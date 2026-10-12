@@ -61,6 +61,12 @@ namespace WindowsMidiServices
         [Parameter]
         public MidiRtpSendSpeedLimit SendSpeedLimit { get; set; } = MidiRtpSendSpeedLimit.Unlimited;
 
+        // Leaves out the recovery journal, the short summary of recent notes in each packet that
+        // lets the remote end a note whose Note Off was lost. Only for a device that plays extra
+        // notes, or notes that don't stop, while the journal is on.
+        [Parameter]
+        public SwitchParameter NoRecoveryJournal { get; set; }
+
         [Parameter]
         public SwitchParameter SaveToConfiguration { get; set; }
 
@@ -117,6 +123,7 @@ namespace WindowsMidiServices
                 Name = LocalEndpointName,
                 CustomEndpointName = EndpointName,
                 SendSpeedLimit = SendSpeedLimit,
+                SendRecoveryJournal = !NoRecoveryJournal.IsPresent,
                 MatchCriteria = criteria
             };
 

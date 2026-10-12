@@ -51,6 +51,9 @@ public:
     TEST_METHOD(TestLossRecoveredFromJournal);
     TEST_METHOD(TestLossWithoutJournalSilences);
     TEST_METHOD(TestFeedbackTrimsJournal);
+    TEST_METHOD(TestChannelTwoNotesOnTheWire);
+    TEST_METHOD(TestJournalNamesTheChannelOfEveryNote);
+    TEST_METHOD(TestLostReleaseIsRepairedOnItsChannel);
     TEST_METHOD(TestEndSessionAndRejection);
     TEST_METHOD(TestHeldInvitationIsAnsweredLater);
     TEST_METHOD(TestTimeouts);

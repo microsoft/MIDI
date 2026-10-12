@@ -111,6 +111,111 @@ void MidiEndpointDeviceInformationTests::TestFindAll()
 }
 
 
+namespace
+{
+    // the rule an endpoint has to meet to be listed under a single filter flag
+    bool IsEndpointOfKind(
+        _In_ MidiEndpointDeviceInformation const& endpoint,
+        _In_ MidiEndpointDeviceInformationFilters const filter)
+    {
+        auto const purpose = endpoint.EndpointPurpose();
+
+        switch (filter)
+        {
+        case MidiEndpointDeviceInformationFilters::DiagnosticLoopback:
+            return purpose == MidiEndpointDevicePurpose::DiagnosticLoopback;
+        case MidiEndpointDeviceInformationFilters::DiagnosticPing:
+            return purpose == MidiEndpointDevicePurpose::DiagnosticPing;
+        case MidiEndpointDeviceInformationFilters::VirtualDeviceResponder:
+            return purpose == MidiEndpointDevicePurpose::VirtualDeviceResponder;
+        default:
+            break;
+        }
+
+        if (purpose == MidiEndpointDevicePurpose::DiagnosticLoopback ||
+            purpose == MidiEndpointDevicePurpose::DiagnosticPing ||
+            purpose == MidiEndpointDevicePurpose::VirtualDeviceResponder)
+        {
+            return false;
+        }
+
+        auto const isByteFormat =
+            endpoint.GetTransportSuppliedInfo().NativeDataFormat() == MidiEndpointNativeDataFormat::Midi1ByteFormat;
+
+        return (filter == MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat) ? isByteFormat : !isByteFormat;
+    }
+}
+
+void MidiEndpointDeviceInformationTests::TestFindAllReturnsOnlyTheRequestedKind()
+{
+    MidiEndpointDeviceInformationFilters const filters[]
+    {
+        MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat,
+        MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat,
+        MidiEndpointDeviceInformationFilters::VirtualDeviceResponder,
+        MidiEndpointDeviceInformationFilters::DiagnosticLoopback,
+        MidiEndpointDeviceInformationFilters::DiagnosticPing,
+    };
+
+    for (auto const filter : filters)
+    {
+        for (auto const& endpoint : MidiEndpointDeviceInformation::FindAll(MidiEndpointDeviceInformationSortOrder::Name, filter))
+        {
+            if (!IsEndpointOfKind(endpoint, filter))
+            {
+                LOG_OUTPUT(L"Filter 0x%08x listed '%s', purpose %d",
+                    static_cast<uint32_t>(filter), endpoint.Name().c_str(), static_cast<int>(endpoint.EndpointPurpose()));
+            }
+
+            VERIFY_IS_TRUE(IsEndpointOfKind(endpoint, filter));
+        }
+    }
+}
+
+void MidiEndpointDeviceInformationTests::TestGeneralMidiSynthIsANormalEndpoint()
+{
+    auto const everything = MidiEndpointDeviceInformation::FindAll(
+        MidiEndpointDeviceInformationSortOrder::Name,
+        MidiEndpointDeviceInformationFilters::AllStandardEndpoints |
+        MidiEndpointDeviceInformationFilters::VirtualDeviceResponder |
+        MidiEndpointDeviceInformationFilters::DiagnosticLoopback |
+        MidiEndpointDeviceInformationFilters::DiagnosticPing);
+
+    winrt::hstring synthId{};
+
+    for (auto const& endpoint : everything)
+    {
+        if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::InBoxGeneralMidiSynth)
+        {
+            synthId = endpoint.EndpointDeviceId();
+            break;
+        }
+    }
+
+    if (synthId.empty())
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"The General MIDI Synth endpoint is not present.");
+        return;
+    }
+
+    auto const listed = [&](MidiEndpointDeviceInformationFilters const filter)
+        {
+            for (auto const& endpoint : MidiEndpointDeviceInformation::FindAll(MidiEndpointDeviceInformationSortOrder::Name, filter))
+            {
+                if (endpoint.EndpointDeviceId() == synthId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+    VERIFY_IS_TRUE(listed(MidiEndpointDeviceInformationFilters::AllStandardEndpoints), L"The synth is in the standard list");
+    VERIFY_IS_FALSE(listed(MidiEndpointDeviceInformationFilters::DiagnosticLoopback | MidiEndpointDeviceInformationFilters::DiagnosticPing), L"and not in the diagnostics list");
+    VERIFY_IS_FALSE(listed(MidiEndpointDeviceInformationFilters::VirtualDeviceResponder), L"and not in the virtual device responder list");
+}
+
 
 void MidiEndpointDeviceInformationTests::ValidateAssociatedMidi1Ports()
 {

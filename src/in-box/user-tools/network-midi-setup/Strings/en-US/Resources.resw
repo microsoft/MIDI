@@ -1023,11 +1023,11 @@
   <data name="RtpHostPortHelp.Text" xml:space="preserve">
     <value>RTP-MIDI also uses the next port up. Keeping one port makes it easier for other devices to find this PC again after a restart.</value>
   </data>
-  <data name="RtpHostSendRecoveryJournalCheckBox.Content" xml:space="preserve">
+  <data name="RtpSendRecoveryJournalCheckBox.Content" xml:space="preserve">
     <value>Help other devices recover notes lost on the network</value>
   </data>
-  <data name="RtpHostSendRecoveryJournalHelp.Text" xml:space="preserve">
-    <value>Each packet carries a short summary of recent notes, so a device which misses a packet can still end a note that would otherwise hang. Turn this off only for a device which cannot handle it.</value>
+  <data name="RtpSendRecoveryJournalHelp.Text" xml:space="preserve">
+    <value>Each packet carries a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Turn this off only for a device that plays extra notes, or notes that don't stop, while this is on.</value>
   </data>
   <data name="HostNetworkAdapterComboBox.Header" xml:space="preserve">
     <value>Network adapter</value>

@@ -1029,6 +1029,233 @@ namespace RtpMidiProtocolCases
         }
     }
 
+    // ------------------------------------------------------------------------------------------
+    // The channel the recovery journal names
+    //
+    // Reported: notes sent on channel 2 to a pipe organ behind rtpmidid also played on channel 1
+    // there, and those never stopped. These pin down what this engine sends for that.
+    // ------------------------------------------------------------------------------------------
+
+    std::string Hex(_In_ std::vector<uint8_t> const& bytes)
+    {
+        std::string text;
+        char part[4]{};
+
+        for (auto const byte : bytes)
+        {
+            snprintf(part, sizeof(part), "%02X ", byte);
+            text += part;
+        }
+
+        return text;
+    }
+
+    // B confirms nothing, as a receiver that sends no RS, so each journal A sends covers every
+    // packet since its first. Every RTP-MIDI packet A sends B is kept, in order.
+    void RecordWithoutFeedback(_Inout_ SimulatedNetwork& network, _In_ SimulatedNode const& a, _In_ SimulatedNode const& b, _Inout_ std::vector<std::vector<uint8_t>>& packets)
+    {
+        network.Drop = [&a, &b, &packets](PeerAddress const&, PeerAddress const& to, std::vector<uint8_t> const& bytes)
+        {
+            if (to == a.Control && ParseReceiverFeedback(bytes.data(), bytes.size()).has_value()) return true;
+            if (IsDataPacketTo(to, b, bytes)) packets.push_back(bytes);
+            return false;
+        };
+    }
+
+    void TestChannelTwoNotesOnTheWire()
+    {
+        SimulatedNetwork network;
+
+        auto configA = Config("Windows");
+        configA.SendJournal = true;
+
+        auto& a = network.AddNode(1, ClockA, configA);
+        auto& b = network.AddNode(2, ClockB, Config("Organ"));
+
+        a.Engine->Invite(b.Control, a.Clock());
+        network.Advance(20000);
+
+        std::vector<std::vector<uint8_t>> sent;
+        RecordWithoutFeedback(network, a, b, sent);
+
+        // a key pressed, released, then the next key: a packet each, the way an app sends them
+        std::vector<std::vector<uint8_t>> const keys = { { 0x91, 0x3C, 0x64 }, { 0x81, 0x3C, 0x40 }, { 0x91, 0x3E, 0x64 } };
+
+        for (auto const& key : keys)
+        {
+            a.Engine->SendMidi(key.data(), key.size(), a.Clock());
+            network.Advance(100);
+        }
+
+        CHECK_EQ(sent.size(), keys.size());
+        if (sent.size() != keys.size()) return;
+
+        RtpHeader first{};
+        CHECK(ParseRtpHeader(sent[0].data(), sent[0].size(), first));
+
+        // nothing was confirmed, so every journal's checkpoint is the first packet
+        auto const checkpointHigh = static_cast<uint8_t>(first.SequenceNumber >> 8);
+        auto const checkpointLow = static_cast<uint8_t>(first.SequenceNumber);
+
+        // 0x43: a journal follows a 3-byte MIDI list
+        std::vector<std::vector<uint8_t>> const expected =
+        {
+            // nothing came before it: S set, no channel journals
+            { 0x43, 0x91, 0x3C, 0x64, 0x80, checkpointHigh, checkpointLow },
+
+            // one channel journal, S clear, CHAN 1, LENGTH 7, chapter N: note 60 on at velocity 100
+            { 0x43, 0x81, 0x3C, 0x40, 0x20, checkpointHigh, checkpointLow, 0x08, 0x07, 0x08, 0x81, 0xF0, 0x3C, 0xE4 },
+
+            // CHAN 1, LENGTH 6, chapter N: note 60 off, B clear because the Note Off was in the packet before
+            { 0x43, 0x91, 0x3E, 0x64, 0x20, checkpointHigh, checkpointLow, 0x08, 0x06, 0x08, 0x00, 0x77, 0x08 },
+        };
+
+        for (size_t i = 0; i < sent.size(); i++)
+        {
+            RtpHeader header{};
+            CHECK(ParseRtpHeader(sent[i].data(), sent[i].size(), header));
+            CHECK_EQ(header.SequenceNumber, static_cast<uint16_t>(first.SequenceNumber + i));
+
+            std::vector<uint8_t> const payload(sent[i].begin() + static_cast<std::ptrdiff_t>(header.PayloadOffset), sent[i].end());
+            VERIFY_IS_TRUE(payload == expected[i], WEX::Common::String().Format(L"packet %u payload: %hs", static_cast<unsigned>(i), Hex(payload).c_str()));
+        }
+
+        // the receiving engine plays exactly that: nothing on channel 1, nothing repaired
+        CHECK(b.ReceivedStream() == (std::vector<uint8_t>{ 0x91, 0x3C, 0x64, 0x81, 0x3C, 0x40, 0x91, 0x3E, 0x64 }));
+        for (auto const& entry : b.Received) CHECK(!entry.Recovered);
+    }
+
+    // A note on each of the 16 channels, then each released. Every journal must put each note
+    // under the channel it was sent on, so a journal naming the wrong channel shows up here.
+    void TestJournalNamesTheChannelOfEveryNote()
+    {
+        SimulatedNetwork network;
+
+        auto configA = Config("Windows");
+        configA.SendJournal = true;
+
+        auto& a = network.AddNode(1, ClockA, configA);
+        auto& b = network.AddNode(2, ClockB, Config("Organ"));
+
+        a.Engine->Invite(b.Control, a.Clock());
+        network.Advance(20000);
+
+        std::vector<std::vector<uint8_t>> sent;
+        RecordWithoutFeedback(network, a, b, sent);
+
+        // a different note on each channel
+        std::vector<std::vector<uint8_t>> messages;
+        for (uint8_t channel = 0; channel < 16; channel++) messages.push_back({ static_cast<uint8_t>(0x90 | channel), static_cast<uint8_t>(40 + channel), 0x64 });
+        for (uint8_t channel = 0; channel < 16; channel++) messages.push_back({ static_cast<uint8_t>(0x80 | channel), static_cast<uint8_t>(40 + channel), 0x40 });
+
+        std::vector<uint8_t> stream;
+
+        for (auto const& message : messages)
+        {
+            a.Engine->SendMidi(message.data(), message.size(), a.Clock());
+            stream.insert(stream.end(), message.begin(), message.end());
+            network.Advance(100);
+        }
+
+        CHECK_EQ(sent.size(), messages.size());
+
+        // what the packets before each one left every note as: 0 never sent, 1 on, 2 off
+        std::array<std::array<uint8_t, 128>, 16> before{};
+
+        for (size_t i = 0; i < sent.size() && i < messages.size(); i++)
+        {
+            CommandSectionDecoder decoder;
+            DecodedPacket packet;
+            CHECK(decoder.Decode(sent[i].data(), sent[i].size(), packet) == DecodeStatus::Ok);
+            CHECK(packet.HasJournal);
+
+            RecoveryJournal journal{};
+            CHECK(ParseRecoveryJournal(sent[i].data() + packet.JournalOffset, packet.JournalSize, journal));
+
+            std::array<std::array<uint8_t, 128>, 16> described{};
+            int previousChannel = -1;
+
+            for (auto const& channel : journal.Channels)
+            {
+                // ascending, each channel at most once (RFC 6295 section 5)
+                CHECK(static_cast<int>(channel.Channel) > previousChannel);
+                previousChannel = channel.Channel;
+
+                for (auto const& on : channel.NoteOns)
+                {
+                    described[channel.Channel][on.Note] = 1;
+                    CHECK_EQ(on.Velocity, 0x64);
+                }
+
+                for (auto const off : channel.NoteOffs) described[channel.Channel][off] = 2;
+            }
+
+            VERIFY_IS_TRUE(described == before, WEX::Common::String().Format(L"packet %u journal: %hs", static_cast<unsigned>(i),
+                Hex(std::vector<uint8_t>(sent[i].begin() + static_cast<std::ptrdiff_t>(packet.JournalOffset), sent[i].end())).c_str()));
+
+            CHECK_EQ(packet.Events.size(), 1u);
+            if (packet.Events.size() == 1) CHECK(packet.Events[0].Bytes == messages[i]);
+
+            auto const& message = messages[i];
+            before[message[0] & 0x0F][message[1]] = static_cast<uint8_t>(((message[0] & 0xF0) == 0x90) ? 1 : 2);
+        }
+
+        // the receiving engine plays exactly what was sent, with nothing added
+        CHECK(b.ReceivedStream() == stream);
+        for (auto const& entry : b.Received) CHECK(!entry.Recovered);
+    }
+
+    // The release on channel 2 is lost. The next packet's journal has it, and a receiver that
+    // follows RFC 6295 ends the note on channel 2 and nowhere else.
+    void TestLostReleaseIsRepairedOnItsChannel()
+    {
+        SimulatedNetwork network;
+
+        auto configA = Config("Windows");
+        configA.SendJournal = true;
+
+        auto& a = network.AddNode(1, ClockA, configA);
+        auto& b = network.AddNode(2, ClockB, Config("Organ"));
+
+        a.Engine->Invite(b.Control, a.Clock());
+        network.Advance(20000);
+
+        uint8_t const press[] = { 0x91, 0x3C, 0x64 };
+        a.Engine->SendMidi(press, sizeof(press), a.Clock());
+        network.Advance(100);
+
+        int dataPacketsSeen = 0;
+        network.Drop = [&](PeerAddress const&, PeerAddress const& to, std::vector<uint8_t> const& bytes)
+        {
+            return IsDataPacketTo(to, b, bytes) && dataPacketsSeen++ == 0;
+        };
+
+        uint8_t const release[] = { 0x81, 0x3C, 0x40 };
+        a.Engine->SendMidi(release, sizeof(release), a.Clock());
+        network.Advance(100);
+
+        uint8_t const next[] = { 0x91, 0x3E, 0x64 };
+        a.Engine->SendMidi(next, sizeof(next), a.Clock());
+        network.Advance(100);
+
+        std::vector<std::vector<uint8_t>> repairs;
+        for (auto const& entry : b.Received) if (entry.Recovered) repairs.push_back(entry.Bytes);
+
+        CHECK_EQ(repairs.size(), 1u);
+        CHECK(!repairs.empty() && repairs[0] == (std::vector<uint8_t>{ 0x81, 0x3C, 0x40 }));
+        CHECK(b.ReceivedStream() == (std::vector<uint8_t>{ 0x91, 0x3C, 0x64, 0x91, 0x3E, 0x64 }));
+
+        auto const view = b.Engine->Snapshot();
+        CHECK_EQ(view.size(), 1u);
+
+        if (view.size() == 1)
+        {
+            CHECK_EQ(view[0].Stats.LossEventsCovered, 1u);
+            for (uint8_t channel = 0; channel < 16; channel++) CHECK(!view[0].ActiveNotes[channel][0x3C]);
+            CHECK(view[0].ActiveNotes[1][0x3E]);
+        }
+    }
+
     void TestEndSessionAndRejection()
     {
         {
@@ -1256,6 +1483,9 @@ void RtpMidiProtocolTests::TestSendToOneParticipant() { Run(RtpMidiProtocolCases
 void RtpMidiProtocolTests::TestLossRecoveredFromJournal() { Run(RtpMidiProtocolCases::TestLossRecoveredFromJournal); }
 void RtpMidiProtocolTests::TestLossWithoutJournalSilences() { Run(RtpMidiProtocolCases::TestLossWithoutJournalSilences); }
 void RtpMidiProtocolTests::TestFeedbackTrimsJournal() { Run(RtpMidiProtocolCases::TestFeedbackTrimsJournal); }
+void RtpMidiProtocolTests::TestChannelTwoNotesOnTheWire() { Run(RtpMidiProtocolCases::TestChannelTwoNotesOnTheWire); }
+void RtpMidiProtocolTests::TestJournalNamesTheChannelOfEveryNote() { Run(RtpMidiProtocolCases::TestJournalNamesTheChannelOfEveryNote); }
+void RtpMidiProtocolTests::TestLostReleaseIsRepairedOnItsChannel() { Run(RtpMidiProtocolCases::TestLostReleaseIsRepairedOnItsChannel); }
 void RtpMidiProtocolTests::TestEndSessionAndRejection() { Run(RtpMidiProtocolCases::TestEndSessionAndRejection); }
 void RtpMidiProtocolTests::TestHeldInvitationIsAnsweredLater() { Run(RtpMidiProtocolCases::TestHeldInvitationIsAnsweredLater); }
 void RtpMidiProtocolTests::TestTimeouts() { Run(RtpMidiProtocolCases::TestTimeouts); }

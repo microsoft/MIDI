@@ -662,6 +662,10 @@ namespace winrt::midinetworksetup::implementation
             ConnectReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             ConnectRtpNoReduceSendSpeedText().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
+            // on, like every other way of connecting
+            ConnectRtpSendRecoveryJournalCheckBox().IsChecked(true);
+            ConnectRtpSendRecoveryJournalPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
             ConnectNameDialog().XamlRoot(Content().XamlRoot());
 
             m_openDialog = ConnectNameDialog();
@@ -678,6 +682,7 @@ namespace winrt::midinetworksetup::implementation
             choices->CustomName = TextOf(ConnectNameDialogTextBox());
             choices->SendSpeedLimit = SelectedSendSpeedLimit(ConnectSendSpeedLimitComboBox());
             choices->ReduceSendSpeedAutomatically = offerReduceAutomatically && IsCheckBoxChecked(ConnectReduceSendSpeedCheckBox());
+            choices->SendRecoveryJournal = IsCheckBoxChecked(ConnectRtpSendRecoveryJournalCheckBox());
 
             co_return true;
         }
@@ -3795,7 +3800,7 @@ namespace winrt::midinetworksetup::implementation
                 co_return;
             }
 
-            ConnectRtpRemoteHostAsync(item, choices->CustomName, choices->SendSpeedLimit);
+            ConnectRtpRemoteHostAsync(item, choices->CustomName, choices->SendSpeedLimit, choices->SendRecoveryJournal);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to an RTP-MIDI device.")
     }
@@ -3804,7 +3809,8 @@ namespace winrt::midinetworksetup::implementation
     winrt::fire_and_forget MainWindow::ConnectRtpRemoteHostAsync(
         midinetworksetup::RtpRemoteHostItem const item,
         winrt::hstring const customEndpointName,
-        uint32_t const sendSpeedLimit)
+        uint32_t const sendSpeedLimit,
+        bool const sendRecoveryJournal)
     {
         if (item == nullptr)
         {
@@ -3834,6 +3840,7 @@ namespace winrt::midinetworksetup::implementation
             config.CustomEndpointName(customEndpointName);
             config.MatchCriteria(criteria);
             config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+            config.SendRecoveryJournal(sendRecoveryJournal);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
 
@@ -4295,6 +4302,7 @@ namespace winrt::midinetworksetup::implementation
         auto const name = TextOf(RtpManualNameTextBox());
         auto const customName = TextOf(RtpManualCustomNameTextBox());
         auto const sendSpeedLimit = SelectedSendSpeedLimit(RtpManualSendSpeedLimitComboBox());
+        auto const sendRecoveryJournal = IsCheckBoxChecked(RtpManualSendRecoveryJournalCheckBox());
 
         if (IsNetworkMidi2Machine(address) && !co_await ConfirmRtpAlongsideNetworkMidi2Async(address))
         {
@@ -4319,6 +4327,7 @@ namespace winrt::midinetworksetup::implementation
             config.CustomEndpointName(customName);
             config.MatchCriteria(criteria);
             config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+            config.SendRecoveryJournal(sendRecoveryJournal);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
 

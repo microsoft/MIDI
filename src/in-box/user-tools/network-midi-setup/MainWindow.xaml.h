@@ -142,6 +142,9 @@ namespace winrt::midinetworksetup::implementation
             winrt::hstring CustomName{};
             uint32_t SendSpeedLimit{ 0 };
             bool ReduceSendSpeedAutomatically{ false };
+
+            // RTP-MIDI only
+            bool SendRecoveryJournal{ true };
         };
 
         // everything the service knows, gathered off the UI thread in one pass
@@ -330,7 +333,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::guid const explicitClientId = winrt::guid{});
 
         // Asks for an optional display name and the sending speed before connecting. RTP-MIDI
-        // cannot tell that a device missed data, so it is not offered the slow down choice.
+        // cannot tell that a device missed data, so it is not offered the slow down choice. It is
+        // offered the recovery journal choice, which Network MIDI 2.0 does not have.
         foundation::IAsyncOperation<bool> PromptForConnectNameAsync(
             _In_ winrt::hstring const deviceName,
             _In_ bool const offerReduceAutomatically,
@@ -356,7 +360,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget ConnectRtpRemoteHostAsync(
             _In_ midinetworksetup::RtpRemoteHostItem const item,
             _In_ winrt::hstring const customEndpointName,
-            _In_ uint32_t const sendSpeedLimit);
+            _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const sendRecoveryJournal);
 
         // Network MIDI 2.0 is the better choice when a machine offers both, so connecting over
         // RTP-MIDI to one of those asks first. It never refuses: the customer decides.

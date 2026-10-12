@@ -72,6 +72,10 @@ public:
     TEST_METHOD(TestRemoteClientSpeedChangesWithoutReconnecting);
     TEST_METHOD(TestRemoteClientSpeedsAreCheckedAndKeptWithTheHost);
 
+    // the channel notes carry on the wire, and a host without a journal, in RtpMidiChannelTests.cpp
+    TEST_METHOD(TestNotesKeepTheirChannelOnTheWire);
+    TEST_METHOD(TestHostWithoutJournalSendsNone);
+
 private:
     winrt::Windows::Data::Json::JsonObject Send(std::wstring const& text, HRESULT* result = nullptr);
     winrt::Windows::Data::Json::JsonObject FindHost(std::wstring const& hostId);

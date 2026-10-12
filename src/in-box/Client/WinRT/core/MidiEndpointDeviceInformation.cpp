@@ -301,9 +301,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         }
 
 
-        // check if normal client MIDI 1.0 / bytestream
-        else if ((deviceInformation.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat))
+        // any other purpose, including the General MIDI synth, is a normal endpoint. Check MIDI 1.0 / bytestream
+        else if (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat)
         {
             if ((endpointFilters & midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat) ==
                 midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat)
@@ -312,22 +311,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             }
         }
 
-        // check if normal client MIDI 2.0 / UMP 
-        else if ((deviceInformation.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat ||
-                deviceInformation.GetTransportSuppliedInfo().NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Unknown))
+        // normal MIDI 2.0 / UMP endpoint, or one which did not report its format
+        else
         {
             if ((endpointFilters & midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat) ==
                 midi2enum::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat)
             {
                 return true;
             }
-        }
-
-        // no idea what kind of endpoint this is, so default to including it
-        else
-        {
-            return true;
         }
 
         return false;

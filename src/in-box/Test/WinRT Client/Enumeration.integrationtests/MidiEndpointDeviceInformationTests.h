@@ -23,6 +23,8 @@ public:
     TEST_METHOD(TestWalkUpToParent);
 
     TEST_METHOD(TestFindAll);
+    TEST_METHOD(TestFindAllReturnsOnlyTheRequestedKind);
+    TEST_METHOD(TestGeneralMidiSynthIsANormalEndpoint);
     TEST_METHOD(ValidateAssociatedMidi1Ports);
 
 
