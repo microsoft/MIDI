@@ -21,7 +21,7 @@ namespace midiapp
         winrt::hstring CopyFailedButton{};
         winrt::hstring CloseButton{};
 
-        // Only the overload that builds the prompt shows these.
+        // Shown until the first look at the devices is done.
         winrt::hstring LookingTitle{};
         winrt::hstring LookingMessage{};
     };
@@ -32,16 +32,8 @@ namespace midiapp
     // The names Windows shows for the endpoints present now, in alphabetical order.
     std::vector<std::wstring> EndpointNamesForPrompt();
 
-    // The customer sees the whole prompt, device names included, before anything leaves the app.
-    // Copy puts it on the clipboard and leaves the dialog open to say whether that worked.
-    winrt::Windows::Foundation::IAsyncAction ShowAssistantPromptAsync(
-        _In_ winrt::Microsoft::UI::Xaml::XamlRoot root,
-        _In_ AssistantPromptStrings strings,
-        _In_ winrt::hstring prompt,
-        _In_ winrt::Windows::Foundation::Uri guide);
-
-    // The same, with the prompt built again each time the device list changes. Until the first
-    // look at the devices is done, stillLooking is true, the prompt leaves them out and Copy waits.
+    // The customer sees the whole prompt before anything leaves the app. It's rebuilt when the
+    // device list changes; while stillLooking is true it leaves the devices out and Copy waits.
     winrt::Windows::Foundation::IAsyncAction ShowAssistantPromptAsync(
         _In_ winrt::Microsoft::UI::Xaml::XamlRoot root,
         _In_ AssistantPromptStrings strings,

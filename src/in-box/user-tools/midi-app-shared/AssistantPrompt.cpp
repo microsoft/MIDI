@@ -88,7 +88,7 @@ namespace midiapp
             wuxc::StackPanel Panel{};
             wuxc::TextBox PromptBox{};
             wuxc::ContentDialog Dialog{};
-            wuxc::InfoBar Looking{ nullptr };
+            wuxc::InfoBar Looking{};
 
             void ShowPrompt(_In_ winrt::hstring const& prompt)
             {
@@ -157,10 +157,21 @@ namespace midiapp
             guideLink.Content(winrt::box_value(strings.GuideLink));
             guideLink.NavigateUri(guide);
 
+            wuxc::ProgressBar progress{};
+            progress.IsIndeterminate(true);
+
+            auto const& looking = view->Looking;
+            looking.IsClosable(false);
+            looking.Severity(wuxc::InfoBarSeverity::Informational);
+            looking.Title(strings.LookingTitle);
+            looking.Message(strings.LookingMessage);
+            looking.Content(progress);
+
             auto const& panel = view->Panel;
             panel.Spacing(12.0);
             panel.Width(std::clamp(static_cast<double>(space.Width), 480.0, 760.0));
             panel.Children().Append(message);
+            panel.Children().Append(looking);
             panel.Children().Append(promptBox);
             panel.Children().Append(guideLink);
 
@@ -222,37 +233,11 @@ namespace midiapp
     winrt::Windows::Foundation::IAsyncAction ShowAssistantPromptAsync(
         wux::XamlRoot root,
         AssistantPromptStrings strings,
-        winrt::hstring prompt,
-        winrt::Windows::Foundation::Uri guide)
-    {
-        auto const view = MakeAssistantPromptView(root, strings, guide);
-
-        view->ShowPrompt(prompt);
-
-        co_await view->Dialog.ShowAsync();
-    }
-
-    _Use_decl_annotations_
-    winrt::Windows::Foundation::IAsyncAction ShowAssistantPromptAsync(
-        wux::XamlRoot root,
-        AssistantPromptStrings strings,
         std::function<winrt::hstring(bool stillLooking)> buildPrompt,
         winrt::Windows::Foundation::Uri guide)
     {
         auto const view = MakeAssistantPromptView(root, strings, guide);
         view->BuildPrompt = std::move(buildPrompt);
-
-        wuxc::ProgressBar progress{};
-        progress.IsIndeterminate(true);
-
-        view->Looking = wuxc::InfoBar{};
-        view->Looking.IsClosable(false);
-        view->Looking.Severity(wuxc::InfoBarSeverity::Informational);
-        view->Looking.Title(strings.LookingTitle);
-        view->Looking.Message(strings.LookingMessage);
-        view->Looking.Content(progress);
-
-        view->Panel.Children().InsertAt(1, view->Looking);
 
         // Only a weak reference crosses threads, so the XAML objects are always let go on this one.
         std::weak_ptr<AssistantPromptView> weakView = view;
