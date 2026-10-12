@@ -14,6 +14,7 @@
 
 #include <winrt/Windows.Networking.h>
 #include <winrt/Windows.Networking.Sockets.h>
+#include <winrt/Windows.Storage.Streams.h>
 
 using namespace WEX::Logging;
 using namespace WEX::Common;
@@ -2179,16 +2180,27 @@ void MidiNetworkApiTests::TestHostRepliesFromTheAddressTheClientInvited()
     // the reply is 127.0.0.1. The same shape as an IPv6 host with several addresses on one network.
     constexpr wchar_t SecondLoopbackAddress[] = L"127.0.0.2";
 
-    // Skipped on a PC which does not accept a second loopback address
+    // Skipped on a PC which cannot send from a second loopback address. The send is needed: until a
+    // socket bound to the address has sent from it, Windows refuses the host's reply from it too.
     try
     {
-        winrt::Windows::Networking::Sockets::DatagramSocket socket;
-        socket.BindEndpointAsync(winrt::Windows::Networking::HostName{ SecondLoopbackAddress }, L"").get();
-        socket.Close();
+        winrt::Windows::Networking::Sockets::DatagramSocket receiver;
+        receiver.BindEndpointAsync(winrt::Windows::Networking::HostName{ L"127.0.0.1" }, L"").get();
+
+        winrt::Windows::Networking::Sockets::DatagramSocket sender;
+        sender.BindEndpointAsync(winrt::Windows::Networking::HostName{ SecondLoopbackAddress }, L"").get();
+
+        winrt::Windows::Storage::Streams::DataWriter writer{ sender.GetOutputStreamAsync(
+            winrt::Windows::Networking::HostName{ L"127.0.0.1" }, receiver.Information().LocalPort()).get() };
+        writer.WriteByte(0);
+        writer.StoreAsync().get();
+
+        sender.Close();
+        receiver.Close();
     }
     catch (...)
     {
-        Log::Result(TestResults::Skipped, L"This PC does not accept a second loopback address.");
+        Log::Result(TestResults::Skipped, L"This PC cannot send from a second loopback address.");
         return;
     }
 
