@@ -22,12 +22,12 @@
 
   "major": 1,
   "minor": 0,
-  "patch": 42,
+  "patch": 43,
 
   "channel": "preview",
-  "channelNumber": 10,
+  "channelNumber": 12,
 
   "build": 0,
 
-  "versionName": "Plugin Preview 10"
+  "versionName": "Plugin Preview 12"
 }
