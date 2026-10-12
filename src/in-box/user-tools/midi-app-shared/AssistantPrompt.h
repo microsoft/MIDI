@@ -20,6 +20,10 @@ namespace midiapp
         winrt::hstring CopiedButton{};
         winrt::hstring CopyFailedButton{};
         winrt::hstring CloseButton{};
+
+        // Only the overload that builds the prompt shows these.
+        winrt::hstring LookingTitle{};
+        winrt::hstring LookingMessage{};
     };
 
     // One "- name" line per name. Each name is sanitized, so a device name can't add lines of its own.
@@ -34,5 +38,13 @@ namespace midiapp
         _In_ winrt::Microsoft::UI::Xaml::XamlRoot root,
         _In_ AssistantPromptStrings strings,
         _In_ winrt::hstring prompt,
+        _In_ winrt::Windows::Foundation::Uri guide);
+
+    // The same, with the prompt built again each time the device list changes. Until the first
+    // look at the devices is done, stillLooking is true, the prompt leaves them out and Copy waits.
+    winrt::Windows::Foundation::IAsyncAction ShowAssistantPromptAsync(
+        _In_ winrt::Microsoft::UI::Xaml::XamlRoot root,
+        _In_ AssistantPromptStrings strings,
+        _In_ std::function<winrt::hstring(bool stillLooking)> buildPrompt,
         _In_ winrt::Windows::Foundation::Uri guide);
 }

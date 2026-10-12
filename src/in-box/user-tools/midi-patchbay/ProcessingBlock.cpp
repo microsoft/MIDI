@@ -68,6 +68,8 @@ namespace midipatchbay
             { BlockKind::SetTag, BlockCategory::Logic, L"setTag" },
             { BlockKind::SetMemory, BlockCategory::Logic, L"setMemory" },
             { BlockKind::PutValue, BlockCategory::Logic, L"putValue" },
+            { BlockKind::ControllerButton, BlockCategory::GameController, L"controllerButton" },
+            { BlockKind::ControllerAxis, BlockCategory::GameController, L"controllerAxis" },
         };
 
         static_assert(std::size(Kinds) == BlockKindCount);
@@ -1285,7 +1287,9 @@ namespace midipatchbay
     _Use_decl_annotations_
     bool IsGenerator(BlockKind kind) noexcept
     {
-        return CategoryOf(kind) == BlockCategory::Generator;
+        auto const category = CategoryOf(kind);
+
+        return category == BlockCategory::Generator || category == BlockCategory::GameController;
     }
 
     _Use_decl_annotations_
@@ -1297,7 +1301,8 @@ namespace midipatchbay
     _Use_decl_annotations_
     bool HasInput(BlockKind kind) noexcept
     {
-        return kind != BlockKind::ClockGenerator && kind != BlockKind::TimeCodeGenerator && kind != BlockKind::Annotation;
+        return kind != BlockKind::ClockGenerator && kind != BlockKind::TimeCodeGenerator && kind != BlockKind::Annotation &&
+            CategoryOf(kind) != BlockCategory::GameController;
     }
 
     _Use_decl_annotations_
@@ -1717,6 +1722,8 @@ namespace midipatchbay
         case BlockKind::ClockGenerator:
         case BlockKind::TimeCodeGenerator:
         case BlockKind::LfoGenerator:
+        case BlockKind::ControllerButton:
+        case BlockKind::ControllerAxis:
             return false;
 
         // The clock divider needs its count, which the route graph keeps: see DivideClock.
@@ -1810,6 +1817,8 @@ namespace midipatchbay
         case BlockKind::ClockGenerator:
         case BlockKind::TimeCodeGenerator:
         case BlockKind::LfoGenerator:
+        case BlockKind::ControllerButton:
+        case BlockKind::ControllerAxis:
             return false;
 
         default:
@@ -1971,6 +1980,14 @@ namespace midipatchbay
                 SetBool(object, KeyStartStopWithClock, lfo.KeepsToStartAndStop);
                 break;
             }
+
+            case BlockKind::ControllerButton:
+                ControllerButtonToJson(settings.ControllerButton, object);
+                break;
+
+            case BlockKind::ControllerAxis:
+                ControllerAxisToJson(settings.ControllerAxis, object);
+                break;
 
             case BlockKind::ClockDivider:
                 SetNumber(object, KeyDivideBy, settings.ClockDivision);
@@ -2383,6 +2400,14 @@ namespace midipatchbay
                 break;
             }
 
+            case BlockKind::ControllerButton:
+                settings.ControllerButton = ControllerButtonFromJson(object);
+                break;
+
+            case BlockKind::ControllerAxis:
+                settings.ControllerAxis = ControllerAxisFromJson(object);
+                break;
+
             case BlockKind::ClockDivider:
                 settings.ClockDivision = static_cast<uint32_t>(
                     std::floor(ReadNumber(object, KeyDivideBy, 1, MaximumClockDivision, DefaultClockDivision)));
@@ -2770,6 +2795,14 @@ namespace midipatchbay
                 break;
             }
 
+            case BlockKind::ControllerButton:
+                signature += ControllerButtonSignature(settings.ControllerButton);
+                break;
+
+            case BlockKind::ControllerAxis:
+                signature += ControllerAxisSignature(settings.ControllerAxis);
+                break;
+
             case BlockKind::ClockDivider:
                 signature += std::to_wstring(settings.ClockDivision);
                 break;
@@ -3029,6 +3062,12 @@ namespace midipatchbay
             case BlockKind::LfoGenerator:
                 // Everything about a sweep changes on the fly, and the phase carries on.
                 return L"lfo";
+
+            case BlockKind::ControllerButton:
+                return ControllerRestartSignature(settings.ControllerButton.Player, settings.ControllerButton.Control);
+
+            case BlockKind::ControllerAxis:
+                return ControllerRestartSignature(settings.ControllerAxis.Player, settings.ControllerAxis.Control);
 
             default:
                 // A new frame rate or start time means starting the time code again.

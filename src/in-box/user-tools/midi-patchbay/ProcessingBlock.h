@@ -12,6 +12,7 @@
 // in MessageText.h.
 
 #include "MessageTransform.h"
+#include "ControllerSteps.h"
 
 // Shared with MIDI Glass and MIDI Clock, in midi-app-shared. All three are pure.
 #include "ChannelVoiceWords.h"
@@ -70,9 +71,12 @@ namespace midipatchbay
         SetTag = 30,
         SetMemory = 31,
         PutValue = 32,
+
+        ControllerButton = 33,
+        ControllerAxis = 34,
     };
 
-    constexpr size_t BlockKindCount = 33;
+    constexpr size_t BlockKindCount = 35;
 
     // The order the palette shows them in.
     constexpr BlockKind AllBlockKinds[BlockKindCount] =
@@ -90,6 +94,7 @@ namespace midipatchbay
         BlockKind::Gate,
         BlockKind::CiResponder, BlockKind::CiFilter,
         BlockKind::ClockGenerator, BlockKind::TimeCodeGenerator, BlockKind::LfoGenerator,
+        BlockKind::ControllerButton, BlockKind::ControllerAxis,
         BlockKind::Annotation,
     };
 
@@ -113,15 +118,20 @@ namespace midipatchbay
 
         // Decides by a value, remembers one, or puts one into the message.
         Logic = 7,
+
+        // Turns a game controller into messages. Like a generator, it has a way out and no way in.
+        GameController = 8,
     };
 
     BlockCategory CategoryOf(_In_ BlockKind kind) noexcept;
 
+    // Makes messages of its own: the generators and the game controller steps.
     bool IsGenerator(_In_ BlockKind kind) noexcept;
 
     bool IsAnnotation(_In_ BlockKind kind) noexcept;
 
-    // Every kind but MIDI clock and MIDI Time Code has an In. An LFO's takes the clock it follows.
+    // Every kind but MIDI clock, MIDI Time Code, and the game controller steps has an In. An LFO's
+    // takes the clock it follows.
     bool HasInput(_In_ BlockKind kind) noexcept;
 
     // Every kind but an annotation has an Out.
@@ -803,6 +813,9 @@ namespace midipatchbay
         SetTagSettings SetTag{};
         SetMemorySettings SetMemory{};
         PutValueSettings PutValue{};
+
+        ControllerButtonSettings ControllerButton{};
+        ControllerAxisSettings ControllerAxis{};
 
         AnnotationSettings Annotation{};
     };

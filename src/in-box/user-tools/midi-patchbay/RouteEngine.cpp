@@ -11,6 +11,7 @@
 #include "TextMatch.h"
 
 #include "BeatClockGenerator.h"
+#include "ControllerStepRunner.h"
 #include "LfoMessageGenerator.h"
 #include "TimeCodeGenerator.h"
 
@@ -745,7 +746,7 @@ namespace midipatchbay
 
         // Builds the generator without starting it, so a clock input can find an LFO before
         // anything reaches the graph it runs in.
-        bool Create(_In_ BlockSettings const& settings, _In_ bool followsClock) noexcept
+        bool Create(_In_ BlockSettings const& settings, _In_ bool followsClock, _In_ std::wstring const& generatorKey) noexcept
         {
             try
             {
@@ -793,6 +794,13 @@ namespace midipatchbay
                     m_lfo = std::make_shared<midiapp::LfoMessageGenerator>(std::move(sink), LfoOptions(settings.Lfo, followsClock));
                     break;
 
+                case BlockKind::ControllerButton:
+                case BlockKind::ControllerAxis:
+                    // The key is the patch's, then the step's, so the patch is everything before the last part.
+                    m_controller = std::make_unique<ControllerStepRunner>(m_kind,
+                        generatorKey.substr(0, generatorKey.rfind(L'|')), settings, std::move(sink));
+                    break;
+
                 default:
                     return false;
                 }
@@ -820,6 +828,10 @@ namespace midipatchbay
                 else if (m_lfo != nullptr)
                 {
                     m_lfo->Start(originTimestamp);
+                }
+                else if (m_controller != nullptr)
+                {
+                    return m_controller->Start();
                 }
                 else
                 {
@@ -863,6 +875,11 @@ namespace midipatchbay
                 {
                     m_lfo->Options(LfoOptions(settings.Lfo, m_followsClock));
                 }
+
+                if (m_controller != nullptr)
+                {
+                    m_controller->Update(settings);
+                }
             }
             MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change a running generator.")
         }
@@ -891,6 +908,13 @@ namespace midipatchbay
                 {
                     last = (std::max)(last, m_lfo->Stop());
                     m_lfo.reset();
+                }
+
+                // Its note offs go now, so there is nothing to wait for.
+                if (m_controller != nullptr)
+                {
+                    m_controller->Stop();
+                    m_controller.reset();
                 }
             }
             MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to stop a generator.")
@@ -966,6 +990,7 @@ namespace midipatchbay
         std::unique_ptr<midiapp::BeatClockGenerator> m_clock{};
         std::unique_ptr<midiapp::TimeCodeGenerator> m_timeCode{};
         std::shared_ptr<midiapp::LfoMessageGenerator> m_lfo{};
+        std::unique_ptr<ControllerStepRunner> m_controller{};
     };
 
     _Use_decl_annotations_
@@ -1665,7 +1690,7 @@ namespace midipatchbay
 
                 auto runner = std::make_unique<GeneratorRunner>(planned.Kind, RestartSignatureOf(routes, planned));
 
-                if (!runner->Create(routes.Settings[planned.Settings], planned.FollowsClock))
+                if (!runner->Create(routes.Settings[planned.Settings], planned.FollowsClock, planned.Key))
                 {
                     SetLastError(resources::GetString(L"ErrorRoutingFailed"));
                     continue;

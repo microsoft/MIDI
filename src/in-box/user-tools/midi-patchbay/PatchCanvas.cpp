@@ -687,6 +687,10 @@ namespace midipatchbay
                 color = dark ? Rgb(0xFF, 0x7A, 0x5C) : Rgb(0xB3, 0x36, 0x14);
                 break;
 
+            case BlockCategory::GameController:
+                color = dark ? Rgb(0xD5, 0x8B, 0xFF) : Rgb(0x7A, 0x2E, 0xB0);
+                break;
+
             default:
                 color = dark ? Rgb(0xFF, 0xB5, 0x47) : Rgb(0x9A, 0x5B, 0x00);
                 break;

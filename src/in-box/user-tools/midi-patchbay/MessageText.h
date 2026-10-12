@@ -125,4 +125,21 @@ namespace midipatchbay
 
     // A tag or memory as it is now, for the inspector: "Empty", "Channel 2", "64".
     winrt::hstring DescribeLogicValue(_In_ LogicValue const& value, _In_ LogicUnit unit, _In_ ValueScale scale) noexcept;
+
+    // ---- game controllers, in ControllerText.cpp ----
+
+    // "A", "D-pad up", "Left stick up", for a picker and a summary.
+    winrt::hstring DescribeControllerControl(_In_ ControllerControl control) noexcept;
+
+    // "Controller 1". Player counts from 0, as the file does.
+    winrt::hstring DescribeControllerPlayer(_In_ uint8_t player) noexcept;
+
+    // "Note", "Control change", for a picker.
+    winrt::hstring DescribeControllerMessageKind(_In_ ControllerMessageKind kind) noexcept;
+
+    // "note C3", "CC 64", "next program", for a summary.
+    winrt::hstring DescribeControllerMessage(_In_ ControllerMessage const& message) noexcept;
+
+    // One line for a controller button or a controller stick or trigger step.
+    winrt::hstring DescribeControllerStep(_In_ BlockKind kind, _In_ BlockSettings const& settings) noexcept;
 }

@@ -2256,6 +2256,12 @@
   <data name="AssistantCopyFailed" xml:space="preserve">
     <value>Couldn't copy. Try again</value>
   </data>
+  <data name="AssistantLookingTitle" xml:space="preserve">
+    <value>Looking for MIDI devices…</value>
+  </data>
+  <data name="AssistantLooking" xml:space="preserve">
+    <value>This can take a moment on a PC with a lot of devices. They're added to the prompt when the search is done, and then you can copy it.</value>
+  </data>
   <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
   <data name="AssistantPromptIntroFormat" xml:space="preserve">
     <value>I want to make a layout for Windows MIDI Glass. Before you start, read the whole guide at {0} and follow it. If you can't open the guide, tell me and stop. Don't guess the file format: a guessed file opens without an error but doesn't do what I asked. Ask me what you need to know. Then give me a .midilayout file.</value>

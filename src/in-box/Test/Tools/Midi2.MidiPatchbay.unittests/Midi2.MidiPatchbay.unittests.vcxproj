@@ -102,6 +102,7 @@
     <ClInclude Include="SharedGeneratorTests.h" />
     <ClInclude Include="CapabilityInquiryTests.h" />
     <ClInclude Include="LogicStepTests.h" />
+    <ClInclude Include="ControllerStepTests.h" />
     <ClInclude Include="PatchFolderMoveTests.h" />
     <!-- shared by source with midipatchbay, so the patch model is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageFilter.h" />
@@ -112,6 +113,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\RouteGraph.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\LogicSteps.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchTrace.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SpinGuard.h" />
@@ -136,6 +138,7 @@
     <ClCompile Include="StatefulBlockTests.cpp" />
     <ClCompile Include="CapabilityInquiryTests.cpp" />
     <ClCompile Include="LogicStepTests.cpp" />
+    <ClCompile Include="ControllerStepTests.cpp" />
     <ClCompile Include="PatchFolderMoveTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageFilter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageTransform.cpp" />
@@ -146,6 +149,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\RouteGraph.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\StatefulBlocks.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\LogicSteps.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchTrace.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.cpp" />
