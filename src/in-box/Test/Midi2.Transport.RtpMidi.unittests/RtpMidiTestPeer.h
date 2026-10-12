@@ -402,12 +402,24 @@ namespace RtpMidiTest
         std::vector<RtpMidi::EndReason> Ended() { auto lock = std::scoped_lock{ m_lock }; return m_ended; }
         std::string LastRemoteName() { auto lock = std::scoped_lock{ m_lock }; return m_lastRemoteName; }
 
+        // every RTP-MIDI packet accepted from the other end, byte for byte
+        std::vector<std::vector<uint8_t>> RtpPackets() { auto lock = std::scoped_lock{ m_lock }; return m_rtpPackets; }
+
+        // Like a receiver that never sends RS, so the other end's recovery journal keeps covering
+        // everything since its first packet
+        void WithholdFeedback() { m_withholdFeedback = true; }
+
         // Loopback answers in well under one 100 microsecond tick, which would measure as no
         // latency at all. Delaying clock sync replies makes the round trip visible.
         void SetSyncDelay(DWORD const milliseconds) { m_syncDelayMilliseconds = milliseconds; }
 
         // ISessionHost, called with m_lock held
-        void SendControl(RtpMidi::PeerAddress const& to, std::vector<uint8_t> const& datagram) override { m_ports.Control().Send(to, datagram); }
+        void SendControl(RtpMidi::PeerAddress const& to, std::vector<uint8_t> const& datagram) override
+        {
+            if (m_withholdFeedback && RtpMidi::ParseReceiverFeedback(datagram.data(), datagram.size()).has_value()) return;
+
+            m_ports.Control().Send(to, datagram);
+        }
 
         void SendData(RtpMidi::PeerAddress const& to, std::vector<uint8_t> const& datagram) override
         {
@@ -426,6 +438,11 @@ namespace RtpMidiTest
         void OnMidi(RtpMidi::Participant const&, uint64_t, int64_t, bool, std::vector<uint8_t> const& bytes) override
         {
             m_received.insert(m_received.end(), bytes.begin(), bytes.end());
+        }
+
+        void OnRtpPacket(RtpMidi::Participant const&, RtpMidi::DecodedPacket const&, _In_reads_(size) uint8_t const* datagram, _In_ size_t size) override
+        {
+            m_rtpPackets.emplace_back(datagram, datagram + size);
         }
 
         void OnParticipantChanged(RtpMidi::Participant const& participant) override
@@ -456,6 +473,8 @@ namespace RtpMidiTest
         std::atomic<bool> m_stopping{ false };
         std::atomic<bool> m_stopped{ false };
         std::vector<uint8_t> m_received;
+        std::vector<std::vector<uint8_t>> m_rtpPackets;
+        std::atomic<bool> m_withholdFeedback{ false };
         std::vector<RtpMidi::EndReason> m_ended;
         std::string m_lastRemoteName;
         std::atomic<DWORD> m_syncDelayMilliseconds{ 0 };

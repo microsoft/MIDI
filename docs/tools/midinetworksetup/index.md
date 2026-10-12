@@ -40,6 +40,8 @@ RTP-MIDI is the older network MIDI protocol that Apple devices and many network 
 
 Some devices offer both. When they do, use Network MIDI 2.0. The RTP-MIDI page tells you when a device also offers Network MIDI 2.0, and asks you before it connects to that device over RTP-MIDI. Connecting both ways gives you two sets of endpoints for the same device, which is confusing in a DAW.
 
+RTP-MIDI has one choice that Network MIDI 2.0 doesn't: **Help other devices recover notes lost on the network**. It's on unless you turn it off. Each packet then carries a short summary of recent notes, called the recovery journal, so a device that misses a packet can still end a note that would otherwise hang. Turn it off only for a device that plays extra notes, or notes that don't stop, while it's on. You'll find it when you connect to a device, in **Connect to a device by address**, and under **Advanced** when you create a host. To change it later, select **Disconnect and forget** and connect again, or delete the host and create it again.
+
 ## You don't need to keep this app running
 
 This app is here to set connections up. It doesn't carry any MIDI data, and nothing depends on it once you've closed it.
@@ -311,5 +313,7 @@ A few things to check, roughly in order:
 **Check whether it's blocked.** If you selected **Block** at some point, the device is refused silently. Look under **Remembered decisions** on the host.
 
 **If it connects but misses messages**, especially during a SysEx transfer, give it a slower sending speed. See [Choosing a sending speed](#choosing-a-sending-speed).
+
+**If an RTP-MIDI device plays extra notes, or notes that don't stop**, turn off **Help other devices recover notes lost on the network** for that device. See [RTP-MIDI](#rtp-midi).
 
 If Network MIDI 2.0 isn't installed or isn't enabled on this PC, the app tells you so when it starts and the rest of the window stays empty. Nothing here will work until that's sorted out.

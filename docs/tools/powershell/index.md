@@ -459,6 +459,8 @@ Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
 
 `-SendSpeedLimit` works the same way as for Network MIDI 2.0. RTP-MIDI devices can't say when they miss data, so there's no option to slow down by itself.
 
+Each packet this PC sends normally carries a recovery journal, a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Add `-NoRecoveryJournal` to leave it out, but only for a device that plays extra notes, or notes that don't stop, while the journal is on.
+
 ### Disconnect-MidiRtpHost
 
 Disconnects by client identifier, by the name the device advertises, or by address and port. The connection ends and the entry is removed from the running service. An entry saved in the configuration file comes back when the service restarts.

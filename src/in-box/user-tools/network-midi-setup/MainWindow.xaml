@@ -1708,6 +1708,8 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBox x:Name="RtpManualAddressTextBox"
@@ -1768,6 +1770,20 @@
                                 <TextBlock x:Uid="RtpNoReduceSendSpeedHelp"
                                            Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5"
                                            Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <CheckBox x:Name="RtpManualSendRecoveryJournalCheckBox"
+                                          x:Uid="RtpSendRecoveryJournalCheckBox"
+                                          Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
+                                          Margin="0,8,0,0"
+                                          Content="Help other devices recover notes lost on the network"
+                                          IsChecked="True" />
+
+                                <TextBlock x:Uid="RtpSendRecoveryJournalHelp"
+                                           Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="Each packet carries a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Turn this off only for a device that plays extra notes, or notes that don't stop, while this is on."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -2673,11 +2689,11 @@
 
                             <StackPanel Spacing="4">
                                 <CheckBox x:Name="RtpHostSendRecoveryJournalCheckBox"
-                                          x:Uid="RtpHostSendRecoveryJournalCheckBox"
+                                          x:Uid="RtpSendRecoveryJournalCheckBox"
                                           Content="Help other devices recover notes lost on the network"
                                           IsChecked="True" />
-                                <TextBlock x:Uid="RtpHostSendRecoveryJournalHelp"
-                                           Text="Each packet carries a short summary of recent notes, so a device which misses a packet can still end a note that would otherwise hang. Turn this off only for a device which cannot handle it."
+                                <TextBlock x:Uid="RtpSendRecoveryJournalHelp"
+                                           Text="Each packet carries a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Turn this off only for a device that plays extra notes, or notes that don't stop, while this is on."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -2787,50 +2803,67 @@
                        PrimaryButtonText="Connect"
                        CloseButtonText="Cancel"
                        DefaultButton="Primary">
-            <StackPanel Spacing="8" MaxWidth="420">
-                <TextBlock x:Name="ConnectNameDialogText" TextWrapping="Wrap" />
-                <TextBox x:Name="ConnectNameDialogTextBox"
-                         x:Uid="ConnectNameDialogTextBox"
-                         Header="Name to show in Windows"
-                         PlaceholderText="Optional" />
-                <TextBlock x:Uid="ConnectNameDialogHint"
-                           Text="Leave this empty to use the name the device reports."
-                           TextWrapping="Wrap"
-                           Style="{ThemeResource CaptionTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-                <StackPanel Spacing="4" Margin="0,8,0,0">
-                    <ComboBox x:Name="ConnectSendSpeedLimitComboBox"
-                              x:Uid="SendSpeedLimitComboBox"
-                              Header="Sending speed"
-                              HorizontalAlignment="Stretch" />
-                    <TextBlock x:Uid="SendSpeedLimitHelp"
-                               Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+            <!-- A dialog cuts its content off rather than scrolling, and the RTP-MIDI choices make
+                 this one taller. Scrolling here is only for a small window. -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="8" MaxWidth="420" Margin="0,0,12,0">
+                    <TextBlock x:Name="ConnectNameDialogText" TextWrapping="Wrap" />
+                    <TextBox x:Name="ConnectNameDialogTextBox"
+                             x:Uid="ConnectNameDialogTextBox"
+                             Header="Name to show in Windows"
+                             PlaceholderText="Optional" />
+                    <TextBlock x:Uid="ConnectNameDialogHint"
+                               Text="Leave this empty to use the name the device reports."
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </StackPanel>
 
-                <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
-                <StackPanel x:Name="ConnectReduceSendSpeedPanel" Spacing="4">
-                    <CheckBox x:Name="ConnectReduceSendSpeedCheckBox"
-                              x:Uid="ReduceSendSpeedCheckBox"
-                              Content="Slow down when a device misses data" />
-                    <TextBlock x:Uid="ReduceSendSpeedHelp"
-                               Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                    <StackPanel Spacing="4" Margin="0,8,0,0">
+                        <ComboBox x:Name="ConnectSendSpeedLimitComboBox"
+                                  x:Uid="SendSpeedLimitComboBox"
+                                  Header="Sending speed"
+                                  HorizontalAlignment="Stretch" />
+                        <TextBlock x:Uid="SendSpeedLimitHelp"
+                                   Text="Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <!-- Network MIDI 2.0 only. RTP-MIDI cannot tell that a device missed data. -->
+                    <StackPanel x:Name="ConnectReduceSendSpeedPanel" Spacing="4">
+                        <CheckBox x:Name="ConnectReduceSendSpeedCheckBox"
+                                  x:Uid="ReduceSendSpeedCheckBox"
+                                  Content="Slow down when a device misses data" />
+                        <TextBlock x:Uid="ReduceSendSpeedHelp"
+                                   Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <!-- RTP-MIDI only, in place of the check box -->
+                    <TextBlock x:Name="ConnectRtpNoReduceSendSpeedText"
+                               x:Uid="RtpNoReduceSendSpeedHelp"
+                               Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </StackPanel>
 
-                <!-- RTP-MIDI only, in place of the check box -->
-                <TextBlock x:Name="ConnectRtpNoReduceSendSpeedText"
-                           x:Uid="RtpNoReduceSendSpeedHelp"
-                           Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
-                           TextWrapping="Wrap"
-                           Style="{ThemeResource CaptionTextBlockStyle}"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            </StackPanel>
+                    <!-- RTP-MIDI only. Network MIDI 2.0 has no recovery journal. -->
+                    <StackPanel x:Name="ConnectRtpSendRecoveryJournalPanel" Spacing="4" Margin="0,8,0,0">
+                        <CheckBox x:Name="ConnectRtpSendRecoveryJournalCheckBox"
+                                  x:Uid="RtpSendRecoveryJournalCheckBox"
+                                  Content="Help other devices recover notes lost on the network"
+                                  IsChecked="True" />
+                        <TextBlock x:Uid="RtpSendRecoveryJournalHelp"
+                                   Text="Each packet carries a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Turn this off only for a device that plays extra notes, or notes that don't stop, while this is on."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </ContentDialog>
         <ContentDialog x:Name="ReassociateDialog"
                        x:Uid="ReassociateDialog"

@@ -103,6 +103,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RtpMidiApprovalTests.cpp" />
+    <ClCompile Include="RtpMidiChannelTests.cpp" />
     <ClCompile Include="RtpMidiDnssdTests.cpp" />
     <ClCompile Include="RtpMidiProtocolTests.cpp" />
     <ClCompile Include="RtpMidiReplySourceTests.cpp" />
