@@ -3064,10 +3064,12 @@ namespace midipatchbay
                 return L"lfo";
 
             case BlockKind::ControllerButton:
-                return ControllerRestartSignature(settings.ControllerButton.Player, settings.ControllerButton.Control);
+                return ControllerRestartSignature(settings.ControllerButton.Player, settings.ControllerButton.Control,
+                    settings.ControllerButton.Device, settings.ControllerButton.DeviceControl);
 
             case BlockKind::ControllerAxis:
-                return ControllerRestartSignature(settings.ControllerAxis.Player, settings.ControllerAxis.Control);
+                return ControllerRestartSignature(settings.ControllerAxis.Player, settings.ControllerAxis.Control,
+                    settings.ControllerAxis.Device, settings.ControllerAxis.DeviceControl);
 
             default:
                 // A new frame rate or start time means starting the time code again.

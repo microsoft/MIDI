@@ -157,6 +157,14 @@ namespace midipatchbay
         constexpr wchar_t KeyShape[] = L"shape";
         constexpr wchar_t KeyIntervalMilliseconds[] = L"intervalMilliseconds";
         constexpr wchar_t KeyReturnToRest[] = L"returnToRest";
+        constexpr wchar_t KeyDevice[] = L"device";
+        constexpr wchar_t KeyName[] = L"name";
+        constexpr wchar_t KeyVendorId[] = L"vendorId";
+        constexpr wchar_t KeyProductId[] = L"productId";
+        constexpr wchar_t KeyPath[] = L"path";
+
+        constexpr size_t MaximumDeviceNameLength = 256;
+        constexpr size_t MaximumDevicePathLength = 1024;
 
         constexpr wchar_t ScaleSevenBit[] = L"sevenBit";
         constexpr wchar_t ScalePercent[] = L"percent";
@@ -336,6 +344,95 @@ namespace midipatchbay
             }
 
             return *control;
+        }
+
+        json::JsonObject DeviceToJson(_In_ HidDeviceId const& device)
+        {
+            json::JsonObject item{};
+
+            SetString(item, KeyName, device.Name);
+            SetNumber(item, KeyVendorId, device.VendorId);
+            SetNumber(item, KeyProductId, device.ProductId);
+
+            if (!device.Path.empty())
+            {
+                SetString(item, KeyPath, device.Path);
+            }
+
+            return item;
+        }
+
+        HidDeviceId DeviceFromJson(_In_ json::JsonObject const& item) noexcept
+        {
+            HidDeviceId device{};
+
+            if (item == nullptr)
+            {
+                return device;
+            }
+
+            device.Name = ReadString(item, KeyName);
+            device.Path = ReadString(item, KeyPath);
+            device.VendorId = static_cast<uint16_t>(ReadWhole(item, KeyVendorId, 0xFFFF, 0));
+            device.ProductId = static_cast<uint16_t>(ReadWhole(item, KeyProductId, 0xFFFF, 0));
+
+            if (device.Name.size() > MaximumDeviceNameLength)
+            {
+                device.Name.resize(MaximumDeviceNameLength);
+            }
+
+            if (device.Path.size() > MaximumDevicePathLength)
+            {
+                device.Path.clear();
+            }
+
+            return device;
+        }
+
+        HidControl ReadDeviceControl(_In_ json::JsonObject const& object, _In_ bool forButton, _In_ HidControl fallback) noexcept
+        {
+            auto const control = HidControlFromKey(ReadString(object, KeyControl));
+
+            if (!control.has_value() || (forButton ? !CanBePressed(*control) : !CanSlide(*control)))
+            {
+                return fallback;
+            }
+
+            return *control;
+        }
+
+        // The file has the player or the device, whichever the step reads.
+        void WriteSource(
+            _In_ json::JsonObject const& object,
+            _In_ uint8_t player,
+            _In_ ControllerControl control,
+            _In_ HidDeviceId const& device,
+            _In_ HidControl deviceControl)
+        {
+            if (device.IsEmpty())
+            {
+                SetNumber(object, KeyPlayer, player);
+                SetString(object, KeyControl, ControllerControlKey(control));
+                return;
+            }
+
+            object.SetNamedValue(KeyDevice, DeviceToJson(device));
+            SetString(object, KeyControl, HidControlKey(deviceControl));
+        }
+
+        std::wstring SourceSignature(
+            _In_ uint8_t player,
+            _In_ ControllerControl control,
+            _In_ HidDeviceId const& device,
+            _In_ HidControl deviceControl)
+        {
+            if (device.IsEmpty())
+            {
+                return L"p" + std::to_wstring(player) + L'.' + std::wstring{ ControllerControlKey(control) };
+            }
+
+            return L"d" + std::to_wstring(device.VendorId) + L':' + std::to_wstring(device.ProductId) + L'.' +
+                std::to_wstring(device.Name.size()) + L':' + device.Name + L'.' + device.Path + L'.' + HidControlKey(deviceControl);
         }
 
         // How many words a whole message of this type takes, from the type in its first word.
@@ -1202,14 +1299,28 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    ControlRest AxisRest(ControllerAxisSettings const& settings) noexcept
+    {
+        if (settings.ReadsDevice())
+        {
+            return HidControlRest(settings.DeviceControl);
+        }
+
+        return IsControllerStick(settings.Control) ? ControlRest::Middle : ControlRest::Bottom;
+    }
+
+    _Use_decl_annotations_
     double ShapedAxisValue(ControllerAxisSettings const& settings, double value) noexcept
     {
-        auto const clamped = std::isfinite(value) ? std::clamp(value, 0.0, 1.0) : ControlRestValue(settings.Control);
-        auto const dead = std::clamp(settings.DeadZoneHundredths, 0, MaximumDeadZoneHundredths) / static_cast<double>(FullScaleHundredths);
+        auto const rest = AxisRest(settings);
+        auto const clamped = std::isfinite(value) ? std::clamp(value, 0.0, 1.0) : (rest == ControlRest::Middle ? 0.5 : 0.0);
+        auto const dead = rest == ControlRest::None
+            ? 0.0
+            : std::clamp(settings.DeadZoneHundredths, 0, MaximumDeadZoneHundredths) / static_cast<double>(FullScaleHundredths);
 
         double travel{ 0.0 };
 
-        if (IsControllerStick(settings.Control))
+        if (rest == ControlRest::Middle)
         {
             auto const offset = clamped - 0.5;
             auto const reach = (std::min)(std::abs(offset) * 2.0, 1.0);
@@ -1260,12 +1371,14 @@ namespace midipatchbay
         double value,
         ControllerSink const& sink)
     {
-        auto const rest = ShapedAxisValue(settings, ControlRestValue(settings.Control));
+        auto const restKind = AxisRest(settings);
+        auto const hasRest = restKind != ControlRest::None;
+        auto const rest = ShapedAxisValue(settings, restKind == ControlRest::Middle ? 0.5 : 0.0);
 
-        // A controller that goes away is a control let go of.
-        if (!connected)
+        // A controller that goes away, or an axis it doesn't have, is a control let go of.
+        if (!connected || !std::isfinite(value))
         {
-            if (settings.ReturnsToRest && m_sentAny && m_lastSentValue != rest)
+            if (hasRest && settings.ReturnsToRest && m_sentAny && m_lastSentValue != rest)
             {
                 SendValue(settings, rest, static_cast<int64_t>(std::llround(rest * static_cast<double>(AxisStepCount(settings.Target) - 1))), sink);
                 m_lastSentAt = nowMilliseconds;
@@ -1288,7 +1401,7 @@ namespace midipatchbay
         }
 
         // The two ends and the rest are sent exactly, even when the last value was a hair away.
-        auto const exact = (shaped == 0.0 || shaped == 1.0 || shaped == rest) && shaped != m_lastSentValue;
+        auto const exact = (shaped == 0.0 || shaped == 1.0 || (hasRest && shaped == rest)) && shaped != m_lastSentValue;
 
         if (step == m_lastStep && !exact)
         {
@@ -1310,9 +1423,9 @@ namespace midipatchbay
     _Use_decl_annotations_
     void ControllerAxisMachine::Release(ControllerAxisSettings const& settings, ControllerSink const& sink)
     {
-        if (settings.ReturnsToRest && m_sentAny)
+        if (settings.ReturnsToRest && m_sentAny && AxisRest(settings) != ControlRest::None)
         {
-            auto const rest = ShapedAxisValue(settings, ControlRestValue(settings.Control));
+            auto const rest = ShapedAxisValue(settings, AxisRest(settings) == ControlRest::Middle ? 0.5 : 0.0);
 
             if (rest != m_lastSentValue)
             {
@@ -1328,8 +1441,7 @@ namespace midipatchbay
     _Use_decl_annotations_
     void ControllerButtonToJson(ControllerButtonSettings const& settings, json::JsonObject const& object)
     {
-        SetNumber(object, KeyPlayer, settings.Player);
-        SetString(object, KeyControl, ControllerControlKey(settings.Control));
+        WriteSource(object, settings.Player, settings.Control, settings.Device, settings.DeviceControl);
 
         json::JsonObject pressed{};
         MessageToJson(settings.Pressed, pressed);
@@ -1366,6 +1478,8 @@ namespace midipatchbay
         {
             settings.Player = ReadPlayer(object);
             settings.Control = ReadControl(object, true, ControllerControl::A);
+            settings.Device = DeviceFromJson(ReadObject(object, KeyDevice));
+            settings.DeviceControl = ReadDeviceControl(object, true, HidButtonControl(1));
             settings.Pressed = MessageFromJson(ReadObject(object, KeyPressed), ControllerMessageKind::Note);
             settings.Toggles = ReadBool(object, KeyToggles, false);
             settings.Held = MessageFromJson(ReadObject(object, KeyHeld), ControllerMessageKind::Nothing);
@@ -1388,8 +1502,7 @@ namespace midipatchbay
     _Use_decl_annotations_
     void ControllerAxisToJson(ControllerAxisSettings const& settings, json::JsonObject const& object)
     {
-        SetNumber(object, KeyPlayer, settings.Player);
-        SetString(object, KeyControl, ControllerControlKey(settings.Control));
+        WriteSource(object, settings.Player, settings.Control, settings.Device, settings.DeviceControl);
         SetString(object, KeyMessage, midiapp::ValueMessageKindKey(settings.Target.Kind));
         SetNumber(object, KeyGroup, settings.Target.Group);
         SetNumber(object, KeyChannel, settings.Target.Channel);
@@ -1426,6 +1539,8 @@ namespace midipatchbay
         {
             settings.Player = ReadPlayer(object);
             settings.Control = ReadControl(object, false, ControllerControl::LeftStickX);
+            settings.Device = DeviceFromJson(ReadObject(object, KeyDevice));
+            settings.DeviceControl = ReadDeviceControl(object, false, HidAxisControl(HidAxis::X));
 
             auto& target = settings.Target;
 
@@ -1464,7 +1579,7 @@ namespace midipatchbay
     _Use_decl_annotations_
     std::wstring ControllerButtonSignature(ControllerButtonSettings const& settings)
     {
-        return L"p" + std::to_wstring(settings.Player) + L'.' + std::wstring{ ControllerControlKey(settings.Control) } +
+        return SourceSignature(settings.Player, settings.Control, settings.Device, settings.DeviceControl) +
             L"|" + MessageSignature(settings.Pressed) + (settings.Toggles ? L"|t" : L"|-") +
             L"|" + MessageSignature(settings.Held) + L'@' + std::to_wstring(settings.HoldMilliseconds) +
             (settings.Repeats ? L"r" : L"-") + std::to_wstring(settings.RepeatMilliseconds) +
@@ -1476,7 +1591,7 @@ namespace midipatchbay
     {
         auto const& target = settings.Target;
 
-        return L"p" + std::to_wstring(settings.Player) + L'.' + std::wstring{ ControllerControlKey(settings.Control) } +
+        return SourceSignature(settings.Player, settings.Control, settings.Device, settings.DeviceControl) +
             L"|" + std::wstring{ midiapp::ValueMessageKindKey(target.Kind) } + L".g" + std::to_wstring(target.Group) +
             L"c" + std::to_wstring(target.Channel) + L"n" + std::to_wstring(target.Number) +
             (target.Midi1Protocol ? L".m1" : L".m2") + L".d" + std::to_wstring(settings.DeadZoneHundredths) +
@@ -1485,8 +1600,8 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::wstring ControllerRestartSignature(uint8_t player, ControllerControl control)
+    std::wstring ControllerRestartSignature(uint8_t player, ControllerControl control, HidDeviceId const& device, HidControl deviceControl)
     {
-        return L"controller." + std::to_wstring(player) + L'.' + std::wstring{ ControllerControlKey(control) };
+        return L"controller." + SourceSignature(player, control, device, deviceControl);
     }
 }

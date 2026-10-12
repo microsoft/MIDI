@@ -13,6 +13,7 @@
 #include "MainWindow.xaml.h"
 
 #include "ControllerHub.h"
+#include "HidHub.h"
 #include "DialogParts.h"
 #include "GeneralMidi.h"
 #include "MessageText.h"
@@ -991,18 +992,23 @@ namespace winrt::midipatchbay::implementation
             AddScaleChoice(host, scale, [](patchbay::BlockSettings& s) -> patchbay::ValueScale& { return s.ControllerAxis.Scale; },
                 change, refresh);
 
-            auto deadZone = Number(resources::GetString(L"ControllerDeadZone"), 0,
-                patchbay::MaximumDeadZoneHundredths / 100.0, axis.DeadZoneHundredths / 100.0, L"deadZone");
+            auto const rests = patchbay::AxisRest(axis) != patchbay::ControlRest::None;
 
-            OnNumberChanged(deadZone, [change](double value)
-                {
-                    auto const hundredths = std::clamp(static_cast<int32_t>(std::lround(value * 100.0)), 0, patchbay::MaximumDeadZoneHundredths);
+            if (rests)
+            {
+                auto deadZone = Number(resources::GetString(L"ControllerDeadZone"), 0,
+                    patchbay::MaximumDeadZoneHundredths / 100.0, axis.DeadZoneHundredths / 100.0, L"deadZone");
 
-                    change([&](patchbay::BlockSettings& s) { s.ControllerAxis.DeadZoneHundredths = hundredths; });
-                });
+                OnNumberChanged(deadZone, [change](double value)
+                    {
+                        auto const hundredths = std::clamp(static_cast<int32_t>(std::lround(value * 100.0)), 0, patchbay::MaximumDeadZoneHundredths);
 
-            host.Children().Append(deadZone);
-            host.Children().Append(Hint(resources::GetString(L"ControllerDeadZoneHint")));
+                        change([&](patchbay::BlockSettings& s) { s.ControllerAxis.DeadZoneHundredths = hundredths; });
+                    });
+
+                host.Children().Append(deadZone);
+                host.Children().Append(Hint(resources::GetString(L"ControllerDeadZoneHint")));
+            }
 
             auto const& shape = axis.Shape;
 
@@ -1064,8 +1070,11 @@ namespace winrt::midipatchbay::implementation
             host.Children().Append(interval);
             host.Children().Append(Hint(resources::GetString(L"ControllerIntervalHint")));
 
-            host.Children().Append(CommittedCheck(resources::GetString(L"ControllerReturnToRest"), axis.ReturnsToRest, L"returnToRest",
-                [](patchbay::BlockSettings& s, bool on) { s.ControllerAxis.ReturnsToRest = on; }, change, nullptr));
+            if (rests)
+            {
+                host.Children().Append(CommittedCheck(resources::GetString(L"ControllerReturnToRest"), axis.ReturnsToRest, L"returnToRest",
+                    [](patchbay::BlockSettings& s, bool on) { s.ControllerAxis.ReturnsToRest = on; }, change, nullptr));
+            }
         }
     }
 
@@ -1156,32 +1165,122 @@ namespace winrt::midipatchbay::implementation
 
             auto const player = isButton ? settings.ControllerButton.Player : settings.ControllerAxis.Player;
             auto const control = isButton ? settings.ControllerButton.Control : settings.ControllerAxis.Control;
-            auto const learning = m_controllerLearnToken != 0 && m_controllerLearnBlockId == blockId;
+            auto const readsDevice = isButton ? settings.ControllerButton.ReadsDevice() : settings.ControllerAxis.ReadsDevice();
+            auto const& device = isButton ? settings.ControllerButton.Device : settings.ControllerAxis.Device;
+            auto const deviceControl = isButton ? settings.ControllerButton.DeviceControl : settings.ControllerAxis.DeviceControl;
+            auto const learning = !m_controllerLearnBlockId.empty() && m_controllerLearnBlockId == blockId;
+
+            auto const present = patchbay::HidHub::Devices();
+
+            std::vector<patchbay::HidDeviceId> presentIds{};
+
+            for (auto const& info : present)
+            {
+                presentIds.push_back(info.Id);
+            }
+
+            auto const chosenDevice = readsDevice ? patchbay::ChooseHidDevice(presentIds, device) : -1;
 
             // ------------------------------------------------------------ which controller
             {
-                std::vector<winrt::hstring> players{};
+                struct Source
+                {
+                    uint8_t Player{ 0 };
+                    patchbay::HidDeviceInfo Info{};
+                };
+
+                std::vector<Source> sources{};
+                std::vector<winrt::hstring> names{};
+                int32_t selected{ readsDevice ? -1 : static_cast<int32_t>(player) };
 
                 for (uint8_t i = 0; i < patchbay::ControllerPlayerCount; i++)
                 {
-                    players.push_back(patchbay::DescribeControllerPlayer(i));
+                    sources.push_back(Source{ i, {} });
+                    names.push_back(patchbay::DescribeControllerPlayer(i));
                 }
 
-                auto playerBox = Choices(resources::GetString(L"ControllerPlayerHeader"), players, player, L"player");
+                for (size_t i = 0; i < present.size(); i++)
+                {
+                    auto name = patchbay::DescribeControllerDevice(present[i].Id);
 
-                playerBox.SelectionChanged([change, isButton](foundation::IInspectable const& sender, auto&&)
+                    // Two of the same are numbered in the order of their USB ports.
+                    auto const same = std::count_if(present.begin(), present.begin() + static_cast<ptrdiff_t>(i),
+                        [&present, i](patchbay::HidDeviceInfo const& other) { return other.Id.Name == present[i].Id.Name; });
+
+                    if (same > 0)
+                    {
+                        name = resources::FormatString(L"ControllerDeviceNumberFormat", name, static_cast<int>(same) + 1);
+                    }
+
+                    if (static_cast<int32_t>(i) == chosenDevice)
+                    {
+                        selected = static_cast<int32_t>(sources.size());
+                    }
+
+                    sources.push_back(Source{ 0, present[i] });
+                    names.push_back(name);
+                }
+
+                if (readsDevice && chosenDevice < 0)
+                {
+                    patchbay::HidDeviceInfo missing{};
+                    missing.Id = device;
+
+                    selected = static_cast<int32_t>(sources.size());
+                    sources.push_back(Source{ 0, missing });
+                    names.push_back(resources::FormatString(L"ControllerDeviceMissingSuffixFormat", patchbay::DescribeControllerDevice(device)));
+                }
+
+                auto playerBox = Choices(resources::GetString(L"ControllerPlayerHeader"), names, selected, L"player");
+
+                playerBox.SelectionChanged([change, refresh, isButton, sources](foundation::IInspectable const& sender, auto&&)
                     {
                         auto const index = SelectedIndexOf(sender);
 
-                        if (index < 0 || index >= patchbay::ControllerPlayerCount)
+                        if (index < 0 || static_cast<size_t>(index) >= sources.size())
                         {
                             return;
                         }
 
-                        change([&](patchbay::BlockSettings& s)
+                        auto const& source = sources[static_cast<size_t>(index)];
+
+                        auto const changed = change([&](patchbay::BlockSettings& s)
                             {
-                                (isButton ? s.ControllerButton.Player : s.ControllerAxis.Player) = static_cast<uint8_t>(index);
+                                auto& chosenPlayer = isButton ? s.ControllerButton.Player : s.ControllerAxis.Player;
+                                auto& chosen = isButton ? s.ControllerButton.Device : s.ControllerAxis.Device;
+                                auto& chosenControl = isButton ? s.ControllerButton.DeviceControl : s.ControllerAxis.DeviceControl;
+
+                                if (source.Info.Id.IsEmpty())
+                                {
+                                    chosen = {};
+                                    chosenPlayer = source.Player;
+                                    return;
+                                }
+
+                                if (chosen == source.Info.Id)
+                                {
+                                    return;
+                                }
+
+                                chosen = source.Info.Id;
+                                chosenControl = isButton ? patchbay::HidButtonControl(1) : patchbay::HidAxisControl(patchbay::HidAxis::X);
+
+                                // The first axis the device has, for a stick or trigger.
+                                for (size_t a = 0; !isButton && a < patchbay::HidAxisCount; a++)
+                                {
+                                    if (source.Info.Axes.test(a))
+                                    {
+                                        chosenControl = patchbay::HidAxisControl(static_cast<patchbay::HidAxis>(a));
+                                        break;
+                                    }
+                                }
                             });
+
+                        // Each controller has controls of its own.
+                        if (changed)
+                        {
+                            refresh(L"player");
+                        }
                     });
 
                 // The same Learn as the filter steps: down while it listens.
@@ -1203,7 +1302,7 @@ namespace winrt::midipatchbay::implementation
                             return;
                         }
 
-                        if (strong->m_controllerLearnToken != 0 && strong->m_controllerLearnBlockId == blockId)
+                        if (!strong->m_controllerLearnBlockId.empty() && strong->m_controllerLearnBlockId == blockId)
                         {
                             strong->StopControllerLearn();
                         }
@@ -1229,10 +1328,110 @@ namespace winrt::midipatchbay::implementation
                 m_controllerStatusText.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
 
                 host.Children().Append(m_controllerStatusText);
-                host.Children().Append(Hint(resources::GetString(L"ControllerPlayerHint")));
+                host.Children().Append(Hint(resources::GetString(readsDevice ? L"ControllerDeviceHint" : L"ControllerPlayerHint")));
             }
 
             // ------------------------------------------------------------ which control
+            if (readsDevice)
+            {
+                patchbay::HidDeviceInfo layout{};
+
+                if (chosenDevice >= 0)
+                {
+                    layout = present[static_cast<size_t>(chosenDevice)];
+                }
+                else
+                {
+                    // Not plugged in: what most joysticks and gamepads have.
+                    layout.ButtonCount = 32;
+                    layout.HasHat = true;
+
+                    for (auto const axis : { patchbay::HidAxis::X, patchbay::HidAxis::Y, patchbay::HidAxis::Z, patchbay::HidAxis::Rx,
+                                             patchbay::HidAxis::Ry, patchbay::HidAxis::Rz, patchbay::HidAxis::Slider })
+                    {
+                        layout.Axes.set(static_cast<size_t>(axis));
+                    }
+                }
+
+                std::vector<patchbay::HidControl> choices{};
+
+                if (isButton)
+                {
+                    for (uint16_t b = 1; b <= (std::max)(layout.ButtonCount, uint16_t{ 1 }); b++)
+                    {
+                        choices.push_back(patchbay::HidButtonControl(b));
+                    }
+
+                    if (layout.HasHat)
+                    {
+                        for (auto const kind : { patchbay::HidControlKind::HatUp, patchbay::HidControlKind::HatDown,
+                                                 patchbay::HidControlKind::HatLeft, patchbay::HidControlKind::HatRight })
+                        {
+                            choices.push_back(patchbay::HidControl{ kind, 0 });
+                        }
+                    }
+                }
+
+                for (size_t a = 0; a < patchbay::HidAxisCount; a++)
+                {
+                    if (!layout.Axes.test(a))
+                    {
+                        continue;
+                    }
+
+                    auto const number = static_cast<uint16_t>(a);
+
+                    if (isButton)
+                    {
+                        choices.push_back(patchbay::HidControl{ patchbay::HidControlKind::AxisLow, number });
+                        choices.push_back(patchbay::HidControl{ patchbay::HidControlKind::AxisHigh, number });
+                    }
+                    else
+                    {
+                        choices.push_back(patchbay::HidControl{ patchbay::HidControlKind::Axis, number });
+                    }
+                }
+
+                if (std::find(choices.begin(), choices.end(), deviceControl) == choices.end())
+                {
+                    choices.push_back(deviceControl);
+                }
+
+                std::vector<winrt::hstring> names{};
+                int32_t selected{ -1 };
+
+                for (size_t i = 0; i < choices.size(); i++)
+                {
+                    names.push_back(patchbay::DescribeHidControl(choices[i]));
+
+                    if (choices[i] == deviceControl)
+                    {
+                        selected = static_cast<int32_t>(i);
+                    }
+                }
+
+                auto controlBox = Choices(resources::GetString(L"ControllerControlHeader"), names, selected, L"control");
+
+                controlBox.SelectionChanged([change, isButton, choices](foundation::IInspectable const& sender, auto&&)
+                    {
+                        auto const index = SelectedIndexOf(sender);
+
+                        if (index < 0 || static_cast<size_t>(index) >= choices.size())
+                        {
+                            return;
+                        }
+
+                        auto const chosen = choices[static_cast<size_t>(index)];
+
+                        change([&](patchbay::BlockSettings& s)
+                            {
+                                (isButton ? s.ControllerButton.DeviceControl : s.ControllerAxis.DeviceControl) = chosen;
+                            });
+                    });
+
+                host.Children().Append(controlBox);
+            }
+            else
             {
                 std::vector<patchbay::ControllerControl> choices{};
                 std::vector<winrt::hstring> names{};
@@ -1307,20 +1506,22 @@ namespace winrt::midipatchbay::implementation
             auto weak = get_weak();
             auto dispatcher = DispatcherQueue();
 
+            // Whichever controller moves first wins, and the two hubs have threads of their own.
+            auto found = std::make_shared<std::atomic<bool>>(false);
+
             // Where each controller was when Learn started, kept by the hub's thread alone.
             struct Seen
             {
                 std::array<patchbay::ControllerReading, patchbay::ControllerPlayerCount> Before{};
                 std::array<bool, patchbay::ControllerPlayerCount> Have{};
-                bool Found{ false };
             };
 
             auto seen = std::make_shared<Seen>();
 
             m_controllerLearnToken = patchbay::ControllerHub::Current().Listen(patchbay::ControllerHub::AnyPlayer,
-                [weak, dispatcher, blockId, forButton, seen](uint8_t player, uint64_t, uint64_t, patchbay::ControllerReading const& reading)
+                [weak, dispatcher, blockId, forButton, seen, found](uint8_t player, uint64_t, uint64_t, patchbay::ControllerReading const& reading)
                 {
-                    if (seen->Found || player >= patchbay::ControllerPlayerCount)
+                    if (found->load() || player >= patchbay::ControllerPlayerCount)
                     {
                         return;
                     }
@@ -1334,23 +1535,69 @@ namespace winrt::midipatchbay::implementation
 
                     auto const moved = patchbay::FindMovedControl(seen->Before[player], reading, forButton);
 
-                    if (!moved.has_value())
+                    if (!moved.has_value() || found->exchange(true))
                     {
                         return;
                     }
 
-                    seen->Found = true;
+                    patchbay::LearnedControl learned{};
+                    learned.Player = player;
+                    learned.Control = *moved;
 
-                    dispatcher.TryEnqueue([weak, blockId, player, control = *moved]()
+                    dispatcher.TryEnqueue([weak, blockId, learned]()
                         {
                             if (auto strong = weak.get())
                             {
-                                strong->OnControllerLearned(blockId, player, control);
+                                strong->OnControllerLearned(blockId, learned);
                             }
                         });
                 });
 
-            if (m_controllerLearnToken != 0)
+            // Each HID game controller, by path, with where its controls rest, learned as reports arrive.
+            auto devices = std::make_shared<std::vector<std::pair<std::wstring, patchbay::HidReading>>>();
+
+            m_controllerHidLearnToken = patchbay::HidHub::Current().ListenToAll(
+                [weak, dispatcher, blockId, forButton, devices, found](patchbay::HidDeviceId const& device, patchbay::HidReading const& reading)
+                {
+                    if (found->load())
+                    {
+                        return;
+                    }
+
+                    auto it = std::find_if(devices->begin(), devices->end(),
+                        [&device](auto const& entry) { return entry.first == device.Path; });
+
+                    if (it == devices->end())
+                    {
+                        devices->emplace_back(device.Path, reading);
+                        return;
+                    }
+
+                    auto& before = it->second;
+
+                    patchbay::SettleHidLearnBaseline(before, reading);
+
+                    auto const moved = patchbay::FindMovedHidControl(before, reading, forButton);
+
+                    if (!moved.has_value() || found->exchange(true))
+                    {
+                        return;
+                    }
+
+                    patchbay::LearnedControl learned{};
+                    learned.Device = device;
+                    learned.DeviceControl = *moved;
+
+                    dispatcher.TryEnqueue([weak, blockId, learned]()
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->OnControllerLearned(blockId, learned);
+                            }
+                        });
+                });
+
+            if (m_controllerLearnToken != 0 || m_controllerHidLearnToken != 0)
             {
                 m_controllerLearnBlockId = blockId;
             }
@@ -1365,16 +1612,22 @@ namespace winrt::midipatchbay::implementation
             patchbay::ControllerHub::Current().StopListening(m_controllerLearnToken);
         }
 
+        if (m_controllerHidLearnToken != 0)
+        {
+            patchbay::HidHub::Current().StopListening(m_controllerHidLearnToken);
+        }
+
         m_controllerLearnToken = 0;
+        m_controllerHidLearnToken = 0;
         m_controllerLearnBlockId.clear();
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnControllerLearned(std::wstring const& blockId, uint8_t player, patchbay::ControllerControl control) noexcept
+    void MainWindow::OnControllerLearned(std::wstring const& blockId, patchbay::LearnedControl const& learned) noexcept
     {
         try
         {
-            if (m_controllerLearnToken == 0 || m_controllerLearnBlockId != blockId)
+            if (m_controllerLearnBlockId.empty() || m_controllerLearnBlockId != blockId)
             {
                 return;
             }
@@ -1382,26 +1635,32 @@ namespace winrt::midipatchbay::implementation
             StopControllerLearn();
 
             auto const* patch = CurrentPatch();
-            auto const* learned = patch == nullptr ? nullptr : patch->FindBlock(blockId);
+            auto const* block = patch == nullptr ? nullptr : patch->FindBlock(blockId);
 
-            if (learned == nullptr)
+            if (block == nullptr)
             {
                 return;
             }
 
-            auto const isButton = learned->Kind == patchbay::BlockKind::ControllerButton;
+            auto const isButton = block->Kind == patchbay::BlockKind::ControllerButton;
 
-            ChangeStepSettings(blockId, [player, control, isButton](patchbay::BlockSettings& s)
+            ChangeStepSettings(blockId, [&learned, isButton](patchbay::BlockSettings& s)
                 {
-                    if (isButton)
+                    auto& player = isButton ? s.ControllerButton.Player : s.ControllerAxis.Player;
+                    auto& control = isButton ? s.ControllerButton.Control : s.ControllerAxis.Control;
+                    auto& device = isButton ? s.ControllerButton.Device : s.ControllerAxis.Device;
+                    auto& deviceControl = isButton ? s.ControllerButton.DeviceControl : s.ControllerAxis.DeviceControl;
+
+                    device = learned.Device;
+
+                    if (learned.Device.IsEmpty())
                     {
-                        s.ControllerButton.Player = player;
-                        s.ControllerButton.Control = control;
+                        player = learned.Player;
+                        control = learned.Control;
                     }
                     else
                     {
-                        s.ControllerAxis.Player = player;
-                        s.ControllerAxis.Control = control;
+                        deviceControl = learned.DeviceControl;
                     }
                 });
 
@@ -1446,6 +1705,22 @@ namespace winrt::midipatchbay::implementation
                 return {};
             }
 
+            auto const isButton = block->Kind == patchbay::BlockKind::ControllerButton;
+            auto const& device = isButton ? block->Settings.ControllerButton.Device : block->Settings.ControllerAxis.Device;
+
+            if (!device.IsEmpty())
+            {
+                std::vector<patchbay::HidDeviceId> present{};
+
+                for (auto const& info : patchbay::HidHub::Devices())
+                {
+                    present.push_back(info.Id);
+                }
+
+                return resources::FormatString(patchbay::ChooseHidDevice(present, device) >= 0 ? L"ControllerConnectedFormat" : L"ControllerMissingFormat",
+                    patchbay::DescribeControllerDevice(device));
+            }
+
             auto& hub = patchbay::ControllerHub::Current();
 
             if (!hub.IsAvailable())
@@ -1453,12 +1728,10 @@ namespace winrt::midipatchbay::implementation
                 return resources::GetString(L"ControllerNoXInput");
             }
 
-            auto const player = block->Kind == patchbay::BlockKind::ControllerButton
-                ? block->Settings.ControllerButton.Player
-                : block->Settings.ControllerAxis.Player;
+            auto const player = isButton ? block->Settings.ControllerButton.Player : block->Settings.ControllerAxis.Player;
 
             return resources::FormatString(hub.Read(player).Connected ? L"ControllerConnectedFormat" : L"ControllerMissingFormat",
-                static_cast<int>(player) + 1);
+                patchbay::DescribeControllerPlayer(player));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to describe the game controller.")
 

@@ -41,6 +41,7 @@ namespace midipatchbay
 
     private:
         void OnReading(_In_ uint64_t nowMilliseconds, _In_ uint64_t timestamp, _In_ ControllerReading const& reading) noexcept;
+        void OnHidReading(_In_ uint64_t nowMilliseconds, _In_ uint64_t timestamp, _In_ HidReading const& reading) noexcept;
 
         BlockKind const m_kind;
         std::wstring const m_patchKey;
@@ -53,6 +54,7 @@ namespace midipatchbay
         ControllerAxisMachine m_axisMachine{};
 
         uint64_t m_token{ 0 };
+        bool m_readsDevice{ false };
     };
 
     // Where next and previous program left off in one patch, on one group and channel. Kept for

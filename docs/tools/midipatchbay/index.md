@@ -122,7 +122,7 @@ There are eight kinds:
 - **Logic** steps send a message one way or another by what's in it, and remember things from one message to the next. See [Logic steps](#logic-steps).
 - **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. See [MIDI-CI steps](#midi-ci-steps).
 - **Generators** make messages of their own: MIDI clock, MIDI Time Code, and an LFO. See [Generators](#generators).
-- **Game controllers** turn the buttons, sticks, and triggers of an Xbox controller into MIDI messages. See [Game controllers](#game-controllers).
+- **Game controllers** turn the buttons, sticks, and triggers of an Xbox controller, a joystick, or a gamepad into MIDI messages. See [Game controllers](#game-controllers).
 
 The **Steps** tab also has **Annotation**, a note on the canvas. It isn't a step. See [Annotations](#annotations).
 
@@ -280,14 +280,16 @@ MIDI clock and MIDI Time Code don't follow a clock that comes in from a device, 
 
 ## Game controllers
 
-Game controller steps turn an Xbox controller into a MIDI controller. Press a button to play a note or hold the sustain pedal, run through programs with the D-pad, or bend pitch with a stick. They work with any controller Windows sees as an Xbox controller, including the Xbox Adaptive Controller. Many other gamepads have a switch for Xbox mode, often marked X or XInput.
+Game controller steps turn a game controller into a MIDI controller. Press a button to play a note or hold the sustain pedal, run through programs with the D-pad, bend pitch with a stick, or set the volume with a joystick's throttle. They work with Xbox controllers, including the Xbox Adaptive Controller, and with the joysticks, flight sticks, wheels, and gamepads that Windows lists in **Game Controllers** in Control Panel.
 
-- **Controller button** sends a message when you press a button, and can send another when you hold it down. It can use any button, the D-pad, a trigger pulled past halfway, or a stick pushed more than halfway in one direction.
-- **Controller stick or trigger** sends a value that follows a stick or a trigger as it moves: a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN.
+- **Controller button** sends a message when you press a button, and can send another when you hold it down. It can use any button, the D-pad or hat switch, a trigger pulled past halfway, or a stick pushed more than halfway in one direction.
+- **Controller stick or trigger** sends a value that follows a stick, a trigger, a slider, or a pedal as it moves: a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN.
 
 Each step uses one control, so add a step for each control you want to use. Like a generator, a game controller step only has an **Out**, and it runs for as long as its patch is routing. It keeps working while another app, such as a game or a DAW, is in front.
 
-**Which controller.** Windows numbers Xbox controllers 1 to 4 in the order they were plugged in. A step picks its controller by that number, so if you plug your controllers in again in a different order, a step can follow a different controller. Select the step to see whether its controller is connected.
+**Which controller.** Pick an Xbox controller by its number, or any other controller by its name. Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so if you plug them in again in a different order, a step can follow a different controller. Any other controller is found by its name and the USB port it's plugged into. Plug it into another port and it's still found, unless you have two of the same. Select the step to see whether its controller is connected.
+
+**Joysticks and other controllers.** Their buttons have numbers, the same numbers Windows shows in **Game Controllers** in Control Panel. Their axes have the names Windows gives them. On most joysticks, **X axis** and **Y axis** are the stick, **Z rotation** is twisting it, and **Slider** is the throttle lever. The hat switch, the small thumb pad on top of many joysticks, works like a D-pad. In a **Controller button** step, either end of an axis can be a button too.
 
 **Learn.** Select **Learn**, then press the button, or move the stick or trigger, that you want. The step picks the controller and the control for you.
 
@@ -311,6 +313,7 @@ Messages go out as MIDI 2.0, with the finest steps, and Windows converts them fo
 - **Range and curve** shape the value with the input and output ranges, the curve, and **Invert**, the same way as in [Shaping controller values](#shaping-controller-values).
 - **At most one message every** limits how many messages a quick move sends. Where the control stops is always sent.
 - A stick rests in the middle, the same as pitch bend, so the two are a good fit. A trigger rests at the bottom, which suits a control change.
+- A slider, a throttle, or a dial stays where you leave it. It has no dead zone, and nothing is sent for it when routing stops.
 
 **When it stops.** When the patch stops routing or the controller goes away, a note a button started gets its note off, a value gets its value for letting go, and a button that's switched on is switched off. A stick or trigger step with **Send where it rests when routing stops or the controller goes away** checked sends where the control rests, so a pitch bend isn't left bent.
 
@@ -318,9 +321,10 @@ Messages go out as MIDI 2.0, with the finest steps, and Windows converts them fo
 
 Things game controller steps can't do:
 
-- **Only Xbox controllers.** Gamepads and joysticks that Windows doesn't see as Xbox controllers don't work with these steps.
-- **Up to four controllers,** numbered by Windows in the order they were plugged in.
+- **Up to four Xbox controllers,** numbered by Windows in the order they were plugged in.
 - **Only the controls every Xbox controller has.** Extra buttons, such as the paddles on an Elite controller, aren't seen unless the Xbox Accessories app maps them to one of the standard buttons.
+- **Two of the same joystick are told apart by USB port.** Plug each one back into the port it was in, or the steps for the two can swap.
+- **No force feedback, rumble, or lights.** The steps only read controllers.
 
 ## Annotations
 

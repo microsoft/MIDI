@@ -44,6 +44,27 @@ namespace midipatchbay
 
         static_assert(std::size(MessageKindKeys) == ControllerMessageKindCount);
 
+        constexpr wchar_t const* HidAxisKeys[] =
+        {
+            L"HidAxisX", L"HidAxisY", L"HidAxisZ", L"HidAxisRx", L"HidAxisRy", L"HidAxisRz",
+            L"HidAxisSlider", L"HidAxisSlider2", L"HidAxisDial", L"HidAxisWheel",
+            L"HidAxisThrottle", L"HidAxisRudder", L"HidAxisAccelerator", L"HidAxisBrake", L"HidAxisSteering",
+        };
+
+        static_assert(std::size(HidAxisKeys) == HidAxisCount);
+
+        // The controller a step reads, then the control on it.
+        template <typename Settings>
+        std::pair<winrt::hstring, winrt::hstring> DescribeSource(_In_ Settings const& settings)
+        {
+            if (settings.ReadsDevice())
+            {
+                return { DescribeControllerDevice(settings.Device), DescribeHidControl(settings.DeviceControl) };
+            }
+
+            return { DescribeControllerPlayer(settings.Player), DescribeControllerControl(settings.Control) };
+        }
+
         winrt::hstring DescribeTarget(_In_ midiapp::ValueMessageTarget const& target)
         {
             auto const bank = static_cast<int>((target.Number >> 7) & 0x7F);
@@ -84,6 +105,67 @@ namespace midipatchbay
     winrt::hstring DescribeControllerPlayer(uint8_t player) noexcept
     {
         return resources::FormatString(L"ControllerPlayerFormat", static_cast<int>(player) + 1);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeControllerDevice(HidDeviceId const& device) noexcept
+    {
+        try
+        {
+            if (!device.Name.empty())
+            {
+                return winrt::hstring{ device.Name };
+            }
+
+            return resources::FormatString(L"ControllerDeviceUnnamedFormat",
+                std::format(L"{:04X}:{:04X}", device.VendorId, device.ProductId));
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeHidControl(HidControl control) noexcept
+    {
+        try
+        {
+            switch (control.Kind)
+            {
+            case HidControlKind::Button:
+                return resources::FormatString(L"HidButtonFormat", static_cast<int>(control.Number));
+
+            case HidControlKind::Axis:
+            case HidControlKind::AxisLow:
+            case HidControlKind::AxisHigh:
+            {
+                if (control.Number >= std::size(HidAxisKeys))
+                {
+                    return {};
+                }
+
+                auto const axis = resources::GetString(HidAxisKeys[control.Number]);
+
+                return control.Kind == HidControlKind::Axis ? axis
+                    : resources::FormatString(control.Kind == HidControlKind::AxisLow ? L"HidAxisLowFormat" : L"HidAxisHighFormat", axis);
+            }
+
+            case HidControlKind::HatUp:     return resources::GetString(L"HidHatUp");
+            case HidControlKind::HatDown:   return resources::GetString(L"HidHatDown");
+            case HidControlKind::HatLeft:   return resources::GetString(L"HidHatLeft");
+            case HidControlKind::HatRight:  return resources::GetString(L"HidHatRight");
+
+            default:
+                return {};
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
     }
 
     _Use_decl_annotations_
@@ -161,19 +243,21 @@ namespace midipatchbay
             if (kind == BlockKind::ControllerAxis)
             {
                 auto const& axis = settings.ControllerAxis;
+                auto const [source, control] = DescribeSource(axis);
 
                 return resources::FormatString(L"BlockDescControllerAxisFormat",
-                    static_cast<int>(axis.Player) + 1,
-                    DescribeControllerControl(axis.Control),
+                    source,
+                    control,
                     DescribeTarget(axis.Target),
                     static_cast<int>(axis.Target.Channel) + 1);
             }
 
             auto const& button = settings.ControllerButton;
+            auto const [source, control] = DescribeSource(button);
 
             auto text = resources::FormatString(button.Toggles ? L"BlockDescControllerToggleFormat" : L"BlockDescControllerButtonFormat",
-                static_cast<int>(button.Player) + 1,
-                DescribeControllerControl(button.Control),
+                source,
+                control,
                 DescribeControllerMessage(button.Pressed));
 
             if (button.SendsWhenHeld())

@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "ControllerStepRunner.h"
 #include "ControllerHub.h"
+#include "HidHub.h"
 
 #include <midi_timestamp.h>
 
@@ -64,7 +65,22 @@ namespace midipatchbay
                 return true;
             }
 
-            auto const player = m_kind == BlockKind::ControllerButton ? m_button.Player : m_axis.Player;
+            auto const isButton = m_kind == BlockKind::ControllerButton;
+
+            m_readsDevice = isButton ? m_button.ReadsDevice() : m_axis.ReadsDevice();
+
+            if (m_readsDevice)
+            {
+                m_token = HidHub::Current().Listen(isButton ? m_button.Device : m_axis.Device,
+                    [this](uint64_t nowMilliseconds, uint64_t timestamp, HidReading const& reading)
+                    {
+                        OnHidReading(nowMilliseconds, timestamp, reading);
+                    });
+
+                return m_token != 0;
+            }
+
+            auto const player = isButton ? m_button.Player : m_axis.Player;
 
             m_token = ControllerHub::Current().Listen(player,
                 [this](uint8_t, uint64_t nowMilliseconds, uint64_t timestamp, ControllerReading const& reading)
@@ -94,7 +110,15 @@ namespace midipatchbay
         {
             if (m_token != 0)
             {
-                ControllerHub::Current().StopListening(m_token);
+                if (m_readsDevice)
+                {
+                    HidHub::Current().StopListening(m_token);
+                }
+                else
+                {
+                    ControllerHub::Current().StopListening(m_token);
+                }
+
                 m_token = 0;
             }
 
@@ -138,6 +162,30 @@ namespace midipatchbay
             else
             {
                 m_axisMachine.Update(m_axis, nowMilliseconds, reading.Connected, ControlValue(reading, m_axis.Control), sink);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to handle a game controller reading.")
+    }
+
+    _Use_decl_annotations_
+    void ControllerStepRunner::OnHidReading(uint64_t nowMilliseconds, uint64_t timestamp, HidReading const& reading) noexcept
+    {
+        try
+        {
+            std::lock_guard lock{ m_lock };
+
+            ControllerSink const sink = [this, timestamp](uint32_t const* words, uint8_t count)
+                {
+                    m_send(timestamp, words, count);
+                };
+
+            if (m_kind == BlockKind::ControllerButton)
+            {
+                m_buttonMachine.Update(m_button, nowMilliseconds, HidControlIsDown(reading, m_button.DeviceControl), sink);
+            }
+            else
+            {
+                m_axisMachine.Update(m_axis, nowMilliseconds, reading.Connected, HidControlValue(reading, m_axis.DeviceControl), sink);
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to handle a game controller reading.")

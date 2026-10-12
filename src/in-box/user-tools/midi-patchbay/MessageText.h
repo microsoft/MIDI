@@ -134,6 +134,12 @@ namespace midipatchbay
     // "Controller 1". Player counts from 0, as the file does.
     winrt::hstring DescribeControllerPlayer(_In_ uint8_t player) noexcept;
 
+    // The name the device gives itself, or its vendor and product when it has none.
+    winrt::hstring DescribeControllerDevice(_In_ HidDeviceId const& device) noexcept;
+
+    // "Button 3", "X axis", "X axis, low end", "Hat up".
+    winrt::hstring DescribeHidControl(_In_ HidControl control) noexcept;
+
     // "Note", "Control change", for a picker.
     winrt::hstring DescribeControllerMessageKind(_In_ ControllerMessageKind kind) noexcept;
 

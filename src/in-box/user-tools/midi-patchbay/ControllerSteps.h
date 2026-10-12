@@ -12,6 +12,7 @@
 // from is ControllerHub.h; names and summaries for people are in MessageText.h.
 
 #include "MessageTransform.h"
+#include "HidControllers.h"
 
 // Shared with MIDI Glass, in midi-app-shared. Pure.
 #include "ChannelVoiceWords.h"
@@ -242,6 +243,10 @@ namespace midipatchbay
         uint8_t Player{ 0 };
         ControllerControl Control{ ControllerControl::A };
 
+        // Read instead of Xbox controller Player when it isn't empty.
+        HidDeviceId Device{};
+        HidControl DeviceControl{ HidButtonControl(1) };
+
         ControllerMessage Pressed{};
 
         // Each press switches it on, and the next switches it off. Held messages don't apply.
@@ -262,6 +267,16 @@ namespace midipatchbay
         ValueScale Scale{ ValueScale::Percent };
 
         bool SendsWhenHeld() const noexcept;
+        bool ReadsDevice() const noexcept { return !Device.IsEmpty(); }
+    };
+
+    // A control on an Xbox controller, or on Device when it isn't empty.
+    struct LearnedControl
+    {
+        uint8_t Player{ 0 };
+        ControllerControl Control{ ControllerControl::A };
+        HidDeviceId Device{};
+        HidControl DeviceControl{};
     };
 
     constexpr int32_t MaximumDeadZoneHundredths = 5000;
@@ -273,6 +288,10 @@ namespace midipatchbay
     {
         uint8_t Player{ 0 };
         ControllerControl Control{ ControllerControl::LeftStickX };
+
+        // Read instead of Xbox controller Player when it isn't empty.
+        HidDeviceId Device{};
+        HidControl DeviceControl{ HidAxisControl(HidAxis::X) };
 
         // Pitch bend on channel 1, group 1, unless the step says otherwise. Pitch bend has no number.
         midiapp::ValueMessageTarget Target{ midiapp::ValueMessageKind::PitchBend, 0, 0, 0 };
@@ -291,7 +310,12 @@ namespace midipatchbay
         bool ReturnsToRest{ true };
 
         ValueScale Scale{ ValueScale::Percent };
+
+        bool ReadsDevice() const noexcept { return !Device.IsEmpty(); }
     };
+
+    // A control with no rest, such as a slider, has no dead zone and never goes back to rest.
+    ControlRest AxisRest(_In_ ControllerAxisSettings const& settings) noexcept;
 
     // Where next and previous program left off, for one group and channel in one patch. -1 is
     // before the first one.
@@ -415,5 +439,9 @@ namespace midipatchbay
 
     // A different controller or control means a running step starts again, which lets go of
     // anything the old control left on. Everything else changes on the fly.
-    std::wstring ControllerRestartSignature(_In_ uint8_t player, _In_ ControllerControl control);
+    std::wstring ControllerRestartSignature(
+        _In_ uint8_t player,
+        _In_ ControllerControl control,
+        _In_ HidDeviceId const& device,
+        _In_ HidControl deviceControl);
 }

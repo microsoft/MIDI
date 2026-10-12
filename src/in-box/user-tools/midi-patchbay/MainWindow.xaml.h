@@ -339,10 +339,7 @@ namespace winrt::midipatchbay::implementation
         // Learn: the next control pressed or moved on any controller becomes the step's.
         void StartControllerLearn(_In_ std::wstring const& blockId, _In_ bool forButton) noexcept;
         void StopControllerLearn() noexcept;
-        void OnControllerLearned(
-            _In_ std::wstring const& blockId,
-            _In_ uint8_t player,
-            _In_ ::midipatchbay::ControllerControl control) noexcept;
+        void OnControllerLearned(_In_ std::wstring const& blockId, _In_ ::midipatchbay::LearnedControl const& learned) noexcept;
 
         // "Controller 1 is connected", for the refresh that keeps the activity current.
         winrt::hstring ControllerStatusText(_In_ std::wstring const& blockId) noexcept;
@@ -447,6 +444,7 @@ namespace winrt::midipatchbay::implementation
         // A game controller step: whether its controller is there, and Learn while it listens.
         controls::TextBlock m_controllerStatusText{ nullptr };
         uint64_t m_controllerLearnToken{ 0 };
+        uint64_t m_controllerHidLearnToken{ 0 };
         std::wstring m_controllerLearnBlockId{};
         winrt::weak_ref<controls::StackPanel> m_controllerSettingsHost{};
 
