@@ -60,6 +60,13 @@ public:
     // What this connection sends at now: its own speed, or its node's
     uint32_t EffectiveSendSpeedLimit(_In_ RtpMidiNode const& node) const noexcept;
 
+    // Whether this connection alone skips in-between values to catch up, used instead of its
+    // host's or client's choice. Empty to go back to that one.
+    void SetOwnSkipInBetweenValuesToCatchUp(_In_ std::optional<bool> const skip) noexcept;
+
+    // Its own choice, or its node's
+    bool EffectiveSkipInBetweenValuesToCatchUp(_In_ RtpMidiNode const& node) const noexcept;
+
     uint64_t MessagesReceived() const noexcept { return m_messagesReceived.load(); }
     uint64_t MessagesSent() const noexcept { return m_messagesSent.load(); }
 
@@ -76,6 +83,10 @@ private:
 
     // Needs m_pacedLock
     bool HasRoomLocked(_In_ uint32_t const speedMultiple) const noexcept;
+
+    // Thins out a queue backed up behind the speed limit. Needs m_pacedLock. True when it took
+    // something out.
+    bool PrunePacedLocked(_In_ uint32_t const speedMultiple, _In_ size_t const incomingByteCount) noexcept;
 
     void WakeSendersWaitingForRoom() noexcept;
 
@@ -112,9 +123,14 @@ private:
     WindowsMidiServicesInternal::MidiSendPacer m_sendPacer{};
     uint32_t m_sendPacerMultiple{ 0 };
     bool m_pacedSendClosed{ false };
+    WindowsMidiServicesInternal::MidiSendBacklogPruner m_pacedPruner{};
+    bool m_pacedChangedSincePrune{ false };
 
     // -1 when the connection uses its node's speed
     std::atomic<int64_t> m_ownSendSpeedLimit{ -1 };
+
+    // -1 when the connection uses its node's choice, otherwise 1 to skip and 0 to send everything
+    std::atomic<int8_t> m_ownSkipInBetweenValuesToCatchUp{ -1 };
 
     // Changes whenever messages leave the queue. A sender waiting for room waits on its address.
     // Written under m_pacedLock.

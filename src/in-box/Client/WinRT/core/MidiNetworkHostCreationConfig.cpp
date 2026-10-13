@@ -368,6 +368,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             json::JsonValue::CreateBooleanValue(ReduceSendSpeedAutomatically()));
 
         hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            json::JsonValue::CreateBooleanValue(SkipInBetweenValuesToCatchUp()));
+
+        hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY,
             json::JsonValue::CreateBooleanValue(Advertise()));
 

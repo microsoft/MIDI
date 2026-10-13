@@ -76,6 +76,7 @@ BEGIN
     IDS_RTP_ERROR_TOO_MANY_REMOTE_CLIENT_DECISIONS "This host already remembers 256 decisions. Forget some before adding more."
     IDS_RTP_ERROR_CONNECTION_NOT_FOUND      "There is no connection with this identifier. The remote may already have left."
     IDS_RTP_ERROR_TEXT_TOO_LONG             "A remote device name, custom endpoint name or remote address can be at most 255 characters long."
+    IDS_RTP_ERROR_INVALID_OFFLINE_RETENTION "The offline retention must be always, immediate or a whole number of seconds up to 86400."
 END
 
 IDR_MIDI2RTPMIDITRANSPORT REGISTRY "Midi2.RtpMidiTransport.rgs"

@@ -8,6 +8,7 @@ Painting a page, and turning a finger on it into a value.
 | `SurfaceAutomationPeer.*` | What that element owes a screen reader. |
 | `SurfaceRenderer.*` | The composition visuals drawn inside each element. |
 | `SurfacePads.cpp` | The rest of `SurfaceRenderer` for note pads and hex pads: one shape per pad, its color, its note name, and which pads are held. |
+| `SurfaceKeyPickers.cpp` | A root or scale picker's pick, redrawn: every pad grid with a key in the picked key, and every picker showing it. |
 | `InputRouter.*` | Pointer, pen and touch to a control to a value. |
 | `InputRules.*` | Which way a finger moves a control. Pure, and tested. |
 | `SurfaceColors.*` | What color a control ends up, given a theme. Pure, and tested. |

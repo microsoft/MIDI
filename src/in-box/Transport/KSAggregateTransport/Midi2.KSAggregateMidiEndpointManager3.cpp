@@ -19,6 +19,7 @@
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
+#include "Feature_Servicing_MIDI2KSAPinChangesWhileOpen.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -880,6 +881,12 @@ CMidi2KSAggregateMidiEndpointManager3::DeviceUpdateExistingMidiUmpEndpointWithFi
         m_activatedEndpointDefinitions.insert_or_assign(
             internal::NormalizeDeviceInstanceIdWStringCopy(endpointDefinition->EndpointDeviceInstanceId),
             endpointDefinition);
+
+        if (Feature_Servicing_MIDI2KSAPinChangesWhileOpen::IsEnabled())
+        {
+            // a connection already open read the pin map when it opened
+            LOG_IF_FAILED(TransportState::Current().PublishPinMapToOpenEndpoint(endpointDefinition->EndpointDeviceId, pinMapPropertyData));
+        }
 
     }
     else

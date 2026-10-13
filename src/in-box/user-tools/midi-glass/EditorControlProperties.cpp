@@ -107,16 +107,6 @@ namespace winrt::midiglass::implementation
 
         static_assert(std::size(glass::LfoRateChoices) == std::size(LfoRateKeys));
 
-        constexpr wchar_t const* PadScaleKeys[]
-        {
-            L"PadScaleMajor", L"PadScaleMinor", L"PadScaleHarmonicMinor", L"PadScaleMelodicMinor",
-            L"PadScaleDorian", L"PadScalePhrygian", L"PadScaleLydian", L"PadScaleMixolydian",
-            L"PadScaleLocrian", L"PadScaleMajorPentatonic", L"PadScaleMinorPentatonic",
-            L"PadScaleBlues", L"PadScaleWholeTone",
-        };
-
-        static_assert(std::size(glass::PadScaleOrder) == std::size(PadScaleKeys));
-
         constexpr wchar_t const* PadNoteNamesKeys[]
         {
             L"PadNamesCenter", L"PadNamesTop", L"PadNamesBottom", L"PadNamesTopLeft",
@@ -294,10 +284,12 @@ namespace winrt::midiglass::implementation
                 SpringTargetCombo().Items().Append(box_value(resources::GetString(key)));
             }
 
-            for (auto const* const key : PadScaleKeys)
+            for (auto const scale : glass::PadScaleOrder)
             {
-                PadScaleCombo().Items().Append(box_value(resources::GetString(key)));
+                PadScaleCombo().Items().Append(box_value(resources::GetString(glass::ScaleNameResourceKey(scale))));
             }
+
+            BuildKeyPickerChoices();
 
             for (auto const* const key : PadNoteNamesKeys)
             {
@@ -317,6 +309,15 @@ namespace winrt::midiglass::implementation
             for (auto const* const key : PadRowKeys)
             {
                 PadRowCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            PadRowStepsCombo().Items().Append(box_value(resources::GetString(L"PadRowCarryOn")));
+            PadRowStepsCombo().Items().Append(box_value(resources::GetString(L"PadRowStepsOne")));
+
+            for (int32_t steps = 2; steps < glass::PadRowStepChoiceCount; ++steps)
+            {
+                PadRowStepsCombo().Items().Append(box_value(
+                    resources::FormatString(L"PadRowStepsFormat", std::to_wstring(steps))));
             }
 
             PadKeyCombo().Items().Append(box_value(resources::GetString(L"PadKeyNone")));
@@ -517,6 +518,7 @@ namespace winrt::midiglass::implementation
             if (selector)
             {
                 RefreshSwitchPositions(control);
+                RefreshKeyPickerPanel(control);
             }
 
             // ---- keys ----
@@ -743,18 +745,30 @@ namespace winrt::midiglass::implementation
         auto const& spec = control.Pads;
         auto const hex = glass::IsHexPadGrid(control.Kind);
         auto const keyed = spec.KeyRoot != glass::NoKey;
+        auto const inKey = glass::PlaysOnlyTheKey(spec);
 
         PadCountBox().Value(spec.PadCount);
         PadSizeBox().Value(spec.PadSize);
-        PadStartNoteBox().Value(spec.StartNote);
+
+        // In key the grid starts on the root, so the box shows that note and steps an octave.
+        PadStartNoteBox().Value(glass::FirstPadNote(spec));
+        PadStartNoteBox().SmallChange(inKey ? 12.0 : 1.0);
+        PadStartNoteBox().LargeChange(inKey ? 12.0 : 10.0);
+
         PadRightIntervalBox().Value(spec.RightInterval);
         PadUpIntervalBox().Value(spec.RowInterval);
+        PadRightStepsBox().Value(spec.RightSteps);
+        PadUpStepsBox().Value(spec.RowSteps);
 
         // Square pads pick where each row starts from a list. Hexagons pick a layout by name, or
-        // give both of their intervals.
-        show(PadRowCombo(), !hex);
-        show(PadHexLayoutCombo(), hex);
+        // give both of their intervals. In key, the same choices count notes of the scale.
+        show(PadRowCombo(), !hex && !inKey);
+        show(PadHexLayoutCombo(), hex && !inKey);
+        show(PadIntervalGrid(), !inKey);
         show(PadUpIntervalBox(), hex);
+        show(PadRowStepsCombo(), !hex && inKey);
+        show(PadStepsGrid(), inKey);
+        show(PadUpStepsBox(), hex);
 
         if (hex)
         {
@@ -778,11 +792,18 @@ namespace winrt::midiglass::implementation
             // something that is not what the pads do.
             PadRowCombo().SelectedIndex(
                 spec.RowInterval >= 0 && spec.RowInterval < glass::PadRowChoiceCount ? spec.RowInterval : -1);
+
+            PadRowStepsCombo().SelectedIndex(
+                spec.RowSteps >= 0 && spec.RowSteps < glass::PadRowStepChoiceCount ? spec.RowSteps : -1);
         }
 
         PadKeyCombo().SelectedIndex(keyed && spec.KeyRoot <= 11 ? spec.KeyRoot + 1 : 0);
         PadScaleCombo().SelectedIndex(IndexOfValue(glass::PadScaleOrder, spec.Scale));
         PadScaleCombo().IsEnabled(keyed);
+
+        PadInKeyCheck().IsChecked(spec.Notes == glass::PadNotes::InKey);
+        PadInKeyCheck().IsEnabled(keyed);
+        show(PadInKeyCaption(), inKey);
 
         PadRootColorBox().Text(winrt::hstring{ spec.RootColor });
         PadInKeyColorBox().Text(winrt::hstring{ spec.InKeyColor });
@@ -790,11 +811,11 @@ namespace winrt::midiglass::implementation
         PadPressedColorBox().Text(winrt::hstring{ spec.PressedColor });
 
         // With no key every pad is in it, so the root and the notes outside it have no color
-        // to set.
+        // to set. In key, no pad is outside it.
         PadRootColorBox().IsEnabled(keyed);
         PadRootColorButton().IsEnabled(keyed);
-        PadOutOfKeyColorBox().IsEnabled(keyed);
-        PadOutOfKeyColorButton().IsEnabled(keyed);
+        PadOutOfKeyColorBox().IsEnabled(keyed && !inKey);
+        PadOutOfKeyColorButton().IsEnabled(keyed && !inKey);
 
         PadNamesCombo().SelectedIndex(IndexOfValue(glass::PadNoteNamesOrder, spec.NoteNames));
         PadNameSizeBox().Value(spec.NoteNameSize);
@@ -847,6 +868,8 @@ namespace winrt::midiglass::implementation
             ? resources::FormatString(
                 L"PadRangeFormat", glass::PadNoteName(lowest, flats), glass::PadNoteName(highest, flats))
             : resources::GetString(L"PadRangeNone"));
+
+        RefreshPadGridPickers(control);
     }
 
     // Every knob and fader on the layout, so a clock can be told where to get its tempo.

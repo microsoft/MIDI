@@ -44,6 +44,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                 static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(source, MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY)) :
                 m_sendSpeedLimit;
 
+            m_skipInBetweenValuesToCatchUp = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
+
             m_lastErrorCode = MidiRtpSdkJson::Hresult(source, MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY);
 
             // An older service reports none of these, which reads as every adapter
@@ -88,7 +90,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             for (auto const& entry : MidiRtpSdkJson::Objects(MidiRtpSdkJson::Array(source, MIDI_CONFIG_JSON_RTP_MIDI_CONNECTIONS_KEY)))
             {
                 auto connection = winrt::make_self<MidiRtpConnection>();
-                connection->InternalInitialize(entry, m_sendSpeedLimit);
+                connection->InternalInitialize(entry, m_sendSpeedLimit, m_skipInBetweenValuesToCatchUp);
                 m_connections.Append(*connection);
             }
 
@@ -99,6 +101,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
                 auto settings = winrt::make_self<MidiRtpRemoteClientSettings>(name);
                 settings->SendSpeedLimit(static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY)));
+                settings->SkipInBetweenValuesToCatchUp(MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
 
                 m_remoteClientSettings.Append(*settings);
             }

@@ -51,6 +51,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
         void ReduceSendSpeedAutomatically(_In_ bool const value) noexcept { m_reduceSendSpeedAutomatically = value; }
 
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
+        void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
+
     private:
         winrt::hstring m_umpEndpointName{};
         winrt::hstring m_customEndpointName{};
@@ -64,6 +67,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
 
     };
 }

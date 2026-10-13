@@ -20,8 +20,7 @@
 #include "..\LoopbackStressHelpers.h"
 #include "MidiLoopbackStressTests.h"
 
-#include "Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds.h"
-#include "Feature_Servicing_MIDI2LoopbackRemovalRejectionReasons.h"
+#include "Feature_Servicing_MIDI2LoopbackAddRemoveReliability.h"
 
 #pragma comment(lib, "winmm.lib")
 
@@ -163,7 +162,7 @@ namespace
     {
         VERIFY_IS_FALSE(response.Success());
 
-        if (Feature_Servicing_MIDI2LoopbackRemovalRejectionReasons::IsEnabled())
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
         {
             VERIFY_ARE_EQUAL(static_cast<uint32_t>(response.ErrorCode()), static_cast<uint32_t>(MidiLoopbackErrorCode::EndpointNotFound));
             VERIFY_IS_FALSE(response.ErrorMessage().empty());
@@ -771,7 +770,7 @@ void MidiLoopbackStressTests::TestRemoveWithAssociationIdItDoesNotOwnIsRejected(
 
 void MidiLoopbackStressTests::TestOverlappingUniqueIdsAreRejected()
 {
-    if (!Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds::IsEnabled())
+    if (!Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
     {
         LOG_OUTPUT(L"KIR disabled, skipping.");
         return;

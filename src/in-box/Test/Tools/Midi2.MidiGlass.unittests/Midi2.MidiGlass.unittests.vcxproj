@@ -105,6 +105,7 @@
     <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="NewControlTests.h" />
     <ClInclude Include="PadGridTests.h" />
+    <ClInclude Include="KeyPickerTests.h" />
     <ClInclude Include="GeneratorTests.h" />
     <ClInclude Include="PackageSurveyTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
@@ -174,6 +175,7 @@
     <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="NewControlTests.cpp" />
     <ClCompile Include="PadGridTests.cpp" />
+    <ClCompile Include="KeyPickerTests.cpp" />
     <ClCompile Include="GeneratorTests.cpp" />
     <ClCompile Include="PackageSurveyTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
@@ -219,6 +221,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditGeometry.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorController.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerEdits.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerPickers.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\RepeatPlan.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\UndoStack.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />

@@ -31,6 +31,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         // The saved entry, then each saved change to it in the order the service applies them
         void InternalInitialize(
@@ -59,5 +60,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
     };
 }

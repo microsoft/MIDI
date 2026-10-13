@@ -211,8 +211,12 @@ bool RtpMidiTransportTests::ClassSetup()
     VERIFY_IS_TRUE(IsSuccess(Send(L"{\"create\":{\"hosts\":{\"" + m_hostId + L"\":{\"name\":\"Harness Host\",\"port\":\"auto\",\"advertise\":false}}}}")),
         L"a create section for one host is accepted");
 
+    DefineKeptClientBeforeStart();
+
     VERIFY_SUCCEEDED(m_transport->Activate(__uuidof(IMidiEndpointManager), reinterpret_cast<void**>(&m_endpointManager)));
     VERIFY_SUCCEEDED(m_endpointManager->Initialize(m_deviceManager, m_protocolManager));
+
+    NoteKeptEndpointAfterStart();
 
     VERIFY_IS_TRUE(WaitFor([&]()
     {
@@ -233,6 +237,11 @@ bool RtpMidiTransportTests::ClassCleanup()
     if (m_configuration != nullptr && !m_hostId.empty())
     {
         Send(Command(L"removeHost", { { L"entryIdentifier", m_hostId } }));
+    }
+
+    if (m_configuration != nullptr && !m_keptClientId.empty())
+    {
+        Send(Command(L"removeClient", { { L"entryIdentifier", m_keptClientId } }));
     }
 
     if (m_endpointManager != nullptr)

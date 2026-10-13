@@ -30,6 +30,7 @@
 #include "LfoGenerator.h"
 #include "StepSequencer.h"
 #include "PadVoices.h"
+#include "PadGrid.h"
 
 namespace glass
 {
@@ -120,6 +121,10 @@ namespace glass
         // Something arrived that a control could be bound to, while learning is armed. Raised
         // on the dispatcher's thread, and only while SetLearning(true) is in force.
         std::function<void(LearnedBinding const& learned)> Learned{};
+
+        // A root or scale picker picked something new. The owner redraws the pad grids and the
+        // pickers in it.
+        std::function<void(PickedKey const& picked)> KeyPicked{};
 
         // ---- lifetime ----
 
@@ -236,6 +241,13 @@ namespace glass
 
         BindingEngine const& Engine() const noexcept { return m_engine; }
 
+        // What the root and scale pickers have picked since the layout opened (LivePlayerKeys.cpp).
+        // Nothing, for each, until one is touched.
+        PickedKey PickedKeyNow() const noexcept { return m_pickedKey; }
+
+        // Back to nothing picked, which is where the editor goes on leaving Try mode.
+        void ForgetPickedKey() noexcept;
+
     private:
         LivePlayer() = default;
 
@@ -246,6 +258,10 @@ namespace glass
         // Anything this control does for this trigger beyond the immediate channel voice
         // messages: a dump, a raw message, a sequence, a page change.
         void RunPlan(_In_ uint32_t controlIndex, _In_ MessageTrigger trigger) noexcept;
+
+        // A picker's new position, made into a key and announced. False when the control is not
+        // a picker. A picker sends nothing either way.
+        bool PickFromSwitch(_In_ uint32_t controlIndex, _In_ double value);
 
         // One already-built burst of words straight to a connection. What the sequence runner
         // calls, on the dispatcher's thread.
@@ -286,6 +302,9 @@ namespace glass
             int32_t StartNote{ 48 };
             int32_t BendRange{ 48 };
             PadVoices Voices{};
+
+            // As saved, so the first pad can move with a key that is picked.
+            PadGridSpec Spec{};
         };
 
         PadEntry* FindPadControl(_In_ uint32_t controlIndex) noexcept;
@@ -367,6 +386,18 @@ namespace glass
         StepsEntry* FindStepControl(_In_ uint32_t controlIndex) noexcept;
 
         std::vector<PadEntry> m_padControls{};
+
+        // The root and scale pickers, with only what picking needs: the kind and the switch.
+        struct PickerEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            Control Picker{};
+        };
+
+        std::vector<PickerEntry> m_pickerControls{};
+
+        // UI thread only. Kept through an edit in Try mode, like a fader's position is.
+        PickedKey m_pickedKey{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};

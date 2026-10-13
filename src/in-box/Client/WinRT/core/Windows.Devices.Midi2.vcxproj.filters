@@ -935,6 +935,9 @@
     <Midl Include="MidiRtpSendSpeedLimitEnum.idl">
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>
+    <Midl Include="MidiRtpOfflineRetentionEnum.idl">
+      <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
     <Midl Include="MidiRtpAdvertisedHost.idl">
       <Filter>SDK\Transports\Rtp</Filter>
     </Midl>

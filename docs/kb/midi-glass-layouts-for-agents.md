@@ -148,7 +148,7 @@ If the customer wants a look of their own, design a theme file as well, followin
 | Toggle | `toggle` | 96 × 40 | Press for on, press again for off. |
 | Pad | `pad` | 56 × 56 | A square button for drums and clips. |
 | Page tab | `pageTab` | 120 × 36 | Goes to another page. |
-| Switch | `switch` | 180 × 44 | Two to sixteen named positions, each sending its own message. |
+| Switch | `switch` | 180 × 44 | Two to sixteen named positions, each sending its own message. Or a picker for the key of the pad grids. |
 | Knob | `knob` | 56 × 56 | |
 | Turntable | `turntable` | 160 × 160 | A platter you push. Springs back to the middle. |
 | Fader | `fader` | 40 × 180 | |
@@ -212,6 +212,7 @@ $themes = 'Studio Dark', 'Airy System', 'Bigwig', 'Blueprint', 'Bone', 'Cathode'
 $controlKinds = 'knob', 'fader', 'pad', 'button', 'toggle', 'xyPad', 'meter', 'lamp', 'readout', 'label', 'image', 'pageTab', 'panel', 'joystick', 'ribbon', 'pianoKeyboard', 'beatClock', 'timeDisplay', 'lfo', 'turntable', 'wheel', 'switch', 'steps', 'line', 'notePads', 'hexPads'
 $messageKinds = 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController', 'systemExclusive', 'rawUmp', 'sequence', 'goToPage', 'mackieControl'
 $numbered = 'note', 'controlChange', 'programChange', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController'
+$scales = 'major', 'minor', 'harmonicMinor', 'melodicMinor', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'locrian', 'majorPentatonic', 'minorPentatonic', 'blues', 'wholeTone'
 
 $pageWidth = $layout.pageWidth ?? 1280
 $pageHeight = $layout.pageHeight ?? 800
@@ -239,6 +240,12 @@ foreach ($page in $layout.pages) {
         elseif ($x -lt 0 -or $y -lt 0 -or ($x + $w) -gt $pageWidth -or ($y + $h) -gt $pageHeight) { $problems.Add("$where hangs off the page, so it won't show when the layout runs.") }
         $slot = $c.hueSlot ?? 0
         if ($slot -lt -1 -or $slot -gt 6 -or ($slot -eq -1 -and -not $c.literalColor)) { $problems.Add("$where needs a hueSlot from 0 to 6, or -1 with a literalColor.") }
+        if ($null -ne $c.pads.notes -and $c.pads.notes -cnotin 'chromatic', 'inKey') { $problems.Add("$where has the pad notes '$($c.pads.notes)', which isn't a choice, so the pads play every note.") }
+        elseif ($c.pads.notes -ceq 'inKey' -and $c.pads.key -ceq 'none') { $problems.Add("$where plays only the notes in the key, but has no key, so it plays every note.") }
+        if ($null -ne $c.switch.picks -and $c.switch.picks -cnotin 'nothing', 'rootNote', 'scale') { $problems.Add("$where picks '$($c.switch.picks)', which isn't a choice, so it's a switch that sends.") }
+        elseif ($c.switch.picks -cin 'rootNote', 'scale' -and $c.messages.Count -gt 0) { $problems.Add("$where picks the key, so its messages are never sent.") }
+        foreach ($s in $c.switch.scales) { if ($s -cnotin $scales) { $problems.Add("$where offers the scale '$s', which isn't a choice, so the picker leaves it out.") } }
+        if ($c.switch.picks -ceq 'scale' -and $null -ne $c.switch.scales -and @($c.switch.scales | Where-Object { $_ -cin $scales } | Select-Object -Unique).Count -lt 2) { $problems.Add("$where offers fewer than two scales, so it offers the usual seven instead.") }
         foreach ($m in $c.messages) {
             $kind = $m.kind ?? 'controlChange'
             if ($kind -cnotin $messageKinds) { $problems.Add("$where sends '$kind', which isn't a message kind."); continue }
@@ -402,6 +409,7 @@ Tell the customer about these before they find out on their own.
 
 - **A control can't change what another control sends.** There's no "selected articulation" that a keyboard follows, and no shift button that changes what the knobs do. A button can run a sequence that moves another control to a value, and a beat clock can take its tempo from a knob, but that's all. Use more pages, or more controls, instead.
 - **A keyboard plays one attribute.** A keyboard or a pad grid can put a MIDI 2.0 note attribute, such as an articulation, on every note it plays, but it's the same attribute on every key. For two articulations, use two keyboards, or a page for each.
+- **Every pad grid plays in the same picked key.** Root and scale pickers change the key of every pad grid that has one, all together. Two grids can't follow two different pickers, and a picked key isn't saved, so the layout opens in its saved key each time. Pickers change pad grids only, not keyboards or step sequencers. For two keys at once, make a layout for each grid, each with its own pickers, and have the customer run both side by side. The same layout can't run twice: running it again only brings its window to the front.
 - **Following a clock follows only its tempo.** A layout that follows incoming MIDI clock takes its speed, but doesn't line its beat up with it, and doesn't start or stop with it.
 - **Nothing shows text from a device.** A readout shows a value, and a meter and a lamp show levels and activity. There's no track name, no patch name, and no list of messages on a running page.
 - **No MIDI-CI.** Windows MIDI Glass can't turn a profile on, or ask a device what it supports.
@@ -735,11 +743,14 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 | --- | --- | --- | --- |
 | `padCount` | 1 to 128 | 24 | How many pads. They flow into rows to fill the control's width. |
 | `padSize` | 12 to 240 | 48 | One pad's width, in page pixels. |
-| `startNote` | 0 to 127 | 48 | The note of the bottom left pad. |
+| `startNote` | 0 to 127 | 48 | The note of the bottom left pad. With `notes` set to `inKey`, only its octave counts: the bottom left pad plays the key's root in that octave. |
 | `rightInterval` | 1 to 24 | 1 | Semitones from one pad to the next on its right. |
 | `rowInterval` | 0 to 24 | 5 | Semitones from one pad to the one above it. On square pads, 0 carries each row on from the end of the row below. |
-| `key` | `none`, `c`, `cSharp`, `d`, `dSharp`, `e`, `f`, `fSharp`, `g`, `gSharp`, `a`, `aSharp`, `b` | `c` | The key the pads are colored for. |
+| `key` | `none`, `c`, `cSharp`, `d`, `dSharp`, `e`, `f`, `fSharp`, `g`, `gSharp`, `a`, `aSharp`, `b` | `c` | The key the pads are colored for. With `notes` set to `inKey`, it's also the only notes they play. |
 | `scale` | `major`, `minor`, `harmonicMinor`, `melodicMinor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `majorPentatonic`, `minorPentatonic`, `blues`, `wholeTone` | `major` | |
+| `notes` | `chromatic`, `inKey` | `chromatic` | `inKey` puts only the notes of `key` and `scale` on the pads, the way many grid controllers play in key. `rightSteps` and `rowSteps` then take the place of `rightInterval` and `rowInterval`. With `key` set to `none`, the pads play every note. |
+| `rightSteps` | 1 to 24 | 1 | With `notes` set to `inKey`, notes of the scale from one pad to the next on its right. |
+| `rowSteps` | 0 to 24 | 3 | With `notes` set to `inKey`, notes of the scale from one pad to the one above it. 3 is a fourth in a seven-note scale. Windows MIDI Glass starts hex pads at 4, which puts the octave two rows straight up. On square pads, 0 carries each row on from the end of the row below. |
 | `noteNames` | `hidden`, `center`, `top`, `bottom`, `topLeft`, `topRight`, `bottomLeft`, `bottomRight` | `center` | Where each pad prints its note. |
 | `noteNameSize` | 0 to 64 | 0 | 0 sizes the name to the pad. |
 | `rootColor`, `inKeyColor`, `outOfKeyColor`, `pressedColor` | `#RRGGBB` | the theme's | Leave them out to follow the theme. |
@@ -755,6 +766,20 @@ A control with a `feedback` block moves or lights up when a device sends somethi
   { "trigger": "changes", "kind": "controlChange", "device": "Synth", "number": 70, "position": 1, "maximum": { "value": 0.5, "scaling": "fraction" } },
   { "trigger": "changes", "kind": "controlChange", "device": "Synth", "number": 70, "position": 2, "maximum": { "value": 1, "scaling": "fraction" } }
 ]
+```
+
+**Root and scale pickers** are switches with `picks` set. A picker sends nothing, so give it no messages and leave `positions` empty. While the layout runs, the note or the scale picked becomes the key of every pad grid that has one. The layout opens in its saved key each time.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `picks` | `nothing`, `rootNote`, `scale` | `nothing` | `rootNote` has twelve positions, C to B. `scale` has one for each of `scales`. |
+| `scales` | Two or more of the pad `scale` names | `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` | What a `scale` picker offers, first to last. |
+
+Give a root picker about 30 pixels a note along it, and a scale picker about 80 a scale lying down or 30 standing up, so every name fits:
+
+```json
+{ "id": "root-picker", "kind": "switch", "label": "Root note", "x": 40, "y": 40, "width": 376, "height": 44, "switch": { "positions": [], "picks": "rootNote" } },
+{ "id": "scale-picker", "kind": "switch", "label": "Scale", "x": 480, "y": 96, "width": 128, "height": 226, "switch": { "positions": [], "picks": "scale", "scales": [ "major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian" ] } }
 ```
 
 **Steps,** in `sequencer`:
@@ -988,6 +1013,7 @@ Windows MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024
 > - A value for a MIDI 2.0 device is written as an `absolute` 0 to 127, so it's next to nothing.
 > - A hexadecimal number is written in JSON, such as `0x40903C02` or `"40903C02"` in `words`. Only decimal numbers work.
 > - A per-note controller has its two numbers swapped. `number` is the note, and `controller` is the controller.
+> - A pad grid has `notes` set to `inKey` and `key` set to `none`, so it plays every note.
 > - A note attribute is only on the `turnsOn` row of a pair, when the device wants it on the note off too.
 > - A control on a band sits where it covers a control on another page.
 > - A control hangs off the edge of the page, so it doesn't show.

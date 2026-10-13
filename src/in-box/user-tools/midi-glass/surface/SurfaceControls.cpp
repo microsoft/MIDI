@@ -19,6 +19,7 @@
 #include "LfoShape.h"
 #include "PadGrid.h"
 #include "StepPattern.h"
+#include "StringResources.h"
 #include "ThemeStore.h"
 
 #include <winrt/Windows.Media.Core.h>
@@ -58,6 +59,26 @@ namespace glass
 
         // The dotted line round the playing step stands this far off the step.
         constexpr float StepFocusOffset = 2.0f;
+
+        // A picker prints the notes or the scales it offers; any other switch, the names it was given.
+        std::wstring SwitchPositionName(_In_ Control const& control, _In_ size_t position)
+        {
+            auto const& spec = control.Switch;
+
+            if (spec.Picks == SwitchPicks::RootNote)
+            {
+                return RootPickerName(static_cast<int32_t>(position));
+            }
+
+            if (spec.Picks == SwitchPicks::Scale)
+            {
+                return position < spec.Scales.size()
+                    ? std::wstring{ ::midiglass::resources::GetString(ScaleNameResourceKey(spec.Scales[position])) }
+                    : std::wstring{};
+            }
+
+            return position < spec.Positions.size() ? spec.Positions[position] : std::to_wstring(position + 1);
+        }
 
         // The dot of hue inside a joystick's cap. The comp insets it 11 px on a 30 px puck,
         // which leaves a dot 8 px across - so this is its radius, not its width.
@@ -943,8 +964,12 @@ namespace glass
             media::Brush const restInk = media::SolidColorBrush{ ToWindowsColor(visual.SwitchRestInk) };
             media::Brush const litInk = media::SolidColorBrush{ ToWindowsColor(visual.SwitchLitInk) };
 
-            auto const chosen = static_cast<size_t>(SwitchPositionAt(
-                itemIndex < m_values.size() ? m_values[itemIndex] : 0.0, visual.SwitchPositions));
+            auto const value = itemIndex < m_values.size() ? m_values[itemIndex] : 0.0;
+
+            // A picker showing a scale it does not offer is given a negative value, and lights none.
+            auto const chosen = value < 0.0
+                ? visual.SwitchCells.size()
+                : static_cast<size_t>(SwitchPositionAt(value, visual.SwitchPositions));
 
             auto const unbounded = winrt::Windows::Foundation::Size{
                 std::numeric_limits<float>::infinity(),
@@ -954,9 +979,7 @@ namespace glass
             {
                 auto const& cell = visual.SwitchCells[position];
 
-                auto const name = position < control.Switch.Positions.size()
-                    ? control.Switch.Positions[position]
-                    : std::to_wstring(position + 1);
+                auto const name = SwitchPositionName(control, position);
 
                 controls::TextBlock text{};
 

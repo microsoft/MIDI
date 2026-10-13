@@ -663,8 +663,13 @@ namespace winrt::midinetworksetup::implementation
             ConnectRtpNoReduceSendSpeedText().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             // on, like every other way of connecting
+            ConnectSkipInBetweenValuesCheckBox().IsChecked(true);
             ConnectRtpSendRecoveryJournalCheckBox().IsChecked(true);
             ConnectRtpSendRecoveryJournalPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            // removed straight away, as a device that is switched off always has been
+            ConnectRtpOfflineRetentionComboBox().SelectedIndex(RtpRemoteHostItem::OfflineRetentionIndexFromSeconds(0));
+            ConnectRtpOfflineRetentionPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             ConnectNameDialog().XamlRoot(Content().XamlRoot());
 
@@ -682,7 +687,11 @@ namespace winrt::midinetworksetup::implementation
             choices->CustomName = TextOf(ConnectNameDialogTextBox());
             choices->SendSpeedLimit = SelectedSendSpeedLimit(ConnectSendSpeedLimitComboBox());
             choices->ReduceSendSpeedAutomatically = offerReduceAutomatically && IsCheckBoxChecked(ConnectReduceSendSpeedCheckBox());
+            choices->SkipInBetweenValuesToCatchUp = IsCheckBoxChecked(ConnectSkipInBetweenValuesCheckBox());
             choices->SendRecoveryJournal = IsCheckBoxChecked(ConnectRtpSendRecoveryJournalCheckBox());
+            choices->OfflineRetentionSeconds = offerReduceAutomatically ?
+                0 :
+                RtpRemoteHostItem::OfflineRetentionSecondsFromIndex(ConnectRtpOfflineRetentionComboBox().SelectedIndex());
 
             co_return true;
         }
@@ -723,7 +732,8 @@ namespace winrt::midinetworksetup::implementation
                 false,
                 choices->CustomName,
                 choices->SendSpeedLimit,
-                choices->ReduceSendSpeedAutomatically);
+                choices->ReduceSendSpeedAutomatically,
+                choices->SkipInBetweenValuesToCatchUp);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to a remote device.")
     }
@@ -812,7 +822,8 @@ namespace winrt::midinetworksetup::implementation
                     true,
                     winrt::hstring{},
                     item.SendSpeedLimit(),
-                    item.ReduceSendSpeedAutomatically());
+                    item.ReduceSendSpeedAutomatically(),
+                    item.SkipInBetweenValuesToCatchUp());
             }
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to retry a remote device.")
@@ -937,6 +948,10 @@ namespace winrt::midinetworksetup::implementation
             savedClient.ReduceSendSpeedAutomatically() :
             item.ReduceSendSpeedAutomatically();
 
+        auto const savedSkipInBetweenValues = savedClient != nullptr ?
+            savedClient.SkipInBetweenValuesToCatchUp() :
+            item.SkipInBetweenValuesToCatchUp();
+
         auto target = std::make_shared<midinetworksetup::RemoteHostItem>(nullptr);
 
         if (!co_await PromptForReassociateTargetAsync(entryName, target) || *target == nullptr)
@@ -980,7 +995,7 @@ namespace winrt::midinetworksetup::implementation
 
         if (queue != nullptr)
         {
-            queue.TryEnqueue([weak, item, target, entryName, savedCustomName, savedSendSpeedLimit, savedReduceSendSpeed, clientId, removed]()
+            queue.TryEnqueue([weak, item, target, entryName, savedCustomName, savedSendSpeedLimit, savedReduceSendSpeed, savedSkipInBetweenValues, clientId, removed]()
                 {
                     item.IsBusy(false);
 
@@ -1005,6 +1020,7 @@ namespace winrt::midinetworksetup::implementation
                         savedCustomName,
                         savedSendSpeedLimit,
                         savedReduceSendSpeed,
+                        savedSkipInBetweenValues,
                         clientId);
                 });
         }
@@ -1017,6 +1033,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring const customEndpointName,
         uint32_t const sendSpeedLimit,
         bool const reduceSendSpeedAutomatically,
+        bool const skipInBetweenValuesToCatchUp,
         winrt::guid const explicitClientId)
     {
         if (item == nullptr)
@@ -1084,6 +1101,7 @@ namespace winrt::midinetworksetup::implementation
                 config.FallbackMidi1PortCount(savedEntry.FallbackMidi1PortCount());
                 config.SendSpeedLimit(savedEntry.SendSpeedLimit());
                 config.ReduceSendSpeedAutomatically(savedEntry.ReduceSendSpeedAutomatically());
+                config.SkipInBetweenValuesToCatchUp(savedEntry.SkipInBetweenValuesToCatchUp());
             }
             else
             {
@@ -1108,6 +1126,7 @@ namespace winrt::midinetworksetup::implementation
 
                 config.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
                 config.ReduceSendSpeedAutomatically(reduceSendSpeedAutomatically);
+                config.SkipInBetweenValuesToCatchUp(skipInBetweenValuesToCatchUp);
             }
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ConnectNetworkClientAsync(config);
@@ -1196,6 +1215,7 @@ namespace winrt::midinetworksetup::implementation
 
         uint32_t currentSendSpeedLimit{ 0 };
         bool currentReduceSendSpeed{ false };
+        bool currentSkipInBetweenValues{ true };
         bool canChangeSendSpeed{ false };
 
         midi2rtp::MidiRtpSavedClient savedRtpClient{ nullptr };
@@ -1217,6 +1237,7 @@ namespace winrt::midinetworksetup::implementation
                 if (savedRtpClient != nullptr && savedRtpClient.IsEnabled())
                 {
                     currentSendSpeedLimit = static_cast<uint32_t>(savedRtpClient.SendSpeedLimit());
+                    currentSkipInBetweenValues = savedRtpClient.SkipInBetweenValuesToCatchUp();
                     canChangeSendSpeed = true;
                 }
             }
@@ -1224,6 +1245,7 @@ namespace winrt::midinetworksetup::implementation
             {
                 currentSendSpeedLimit = static_cast<uint32_t>(savedClient.SendSpeedLimit());
                 currentReduceSendSpeed = savedClient.ReduceSendSpeedAutomatically();
+                currentSkipInBetweenValues = savedClient.SkipInBetweenValuesToCatchUp();
                 canChangeSendSpeed = true;
             }
         }
@@ -1283,6 +1305,7 @@ namespace winrt::midinetworksetup::implementation
 
             FillSendSpeedLimitChoices(CustomizeSendSpeedLimitComboBox(), currentSendSpeedLimit);
             CustomizeReduceSendSpeedCheckBox().IsChecked(currentReduceSendSpeed);
+            CustomizeSkipInBetweenValuesCheckBox().IsChecked(currentSkipInBetweenValues);
             CustomizeSendSpeedPanel().Visibility(canChangeSendSpeed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             CustomizeReduceSendSpeedPanel().Visibility(isRtpMidi ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
             CustomizeRtpNoReduceSendSpeedText().Visibility(isRtpMidi ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -1351,6 +1374,10 @@ namespace winrt::midinetworksetup::implementation
         auto const reduceSendSpeed = reset || !canChangeSendSpeed || isRtpMidi ?
             currentReduceSendSpeed :
             IsCheckBoxChecked(CustomizeReduceSendSpeedCheckBox());
+
+        auto const skipInBetweenValues = reset || !canChangeSendSpeed ?
+            currentSkipInBetweenValues :
+            IsCheckBoxChecked(CustomizeSkipInBetweenValuesCheckBox());
 
         auto const transportId = isRtpMidi ?
             midi2rtp::MidiRtpTransportManager::TransportId() :
@@ -1421,7 +1448,8 @@ namespace winrt::midinetworksetup::implementation
                 (createMidi1Ports != currentCreateMidi1Ports ||
                  fallbackMidi1PortCount != currentFallbackMidi1PortCount ||
                  sendSpeedLimit != currentSendSpeedLimit ||
-                 reduceSendSpeed != currentReduceSendSpeed))
+                 reduceSendSpeed != currentReduceSendSpeed ||
+                 skipInBetweenValues != currentSkipInBetweenValues))
             {
                 midi2net::MidiNetworkClientUpdateConfig update{};
 
@@ -1438,6 +1466,11 @@ namespace winrt::midinetworksetup::implementation
                 if (reduceSendSpeed != currentReduceSendSpeed)
                 {
                     update.ReduceSendSpeedAutomatically(reduceSendSpeed);
+                }
+
+                if (skipInBetweenValues != currentSkipInBetweenValues)
+                {
+                    update.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
                 }
 
                 auto const updateResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(update);
@@ -1467,7 +1500,8 @@ namespace winrt::midinetworksetup::implementation
 
             // RTP-MIDI has no verb for changing a client entry. Creating it again with the same id
             // replaces it, and a new speed alone does not disconnect the device.
-            if (succeeded && isRtpMidi && savedRtpClient != nullptr && sendSpeedLimit != currentSendSpeedLimit)
+            if (succeeded && isRtpMidi && savedRtpClient != nullptr &&
+                (sendSpeedLimit != currentSendSpeedLimit || skipInBetweenValues != currentSkipInBetweenValues))
             {
                 midi2rtp::MidiRtpClientConnectConfig replacement{};
 
@@ -1478,7 +1512,9 @@ namespace winrt::midinetworksetup::implementation
                 replacement.MatchCriteria(savedRtpClient.MatchCriteria());
                 replacement.AutoReconnect(savedRtpClient.AutoReconnect());
                 replacement.SendRecoveryJournal(savedRtpClient.SendRecoveryJournal());
+                replacement.OfflineRetentionSeconds(savedRtpClient.OfflineRetentionSeconds());
                 replacement.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+                replacement.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
 
                 auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(replacement);
 
@@ -1580,11 +1616,13 @@ namespace winrt::midinetworksetup::implementation
 
         auto const currentSendSpeedLimit = item.SendSpeedLimit();
         auto const currentReduceAutomatically = item.ReduceSendSpeedAutomatically();
+        auto const currentSkipInBetweenValues = item.SkipInBetweenValuesToCatchUp();
 
         if (!co_await ShowChangeSendSpeedDialogAsync(
             item.DisplayName(),
             currentSendSpeedLimit,
             currentReduceAutomatically,
+            currentSkipInBetweenValues,
             true,
             winrt::hstring{},
             false))
@@ -1614,6 +1652,13 @@ namespace winrt::midinetworksetup::implementation
             if (reduceAutomatically != currentReduceAutomatically)
             {
                 update.ReduceSendSpeedAutomatically(reduceAutomatically);
+            }
+
+            auto const skipInBetweenValues = IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox());
+
+            if (skipInBetweenValues != currentSkipInBetweenValues)
+            {
+                update.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
             }
         }
         catch (...)
@@ -2183,6 +2228,7 @@ namespace winrt::midinetworksetup::implementation
 
         auto const sendSpeedLimit = SelectedSendSpeedLimit(ManualSendSpeedLimitComboBox());
         auto const reduceSendSpeed = IsCheckBoxChecked(ManualReduceSendSpeedCheckBox());
+        auto const skipInBetweenValues = IsCheckBoxChecked(ManualSkipInBetweenValuesCheckBox());
 
         ManualConnectButton().IsEnabled(false);
         SetRemoteStatus(res::FormatString(L"ConnectingToDeviceFormat", address));
@@ -2204,6 +2250,7 @@ namespace winrt::midinetworksetup::implementation
             config.MatchCriteria(criteria);
             config.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
             config.ReduceSendSpeedAutomatically(reduceSendSpeed);
+            config.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
 
             auto const response = co_await midi2net::MidiNetworkTransportManager::ConnectNetworkClientAsync(config);
 
@@ -2668,6 +2715,7 @@ namespace winrt::midinetworksetup::implementation
 
         FillSendSpeedLimitChoices(HostSendSpeedLimitComboBox(), static_cast<uint32_t>(config.SendSpeedLimit()));
         HostReduceSendSpeedCheckBox().IsChecked(config.ReduceSendSpeedAutomatically());
+        HostSkipInBetweenValuesCheckBox().IsChecked(config.SkipInBetweenValuesToCatchUp());
 
         UpdateCreateHostButtonState();
 
@@ -2720,6 +2768,7 @@ namespace winrt::midinetworksetup::implementation
 
             config.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(SelectedSendSpeedLimit(HostSendSpeedLimitComboBox())));
             config.ReduceSendSpeedAutomatically(IsCheckBoxChecked(HostReduceSendSpeedCheckBox()));
+            config.SkipInBetweenValuesToCatchUp(IsCheckBoxChecked(HostSkipInBetweenValuesCheckBox()));
         }
         catch (...)
         {
@@ -3024,6 +3073,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring const name,
         uint32_t const currentSendSpeedLimit,
         bool const currentReduceAutomatically,
+        bool const currentSkipInBetweenValues,
         bool const offerReduceAutomatically,
         winrt::hstring const hostSendSpeedText,
         bool const currentUsesHostSpeed)
@@ -3043,6 +3093,7 @@ namespace winrt::midinetworksetup::implementation
             FillSendSpeedLimitChoices(ChangeSendSpeedLimitComboBox(), currentSendSpeedLimit);
 
             ChangeReduceSendSpeedCheckBox().IsChecked(currentReduceAutomatically);
+            ChangeSkipInBetweenValuesCheckBox().IsChecked(currentSkipInBetweenValues);
             ChangeReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             ChangeRtpNoReduceSendSpeedText().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
@@ -3054,6 +3105,7 @@ namespace winrt::midinetworksetup::implementation
             // the state asked for
             ChangeSendSpeedLimitComboBox().IsEnabled(!startsOnHostSpeed);
             ChangeReduceSendSpeedCheckBox().IsEnabled(!startsOnHostSpeed);
+            ChangeSkipInBetweenValuesCheckBox().IsEnabled(!startsOnHostSpeed);
 
             ChangeSendSpeedDialog().Title(winrt::box_value(res::FormatString(L"ChangeSendSpeedTitleFormat", name)));
             ChangeSendSpeedDialog().XamlRoot(Content().XamlRoot());
@@ -3085,7 +3137,8 @@ namespace winrt::midinetworksetup::implementation
         // device stays on the host's speed
         co_return !usesHostSpeed &&
             (SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()) != currentSendSpeedLimit ||
-             (offerReduceAutomatically && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()) != currentReduceAutomatically));
+             (offerReduceAutomatically && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()) != currentReduceAutomatically) ||
+             IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()) != currentSkipInBetweenValues);
     }
 
     _Use_decl_annotations_
@@ -3098,6 +3151,7 @@ namespace winrt::midinetworksetup::implementation
 
             ChangeSendSpeedLimitComboBox().IsEnabled(ownSpeed);
             ChangeReduceSendSpeedCheckBox().IsEnabled(ownSpeed);
+            ChangeSkipInBetweenValuesCheckBox().IsEnabled(ownSpeed);
         }
         catch (...)
         {
@@ -3124,6 +3178,7 @@ namespace winrt::midinetworksetup::implementation
             item.DisplayName(),
             item.SendSpeedLimit(),
             item.ReduceSendSpeedAutomatically(),
+            item.SkipInBetweenValuesToCatchUp(),
             true,
             winrt::hstring{},
             false))
@@ -3149,6 +3204,13 @@ namespace winrt::midinetworksetup::implementation
             if (reduceAutomatically != item.ReduceSendSpeedAutomatically())
             {
                 config.ReduceSendSpeedAutomatically(reduceAutomatically);
+            }
+
+            auto const skipInBetweenValues = IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox());
+
+            if (skipInBetweenValues != item.SkipInBetweenValuesToCatchUp())
+            {
+                config.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
             }
         }
         catch (...)
@@ -3218,7 +3280,8 @@ namespace winrt::midinetworksetup::implementation
         bool const isRtpMidi,
         bool const hasOwnSpeed,
         uint32_t const ownSendSpeedLimit,
-        bool const ownReduceAutomatically)
+        bool const ownReduceAutomatically,
+        bool const ownSkipInBetweenValues)
     {
         auto strongThis = get_strong();
 
@@ -3253,8 +3316,9 @@ namespace winrt::midinetworksetup::implementation
             remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName,
             hasOwnSpeed ? ownSendSpeedLimit : host.SendSpeedLimit(),
             hasOwnSpeed ? ownReduceAutomatically : hostReduceAutomatically,
+            hasOwnSpeed ? ownSkipInBetweenValues : host.SkipInBetweenValuesToCatchUp(),
             !isRtpMidi,
-            SendSpeedValueText(host.SendSpeedLimit(), hostReduceAutomatically),
+            SendSpeedValueText(host.SendSpeedLimit(), hostReduceAutomatically, host.SkipInBetweenValuesToCatchUp()),
             !hasOwnSpeed))
         {
             co_return;
@@ -3267,7 +3331,8 @@ namespace winrt::midinetworksetup::implementation
             isRtpMidi,
             IsCheckBoxChecked(ChangeSendSpeedUseHostCheckBox()),
             SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()),
-            !isRtpMidi && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()));
+            !isRtpMidi && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()),
+            IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()));
     }
 
     _Use_decl_annotations_
@@ -3278,7 +3343,8 @@ namespace winrt::midinetworksetup::implementation
         bool const isRtpMidi,
         bool const useHostSpeed,
         uint32_t const sendSpeedLimit,
-        bool const reduceAutomatically)
+        bool const reduceAutomatically,
+        bool const skipInBetweenValues)
     {
         winrt::guid hostId{};
 
@@ -3342,6 +3408,7 @@ namespace winrt::midinetworksetup::implementation
                 {
                     midi2rtp::MidiRtpRemoteClientSettings settings{ remoteName };
                     settings.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+                    settings.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
 
                     config.RemoteClientSettings().Append(settings);
                 }
@@ -3387,6 +3454,7 @@ namespace winrt::midinetworksetup::implementation
                     midi2net::MidiNetworkRemoteClientSettings settings{ remoteName, remoteProductInstanceId };
                     settings.SendSpeedLimit(static_cast<midi2net::MidiNetworkSendSpeedLimit>(sendSpeedLimit));
                     settings.ReduceSendSpeedAutomatically(reduceAutomatically);
+                    settings.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
 
                     config.RemoteClientSettings().Append(settings);
                 }
@@ -3443,7 +3511,8 @@ namespace winrt::midinetworksetup::implementation
                 self->IsRtpMidi(),
                 self->UsesOwnSendSpeed(),
                 self->SendSpeedLimit(),
-                self->ReduceSendSpeedAutomatically());
+                self->ReduceSendSpeedAutomatically(),
+                self->SkipInBetweenValuesToCatchUp());
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to change the sending speed for a connected device.")
     }
@@ -3467,7 +3536,8 @@ namespace winrt::midinetworksetup::implementation
                 item.IsRtpMidi(),
                 true,
                 item.SendSpeedLimit(),
-                item.ReduceSendSpeedAutomatically());
+                item.ReduceSendSpeedAutomatically(),
+                item.SkipInBetweenValuesToCatchUp());
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to change a device's own sending speed.")
     }
@@ -3491,7 +3561,8 @@ namespace winrt::midinetworksetup::implementation
                 item.IsRtpMidi(),
                 true,
                 0,
-                false);
+                false,
+                true);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to put a device back on the host's sending speed.")
     }
@@ -3800,7 +3871,13 @@ namespace winrt::midinetworksetup::implementation
                 co_return;
             }
 
-            ConnectRtpRemoteHostAsync(item, choices->CustomName, choices->SendSpeedLimit, choices->SendRecoveryJournal);
+            ConnectRtpRemoteHostAsync(
+                item,
+                choices->CustomName,
+                choices->SendSpeedLimit,
+                choices->SkipInBetweenValuesToCatchUp,
+                choices->SendRecoveryJournal,
+                choices->OfflineRetentionSeconds);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to an RTP-MIDI device.")
     }
@@ -3810,7 +3887,9 @@ namespace winrt::midinetworksetup::implementation
         midinetworksetup::RtpRemoteHostItem const item,
         winrt::hstring const customEndpointName,
         uint32_t const sendSpeedLimit,
-        bool const sendRecoveryJournal)
+        bool const skipInBetweenValuesToCatchUp,
+        bool const sendRecoveryJournal,
+        int32_t const offlineRetentionSeconds)
     {
         if (item == nullptr)
         {
@@ -3840,7 +3919,9 @@ namespace winrt::midinetworksetup::implementation
             config.CustomEndpointName(customEndpointName);
             config.MatchCriteria(criteria);
             config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+            config.SkipInBetweenValuesToCatchUp(skipInBetweenValuesToCatchUp);
             config.SendRecoveryJournal(sendRecoveryJournal);
+            config.OfflineRetentionSeconds(offlineRetentionSeconds);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
 
@@ -4104,6 +4185,7 @@ namespace winrt::midinetworksetup::implementation
             item.DisplayName(),
             currentSendSpeedLimit,
             false,
+            savedClient.SkipInBetweenValuesToCatchUp(),
             false,
             winrt::hstring{},
             false))
@@ -4112,6 +4194,7 @@ namespace winrt::midinetworksetup::implementation
         }
 
         auto const sendSpeedLimit = SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox());
+        auto const skipInBetweenValues = IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox());
         auto const displayName = item.DisplayName();
 
         auto weak = get_weak();
@@ -4134,7 +4217,9 @@ namespace winrt::midinetworksetup::implementation
             replacement.MatchCriteria(savedClient.MatchCriteria());
             replacement.AutoReconnect(savedClient.AutoReconnect());
             replacement.SendRecoveryJournal(savedClient.SendRecoveryJournal());
+            replacement.OfflineRetentionSeconds(savedClient.OfflineRetentionSeconds());
             replacement.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+            replacement.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(replacement);
 
@@ -4302,6 +4387,7 @@ namespace winrt::midinetworksetup::implementation
         auto const name = TextOf(RtpManualNameTextBox());
         auto const customName = TextOf(RtpManualCustomNameTextBox());
         auto const sendSpeedLimit = SelectedSendSpeedLimit(RtpManualSendSpeedLimitComboBox());
+        auto const skipInBetweenValues = IsCheckBoxChecked(RtpManualSkipInBetweenValuesCheckBox());
         auto const sendRecoveryJournal = IsCheckBoxChecked(RtpManualSendRecoveryJournalCheckBox());
 
         if (IsNetworkMidi2Machine(address) && !co_await ConfirmRtpAlongsideNetworkMidi2Async(address))
@@ -4327,6 +4413,7 @@ namespace winrt::midinetworksetup::implementation
             config.CustomEndpointName(customName);
             config.MatchCriteria(criteria);
             config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+            config.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
             config.SendRecoveryJournal(sendRecoveryJournal);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
@@ -4453,6 +4540,7 @@ namespace winrt::midinetworksetup::implementation
             RtpHostNetworkAdapterFallbackCheckBox().IsEnabled(false);
 
             FillSendSpeedLimitChoices(RtpHostSendSpeedLimitComboBox(), 0);
+            RtpHostSkipInBetweenValuesCheckBox().IsChecked(true);
 
             UpdateCreateRtpHostButtonState();
 
@@ -4510,6 +4598,7 @@ namespace winrt::midinetworksetup::implementation
 
             config.SendRecoveryJournal(IsCheckBoxChecked(RtpHostSendRecoveryJournalCheckBox()));
             config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(SelectedSendSpeedLimit(RtpHostSendSpeedLimitComboBox())));
+            config.SkipInBetweenValuesToCatchUp(IsCheckBoxChecked(RtpHostSkipInBetweenValuesCheckBox()));
 
             config.NetworkAdapterId(SelectedNetworkAdapterId(RtpHostNetworkAdapterComboBox()));
             config.AllowNetworkAdapterFallback(IsCheckBoxChecked(RtpHostNetworkAdapterFallbackCheckBox()));
@@ -4736,6 +4825,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::guid const adapterId,
         bool const allowAdapterFallback,
         uint32_t const sendSpeedLimit,
+        bool const skipInBetweenValuesToCatchUp,
         winrt::hstring const doneMessage)
     {
         if (item == nullptr)
@@ -4842,6 +4932,7 @@ namespace winrt::midinetworksetup::implementation
 
                 config.AllowNetworkAdapterFallback(allowAdapterFallback);
                 config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
+                config.SkipInBetweenValuesToCatchUp(skipInBetweenValuesToCatchUp);
 
                 auto const response = co_await midi2rtp::MidiRtpTransportManager::CreateRtpHostAsync(config);
 
@@ -4916,6 +5007,7 @@ namespace winrt::midinetworksetup::implementation
             SelectedNetworkAdapterId(ChangeHostAdapterComboBox()),
             IsCheckBoxChecked(ChangeHostAdapterFallbackCheckBox()),
             item.SendSpeedLimit(),
+            item.SkipInBetweenValuesToCatchUp(),
             res::FormatString(L"HostNetworkAdapterChangedFormat", item.DisplayName()));
     }
 
@@ -4936,6 +5028,7 @@ namespace winrt::midinetworksetup::implementation
             item.DisplayName(),
             item.SendSpeedLimit(),
             false,
+            item.SkipInBetweenValuesToCatchUp(),
             false,
             winrt::hstring{},
             false))
@@ -4952,6 +5045,7 @@ namespace winrt::midinetworksetup::implementation
             winrt::guid{ configuredAdapterId },
             item.AllowNetworkAdapterFallback(),
             SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()),
+            IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()),
             res::FormatString(L"HostSendSpeedChangedFormat", item.DisplayName()));
     }
 

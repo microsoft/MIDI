@@ -90,6 +90,11 @@ public:
     uint32_t GetSendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
     bool GetReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
 
+    // Skips in-between values to catch up when messages back up behind the speed. Takes effect
+    // from the next message.
+    void SetSkipInBetweenValuesToCatchUp(_In_ bool const skip) noexcept { m_skipInBetweenValuesToCatchUp = skip; }
+    bool GetSkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
+
     // What the connection sends at now. Below the limit while reduced automatically.
     uint32_t GetCurrentSendSpeedLimit() const noexcept { return m_currentSendSpeed; }
 
@@ -380,6 +385,12 @@ protected:
     void ClearOutgoingQueue() noexcept;
     void WakeSendersWaitingForRoom() noexcept;
 
+    // Thins out a queue backed up behind the speed limit. Needs m_outgoingUmpMessageQueueLock.
+    // True when it took something out.
+    bool PruneOutgoingQueue(_In_ uint64_t const incomingWireBytes) noexcept;
+    ::WindowsMidiServicesInternal::MidiSendBacklogPruner m_outgoingPruner{};
+    bool m_outgoingQueueChangedSincePrune{ false };
+
     // written under m_outgoingUmpMessageQueueLock
     std::atomic<bool> m_endpointBeingCreated{ false };
     HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);
@@ -404,6 +415,7 @@ protected:
     // The customer's choice
     std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
     std::atomic<bool> m_reduceSendSpeedAutomatically{ false };
+    std::atomic<bool> m_skipInBetweenValuesToCatchUp{ true };
 
     // What the connection sends at now. Read by senders to size the queue.
     std::atomic<uint32_t> m_currentSendSpeed{ 0 };

@@ -67,6 +67,9 @@ public:
     TEST_METHOD(TestHostFallsBackWhenItsNetworkAdapterIsMissing);
     TEST_METHOD(TestHostStartsOnItsNetworkAdapter);
 
+    // A client's endpoint kept while its remote is away
+    TEST_METHOD(TestKeptClientEndpointOutlivesItsRemote);
+
 private:
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
     std::vector<winrt::guid> m_createdHosts{};

@@ -61,11 +61,23 @@ namespace WindowsMidiServices
         [Parameter]
         public MidiRtpSendSpeedLimit SendSpeedLimit { get; set; } = MidiRtpSendSpeedLimit.Unlimited;
 
+        // Send every message, however late, rather than skipping some in-between steps of long
+        // control change, pressure and pitch bend moves to catch up
+        [Parameter]
+        public SwitchParameter NoSkippingInBetweenValues { get; set; }
+
         // Leaves out the recovery journal, the short summary of recent notes in each packet that
         // lets the remote end a note whose Note Off was lost. Only for a device that plays extra
         // notes, or notes that don't stop, while the journal is on.
         [Parameter]
         public SwitchParameter NoRecoveryJournal { get; set; }
+
+        // How long the endpoint and its MIDI 1.0 ports stay while the remote is away: 0 removes them
+        // at once (the default), -1 keeps them always, so an app started while the device is off
+        // still finds its port, and anything else is a number of seconds.
+        [Parameter]
+        [ValidateRange(-1, 86400)]
+        public int OfflineRetentionSeconds { get; set; }
 
         [Parameter]
         public SwitchParameter SaveToConfiguration { get; set; }
@@ -123,7 +135,9 @@ namespace WindowsMidiServices
                 Name = LocalEndpointName,
                 CustomEndpointName = EndpointName,
                 SendSpeedLimit = SendSpeedLimit,
+                SkipInBetweenValuesToCatchUp = !NoSkippingInBetweenValues.IsPresent,
                 SendRecoveryJournal = !NoRecoveryJournal.IsPresent,
+                OfflineRetentionSeconds = OfflineRetentionSeconds,
                 MatchCriteria = criteria
             };
 

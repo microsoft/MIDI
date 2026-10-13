@@ -171,6 +171,7 @@ namespace
                 if (duplicate) continue;
 
                 remote.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
+                remote.SkipInBetweenValuesToCatchUp = RtpMidiJson::GetBoolean(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
 
                 settings.push_back(std::move(remote));
             }
@@ -212,6 +213,7 @@ namespace
         definition.Enabled = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, true);
         definition.SendRecoveryJournal = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
         definition.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
+        definition.SkipInBetweenValuesToCatchUp = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
         definition.RemoteClientPolicy = ReadRemoteClientPolicy(entry);
 
         // An empty id is every adapter, and one which is not a GUID is ignored. The rest is only
@@ -269,6 +271,14 @@ namespace
         definition.Enabled = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, true);
         definition.SendRecoveryJournal = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
         definition.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
+        definition.SkipInBetweenValuesToCatchUp = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
+
+        if (!RtpMidiJson::TryGetOfflineRetention(entry, MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, definition.OfflineRetentionSeconds))
+        {
+            errorCode = RTP_MIDI_ERROR_CODE_INVALID_ENTRY;
+            messageId = IDS_RTP_ERROR_INVALID_OFFLINE_RETENTION;
+            return false;
+        }
 
         if (!TryReadName(entry, definition.Name, errorCode, messageId)) return false;
         if (!IsValidName(definition.Name, false, errorCode, messageId)) return false;

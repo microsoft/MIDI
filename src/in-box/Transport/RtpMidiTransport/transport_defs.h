@@ -76,6 +76,12 @@
 // twelve second invitation cycle, so two cycles never overlap.
 #define MIDI_RTP_CLIENT_RETRY_INTERVAL_MS                       15000
 
+// A client's offlineRetention for an endpoint that stays until the entry goes
+#define MIDI_RTP_OFFLINE_RETENTION_KEEP_ALWAYS                  (-1)
+
+// A kept endpoint the service could not create is tried again after this long
+#define MIDI_RTP_KEPT_ENDPOINT_RETRY_INTERVAL_MS                15000
+
 // A host limited to a network adapter follows it as it comes and goes. Changes are noticed when
 // they happen, and once in this long anyway in case one came and went unseen.
 #define MIDI_RTP_NETWORK_ADAPTER_CHECK_INTERVAL_MS              20000

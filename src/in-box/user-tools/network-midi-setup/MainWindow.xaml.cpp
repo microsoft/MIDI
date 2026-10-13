@@ -1524,11 +1524,19 @@ namespace winrt::midinetworksetup::implementation
     }
 
     _Use_decl_annotations_
-    winrt::hstring MainWindow::SendSpeedValueText(uint32_t const multiple, bool const reduceAutomatically) noexcept
+    winrt::hstring MainWindow::SendSpeedValueText(
+        uint32_t const multiple,
+        bool const reduceAutomatically,
+        bool const skipInBetweenValues) noexcept
     {
-        return reduceAutomatically ?
+        auto const text = reduceAutomatically ?
             res::FormatString(L"SendSpeedReducesAutomaticallyFormat", SendSpeedLimitText(multiple)) :
             SendSpeedLimitText(multiple);
+
+        // with no limit nothing waits, so nothing is ever skipped and there is nothing to say
+        return (skipInBetweenValues || multiple == 0) ?
+            text :
+            res::FormatString(L"SendSpeedNoSkippingFormat", text);
     }
 
     winrt::hstring MainWindow::JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept
@@ -1651,6 +1659,7 @@ namespace winrt::midinetworksetup::implementation
                 // only for a device this PC has an entry for
                 uint32_t SendSpeedLimit{ 0 };
                 bool ReduceSendSpeedAutomatically{ false };
+                bool SkipInBetweenValuesToCatchUp{ true };
                 winrt::hstring SendSpeedText{};
             };
 
@@ -1881,9 +1890,13 @@ namespace winrt::midinetworksetup::implementation
 
                     row->SendSpeedLimit = static_cast<uint32_t>(client.SendSpeedLimit());
                     row->ReduceSendSpeedAutomatically = client.ReduceSendSpeedAutomatically();
+                    row->SkipInBetweenValuesToCatchUp = client.SkipInBetweenValuesToCatchUp();
                     row->SendSpeedText = res::FormatString(
                         L"SendSpeedLineFormat",
-                        SendSpeedValueText(row->SendSpeedLimit, row->ReduceSendSpeedAutomatically));
+                        SendSpeedValueText(
+                            row->SendSpeedLimit,
+                            row->ReduceSendSpeedAutomatically,
+                            row->SkipInBetweenValuesToCatchUp));
 
                     // A device which is not advertising reports nothing, so the row would show an
                     // empty identity and no reason for the entry never matching. The saved entry
@@ -2047,6 +2060,7 @@ namespace winrt::midinetworksetup::implementation
                 winrt::get_self<RemoteHostItem>(item)->InternalUpdateSendSpeed(
                     row.SendSpeedLimit,
                     row.ReduceSendSpeedAutomatically,
+                    row.SkipInBetweenValuesToCatchUp,
                     row.SendSpeedText);
             }
 
@@ -2107,6 +2121,7 @@ namespace winrt::midinetworksetup::implementation
             winrt::hstring ProductInstanceId{};
             uint32_t SendSpeedLimit{ 0 };
             bool ReduceSendSpeedAutomatically{ false };
+            bool SkipInBetweenValuesToCatchUp{ true };
         };
 
         // These change rarely, so the list is only rebuilt when its contents actually differ.
@@ -2139,7 +2154,8 @@ namespace winrt::midinetworksetup::implementation
                         self->RemoteName() != entries[i].Name ||
                         self->ProductInstanceId() != entries[i].ProductInstanceId ||
                         self->SendSpeedLimit() != entries[i].SendSpeedLimit ||
-                        self->ReduceSendSpeedAutomatically() != entries[i].ReduceSendSpeedAutomatically;
+                        self->ReduceSendSpeedAutomatically() != entries[i].ReduceSendSpeedAutomatically ||
+                        self->SkipInBetweenValuesToCatchUp() != entries[i].SkipInBetweenValuesToCatchUp;
                 }
 
                 if (!changed)
@@ -2161,7 +2177,11 @@ namespace winrt::midinetworksetup::implementation
                         entry.ProductInstanceId,
                         entry.SendSpeedLimit,
                         entry.ReduceSendSpeedAutomatically,
-                        MainWindow::SendSpeedValueText(entry.SendSpeedLimit, entry.ReduceSendSpeedAutomatically),
+                        entry.SkipInBetweenValuesToCatchUp,
+                        MainWindow::SendSpeedValueText(
+                            entry.SendSpeedLimit,
+                            entry.ReduceSendSpeedAutomatically,
+                            entry.SkipInBetweenValuesToCatchUp),
                         isRtpMidi);
 
                     list.Append(*created);
@@ -2260,9 +2280,13 @@ namespace winrt::midinetworksetup::implementation
                     self->InternalUpdateSendSpeed(
                         sendSpeedLimit,
                         host.ReduceSendSpeedAutomatically(),
+                        host.SkipInBetweenValuesToCatchUp(),
                         res::FormatString(
                             L"SendSpeedLineFormat",
-                            SendSpeedValueText(sendSpeedLimit, host.ReduceSendSpeedAutomatically())));
+                            SendSpeedValueText(
+                                sendSpeedLimit,
+                                host.ReduceSendSpeedAutomatically(),
+                                host.SkipInBetweenValuesToCatchUp())));
 
                     // connected remote clients
                     std::vector<winrt::hstring> connectionKeys{};
@@ -2341,12 +2365,15 @@ namespace winrt::midinetworksetup::implementation
                                 connection.IsSessionActive(),
                                 connection.IsPendingApproval());
 
-                            auto const connectionSpeedValue =
-                                SendSpeedValueText(connectionSendSpeedLimit, connection.ReduceSendSpeedAutomatically());
+                            auto const connectionSpeedValue = SendSpeedValueText(
+                                connectionSendSpeedLimit,
+                                connection.ReduceSendSpeedAutomatically(),
+                                connection.SkipInBetweenValuesToCatchUp());
 
                             winrt::get_self<HostConnectionItem>(connectionItem)->InternalUpdateSendSpeed(
                                 connectionSendSpeedLimit,
                                 connection.ReduceSendSpeedAutomatically(),
+                                connection.SkipInBetweenValuesToCatchUp(),
                                 connection.UsesRemoteClientSettings(),
                                 // the host keeps a device's speed by its name and id together
                                 !TrimmedText(connection.UmpEndpointName()).empty() &&
@@ -2434,7 +2461,8 @@ namespace winrt::midinetworksetup::implementation
                                     entry.RemoteClientName(),
                                     entry.RemoteClientProductInstanceId(),
                                     static_cast<uint32_t>(entry.SendSpeedLimit()),
-                                    entry.ReduceSendSpeedAutomatically() });
+                                    entry.ReduceSendSpeedAutomatically(),
+                                    entry.SkipInBetweenValuesToCatchUp() });
                             }
                         }
                     }
@@ -2685,7 +2713,9 @@ namespace winrt::midinetworksetup::implementation
 
                 // only for a session this PC has an entry for
                 uint32_t SendSpeedLimit{ 0 };
+                bool SkipInBetweenValuesToCatchUp{ true };
                 winrt::hstring SendSpeedText{};
+                int32_t OfflineRetentionSeconds{ 0 };
             };
 
             std::vector<RowData> rows{};
@@ -2837,7 +2867,14 @@ namespace winrt::midinetworksetup::implementation
                     row->Connected = isConnected;
 
                     row->SendSpeedLimit = static_cast<uint32_t>(client.SendSpeedLimit());
-                    row->SendSpeedText = res::FormatString(L"SendSpeedLineFormat", SendSpeedLimitText(row->SendSpeedLimit));
+                    row->SkipInBetweenValuesToCatchUp = client.SkipInBetweenValuesToCatchUp();
+                    row->SendSpeedText = res::FormatString(
+                        L"SendSpeedLineFormat",
+                        SendSpeedValueText(row->SendSpeedLimit, false, row->SkipInBetweenValuesToCatchUp));
+                    row->OfflineRetentionSeconds = client.OfflineRetentionSeconds();
+
+                    // there while the device is away when the entry keeps it
+                    row->EndpointDeviceId = client.EndpointDeviceId();
 
                     // As on the Network MIDI 2.0 page, an advertised device keeps its advertised
                     // name. Anything else shows the best name there is.
@@ -2860,7 +2897,10 @@ namespace winrt::midinetworksetup::implementation
 
                     if (connection != nullptr)
                     {
-                        row->EndpointDeviceId = connection.EndpointDeviceId();
+                        if (!connection.EndpointDeviceId().empty())
+                        {
+                            row->EndpointDeviceId = connection.EndpointDeviceId();
+                        }
 
                         // an address typed in says nothing about the machine, but its connection does
                         row->AlsoNetworkMidi2 = row->AlsoNetworkMidi2 ||
@@ -3021,7 +3061,16 @@ namespace winrt::midinetworksetup::implementation
                         res::GetString(L"RemoteHostDisconnectAndForgetLabel") :
                         res::GetString(L"RemoteHostForgetLabel"));
 
-                winrt::get_self<RtpRemoteHostItem>(item)->InternalUpdateSendSpeed(row.SendSpeedLimit, row.SendSpeedText);
+                winrt::get_self<RtpRemoteHostItem>(item)->InternalUpdateSendSpeed(
+                    row.SendSpeedLimit,
+                    row.SkipInBetweenValuesToCatchUp,
+                    row.SendSpeedText);
+                winrt::get_self<RtpRemoteHostItem>(item)->InternalUpdateOfflineRetention(
+                    row.OfflineRetentionSeconds,
+                    RtpRemoteHostItem::OfflineRetentionIndexFromSeconds(row.OfflineRetentionSeconds) < 0 ?
+                        res::FormatString(L"OfflineRetentionSecondsFormat", row.OfflineRetentionSeconds) :
+                        winrt::hstring{},
+                    row.Configured);
             }
 
             for (int32_t i = static_cast<int32_t>(m_rtpRemoteHosts.Size()) - 1; i >= 0; i--)
@@ -3196,9 +3245,13 @@ namespace winrt::midinetworksetup::implementation
                     self->InternalUpdateSendSpeed(
                         static_cast<uint32_t>(host.SendSpeedLimit()),
                         false,
+                        host.SkipInBetweenValuesToCatchUp(),
                         res::FormatString(
                             L"SendSpeedLineFormat",
-                            SendSpeedLimitText(static_cast<uint32_t>(host.SendSpeedLimit()))));
+                            SendSpeedValueText(
+                                static_cast<uint32_t>(host.SendSpeedLimit()),
+                                false,
+                                host.SkipInBetweenValuesToCatchUp())));
 
                     std::vector<winrt::hstring> connectionKeys{};
 
@@ -3260,11 +3313,15 @@ namespace winrt::midinetworksetup::implementation
                                 false);
 
                             auto const connectionSendSpeedLimit = static_cast<uint32_t>(connection.SendSpeedLimit());
-                            auto const connectionSpeedValue = SendSpeedLimitText(connectionSendSpeedLimit);
+                            auto const connectionSpeedValue = SendSpeedValueText(
+                                connectionSendSpeedLimit,
+                                false,
+                                connection.SkipInBetweenValuesToCatchUp());
 
                             winrt::get_self<HostConnectionItem>(connectionItem)->InternalUpdateSendSpeed(
                                 connectionSendSpeedLimit,
                                 false,
+                                connection.SkipInBetweenValuesToCatchUp(),
                                 connection.UsesRemoteClientSettings(),
                                 // the host keeps a device's speed by the name it sent
                                 !TrimmedText(connection.RemoteName()).empty(),
@@ -3350,7 +3407,8 @@ namespace winrt::midinetworksetup::implementation
                                     entry.RemoteClientName(),
                                     winrt::hstring{},
                                     static_cast<uint32_t>(entry.SendSpeedLimit()),
-                                    false });
+                                    false,
+                                    entry.SkipInBetweenValuesToCatchUp() });
                             }
                         }
                     }

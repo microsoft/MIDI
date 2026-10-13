@@ -53,5 +53,14 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         // True when the two above come from the host's RemoteClientSettings for this client
         [noexcept] Boolean UsesRemoteClientSettings{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostConnection2", UUID_IMidiNetworkHostConnection2)]
+        [contract(MidiTransportsNetworkApiContract, 2)]
+        {
+            // False when the host sends this client every message, however far behind it falls:
+            // the client's own setting when the host has one, otherwise the host's
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     };
 }

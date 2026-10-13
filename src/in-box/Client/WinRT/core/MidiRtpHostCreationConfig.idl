@@ -71,5 +71,15 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // receives on to a 5-pin DIN cable and loses data in large SysEx dumps. Unlimited by
         // default. Changing only this on an existing host does not restart it.
         [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit;
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpHostCreationConfig2", UUID_IMidiRtpHostCreationConfig2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // When messages back up behind SendSpeedLimit, skip some in-between values of long
+            // control change, pressure and pitch bend moves so the remote catches up. True by
+            // default. Changing only this on an existing host does not restart it.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp;
+        }
     }
 }

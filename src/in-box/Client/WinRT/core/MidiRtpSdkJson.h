@@ -245,6 +245,47 @@ namespace MidiRtpSdkJson
         }
     }
 
+    // An offline retention read the way the transport reads one: "always", "immediate", or whole
+    // seconds as a string or a number. Missing, or anything the transport would refuse, is immediate.
+    inline int32_t OfflineRetention(_In_ json::JsonObject const& parent, _In_ std::wstring_view const key) noexcept
+    {
+        try
+        {
+            if (auto const number = Find(parent, key, json::JsonValueType::Number))
+            {
+                auto const value = number.GetNumber();
+                if (!(value >= 0 && value <= MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_MAX_SECONDS) || value != static_cast<double>(static_cast<uint32_t>(value))) return 0;
+
+                return static_cast<int32_t>(value);
+            }
+
+            auto const text = Find(parent, key, json::JsonValueType::String);
+            if (text == nullptr) return 0;
+
+            std::wstring const value{ text.GetString() };
+
+            if (_wcsicmp(value.c_str(), MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS) == 0) return -1;
+            if (value.empty() || value.size() > 5) return 0;
+            if (!std::all_of(value.begin(), value.end(), [](wchar_t const ch) { return ch >= L'0' && ch <= L'9'; })) return 0;
+
+            auto const parsed = std::stoul(value);
+            return parsed > MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_MAX_SECONDS ? 0 : static_cast<int32_t>(parsed);
+        }
+        catch (...)
+        {
+            return 0;
+        }
+    }
+
+    // Anything other than the named values and a duration is passed on as it is, for the service to refuse
+    inline winrt::hstring OfflineRetentionText(_In_ int32_t const seconds)
+    {
+        if (seconds == -1) return MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS;
+        if (seconds == 0) return MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE;
+
+        return winrt::to_hstring(seconds);
+    }
+
     // a transport section wrapped the way MidiServiceTransportPluginConfigManager expects it
     inline json::JsonObject WrapTransportSection(_In_ json::JsonObject const& section)
     {

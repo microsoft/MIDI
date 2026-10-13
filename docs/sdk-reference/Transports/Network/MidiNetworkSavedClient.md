@@ -22,6 +22,7 @@ A Network MIDI 2.0 client saved in the configuration file. The service connects 
 | `MatchCriteria` | A [MidiNetworkClientMatchCriteria]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientMatchCriteria/) saying which remote device to connect to |
 | `SendSpeedLimit` | How fast this PC sends to the remote device. This includes any change saved later with `MidiNetworkClientUpdateConfig` |
 | `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote device keeps asking for data again. This includes any change saved later with `MidiNetworkClientUpdateConfig` |
+| `SkipInBetweenValuesToCatchUp` | True when the connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. True when nothing was saved. This includes any change saved later with `MidiNetworkClientUpdateConfig`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 

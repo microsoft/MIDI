@@ -88,6 +88,23 @@ namespace midi2console
         return FormatResourceString(IDS_NET_SEND_SPEED_MULTIPLE_FORMAT, multiple);
     }
 
+    std::string FormatSendSpeed(_In_ uint32_t multiple, _In_ bool reduceAutomatically, _In_ bool skipInBetweenValues)
+    {
+        auto speed = FormatSendSpeedLimit(multiple);
+
+        if (reduceAutomatically)
+        {
+            speed = FormatResourceString(IDS_NET_SEND_SPEED_AUTOMATIC_FORMAT, speed);
+        }
+
+        if (!skipInBetweenValues && multiple != 0)
+        {
+            speed = FormatResourceString(IDS_NET_SEND_SPEED_NO_SKIPPING_FORMAT, speed);
+        }
+
+        return speed;
+    }
+
     winrt::guid ParseGuid(_In_ std::string_view value, _Out_ bool& succeeded)
     {
         succeeded = false;

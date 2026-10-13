@@ -3,16 +3,14 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://aka.ms/midi
+// Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+// The device property keys the tests read, defined once. Built without the precompiled header,
+// which only declares them.
 
-class Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds
-{
-public:
-    static bool IsEnabled()
-    {
-        return true;
-    }
-};
+#include <windows.h>
+#include <cstdint>
+#include <initguid.h>
+#include <devpkey.h>
+#include "MidiDefs.h"

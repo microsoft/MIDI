@@ -65,16 +65,26 @@ public:
     TEST_METHOD(TestSendSpeedLimitNeverDelaysAQuietConnection);
     TEST_METHOD(TestSendSpeedLimitChangesWithoutReconnecting);
     TEST_METHOD(TestSendSpeedLimitSlowsAFastSenderWithoutLosingAnything);
+    TEST_METHOD(TestSendSpeedLimitThinsABackedUpSweep);
+    TEST_METHOD(TestSendSpeedLimitSendsEveryValueWithSkippingOff);
     TEST_METHOD(TestSendSpeedLimitReadsAnythingAboveTheMaximumAsUnlimited);
 
     // a speed of a remote's own on a host, also in RtpMidiSendSpeedTests.cpp
     TEST_METHOD(TestRemoteClientSpeedIsUsedInsteadOfTheHostSpeed);
     TEST_METHOD(TestRemoteClientSpeedChangesWithoutReconnecting);
     TEST_METHOD(TestRemoteClientSpeedsAreCheckedAndKeptWithTheHost);
+    TEST_METHOD(TestRemoteClientCanTurnOffSkipping);
 
     // the channel notes carry on the wire, and a host without a journal, in RtpMidiChannelTests.cpp
     TEST_METHOD(TestNotesKeepTheirChannelOnTheWire);
     TEST_METHOD(TestHostWithoutJournalSendsNone);
+
+    // a client which keeps its endpoint while its remote is away, in RtpMidiKeptEndpointTests.cpp
+    TEST_METHOD(TestKeptEndpointIsThereBeforeTheRemote);
+    TEST_METHOD(TestKeptEndpointStaysWhileTheRemoteIsAway);
+    TEST_METHOD(TestKeptEndpointRunsOutAfterItsRetention);
+    TEST_METHOD(TestKeepingCanBeTurnedOnAndOffWhileConnected);
+    TEST_METHOD(TestOfflineRetentionValuesAreChecked);
 
 private:
     winrt::Windows::Data::Json::JsonObject Send(std::wstring const& text, HRESULT* result = nullptr);
@@ -98,4 +108,14 @@ private:
 
     std::wstring m_hostId;
     uint16_t m_hostPort{ 0 };
+
+    // A client in place before the endpoint manager starts, as one saved in the configuration file
+    // is, whose remote does not answer yet. In RtpMidiKeptEndpointTests.cpp.
+    void DefineKeptClientBeforeStart();
+    void NoteKeptEndpointAfterStart();
+
+    std::wstring m_keptClientId;
+
+    // the interface id of its endpoint when Initialize returned, empty when there was none
+    std::wstring m_keptEndpointAtStart;
 };

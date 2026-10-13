@@ -387,6 +387,8 @@ Connect-MidiNetworkHost -HostNameOrAddress 192.168.1.243 -Port 33327 -SaveToConf
 
 For a device that loses data when a lot of it arrives at once, like a long SysEx dump, add `-SendSpeedLimit` with a speed such as `Midi1WireSpeed`, the speed of a MIDI 1.0 cable, or `Midi1WireSpeedTimes4`. A single message is never held back. Add `-ReduceSendSpeedAutomatically` to send more slowly while the device keeps asking for data again. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
 
+When messages pile up behind the speed, Windows skips some in-between steps of long control change, pressure and pitch bend moves so the device catches up. Add `-NoSkippingInBetweenValues` for a device that needs every message, however late.
+
 ```pwsh
 Connect-MidiNetworkHost -HostNameOrAddress 192.168.1.243 -Port 33327 -SendSpeedLimit Midi1WireSpeedTimes4 -ReduceSendSpeedAutomatically
 ```
@@ -412,6 +414,8 @@ Get-MidiNetworkConfiguredClient | Format-Table -AutoSize
 ### Set-MidiNetworkRemoteClientSendSpeed and Remove-MidiNetworkRemoteClientSendSpeed
 
 A host on this PC sends to every device that connects to it at the host's sending speed. `Set-MidiNetworkRemoteClientSendSpeed` gives one device its own speed instead, so one slow device doesn't hold back the others. The host knows the device by the name and product instance id it announces, so the speed is used again the next time it connects. A device that's already connected changes speed right away. Add `-ReduceSendSpeedAutomatically` to send more slowly to that device while it keeps asking for data again. `Remove-MidiNetworkRemoteClientSendSpeed` puts the device back on the host's speed.
+
+Add `-NoSkippingInBetweenValues` to send every message to that device, however late, instead of skipping in-between values to catch up.
 
 The change lasts until the service restarts unless you add `-SaveToConfiguration`, and that only works for a host that's saved. Saving writes the host's whole list of device speeds as it is at that moment. `RemoteClientSettings` on the host lists the devices with their own speed, including ones that aren't connected.
 
@@ -457,9 +461,16 @@ Get-MidiRtpAdvertisedHost |
 Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
 ```
 
-`-SendSpeedLimit` works the same way as for Network MIDI 2.0. RTP-MIDI devices can't say when they miss data, so there's no option to slow down by itself.
+`-SendSpeedLimit` and `-NoSkippingInBetweenValues` work the same way as for Network MIDI 2.0. RTP-MIDI devices can't say when they miss data, so there's no option to slow down by itself.
 
 Each packet this PC sends normally carries a recovery journal, a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Add `-NoRecoveryJournal` to leave it out, but only for a device that plays extra notes, or notes that don't stop, while the journal is on.
+
+Add `-OfflineRetentionSeconds -1` to keep the device's MIDI ports while it's switched off, so an app you start in the meantime still finds them. A number from 1 to 86400 keeps them for that many seconds after the device goes away. The default, `0`, removes them straight away. Anything sent to the device while it's away is lost.
+
+```pwsh
+# keep the ports for a device that's often switched off
+Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -OfflineRetentionSeconds -1 -SaveToConfiguration
+```
 
 ### Disconnect-MidiRtpHost
 

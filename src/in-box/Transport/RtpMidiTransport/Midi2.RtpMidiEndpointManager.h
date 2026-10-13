@@ -36,7 +36,7 @@ public:
     // Gives each remote connected to the host its own speed, or the host's when it has none
     void ApplyRemoteClientSettings(_In_ GUID const& hostId);
 
-    std::shared_ptr<RtpMidiConnection> FindConnectionByEndpointDeviceInterfaceId(_In_ std::wstring const& endpointDeviceInterfaceId);
+    std::shared_ptr<RtpMidiEndpoint> FindEndpointByInterfaceId(_In_ std::wstring const& endpointDeviceInterfaceId);
 
     // Lets a customization reach an endpoint which already exists
     winrt::hstring FindMatchingInstantiatedEndpoint(_In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
@@ -112,13 +112,7 @@ private:
         std::shared_ptr<RtpMidiConnection> Connection;
     };
 
-    struct CreatedEndpoint
-    {
-        std::weak_ptr<RtpMidiConnection> Connection;
-        winrt::hstring InstanceId;
-        winrt::hstring InterfaceId;
-        winrt::hstring EndpointName;
-    };
+    static std::wstring BuildInstanceId(_In_ std::wstring const& readableName, _In_ std::wstring const& identity);
 
     HRESULT CreateParentDevice();
 
@@ -139,6 +133,22 @@ private:
     HRESULT CreateEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     HRESULT RemoveEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool IsInstanceIdInUse(_In_ std::wstring const& instanceId);
+
+    // Listed before the service is asked for it, so an app opening it during activation finds it.
+    // In Midi2.RtpMidiEndpointManagerKept.cpp, with the rest of the endpoint work below.
+    HRESULT ActivateRtpEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint, _In_ std::wstring const& uniqueIdentifier, _In_ std::wstring const& endpointDescription);
+    HRESULT RemoveRtpEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
+    std::shared_ptr<RtpMidiEndpoint> FindEndpointForConnection(_In_ RtpMidiConnection const* connection);
+    std::shared_ptr<RtpMidiEndpoint> FindEndpointForEntry(_In_ GUID const& entryId);
+
+    // A client entry which keeps its endpoint while the remote is away. Made when the transport
+    // starts for "always", handed each connection, renamed, and removed when it runs out.
+    void ReconcileKeptEndpoints();
+    HRESULT CreateKeptEndpoint(_In_ RtpMidiClientDefinition const& definition, _In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    bool AttachToKeptEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    bool DetachFromKeptEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    static std::wstring KeptEndpointInstanceId(_In_ RtpMidiClientDefinition const& definition);
+    static std::wstring KeptEndpointName(_In_ RtpMidiClientDefinition const& definition);
 
     // The addresses a client should invite, in the order to try them, and the port they share.
     // False when there is nowhere to connect yet.
@@ -180,16 +190,14 @@ private:
     std::deque<EndpointWork> m_endpointWork;
 
     std::mutex m_createdEndpointsLock;
-    std::vector<CreatedEndpoint> m_createdEndpoints;
-
-    // The endpoint the worker is activating. Apps can see it before activation returns, and so
-    // before it has a record above. Guarded by m_createdEndpointsLock.
-    std::shared_ptr<RtpMidiConnection> m_endpointBeingCreated;
-    std::wstring m_endpointBeingCreatedInstanceId;
+    std::vector<std::shared_ptr<RtpMidiEndpoint>> m_createdEndpoints;
 
     // worker thread only
     std::map<std::wstring, uint64_t> m_lastWrittenLatencyTicks;
     uint64_t m_nextLatencyRefreshTick{ 0 };
+
+    // A kept endpoint the service would not create waits before the next try. Worker thread only.
+    std::map<GUID, uint64_t, GuidLess> m_keptEndpointRetryTicks;
 
     // Repeats this PC's announcements, which the DNS client gets wrong. A host is withdrawn from
     // it before its registration is.

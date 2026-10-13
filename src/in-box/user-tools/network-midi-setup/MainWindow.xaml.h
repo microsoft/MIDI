@@ -108,6 +108,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnDisconnectRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnCustomizeRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnChangeRtpRemoteHostSendSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRtpOfflineRetentionChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        winrt::fire_and_forget ApplyRtpOfflineRetentionChoiceAsync(_In_ controls::ComboBox const combo);
         void OnCopyRtpEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorRtpHostConnectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -131,8 +133,12 @@ namespace winrt::midinetworksetup::implementation
         // A send speed limit as the customer reads it. 0 is no limit.
         static winrt::hstring SendSpeedLimitText(_In_ uint32_t const multiple) noexcept;
 
-        // The same, with whether it slows down by itself when a device misses data
-        static winrt::hstring SendSpeedValueText(_In_ uint32_t const multiple, _In_ bool const reduceAutomatically) noexcept;
+        // The same, with whether it slows down by itself when a device misses data, and whether it
+        // skips in-between values to catch up
+        static winrt::hstring SendSpeedValueText(
+            _In_ uint32_t const multiple,
+            _In_ bool const reduceAutomatically,
+            _In_ bool const skipInBetweenValues) noexcept;
 
     private:
         // What the customer chose in the connect dialog. The name is empty when they want the
@@ -142,9 +148,11 @@ namespace winrt::midinetworksetup::implementation
             winrt::hstring CustomName{};
             uint32_t SendSpeedLimit{ 0 };
             bool ReduceSendSpeedAutomatically{ false };
+            bool SkipInBetweenValuesToCatchUp{ true };
 
             // RTP-MIDI only
             bool SendRecoveryJournal{ true };
+            int32_t OfflineRetentionSeconds{ 0 };
         };
 
         // everything the service knows, gathered off the UI thread in one pass
@@ -273,6 +281,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const name,
             _In_ uint32_t const currentSendSpeedLimit,
             _In_ bool const currentReduceAutomatically,
+            _In_ bool const currentSkipInBetweenValues,
             _In_ bool const offerReduceAutomatically,
             _In_ winrt::hstring const hostSendSpeedText,
             _In_ bool const currentUsesHostSpeed);
@@ -286,7 +295,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ bool const isRtpMidi,
             _In_ bool const hasOwnSpeed,
             _In_ uint32_t const ownSendSpeedLimit,
-            _In_ bool const ownReduceAutomatically);
+            _In_ bool const ownReduceAutomatically,
+            _In_ bool const ownSkipInBetweenValues);
 
         // Gives one device on a host a speed of its own, or puts it back on the host's speed. The
         // host's whole list is sent and saved, so it is rebuilt from what the service holds now
@@ -298,7 +308,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ bool const isRtpMidi,
             _In_ bool const useHostSpeed,
             _In_ uint32_t const sendSpeedLimit,
-            _In_ bool const reduceAutomatically);
+            _In_ bool const reduceAutomatically,
+            _In_ bool const skipInBetweenValues);
 
         // RTP-MIDI has no verb for changing a host, so this creates it again with the same id and
         // the given adapter and speed, copying everything else from what was saved.
@@ -308,6 +319,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::guid const adapterId,
             _In_ bool const allowAdapterFallback,
             _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ winrt::hstring const doneMessage);
 
         winrt::fire_and_forget AnswerInvitationAsync(            midinetworksetup::PendingInvitationItem const item,
@@ -330,6 +342,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const customEndpointName,
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ winrt::guid const explicitClientId = winrt::guid{});
 
         // Asks for an optional display name and the sending speed before connecting. RTP-MIDI
@@ -361,7 +374,9 @@ namespace winrt::midinetworksetup::implementation
             _In_ midinetworksetup::RtpRemoteHostItem const item,
             _In_ winrt::hstring const customEndpointName,
             _In_ uint32_t const sendSpeedLimit,
-            _In_ bool const sendRecoveryJournal);
+            _In_ bool const skipInBetweenValuesToCatchUp,
+            _In_ bool const sendRecoveryJournal,
+            _In_ int32_t const offlineRetentionSeconds);
 
         // Network MIDI 2.0 is the better choice when a machine offers both, so connecting over
         // RTP-MIDI to one of those asks first. It never refuses: the customer decides.

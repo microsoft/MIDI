@@ -25,6 +25,11 @@ namespace WindowsMidiServices
         [Parameter]
         public SwitchParameter ReduceSendSpeedAutomatically { get; set; }
 
+        // Send every message, however late, rather than skipping some in-between steps of long
+        // control change, pressure and pitch bend moves to catch up
+        [Parameter]
+        public SwitchParameter NoSkippingInBetweenValues { get; set; }
+
         [Parameter]
         public SwitchParameter PassThru { get; set; }
 
@@ -48,7 +53,8 @@ namespace WindowsMidiServices
             var settings = new MidiNetworkRemoteClientSettings(RemoteClientName.Trim(), RemoteClientProductInstanceId.Trim())
             {
                 SendSpeedLimit = SendSpeedLimit,
-                ReduceSendSpeedAutomatically = ReduceSendSpeedAutomatically.IsPresent
+                ReduceSendSpeedAutomatically = ReduceSendSpeedAutomatically.IsPresent,
+                SkipInBetweenValuesToCatchUp = !NoSkippingInBetweenValues.IsPresent
             };
 
             settingsList.Add(settings);

@@ -43,6 +43,7 @@ struct MidiNetworkRemoteClientSettings
     // a multiple of MIDI 1.0 wire speed, 0 for no limit
     uint32_t SendSpeedLimit{ 0 };
     bool ReduceSendSpeedAutomatically{ false };
+    bool SkipInBetweenValuesToCatchUp{ true };
 };
 
 // What a host sends to one remote client, and whether that came from the client's own settings
@@ -51,6 +52,7 @@ struct MidiNetworkRemoteClientSendSpeed
     uint32_t SendSpeedLimit{ 0 };
     bool ReduceSendSpeedAutomatically{ false };
     bool UsesRemoteClientSettings{ false };
+    bool SkipInBetweenValuesToCatchUp{ true };
 };
 
 enum MidiNetworkRemoteClientPolicy

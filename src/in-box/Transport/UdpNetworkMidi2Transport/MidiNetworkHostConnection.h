@@ -58,6 +58,7 @@ public:
     void ApplySendSpeed(_In_ MidiNetworkRemoteClientSendSpeed const& speed) noexcept
     {
         SetSendSpeedLimit(speed.SendSpeedLimit, speed.ReduceSendSpeedAutomatically);
+        SetSkipInBetweenValuesToCatchUp(speed.SkipInBetweenValuesToCatchUp);
 
         m_usesRemoteClientSettings = speed.UsesRemoteClientSettings;
     }

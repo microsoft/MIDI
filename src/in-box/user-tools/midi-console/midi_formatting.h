@@ -26,6 +26,10 @@ namespace midi2console
     // A Network MIDI 2.0 or RTP-MIDI send speed limit, a multiple of MIDI 1.0 wire speed. 0 is no limit.
     std::string FormatSendSpeedLimit(_In_ uint32_t multiple);
 
+    // The same, with whether it slows down by itself (Network MIDI 2.0 only) and whether it skips
+    // in-between values to catch up. Without a limit nothing waits, so nothing is ever skipped.
+    std::string FormatSendSpeed(_In_ uint32_t multiple, _In_ bool reduceAutomatically, _In_ bool skipInBetweenValues);
+
     std::string FormatNumberWithSeparators(_In_ uint64_t value);
     std::string FormatDecimal(_In_ double value, _In_ int decimalPlaces);
 

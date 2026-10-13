@@ -82,14 +82,6 @@ namespace
         }
     }
 
-    std::wstring BuildInstanceId(_In_ std::wstring const& readableName, _In_ std::wstring const& identity)
-    {
-        auto readable = internal::RemoveInvalidSWDUniqueIdCharacters(readableName);
-        if (readable.size() > MIDI_RTP_ENDPOINT_INSTANCE_ID_NAME_MAX_CHARS) readable.resize(MIDI_RTP_ENDPOINT_INSTANCE_ID_NAME_MAX_CHARS);
-
-        return std::wstring{ MIDI_RTP_ENDPOINT_INSTANCE_ID_PREFIX } + readable + L"_" + RtpMidiText::StableHash(identity);
-    }
-
     json::IJsonValue JsonNumber(_In_ uint64_t const value)
     {
         return json::JsonValue::CreateNumberValue(static_cast<double>(value));
@@ -177,6 +169,9 @@ CMidi2RtpMidiEndpointManager::Initialize(
             }));
 
         m_initialized = true;
+
+        // before the service finishes starting, so an app which starts it finds them
+        ReconcileKeptEndpoints();
 
         // The worker starts discovery once something needs it
         {
@@ -300,6 +295,7 @@ CMidi2RtpMidiEndpointManager::Shutdown()
         }
 
         m_lastWrittenLatencyTicks.clear();
+        m_keptEndpointRetryTicks.clear();
 
         m_midiDeviceManager.reset();
         m_midiProtocolManager.reset();
@@ -466,6 +462,7 @@ CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
             ReconcileHosts(stopToken);
             ReconcileClients(stopToken);
             ProcessEndpointWork();
+            ReconcileKeptEndpoints();
 
             auto const now = GetTickCount64();
 
@@ -656,7 +653,11 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             runtime.Definition = definition;
 
             // applies to a running host straight away, without dropping its connections
-            if (runtime.Node != nullptr) runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+            if (runtime.Node != nullptr)
+            {
+                runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+                runtime.Node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
+            }
 
             if (!definition.Enabled || runtime.Node != nullptr)
             {
@@ -718,6 +719,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             RtpMidiNode::Role::Host, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
 
         node->SetSendSpeedLimit(definition.SendSpeedLimit);
+        node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
 
         node->SetAdmissionCheck([hostId = definition.EntryId](std::wstring const& remoteName, std::wstring const& remoteAddress)
             {
@@ -851,7 +853,11 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
             runtime.Definition = definition;
 
             // applies to a running client straight away, without dropping its connection
-            if (runtime.Node != nullptr) runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+            if (runtime.Node != nullptr)
+            {
+                runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+                runtime.Node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
+            }
 
             if (!definition.Enabled) continue;
             if (runtime.State == ClientEntryState::Live || runtime.State == ClientEntryState::Unavailable) continue;
@@ -916,6 +922,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
                 RtpMidiNode::Role::Client, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
 
             node->SetSendSpeedLimit(definition.SendSpeedLimit);
+            node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
 
             std::vector<std::pair<uint16_t, uint16_t>> const ranges
             {
@@ -1074,7 +1081,7 @@ CMidi2RtpMidiEndpointManager::IsInstanceIdInUse(std::wstring const& instanceId)
     auto lock = std::scoped_lock{ m_createdEndpointsLock };
 
     return std::any_of(m_createdEndpoints.begin(), m_createdEndpoints.end(),
-        [&](CreatedEndpoint const& record) { return std::wstring_view{ record.InstanceId } == normalized; });
+        [&](std::shared_ptr<RtpMidiEndpoint> const& endpoint) { return endpoint->NormalizedInstanceId() == normalized; });
 }
 
 
@@ -1087,6 +1094,9 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
         RETURN_HR_IF_NULL(E_INVALIDARG, connection);
         RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
         RETURN_HR_IF(E_UNEXPECTED, m_parentDeviceId.empty());
+
+        // a kept endpoint can take it before its queued creation gets here
+        if (FindEndpointForConnection(connection.get()) != nullptr) return S_OK;
 
         std::wstring customEndpointName{};
         std::wstring readableName{ connection->RemoteName() };
@@ -1104,6 +1114,8 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
 
             if (TransportState::Current().TryGetClientDefinition(connection->EntryId(), definition))
             {
+                if (definition.KeepsEndpoint()) return CreateKeptEndpoint(definition, connection);
+
                 customEndpointName = definition.CustomEndpointName;
 
                 // configured by the customer, so it stays put when the remote renames itself
@@ -1127,140 +1139,12 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
         auto const endpointDescription = internal::ResourceGetWString(
             connection->ThisPcIsHost() ? IDS_RTP_ENDPOINT_DESCRIPTION_HOST : IDS_RTP_ENDPOINT_DESCRIPTION_CLIENT);
 
-        std::wstring transportCode{ TRANSPORT_CODE };
-        std::vector<DEVPROPERTY> interfaceDevProperties;
+        auto const endpoint = std::make_shared<RtpMidiEndpoint>(connection->EntryId(), instanceId, endpointName);
 
-        // looked up before the device node is created, so an endpoint is never published under the
-        // wrong name and renamed a moment later
-        WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
-        matchCriteria.DeviceInstanceId = winrt::hstring{ instanceId };
-        matchCriteria.TransportSuppliedEndpointName = winrt::hstring{ endpointName };
+        // before activation, so an app which opens the endpoint meanwhile already reaches the remote
+        endpoint->Attach(connection);
 
-        std::wstring customName{};
-        std::wstring customDescription{};
-        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
-
-        if (auto configurationManager = TransportState::Current().GetConfigurationManager())
-        {
-            customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
-
-            if (customProperties != nullptr)
-            {
-                if (!customProperties->Name.empty()) customName = customProperties->Name;
-                if (!customProperties->Description.empty()) customDescription = customProperties->Description;
-
-                customProperties->WriteNonCommonProperties(interfaceDevProperties);
-            }
-        }
-
-        std::wstring const friendlyName = customName.empty() ? endpointName : customName;
-
-        DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-
-        // own the memory the group terminal block and name table properties point at
-        std::vector<std::byte> groupTerminalBlockData{};
-        WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
-
-        // A byte stream endpoint has no endpoint discovery to run, so the service is told it is done
-        // and creates the MIDI 1.0 ports straight away
-        interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID)&devPropTrue });
-
-        LOG_IF_FAILED(RtpMidiEndpointProperties::BuildMidi1PortProperties(
-            friendlyName,
-            customProperties,
-            groupTerminalBlockData,
-            nameTable,
-            interfaceDevProperties));
-
-        MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
-        commonProperties.TransportId = TRANSPORT_LAYER_GUID;
-        commonProperties.EndpointDeviceType = MidiEndpointDeviceType::MidiEndpointDeviceType_Normal;
-        commonProperties.FriendlyName = friendlyName.c_str();
-        commonProperties.TransportCode = transportCode.c_str();
-        commonProperties.EndpointName = endpointName.c_str();
-        commonProperties.EndpointDescription = endpointDescription.c_str();
-        commonProperties.CustomEndpointName = customName.empty() ? nullptr : customName.c_str();
-        commonProperties.CustomEndpointDescription = customDescription.empty() ? nullptr : customDescription.c_str();
-        commonProperties.UniqueIdentifier = uniqueIdentifier.c_str();
-        commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
-        commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_ByteStream;
-
-        UINT32 capabilities{ 0 };
-        capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
-        capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
-        capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
-        commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
-
-        SW_DEVICE_CREATE_INFO createInfo{};
-        createInfo.cbSize = sizeof(createInfo);
-        createInfo.pszInstanceId = instanceId.c_str();
-        createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-        createInfo.pszDeviceDescription = friendlyName.c_str();
-
-        wil::unique_cotaskmem_string newDeviceInterfaceId;
-
-        {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
-
-            m_endpointBeingCreated = connection;
-            m_endpointBeingCreatedInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
-        }
-
-        // Closed after the record below is added, so an early open always finds one or the other
-        auto closeCreationWindow = wil::scope_exit([this]()
-            {
-                auto lock = std::scoped_lock{ m_createdEndpointsLock };
-
-                m_endpointBeingCreated.reset();
-                m_endpointBeingCreatedInstanceId.clear();
-            });
-
-        auto const activateHR = m_midiDeviceManager->ActivateEndpoint(
-            m_parentDeviceId.c_str(),
-            false,                                          // when false, WinMM MIDI 1.0 ports are created as well
-            MidiFlow::MidiFlowBidirectional,
-            &commonProperties,
-            static_cast<ULONG>(interfaceDevProperties.size()),
-            static_cast<ULONG>(0),
-            interfaceDevProperties.size() > 0 ? interfaceDevProperties.data() : nullptr,
-            nullptr,
-            &createInfo,
-            &newDeviceInterfaceId);
-
-        RETURN_IF_FAILED(activateHR);
-
-        // S_FALSE means the instance id is already active and no interface id came back
-        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED), activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr);
-
-        auto const normalizedInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
-        auto const normalizedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
-
-        connection->SetEndpointIds(normalizedInstanceId, normalizedInterfaceId);
-
-        {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
-
-            m_createdEndpoints.push_back(CreatedEndpoint{
-                connection,
-                winrt::hstring{ normalizedInstanceId },
-                winrt::hstring{ normalizedInterfaceId },
-                winrt::hstring{ endpointName } });
-        }
-
-        TraceLoggingWrite(
-            MidiRtpMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"rtpMIDI endpoint activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(instanceId.c_str(), "instance id"),
-            TraceLoggingWideString(friendlyName.c_str(), "friendly name"),
-            TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-        );
-
-        return S_OK;
+        return ActivateRtpEndpoint(endpoint, uniqueIdentifier, endpointDescription);
     }
     CATCH_RETURN();
 }
@@ -1274,40 +1158,18 @@ CMidi2RtpMidiEndpointManager::RemoveEndpoint(std::shared_ptr<RtpMidiConnection> 
     {
         RETURN_HR_IF_NULL(E_INVALIDARG, connection);
 
-        auto const instanceId = connection->EndpointDeviceInstanceId();
-        auto const interfaceId = connection->EndpointDeviceInterfaceId();
-
         // never got one, because it ended first
-        if (instanceId.empty()) return S_OK;
+        auto const endpoint = FindEndpointForConnection(connection.get());
+        if (endpoint == nullptr) return S_OK;
 
-        connection->ClearEndpointIds();
-
+        // its entry started keeping it after the connection ended
+        if (endpoint->IsKept())
         {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
-
-            std::erase_if(m_createdEndpoints,
-                [&](CreatedEndpoint const& record) { return std::wstring_view{ record.InstanceId } == instanceId; });
+            endpoint->DetachIfCurrent(connection.get());
+            return S_OK;
         }
 
-        m_lastWrittenLatencyTicks.erase(interfaceId);
-
-        RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
-
-        // Any client with the endpoint open is shut down inside this call, which re-enters the
-        // bidi's Shutdown. No lock of this class is held here.
-        RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(instanceId.c_str()));
-
-        TraceLoggingWrite(
-            MidiRtpMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"rtpMIDI endpoint removed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(instanceId.c_str(), "instance id")
-        );
-
-        return S_OK;
+        return RemoveRtpEndpoint(endpoint);
     }
     CATCH_RETURN();
 }
@@ -1387,8 +1249,10 @@ CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> 
     // before its endpoint exists, so nothing is ever sent to the remote at the host's speed first
     if (connection->ThisPcIsHost())
     {
-        connection->SetOwnSendSpeedLimit(
-            TransportState::Current().FindRemoteClientSendSpeedLimit(connection->EntryId(), connection->RemoteName()));
+        auto const settings = TransportState::Current().FindRemoteClientSettings(connection->EntryId(), connection->RemoteName());
+
+        connection->SetOwnSendSpeedLimit(settings.has_value() ? std::optional<uint32_t>{ settings->SendSpeedLimit } : std::nullopt);
+        connection->SetOwnSkipInBetweenValuesToCatchUp(settings.has_value() ? std::optional<bool>{ settings->SkipInBetweenValuesToCatchUp } : std::nullopt);
     }
 
     if (!connection->ThisPcIsHost())
@@ -1409,6 +1273,8 @@ CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> 
             it->second.UnansweredAttempts = 0;
         }
     }
+
+    if (AttachToKeptEndpoint(connection)) return;
 
     {
         auto lock = std::scoped_lock{ m_workLock };
@@ -1436,6 +1302,8 @@ CMidi2RtpMidiEndpointManager::OnConnectionDown(std::shared_ptr<RtpMidiConnection
         TraceLoggingWideString(connection->RemoteName().c_str(), "remote name"),
         TraceLoggingString(RtpMidi::EndReasonName(reason), "reason")
     );
+
+    if (DetachFromKeptEndpoint(connection)) return;
 
     {
         auto lock = std::scoped_lock{ m_workLock };
@@ -1601,30 +1469,36 @@ CMidi2RtpMidiEndpointManager::ApplyRemoteClientSettings(GUID const& hostId)
     {
         if (connection == nullptr || !connection->ThisPcIsHost()) continue;
 
-        connection->SetOwnSendSpeedLimit(
-            TransportState::Current().FindRemoteClientSendSpeedLimit(hostId, connection->RemoteName()));
+        auto const settings = TransportState::Current().FindRemoteClientSettings(hostId, connection->RemoteName());
+
+        connection->SetOwnSendSpeedLimit(settings.has_value() ? std::optional<uint32_t>{ settings->SendSpeedLimit } : std::nullopt);
+        connection->SetOwnSkipInBetweenValuesToCatchUp(settings.has_value() ? std::optional<bool>{ settings->SkipInBetweenValuesToCatchUp } : std::nullopt);
     }
 }
 
 
 _Use_decl_annotations_
-std::shared_ptr<RtpMidiConnection>
-CMidi2RtpMidiEndpointManager::FindConnectionByEndpointDeviceInterfaceId(std::wstring const& endpointDeviceInterfaceId)
+std::shared_ptr<RtpMidiEndpoint>
+CMidi2RtpMidiEndpointManager::FindEndpointByInterfaceId(std::wstring const& endpointDeviceInterfaceId)
 {
     auto const normalized = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
     auto lock = std::scoped_lock{ m_createdEndpointsLock };
 
-    for (auto const& record : m_createdEndpoints)
+    for (auto const& endpoint : m_createdEndpoints)
     {
-        if (std::wstring_view{ record.InterfaceId } == normalized) return record.Connection.lock();
-    }
+        auto const interfaceId = endpoint->InterfaceId();
 
-    // An interface id carries its instance id as one whole segment: \\?\swd#midisrv#<instance id>#{...}
-    if (m_endpointBeingCreated != nullptr &&
-        internal::EndpointInterfaceIdContainsString(normalized, L"#" + m_endpointBeingCreatedInstanceId + L"#"))
-    {
-        return m_endpointBeingCreated;
+        if (!interfaceId.empty())
+        {
+            if (interfaceId == normalized) return endpoint;
+        }
+        // Still being activated. An interface id carries its instance id as one whole segment:
+        // \\?\swd#midisrv#<instance id>#{...}
+        else if (internal::EndpointInterfaceIdContainsString(normalized, L"#" + endpoint->NormalizedInstanceId() + L"#"))
+        {
+            return endpoint;
+        }
     }
 
     return nullptr;
@@ -1639,13 +1513,16 @@ CMidi2RtpMidiEndpointManager::FindMatchingInstantiatedEndpoint(WindowsMidiServic
 
     auto lock = std::scoped_lock{ m_createdEndpointsLock };
 
-    for (auto const& record : m_createdEndpoints)
+    for (auto const& endpoint : m_createdEndpoints)
     {
+        auto const interfaceId = endpoint->InterfaceId();
+        if (interfaceId.empty()) continue;
+
         WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria available{};
 
-        available.EndpointDeviceId = record.InterfaceId;
-        available.DeviceInstanceId = record.InstanceId;
-        available.TransportSuppliedEndpointName = record.EndpointName;
+        available.EndpointDeviceId = winrt::hstring{ interfaceId };
+        available.DeviceInstanceId = winrt::hstring{ endpoint->NormalizedInstanceId() };
+        available.TransportSuppliedEndpointName = winrt::hstring{ endpoint->EndpointName() };
 
         if (available.Matches(criteria)) return available.EndpointDeviceId;
     }
@@ -1704,6 +1581,8 @@ CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> 
             JsonNumber(usesOwnSpeed ? (*connection)->EffectiveSendSpeedLimit(*node) : entrySendSpeedLimit));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY,
             JsonNumber(haveConnection ? (*connection)->EffectiveSendSpeedLimit(*node) : node->SendSpeedLimit()));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            JsonBoolean(haveConnection ? (*connection)->EffectiveSkipInBetweenValuesToCatchUp(*node) : node->SkipInBetweenValuesToCatchUp()));
 
         connections.Append(item);
     }
@@ -1764,6 +1643,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_PORT_FALLBACK_KEY, JsonBoolean(definition.AllowPortFallback));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, JsonBoolean(definition.SendRecoveryJournal));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(definition.SendSpeedLimit));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(definition.SkipInBetweenValuesToCatchUp));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONFIGURED_PORT_KEY,
             JsonString(definition.Port == 0 ? std::wstring{ MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO } : std::to_wstring(definition.Port)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_HAS_STARTED_KEY, JsonBoolean(running));
@@ -1823,6 +1703,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
             json::JsonObject settingsItem;
             settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY, JsonString(settings.RemoteName));
             settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(settings.SendSpeedLimit));
+            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(settings.SkipInBetweenValuesToCatchUp));
 
             remoteClientSettings.Append(settingsItem);
         }
@@ -1889,8 +1770,14 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, JsonBoolean(definition.Enabled));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, JsonBoolean(definition.SendRecoveryJournal));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(definition.SendSpeedLimit));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(definition.SkipInBetweenValuesToCatchUp));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, JsonString(RtpMidiJson::OfflineRetentionToString(definition.OfflineRetentionSeconds)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_STATE_KEY, JsonString(state));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY, JsonHresult(view.LastError));
+
+        // a kept endpoint still has one while the remote is away
+        auto const endpoint = FindEndpointForEntry(definition.EntryId);
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENDPOINT_DEVICE_ID_KEY, JsonString(endpoint != nullptr ? endpoint->InterfaceId() : std::wstring{}));
 
         if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LOCAL_PORT_KEY, JsonNumber(view.Node->ControlPort()));
         if (running) item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY, JsonNumber(view.Node->SendSpeedLimit()));

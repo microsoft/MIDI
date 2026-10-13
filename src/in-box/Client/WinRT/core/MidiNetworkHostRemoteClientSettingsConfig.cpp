@@ -60,6 +60,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
                     json::JsonValue::CreateBooleanValue(settings.ReduceSendSpeedAutomatically()));
 
+                settingsObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+                    json::JsonValue::CreateBooleanValue(settings.SkipInBetweenValuesToCatchUp()));
+
                 settingsArray.Append(settingsObject);
             }
 

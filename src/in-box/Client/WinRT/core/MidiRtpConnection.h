@@ -39,9 +39,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         rtp::MidiRtpSendSpeedLimit CurrentSendSpeedLimit() const noexcept { return m_currentSendSpeedLimit; }
         bool UsesRemoteClientSettings() const noexcept { return m_usesRemoteClientSettings; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
-        // The entry's speed stands in for anything an older service does not report
-        void InternalInitialize(_In_ json::JsonObject const& source, _In_ rtp::MidiRtpSendSpeedLimit const entrySendSpeedLimit) noexcept;
+        // The entry's settings stand in for anything an older service does not report
+        void InternalInitialize(
+            _In_ json::JsonObject const& source,
+            _In_ rtp::MidiRtpSendSpeedLimit const entrySendSpeedLimit,
+            _In_ bool const entrySkipInBetweenValuesToCatchUp) noexcept;
 
     private:
         uint32_t m_connectionId{ 0 };
@@ -65,5 +69,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         rtp::MidiRtpSendSpeedLimit m_currentSendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         bool m_usesRemoteClientSettings{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
     };
 }

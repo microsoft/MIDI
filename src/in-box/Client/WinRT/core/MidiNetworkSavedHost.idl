@@ -62,5 +62,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         // The remote clients with their own settings, as last saved with
         // MidiNetworkHostRemoteClientSettingsConfig
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRemoteClientSettings> RemoteClientSettings{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkSavedHost2", UUID_IMidiNetworkSavedHost2)]
+        [contract(MidiTransportsNetworkApiContract, 2)]
+        {
+            // True when none is saved. Includes a change saved later with MidiNetworkHostUpdateConfig.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     };
 }

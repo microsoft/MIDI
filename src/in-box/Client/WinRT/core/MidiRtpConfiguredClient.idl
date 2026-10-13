@@ -49,5 +49,20 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // differ only for a moment after a change.
         [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; };
         [noexcept] MidiRtpSendSpeedLimit CurrentSendSpeedLimit{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpConfiguredClient2", UUID_IMidiRtpConfiguredClient2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // a MidiRtpOfflineRetention value or a number of seconds
+            [noexcept] Int32 OfflineRetentionSeconds{ get; };
+
+            // The client's endpoint, which a client that keeps it still has while the remote is
+            // away. Empty when it has none.
+            [noexcept] String EndpointDeviceId{ get; };
+
+            // false when the client sends every message, however far behind its speed it falls
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     }
 }

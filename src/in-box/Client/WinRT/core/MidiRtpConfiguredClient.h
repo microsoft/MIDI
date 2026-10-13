@@ -33,6 +33,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         int32_t LastErrorCode() const noexcept { return m_lastErrorCode; }
         rtp::MidiRtpConnection Connection() const noexcept { return m_connection; }
 
+        int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
+
         // false when the entry has no usable identifier
         bool InternalInitialize(_In_ json::JsonObject const& source) noexcept;
 
@@ -52,5 +56,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpSendSpeedLimit m_currentSendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         int32_t m_lastErrorCode{ 0 };
         rtp::MidiRtpConnection m_connection{ nullptr };
+        int32_t m_offlineRetentionSeconds{ 0 };
+        winrt::hstring m_endpointDeviceId{};
+        bool m_skipInBetweenValuesToCatchUp{ true };
     };
 }

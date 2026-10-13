@@ -28,6 +28,7 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 | `MatchCriteria` | A `MidiNetworkClientMatchCriteria` that says which remote host to connect to |
 | `SendSpeedLimit` | How fast this PC sends to the remote host. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | When true, the connection sends more slowly while the remote host keeps asking for data again, and speeds back up to `SendSpeedLimit` once it stops. False by default. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed) |
+| `SkipInBetweenValuesToCatchUp` | When true, and messages pile up behind `SendSpeedLimit`, the connection skips some in-between steps of long control change, pressure and pitch bend moves so the remote host catches up. True by default. Set it to false for a device that needs every message, however late. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 

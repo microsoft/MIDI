@@ -42,6 +42,18 @@ Some devices offer both. When they do, use Network MIDI 2.0. The RTP-MIDI page t
 
 RTP-MIDI has one choice that Network MIDI 2.0 doesn't: **Help other devices recover notes lost on the network**. It's on unless you turn it off. Each packet then carries a short summary of recent notes, called the recovery journal, so a device that misses a packet can still end a note that would otherwise hang. Turn it off only for a device that plays extra notes, or notes that don't stop, while it's on. You'll find it when you connect to a device, in **Connect to a device by address**, and under **Advanced** when you create a host. To change it later, select **Disconnect and forget** and connect again, or delete the host and create it again.
 
+### Keeping the endpoint when a device is offline
+
+Many apps, DAWs especially, remember their setup by MIDI port. If a device is switched off when you start the app, its ports are missing, and the app may drop the device from its setup. **Keep endpoint when offline** decides what happens to the device's endpoint and its MIDI ports while the device is off or away from the network. It has the same choices as Bluetooth MIDI:
+
+- **Always** keeps them, so apps find the ports even when the device is off. They start working again when it comes back. Anything sent to the device while it's off is lost.
+- **Remove immediately** removes them as soon as the connection ends, and makes them again when the device comes back. This is the default, because some apps can only tell that a device is gone when its ports go away.
+- **After 30 seconds** and **After 5 minutes** keep them for that long, so a device that's only switched off for a moment doesn't disappear from apps.
+
+Choose it when you connect to an RTP-MIDI device, or later under **Details** on the device's row on the **Network devices** page. Changing it there doesn't disconnect the device. A device you connect to by address starts with **Remove immediately**, so change it under **Details** once it's listed. **Disconnect and forget** always removes the endpoint.
+
+Network MIDI 2.0 devices don't have this choice. Windows learns a Network MIDI 2.0 device's ports and protocol only when its endpoint is new, so the endpoint is always made again when the device comes back.
+
 ## You don't need to keep this app running
 
 This app is here to set connections up. It doesn't carry any MIDI data, and nothing depends on it once you've closed it.
@@ -231,7 +243,11 @@ A network is much faster than a MIDI 1.0 cable, and some devices can't keep up w
 
 The choices are **Unlimited**, which is the default, **MIDI 1.0 wire speed**, which is the speed of a DIN cable, and 2, 4, 8, 16 or 32 times that. Start with MIDI 1.0 wire speed for a device that was built for a cable, and go faster if it copes.
 
-A single note or knob turn is never held back, at any speed. Only a large amount of data sent all at once is spaced out, so at MIDI 1.0 wire speed a SysEx dump takes about as long as it would on a cable. Nothing is dropped to keep to the speed.
+A single note or knob turn is never held back, at any speed. Only a large amount of data sent all at once is spaced out, so at MIDI 1.0 wire speed a SysEx dump takes about as long as it would on a cable. Notes, SysEx and other messages are never dropped to keep to the speed.
+
+When a fader, pitch wheel or aftertouch sends faster than the speed allows, Windows skips some of the in-between values so the device catches up. Where each move starts, turns around and ends always gets through, and so does a short move. A device that uses those messages in another way, such as an endless knob that sends how far it turned, is left alone in nearly every case. If it still loses steps, give that device a faster speed. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
+
+For a device that needs every message, however late, clear **Skip in-between values to catch up**. It's next to the sending speed everywhere you choose one: when you connect, when you create a host, under **Change**, and in **Customize**.
 
 For Network MIDI 2.0, **Slow down when a device misses data** lets Windows choose for you. When a device asks for data again, Windows sends to it more slowly, down to MIDI 1.0 wire speed, and speeds back up once the device stops asking. A connection that has slowed down says so in its status. RTP-MIDI devices can't tell this PC when they miss data, so for those, choose the speed yourself.
 

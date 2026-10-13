@@ -41,6 +41,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         collections::IVectorView<rtp::MidiRtpKnownRemoteClient> KnownRemoteClients() const noexcept { return m_knownRemoteClients.GetView(); }
 
         collections::IVectorView<rtp::MidiRtpRemoteClientSettings> RemoteClientSettings() const noexcept { return m_remoteClientSettings.GetView(); }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         // The saved entry, and the decisions and remote settings saved for it, which are kept
         // beside it in the file
@@ -76,5 +77,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
         collections::IVector<rtp::MidiRtpKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<rtp::MidiRtpKnownRemoteClient>() };
         collections::IVector<rtp::MidiRtpRemoteClientSettings> m_remoteClientSettings{ winrt::single_threaded_vector<rtp::MidiRtpRemoteClientSettings>() };
+        bool m_skipInBetweenValuesToCatchUp{ true };
     };
 }

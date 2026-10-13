@@ -465,6 +465,18 @@
 #define UUID_IMidiNetworkHostRemoteClientSettingsConfig         8087b303-0519-c0de-31d1-dd00F0324000
 #define UUID_IMidiNetworkHostRemoteClientSettingsConfigFactory  8087b303-0519-c0de-31d1-ff00F0324000
 
+// MidiTransportsNetworkApiContract 2, added after Preview 11
+#define UUID_IMidiNetworkHostCreationConfig2                    8087b303-0519-c0de-31d1-dd00F0302002
+#define UUID_IMidiNetworkHostUpdateConfig2                      8087b303-0519-c0de-31d1-dd00F031A002
+#define UUID_IMidiNetworkConfiguredHost2                        8087b303-0519-c0de-31d1-dd00F030C002
+#define UUID_IMidiNetworkSavedHost2                             8087b303-0519-c0de-31d1-dd00F0321002
+#define UUID_IMidiNetworkHostConnection2                        8087b303-0519-c0de-31d1-dd00F0316002
+#define UUID_IMidiNetworkRemoteClientSettings2                  8087b303-0519-c0de-31d1-dd00F0323002
+#define UUID_IMidiNetworkClientConnectConfig2                   8087b303-0519-c0de-31d1-dd00F0307002
+#define UUID_IMidiNetworkClientUpdateConfig2                    8087b303-0519-c0de-31d1-dd00F031B002
+#define UUID_IMidiNetworkConfiguredClient2                      8087b303-0519-c0de-31d1-dd00F030D002
+#define UUID_IMidiNetworkSavedClient2                           8087b303-0519-c0de-31d1-dd00F0322002
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 
@@ -580,6 +592,16 @@
 #define UUID_IMidiRtpRemoteClientSettingsFactory                8087b303-0519-c0de-31d1-ff00F071B000
 #define UUID_IMidiRtpHostRemoteClientSettingsConfig             8087b303-0519-c0de-31d1-dd00F071C000
 #define UUID_IMidiRtpHostRemoteClientSettingsConfigFactory      8087b303-0519-c0de-31d1-ff00F071C000
+
+// MidiTransportsRtpApiContract 2, added after Preview 11
+#define UUID_IMidiRtpClientConnectConfig2                       8087b303-0519-c0de-31d1-dd00F0707002
+#define UUID_IMidiRtpConfiguredClient2                          8087b303-0519-c0de-31d1-dd00F070D002
+#define UUID_IMidiRtpSavedClient2                               8087b303-0519-c0de-31d1-dd00F071A002
+#define UUID_IMidiRtpHostCreationConfig2                        8087b303-0519-c0de-31d1-dd00F0702002
+#define UUID_IMidiRtpConfiguredHost2                            8087b303-0519-c0de-31d1-dd00F070C002
+#define UUID_IMidiRtpConnection2                                8087b303-0519-c0de-31d1-dd00F070E002
+#define UUID_IMidiRtpSavedHost2                                 8087b303-0519-c0de-31d1-dd00F0719002
+#define UUID_IMidiRtpRemoteClientSettings2                      8087b303-0519-c0de-31d1-dd00F071B002
 
 
 #endif

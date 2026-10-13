@@ -708,6 +708,7 @@ namespace winrt::midiglass::implementation
         whole(PadCountBox(), pads.PadCount);
         whole(PadStartNoteBox(), pads.StartNote);
         whole(PadRightIntervalBox(), pads.RightInterval);
+        whole(PadRightStepsBox(), pads.RightSteps);
         whole(PadBendRangeBox(), pads.BendRangeSemitones);
 
         if (!std::isnan(PadSizeBox().Value()))
@@ -726,11 +727,22 @@ namespace winrt::midiglass::implementation
         if (glass::IsHexPadGrid(control->Kind))
         {
             whole(PadUpIntervalBox(), pads.RowInterval);
+            whole(PadUpStepsBox(), pads.RowSteps);
         }
-        else if (PadRowCombo().SelectedIndex() >= 0)
+        else
         {
-            pads.RowInterval = PadRowCombo().SelectedIndex();
+            if (PadRowCombo().SelectedIndex() >= 0)
+            {
+                pads.RowInterval = PadRowCombo().SelectedIndex();
+            }
+
+            if (PadRowStepsCombo().SelectedIndex() >= 0)
+            {
+                pads.RowSteps = PadRowStepsCombo().SelectedIndex();
+            }
         }
+
+        pads.Notes = PadInKeyCheck().IsChecked().GetBoolean() ? glass::PadNotes::InKey : glass::PadNotes::Chromatic;
 
         auto const keyIndex = PadKeyCombo().SelectedIndex();
 
@@ -843,6 +855,17 @@ namespace winrt::midiglass::implementation
         PadUpIntervalBox().Value(glass::HexLayoutOrder[index].RowInterval);
 
         m_updatingInspector = previous;
+
+        ApplyPadGridEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadNotesChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
 
         ApplyPadGridEdit();
     }

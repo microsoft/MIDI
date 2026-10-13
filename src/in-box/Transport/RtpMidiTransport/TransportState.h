@@ -41,8 +41,8 @@ public:
     void SetRemoteClientSettings(_In_ GUID const& hostId, _In_ std::vector<RtpMidiRemoteClientSettings> const& settings);
     std::vector<RtpMidiRemoteClientSettings> GetRemoteClientSettings(_In_ GUID const& hostId);
 
-    // The speed this remote has of its own on the host, if it has one
-    std::optional<uint32_t> FindRemoteClientSendSpeedLimit(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
+    // The settings this remote has of its own on the host, if it has them
+    std::optional<RtpMidiRemoteClientSettings> FindRemoteClientSettings(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
 
 private:
     TransportState() = default;

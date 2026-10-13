@@ -2462,6 +2462,14 @@ MidiNetworkConnection::ClearResendRequests() noexcept
     m_resendRequests.clear();
 }
 
+// What the queue holds before senders wait for room: about the same time at any speed
+static uint64_t OutgoingQueuePacedLimit(_In_ uint32_t const multiple) noexcept
+{
+    return (std::max)(
+        (static_cast<uint64_t>(multiple) * ::WindowsMidiServicesInternal::MidiWireSpeedBytesPerSecond * MIDI_NETWORK_SEND_QUEUE_PACED_MILLISECONDS) / 1000,
+        static_cast<uint64_t>(MIDI_NETWORK_SEND_QUEUE_PACED_MINIMUM_WIRE_BYTES));
+}
+
 bool
 MidiNetworkConnection::OutgoingQueueHasRoom() const noexcept
 {
@@ -2479,12 +2487,7 @@ MidiNetworkConnection::OutgoingQueueHasRoom() const noexcept
         return true;
     }
 
-    // About the same time at any speed
-    auto const pacedLimit = (std::max)(
-        (static_cast<uint64_t>(multiple) * ::WindowsMidiServicesInternal::MidiWireSpeedBytesPerSecond * MIDI_NETWORK_SEND_QUEUE_PACED_MILLISECONDS) / 1000,
-        static_cast<uint64_t>(MIDI_NETWORK_SEND_QUEUE_PACED_MINIMUM_WIRE_BYTES));
-
-    return m_outgoingQueuedWireBytes < pacedLimit;
+    return m_outgoingQueuedWireBytes < OutgoingQueuePacedLimit(multiple);
 }
 
 void
@@ -2500,6 +2503,46 @@ void
 MidiNetworkConnection::WakeSendersWaitingForRoom() noexcept
 {
     WakeByAddressAll(const_cast<ULONG*>(&m_outgoingQueueGeneration));
+}
+
+_Use_decl_annotations_
+bool
+MidiNetworkConnection::PruneOutgoingQueue(uint64_t const incomingWireBytes) noexcept
+{
+    auto const multiple = m_currentSendSpeed.load();
+
+    // A pass that found nothing is not repeated until more arrives
+    if (multiple == 0 || !m_outgoingQueueChangedSincePrune)
+    {
+        return false;
+    }
+
+    auto const keepOneIn = ::WindowsMidiServicesInternal::ChooseMidiSendBacklogKeepOneIn(
+        m_outgoingQueuedWireBytes + incomingWireBytes, OutgoingQueuePacedLimit(multiple));
+
+    auto const result = m_outgoingPruner.PruneUmp(m_outgoingUmpMessages, m_outgoingReadIndex, keepOneIn);
+
+    m_outgoingQueueChangedSincePrune = result.MessagesRemoved > 0;
+
+    if (result.MessagesRemoved == 0)
+    {
+        return false;
+    }
+
+    m_outgoingQueuedWireBytes = (m_outgoingQueuedWireBytes > result.WireBytesRemoved) ? m_outgoingQueuedWireBytes - result.WireBytesRemoved : 0;
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Outbound queue backed up behind the speed limit. Thinned out in-between values.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(result.MessagesRemoved, "messages removed"),
+        TraceLoggingUInt32(keepOneIn, "kept one in-between value in every, 0 for none")
+    );
+
+    return true;
 }
 
 _Use_decl_annotations_
@@ -3067,7 +3110,15 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
             }
 
             // Before the session starts, nothing drains the queue, so there is nothing to wait for
-            if (!m_sessionActive || OutgoingQueueHasRoom() || GetTickCount64() >= waitDeadline)
+            bool canQueue = !m_sessionActive || OutgoingQueueHasRoom() || GetTickCount64() >= waitDeadline;
+
+            // Thinning a backed up queue can make room without waiting
+            if (!canQueue && m_skipInBetweenValuesToCatchUp && PruneOutgoingQueue(wireBytes))
+            {
+                canQueue = OutgoingQueueHasRoom();
+            }
+
+            if (canQueue)
             {
                 if ((m_outgoingUmpMessages.size() - m_outgoingReadIndex) + words.size() > MIDI_NETWORK_SEND_QUEUE_HARD_MAX_WORDS)
                 {
@@ -3092,6 +3143,7 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
                 CATCH_RETURN();
 
                 m_outgoingQueuedWireBytes += wireBytes;
+                m_outgoingQueueChangedSincePrune = true;
 
                 break;
             }

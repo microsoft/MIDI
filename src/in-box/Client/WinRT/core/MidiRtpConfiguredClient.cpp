@@ -38,6 +38,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                 m_sendSpeedLimit;
 
             m_lastErrorCode = MidiRtpSdkJson::Hresult(source, MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY);
+            m_offlineRetentionSeconds = MidiRtpSdkJson::OfflineRetention(source, MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY);
+            m_endpointDeviceId = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_ENDPOINT_DEVICE_ID_KEY);
+            m_skipInBetweenValuesToCatchUp = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
 
             auto const state = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_STATE_KEY);
 
@@ -52,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             if (!connections.empty())
             {
                 auto connection = winrt::make_self<MidiRtpConnection>();
-                connection->InternalInitialize(connections.front(), m_sendSpeedLimit);
+                connection->InternalInitialize(connections.front(), m_sendSpeedLimit, m_skipInBetweenValuesToCatchUp);
                 m_connection = *connection;
             }
 

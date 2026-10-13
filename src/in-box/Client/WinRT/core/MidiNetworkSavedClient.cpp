@@ -69,6 +69,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             auto sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
             auto reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
+            auto skipInBetweenValuesToCatchUp = MidiSavedConfigJson::Boolean(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
 
             // a value missing from a change leaves what came before it
             for (auto const& update : updates)
@@ -85,6 +86,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                 sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, sendSpeedLimit);
                 reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, reduceSendSpeedAutomatically);
+                skipInBetweenValuesToCatchUp = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, skipInBetweenValuesToCatchUp);
             }
 
             m_customEndpointName = internal::TrimmedHStringCopy(customEndpointName);
@@ -92,6 +94,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_fallbackMidi1PortCount = fallbackMidi1PortCount;
             m_sendSpeedLimit = static_cast<network::MidiNetworkSendSpeedLimit>(sendSpeedLimit);
             m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_skipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
 
             auto const match = MidiSavedConfigJson::Object(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY);
 

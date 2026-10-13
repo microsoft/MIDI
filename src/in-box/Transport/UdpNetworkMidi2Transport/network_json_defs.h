@@ -69,6 +69,10 @@
 // down to MIDI 1.0 wire speed, and go back up to the limit once it stops.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY       L"reduceSendSpeedAutomatically" // boolean, default false
 
+// When messages back up behind the send speed limit, skip some in-between values of long control
+// change, pressure and pitch bend moves, so the remote catches up
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY    L"skipInBetweenValuesToCatchUp" // boolean, default true
+
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY                 L"serviceInstanceName"      // just the first part (before the . ) of the host instance name. Defaults to machine name
 
@@ -96,9 +100,9 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY                  L"umpEndpointName"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY   L"productInstanceId"
 
-// Remote clients of a host with their own sendSpeedLimit and reduceSendSpeedAutomatically, used
-// for them instead of the host's. An array of objects with the identity keys above. Always the
-// whole list: an update replaces it rather than adding to it.
+// Remote clients of a host with their own sendSpeedLimit, reduceSendSpeedAutomatically and
+// skipInBetweenValuesToCatchUp, used for them instead of the host's. An array of objects with the
+// identity keys above. Always the whole list: an update replaces it rather than adding to it.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY                L"remoteClientSettings"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY                   L"authentication"        // password, user, none
@@ -193,6 +197,7 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SEND_SPEED_LIMIT_KEY    MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY
 
 // What the connection sends at right now, which automatic reduction may have lowered. Only
 // present while the client is running.
@@ -257,6 +262,7 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SEND_SPEED_LIMIT_KEY      MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY
 
 // Per-host list of remote clients, so a polling app can show what is connected and what is
@@ -282,6 +288,7 @@
 // the host's, and which of the two it is.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SEND_SPEED_LIMIT_KEY               MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY    L"usesRemoteClientSettings"
 
 

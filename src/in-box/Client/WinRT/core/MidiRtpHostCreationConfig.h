@@ -49,6 +49,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         void SendSpeedLimit(_In_ rtp::MidiRtpSendSpeedLimit const value) noexcept { m_sendSpeedLimit = value; }
 
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
+        void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
+
         winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId; }
         void NetworkAdapterId(_In_ winrt::guid const& value) noexcept;
 
@@ -71,6 +74,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpRemoteClientPolicy m_remoteClientPolicy{ rtp::MidiRtpRemoteClientPolicy::AllowAny };
         bool m_sendRecoveryJournal{ true };
         rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        bool m_skipInBetweenValuesToCatchUp{ true };
 
         winrt::guid m_networkAdapterId{};
         winrt::hstring m_networkAdapterName{};

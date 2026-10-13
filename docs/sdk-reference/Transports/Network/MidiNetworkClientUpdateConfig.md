@@ -25,12 +25,13 @@ Pass to `MidiNetworkTransportManager.UpdateNetworkClientAsync`.
 | `FallbackMidi1PortCount` | How many source and destination ports to create when the remote host declares no function blocks. 1 to 16 |
 | `SendSpeedLimit` | How fast this PC sends to the remote host. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | Whether the connection sends more slowly while the remote host keeps asking for data again |
+| `SkipInBetweenValuesToCatchUp` | Whether the connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 
 The connection stays up. Only the settings that can change on a running connection take effect right away.
 
-`SendSpeedLimit` and `ReduceSendSpeedAutomatically` are only changed when you set them, so a speed chosen somewhere else is left alone when you change only the ports. Both apply straight away, without disconnecting.
+`SendSpeedLimit`, `ReduceSendSpeedAutomatically` and `SkipInBetweenValuesToCatchUp` are only changed when you set them, so a speed chosen somewhere else is left alone when you change only the ports. All three apply straight away, without disconnecting.
 
 `FallbackMidi1PortCount` applies to an endpoint that's already running. Ports are added or removed without disconnecting. `CreateMidi1Ports` is saved for the next connection, because whether an endpoint has MIDI 1.0 ports at all is decided when the endpoint is built. To use it now, disconnect and connect again.
 

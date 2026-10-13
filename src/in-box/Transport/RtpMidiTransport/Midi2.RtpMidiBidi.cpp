@@ -36,17 +36,17 @@ CMidi2RtpMidiBidi::Initialize(
         auto endpointManager = TransportState::Current().GetEndpointManager();
         RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
 
-        auto connection = endpointManager->FindConnectionByEndpointDeviceInterfaceId(endpointDeviceInterfaceId);
-        RETURN_HR_IF_NULL(E_NOTFOUND, connection);
+        auto endpoint = endpointManager->FindEndpointByInterfaceId(endpointDeviceInterfaceId);
+        RETURN_HR_IF_NULL(E_NOTFOUND, endpoint);
 
         {
             auto lock = std::scoped_lock{ m_lock };
 
             m_callback = callback;
-            m_connection = connection;
+            m_endpoint = endpoint;
         }
 
-        RETURN_IF_FAILED(connection->ConnectMidiCallback(this, context));
+        RETURN_IF_FAILED(endpoint->ConnectMidiCallback(this, context));
 
         return S_OK;
     }
@@ -68,17 +68,17 @@ CMidi2RtpMidiBidi::Shutdown()
 
     try
     {
-        std::shared_ptr<RtpMidiConnection> connection{ nullptr };
+        std::shared_ptr<RtpMidiEndpoint> endpoint{ nullptr };
 
         {
             auto lock = std::scoped_lock{ m_lock };
-            connection = m_connection.lock();
+            endpoint = m_endpoint.lock();
         }
 
-        // before the callback goes, so the connection stops handing messages to this endpoint
-        if (connection != nullptr)
+        // before the callback goes, so the endpoint stops handing messages to this bidi
+        if (endpoint != nullptr)
         {
-            LOG_IF_FAILED(connection->DisconnectMidiCallbackIfCurrent(this));
+            LOG_IF_FAILED(endpoint->DisconnectMidiCallbackIfCurrent(this));
         }
 
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
@@ -86,7 +86,7 @@ CMidi2RtpMidiBidi::Shutdown()
         {
             auto lock = std::scoped_lock{ m_lock };
 
-            m_connection.reset();
+            m_endpoint.reset();
             callback = std::move(m_callback);
         }
 
@@ -112,16 +112,16 @@ CMidi2RtpMidiBidi::SendMidiMessage(
         RETURN_HR_IF_NULL(E_INVALIDARG, data);
         RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-        std::shared_ptr<RtpMidiConnection> connection{ nullptr };
+        std::shared_ptr<RtpMidiEndpoint> endpoint{ nullptr };
 
         {
             auto lock = std::scoped_lock{ m_lock };
-            connection = m_connection.lock();
+            endpoint = m_endpoint.lock();
         }
 
-        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), connection);
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), endpoint);
 
-        return connection->SendToNetwork(data, length);
+        return endpoint->SendToNetwork(data, length);
     }
     CATCH_RETURN();
 }

@@ -59,5 +59,13 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // The remotes with their own settings, as last saved with
         // MidiRtpHostRemoteClientSettingsConfig
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpRemoteClientSettings> RemoteClientSettings{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpSavedHost2", UUID_IMidiRtpSavedHost2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // True when none is saved
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     }
 }

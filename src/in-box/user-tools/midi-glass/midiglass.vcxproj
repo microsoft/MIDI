@@ -281,6 +281,7 @@
     <ClCompile Include="EditorSequenceDialog.cpp" />
     <ClCompile Include="EditorPanes.cpp" />
     <ClCompile Include="EditorTryMode.cpp" />
+    <ClCompile Include="EditorKeyPickers.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
@@ -423,6 +424,9 @@
     <ClCompile Include="editor\EditorControllerEdits.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="editor\EditorControllerPickers.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="editor\RepeatPlan.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -435,12 +439,14 @@
     <ClCompile Include="runtime\StepSequencer.cpp" />
     <ClCompile Include="surface\DeckBrush.cpp" />
     <ClCompile Include="runtime\LivePlayer.cpp" />
+    <ClCompile Include="runtime\LivePlayerKeys.cpp" />
     <ClCompile Include="runtime\SequenceRunner.cpp" />
     <ClCompile Include="runtime\OutputRouter.cpp" />
     <ClCompile Include="surface\GlassControl.cpp" />
     <ClCompile Include="surface\InputRouter.cpp" />
     <ClCompile Include="surface\SurfaceAutomationPeer.cpp" />
     <ClCompile Include="surface\SurfaceControls.cpp" />
+    <ClCompile Include="surface\SurfaceKeyPickers.cpp" />
     <ClCompile Include="surface\SurfacePads.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
     <ClCompile Include="surface\SurfaceTextures.cpp" />

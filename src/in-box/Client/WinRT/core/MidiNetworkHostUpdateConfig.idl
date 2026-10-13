@@ -58,5 +58,14 @@ namespace Windows.Devices.Midi2.Transports.Network
         // Send more slowly while a remote client keeps asking for data again. Applied straight
         // away, without dropping a connection.
         [noexcept] Boolean ReduceSendSpeedAutomatically;
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostUpdateConfig2", UUID_IMidiNetworkHostUpdateConfig2)]
+        [contract(MidiTransportsNetworkApiContract, 2)]
+        {
+            // Skip some in-between values to catch up when messages back up behind the speed.
+            // Applied straight away, without dropping a connection.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp;
+        }
     }
 }

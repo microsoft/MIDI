@@ -32,6 +32,7 @@ Describes a host for remote devices to connect to. Pass it to `MidiRtpTransportM
 | `NetworkAdapterName` | The adapter's name, like `Ethernet 3`. It's only shown to people, so they can tell which adapter a host is waiting for |
 | `AllowNetworkAdapterFallback` | What the host does while its adapter is missing. When true, it runs on every adapter until the adapter is back. When false, it doesn't run until the adapter is back |
 | `SendSpeedLimit` | How fast the host sends to each connected device. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
+| `SkipInBetweenValuesToCatchUp` | When true, and messages pile up behind `SendSpeedLimit`, a connection skips some in-between steps of long control change, pressure and pitch bend moves so the device catches up. Set it to false for devices that need every message, however late. Added in version 2 of `MidiTransportsRtpApiContract` |
 
 ## Defaults
 
@@ -48,6 +49,7 @@ Describes a host for remote devices to connect to. Pass it to `MidiRtpTransportM
 | `NetworkAdapterId` | Empty, so the host runs on every adapter |
 | `AllowNetworkAdapterFallback` | `true` |
 | `SendSpeedLimit` | `Unlimited` |
+| `SkipInBetweenValuesToCatchUp` | `true` |
 
 ## Remarks
 
@@ -57,6 +59,6 @@ When the host is advertised and `ServiceInstanceName` is empty, `Name` is the na
 
 If another device on the network already advertises the same name, Windows gives the host a different one, instead of refusing it. `MidiRtpConfiguredHost.ActualServiceInstanceName` has the name really in use.
 
-There's no separate way to change a host. To change one, fill in every property the way you want it, set `HostId` to the host's id, and pass the configuration to `CreateRtpHostAsync`. The host restarts with the new settings, which ends its connections, and its remembered allow and deny decisions are kept. A host that was stopped is started again. A new `SendSpeedLimit` is the exception: when it's the only change, it applies to the running host and its connections straight away, without a restart.
+There's no separate way to change a host. To change one, fill in every property the way you want it, set `HostId` to the host's id, and pass the configuration to `CreateRtpHostAsync`. The host restarts with the new settings, which ends its connections, and its remembered allow and deny decisions are kept. A host that was stopped is started again. A new `SendSpeedLimit` or `SkipInBetweenValuesToCatchUp` is the exception: when that's the only change, it applies to the running host and its connections straight away, without a restart.
 
 A host limited to one network adapter only advertises itself there, and only answers devices that reach it through that adapter. The service also remembers the adapter's hardware address, so a USB network adapter that comes back with a new GUID after being plugged into another port is still found. If the adapter is missing and `AllowNetworkAdapterFallback` is false, `CreateRtpHostAsync` reports `NetworkAdapterNotAvailable`. The host is still created, and it starts by itself when the adapter is back, so save the configuration as usual.

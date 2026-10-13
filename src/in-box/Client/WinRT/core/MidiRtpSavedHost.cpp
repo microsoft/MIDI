@@ -38,6 +38,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
             m_allowPortFallback = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
             m_sendRecoveryJournal = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
             m_sendSpeedLimit = static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY));
+            m_skipInBetweenValuesToCatchUp = MidiRtpSdkJson::Boolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
 
             // An id which is not a GUID is ignored, as the service ignores it
             GUID networkAdapterId{};
@@ -109,6 +110,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
                     auto settings = winrt::make_self<MidiRtpRemoteClientSettings>(name);
                     settings->SendSpeedLimit(static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(client, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY)));
+                    settings->SkipInBetweenValuesToCatchUp(MidiRtpSdkJson::Boolean(client, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
 
                     m_remoteClientSettings.Append(*settings);
                 }

@@ -128,6 +128,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 // The send speed limit, shared with the RTP-MIDI transport
 #include "midi_send_pacer.h"
+#include "midi_send_backlog_pruner.h"
 
 #include <deque>
 

@@ -63,6 +63,11 @@ namespace WindowsMidiServices
         [Parameter]
         public SwitchParameter ReduceSendSpeedAutomatically { get; set; }
 
+        // Send every message, however late, rather than skipping some in-between steps of long
+        // control change, pressure and pitch bend moves to catch up
+        [Parameter]
+        public SwitchParameter NoSkippingInBetweenValues { get; set; }
+
         [Parameter]
         public SwitchParameter SaveToConfiguration { get; set; }
 
@@ -123,6 +128,7 @@ namespace WindowsMidiServices
                 CreateOnlyUmpEndpoints = CreateOnlyUmpEndpoints.IsPresent,
                 SendSpeedLimit = SendSpeedLimit,
                 ReduceSendSpeedAutomatically = ReduceSendSpeedAutomatically.IsPresent,
+                SkipInBetweenValuesToCatchUp = !NoSkippingInBetweenValues.IsPresent,
                 MatchCriteria = criteria
             };
 

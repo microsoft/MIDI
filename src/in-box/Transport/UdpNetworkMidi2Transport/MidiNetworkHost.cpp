@@ -55,6 +55,7 @@ MidiNetworkHost::Initialize(
     m_fallbackMidi1PortCount = hostDefinition.FallbackMidi1PortCount;
     m_sendSpeedLimit = hostDefinition.SendSpeedLimit;
     m_reduceSendSpeedAutomatically = hostDefinition.ReduceSendSpeedAutomatically;
+    m_skipInBetweenValuesToCatchUp = hostDefinition.SkipInBetweenValuesToCatchUp;
 
     m_hostEndpointName = hostDefinition.UmpEndpointName;
     m_hostProductInstanceId = hostDefinition.ProductInstanceId;
@@ -266,7 +267,7 @@ MidiNetworkRemoteClientSendSpeed
 MidiNetworkHost::GetSendSpeedForRemoteClient(MidiNetworkRemoteClientIdentity const& identity) noexcept
 {
     // the definition only has the host's own speed as it was created, so it comes from here
-    MidiNetworkRemoteClientSendSpeed speed{ m_sendSpeedLimit, m_reduceSendSpeedAutomatically, false };
+    MidiNetworkRemoteClientSendSpeed speed{ m_sendSpeedLimit, m_reduceSendSpeedAutomatically, false, m_skipInBetweenValuesToCatchUp };
 
     try
     {
@@ -274,7 +275,7 @@ MidiNetworkHost::GetSendSpeedForRemoteClient(MidiNetworkRemoteClientIdentity con
 
         if (auto const settings = m_hostDefinition.FindRemoteClientSettings(identity); settings != nullptr)
         {
-            speed = { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true };
+            speed = { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true, settings->SkipInBetweenValuesToCatchUp };
         }
     }
     CATCH_LOG();
@@ -327,6 +328,7 @@ MidiNetworkHost::CreateNetworkConnection(
         ));
 
         conn->SetSendSpeedLimit(m_sendSpeedLimit, m_reduceSendSpeedAutomatically);
+        conn->SetSkipInBetweenValuesToCatchUp(m_skipInBetweenValuesToCatchUp);
 
         // Another thread pool thread may have created one for this same remote while we were
         // initializing. Whichever landed in the map first wins, and the loser is torn down.

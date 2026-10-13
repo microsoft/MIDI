@@ -9,6 +9,7 @@
 
 #include "BindingEngine.h"
 #include "MackieControl.h"
+#include "PadGrid.h"
 
 #include <algorithm>
 #include <cmath>
@@ -437,7 +438,8 @@ namespace glass
 
                     for (auto const& message : control.Messages)
                     {
-                        if (message.Kind == MessageKind::Unrecognized)
+                        // A picker sets the pads' key instead. Its rows wait until it stops picking.
+                        if (message.Kind == MessageKind::Unrecognized || IsKeyPicker(control))
                         {
                             continue;
                         }
@@ -480,7 +482,9 @@ namespace glass
 
                     prepared.MessageCount = static_cast<uint32_t>(m_messages.size()) - prepared.FirstMessage;
 
-                    if (control.Feedback.Enabled && control.Feedback.Kind != MessageKind::Unrecognized)
+                    // A picker shows the key that was picked, so nothing coming in may move it.
+                    if (control.Feedback.Enabled && control.Feedback.Kind != MessageKind::Unrecognized &&
+                        !IsKeyPicker(control))
                     {
                         PreparedFeedback feedback{};
 

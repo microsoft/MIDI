@@ -9,7 +9,7 @@
 
 #pragma once
 
-// Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges. The table keeps a
+// Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability. The table keeps a
 // copy of the device built at creation, so a copy gets a lock of its own instead of sharing one.
 class MidiLoopbackCallbackLock
 {
@@ -66,7 +66,7 @@ public:
         m_callbackB = callback;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     void ShutdownWithLock()
     {
         wil::com_ptr_nothrow<IMidiCallback> releasedA{ nullptr };
@@ -82,7 +82,7 @@ public:
         // released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     void RegisterEndpointAWithLock(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
         {
@@ -93,7 +93,7 @@ public:
         // callback now holds the one it replaced, released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     void RegisterEndpointBWithLock(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
         {
@@ -104,7 +104,7 @@ public:
         // callback now holds the one it replaced, released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges. Holds its own
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability. Holds its own
     // reference to the destination for the whole delivery, and keeps the muting and feedback
     // protection behavior of the four Send functions below.
     HRESULT SendMessageWithLock(
@@ -268,7 +268,7 @@ private:
     wil::com_ptr_nothrow<IMidiCallback> m_callbackA{ nullptr };
     wil::com_ptr_nothrow<IMidiCallback> m_callbackB{ nullptr };
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     MidiLoopbackCallbackLock m_callbackLock{};
 
 };

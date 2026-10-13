@@ -53,6 +53,8 @@ If you need to keep other devices off a host, put it on a network you control, o
 
 **Connections are remembered and re-established on their own.** A connection you set up survives a restart of the service or the PC, with no app running. If the device is switched off, the entry stays and connects when the device reappears.
 
+**The endpoint goes away while the device is away.** When a connection ends, Windows removes the device's endpoint and its MIDI 1.0 ports, and makes them again when the device comes back. Unlike RTP-MIDI and Bluetooth MIDI, there's no setting to keep them. When a Network MIDI 2.0 endpoint first appears, Windows asks the device to describe itself, and the two agree on which MIDI protocol to use. Windows only does that for a new endpoint, and a device that was switched off can come back with different answers. Keeping the endpoint would need a big exception to how that works, so Windows doesn't offer it.
+
 **A device that does not advertise can be connected by address.** Advertised connections are more efficient, because Windows waits for an announcement rather than repeatedly probing an address.
 
 **A device with more than one address is tried at each one in turn.** A device can have an IPv4 address and several IPv6 addresses, and its announcement doesn't say which one to use. Windows tries them in the same order it uses for every other app on this PC. That's usually IPv6 first, but an IPv6 address starting with `fd` comes after IPv4, and an address this PC has no way to reach is skipped. If the device doesn't answer at one address, Windows tries the next one right away. Once a connection works, Windows tries that address first next time. To always use one particular address, connect to the device by that address. An administrator can also make the whole PC [prefer IPv4 over IPv6](https://learn.microsoft.com/troubleshoot/windows-server/networking/configure-ipv6-in-windows).
@@ -277,7 +279,13 @@ A number above 32 means no limit. The speed is measured in the bytes the same me
 
 **A single message is never held back.** After a quiet moment, a short burst goes out at once: 64 bytes at wire speed, and 64 more for each step up. Only what comes after that is spaced out. So somebody playing a keyboard won't notice a limit, while a 3,000 byte SysEx dump at wire speed takes about a second, as it would on a cable.
 
-**Nothing is dropped to keep to the limit.** Windows holds the extra messages and sends them as fast as the limit allows. If an app keeps sending faster than that, its sends slow down to match.
+**Windows holds the extra messages** and sends them as fast as the limit allows. Notes, program changes, SysEx and other messages are never dropped to keep to the limit. If an app keeps sending faster than that, its sends slow down to match.
+
+**A fast move is thinned out so the device can catch up.** Moving a fader or a pitch wheel, or pressing on a key with aftertouch, can send hundreds of messages a second, which is more than a slow limit carries. When more than about a tenth of a second of messages is waiting, Windows skips some of the steps in the middle of each control change, pressure or pitch bend move. Where each move starts, every point where it turns around, and where it ends are always sent, and so is the value right before and after each note. So the device gets to the right value sooner, instead of playing every step late. A value sent several times in a row is always kept, so a button that sends the same value each time it's pressed still works.
+
+Some devices use these messages in other ways, such as an endless knob that sends how far it turned rather than where it is, or a control surface that sends meter levels as pressure. Those messages go up and down in short runs, and the first 16 steps of every run are always sent, so they're left alone in nearly every case. If a device still loses steps, give it a faster speed or none, or turn off skipping for it.
+
+**You can turn the skipping off.** Every host, every client entry and every device with a speed of its own has a **Skip in-between values to catch up** setting, which is on by default. Turn it off for a device that needs every message, and Windows sends them all, however late they get. In Network MIDI Setup, it's a check box next to the sending speed. In the API, it's `SkipInBetweenValuesToCatchUp`, and in PowerShell it's `-NoSkippingInBetweenValues`. RTP-MIDI has the same setting.
 
 **A change applies right away**, including to connections that are already up, without disconnecting them.
 

@@ -30,6 +30,9 @@ namespace midipatchbay
         uint64_t MessagesWaiting{ 0 };
         uint64_t MessagesDropped{ 0 };
 
+        // A throttle: in-between values of controller sweeps it skipped to catch up.
+        uint64_t MessagesThinned{ 0 };
+
         bool IsActive{ false };
     };
 

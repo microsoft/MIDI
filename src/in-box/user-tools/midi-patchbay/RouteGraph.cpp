@@ -875,6 +875,7 @@ namespace midipatchbay
 
                 RouteThrottle throttle{};
                 throttle.Speed = block.Settings.SendSpeedLimit;
+                throttle.SkipInBetweenValues = block.Settings.SkipInBetweenValues;
                 throttle.Cell = CellFor(block.Id);
                 throttle.FirstEdge = static_cast<uint32_t>(m_graph.Edges.size());
                 throttle.EdgeCount = static_cast<uint32_t>(next.size());

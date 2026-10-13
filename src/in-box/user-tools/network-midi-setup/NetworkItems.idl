@@ -101,6 +101,7 @@ namespace midinetworksetup
         String SendSpeedText{ get; };
         UInt32 SendSpeedLimit{ get; };
         Boolean ReduceSendSpeedAutomatically{ get; };
+        Boolean SkipInBetweenValuesToCatchUp{ get; };
         Microsoft.UI.Xaml.Visibility SendSpeedVisibility{ get; };
 
         // Round trip latency over the last several polls, newest at the right. Rendered as a
@@ -184,6 +185,7 @@ namespace midinetworksetup
 
         UInt32 SendSpeedLimit{ get; };
         Boolean ReduceSendSpeedAutomatically{ get; };
+        Boolean SkipInBetweenValuesToCatchUp{ get; };
 
         // which transport's host the setting belongs to
         Boolean IsRtpMidi{ get; };
@@ -226,6 +228,7 @@ namespace midinetworksetup
         String SendSpeedText{ get; };
         UInt32 SendSpeedLimit{ get; };
         Boolean ReduceSendSpeedAutomatically{ get; };
+        Boolean SkipInBetweenValuesToCatchUp{ get; };
 
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
@@ -289,7 +292,14 @@ namespace midinetworksetup
         // how fast this PC sends to the session, for an entry this PC has
         String SendSpeedText{ get; };
         UInt32 SendSpeedLimit{ get; };
+        Boolean SkipInBetweenValuesToCatchUp{ get; };
         Microsoft.UI.Xaml.Visibility SendSpeedVisibility{ get; };
+
+        // how long the endpoint stays while the device is away, for an entry this PC has. The text
+        // is only filled in for a duration which is not one of the choices.
+        Int32 OfflineRetentionIndex{ get; };
+        String OfflineRetentionText{ get; };
+        Microsoft.UI.Xaml.Visibility OfflineRetentionVisibility{ get; };
 
         Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
         Microsoft.UI.Xaml.Media.PointCollection LatencyLinePoints{ get; };

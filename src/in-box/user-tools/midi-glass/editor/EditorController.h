@@ -404,6 +404,20 @@ namespace glass
         bool AddSwitchPosition(_In_ std::wstring const& id);
         bool RemoveSwitchPosition(_In_ std::wstring const& id, _In_ size_t index);
 
+        // What a switch picks while the layout runs (EditorControllerPickers.cpp). A switch that
+        // starts picking grows, if it has to, until every name it prints fits.
+        bool SetSwitchPicks(_In_ std::wstring const& id, _In_ SwitchPicks picks);
+
+        // The scales a scale picker offers, kept in the order the inspector lists them. At least two.
+        bool SetSwitchScales(_In_ std::wstring const& id, _In_ std::vector<MusicalScale> const& scales);
+
+        // A root picker above a pad grid and a scale picker beside it, as one edit, for whichever
+        // of the two the layout does not have yet. The labels are what a screen reader calls them.
+        std::vector<std::wstring> AddKeyPickers(
+            _In_ std::wstring const& gridId,
+            _In_ std::wstring const& rootLabel,
+            _In_ std::wstring const& scaleLabel);
+
         bool SetControlKeyboard(_In_ std::wstring const& id, _In_ KeyboardSpec const& keyboard);
         bool SetControlClock(_In_ std::wstring const& id, _In_ ClockSpec const& clock);
         bool SetControlLfo(_In_ std::wstring const& id, _In_ LfoSpec const& lfo);

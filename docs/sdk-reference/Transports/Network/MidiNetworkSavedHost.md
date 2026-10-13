@@ -29,6 +29,7 @@ A Network MIDI 2.0 host saved in the configuration file. The service starts it e
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
 | `SendSpeedLimit` | How fast the host sends to each connected device. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `ReduceSendSpeedAutomatically` | True when a connection sends more slowly while the device keeps asking for data again. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
+| `SkipInBetweenValuesToCatchUp` | True when a connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. True when nothing was saved. This includes any change saved later with `MidiNetworkHostUpdateConfig`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) objects |
 | `RemoteClientSettings` | Every saved remote client with a sending speed of its own, as [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/) objects |
 

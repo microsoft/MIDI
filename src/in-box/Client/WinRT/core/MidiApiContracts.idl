@@ -80,7 +80,8 @@ namespace Windows.Devices.Midi2
 
         namespace Network
         {
-            [contractversion(1)]
+            // 2: turning off skipping in-between values to catch up, added after Preview 11
+            [contractversion(2)]
             apicontract MidiTransportsNetworkApiContract { };
         }
 
@@ -98,7 +99,9 @@ namespace Windows.Devices.Midi2
 
         namespace Rtp
         {
-            [contractversion(1)]
+            // 2: kept endpoints (offline retention) on clients, and turning off skipping in-between
+            // values to catch up, added after Preview 11
+            [contractversion(2)]
             apicontract MidiTransportsRtpApiContract { };
         }
 

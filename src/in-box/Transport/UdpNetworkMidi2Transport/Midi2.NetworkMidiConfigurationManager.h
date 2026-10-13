@@ -109,6 +109,7 @@ private:
         _In_ uint8_t const fallbackMidi1PortCount,
         _In_ uint32_t const sendSpeedLimit,
         _In_ bool const reduceSendSpeedAutomatically,
+        _In_ bool const skipInBetweenValuesToCatchUp,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     // Connects to an mDNS-discovered host by its Windows device id. The address and port are
@@ -123,6 +124,7 @@ private:
         _In_ uint8_t const fallbackMidi1PortCount,
         _In_ uint32_t const sendSpeedLimit,
         _In_ bool const reduceSendSpeedAutomatically,
+        _In_ bool const skipInBetweenValuesToCatchUp,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     HRESULT RunCommandDisconnectClient(

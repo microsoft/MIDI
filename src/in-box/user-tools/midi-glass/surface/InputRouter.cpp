@@ -160,6 +160,29 @@ namespace glass
         m_renderer = nullptr;
     }
 
+    void InputRouter::RefreshPadGrids() noexcept
+    {
+        if (m_renderer == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            for (auto& binding : m_bindings)
+            {
+                if (binding.PlaysPads)
+                {
+                    binding.PadGrid = m_renderer->PadGridAt(binding.ItemIndex);
+                    binding.PadLayout = m_renderer->PadLayoutAt(binding.ItemIndex);
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
     void InputRouter::ReleaseAll()
     {
         for (auto& binding : m_bindings)
@@ -1045,7 +1068,7 @@ namespace glass
             touch.Touch = pointerId;
             touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
             touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
-            touch.Pitch = PitchAtPoint(binding.PadLayout, binding.PadGrid, cell, x);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x);
 
             PadTouched(binding.ItemIndex, touch);
         }
@@ -1120,7 +1143,7 @@ namespace glass
             touch.Touch = pointerId;
             touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
             touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
-            touch.Pitch = PitchAtPoint(binding.PadLayout, binding.PadGrid, cell, x);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x);
 
             PadTouched(binding.ItemIndex, touch);
         }

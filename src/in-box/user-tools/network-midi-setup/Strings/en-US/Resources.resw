@@ -1111,6 +1111,14 @@
     <value>Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data.</value>
     <comment>Shown for RTP-MIDI in place of the "Slow down when a device misses data" check box, which only Network MIDI 2.0 has.</comment>
   </data>
+  <data name="SkipInBetweenValuesCheckBox.Content" xml:space="preserve">
+    <value>Skip in-between values to catch up</value>
+    <comment>Check box next to the sending speed, for both Network MIDI 2.0 and RTP-MIDI. On by default.</comment>
+  </data>
+  <data name="SkipInBetweenValuesHelp.Text" xml:space="preserve">
+    <value>When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned.</value>
+    <comment>Help under the "Skip in-between values to catch up" check box.</comment>
+  </data>
   <data name="SendSpeedLimitUnlimited" xml:space="preserve">
     <value>Unlimited</value>
   </data>
@@ -1125,6 +1133,10 @@
   <data name="SendSpeedReducesAutomaticallyFormat" xml:space="preserve">
     <value>{0}, and slows down when a device misses data</value>
     <comment>{0} is a sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="SendSpeedNoSkippingFormat" xml:space="preserve">
+    <value>{0}, without skipping in-between values</value>
+    <comment>{0} is a sending speed, such as 4× MIDI 1.0 wire speed, which may already end in "and slows down when a device misses data". Shown when "Skip in-between values to catch up" is turned off.</comment>
   </data>
   <data name="SendSpeedSlowedFormat" xml:space="preserve">
     <value>{0}. Sending at {1} for now, because it missed data.</value>
@@ -1204,6 +1216,55 @@
   </data>
   <data name="SendSpeedNeedsSavedEntryFormat" xml:space="preserve">
     <value>Windows could not change the sending speed for {0}, because this PC's connection to it is not saved. Forget it, then connect again.</value>
+    <comment>{0} is the name of a device this PC connects to.</comment>
+  </data>
+  <data name="OfflineRetentionLabel.Text" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="OfflineRetentionCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="ConnectOfflineRetentionComboBox.Header" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="OfflineRetentionAlwaysItem.Content" xml:space="preserve">
+    <value>Always</value>
+  </data>
+  <data name="OfflineRetentionImmediateItem.Content" xml:space="preserve">
+    <value>Remove immediately</value>
+  </data>
+  <data name="OfflineRetention30SecondsItem.Content" xml:space="preserve">
+    <value>After 30 seconds</value>
+  </data>
+  <data name="OfflineRetention5MinutesItem.Content" xml:space="preserve">
+    <value>After 5 minutes</value>
+  </data>
+  <data name="OfflineRetentionHelp.Text" xml:space="preserve">
+    <value>Keeping the endpoint means apps hold on to their MIDI ports while the device is off, so they keep their setup. Anything sent to it then is lost. Removing it means the ports go away, which is the only way most apps can tell the device is gone.</value>
+  </data>
+  <data name="OfflineRetentionAlways" xml:space="preserve">
+    <value>always</value>
+  </data>
+  <data name="OfflineRetentionImmediate" xml:space="preserve">
+    <value>removed immediately</value>
+  </data>
+  <data name="OfflineRetentionSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+    <comment>{0} is a number of seconds.</comment>
+  </data>
+  <data name="OfflineRetentionSetFormat" xml:space="preserve">
+    <value>{0} will keep its endpoint when offline: {1}.</value>
+    <comment>{0} is the name of a device this PC connects to. {1} is always, removed immediately, or a number of seconds.</comment>
+  </data>
+  <data name="OfflineRetentionChangeFailedGeneral" xml:space="preserve">
+    <value>Windows could not change how long the endpoint is kept when offline.</value>
+  </data>
+  <data name="OfflineRetentionChangeFailedFormat" xml:space="preserve">
+    <value>Windows could not change how long the endpoint is kept when offline. {0}</value>
+    <comment>{0} is the reason the MIDI service gave.</comment>
+  </data>
+  <data name="OfflineRetentionNeedsSavedEntryFormat" xml:space="preserve">
+    <value>Windows could not change how long the endpoint for {0} is kept when offline, because this PC's connection to it is not saved. Forget it, then connect again.</value>
     <comment>{0} is the name of a device this PC connects to.</comment>
   </data>
   <data name="FirewallNavigationItem.Content" xml:space="preserve">

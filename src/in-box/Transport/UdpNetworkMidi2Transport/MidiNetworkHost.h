@@ -72,8 +72,9 @@ struct MidiNetworkHostDefinition
     // limit. See MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY.
     uint32_t SendSpeedLimit{ 0 };
     bool ReduceSendSpeedAutomatically{ false };
+    bool SkipInBetweenValuesToCatchUp{ true };
 
-    // Remote clients with their own settings, used for them instead of the two above
+    // Remote clients with their own settings, used for them instead of the ones above
     std::vector<MidiNetworkRemoteClientSettings> RemoteClientSettings{};
 
     // The entry for this remote client, or nullptr when it has none
@@ -96,10 +97,10 @@ struct MidiNetworkHostDefinition
     {
         if (auto const settings = FindRemoteClientSettings(identity); settings != nullptr)
         {
-            return { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true };
+            return { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true, settings->SkipInBetweenValuesToCatchUp };
         }
 
-        return { SendSpeedLimit, ReduceSendSpeedAutomatically, false };
+        return { SendSpeedLimit, ReduceSendSpeedAutomatically, false, SkipInBetweenValuesToCatchUp };
     }
 
     // connection rules
@@ -195,6 +196,10 @@ public:
         m_reduceSendSpeedAutomatically = reduceAutomatically;
     }
 
+    // Used for the next remote client which connects. The ones already connected are updated in
+    // place by the configuration manager.
+    void SetSkipInBetweenValuesToCatchUp(_In_ bool const skip) noexcept { m_skipInBetweenValuesToCatchUp = skip; }
+
     // Used for the remote clients which identify themselves from now on. The ones already
     // connected are updated in place by the configuration manager.
     void SetRemoteClientSettings(_In_ std::vector<MidiNetworkRemoteClientSettings> const& settings);
@@ -230,6 +235,7 @@ private:
     std::atomic<uint8_t> m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
     std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
     std::atomic<bool> m_reduceSendSpeedAutomatically{ false };
+    std::atomic<bool> m_skipInBetweenValuesToCatchUp{ true };
 
     winrt::guid m_entryIdentifier{ };
 

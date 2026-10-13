@@ -237,6 +237,7 @@ void MidiRtpApiTests::TestHostCreationConfigDefaults()
     VERIFY_IS_TRUE(client.AutoReconnect());
     VERIFY_IS_TRUE(client.SendRecoveryJournal());
     VERIFY_IS_TRUE(client.SendSpeedLimit() == MidiRtpSendSpeedLimit::Unlimited);
+    VERIFY_ARE_EQUAL(client.OfflineRetentionSeconds(), static_cast<int32_t>(MidiRtpOfflineRetention::Immediate), L"the endpoint goes with the remote unless asked otherwise");
 
     MidiRtpClientMatchCriteria match;
     VERIFY_IS_TRUE(match.DirectPort() == 5004, L"the port RTP-MIDI devices use unless told otherwise");
@@ -296,6 +297,16 @@ void MidiRtpApiTests::TestClientConnectConfigJson()
     VERIFY_IS_TRUE(client.GetNamedBoolean(L"autoReconnect"));
     VERIFY_IS_TRUE(client.GetNamedBoolean(L"enabled"));
     VERIFY_ARE_EQUAL(client.GetNamedNumber(L"sendSpeedLimit", -1), 0.0, L"unlimited");
+    VERIFY_IS_TRUE(std::wstring{ client.GetNamedString(L"offlineRetention") } == L"immediate",
+        L"always written, because saving merges into the entry already in the file");
+
+    config.OfflineRetentionSeconds(static_cast<int32_t>(MidiRtpOfflineRetention::KeepAlways));
+    client = OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"clients"), config.ClientId());
+    VERIFY_IS_TRUE(std::wstring{ client.GetNamedString(L"offlineRetention") } == L"always");
+
+    config.OfflineRetentionSeconds(90);
+    client = OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"clients"), config.ClientId());
+    VERIFY_IS_TRUE(std::wstring{ client.GetNamedString(L"offlineRetention") } == L"90", L"seconds, written the way the Bluetooth MIDI transport takes them");
 
     MidiRtpClientMatchCriteria direct;
     direct.DirectHostNameOrIPAddress(L" 192.168.1.20 ");

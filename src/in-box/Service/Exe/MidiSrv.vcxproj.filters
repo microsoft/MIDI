@@ -98,6 +98,9 @@
     <ClInclude Include="..\Inc\MidiDevicePipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Midi1PortRegistrationCheck.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="MidiConfigurationManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>

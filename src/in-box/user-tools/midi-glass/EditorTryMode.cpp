@@ -249,6 +249,14 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->KeyPicked = [weak](glass::PickedKey const& picked)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnTryKeyPicked(picked);
+                }
+            };
+
         // Nothing leaves until Try mode says so. Learning opens the connections and listens;
         // it must not push a layout's worth of startup values at a desk on its own.
         m_player->SetOutputEnabled(false);
@@ -302,6 +310,8 @@ namespace winrt::midiglass::implementation
                 {
                     m_player->SetOutputEnabled(false);
                 }
+
+                ForgetTryKey();
 
                 for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
                 {

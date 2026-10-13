@@ -259,7 +259,6 @@ try
 
             if (bytes.size() > sizeBefore)
             {
-                m_messagesSent++;
                 messageSizes.push_back(static_cast<uint32_t>(bytes.size() - sizeBefore));
             }
 
@@ -289,12 +288,25 @@ try
 
             auto const speedMultiple = EffectiveSendSpeedLimit(*node);
 
-            if (HasRoomLocked(speedMultiple) || GetTickCount64() >= waitDeadline)
+            bool canQueue = HasRoomLocked(speedMultiple) || GetTickCount64() >= waitDeadline;
+
+            // Thinning a backed up queue can make room without waiting
+            if (!canQueue && EffectiveSkipInBetweenValuesToCatchUp(*node) && PrunePacedLocked(speedMultiple, bytes.size()))
+            {
+                canQueue = HasRoomLocked(speedMultiple);
+            }
+
+            if (canQueue)
             {
                 if (m_pacedMessageSizes.empty() && speedMultiple == 0)
                 {
                     // no limit and nothing ahead of it, so straight out as before
                     participantReady = node->SendMidi(m_participantId, bytes.data(), bytes.size());
+
+                    if (participantReady)
+                    {
+                        m_messagesSent += messageSizes.size();
+                    }
 
                     break;
                 }
@@ -317,6 +329,7 @@ try
 
                 m_pacedBytes.insert(m_pacedBytes.end(), bytes.begin(), bytes.end());
                 m_pacedMessageSizes.insert(m_pacedMessageSizes.end(), messageSizes.begin(), messageSizes.end());
+                m_pacedChangedSincePrune = true;
 
                 // What the limit allows goes now, on this thread, as everything did before there
                 // was a limit. Without one, that is all of it.
@@ -439,7 +452,18 @@ RtpMidiConnection::SendAllowedLocked(
         return false;
     }
 
+    m_messagesSent += messagesTaken;
+
     return true;
+}
+
+
+// What the queue holds before senders wait for room: about the same time at any speed
+static uint64_t PacedQueueLimitBytes(_In_ uint32_t const speedMultiple) noexcept
+{
+    return (std::max)(
+        (static_cast<uint64_t>(speedMultiple) * WindowsMidiServicesInternal::MidiWireSpeedBytesPerSecond * MIDI_RTP_SEND_QUEUE_PACED_MILLISECONDS) / 1000,
+        static_cast<uint64_t>(MIDI_RTP_SEND_QUEUE_PACED_MINIMUM_BYTES));
 }
 
 
@@ -452,12 +476,45 @@ RtpMidiConnection::HasRoomLocked(uint32_t const speedMultiple) const noexcept
         return m_pacedBytes.size() < MIDI_RTP_SEND_QUEUE_UNLIMITED_MAX_BYTES;
     }
 
-    // about the same time at any speed
-    auto const limit = (std::max)(
-        (static_cast<uint64_t>(speedMultiple) * WindowsMidiServicesInternal::MidiWireSpeedBytesPerSecond * MIDI_RTP_SEND_QUEUE_PACED_MILLISECONDS) / 1000,
-        static_cast<uint64_t>(MIDI_RTP_SEND_QUEUE_PACED_MINIMUM_BYTES));
+    return m_pacedBytes.size() < PacedQueueLimitBytes(speedMultiple);
+}
 
-    return m_pacedBytes.size() < limit;
+
+_Use_decl_annotations_
+bool
+RtpMidiConnection::PrunePacedLocked(uint32_t const speedMultiple, size_t const incomingByteCount) noexcept
+{
+    // A pass that found nothing is not repeated until more arrives
+    if (speedMultiple == 0 || !m_pacedChangedSincePrune)
+    {
+        return false;
+    }
+
+    auto const keepOneIn = WindowsMidiServicesInternal::ChooseMidiSendBacklogKeepOneIn(
+        m_pacedBytes.size() + incomingByteCount, PacedQueueLimitBytes(speedMultiple));
+
+    auto const result = m_pacedPruner.PruneMidi1(m_pacedBytes, m_pacedMessageSizes, keepOneIn);
+
+    m_pacedChangedSincePrune = result.MessagesRemoved > 0;
+
+    if (result.MessagesRemoved == 0)
+    {
+        return false;
+    }
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Outbound queue backed up behind the speed limit. Thinned out in-between values.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_remoteName.c_str(), "remote name"),
+        TraceLoggingUInt32(result.MessagesRemoved, "messages removed"),
+        TraceLoggingUInt32(keepOneIn, "kept one in-between value in every, 0 for none")
+    );
+
+    return true;
 }
 
 
@@ -517,6 +574,37 @@ RtpMidiConnection::EffectiveSendSpeedLimit(RtpMidiNode const& node) const noexce
     auto const own = m_ownSendSpeedLimit.load();
 
     return own >= 0 ? static_cast<uint32_t>(own) : node.SendSpeedLimit();
+}
+
+
+_Use_decl_annotations_
+void
+RtpMidiConnection::SetOwnSkipInBetweenValuesToCatchUp(std::optional<bool> const skip) noexcept
+{
+    int8_t const value = skip.has_value() ? (*skip ? int8_t{ 1 } : int8_t{ 0 }) : int8_t{ -1 };
+
+    if (m_ownSkipInBetweenValuesToCatchUp.exchange(value) == value) return;
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Connection choice to skip in-between values changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_remoteName.c_str(), "remote name"),
+        TraceLoggingInt8(value, "1 skips, 0 sends every message, -1 for the entry's")
+    );
+}
+
+
+_Use_decl_annotations_
+bool
+RtpMidiConnection::EffectiveSkipInBetweenValuesToCatchUp(RtpMidiNode const& node) const noexcept
+{
+    auto const own = m_ownSkipInBetweenValuesToCatchUp.load();
+
+    return own >= 0 ? own != 0 : node.SkipInBetweenValuesToCatchUp();
 }
 
 

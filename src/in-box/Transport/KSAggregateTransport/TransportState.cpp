@@ -47,3 +47,43 @@ TransportState::ConstructConfigurationManager()
 
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT
+TransportState::PublishPinMapToOpenEndpoint(
+    std::wstring const& endpointDeviceId,
+    std::vector<std::byte> const& pinMapPropertyData
+)
+try
+{
+    std::vector<KsaPinMap::Entry> entries{ };
+
+    RETURN_IF_FAILED(KsaPinMap::Parse(
+        reinterpret_cast<uint8_t const*>(pinMapPropertyData.data()),
+        pinMapPropertyData.size(),
+        entries));
+
+    auto const normalizedEndpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceId);
+
+    size_t appliedCount{ 0 };
+    auto const published = m_openEndpointPinMaps.Publish(normalizedEndpointDeviceId, entries, &appliedCount);
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Pin map published to the open instances of the endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(normalizedEndpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(entries.size()), "pin count"),
+        TraceLoggingUInt32(static_cast<uint32_t>(appliedCount), "open instances updated"),
+        TraceLoggingHResult(published, MIDI_TRACE_EVENT_HRESULT_FIELD)
+    );
+
+    RETURN_IF_FAILED(published);
+
+    return S_OK;
+}
+CATCH_RETURN();

@@ -46,6 +46,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically.value_or(false); }
         void ReduceSendSpeedAutomatically(_In_ bool const value) noexcept { m_reduceSendSpeedAutomatically = value; }
 
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp.value_or(true); }
+        void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -60,6 +63,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         std::optional<bool> m_allowNetworkAdapterFallback{};
         std::optional<network::MidiNetworkSendSpeedLimit> m_sendSpeedLimit{};
         std::optional<bool> m_reduceSendSpeedAutomatically{};
+        std::optional<bool> m_skipInBetweenValuesToCatchUp{};
 
         // Set with the id, and how the service finds the adapter again under a new GUID
         winrt::hstring m_networkAdapterPhysicalAddress{};

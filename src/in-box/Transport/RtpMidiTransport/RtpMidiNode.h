@@ -76,6 +76,10 @@ public:
     void SetSendSpeedLimit(_In_ uint32_t const speedMultiple) noexcept;
     uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit.load(); }
 
+    // For every connection without its own choice. Takes effect from the next message.
+    void SetSkipInBetweenValuesToCatchUp(_In_ bool const skip) noexcept { m_skipInBetweenValuesToCatchUp.store(skip); }
+    bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp.load(); }
+
     // A connection has messages waiting for the speed limit. The timer thread sends them.
     void WakeForPacedSend() noexcept;
 
@@ -157,6 +161,7 @@ private:
     std::atomic<bool> m_running{ false };
 
     std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
+    std::atomic<bool> m_skipInBetweenValuesToCatchUp{ true };
 
     // Wake the timer thread early: for a stop, or for messages waiting on the speed limit.
     // Declared before the thread, so they outlive it.

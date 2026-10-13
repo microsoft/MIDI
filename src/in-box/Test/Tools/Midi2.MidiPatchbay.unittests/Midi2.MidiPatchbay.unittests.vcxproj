@@ -105,6 +105,7 @@
     <ClInclude Include="ControllerStepTests.h" />
     <ClInclude Include="HidControllerTests.h" />
     <ClInclude Include="PatchFolderMoveTests.h" />
+    <ClInclude Include="SendQueueTests.h" />
     <!-- shared by source with midipatchbay, so the patch model is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageFilter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageTransform.h" />
@@ -121,6 +122,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SpinGuard.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\TextMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\SendQueue.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
@@ -143,6 +145,7 @@
     <ClCompile Include="ControllerStepTests.cpp" />
     <ClCompile Include="HidControllerTests.cpp" />
     <ClCompile Include="PatchFolderMoveTests.cpp" />
+    <ClCompile Include="SendQueueTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageFilter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageTransform.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ProcessingBlock.cpp" />
@@ -157,6 +160,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchTrace.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\SendQueue.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />

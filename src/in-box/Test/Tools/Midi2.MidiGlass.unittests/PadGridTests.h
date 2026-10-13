@@ -79,4 +79,15 @@ public:
     TEST_METHOD(PadsSurviveARoundTrip);
     TEST_METHOD(PadsFromAFileAreBounded);
     TEST_METHOD(SwitchingBetweenSquareAndHexCarriesTheStartingLayout);
+
+    // ---- only the notes in the key ----
+
+    TEST_METHOD(InKeyEveryPadPlaysANoteOfTheScale);
+    TEST_METHOD(InKeyRowsStepUpInNotesOfTheScale);
+    TEST_METHOD(InKeyTheRootIsBottomLeftInTheStartNotesOctave);
+    TEST_METHOD(InKeyHexagonsPutTheOctaveTwoRowsUp);
+    TEST_METHOD(WithNoKeyInKeyPadsPlayEveryNote);
+    TEST_METHOD(InKeyABendAimsAtTheNextPadsNote);
+    TEST_METHOD(InKeySurvivesARoundTrip);
+    TEST_METHOD(SwitchingBetweenSquareAndHexCarriesTheInKeySteps);
 };
