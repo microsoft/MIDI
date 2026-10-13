@@ -20,6 +20,7 @@ An RTP-MIDI client saved in the configuration file. The service connects it ever
 | `AutoReconnect` | False when the client connects once, and stays disconnected after the connection ends |
 | `SendRecoveryJournal` | True when the client sends the recovery journal, so the remote device can repair a lost Note Off |
 | `SendSpeedLimit` | How fast this PC sends to the remote device. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
+| `OfflineRetentionSeconds` | How long the endpoint stays while the remote device is away. `Immediate` when nothing was saved. See [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/). Added in version 2 of `MidiTransportsRtpApiContract` |
 | `IsEnabled` | False when the service shouldn't connect the client |
 
 ## Remarks

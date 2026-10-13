@@ -1803,6 +1803,7 @@
     <Midl Include="MidiRtpRemoteClientForgetErrorCodeEnum.idl" />
     <Midl Include="MidiRtpRemoteClientPolicyEnum.idl" />
     <Midl Include="MidiRtpSendSpeedLimitEnum.idl" />
+    <Midl Include="MidiRtpOfflineRetentionEnum.idl" />
     <Midl Include="MidiRtpAdvertisedHost.idl" />
     <Midl Include="MidiRtpClientConnectConfig.idl" />
     <Midl Include="MidiRtpClientConnectResponse.idl" />

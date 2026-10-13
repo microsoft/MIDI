@@ -78,6 +78,10 @@ namespace glass
         // Nothing is left held when a window closes or a page changes.
         void ReleaseAll();
 
+        // The pads under every grid again, after a picked key changed what they play. A finger
+        // already down keeps its pad, and the note it is holding until it lifts.
+        void RefreshPadGrids() noexcept;
+
         bool IsAnythingHeld() const noexcept { return m_heldCount > 0; }
 
     private:

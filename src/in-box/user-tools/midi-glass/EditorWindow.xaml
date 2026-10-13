@@ -1850,6 +1850,25 @@
                                             <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
                                         </Grid>
 
+                                        <!-- A switch either sends, or picks the key of the pad grids while the layout runs. -->
+                                        <ComboBox x:Name="SwitchPicksCombo"
+                                                  x:Uid="SwitchPicksCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="OnSwitchPicksChanged" />
+
+                                        <!-- One check box per scale, built in code. -->
+                                        <StackPanel x:Name="SwitchScalesPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <TextBlock x:Uid="SwitchScalesLabel" Text="Scales it offers" Style="{StaticResource InspectorLabelStyle}" />
+                                            <StackPanel x:Name="SwitchScaleChecks" />
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="SwitchPicksCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="Collapsed"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
                                         <StackPanel x:Name="SwitchPositionRows" Spacing="6" />
 
                                         <Button x:Name="AddSwitchPositionButton"
@@ -1863,7 +1882,8 @@
                                             </StackPanel>
                                         </Button>
 
-                                        <TextBlock x:Uid="SwitchPositionsCaption"
+                                        <TextBlock x:Name="SwitchPositionsCaption"
+                                                   x:Uid="SwitchPositionsCaption"
                                                    Text="Each position sends its own message. Choose what each one sends on the Sends tab."
                                                    FontSize="11"
                                                    Margin="0,6,0,0"
@@ -2027,6 +2047,13 @@
                                                   Margin="0,8,0,0"
                                                   SelectionChanged="OnPadRowChanged" />
 
+                                        <!-- The same in notes of the key, when the pads play only those. -->
+                                        <ComboBox x:Name="PadRowStepsCombo"
+                                                  x:Uid="PadRowStepsCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnPadGridChoiceChanged" />
+
                                         <!-- Hexagons: a layout somebody might know by name, or two
                                              intervals of their own. -->
                                         <ComboBox x:Name="PadHexLayoutCombo"
@@ -2035,7 +2062,7 @@
                                                   Margin="0,8,0,0"
                                                   SelectionChanged="OnPadHexLayoutChanged" />
 
-                                        <Grid ColumnSpacing="6" Margin="0,6,0,0">
+                                        <Grid x:Name="PadIntervalGrid" ColumnSpacing="6" Margin="0,6,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="*" />
@@ -2051,6 +2078,30 @@
 
                                             <NumberBox x:Name="PadUpIntervalBox"
                                                        x:Uid="PadUpIntervalBox"
+                                                       Grid.Column="1"
+                                                       Minimum="0"
+                                                       Maximum="24"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+                                        </Grid>
+
+                                        <!-- The same two steps counted in notes of the key. -->
+                                        <Grid x:Name="PadStepsGrid" ColumnSpacing="6" Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="PadRightStepsBox"
+                                                       x:Uid="PadRightStepsBox"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="24"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+
+                                            <NumberBox x:Name="PadUpStepsBox"
+                                                       x:Uid="PadUpStepsBox"
                                                        Grid.Column="1"
                                                        Minimum="0"
                                                        Maximum="24"
@@ -2078,6 +2129,35 @@
                                                       HorizontalAlignment="Stretch"
                                                       SelectionChanged="OnPadGridChoiceChanged" />
                                         </Grid>
+
+                                        <!-- Every pad on a note of the key, the way a grid controller plays in key. -->
+                                        <CheckBox x:Name="PadInKeyCheck"
+                                                  x:Uid="PadInKeyCheck"
+                                                  Content="Only notes in the key"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnPadNotesChanged"
+                                                  Unchecked="OnPadNotesChanged" />
+
+                                        <TextBlock x:Name="PadInKeyCaption"
+                                                   x:Uid="PadInKeyCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Two switches that change the key while the layout runs. -->
+                                        <Button x:Name="PadAddPickersButton"
+                                                x:Uid="PadAddPickersButton"
+                                                Content="Add root and scale pickers"
+                                                Margin="0,8,0,0"
+                                                FontSize="11"
+                                                Click="OnAddKeyPickersClick" />
+
+                                        <TextBlock x:Name="PadPickersCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                         <TextBlock x:Uid="PadColorsLabel" Text="Pad colors" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
 

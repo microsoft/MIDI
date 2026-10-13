@@ -2686,6 +2686,7 @@ namespace winrt::midinetworksetup::implementation
                 // only for a session this PC has an entry for
                 uint32_t SendSpeedLimit{ 0 };
                 winrt::hstring SendSpeedText{};
+                int32_t OfflineRetentionSeconds{ 0 };
             };
 
             std::vector<RowData> rows{};
@@ -2838,6 +2839,10 @@ namespace winrt::midinetworksetup::implementation
 
                     row->SendSpeedLimit = static_cast<uint32_t>(client.SendSpeedLimit());
                     row->SendSpeedText = res::FormatString(L"SendSpeedLineFormat", SendSpeedLimitText(row->SendSpeedLimit));
+                    row->OfflineRetentionSeconds = client.OfflineRetentionSeconds();
+
+                    // there while the device is away when the entry keeps it
+                    row->EndpointDeviceId = client.EndpointDeviceId();
 
                     // As on the Network MIDI 2.0 page, an advertised device keeps its advertised
                     // name. Anything else shows the best name there is.
@@ -2860,7 +2865,10 @@ namespace winrt::midinetworksetup::implementation
 
                     if (connection != nullptr)
                     {
-                        row->EndpointDeviceId = connection.EndpointDeviceId();
+                        if (!connection.EndpointDeviceId().empty())
+                        {
+                            row->EndpointDeviceId = connection.EndpointDeviceId();
+                        }
 
                         // an address typed in says nothing about the machine, but its connection does
                         row->AlsoNetworkMidi2 = row->AlsoNetworkMidi2 ||
@@ -3022,6 +3030,12 @@ namespace winrt::midinetworksetup::implementation
                         res::GetString(L"RemoteHostForgetLabel"));
 
                 winrt::get_self<RtpRemoteHostItem>(item)->InternalUpdateSendSpeed(row.SendSpeedLimit, row.SendSpeedText);
+                winrt::get_self<RtpRemoteHostItem>(item)->InternalUpdateOfflineRetention(
+                    row.OfflineRetentionSeconds,
+                    RtpRemoteHostItem::OfflineRetentionIndexFromSeconds(row.OfflineRetentionSeconds) < 0 ?
+                        res::FormatString(L"OfflineRetentionSecondsFormat", row.OfflineRetentionSeconds) :
+                        winrt::hstring{},
+                    row.Configured);
             }
 
             for (int32_t i = static_cast<int32_t>(m_rtpRemoteHosts.Size()) - 1; i >= 0; i--)

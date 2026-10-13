@@ -115,7 +115,7 @@ CMidi2LoopbackMidiBidi::Initialize(
 
     if (device)
     {
-        if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
         {
             if (m_isEndpointA)
             {
@@ -176,7 +176,7 @@ CMidi2LoopbackMidiBidi::Shutdown()
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-    if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
     {
         wil::com_ptr_nothrow<IMidiCallback> released{ nullptr };
 
@@ -215,7 +215,7 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
     {
         return SendToOtherSideWithLock(Message, Size, Position);
     }
@@ -305,7 +305,7 @@ CMidi2LoopbackMidiBidi::Callback(
 
     // message received from the client
 
-    if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
     {
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 

@@ -1206,6 +1206,55 @@
     <value>Windows could not change the sending speed for {0}, because this PC's connection to it is not saved. Forget it, then connect again.</value>
     <comment>{0} is the name of a device this PC connects to.</comment>
   </data>
+  <data name="OfflineRetentionLabel.Text" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="OfflineRetentionCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="ConnectOfflineRetentionComboBox.Header" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="OfflineRetentionAlwaysItem.Content" xml:space="preserve">
+    <value>Always</value>
+  </data>
+  <data name="OfflineRetentionImmediateItem.Content" xml:space="preserve">
+    <value>Remove immediately</value>
+  </data>
+  <data name="OfflineRetention30SecondsItem.Content" xml:space="preserve">
+    <value>After 30 seconds</value>
+  </data>
+  <data name="OfflineRetention5MinutesItem.Content" xml:space="preserve">
+    <value>After 5 minutes</value>
+  </data>
+  <data name="OfflineRetentionHelp.Text" xml:space="preserve">
+    <value>Keeping the endpoint means apps hold on to their MIDI ports while the device is off, so they keep their setup. Anything sent to it then is lost. Removing it means the ports go away, which is the only way most apps can tell the device is gone.</value>
+  </data>
+  <data name="OfflineRetentionAlways" xml:space="preserve">
+    <value>always</value>
+  </data>
+  <data name="OfflineRetentionImmediate" xml:space="preserve">
+    <value>removed immediately</value>
+  </data>
+  <data name="OfflineRetentionSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+    <comment>{0} is a number of seconds.</comment>
+  </data>
+  <data name="OfflineRetentionSetFormat" xml:space="preserve">
+    <value>{0} will keep its endpoint when offline: {1}.</value>
+    <comment>{0} is the name of a device this PC connects to. {1} is always, removed immediately, or a number of seconds.</comment>
+  </data>
+  <data name="OfflineRetentionChangeFailedGeneral" xml:space="preserve">
+    <value>Windows could not change how long the endpoint is kept when offline.</value>
+  </data>
+  <data name="OfflineRetentionChangeFailedFormat" xml:space="preserve">
+    <value>Windows could not change how long the endpoint is kept when offline. {0}</value>
+    <comment>{0} is the reason the MIDI service gave.</comment>
+  </data>
+  <data name="OfflineRetentionNeedsSavedEntryFormat" xml:space="preserve">
+    <value>Windows could not change how long the endpoint for {0} is kept when offline, because this PC's connection to it is not saved. Forget it, then connect again.</value>
+    <comment>{0} is the name of a device this PC connects to.</comment>
+  </data>
   <data name="FirewallNavigationItem.Content" xml:space="preserve">
     <value>Firewall</value>
   </data>

@@ -452,10 +452,13 @@ namespace winrt::midiglass::implementation
             for (size_t item = 0; item < m_renderer.ItemCount(); ++item)
             {
                 auto const controlIndex = m_renderer.ControlIndexOf(item);
+                auto const* const control = m_document.ControlAtIndex(controlIndex);
 
                 // A page tab says which page is showing, and the page being built decides that.
+                // So does a root or scale picker: it shows the key the page was built in.
                 if (controlIndex >= m_controlValues.size() ||
-                    m_renderer.KindAt(item) == glass::ControlKind::PageTab)
+                    m_renderer.KindAt(item) == glass::ControlKind::PageTab ||
+                    (control != nullptr && glass::IsKeyPicker(*control)))
                 {
                     continue;
                 }

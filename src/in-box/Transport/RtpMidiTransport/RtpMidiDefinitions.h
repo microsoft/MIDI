@@ -92,7 +92,14 @@ struct RtpMidiClientDefinition
     // Changing it never drops the connection.
     uint32_t SendSpeedLimit{ 0 };
 
+    // Seconds the endpoint stays after the connection ends. 0 removes it at once, as before there
+    // was a choice, and MIDI_RTP_OFFLINE_RETENTION_KEEP_ALWAYS keeps it until the entry goes.
+    int32_t OfflineRetentionSeconds{ 0 };
+
     bool IsDirect() const noexcept { return !RemoteAddress.empty(); }
+
+    // Only an entry which reconnects by itself is worth an endpoint while its remote is away
+    bool KeepsEndpoint() const noexcept { return Enabled && AutoReconnect && OfflineRetentionSeconds != 0; }
 };
 
 // One remote's own settings on a host, used for it instead of the host's. A remote is known by the
@@ -300,6 +307,67 @@ namespace RtpMidiJson
         {
             return 0;
         }
+    }
+
+    // "always", "immediate" or whole seconds up to a day, as a string or a number. A missing key is
+    // immediate. False for anything else, so a mistake is reported rather than guessed at.
+    inline bool TryGetOfflineRetention(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view const key,
+        _Out_ int32_t& seconds) noexcept
+    {
+        seconds = 0;
+
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(winrt::hstring{ key })) return true;
+
+            json::IJsonValue found{ nullptr };
+
+            if (TryGetValue(parent, key, json::JsonValueType::Number, found))
+            {
+                auto const number = found.GetNumber();
+                if (!(number >= 0 && number <= MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_MAX_SECONDS) ||
+                    number != static_cast<double>(static_cast<uint32_t>(number))) return false;
+
+                seconds = static_cast<int32_t>(number);
+                return true;
+            }
+
+            if (!TryGetValue(parent, key, json::JsonValueType::String, found)) return false;
+
+            std::wstring const text{ found.GetString() };
+
+            if (_wcsicmp(text.c_str(), MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS) == 0)
+            {
+                seconds = MIDI_RTP_OFFLINE_RETENTION_KEEP_ALWAYS;
+                return true;
+            }
+
+            if (_wcsicmp(text.c_str(), MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE) == 0) return true;
+
+            if (text.empty() || text.size() > 5) return false;
+            if (!std::all_of(text.begin(), text.end(), [](wchar_t ch) { return ch >= L'0' && ch <= L'9'; })) return false;
+
+            auto const value = std::stoul(text);
+            if (value > MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_MAX_SECONDS) return false;
+
+            seconds = static_cast<int32_t>(value);
+            return true;
+        }
+        catch (...)
+        {
+            seconds = 0;
+            return false;
+        }
+    }
+
+    inline std::wstring OfflineRetentionToString(_In_ int32_t const seconds)
+    {
+        if (seconds < 0) return MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS;
+        if (seconds == 0) return MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE;
+
+        return std::to_wstring(seconds);
     }
 
     // The keys of a create or remove section are entry identifiers

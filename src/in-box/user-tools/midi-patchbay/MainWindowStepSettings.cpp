@@ -596,6 +596,19 @@ namespace winrt::midipatchbay::implementation
                 body.Children().Append(speed);
                 body.Children().Append(Hint(resources::GetString(L"InspectorSendingSpeedHelp")));
 
+                auto skip = Check(resources::GetString(L"InspectorSkipInBetweenValues"), settings.SkipInBetweenValues);
+
+                auto const setSkip = [change](bool on)
+                    {
+                        change([on](patchbay::BlockSettings& s) { s.SkipInBetweenValues = on; });
+                    };
+
+                skip.Checked([setSkip](auto&&, auto&&) { setSkip(true); });
+                skip.Unchecked([setSkip](auto&&, auto&&) { setSkip(false); });
+
+                body.Children().Append(skip);
+                body.Children().Append(Hint(resources::GetString(L"InspectorSkipInBetweenValuesHelp")));
+
                 m_stepSettingsFocus = speed;
                 break;
             }

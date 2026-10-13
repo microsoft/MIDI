@@ -79,6 +79,14 @@ namespace glass
         _In_ double width,
         _In_ double height) noexcept;
 
+    // Whether the pads play only the notes of their key: asked for, with a key to play in.
+    bool PlaysOnlyTheKey(_In_ PadGridSpec const& spec) noexcept;
+
+    // The note the bottom left pad plays: the start note, or with only the notes of the key, the
+    // key's root in the start note's octave. Changing the key then moves the notes, not the
+    // shapes a hand has learned.
+    int32_t FirstPadNote(_In_ PadGridSpec const& spec) noexcept;
+
     // The note one pad plays, or -1 when it is off either end of the note range.
     int32_t PadNote(
         _In_ PadGridSpec const& spec,
@@ -98,11 +106,10 @@ namespace glass
 
     // The pitch under a finger on a pad, in semitones, for a note that bends to follow it. Flat
     // across the middle of the pad, then rising to meet the next pad along the row at the edge
-    // between them. Only the row decides: a finger moving onto another row lands on that row's
-    // pitch.
+    // between them, however far apart their notes are. Only the row decides: a finger moving
+    // onto another row lands on that row's pitch.
     double PitchAtPoint(
         _In_ PadGridLayout const& layout,
-        _In_ PadGridSpec const& spec,
         _In_ int32_t cell,
         _In_ double x) noexcept;
 
@@ -144,6 +151,10 @@ namespace glass
     // Whole tones along a row, and a semitone up to the right. Every other row repeats the one
     // two below it, which is what lets one fingering be played from either row.
     constexpr HexLayoutPreset JankoLayout{ 2, 1 };
+
+    // Wicki-Hayden counted in notes of the key: the next note along a row, a fifth up to the
+    // right and a fourth up to the left in a seven-note scale, so two rows up is an octave.
+    constexpr int32_t InKeyHexRowSteps = 4;
 
     // The orders the inspector offers these in, shared by the panel that shows them and the edit
     // that reads them back, so an index in a list can never mean two things.
@@ -194,4 +205,51 @@ namespace glass
 
     // Where each row of square pads starts: the row below's end, then one to twelve semitones up.
     constexpr int32_t PadRowChoiceCount = 13;
+
+    // The same with only the notes of the key: the row below's end, then one to seven notes of
+    // the scale up.
+    constexpr int32_t PadRowStepChoiceCount = 8;
+
+    // ---- root and scale pickers ----
+
+    // A root note or a scale picked on the surface while the layout runs. Never saved. -1 is
+    // nothing picked.
+    struct PickedKey
+    {
+        int32_t Root{ -1 };
+        int32_t Scale{ -1 };
+    };
+
+    // The pads as they play once something is picked. A grid with a key takes the picked root
+    // and scale; a grid with no key is left alone.
+    PadGridSpec WithPickedKey(_In_ PadGridSpec spec, _In_ PickedKey const& picked) noexcept;
+
+    // The root and scale of the first pad grid in the layout that has a key, or nothing.
+    PickedKey FirstGridKey(_In_ LayoutDocument const& document) noexcept;
+
+    // What the pickers show: whatever has been picked, and the first grid's key for the rest.
+    PickedKey ShownKey(_In_ LayoutDocument const& document, _In_ PickedKey const& picked) noexcept;
+
+    bool IsKeyPicker(_In_ Control const& control) noexcept;
+
+    // What one of a picker's positions picks, or nothing for a position it does not have.
+    PickedKey PickAt(_In_ Control const& picker, _In_ int32_t position) noexcept;
+
+    // The position a picker lights for a key, or -1 when it does not offer it.
+    int32_t PickerPosition(_In_ Control const& picker, _In_ PickedKey const& shown) noexcept;
+
+    // The same as a switch value, 0 to 1. Negative when it lights nothing.
+    double PickerValue(_In_ Control const& picker, _In_ PickedKey const& shown) noexcept;
+
+    // Whether any page of the layout has a picker that picks this.
+    bool HasKeyPicker(_In_ LayoutDocument const& document, _In_ SwitchPicks picks) noexcept;
+
+    // A root picker's name for a note: the spelling most keys are written in, such as B flat.
+    std::wstring RootPickerName(_In_ int32_t root);
+
+    // What a new scale picker offers: the seven modes of the major scale.
+    std::vector<MusicalScale> DefaultPickerScales();
+
+    // The resource key for a scale's name, so everything that prints one prints the same name.
+    wchar_t const* ScaleNameResourceKey(_In_ MusicalScale scale) noexcept;
 }

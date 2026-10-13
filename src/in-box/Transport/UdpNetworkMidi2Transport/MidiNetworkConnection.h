@@ -380,6 +380,12 @@ protected:
     void ClearOutgoingQueue() noexcept;
     void WakeSendersWaitingForRoom() noexcept;
 
+    // Thins out a queue backed up behind the speed limit. Needs m_outgoingUmpMessageQueueLock.
+    // True when it took something out.
+    bool PruneOutgoingQueue(_In_ uint64_t const incomingWireBytes) noexcept;
+    ::WindowsMidiServicesInternal::MidiSendBacklogPruner m_outgoingPruner{};
+    bool m_outgoingQueueChangedSincePrune{ false };
+
     // written under m_outgoingUmpMessageQueueLock
     std::atomic<bool> m_endpointBeingCreated{ false };
     HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);

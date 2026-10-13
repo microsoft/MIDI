@@ -1177,6 +1177,63 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // Order must match the ComboBoxItems in MainWindow.xaml
+        static int32_t OfflineRetentionSecondsFromIndex(_In_ int32_t const index) noexcept
+        {
+            switch (index)
+            {
+            case 0: return -1;      // keep the endpoint always
+            case 1: return 0;       // remove it as soon as the device goes away
+            case 2: return 30;
+            case 3: return 300;
+            default: return 0;
+            }
+        }
+
+        // A duration set from the console, PowerShell or the API which is not one of the choices
+        // shows no selection rather than being rounded to one of them
+        static int32_t OfflineRetentionIndexFromSeconds(_In_ int32_t const seconds) noexcept
+        {
+            switch (seconds)
+            {
+            case -1: return 0;
+            case 0: return 1;
+            case 30: return 2;
+            case 300: return 3;
+            default: return -1;
+            }
+        }
+
+        int32_t OfflineRetentionIndex() const noexcept { return OfflineRetentionIndexFromSeconds(m_offlineRetentionSeconds); }
+        winrt::hstring OfflineRetentionText() const noexcept { return m_offlineRetentionText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility OfflineRetentionVisibility() const noexcept
+        {
+            return VisibleIf(m_hasOfflineRetention);
+        }
+
+        void InternalUpdateOfflineRetention(
+            _In_ int32_t const seconds,
+            _In_ winrt::hstring const& text,
+            _In_ bool const hasEntry) noexcept
+        {
+            if (m_offlineRetentionSeconds != seconds)
+            {
+                m_offlineRetentionSeconds = seconds;
+                RaisePropertyChanged(L"OfflineRetentionIndex");
+            }
+
+            UpdateField(m_offlineRetentionText, text, L"OfflineRetentionText");
+            UpdateField(m_hasOfflineRetention, hasEntry, L"OfflineRetentionVisibility");
+        }
+
+        // Puts a choice the service did not take back to what it holds, in whichever row shows
+        // this device by now
+        void InternalRefreshOfflineRetention() noexcept
+        {
+            RaisePropertyChanged(L"OfflineRetentionIndex");
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
         {
             return VisibleIf(m_latency.HasSamples());
@@ -1307,6 +1364,10 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::hstring m_sendSpeedText{};
         uint32_t m_sendSpeedLimit{ 0 };
+
+        int32_t m_offlineRetentionSeconds{ 0 };
+        winrt::hstring m_offlineRetentionText{};
+        bool m_hasOfflineRetention{ false };
 
         LatencyHistory m_latency{};
 

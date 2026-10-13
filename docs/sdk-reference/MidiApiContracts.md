@@ -35,4 +35,6 @@ Each Windows MIDI Services WinRT API namespace has its own API contract, and the
 
 ## Remarks
 
-All contracts above are currently versioned at `1` in the IDL.
+All contracts above are at version `1`, except `MidiTransportsRtpApiContract`, which is at version `2`. Version 2 adds [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/), the `OfflineRetentionSeconds` properties that use it, and `MidiRtpConfiguredClient.EndpointDeviceId`.
+
+To check for them, pass the contract's full name and version to `IsApiContractPresent`, for example `ApiInformation.IsApiContractPresent("Windows.Devices.Midi2.Transports.Rtp.MidiTransportsRtpApiContract", 2)`.

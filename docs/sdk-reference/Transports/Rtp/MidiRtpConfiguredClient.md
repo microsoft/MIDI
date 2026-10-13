@@ -25,6 +25,8 @@ Returned by `MidiRtpTransportManager.GetConfiguredClients()`.
 | `SendRecoveryJournal` | True if this PC sends a recovery journal with each packet |
 | `SendSpeedLimit` | How fast this PC is set up to send to the remote device. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
 | `CurrentSendSpeedLimit` | How fast the running client is sending. It's only different from `SendSpeedLimit` for a moment after a change |
+| `OfflineRetentionSeconds` | How long the endpoint stays while the remote device is away. See [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/). Added in version 2 of `MidiTransportsRtpApiContract` |
+| `EndpointDeviceId` | The id of this entry's MIDI endpoint, or empty when it has none. Unlike `Connection.EndpointDeviceId`, it's there while an endpoint is kept for a remote device that's away. Added in version 2 of `MidiTransportsRtpApiContract` |
 | `LastErrorCode` | The HRESULT from the last try, or `0`. See the table below |
 | `Connection` | The [MidiRtpConnection]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpConnection/), or null when there isn't one |
 

@@ -111,6 +111,17 @@ namespace
         return spec;
     }
 
+    glass::PadGridSpec InKey(_In_ int32_t root, _In_ glass::MusicalScale scale)
+    {
+        glass::PadGridSpec spec{};
+
+        spec.KeyRoot = root;
+        spec.Scale = scale;
+        spec.Notes = glass::PadNotes::InKey;
+
+        return spec;
+    }
+
     bool Is(_In_ glass::PadAction const& action, _In_ glass::PadActionKind kind, _In_ int32_t note)
     {
         return action.Kind == kind && action.Note == note;
@@ -333,36 +344,33 @@ void PadGridTests::ATouchNearAHexagonsPointIsThatHexagon()
 void PadGridTests::AFingerNearTheMiddleOfAPadIsInTune()
 {
     auto const layout = DefaultSquareLayout();
-    glass::PadGridSpec const spec{};
 
     auto const& cell = layout.Cells[1];
 
-    VERIFY_ARE_EQUAL(49.0, glass::PitchAtPoint(layout, spec, 1, cell.CenterX));
-    VERIFY_ARE_EQUAL(49.0, glass::PitchAtPoint(layout, spec, 1, cell.CenterX + layout.Pitch * 0.15));
-    VERIFY_ARE_EQUAL(49.0, glass::PitchAtPoint(layout, spec, 1, cell.CenterX - layout.Pitch * 0.15));
+    VERIFY_ARE_EQUAL(49.0, glass::PitchAtPoint(layout, 1, cell.CenterX));
+    VERIFY_ARE_EQUAL(49.0, glass::PitchAtPoint(layout, 1, cell.CenterX + layout.Pitch * 0.15));
+    VERIFY_ARE_EQUAL(49.0, glass::PitchAtPoint(layout, 1, cell.CenterX - layout.Pitch * 0.15));
 }
 
 void PadGridTests::ThePitchMeetsTheNextPadAtTheEdgeBetweenThem()
 {
     auto const layout = DefaultSquareLayout();
-    glass::PadGridSpec const spec{};
 
     auto const edge = layout.Cells[1].CenterX + layout.Pitch * 0.5;
 
-    VerifyNear(49.5, glass::PitchAtPoint(layout, spec, 1, edge));
-    VerifyNear(49.5, glass::PitchAtPoint(layout, spec, 2, edge));
+    VerifyNear(49.5, glass::PitchAtPoint(layout, 1, edge));
+    VerifyNear(49.5, glass::PitchAtPoint(layout, 2, edge));
 
     // Three quarters of the way out, half way between flat and the edge.
-    VerifyNear(49.25, glass::PitchAtPoint(layout, spec, 1, layout.Cells[1].CenterX + layout.Pitch * 0.35));
+    VerifyNear(49.25, glass::PitchAtPoint(layout, 1, layout.Cells[1].CenterX + layout.Pitch * 0.35));
 }
 
 void PadGridTests::TheEndOfARowHoldsItsOwnNote()
 {
     auto const layout = DefaultSquareLayout();
-    glass::PadGridSpec const spec{};
 
-    VERIFY_ARE_EQUAL(55.0, glass::PitchAtPoint(layout, spec, 7, layout.Cells[7].CenterX + layout.Pitch * 0.4));
-    VERIFY_ARE_EQUAL(48.0, glass::PitchAtPoint(layout, spec, 0, layout.Cells[0].CenterX - layout.Pitch * 0.4));
+    VERIFY_ARE_EQUAL(55.0, glass::PitchAtPoint(layout, 7, layout.Cells[7].CenterX + layout.Pitch * 0.4));
+    VERIFY_ARE_EQUAL(48.0, glass::PitchAtPoint(layout, 0, layout.Cells[0].CenterX - layout.Pitch * 0.4));
 }
 
 // -------------------------------------------------------------------- keys and names
@@ -798,4 +806,215 @@ void PadGridTests::SwitchingBetweenSquareAndHexCarriesTheStartingLayout()
     VERIFY_IS_TRUE(controller.SetControlKind(id, glass::ControlKind::HexPads));
     VERIFY_ARE_EQUAL(3, padsOf().RightInterval);
     VERIFY_ARE_EQUAL(4, padsOf().RowInterval);
+}
+
+// ------------------------------------------------------------ only the notes in the key
+
+void PadGridTests::InKeyEveryPadPlaysANoteOfTheScale()
+{
+    auto spec = InKey(2, glass::MusicalScale::Major);
+    auto const layout = glass::LayOutPadGrid(spec, false, 428.0, 164.0);
+
+    VERIFY_ARE_EQUAL(size_t{ 24 }, layout.Cells.size());
+
+    for (auto const& cell : layout.Cells)
+    {
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(cell.Note, 0);
+        VERIFY_IS_FALSE(glass::RoleOfNote(spec, cell.Note) == glass::PadRole::OutOfKey);
+    }
+
+    // D major from D2 along the bottom row, one note of the scale to a pad.
+    int32_t const bottom[]{ 50, 52, 54, 55, 57, 59, 61, 62 };
+
+    for (size_t column = 0; column < std::size(bottom); ++column)
+    {
+        VERIFY_ARE_EQUAL(bottom[column], layout.Cells[column].Note);
+    }
+
+    // The same grid playing every note has the notes outside the key on it.
+    spec.Notes = glass::PadNotes::Chromatic;
+
+    VERIFY_ARE_EQUAL(49, glass::PadNote(spec, false, 0, 1, 8));
+}
+
+void PadGridTests::InKeyRowsStepUpInNotesOfTheScale()
+{
+    auto spec = InKey(0, glass::MusicalScale::Major);
+
+    // Three notes of the scale up is a fourth from the root, and from F it is B, not B flat.
+    VERIFY_ARE_EQUAL(53, glass::PadNote(spec, false, 1, 0, 8));
+    VERIFY_ARE_EQUAL(59, glass::PadNote(spec, false, 2, 0, 8));
+
+    // Continuous: the next row starts on the note after the end of the row below.
+    spec.RowSteps = 0;
+
+    VERIFY_ARE_EQUAL(60, glass::PadNote(spec, false, 0, 7, 8));
+    VERIFY_ARE_EQUAL(62, glass::PadNote(spec, false, 1, 0, 8));
+
+    // Three notes up a five-note scale reaches further: a fifth from the root.
+    auto const pentatonic = InKey(9, glass::MusicalScale::MinorPentatonic);
+
+    VERIFY_ARE_EQUAL(57, glass::PadNote(pentatonic, false, 0, 0, 8));
+    VERIFY_ARE_EQUAL(60, glass::PadNote(pentatonic, false, 0, 1, 8));
+    VERIFY_ARE_EQUAL(64, glass::PadNote(pentatonic, false, 1, 0, 8));
+}
+
+void PadGridTests::InKeyTheRootIsBottomLeftInTheStartNotesOctave()
+{
+    auto spec = InKey(2, glass::MusicalScale::Major);
+
+    // Any start note from C2 up to B2 puts D2 in the corner.
+    for (auto const start : { 48, 50, 51, 59 })
+    {
+        spec.StartNote = start;
+
+        VERIFY_ARE_EQUAL(50, glass::FirstPadNote(spec));
+        VERIFY_ARE_EQUAL(50, glass::PadNote(spec, false, 0, 0, 8));
+    }
+
+    spec.StartNote = 60;
+    VERIFY_ARE_EQUAL(62, glass::FirstPadNote(spec));
+
+    // Another key moves the notes and keeps the shape: its root is in the corner instead.
+    spec.StartNote = 48;
+    spec.KeyRoot = 7;
+    VERIFY_ARE_EQUAL(55, glass::PadNote(spec, false, 0, 0, 8));
+    VERIFY_ARE_EQUAL(60, glass::PadNote(spec, false, 1, 0, 8));
+
+    // The top octave stops at G8, so B starts in the octave below.
+    spec.KeyRoot = 11;
+    spec.StartNote = 125;
+    VERIFY_ARE_EQUAL(119, glass::FirstPadNote(spec));
+}
+
+void PadGridTests::InKeyHexagonsPutTheOctaveTwoRowsUp()
+{
+    glass::Page page{};
+    page.Id = L"page";
+
+    auto control = glass::MakeNewControl(
+        glass::ControlKind::HexPads, 0, 0, glass::ReferencePageWidth, glass::ReferencePageHeight, L"Synth", page);
+
+    VERIFY_ARE_EQUAL(glass::InKeyHexRowSteps, control.Pads.RowSteps);
+
+    control.Pads.Notes = glass::PadNotes::InKey;
+
+    auto const& spec = control.Pads;
+
+    // The next note along a row, a fifth up to the right, a fourth up to the left from D, and
+    // the octave straight up two rows.
+    VERIFY_ARE_EQUAL(48, glass::PadNote(spec, true, 0, 0, 8));
+    VERIFY_ARE_EQUAL(50, glass::PadNote(spec, true, 0, 1, 8));
+    VERIFY_ARE_EQUAL(55, glass::PadNote(spec, true, 1, 0, 8));
+    VERIFY_ARE_EQUAL(60, glass::PadNote(spec, true, 2, 0, 8));
+}
+
+void PadGridTests::WithNoKeyInKeyPadsPlayEveryNote()
+{
+    auto const spec = InKey(glass::NoKey, glass::MusicalScale::Major);
+
+    VERIFY_IS_FALSE(glass::PlaysOnlyTheKey(spec));
+    VERIFY_ARE_EQUAL(48, glass::FirstPadNote(spec));
+    VERIFY_ARE_EQUAL(49, glass::PadNote(spec, false, 0, 1, 8));
+    VERIFY_ARE_EQUAL(53, glass::PadNote(spec, false, 1, 0, 8));
+}
+
+void PadGridTests::InKeyABendAimsAtTheNextPadsNote()
+{
+    auto const layout = glass::LayOutPadGrid(InKey(0, glass::MusicalScale::Major), false, 428.0, 164.0);
+
+    auto const& e = layout.Cells[2];
+    auto const& f = layout.Cells[3];
+
+    VERIFY_ARE_EQUAL(52, e.Note);
+    VERIFY_ARE_EQUAL(53, f.Note);
+
+    // E to F is a semitone, F to G and D to E a tone, so each edge is half way between its two.
+    VerifyNear(52.5, glass::PitchAtPoint(layout, 2, e.CenterX + layout.Pitch * 0.5));
+    VerifyNear(52.5, glass::PitchAtPoint(layout, 3, f.CenterX - layout.Pitch * 0.5));
+    VerifyNear(54.0, glass::PitchAtPoint(layout, 3, f.CenterX + layout.Pitch * 0.5));
+    VerifyNear(51.0, glass::PitchAtPoint(layout, 2, e.CenterX - layout.Pitch * 0.5));
+}
+
+void PadGridTests::InKeySurvivesARoundTrip()
+{
+    glass::Control control{};
+
+    control.Id = L"grid";
+    control.Kind = glass::ControlKind::NotePads;
+    control.Width = 428;
+    control.Height = 164;
+    control.Pads = InKey(9, glass::MusicalScale::MinorPentatonic);
+    control.Pads.RightSteps = 2;
+    control.Pads.RowSteps = 0;
+
+    auto const text = glass::WriteLayoutToJson(DocumentWith({ control }));
+
+    VERIFY_IS_TRUE(text.find(L"\"notes\": \"inKey\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"rightSteps\": 2") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"rowSteps\": 0") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const* back = reread.Document.FindControl(L"grid");
+    VERIFY_IS_NOT_NULL(back);
+
+    VERIFY_IS_TRUE(back->Pads.Notes == glass::PadNotes::InKey);
+    VERIFY_ARE_EQUAL(2, back->Pads.RightSteps);
+    VERIFY_ARE_EQUAL(0, back->Pads.RowSteps);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+
+    // A file from before the setting existed plays every note, and so does a choice or a step
+    // this build does not know.
+    auto const older = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "a", "kind": "notePads", "pads": { "key": "d" } },
+            { "id": "b", "kind": "notePads", "pads": { "notes": "drums", "rightSteps": 0, "rowSteps": 99 } } ] } ] })");
+
+    VERIFY_IS_TRUE(older.Succeeded);
+
+    for (auto const& read : older.Document.Pages[0].Controls)
+    {
+        VERIFY_IS_TRUE(read.Pads.Notes == glass::PadNotes::Chromatic);
+        VERIFY_ARE_EQUAL(1, read.Pads.RightSteps);
+        VERIFY_ARE_EQUAL(3, read.Pads.RowSteps);
+    }
+}
+
+void PadGridTests::SwitchingBetweenSquareAndHexCarriesTheInKeySteps()
+{
+    glass::EditorController controller{};
+    controller.Load(DocumentWith({}));
+
+    auto const id = controller.AddControl(glass::ControlKind::NotePads, 100, 100);
+
+    VERIFY_IS_FALSE(id.empty());
+
+    auto const padsOf = [&]() { return controller.Document().FindControl(id)->Pads; };
+
+    VERIFY_ARE_EQUAL(3, padsOf().RowSteps);
+
+    VERIFY_IS_TRUE(controller.SetControlKind(id, glass::ControlKind::HexPads));
+    VERIFY_ARE_EQUAL(glass::InKeyHexRowSteps, padsOf().RowSteps);
+
+    VERIFY_IS_TRUE(controller.SetControlKind(id, glass::ControlKind::NotePads));
+    VERIFY_ARE_EQUAL(3, padsOf().RowSteps);
+
+    // The editor holds the steps to their range, and the same setting twice is one edit.
+    auto asked = padsOf();
+    asked.Notes = glass::PadNotes::InKey;
+    asked.RightSteps = 0;
+    asked.RowSteps = 99;
+
+    VERIFY_IS_TRUE(controller.SetControlPads(id, asked));
+
+    auto const stored = padsOf();
+
+    VERIFY_IS_TRUE(stored.Notes == glass::PadNotes::InKey);
+    VERIFY_ARE_EQUAL(glass::MinimumRightInterval, stored.RightSteps);
+    VERIFY_ARE_EQUAL(glass::MaximumPadInterval, stored.RowSteps);
+
+    VERIFY_IS_FALSE(controller.SetControlPads(id, stored));
 }

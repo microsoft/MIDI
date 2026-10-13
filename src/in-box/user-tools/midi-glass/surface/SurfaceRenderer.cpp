@@ -987,6 +987,9 @@ namespace glass
         m_controlIndexes.reserve(total);
         m_kinds.reserve(total);
 
+        // Pickers show the key picked, and the first grid's key until something is.
+        auto const shownKey = ShownKey(document, m_pickedKey);
+
         for (auto const index : shown)
         {
             auto controlIndex = firstIndexes[index];
@@ -994,6 +997,17 @@ namespace glass
             for (auto const& control : document.Pages[index].Controls)
             {
                 BuildControl(compositor, control, theme, controlIndex);
+
+                if (IsKeyPicker(control))
+                {
+                    auto const item = m_visuals.size() - 1;
+                    auto const value = PickerValue(control, shownKey);
+
+                    SetValue(item, value);
+                    winrt::get_self<winrt::midiglass::implementation::GlassControl>(m_elements[item])
+                        ->SetValueDirect(std::max(value, 0.0));
+                }
+
                 controlIndex++;
             }
         }
@@ -1200,7 +1214,7 @@ namespace glass
         m_dragAxes.push_back(control.Drag);
         m_pickups.push_back(control.Pickup);
         m_keyboards.push_back(control.Keyboard);
-        m_padGrids.push_back(control.Pads);
+        m_padGrids.push_back(WithPickedKey(control.Pads, m_pickedKey));
         m_velocityFromTouch.push_back(control.VelocityFromTouch);
         m_latches.push_back(
             control.Kind == ControlKind::Lfo ? control.Lfo.Latching :
@@ -4576,7 +4590,7 @@ namespace glass
 
             if (itemIndex < m_padGrids.size())
             {
-                m_padGrids[itemIndex] = control.Pads;
+                m_padGrids[itemIndex] = WithPickedKey(control.Pads, m_pickedKey);
             }
 
             LayoutVisual(compositor, m_visuals[itemIndex], control, theme, SurfaceFor(itemIndex, control));
@@ -6279,10 +6293,13 @@ namespace glass
                 return;
             }
 
-            // One position lit, and its name inked to read on the light.
+            // One position lit, and its name inked to read on the light. A picker showing a
+            // scale it does not offer is given a negative value, and lights none.
             if (visual.Kind == ControlKind::Switch)
             {
-                auto const chosen = static_cast<size_t>(SwitchPositionAt(clamped, visual.SwitchPositions));
+                auto const chosen = value < 0.0
+                    ? visual.SwitchSegments.size()
+                    : static_cast<size_t>(SwitchPositionAt(clamped, visual.SwitchPositions));
 
                 for (size_t position = 0; position < visual.SwitchSegments.size(); ++position)
                 {

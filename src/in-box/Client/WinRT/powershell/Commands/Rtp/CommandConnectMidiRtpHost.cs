@@ -67,6 +67,13 @@ namespace WindowsMidiServices
         [Parameter]
         public SwitchParameter NoRecoveryJournal { get; set; }
 
+        // How long the endpoint and its MIDI 1.0 ports stay while the remote is away: 0 removes them
+        // at once (the default), -1 keeps them always, so an app started while the device is off
+        // still finds its port, and anything else is a number of seconds.
+        [Parameter]
+        [ValidateRange(-1, 86400)]
+        public int OfflineRetentionSeconds { get; set; }
+
         [Parameter]
         public SwitchParameter SaveToConfiguration { get; set; }
 
@@ -124,6 +131,7 @@ namespace WindowsMidiServices
                 CustomEndpointName = EndpointName,
                 SendSpeedLimit = SendSpeedLimit,
                 SendRecoveryJournal = !NoRecoveryJournal.IsPresent,
+                OfflineRetentionSeconds = OfflineRetentionSeconds,
                 MatchCriteria = criteria
             };
 

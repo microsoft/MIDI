@@ -269,6 +269,19 @@ namespace glass
                 pads.RightInterval = square.RightInterval;
                 pads.RowInterval = square.RowInterval;
             }
+
+            // The same for the steps that count notes of the key.
+            if (pads.RightSteps == square.RightSteps)
+            {
+                if (IsHexPadGrid(kind) && pads.RowSteps == square.RowSteps)
+                {
+                    pads.RowSteps = InKeyHexRowSteps;
+                }
+                else if (!IsHexPadGrid(kind) && pads.RowSteps == InKeyHexRowSteps)
+                {
+                    pads.RowSteps = square.RowSteps;
+                }
+            }
         }
 
         // A control turned into a sequencer has no steps to play, which would look like a
@@ -1222,6 +1235,9 @@ namespace glass
         wanted.RightInterval = std::clamp(pads.RightInterval, MinimumRightInterval, MaximumPadInterval);
         wanted.RowInterval = std::clamp(pads.RowInterval, MinimumRowInterval, MaximumPadInterval);
         wanted.KeyRoot = pads.KeyRoot >= 0 && pads.KeyRoot <= 11 ? pads.KeyRoot : NoKey;
+        wanted.Notes = pads.Notes == PadNotes::InKey ? PadNotes::InKey : PadNotes::Chromatic;
+        wanted.RightSteps = std::clamp(pads.RightSteps, MinimumRightInterval, MaximumPadInterval);
+        wanted.RowSteps = std::clamp(pads.RowSteps, MinimumRowInterval, MaximumPadInterval);
         wanted.NoteNameSize = std::isfinite(pads.NoteNameSize)
             ? std::clamp(pads.NoteNameSize, 0.0, MaximumPadNoteNameSize)
             : 0.0;
@@ -1237,6 +1253,9 @@ namespace glass
             current.RowInterval == wanted.RowInterval &&
             current.KeyRoot == wanted.KeyRoot &&
             current.Scale == wanted.Scale &&
+            current.Notes == wanted.Notes &&
+            current.RightSteps == wanted.RightSteps &&
+            current.RowSteps == wanted.RowSteps &&
             current.NoteNames == wanted.NoteNames &&
             current.NoteNameSize == wanted.NoteNameSize &&
             current.RootColor == wanted.RootColor &&

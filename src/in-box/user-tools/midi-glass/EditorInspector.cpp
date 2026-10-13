@@ -17,6 +17,7 @@
 #include "MackieControl.h"
 #include "SurfaceColors.h"
 #include "HexText.h"
+#include "PadGrid.h"
 
 #include <format>
 
@@ -1164,13 +1165,17 @@ namespace winrt::midiglass::implementation
             // A control that only displays has nothing to send, so the MIDI tab would be a page
             // of controls that do nothing. It is disabled rather than hidden, because a tab that
             // comes and goes is harder to find than one that is visibly not for this control.
-            MidiTab().IsEnabled(glass::SendsAnything(control->Kind));
+            // A root or scale picker picks a key instead of sending, and nothing moves it but a
+            // finger.
+            auto const picker = glass::IsKeyPicker(*control);
+
+            MidiTab().IsEnabled(glass::SendsAnything(control->Kind) && !picker);
 
             // The mirror of that: text, a picture and a frame are not driven by anything, and
             // nothing about them changes over time either.
             auto const passive = IsPassive(control->Kind);
 
-            MidiInTab().IsEnabled(!passive);
+            MidiInTab().IsEnabled(!passive && !picker);
             BehaviorTab().IsEnabled(!passive);
 
             // A disabled tab cannot be left showing, or the pane reads as broken rather than as

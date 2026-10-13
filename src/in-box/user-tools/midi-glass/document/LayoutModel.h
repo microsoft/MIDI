@@ -665,17 +665,39 @@ namespace glass
     constexpr double MinimumLineThickness = 1.0;
     constexpr double MaximumLineThickness = 64.0;
 
+    // In full with the pads, below. A scale picker names the scales it offers.
+    enum class MusicalScale;
+
+    // What a switch picks while the layout runs, instead of sending its rows.
+    enum class SwitchPicks
+    {
+        Nothing = 0,
+
+        // Twelve positions, C up to B. Each sets the root note of every pad grid that has a key.
+        RootNote = 1,
+
+        // One position for each scale it offers. Each sets the scale of every pad grid that has
+        // a key.
+        Scale = 2,
+    };
+
     // The positions of a switch, in order, by the name printed on each. The first position is
     // the value 0 and the last is 1, so a message row that follows the value still works.
     struct SwitchSpec
     {
         std::vector<std::wstring> Positions{};
 
+        // A picker prints the notes or scales it offers, so the names above wait, unchanged,
+        // for a switch that stops picking.
+        SwitchPicks Picks{ SwitchPicks::Nothing };
+        std::vector<MusicalScale> Scales{};
+
         UnknownFields Unknown{ nullptr };
     };
 
     constexpr int32_t MinimumSwitchPositions = 2;
     constexpr int32_t MaximumSwitchPositions = 16;
+    constexpr int32_t RootPickerPositions = 12;
 
     // Which way a step sequencer walks its steps.
     enum class StepDirection
@@ -795,6 +817,18 @@ namespace glass
         PerNoteBend = 2,
     };
 
+    // Which notes the pads play.
+    enum class PadNotes
+    {
+        // Every note. The intervals count semitones, and the key only colors the pads.
+        Chromatic = 0,
+
+        // Only the notes of the key, the way a grid controller plays in key. The bottom left pad
+        // plays the root and the steps count notes of the scale, so a shape played in one key
+        // is the same shape in every other.
+        InKey = 1,
+    };
+
     // No key: every pad is the same color.
     constexpr int32_t NoKey = -1;
 
@@ -823,6 +857,15 @@ namespace glass
         // The key's root, 0 for C up to 11 for B, or NoKey.
         int32_t KeyRoot{ 0 };
         MusicalScale Scale{ MusicalScale::Major };
+
+        // With no key, every note is on the pads whatever this says.
+        PadNotes Notes{ PadNotes::Chromatic };
+
+        // With only the notes of the key, these take the place of the two intervals, counted in
+        // notes of the scale. Three is a fourth in a seven-note scale. Zero on square pads
+        // carries each row on from the end of the row below.
+        int32_t RightSteps{ 1 };
+        int32_t RowSteps{ 3 };
 
         PadNoteNames NoteNames{ PadNoteNames::Center };
 

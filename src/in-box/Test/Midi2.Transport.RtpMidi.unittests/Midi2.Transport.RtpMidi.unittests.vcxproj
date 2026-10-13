@@ -83,6 +83,7 @@
   <ItemGroup>
     <ClInclude Include="MidiDnssdAdvertiserTests.h" />
     <ClInclude Include="MidiNetworkAddressTests.h" />
+    <ClInclude Include="MidiSendBacklogPrunerTests.h" />
     <ClInclude Include="MidiSendPacerTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RtpMidiDnssdTests.h" />
@@ -98,12 +99,14 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MidiDnssdAdvertiserTests.cpp" />
     <ClCompile Include="MidiNetworkAddressTests.cpp" />
+    <ClCompile Include="MidiSendBacklogPrunerTests.cpp" />
     <ClCompile Include="MidiSendPacerTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RtpMidiApprovalTests.cpp" />
     <ClCompile Include="RtpMidiChannelTests.cpp" />
+    <ClCompile Include="RtpMidiKeptEndpointTests.cpp" />
     <ClCompile Include="RtpMidiDnssdTests.cpp" />
     <ClCompile Include="RtpMidiProtocolTests.cpp" />
     <ClCompile Include="RtpMidiReplySourceTests.cpp" />

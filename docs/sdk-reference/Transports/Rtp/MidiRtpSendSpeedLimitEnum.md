@@ -28,6 +28,8 @@ Choose a limit for a device that loses data when a lot of it arrives at once, li
 
 A limit never delays a lone message. After a quiet moment, a short burst goes out straight away: up to 64 bytes at `Midi1WireSpeed`, and 64 bytes more for each step up. Only the data after that is spaced out. So a single note or a knob turn is sent the moment it arrives, at any limit.
 
+When more than about a tenth of a second of messages is waiting behind a limit, some of the steps in the middle of each control change, pressure or pitch bend move are skipped so the device catches up. Where each move starts, turns and ends always goes, and so does every other kind of message. See [Choosing a sending speed]({{ site.baseurl }}/tools/midinetworksetup/#choosing-a-sending-speed).
+
 When an app sends faster than the limit, Windows holds the extra messages and sends them as fast as the limit allows. An app that keeps sending faster than that is slowed down to match, instead of having messages dropped.
 
 A new limit applies straight away, including to connections that are already up, and doesn't disconnect anything.

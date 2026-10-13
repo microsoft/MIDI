@@ -351,6 +351,9 @@ namespace winrt::midiglass::implementation
         void OnPadGridColorChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnPadRowChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnPadHexLayoutChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnPadNotesChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSwitchPicksChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnAddKeyPickersClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnSpringTargetChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnDragAxisChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -553,6 +556,13 @@ namespace winrt::midiglass::implementation
         void RefreshPadGridPanel(_In_ glass::Control const& control);
         void RefreshFeedbackPanel(_In_ glass::Control const& control);
         void RefreshSwitchPositions(_In_ glass::Control const& control);
+
+        // ---- root and scale pickers (EditorKeyPickers.cpp) ----
+
+        void BuildKeyPickerChoices();
+        void RefreshKeyPickerPanel(_In_ glass::Control const& control);
+        void RefreshPadGridPickers(_In_ glass::Control const& control);
+        void ApplyPickerScales();
 
         // The nine alignment buttons, the crop box and the opacity track. Built once; brought
         // into step with the selected control every time the inspector is filled in.
@@ -798,6 +808,8 @@ namespace winrt::midiglass::implementation
         void OnTryValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnTrySwitched(_In_ size_t itemIndex, _In_ bool isOn, _In_ double velocity);
         void OnTryFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
+        void OnTryKeyPicked(_In_ glass::PickedKey const& picked);
+        void ForgetTryKey();
 
         void AppendMonitorRow(_In_ glass::SentMessage const& message);
         void AppendMonitorItem(_In_ glass::SentMessage const& message);

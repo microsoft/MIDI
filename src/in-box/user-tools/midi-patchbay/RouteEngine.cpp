@@ -1540,7 +1540,7 @@ namespace midipatchbay
                 if (planned.WaitForSendComplete)
                 {
                     leaf.WaitQueue = std::make_unique<SendQueue>();
-                    leaf.WaitQueue->Configure(0, ticksPerSecond);
+                    leaf.WaitQueue->Configure(0, ticksPerSecond, false);
                 }
 
                 leaf.Usable = true;
@@ -1599,7 +1599,7 @@ namespace midipatchbay
                 runner->Owner = &runtime;
                 runner->Index = static_cast<uint32_t>(i);
                 runner->Cell = routes.Throttles[i].Cell;
-                runner->Queue.Configure(routes.Throttles[i].Speed, ticksPerSecond);
+                runner->Queue.Configure(routes.Throttles[i].Speed, ticksPerSecond, routes.Throttles[i].SkipInBetweenValues);
                 runner->Work.Prepare(runtime);
 
                 runtime.Throttles.push_back(std::move(runner));
@@ -1933,6 +1933,7 @@ namespace midipatchbay
                 if (runner != nullptr && runner->Cell < routes.Cells.size())
                 {
                     result[routes.Cells[runner->Cell]].MessagesWaiting += runner->Queue.WaitingMessageCount();
+                    result[routes.Cells[runner->Cell]].MessagesThinned += runner->Queue.PrunedMessageCount();
                 }
             }
         }

@@ -491,6 +491,12 @@
   <data name="InspectorSendingSpeedHelp" xml:space="preserve">
     <value>Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back.</value>
   </data>
+  <data name="InspectorSkipInBetweenValues" xml:space="preserve">
+    <value>Skip in-between values to catch up</value>
+  </data>
+  <data name="InspectorSkipInBetweenValuesHelp" xml:space="preserve">
+    <value>When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned.</value>
+  </data>
   <data name="SendSpeedLimitUnlimited" xml:space="preserve">
     <value>Unlimited</value>
   </data>
@@ -970,6 +976,10 @@
   <data name="ConnectionDroppedFormat" xml:space="preserve">
     <value>{0} dropped because too many were waiting to be sent</value>
     <comment>{0} is a number of MIDI messages.</comment>
+  </data>
+  <data name="ConnectionThinnedFormat" xml:space="preserve">
+    <value>{0} in-between values skipped to catch up</value>
+    <comment>{0} is a number of MIDI messages. When messages back up behind a throttle, some of the steps in the middle of a control change, pressure or pitch bend sweep are not sent, so the device catches up. Where each sweep starts, turns and ends is always sent.</comment>
   </data>
   <data name="ActionShowAllGroups" xml:space="preserve">
     <value>Show all 16 groups</value>

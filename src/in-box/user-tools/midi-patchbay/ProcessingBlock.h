@@ -794,6 +794,9 @@ namespace midipatchbay
         // Throttle: a multiple of MIDI 1.0 wire speed, 0 for no limit.
         uint32_t SendSpeedLimit{ DefaultThrottleSpeed };
 
+        // Throttle: skips in-between values of controller moves to catch up when it falls behind.
+        bool SkipInBetweenValues{ true };
+
         ClockGeneratorSettings Clock{};
         TimeCodeGeneratorSettings TimeCode{};
         LfoGeneratorSettings Lfo{};

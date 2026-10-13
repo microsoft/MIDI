@@ -1032,7 +1032,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             }
                         }
 
-                        if (Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds::IsEnabled())
+                        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
                         {
                             // Runtime creates only, so overlapping loopbacks already saved in the configuration file still load.
                             if (TransportState::Current().GetEndpointManager() != nullptr &&
@@ -1213,7 +1213,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(associationId.c_str(), "association id")
                     );
 
-                    if (Feature_Servicing_MIDI2LoopbackRemovalRejectionReasons::IsEnabled())
+                    if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
                     {
                         GUID parsedAssociationId{};
 

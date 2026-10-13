@@ -24,6 +24,8 @@ A PC can have several hosts and clients at the same time. Either way, each conne
 
 Each connection gets its own MIDI endpoint, with MIDI 1.0 ports for apps that use the older Windows MIDI APIs. The endpoint is created when the connection is up, and removed when it ends. An app that lists endpoints only when it starts won't see a connection made after that.
 
+A client can keep its endpoint while the remote device is away instead. See [Keeping the endpoint while the device is away](#keeping-the-endpoint-while-the-device-is-away).
+
 The endpoint is named after the name the remote device sends. For a client, set `CustomEndpointName` to choose a different name before the endpoint is created.
 
 When the same remote device connects to a host again, its endpoint gets the same id as last time, so a name or other setting the customer gave it stays with it. The remote is recognized by the name it sends. A client's endpoint keeps the same id for as long as the client entry exists.
@@ -91,6 +93,12 @@ To connect only once, set `AutoReconnect` to false. Then, when a try or a connec
 
 An entry marked `Unavailable` stays that way until `ReconnectRtpClientAsync` is called. Use [MidiRtpConfiguredClient]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpConfiguredClient/).`EntryState` and `LastErrorCode` to show this in your app. See [MidiRtpClientEntryState]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpClientEntryStateEnum/).
 
+## Keeping the endpoint while the device is away
+
+Many apps, DAWs especially, remember their setup by port. When a device is switched off while the app starts, its port is missing, and the app may drop it from the setup. To avoid that, set `OfflineRetentionSeconds` on the [MidiRtpClientConnectConfig]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpClientConnectConfig/) to `KeepAlways`. The endpoint is then there from the moment the MIDI service starts, and it starts working when the device answers. Messages sent while the device is away are thrown away.
+
+It's off by default, and it only applies to a client with `AutoReconnect` turned on. Disconnecting the client, turning it off or removing it still removes the endpoint. Read [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/) for the details, and for why it's a choice. Added in version 2 of `MidiTransportsRtpApiContract`.
+
 ## Persistence
 
 Hosts, clients, and decisions made with this API change the running service only, and they're gone when the service restarts. To keep one, also pass the same configuration object to [MidiServiceTransportPluginConfigManager]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceTransportPluginConfigManager/).`SaveUpdate`.
@@ -113,4 +121,4 @@ When a device has both, Network MIDI 2.0 is the better choice. The service doesn
 
 - RTP-MIDI carries MIDI 1.0 messages only. MIDI 2.0 messages sent to an RTP-MIDI endpoint are translated to MIDI 1.0 where MIDI 1.0 has an equivalent
 - mDNS discovery only works on the local subnet. Direct connections don't have that limit
-- A connection's endpoint exists only while the connection is up
+- A connection a remote device makes to a host has an endpoint only while the connection is up. Only a client can keep its endpoint while the remote device is away

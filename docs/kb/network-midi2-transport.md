@@ -277,7 +277,11 @@ A number above 32 means no limit. The speed is measured in the bytes the same me
 
 **A single message is never held back.** After a quiet moment, a short burst goes out at once: 64 bytes at wire speed, and 64 more for each step up. Only what comes after that is spaced out. So somebody playing a keyboard won't notice a limit, while a 3,000 byte SysEx dump at wire speed takes about a second, as it would on a cable.
 
-**Nothing is dropped to keep to the limit.** Windows holds the extra messages and sends them as fast as the limit allows. If an app keeps sending faster than that, its sends slow down to match.
+**Windows holds the extra messages** and sends them as fast as the limit allows. Notes, program changes, SysEx and other messages are never dropped to keep to the limit. If an app keeps sending faster than that, its sends slow down to match.
+
+**A fast move is thinned out so the device can catch up.** Moving a fader or a pitch wheel, or pressing on a key with aftertouch, can send hundreds of messages a second, which is more than a slow limit carries. When more than about a tenth of a second of messages is waiting, Windows skips some of the steps in the middle of each control change, pressure or pitch bend move. Where each move starts, every point where it turns around, and where it ends are always sent, and so is the value right before and after each note. So the device gets to the right value sooner, instead of playing every step late. A value sent several times in a row is always kept, so a button that sends the same value each time it's pressed still works.
+
+Some devices use these messages in other ways, such as an endless knob that sends how far it turned rather than where it is, or a control surface that sends meter levels as pressure. Those messages go up and down in short runs, and the first 16 steps of every run are always sent, so they're left alone in nearly every case. If a device still loses steps, give it a faster speed or none.
 
 **A change applies right away**, including to connections that are already up, without disconnecting them.
 

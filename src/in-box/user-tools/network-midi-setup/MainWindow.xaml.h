@@ -108,6 +108,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnDisconnectRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnCustomizeRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnChangeRtpRemoteHostSendSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRtpOfflineRetentionChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        winrt::fire_and_forget ApplyRtpOfflineRetentionChoiceAsync(_In_ controls::ComboBox const combo);
         void OnCopyRtpEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorRtpRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorRtpHostConnectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -145,6 +147,7 @@ namespace winrt::midinetworksetup::implementation
 
             // RTP-MIDI only
             bool SendRecoveryJournal{ true };
+            int32_t OfflineRetentionSeconds{ 0 };
         };
 
         // everything the service knows, gathered off the UI thread in one pass
@@ -361,7 +364,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ midinetworksetup::RtpRemoteHostItem const item,
             _In_ winrt::hstring const customEndpointName,
             _In_ uint32_t const sendSpeedLimit,
-            _In_ bool const sendRecoveryJournal);
+            _In_ bool const sendRecoveryJournal,
+            _In_ int32_t const offlineRetentionSeconds);
 
         // Network MIDI 2.0 is the better choice when a machine offers both, so connecting over
         // RTP-MIDI to one of those asks first. It never refuses: the customer decides.

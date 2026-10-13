@@ -38,6 +38,13 @@
 
 #define MIDI_CONFIG_JSON_RTP_MIDI_AUTO_RECONNECT_KEY                    L"autoReconnect"
 
+// How long a client's endpoint stays while its remote is away. Same values as the Bluetooth MIDI
+// transport: "immediate" (the default), "always", or whole seconds. Ignored without autoReconnect.
+#define MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY                 L"offlineRetention"
+#define MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS        L"always"
+#define MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE     L"immediate"
+#define MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_MAX_SECONDS         86400
+
 // Chapter N recovery journal on outgoing packets, so a peer can repair a lost Note Off
 #define MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY             L"sendRecoveryJournal"
 

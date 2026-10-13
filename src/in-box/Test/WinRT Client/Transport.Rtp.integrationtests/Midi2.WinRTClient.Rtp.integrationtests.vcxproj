@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiRtpApiTests.cpp" />
+    <ClCompile Include="MidiRtpKeptEndpointApiTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiRtpApiTests.h" />

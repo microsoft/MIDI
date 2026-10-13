@@ -215,6 +215,7 @@ namespace winrt::midiglass::implementation
             _In_ int32_t beatInBar,
             _In_ double phase,
             _In_ bool running);
+        void OnKeyPicked(_In_ glass::PickedKey const& picked);
 
         midiapp::WindowChrome m_chrome{};
 

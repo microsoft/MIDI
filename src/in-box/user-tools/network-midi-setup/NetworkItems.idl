@@ -291,6 +291,12 @@ namespace midinetworksetup
         UInt32 SendSpeedLimit{ get; };
         Microsoft.UI.Xaml.Visibility SendSpeedVisibility{ get; };
 
+        // how long the endpoint stays while the device is away, for an entry this PC has. The text
+        // is only filled in for a duration which is not one of the choices.
+        Int32 OfflineRetentionIndex{ get; };
+        String OfflineRetentionText{ get; };
+        Microsoft.UI.Xaml.Visibility OfflineRetentionVisibility{ get; };
+
         Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
         Microsoft.UI.Xaml.Media.PointCollection LatencyLinePoints{ get; };
         Microsoft.UI.Xaml.Media.PointCollection LatencyFillPoints{ get; };

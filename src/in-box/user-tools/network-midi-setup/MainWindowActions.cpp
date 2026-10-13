@@ -666,6 +666,10 @@ namespace winrt::midinetworksetup::implementation
             ConnectRtpSendRecoveryJournalCheckBox().IsChecked(true);
             ConnectRtpSendRecoveryJournalPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
+            // removed straight away, as a device that is switched off always has been
+            ConnectRtpOfflineRetentionComboBox().SelectedIndex(RtpRemoteHostItem::OfflineRetentionIndexFromSeconds(0));
+            ConnectRtpOfflineRetentionPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
             ConnectNameDialog().XamlRoot(Content().XamlRoot());
 
             m_openDialog = ConnectNameDialog();
@@ -683,6 +687,9 @@ namespace winrt::midinetworksetup::implementation
             choices->SendSpeedLimit = SelectedSendSpeedLimit(ConnectSendSpeedLimitComboBox());
             choices->ReduceSendSpeedAutomatically = offerReduceAutomatically && IsCheckBoxChecked(ConnectReduceSendSpeedCheckBox());
             choices->SendRecoveryJournal = IsCheckBoxChecked(ConnectRtpSendRecoveryJournalCheckBox());
+            choices->OfflineRetentionSeconds = offerReduceAutomatically ?
+                0 :
+                RtpRemoteHostItem::OfflineRetentionSecondsFromIndex(ConnectRtpOfflineRetentionComboBox().SelectedIndex());
 
             co_return true;
         }
@@ -1478,6 +1485,7 @@ namespace winrt::midinetworksetup::implementation
                 replacement.MatchCriteria(savedRtpClient.MatchCriteria());
                 replacement.AutoReconnect(savedRtpClient.AutoReconnect());
                 replacement.SendRecoveryJournal(savedRtpClient.SendRecoveryJournal());
+                replacement.OfflineRetentionSeconds(savedRtpClient.OfflineRetentionSeconds());
                 replacement.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
 
                 auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(replacement);
@@ -3800,7 +3808,7 @@ namespace winrt::midinetworksetup::implementation
                 co_return;
             }
 
-            ConnectRtpRemoteHostAsync(item, choices->CustomName, choices->SendSpeedLimit, choices->SendRecoveryJournal);
+            ConnectRtpRemoteHostAsync(item, choices->CustomName, choices->SendSpeedLimit, choices->SendRecoveryJournal, choices->OfflineRetentionSeconds);
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to an RTP-MIDI device.")
     }
@@ -3810,7 +3818,8 @@ namespace winrt::midinetworksetup::implementation
         midinetworksetup::RtpRemoteHostItem const item,
         winrt::hstring const customEndpointName,
         uint32_t const sendSpeedLimit,
-        bool const sendRecoveryJournal)
+        bool const sendRecoveryJournal,
+        int32_t const offlineRetentionSeconds)
     {
         if (item == nullptr)
         {
@@ -3841,6 +3850,7 @@ namespace winrt::midinetworksetup::implementation
             config.MatchCriteria(criteria);
             config.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
             config.SendRecoveryJournal(sendRecoveryJournal);
+            config.OfflineRetentionSeconds(offlineRetentionSeconds);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(config);
 
@@ -4134,6 +4144,7 @@ namespace winrt::midinetworksetup::implementation
             replacement.MatchCriteria(savedClient.MatchCriteria());
             replacement.AutoReconnect(savedClient.AutoReconnect());
             replacement.SendRecoveryJournal(savedClient.SendRecoveryJournal());
+            replacement.OfflineRetentionSeconds(savedClient.OfflineRetentionSeconds());
             replacement.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(replacement);

@@ -821,6 +821,7 @@ bool DoSectionRtpMidi()
                 .AddBool(L"direct", client.IsDirectConnection())
                 .AddSignedNumber(L"last_error", client.LastErrorCode())
                 .AddNumber(L"send_speed_limit", static_cast<uint32_t>(client.SendSpeedLimit()))
+                .AddSignedNumber(L"offline_retention", client.OfflineRetentionSeconds())
                 .AddIfNotEmpty(L"remote_service_instance", client.RemoteServiceInstanceName())
                 .AddIfNotEmpty(L"address", MaskIpAddress(client.ConfiguredDirectAddress()))
                 .Add(L"name", client.Name());

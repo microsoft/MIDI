@@ -426,6 +426,18 @@ namespace glass
         PadGridSpec const& PadGridAt(_In_ size_t itemIndex) const noexcept;
         PadGridLayout const& PadLayoutAt(_In_ size_t itemIndex) const noexcept;
 
+        // The key a root or scale picker picked while the layout runs (SurfaceKeyPickers.cpp).
+        // Every build draws pad grids in it until it is put back to nothing. Sends nothing.
+        void SetPickedKey(_In_ PickedKey const& picked) noexcept { m_pickedKey = picked; }
+        PickedKey const& PickedKeyNow() const noexcept { return m_pickedKey; }
+
+        // Redraws the pad grids on the page in the key picked and moves its pickers to show it.
+        // Returns each picker moved and its value, because the caller owns the elements' values.
+        std::vector<std::pair<size_t, double>> ApplyPickedKey(
+            _In_ PickedKey const& picked,
+            _In_ LayoutDocument const& document,
+            _In_ Theme const& theme);
+
         // A finger went onto a pad or came off it. Counted, because two fingers can share one.
         void SetPadHeld(_In_ size_t itemIndex, _In_ int32_t cell, _In_ bool held) noexcept;
 
@@ -1071,6 +1083,9 @@ namespace glass
         std::vector<bool> m_velocityFromTouch{};
         std::vector<bool> m_latches{};
         std::vector<double> m_turnDegrees{};
+
+        // Outlives a build, so a page shown after a pick is drawn in the key picked.
+        PickedKey m_pickedKey{};
 
         // The picture or video a control shows, and the fill behind a grouping panel. A XAML
         // child of the host like the label, so it has to be carried when the control moves.

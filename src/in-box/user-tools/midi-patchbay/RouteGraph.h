@@ -119,6 +119,7 @@ namespace midipatchbay
         // A multiple of MIDI 1.0 wire speed.
         uint32_t Speed{ 1 };
         uint32_t Cell{ 0 };
+        bool SkipInBetweenValues{ true };
 
         // What the throttle sends on to, once paced.
         uint32_t FirstEdge{ 0 };

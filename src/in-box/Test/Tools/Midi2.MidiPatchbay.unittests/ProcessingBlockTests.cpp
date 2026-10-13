@@ -478,6 +478,7 @@ void ProcessingBlockTests::SettingsSurviveTheFile()
 
         case BlockKind::Throttle:
             settings.SendSpeedLimit = 4;
+            settings.SkipInBetweenValues = false;
             break;
 
         case BlockKind::ClockDivider:
@@ -621,6 +622,16 @@ void ProcessingBlockTests::SettingsSurviveTheFile()
 
     auto const backOff = BlockSettingsFromJson(BlockKind::Throttle, BlockSettingsToJson(BlockKind::Throttle, off));
     VERIFY_ARE_EQUAL(0u, backOff.SendSpeedLimit);
+
+    // Skipping in-between values is on unless the file says otherwise, and running routes see the
+    // difference.
+    auto const skips = BlockSettingsFromJson(BlockKind::Throttle, json::JsonObject::Parse(LR"({"speed":1})"));
+    VERIFY_IS_TRUE(skips.SkipInBetweenValues);
+
+    auto sendsAll = skips;
+    sendsAll.SkipInBetweenValues = false;
+
+    VERIFY_ARE_NOT_EQUAL(BlockSettingsSignature(BlockKind::Throttle, skips), BlockSettingsSignature(BlockKind::Throttle, sendsAll));
 }
 
 void ProcessingBlockTests::BadValuesInTheFileTakeTheDefault()
@@ -666,8 +677,9 @@ void ProcessingBlockTests::BadValuesInTheFileTakeTheDefault()
     auto const words = BlockSettingsFromJson(BlockKind::MessageMaskFilter, json::JsonObject::Parse(LR"({"words":9})"));
     VERIFY_ARE_EQUAL(2, static_cast<int>(words.Mask.WordCount));
 
-    auto const throttle = BlockSettingsFromJson(BlockKind::Throttle, json::JsonObject::Parse(LR"({"speed":1000})"));
+    auto const throttle = BlockSettingsFromJson(BlockKind::Throttle, json::JsonObject::Parse(LR"({"speed":1000,"skipInBetweenValues":"no"})"));
     VERIFY_ARE_EQUAL(DefaultThrottleSpeed, throttle.SendSpeedLimit);
+    VERIFY_IS_TRUE(throttle.SkipInBetweenValues);
 
     auto const missing = BlockSettingsFromJson(BlockKind::GroupFilter, nullptr);
     VERIFY_IS_TRUE(BlockChangesNothing(BlockKind::GroupFilter, missing));

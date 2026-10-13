@@ -279,6 +279,12 @@ namespace winrt::midipatchbay::implementation
                         resources::FormatString(L"ConnectionWaitingToSendFormat", stats.MessagesWaiting);
                 }
 
+                if (stats.MessagesThinned > 0)
+                {
+                    text = text + winrt::hstring{ L"\n" } +
+                        resources::FormatString(L"ConnectionThinnedFormat", stats.MessagesThinned);
+                }
+
                 if (stats.MessagesDropped > 0)
                 {
                     text = text + winrt::hstring{ L"\n" } +

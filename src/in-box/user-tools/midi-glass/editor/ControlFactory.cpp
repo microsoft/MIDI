@@ -283,6 +283,7 @@ namespace glass
             {
                 control.Pads.RightInterval = WickiHaydenLayout.RightInterval;
                 control.Pads.RowInterval = WickiHaydenLayout.RowInterval;
+                control.Pads.RowSteps = InKeyHexRowSteps;
             }
         }
 

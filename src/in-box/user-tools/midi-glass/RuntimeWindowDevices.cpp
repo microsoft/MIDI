@@ -156,6 +156,14 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->KeyPicked = [weak](glass::PickedKey const& picked)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnKeyPicked(picked);
+                }
+            };
+
         // One owner per running layout, and the file path is what makes it unique, so the same
         // layout opened twice shares its connections instead of doubling them.
         m_player->Start(m_document, m_dispatcher, m_ownerId);
@@ -398,6 +406,31 @@ namespace winrt::midiglass::implementation
         {
             m_player->Touched(m_renderer.ControlIndexOf(itemIndex), isTouched);
         }
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnKeyPicked(glass::PickedKey const& picked)
+    {
+        if (m_closing)
+        {
+            return;
+        }
+
+        try
+        {
+            // Every grid on the page plays the new key at once, and every picker on it says so.
+            // A grid on another page picks it up when that page is built.
+            for (auto const& [itemIndex, value] : m_renderer.ApplyPickedKey(picked, m_document, m_theme))
+            {
+                if (auto element = m_renderer.ElementAt(itemIndex))
+                {
+                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(value);
+                }
+            }
+
+            m_input.RefreshPadGrids();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the key that was picked.")
     }
 
     _Use_decl_annotations_

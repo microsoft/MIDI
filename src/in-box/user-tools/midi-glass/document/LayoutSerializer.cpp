@@ -10,6 +10,7 @@
 #include "LayoutSerializer.h"
 #include "JsonText.h"
 #include "MackieControl.h"
+#include "PadGrid.h"
 #include "ThemeStore.h"
 
 #include <algorithm>
@@ -130,6 +131,8 @@ namespace glass
         constexpr wchar_t KeyLine[] = L"line";
         constexpr wchar_t KeySwitch[] = L"switch";
         constexpr wchar_t KeyPositions[] = L"positions";
+        constexpr wchar_t KeyPicks[] = L"picks";
+        constexpr wchar_t KeyScales[] = L"scales";
         constexpr wchar_t KeyPosition[] = L"position";
 
         // A Steps control's sequence. Not "steps": a sequence of actions already uses that name
@@ -161,6 +164,9 @@ namespace glass
         constexpr wchar_t KeyPressedColor[] = L"pressedColor";
         constexpr wchar_t KeyGlide[] = L"glide";
         constexpr wchar_t KeyBendRange[] = L"bendRange";
+        constexpr wchar_t KeyPadNotes[] = L"notes";
+        constexpr wchar_t KeyRightSteps[] = L"rightSteps";
+        constexpr wchar_t KeyRowSteps[] = L"rowSteps";
         constexpr wchar_t KeyTempoControl[] = L"tempoControl";
         constexpr wchar_t KeyLowestBeatsPerMinute[] = L"lowestBeatsPerMinute";
         constexpr wchar_t KeyHighestBeatsPerMinute[] = L"highestBeatsPerMinute";
@@ -321,6 +327,19 @@ namespace glass
             { PadGlide::Off, L"off" },
             { PadGlide::Portamento, L"portamento" },
             { PadGlide::PerNoteBend, L"perNoteBend" },
+        };
+
+        constexpr EnumName<PadNotes> PadNotesNames[]
+        {
+            { PadNotes::Chromatic, L"chromatic" },
+            { PadNotes::InKey, L"inKey" },
+        };
+
+        constexpr EnumName<SwitchPicks> SwitchPicksNames[]
+        {
+            { SwitchPicks::Nothing, L"nothing" },
+            { SwitchPicks::RootNote, L"rootNote" },
+            { SwitchPicks::Scale, L"scale" },
         };
 
         constexpr EnumName<LineEnds> LineEndsNames[]
@@ -1236,7 +1255,42 @@ namespace glass
                 }
             }
 
-            spec.Unknown = CaptureUnknown(nested, { KeyPositions });
+            spec.Picks = ValueOf(SwitchPicksNames, ReadString(nested, KeyPicks), SwitchPicks::Nothing);
+
+            if (auto const scales = ReadArray(nested, KeyScales))
+            {
+                for (uint32_t i = 0;
+                    i < scales.Size() && spec.Scales.size() < static_cast<size_t>(MaximumSwitchPositions);
+                    ++i)
+                {
+                    auto const value = scales.GetAt(i);
+
+                    if (value == nullptr || value.ValueType() != mjson::JsonValueType::String)
+                    {
+                        continue;
+                    }
+
+                    std::wstring const name{ value.GetString() };
+
+                    // A scale this build has never heard of is left out, not read as major.
+                    for (auto const& entry : ScaleNames)
+                    {
+                        if (entry.Name == name &&
+                            std::find(spec.Scales.begin(), spec.Scales.end(), entry.Value) == spec.Scales.end())
+                        {
+                            spec.Scales.push_back(entry.Value);
+                        }
+                    }
+                }
+            }
+
+            // A scale picker needs two scales to pick between.
+            if (spec.Picks == SwitchPicks::Scale && spec.Scales.size() < static_cast<size_t>(MinimumSwitchPositions))
+            {
+                spec.Scales = DefaultPickerScales();
+            }
+
+            spec.Unknown = CaptureUnknown(nested, { KeyPositions, KeyPicks, KeyScales });
 
             return spec;
         }
@@ -1310,6 +1364,9 @@ namespace glass
             pads.RowInterval = ReadInt(nested, KeyRowInterval, 5, MinimumRowInterval, MaximumPadInterval);
             pads.KeyRoot = ValueOf(KeyRootNames, ReadString(nested, KeyMusicalKey), 0);
             pads.Scale = ValueOf(ScaleNames, ReadString(nested, KeyScale), MusicalScale::Major);
+            pads.Notes = ValueOf(PadNotesNames, ReadString(nested, KeyPadNotes), PadNotes::Chromatic);
+            pads.RightSteps = ReadInt(nested, KeyRightSteps, 1, MinimumRightInterval, MaximumPadInterval);
+            pads.RowSteps = ReadInt(nested, KeyRowSteps, 3, MinimumRowInterval, MaximumPadInterval);
             pads.NoteNames = ValueOf(NoteNamesNames, ReadString(nested, KeyNoteNames), PadNoteNames::Center);
             pads.NoteNameSize = std::clamp(ReadNumber(nested, KeyNoteNameSize, 0.0), 0.0, MaximumPadNoteNameSize);
             pads.RootColor = ReadString(nested, KeyRootColor);
@@ -1322,8 +1379,9 @@ namespace glass
 
             pads.Unknown = CaptureUnknown(nested,
                 { KeyPadCount, KeyPadSize, KeyStartNote, KeyRightInterval, KeyRowInterval,
-                  KeyMusicalKey, KeyScale, KeyNoteNames, KeyNoteNameSize, KeyRootColor,
-                  KeyInKeyColor, KeyOutOfKeyColor, KeyPressedColor, KeyGlide, KeyBendRange });
+                  KeyMusicalKey, KeyScale, KeyPadNotes, KeyRightSteps, KeyRowSteps, KeyNoteNames,
+                  KeyNoteNameSize, KeyRootColor, KeyInKeyColor, KeyOutOfKeyColor, KeyPressedColor,
+                  KeyGlide, KeyBendRange });
 
             return pads;
         }
@@ -2220,6 +2278,25 @@ namespace glass
                 }
 
                 writer.EndArray();
+
+                if (control.Switch.Picks != SwitchPicks::Nothing)
+                {
+                    writer.Write(KeyPicks, NameOf(SwitchPicksNames, control.Switch.Picks));
+                }
+
+                // Kept while the switch picks something else, so picking scales again gets them back.
+                if (control.Switch.Picks == SwitchPicks::Scale || !control.Switch.Scales.empty())
+                {
+                    writer.BeginArray(KeyScales);
+
+                    for (auto const scale : control.Switch.Scales)
+                    {
+                        writer.WriteArrayString(NameOf(ScaleNames, scale));
+                    }
+
+                    writer.EndArray();
+                }
+
                 WriteUnknown(writer, control.Switch.Unknown);
                 writer.EndObject();
             }
@@ -2266,6 +2343,9 @@ namespace glass
                 writer.Write(KeyRowInterval, static_cast<int64_t>(pads.RowInterval));
                 writer.Write(KeyMusicalKey, NameOf(KeyRootNames, pads.KeyRoot));
                 writer.Write(KeyScale, NameOf(ScaleNames, pads.Scale));
+                writer.Write(KeyPadNotes, NameOf(PadNotesNames, pads.Notes));
+                writer.Write(KeyRightSteps, static_cast<int64_t>(pads.RightSteps));
+                writer.Write(KeyRowSteps, static_cast<int64_t>(pads.RowSteps));
                 writer.Write(KeyNoteNames, NameOf(NoteNamesNames, pads.NoteNames));
                 writer.Write(KeyNoteNameSize, pads.NoteNameSize);
                 writer.Write(KeyRootColor, pads.RootColor);

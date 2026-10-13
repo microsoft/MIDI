@@ -314,6 +314,107 @@ void RtpMidiTransportTests::TestSendSpeedLimitSlowsAFastSenderWithoutLosingAnyth
     VERIFY_IS_LESS_THAN(totalMilliseconds, 5000.0, L"and not much slower");
 }
 
+void RtpMidiTransportTests::TestSendSpeedLimitThinsABackedUpSweep()
+{
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Thinning Host\",\"sendSpeedLimit\":1", port);
+    AtExit removeHost([&]() { RemoveHost(hostId); });
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    Peer remote("Thinning Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds a loopback port pair");
+    remote.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 5000), L"the remote gets an endpoint");
+
+    RtpMidiTest::OpenedEndpoint opened(m_transport, m_deviceManager->Endpoints()[baseline].InterfaceId, 65);
+    VERIFY_IS_TRUE(opened.IsOpen(), L"the service opens the endpoint");
+
+    // A pitch wheel swept up and back down, a message for each step, with a note held through
+    // the middle: 2,002 messages, which take about 1.9 s on a MIDI 1.0 cable
+    constexpr uint32_t BendCount{ 2000 };
+    std::vector<std::vector<uint8_t>> messages;
+
+    for (uint32_t i = 0; i < BendCount; i++)
+    {
+        auto const value = (std::min)(i, BendCount - 1 - i) * 16;
+        messages.push_back({ 0xE0, static_cast<uint8_t>(value & 0x7F), static_cast<uint8_t>((value >> 7) & 0x7F) });
+
+        if (i == BendCount / 4) messages.push_back({ 0x90, 0x3C, 0x64 });
+        if (i == 3 * BendCount / 4) messages.push_back({ 0x80, 0x3C, 0x00 });
+    }
+
+    auto const start = std::chrono::steady_clock::now();
+
+    // one call each, as fast as the calls return, the way a fast controller arrives
+    for (auto const& message : messages)
+    {
+        uint32_t const word = 0x20000000u | (static_cast<uint32_t>(message[0]) << 16) | (static_cast<uint32_t>(message[1]) << 8) | message[2];
+        VERIFY_SUCCEEDED(opened.Send(&word, sizeof(word)));
+    }
+
+    auto const sendingMilliseconds = MillisecondsSince(start);
+
+    // the sweep starts and ends on the same value, so wait for the note off ahead of the end too
+    VERIFY_IS_TRUE(WaitFor([&]()
+    {
+        auto const received = remote.Received();
+        return ContainsSequence(received, { 0x80, 0x3C, 0x00 }) &&
+            received.size() >= 3 && std::equal(messages.back().begin(), messages.back().end(), received.end() - 3);
+    }, 5000), L"the sweep ends where it ended");
+
+    auto const totalMilliseconds = MillisecondsSince(start);
+
+    // what arrived, as whole messages
+    auto const bytes = remote.Received();
+    std::vector<std::vector<uint8_t>> arrived;
+
+    for (size_t i = 0; i + 3 <= bytes.size(); i += 3)
+    {
+        arrived.push_back({ bytes[i], bytes[i + 1], bytes[i + 2] });
+    }
+
+    Log::Comment(String().Format(L"Sending took %.0f ms. %zu of %zu messages arrived, all of them after %.0f ms.",
+        sendingMilliseconds, arrived.size(), messages.size(), totalMilliseconds));
+
+    VERIFY_ARE_EQUAL(bytes.size() % 3, static_cast<size_t>(0), L"only whole three-byte messages arrive");
+    VERIFY_IS_LESS_THAN(arrived.size(), messages.size() / 4, L"most of the in-between steps were skipped");
+    VERIFY_IS_LESS_THAN(totalMilliseconds, 1000.0, L"so the device caught up long before the 1.9 s the steps take on a cable");
+
+    // in order, and nothing that was not sent
+    size_t next{ 0 };
+    std::vector<size_t> positions;
+
+    for (auto const& message : arrived)
+    {
+        while (next < messages.size() && messages[next] != message) next++;
+        VERIFY_IS_LESS_THAN(next, messages.size(), L"each message that arrives was sent, in the order it was sent");
+        positions.push_back(next++);
+    }
+
+    VERIFY_ARE_EQUAL(positions.front(), static_cast<size_t>(0), L"the sweep starts where it started");
+
+    // the top of the sweep, and the pitch in effect when the note starts and stops
+    auto const top = std::max_element(arrived.begin(), arrived.end(), [](auto const& a, auto const& b)
+    {
+        return (a[0] == 0xE0 ? (a[1] | (a[2] << 7)) : -1) < (b[0] == 0xE0 ? (b[1] | (b[2] << 7)) : -1);
+    });
+    VERIFY_ARE_EQUAL(((*top)[1] | ((*top)[2] << 7)), static_cast<int>((BendCount / 2 - 1) * 16), L"the sweep still reaches the top");
+
+    for (uint8_t const status : { static_cast<uint8_t>(0x90), static_cast<uint8_t>(0x80) })
+    {
+        auto const note = std::find_if(arrived.begin(), arrived.end(), [&](auto const& message) { return message[0] == status; });
+        VERIFY_IS_TRUE(note != arrived.end(), L"the note on and the note off both arrive");
+
+        auto const at = positions[static_cast<size_t>(note - arrived.begin())];
+        auto const index = static_cast<size_t>(note - arrived.begin());
+
+        VERIFY_IS_TRUE(index > 0 && positions[index - 1] == at - 1, L"right after the pitch that came before it");
+        VERIFY_IS_TRUE(index + 1 < positions.size() && positions[index + 1] == at + 1, L"and right before the pitch that came after it");
+    }
+}
+
 void RtpMidiTransportTests::TestSendSpeedLimitReadsAnythingAboveTheMaximumAsUnlimited()
 {
     struct Case { std::wstring Value; double Expected; wchar_t const* What; };

@@ -581,5 +581,10 @@
 #define UUID_IMidiRtpHostRemoteClientSettingsConfig             8087b303-0519-c0de-31d1-dd00F071C000
 #define UUID_IMidiRtpHostRemoteClientSettingsConfigFactory      8087b303-0519-c0de-31d1-ff00F071C000
 
+// MidiTransportsRtpApiContract 2, added after Preview 11
+#define UUID_IMidiRtpClientConnectConfig2                       8087b303-0519-c0de-31d1-dd00F0707002
+#define UUID_IMidiRtpConfiguredClient2                          8087b303-0519-c0de-31d1-dd00F070D002
+#define UUID_IMidiRtpSavedClient2                               8087b303-0519-c0de-31d1-dd00F071A002
+
 
 #endif

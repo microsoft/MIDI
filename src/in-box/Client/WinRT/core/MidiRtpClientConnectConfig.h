@@ -43,6 +43,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         void SendSpeedLimit(_In_ rtp::MidiRtpSendSpeedLimit const value) noexcept { m_sendSpeedLimit = value; }
 
+        int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        void OfflineRetentionSeconds(_In_ int32_t const value) noexcept { m_offlineRetentionSeconds = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -54,6 +57,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_autoReconnect{ true };
         bool m_sendRecoveryJournal{ true };
         rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        int32_t m_offlineRetentionSeconds{ static_cast<int32_t>(rtp::MidiRtpOfflineRetention::Immediate) };
     };
 }
 

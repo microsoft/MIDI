@@ -38,6 +38,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                 m_sendSpeedLimit;
 
             m_lastErrorCode = MidiRtpSdkJson::Hresult(source, MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY);
+            m_offlineRetentionSeconds = MidiRtpSdkJson::OfflineRetention(source, MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY);
+            m_endpointDeviceId = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_ENDPOINT_DEVICE_ID_KEY);
 
             auto const state = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_STATE_KEY);
 

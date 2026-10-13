@@ -270,6 +270,13 @@ namespace
         definition.SendRecoveryJournal = RtpMidiJson::GetBoolean(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, true);
         definition.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(entry, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
 
+        if (!RtpMidiJson::TryGetOfflineRetention(entry, MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, definition.OfflineRetentionSeconds))
+        {
+            errorCode = RTP_MIDI_ERROR_CODE_INVALID_ENTRY;
+            messageId = IDS_RTP_ERROR_INVALID_OFFLINE_RETENTION;
+            return false;
+        }
+
         if (!TryReadName(entry, definition.Name, errorCode, messageId)) return false;
         if (!IsValidName(definition.Name, false, errorCode, messageId)) return false;
 

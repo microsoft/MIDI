@@ -77,6 +77,10 @@ private:
     // Needs m_pacedLock
     bool HasRoomLocked(_In_ uint32_t const speedMultiple) const noexcept;
 
+    // Thins out a queue backed up behind the speed limit. Needs m_pacedLock. True when it took
+    // something out.
+    bool PrunePacedLocked(_In_ uint32_t const speedMultiple, _In_ size_t const incomingByteCount) noexcept;
+
     void WakeSendersWaitingForRoom() noexcept;
 
     std::weak_ptr<RtpMidiNode> m_node;
@@ -112,6 +116,8 @@ private:
     WindowsMidiServicesInternal::MidiSendPacer m_sendPacer{};
     uint32_t m_sendPacerMultiple{ 0 };
     bool m_pacedSendClosed{ false };
+    WindowsMidiServicesInternal::MidiSendBacklogPruner m_pacedPruner{};
+    bool m_pacedChangedSincePrune{ false };
 
     // -1 when the connection uses its node's speed
     std::atomic<int64_t> m_ownSendSpeedLimit{ -1 };

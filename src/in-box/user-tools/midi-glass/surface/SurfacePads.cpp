@@ -304,7 +304,7 @@ namespace glass
         float height)
     {
         auto const hex = IsHexPadGrid(control.Kind);
-        auto const& spec = control.Pads;
+        auto const spec = WithPickedKey(control.Pads, m_pickedKey);
 
         visual.PadLayout = LayOutPadGrid(spec, hex, width, height);
 
@@ -612,7 +612,7 @@ namespace glass
 
         try
         {
-            auto const& spec = control.Pads;
+            auto const spec = WithPickedKey(control.Pads, m_pickedKey);
             auto const& visual = m_visuals[itemIndex];
             auto const& layout = visual.PadLayout;
 

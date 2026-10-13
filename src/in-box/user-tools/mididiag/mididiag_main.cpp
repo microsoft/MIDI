@@ -2073,12 +2073,10 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
-#include "Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.h"
+#include "Feature_Servicing_MIDI2LoopbackAddRemoveReliability.h"
 #include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
 #include "Feature_Servicing_MIDI2LoopbackFeedbackProtection.h"
-#include "Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds.h"
 #include "Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint.h"
-#include "Feature_Servicing_MIDI2LoopbackRemovalRejectionReasons.h"
 #include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
@@ -2147,12 +2145,10 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled(),    L"MIDI2EndpointCustomizationEnhancements (rework of how endpoint customizations are matched and applied)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled(),            L"MIDI2EndpointNameUtf8ByteLimit (enforce the ump spec utf-8 byte limit on endpoint names)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled(),           L"MIDI2EndpointUniqueIdValidation (reject a unique id which is not usable in a device id)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled(), L"MIDI2LoopbackDeliveryDuringConnectionChanges (keep midi 2.0 loopback message delivery steady while apps connect, disconnect or remove the loopback)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled(),         L"MIDI2LoopbackAddRemoveReliability (midi 2.0 loopbacks: refuse a unique id that overlaps another loopback's, say why a removal was refused, and keep delivery steady while apps connect, disconnect or remove a loopback)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackErrorStringResources::IsEnabled(),         L"MIDI2LoopbackErrorStringResources (localizable error text for loopback configuration failures)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled(),           L"MIDI2LoopbackFeedbackProtection (mute a loopback when MIDI feeds back into it)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds::IsEnabled(),   L"MIDI2LoopbackRejectOverlappingUniqueIds (refuse a midi 2.0 loopback whose unique id starts with another one's, so removing one cannot remove the other)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled(),        L"MIDI2LoopbackRejectRemovedEndpoint (fail an open of a removed midi 2.0 loopback endpoint instead of connecting it to nothing)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackRemovalRejectionReasons::IsEnabled(),      L"MIDI2LoopbackRemovalRejectionReasons (say why a midi 2.0 loopback removal was refused)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled(),          L"MIDI2LoopbackUniqueEndpointNames (reject duplicate names when creating loopback endpoints)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNamingRework::IsEnabled(),                     L"MIDI2PortNamingRework (rework of how midi 1.0 port names are generated)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled(),          L"MIDI2ProtocolNegotiationDeadlock (fix service hang during endpoint protocol negotiation)");

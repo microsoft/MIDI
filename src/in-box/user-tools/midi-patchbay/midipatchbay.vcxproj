@@ -268,7 +268,9 @@
     <ClCompile Include="HidHub.cpp" />
     <ClCompile Include="ControllerStepRunner.cpp" />
     <ClCompile Include="ControllerText.cpp" />
-    <ClCompile Include="SendQueue.cpp" />
+    <ClCompile Include="SendQueue.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ThemeBrushes.cpp" />
     <ClCompile Include="TrayIcon.cpp" />

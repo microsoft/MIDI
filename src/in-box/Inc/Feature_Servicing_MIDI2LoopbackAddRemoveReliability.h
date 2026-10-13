@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges
+class Feature_Servicing_MIDI2LoopbackAddRemoveReliability
 {
 public:
     static bool IsEnabled()

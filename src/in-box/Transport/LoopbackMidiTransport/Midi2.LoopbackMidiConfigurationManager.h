@@ -71,7 +71,7 @@ private:
         _In_ std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
         _Inout_ json::JsonObject& responseObject);
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     HRESULT ValidateNewUniqueIdentifiersDoNotOverlap(
         _In_ MidiLoopbackDeviceDefinition const& definitionA,
         _In_ MidiLoopbackDeviceDefinition const& definitionB,

@@ -387,6 +387,7 @@ namespace glass
         m_lfoControls.clear();
         m_stepControls.clear();
         m_padControls.clear();
+        m_pickerControls.clear();
 
         size_t index{ 0 };
 
@@ -446,12 +447,24 @@ namespace glass
                     PadEntry entry{};
 
                     entry.ControlIndex = static_cast<uint32_t>(index);
-                    entry.StartNote = std::clamp(control.Pads.StartNote, 0, 127);
+                    entry.Spec = control.Pads;
+                    entry.StartNote = FirstPadNote(WithPickedKey(control.Pads, m_pickedKey));
                     entry.BendRange = std::clamp(
                         control.Pads.BendRangeSemitones, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
                     entry.Voices.Configure(control.Pads.Glide, entry.BendRange);
 
                     m_padControls.push_back(std::move(entry));
+                }
+
+                if (IsKeyPicker(control))
+                {
+                    PickerEntry entry{};
+
+                    entry.ControlIndex = static_cast<uint32_t>(index);
+                    entry.Picker.Kind = control.Kind;
+                    entry.Picker.Switch = control.Switch;
+
+                    m_pickerControls.push_back(std::move(entry));
                 }
 
                 index++;
@@ -934,6 +947,11 @@ namespace glass
     void LivePlayer::ValueChanged(uint32_t controlIndex, double value, bool isFinal)
     {
         if (controlIndex >= m_throttles.size())
+        {
+            return;
+        }
+
+        if (PickFromSwitch(controlIndex, value))
         {
             return;
         }

@@ -98,7 +98,8 @@ namespace Windows.Devices.Midi2
 
         namespace Rtp
         {
-            [contractversion(1)]
+            // 2: kept endpoints (offline retention) on clients, added after Preview 11
+            [contractversion(2)]
             apicontract MidiTransportsRtpApiContract { };
         }
 

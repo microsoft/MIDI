@@ -456,7 +456,7 @@ $stepKeys = @{
     controlChangeMap    = @('controlMap')
     controlChangeValue  = @('valueScale', 'controlValueShapes')
     programMap          = @('programMap', 'bankMsbMap', 'bankLsbMap')
-    throttle            = @('speed')
+    throttle            = @('speed', 'skipInBetweenValues')
     clockDivider        = @('divideBy')
     clockGenerator      = @('beatsPerMinute', 'sendStartStop', 'swingPercent', 'swingSubdivision', 'group')
     timeCodeGenerator   = @('frameRate', 'startTime', 'sendFullFrame', 'group')
@@ -558,7 +558,10 @@ foreach ($b in (Get-List $patch.blocks)) {
             foreach ($shape in (Get-List $s.controlValueShapes)) { Test-Shape $shape $true "A controlValueShapes entry in the step '$($b.name ?? $b.id)'" }
         }
         'programMap' { foreach ($key in 'programMap', 'bankMsbMap', 'bankLsbMap') { Test-Map $s $key 127 $where } }
-        'throttle' { if ($null -ne $s.speed -and -not ((Test-Number $s.speed) -and $s.speed -in 0, 1, 2, 4, 8, 16, 32)) { $problems.Add("$where has a speed that isn't 0, 1, 2, 4, 8, 16, or 32.") } }
+        'throttle' {
+            if ($null -ne $s.speed -and -not ((Test-Number $s.speed) -and $s.speed -in 0, 1, 2, 4, 8, 16, 32)) { $problems.Add("$where has a speed that isn't 0, 1, 2, 4, 8, 16, or 32.") }
+            if ($null -ne $s.skipInBetweenValues -and $s.skipInBetweenValues -isnot [bool]) { $problems.Add("$where has skipInBetweenValues that isn't true or false.") }
+        }
         'clockDivider' { if (-not (Test-Range $s.divideBy 1 96)) { $problems.Add("$where has divideBy outside 1 to 96.") } }
         'rpnFilter' {
             Test-Choice $s.action @('letThrough', 'keepOut') $where 'action'
@@ -1411,8 +1414,11 @@ For example, a sustain pedal that works backwards, and an expression pedal that 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `speed` | 0, 1, 2, 4, 8, 16, 32 | 1 | How fast it sends, as a multiple of MIDI 1.0 wire speed, which is the speed of a 5-pin DIN cable. 0 is no limit. |
+| `skipInBetweenValues` | `true`, `false` | `true` | Skips some in-between steps of long control change, pressure and pitch bend moves when messages pile up, so the device catches up. `false` sends every message, however late. |
 
 A single message is never held back: after a quiet moment, 64 bytes for each multiple go out at once, and only what comes after that is spaced out. Everything connected into one throttler shares its speed, so put one throttler in front of the device and connect everything for that device through it.
+
+When more than about a tenth of a second of messages is waiting, a throttler skips some in-between steps of control change, pressure and pitch bend moves so the device catches up, unless `skipInBetweenValues` is `false`. Where each move starts, turns and ends, the first 16 steps each way, the values around each note, and every other kind of message always go. If the person's device uses a controller as something other than a position, such as an endless knob that sends how far it turned, ask whether every message has to arrive. If it does, set `skipInBetweenValues` to `false`.
 
 ### MIDI clock
 

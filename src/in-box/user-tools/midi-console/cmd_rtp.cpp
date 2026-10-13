@@ -53,6 +53,15 @@ namespace midi2console
             }
         }
 
+        // Same wording as the Bluetooth MIDI setting it copies
+        std::string FormatOfflineRetention(_In_ int32_t const seconds)
+        {
+            if (seconds == static_cast<int32_t>(midi2rtp::MidiRtpOfflineRetention::KeepAlways)) return ResourceString(IDS_BT_RETENTION_ALWAYS);
+            if (seconds <= 0)                                                                   return ResourceString(IDS_BT_RETENTION_IMMEDIATE);
+
+            return FormatResourceString(IDS_BT_RETENTION_SECONDS, fmt::format("{}", seconds));
+        }
+
         std::string FormatHresult(_In_ int32_t const value)
         {
             return fmt::format("0x{:08X}", static_cast<uint32_t>(value));
@@ -501,6 +510,11 @@ namespace midi2console
             {
                 table.AddRowDetail(ToUtf8(connection.EndpointDeviceId()), endpointIdTextStyle);
             }
+            else if (!client.EndpointDeviceId().empty())
+            {
+                // an endpoint kept while the remote is away
+                table.AddRowDetail(ToUtf8(client.EndpointDeviceId()), endpointIdTextStyle);
+            }
         }
 
         table.Render();
@@ -531,6 +545,8 @@ namespace midi2console
                 FormatBoolean(client.IsEnabled()), BooleanStyle(client.IsEnabled()));
             WriteField(ResourceString(IDS_RTP_LABEL_AUTO_RECONNECT),
                 FormatBoolean(client.AutoReconnect()), BooleanStyle(client.AutoReconnect()));
+            WriteField(ResourceString(IDS_BT_LABEL_KEEP_WHEN_OFFLINE),
+                FormatOfflineRetention(client.OfflineRetentionSeconds()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_RTP_LABEL_RECOVERY_JOURNAL),
                 FormatBoolean(client.SendRecoveryJournal()), BooleanStyle(client.SendRecoveryJournal()));
             WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),

@@ -331,10 +331,14 @@ namespace glass
     _Use_decl_annotations_
     int32_t SwitchPositionCount(Control const& control) noexcept
     {
-        return std::clamp(
-            static_cast<int32_t>(control.Switch.Positions.size()),
-            MinimumSwitchPositions,
-            MaximumSwitchPositions);
+        // A picker has a position for each note or scale it offers, whatever names it holds.
+        auto const& spec = control.Switch;
+
+        auto const count = spec.Picks == SwitchPicks::RootNote ? RootPickerPositions
+            : spec.Picks == SwitchPicks::Scale ? static_cast<int32_t>(spec.Scales.size())
+            : static_cast<int32_t>(spec.Positions.size());
+
+        return std::clamp(count, MinimumSwitchPositions, MaximumSwitchPositions);
     }
 
     _Use_decl_annotations_

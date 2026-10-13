@@ -461,6 +461,13 @@ Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -Port 5006
 
 Each packet this PC sends normally carries a recovery journal, a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Add `-NoRecoveryJournal` to leave it out, but only for a device that plays extra notes, or notes that don't stop, while the journal is on.
 
+Add `-OfflineRetentionSeconds -1` to keep the device's MIDI ports while it's switched off, so an app you start in the meantime still finds them. A number from 1 to 86400 keeps them for that many seconds after the device goes away. The default, `0`, removes them straight away. Anything sent to the device while it's away is lost.
+
+```pwsh
+# keep the ports for a device that's often switched off
+Connect-MidiRtpHost -HostNameOrAddress 192.168.1.167 -OfflineRetentionSeconds -1 -SaveToConfiguration
+```
+
 ### Disconnect-MidiRtpHost
 
 Disconnects by client identifier, by the name the device advertises, or by address and port. The connection ends and the entry is removed from the running service. An entry saved in the configuration file comes back when the service restarts.

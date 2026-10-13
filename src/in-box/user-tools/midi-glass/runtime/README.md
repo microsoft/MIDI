@@ -4,7 +4,7 @@ Devices, connections and the things a running layout needs that are not drawing.
 
 | File | Holds |
 |---|---|
-| `LivePlayer.*` | Everything between a value on the surface and words on the wire. The runtime window and the editor's Try mode both drive one. |
+| `LivePlayer.*` | Everything between a value on the surface and words on the wire. The runtime window and the editor's Try mode both drive one. `LivePlayerKeys.cpp` is the key a root or scale picker picked, which a picker sets instead of sending. |
 | `DeviceCatalog.*` | The layout's device table, resolved against what is plugged in right now. |
 | `OutputRouter.*` | One connection per endpoint per process, shared by every control, page and layout. |
 | `SequenceRunner.*` | The clock behind a sequence, a dump with gaps in it, and anything else that has to happen later rather than now. |

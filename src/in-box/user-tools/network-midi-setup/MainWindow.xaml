@@ -1588,6 +1588,7 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
 
                                                     <TextBlock x:Uid="RtpHostNameLabel"
@@ -1656,8 +1657,39 @@
                                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
+                                                    <!-- Same choices as Bluetooth MIDI, without "Use default": RTP-MIDI has no
+                                                         setting for the whole transport -->
+                                                    <TextBlock x:Uid="OfflineRetentionLabel"
+                                                               Grid.Row="4" Grid.Column="0"
+                                                               Text="Keep endpoint when offline"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8"
+                                                                VerticalAlignment="Center"
+                                                                Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}">
+                                                        <ComboBox x:Uid="OfflineRetentionCombo"
+                                                                  MinWidth="170"
+                                                                  SelectedIndex="{x:Bind OfflineRetentionIndex, Mode=OneWay}"
+                                                                  SelectionChanged="OnRtpOfflineRetentionChanged">
+                                                            <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
+                                                            <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
+                                                            <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
+                                                            <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
+                                                        </ComboBox>
+                                                        <!-- a duration set some other way shows no selection, so it only appears here -->
+                                                        <TextBlock Text="{x:Bind OfflineRetentionText, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    </StackPanel>
+
                                                     <Button x:Uid="CustomizeButton"
-                                                            Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                                                            Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
                                                             Margin="0,8,0,0"
                                                             HorizontalAlignment="Left"
                                                             Content="Customize..."
@@ -2876,6 +2908,24 @@
                                   IsChecked="True" />
                         <TextBlock x:Uid="RtpSendRecoveryJournalHelp"
                                    Text="Each packet carries a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Turn this off only for a device that plays extra notes, or notes that don't stop, while this is on."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <!-- RTP-MIDI only for now -->
+                    <StackPanel x:Name="ConnectRtpOfflineRetentionPanel" Spacing="4" Margin="0,8,0,0">
+                        <ComboBox x:Name="ConnectRtpOfflineRetentionComboBox"
+                                  x:Uid="ConnectOfflineRetentionComboBox"
+                                  Header="Keep endpoint when offline"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
+                            <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
+                            <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
+                            <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
+                        </ComboBox>
+                        <TextBlock x:Uid="OfflineRetentionHelp"
+                                   Text="Keeping the endpoint means apps hold on to their MIDI ports while the device is off, so they keep their setup. Anything sent to it then is lost. Removing it means the ports go away, which is the only way most apps can tell the device is gone."
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

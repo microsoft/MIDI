@@ -110,6 +110,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 // The send speed limit, shared with the Network MIDI 2.0 transport
 #include "midi_send_pacer.h"
+#include "midi_send_backlog_pruner.h"
 
 #include "Midi2RtpMidiTransport_i.c"
 #include "Midi2RtpMidiTransport.h"
@@ -157,6 +158,7 @@ class RtpMidiNode;
 
 #include "Midi2.RtpMidiTransport.h"
 #include "RtpMidiConnection.h"
+#include "RtpMidiEndpoint.h"
 #include "RtpMidiNode.h"
 #include "Midi2.RtpMidiEndpointManager.h"
 #include "Midi2.RtpMidiConfigurationManager.h"

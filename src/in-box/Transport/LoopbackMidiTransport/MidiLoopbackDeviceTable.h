@@ -66,7 +66,7 @@ public:
 
         if (deviceToRemove)
         {
-            if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+            if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
             {
                 deviceToRemove->ShutdownWithLock();
             }
@@ -112,7 +112,7 @@ public:
         return false;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds. The service removes
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability. The service removes
     // endpoints by the start of their instance id, so removing one of two overlapping loopbacks
     // would take the other with it.
     bool IsUniqueIdentifierOverlappingAnotherLoopbackA(_In_ std::wstring const& uniqueIdentifier)
@@ -134,7 +134,7 @@ public:
         return false;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     bool IsUniqueIdentifierOverlappingAnotherLoopbackB(_In_ std::wstring const& uniqueIdentifier)
     {
         std::lock_guard<std::mutex> lock{ m_devicesLock };

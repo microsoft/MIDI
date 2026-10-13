@@ -123,6 +123,7 @@ namespace midipatchbay
         constexpr wchar_t KeyValue[] = L"value";
         constexpr wchar_t KeyValues[] = L"values";
         constexpr wchar_t KeySpeed[] = L"speed";
+        constexpr wchar_t KeySkipInBetweenValues[] = L"skipInBetweenValues";
 
         // Generators and the clock divider.
         constexpr wchar_t KeyBeatsPerMinute[] = L"beatsPerMinute";
@@ -1944,6 +1945,7 @@ namespace midipatchbay
 
             case BlockKind::Throttle:
                 SetNumber(object, KeySpeed, settings.SendSpeedLimit);
+                SetBool(object, KeySkipInBetweenValues, settings.SkipInBetweenValues);
                 break;
 
             case BlockKind::ClockGenerator:
@@ -2324,6 +2326,7 @@ namespace midipatchbay
                 auto const speed = ReadNumber(object, KeySpeed, 0, MaximumSendSpeed, DefaultThrottleSpeed);
 
                 settings.SendSpeedLimit = speed < 1.0 ? 0 : static_cast<uint32_t>(speed);
+                settings.SkipInBetweenValues = ReadBool(object, KeySkipInBetweenValues, true);
                 break;
             }
 
@@ -2757,7 +2760,7 @@ namespace midipatchbay
                 break;
 
             case BlockKind::Throttle:
-                signature += std::to_wstring(settings.SendSpeedLimit);
+                signature += std::to_wstring(settings.SendSpeedLimit) + (settings.SkipInBetweenValues ? L".skip" : L".all");
                 break;
 
             case BlockKind::ClockGenerator:

@@ -1701,6 +1701,66 @@
   <data name="PadBendRangeBox.Header" xml:space="preserve">
     <value>Bend range (semitones)</value>
   </data>
+  <data name="PadInKeyCheck.Content" xml:space="preserve">
+    <value>Only notes in the key</value>
+  </data>
+  <data name="PadInKeyCaption.Text" xml:space="preserve">
+    <value>Every pad plays a note of the scale, and the bottom left pad plays the root. The first note picks its octave, and the steps count notes of the scale.</value>
+  </data>
+  <data name="PadAddPickersButton.Content" xml:space="preserve">
+    <value>Add root and scale pickers</value>
+  </data>
+  <data name="PadPickersCaption" xml:space="preserve">
+    <value>Adds two switches to the page. One picks the root note and one picks the scale. While the layout runs, every pad grid with a key plays in the key they pick.</value>
+  </data>
+  <data name="PadPickersOnLayoutCaption" xml:space="preserve">
+    <value>This layout has root and scale pickers. While it runs, they change the key of every pad grid that has one.</value>
+  </data>
+  <data name="PadPickersNeedKeyCaption" xml:space="preserve">
+    <value>Choose a key first. The pickers change the key of a pad grid that has one.</value>
+  </data>
+  <data name="RootPickerLabel" xml:space="preserve">
+    <value>Root note</value>
+  </data>
+  <data name="ScalePickerLabel" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="SwitchPicksCombo.Header" xml:space="preserve">
+    <value>Use it to</value>
+  </data>
+  <data name="SwitchPicksNothing" xml:space="preserve">
+    <value>Send messages</value>
+  </data>
+  <data name="SwitchPicksRootNote" xml:space="preserve">
+    <value>Pick the root note of the pads</value>
+  </data>
+  <data name="SwitchPicksScale" xml:space="preserve">
+    <value>Pick the scale of the pads</value>
+  </data>
+  <data name="SwitchScalesLabel.Text" xml:space="preserve">
+    <value>Scales it offers</value>
+  </data>
+  <data name="SwitchPicksRootCaption" xml:space="preserve">
+    <value>While the layout runs, the note picked here becomes the root of every pad grid that has a key. It sends nothing. The layout opens in its saved key each time.</value>
+  </data>
+  <data name="SwitchPicksScaleCaption" xml:space="preserve">
+    <value>While the layout runs, the scale picked here becomes the scale of every pad grid that has a key. It sends nothing. The layout opens in its saved key each time.</value>
+  </data>
+  <data name="PadRowStepsCombo.Header" xml:space="preserve">
+    <value>Row offset</value>
+  </data>
+  <data name="PadRightStepsBox.Header" xml:space="preserve">
+    <value>Steps right</value>
+  </data>
+  <data name="PadUpStepsBox.Header" xml:space="preserve">
+    <value>Steps up-right</value>
+  </data>
+  <data name="PadRowStepsOne" xml:space="preserve">
+    <value>1 scale step</value>
+  </data>
+  <data name="PadRowStepsFormat" xml:space="preserve">
+    <value>{0} scale steps</value>
+  </data>
   <data name="PadScaleMajor" xml:space="preserve">
     <value>Major</value>
   </data>

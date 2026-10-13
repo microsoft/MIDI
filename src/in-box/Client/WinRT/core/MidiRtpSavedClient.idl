@@ -42,5 +42,13 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         [noexcept] Boolean IsEnabled{ get; };
 
         [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpSavedClient2", UUID_IMidiRtpSavedClient2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // a MidiRtpOfflineRetention value or a number of seconds. Immediate when none is saved.
+            [noexcept] Int32 OfflineRetentionSeconds{ get; };
+        }
     }
 }
