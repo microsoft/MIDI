@@ -618,6 +618,39 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         }
 
 
+                        // it would be the same device as the transport's own parent
+                        if (internal::NormalizeDeviceInstanceIdWStringCopy(instanceIdPrefix + definition->EndpointUniqueIdentifier) ==
+                            internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_PARENT_ID))
+                        {
+                            TraceLoggingWrite(
+                                MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier is reserved for the transport's parent device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
+                            );
+
+                            if (!processingMultipleCreates)
+                            {
+                                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                    responseObject,
+                                    BASIC_LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID,
+                                    internal::ResourceGetWString(IDS_ERROR_RESERVED_UNIQUE_ID));
+
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                return S_FALSE;
+                            }
+                            else
+                            {
+                                o.MoveNext();
+                                continue;
+                            }
+                        }
+
+
                         // check for an identifier already in use. Failure to do this results in crashing the 
                         // service due to issues creating the device
                         if (allocatedUniqueIds.find(definition->EndpointUniqueIdentifier) != allocatedUniqueIds.end() ||
@@ -666,6 +699,37 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         // take away loopbacks the customer already had.
                         if (runtimeCreate)
                         {
+                            // the service removes endpoints by the start of their instance id, so one would take the other with it
+                            if (TransportState::Current().GetEndpointTable()->IsUniqueIdentifierOverlappingAnotherLoopback(definition->EndpointUniqueIdentifier))
+                            {
+                                TraceLoggingWrite(
+                                    MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Unique identifier starts with another basic loopback's, or that one starts with it", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
+                                );
+
+                                if (!processingMultipleCreates)
+                                {
+                                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                        responseObject,
+                                        BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
+                                        internal::ResourceGetWString(IDS_ERROR_OVERLAPPING_UNIQUE_ID));
+
+                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                    return S_FALSE;
+                                }
+                                else
+                                {
+                                    o.MoveNext();
+                                    continue;
+                                }
+                            }
+
                             auto const cleanName = internal::ToLowerTrimmedWStringCopy(definition->EndpointName);
 
                             if (allocatedNames.find(cleanName) != allocatedNames.end() ||
@@ -866,6 +930,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
                         internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
 
+                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
                     return S_FALSE;
                 }
 
@@ -891,6 +957,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         responseObject,
                         BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
                         internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+                    internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                     return S_FALSE;
                 }
