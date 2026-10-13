@@ -43,6 +43,9 @@ public:
     // "TRANSPORT" would give a loopback the same device id as the transport's own parent device
     TEST_METHOD(TestUniqueIdOfTransportParentIsRejected);
 
+    // A listener comes and goes while another application sends without a break
+    TEST_METHOD(TestListenerReopenedWhileAnotherClientSends);
+
 private:
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};

@@ -510,6 +510,58 @@ CMidi2LoopbackMidiConfigurationManager::ValidateNewEndpointNamesAreUnused(
 
 _Use_decl_annotations_
 HRESULT
+CMidi2LoopbackMidiConfigurationManager::ValidateNewUniqueIdentifiersDoNotOverlap(
+    MidiLoopbackDeviceDefinition const& definitionA,
+    MidiLoopbackDeviceDefinition const& definitionB,
+    json::JsonObject& responseObject)
+{
+    auto const table = TransportState::Current().GetEndpointTable();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+    struct
+    {
+        std::wstring const& UniqueIdentifier;
+        bool IsSideA;
+    } const sides[]
+    {
+        { definitionA.EndpointUniqueIdentifier, true },
+        { definitionB.EndpointUniqueIdentifier, false },
+    };
+
+    for (auto const& side : sides)
+    {
+        auto const overlaps = side.IsSideA ?
+            table->IsUniqueIdentifierOverlappingAnotherLoopbackA(side.UniqueIdentifier) :
+            table->IsUniqueIdentifierOverlappingAnotherLoopbackB(side.UniqueIdentifier);
+
+        if (overlaps)
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unique identifier overlaps another loopback's on the same side", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(side.UniqueIdentifier.c_str(), "identifier"),
+                TraceLoggingBool(side.IsSideA, "side A")
+            );
+
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                side.IsSideA ? LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID_A : LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID_B,
+                internal::ResourceGetWString(IDS_ERROR_OVERLAPPING_UNIQUE_ID));
+
+            return E_FAIL;
+        }
+    }
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
 CMidi2LoopbackMidiConfigurationManager::ValidateUpdatedEndpointNamesAreUnused(
     std::vector<PendingEndpointUpdate> const& pending,
     std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
@@ -980,6 +1032,24 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             }
                         }
 
+                        if (Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds::IsEnabled())
+                        {
+                            // Runtime creates only, so overlapping loopbacks already saved in the configuration file still load.
+                            if (TransportState::Current().GetEndpointManager() != nullptr &&
+                                TransportState::Current().GetEndpointManager()->IsInitialized())
+                            {
+                                auto const overlapCheckHR = ValidateNewUniqueIdentifiersDoNotOverlap(
+                                    *definitionA, *definitionB, responseObject);
+
+                                if (FAILED(overlapCheckHR))
+                                {
+                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                    return internal::ConfigurationRejectionResult(overlapCheckHR);
+                                }
+                            }
+                        }
+
 
 
                         if (TransportState::Current().GetEndpointManager() != nullptr && 
@@ -1142,6 +1212,26 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Requested device removal but association id not found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(associationId.c_str(), "association id")
                     );
+
+                    if (Feature_Servicing_MIDI2LoopbackRemovalRejectionReasons::IsEnabled())
+                    {
+                        GUID parsedAssociationId{};
+
+                        if (internal::TryParseGuidString(associationId.c_str(), parsedAssociationId))
+                        {
+                            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                responseObject,
+                                LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+                        }
+                        else
+                        {
+                            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                responseObject,
+                                LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+                                internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
+                        }
+                    }
 
                     o.MoveNext();
                     continue;

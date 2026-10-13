@@ -66,7 +66,14 @@ public:
 
         if (deviceToRemove)
         {
-            deviceToRemove->Shutdown();
+            if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+            {
+                deviceToRemove->ShutdownWithLock();
+            }
+            else
+            {
+                deviceToRemove->Shutdown();
+            }
         }
     }
 
@@ -97,6 +104,48 @@ public:
         for (auto const& [key, device] : m_devices)
         {
             if (cleanId == internal::ToLowerTrimmedWStringCopy(device->DefinitionB.EndpointUniqueIdentifier))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds. The service removes
+    // endpoints by the start of their instance id, so removing one of two overlapping loopbacks
+    // would take the other with it.
+    bool IsUniqueIdentifierOverlappingAnotherLoopbackA(_In_ std::wstring const& uniqueIdentifier)
+    {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
+        auto const cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
+
+        for (auto const& [key, device] : m_devices)
+        {
+            auto const otherId = internal::ToLowerTrimmedWStringCopy(device->DefinitionA.EndpointUniqueIdentifier);
+
+            if (cleanId.starts_with(otherId) || otherId.starts_with(cleanId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds.
+    bool IsUniqueIdentifierOverlappingAnotherLoopbackB(_In_ std::wstring const& uniqueIdentifier)
+    {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
+        auto const cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
+
+        for (auto const& [key, device] : m_devices)
+        {
+            auto const otherId = internal::ToLowerTrimmedWStringCopy(device->DefinitionB.EndpointUniqueIdentifier);
+
+            if (cleanId.starts_with(otherId) || otherId.starts_with(cleanId))
             {
                 return true;
             }

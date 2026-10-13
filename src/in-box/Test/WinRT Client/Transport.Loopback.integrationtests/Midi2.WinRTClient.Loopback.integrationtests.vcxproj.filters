@@ -24,12 +24,18 @@
     <ClInclude Include="MidiLoopbackBenchmarks.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiLoopbackStressTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiLoopbackEndpointTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiLoopbackBenchmarks.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackStressTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

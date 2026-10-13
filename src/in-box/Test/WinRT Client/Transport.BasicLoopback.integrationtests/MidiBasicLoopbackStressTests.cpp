@@ -650,3 +650,91 @@ void MidiBasicLoopbackStressTests::TestUniqueIdOfTransportParentIsRejected()
     VERIFY_IS_TRUE(RoundTrip(control.CreatedLoopbackEntry().EndpointDeviceId(), NoteOnWord(1)));
     VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
 }
+
+
+void MidiBasicLoopbackStressTests::TestListenerReopenedWhileAnotherClientSends()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto const processIdAtStart = MidiServiceProcessId();
+
+    auto const response = CreateLoopback(L"Stress Basic Loopback Reopen", MakeUniqueId(L"SREOPEN"));
+    auto const associationId = response.CreatedLoopbackEntry().AssociationId();
+    auto const endpointDeviceId = response.CreatedLoopbackEntry().EndpointDeviceId();
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopbackQuietly(associationId); });
+
+    constexpr uint32_t quietReopens{ 10 };
+    constexpr uint32_t reopens{ 20 };
+
+    Receiver sender{};
+    VERIFY_IS_TRUE(sender.Open(endpointDeviceId, L"Basic loopback stress reopen sender"));
+
+    // the same with nothing being sent, to compare against
+    PhaseTiming quietOpen{};
+    PhaseTiming quietClose{};
+
+    for (uint32_t i = 0; i < quietReopens; i++)
+    {
+        Receiver listener{};
+
+        auto const openStart = StressClock::now();
+        VERIFY_IS_TRUE(listener.Open(endpointDeviceId, L"Basic loopback stress reopen listener"));
+        quietOpen.Add(MillisecondsSince(openStart));
+
+        auto const closeStart = StressClock::now();
+        listener.Close();
+        quietClose.Add(MillisecondsSince(closeStart));
+    }
+
+    LOG_OUTPUT(L"With nothing being sent: open %lld ms on average (longest %lld), close %lld ms on average (longest %lld)",
+        quietOpen.TotalMs / quietReopens, quietOpen.LongestMs, quietClose.TotalMs / quietReopens, quietClose.LongestMs);
+
+    ConnectionFlood flood{};
+    flood.Start(sender.Connection);
+
+    uint32_t silentOpens{ 0 };
+    PhaseTiming open{};
+    PhaseTiming firstMessage{};
+    PhaseTiming close{};
+
+    for (uint32_t i = 0; i < reopens; i++)
+    {
+        Receiver listener{};
+
+        auto const openStart = StressClock::now();
+        VERIFY_IS_TRUE(listener.Open(endpointDeviceId, L"Basic loopback stress reopen listener"));
+        open.Add(MillisecondsSince(openStart));
+
+        auto const listenStart = StressClock::now();
+
+        if (!WaitFor([&] { return listener.Count.load() > 0; }, 2000))
+        {
+            silentOpens++;
+        }
+
+        firstMessage.Add(MillisecondsSince(listenStart));
+
+        auto const closeStart = StressClock::now();
+        listener.Close();
+        close.Add(MillisecondsSince(closeStart));
+    }
+
+    flood.Stop();
+
+    LOG_OUTPUT(L"While another client sent %llu messages (%llu sends refused): open %lld ms on average (longest %lld), first message %lld ms (longest %lld), close %lld ms (longest %lld). %u opens heard nothing.",
+        flood.MessagesSent(), flood.FailedSends(),
+        open.TotalMs / reopens, open.LongestMs,
+        firstMessage.TotalMs / reopens, firstMessage.LongestMs,
+        close.TotalMs / reopens, close.LongestMs,
+        silentOpens);
+
+    VERIFY_IS_FALSE(flood.Threw());
+    VERIFY_ARE_EQUAL(silentOpens, static_cast<uint32_t>(0));
+    VERIFY_ARE_EQUAL(MidiServiceProcessId(), processIdAtStart);
+
+    sender.Close();
+
+    VERIFY_IS_TRUE(RoundTrip(endpointDeviceId, NoteOnWord(1)));
+}
