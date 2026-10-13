@@ -2058,6 +2058,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2KSInputReadCompletionTimestamp.h"
 #include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
+#include "Feature_Servicing_MIDI2KSAPinChangesWhileOpen.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
@@ -2099,6 +2100,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMPortListLockScope.h"
 #include "Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock.h"
 #include "Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h"
+#include "Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
 
@@ -2130,6 +2132,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSOutputWriteHang::IsEnabled(),                    L"MIDI2KSOutputWriteHang (fix for declared midi out when none present)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSInputReadCompletionTimestamp::IsEnabled(),       L"MIDI2KSInputReadCompletionTimestamp (timestamp incoming midi 1.0 driver data when the service reads it, so winmm apps stop dropping it)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled(),                  L"MIDI2KSAWatcherHardening (fix for MONTAGE M / MODX usb port move)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAPinChangesWhileOpen::IsEnabled(),               L"MIDI2KSAPinChangesWhileOpen (ports added to or removed from a device like loopMIDI while its endpoint is open carry data without reopening it, and the device's other MIDI 1.0 ports, with any winmm handles open on them, are left alone when nothing about them changed)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNumberCache::IsEnabled(),                      L"MIDI2PortNumberCache (greatly speeds up service startup)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeUmpSize::IsEnabled(),             L"MIDI2USBSystemRealTimeUmpSize (fix timing clock coming in as NOOP on MIDI2 driver)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSystemRealTimeCin::IsEnabled(),                 L"MIDI2USBSystemRealTimeCin (fix timing clock, start and stop not recognized by some USB MIDI 1.0 devices on MIDI2 driver)");
@@ -2171,6 +2174,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled(),               L"MIDI2WinMMPortListLockScope (stop winmm open, close and device removal from blocking or hanging other winmm calls)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled(),          L"MIDI2WinMMRemovalWithoutPortLock (stop a long winmm sysex send from delaying device removal handling, which could break ports opened after the device came back)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled(),          L"MIDI2WinMMShortMessageNoSendWait (stop winmm waiting for send completion on short messages)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled(),     L"MIDI2WinMMUnprepareAfterDeviceRemoval (let apps unprepare winmm buffers after a device is removed)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
 

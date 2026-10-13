@@ -9,6 +9,8 @@
 
 #include "pch.h"
 
+#include "Feature_Servicing_MIDI2KSAPinChangesWhileOpen.h"
+
 
 
 
@@ -46,16 +48,33 @@ CMidi2KSAggregateMidiBidi::Initialize(
     auto midiDevice = std::make_unique<CMidi2KSAggregateMidi>();
     RETURN_IF_NULL_ALLOC(midiDevice);
 
-    RETURN_IF_FAILED(
-        midiDevice->Initialize(
-            device, 
-            MidiFlowBidirectional, 
-            creationParams, 
-            mmCssTaskId, 
-            callback, 
-            context
-        )
-    );
+    if (Feature_Servicing_MIDI2KSAPinChangesWhileOpen::IsEnabled())
+    {
+        // otherwise the open endpoint never sees pins the device adds or removes while it is open
+        RETURN_IF_FAILED(
+            midiDevice->InitializeFollowingPinMapChanges(
+                device,
+                MidiFlowBidirectional,
+                creationParams,
+                mmCssTaskId,
+                callback,
+                context
+            )
+        );
+    }
+    else
+    {
+        RETURN_IF_FAILED(
+            midiDevice->Initialize(
+                device, 
+                MidiFlowBidirectional, 
+                creationParams, 
+                mmCssTaskId, 
+                callback, 
+                context
+            )
+        );
+    }
 
     m_midiDevice = std::move(midiDevice);
 
@@ -88,7 +107,14 @@ CMidi2KSAggregateMidiBidi::Shutdown()
 
     if (m_midiDevice)
     {
-        m_midiDevice->Shutdown();
+        if (Feature_Servicing_MIDI2KSAPinChangesWhileOpen::IsEnabled())
+        {
+            m_midiDevice->ShutdownFollowingPinMapChanges();
+        }
+        else
+        {
+            m_midiDevice->Shutdown();
+        }
         m_midiDevice = nullptr;
     }
 

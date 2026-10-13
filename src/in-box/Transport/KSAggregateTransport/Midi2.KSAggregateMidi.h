@@ -20,6 +20,18 @@ public:
     HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID , _In_ UINT , _In_ LONGLONG);
     HRESULT Shutdown();
 
+    // Initialize and Shutdown for an open endpoint which also picks up pins the device adds or
+    // removes while it is open. Implemented in Midi2.KSAggregateMidiPinMapUpdates.cpp.
+    HRESULT InitializeFollowingPinMapChanges(
+        _In_ LPCWSTR endpointDeviceInterfaceId,
+        _In_ MidiFlow flow,
+        _In_ PTRANSPORTCREATIONPARAMS creationParams,
+        _Inout_ DWORD* mmCssTaskId,
+        _In_opt_ IMidiCallback* callback,
+        _In_ LONGLONG context);
+
+    HRESULT ShutdownFollowingPinMapChanges();
+
  //   HRESULT HandleCallback(_In_ uint8_t, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
 private:
@@ -35,6 +47,23 @@ private:
 
 
     std::map<std::wstring, std::unique_ptr<KsHandleWrapper>> m_openKsFilters;
+
+    // Everything below is used only when following pin map changes
+
+    HRESULT ReadPinMap(_In_ LPCWSTR endpointDeviceInterfaceId, _Out_ std::vector<KsaPinMap::Entry>& entries);
+    HRESULT ApplyPinMap(_In_ std::vector<KsaPinMap::Entry> const& entries, _In_ bool stopAtFirstFailure, _Inout_ DWORD* mmCssTaskId);
+    HRESULT OpenProxyForPin(_In_ KsaPinMap::Entry const& entry, _Inout_ DWORD* mmCssTaskId);
+    void CloseProxyForPin(_In_ KsaPinMap::Entry const& entry);
+    void CloseFiltersNoLongerUsed();
+
+    std::wstring m_followedEndpointDeviceId{ };
+    std::vector<KsaPinMap::Entry> m_openPins{ };     // one entry per open proxy
+    LONGLONG m_proxyContext{ 0 };
+    ULONG m_proxyBufferSize{ 0 };
+    DWORD m_mmCssTaskIdForAddedPins{ 0 };
+
+    // Declared last, so it ends, waiting for any change being applied, before the maps above are destroyed
+    KsaPinMap::Subscription m_pinMapSubscription{ };
 
 
     // group map. key is the group index.

@@ -10,6 +10,7 @@
 #include "Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval.h"
 #include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
 #include "Feature_Servicing_MIDI2WinMMPortListLockScope.h"
+#include "Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -311,6 +312,15 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDeviceInterface(MidiFlowIn, deviceID, msg, param1, param2);
             break;
         default:
+            if (Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled())
+            {
+                if (MIDM_UNPREPARE == msg)
+                {
+                    hr = ForwardMidUnprepare((MidiPortHandle) user, param1, param2);
+                    break;
+                }
+            }
+
             if (Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval::IsEnabled())
             {
                 hr = ForwardMidMessageAllowingCleanup(msg, (MidiPortHandle) user, param1, param2);
@@ -376,6 +386,15 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDeviceInterface(MidiFlowOut, deviceID, msg, param1, param2);
             break;
         default:
+            if (Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled())
+            {
+                if (MODM_UNPREPARE == msg)
+                {
+                    hr = ForwardModUnprepare((MidiPortHandle) user, param1, param2);
+                    break;
+                }
+            }
+
             hr = ForwardModMessage(msg, (MidiPortHandle) user, param1, param2);
     }
 
@@ -1124,5 +1143,49 @@ CMidiPorts::ForwardModMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR par
 
     RETURN_IF_FAILED(port->ModMessage(msg, param1, param2));
     return S_OK;
+}
+
+// A prepared header is the app's memory, and unpreparing it never touches the device. Refusing
+// it once the device is removed leaves the header prepared, and apps that check the result, like
+// RtMidi, take their error path while closing the port. The port answers MMSYSERR_NOTSUPPORTED,
+// removed or not, and winmm then unprepares the header itself.
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::ForwardMidUnprepare(MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(portHandle, "MidiPortHandle"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+
+    wil::com_ptr_nothrow<CMidiPort> port;
+
+    RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, portHandle, port));
+
+    return port->MidMessage(MIDM_UNPREPARE, param1, param2);
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::ForwardModUnprepare(MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(portHandle, "MidiPortHandle"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+
+    wil::com_ptr_nothrow<CMidiPort> port;
+
+    RETURN_IF_FAILED(GetOpenedPort(MidiFlowOut, portHandle, port));
+
+    return port->ModMessage(MODM_UNPREPARE, param1, param2);
 }
 

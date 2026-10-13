@@ -23,6 +23,8 @@
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
+#include "Feature_Servicing_MIDI2KSAPinChangesWhileOpen.h"
+#include "Midi1PortRegistrationCheck.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -4302,6 +4304,34 @@ CMidiDeviceManager::SyncMidi1Ports(
 
                 // create the swd with the specialized friendly name
                 createInfo.pszDeviceDescription = friendlyName.c_str();
+
+                if (Feature_Servicing_MIDI2KSAPinChangesWhileOpen::IsEnabled())
+                {
+                    // registering a port again turns it off first, and WinMM then treats every handle open on it as removed
+                    if (internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[flow][groupIndex].InterfaceId) != thisUmpMidiPortDeviceInterfaceId &&
+                        Midi1PortRegistration::IsCurrent(portInfo[flow][groupIndex].InterfaceId, interfaceProperties))
+                    {
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"MIDI 1 port unchanged, left registered", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(portInfo[flow][groupIndex].InterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                            TraceLoggingUInt32(flow, "flow"),
+                            TraceLoggingUInt32(groupIndex, "group index")
+                        );
+
+                        // the four per-port values pushed above, as after an activation
+                        interfaceProperties.pop_back();
+                        interfaceProperties.pop_back();
+                        interfaceProperties.pop_back();
+                        interfaceProperties.pop_back();
+
+                        continue;
+                    }
+                }
 
                 PMIDIPORT createdMidiPort {};
 

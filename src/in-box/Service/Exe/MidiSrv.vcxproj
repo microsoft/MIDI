@@ -374,6 +374,7 @@
     <ClInclude Include="..\Inc\MidiSrv.h" />
     <ClInclude Include="..\Inc\MidiTelemetry.h" />
     <ClInclude Include="..\Inc\MidiTransformPipe.h" />
+    <ClInclude Include="Midi1PortRegistrationCheck.h" />
     <ClInclude Include="MidiConfigurationManager.h" />
     <ClInclude Include="MidiEndpointProtocolManager.h" />
     <ClInclude Include="MidiEndpointProtocolWorker.h" />

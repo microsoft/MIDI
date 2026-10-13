@@ -49,6 +49,17 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
+    // Open endpoints which follow pin map changes (Feature_Servicing_MIDI2KSAPinChangesWhileOpen)
+    KsaPinMap::Registry& OpenEndpointPinMaps()
+    {
+        return m_openEndpointPinMaps;
+    }
+
+    // Hands a pin map an endpoint manager has just written to every open instance of that endpoint
+    HRESULT PublishPinMapToOpenEndpoint(
+        _In_ std::wstring const& endpointDeviceId,
+        _In_ std::vector<std::byte> const& pinMapPropertyData);
+
 
 private:
     TransportState();
@@ -59,4 +70,5 @@ private:
 
     wil::com_ptr<CMidi2KSAggregateMidiConfigurationManager> m_configurationManager;
 
+    KsaPinMap::Registry m_openEndpointPinMaps{ };
 };

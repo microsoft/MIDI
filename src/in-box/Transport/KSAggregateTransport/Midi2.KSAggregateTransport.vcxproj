@@ -363,6 +363,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.KSAggregateTransport.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidi.cpp" />
+    <ClCompile Include="Midi2.KSAggregateMidiPinMapUpdates.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiBidi.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiInProxy.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiConfigurationManager.cpp" />
@@ -396,6 +397,7 @@
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.KSAggregateTransport.h" />
     <ClInclude Include="Midi2.KSAggregateMidi.h" />
+    <ClInclude Include="Midi2.KSAggregatePinMapUpdates.h" />
     <ClInclude Include="Midi2.KSAggregateMidiBidi.h" />
     <ClInclude Include="Midi2.KSAggregateMidiInProxy.h" />
     <ClInclude Include="Midi2.KSAggregateMidiConfigurationManager.h" />
