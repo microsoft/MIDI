@@ -8,7 +8,7 @@ categories:
   - Device/Transport Configuration Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Network Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi, this is where you set up the connection.
 

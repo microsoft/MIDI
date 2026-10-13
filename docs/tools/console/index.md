@@ -8,7 +8,7 @@ categories:
   - Developer and Technical User Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 The Windows MIDI Services Console is a command-line tool for listing, inspecting, monitoring and testing MIDI endpoints. It can also set up loopbacks, control the built-in General MIDI synthesizer, connect Bluetooth MIDI devices and report on network MIDI. If you have it installed, you can run it from any command prompt by typing `midi`. We recommend [Windows Terminal](https://aka.ms/terminal) for the best experience.
 

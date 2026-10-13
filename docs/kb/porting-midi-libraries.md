@@ -17,9 +17,9 @@ We would rather help you get this right than debug it later through a customer's
 
 ## Target the in-box API
 
-**Use `Windows.Devices.Midi2`.** It is part of Windows, in box in Windows 11 25H2 and later from the end of November 2026, and it is the only supported Windows MIDI Services API target if you intend to ship. This is not a choice to weigh; it is where you are going.
+**Use `Windows.Devices.Midi2`.** It is part of Windows, in box in Windows 11 25H2 and later starting in Q1 CY 2027, and it is the only supported Windows MIDI Services API target if you intend to ship. This is not a choice to weigh; it is where you are going.
 
-You will find sample code, blog posts, and existing library backends which reference `Microsoft.Windows.Devices.Midi2` instead. That was the out-of-band preview package. **It was never supported for redistribution, only for testing against the preview, and it is being dropped entirely in November 2026.** If your library currently targets it, moving to the in-box namespace is the first piece of work to do, ahead of everything else in this article.
+You will find sample code, blog posts, and existing library backends which reference `Microsoft.Windows.Devices.Midi2` instead. That was the out-of-band preview package. **It was never supported for redistribution, only for testing against the preview, and it is being dropped entirely in Q1 CY 2027.** If your library currently targets it, moving to the in-box namespace is the first piece of work to do, ahead of everything else in this article.
 
 The type names in the two namespaces are largely identical, which makes this more dangerous than it sounds. **Do not copy sample code from one to the other without changing the namespace, and never mix the two in a single build.** A mixed build reports type mismatches which point at the wrong line, and the mistake survives review because every individual line looks correct.
 

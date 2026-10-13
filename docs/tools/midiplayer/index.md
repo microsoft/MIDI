@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Player plays standard MIDI files to any MIDI device on your PC: a hardware synth, a software instrument, a sound module, or the built-in General MIDI synthesizer. It shows you the music as it plays, so you can see which track is doing what rather than just hearing the result.
 

@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Patchbay connects MIDI endpoints to each other. You drop the devices you care about onto a canvas, draw connections from one device's **Out** to another device's **In**, and from then on everything arriving on that connection point is passed along. Steps along the way can keep some messages out or change them, so one keyboard can play two instruments split at middle C, or a pedal that works backwards can be turned around.
 
@@ -310,6 +310,7 @@ Messages go out as MIDI 2.0, with the finest steps, and Windows converts them fo
 **Sticks and triggers.** A stick or trigger step only sends when the control moves, so nothing goes out when the patch starts.
 
 - **Dead zone** is how far the control moves from where it rests before its value starts to change. A stick never comes back to exactly the middle, so without one, a stick you aren't touching could keep sending.
+- A joystick's twist turns a little whenever you push the stick hard, so a twist step changes too. If that gets in the way, raise its dead zone, or use the twist for something that can take small changes.
 - **Range and curve** shape the value with the input and output ranges, the curve, and **Invert**, the same way as in [Shaping controller values](#shaping-controller-values).
 - **At most one message every** limits how many messages a quick move sends. Where the control stops is always sent.
 - A stick rests in the middle, the same as pitch bend, so the two are a good fit. A trigger rests at the bottom, which suits a control change.

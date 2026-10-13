@@ -138,7 +138,7 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | The left stick bends pitch | A `controllerAxis` step with `"control": "leftStickX", "message": "pitchBend"`. Pitch bend rests in the middle, the same as the stick. |
 | D-pad up steps to the next of programs 1 to 8, and holding it runs through them | A `controllerButton` step with `"control": "dpadUp", "pressed": { "message": "programChange", "step": "next", "lowest": 0, "highest": 7 }`, the same object as `held`, and `"repeats": true`. A second step on `dpadDown` with `"step": "previous"` goes back. |
 | A switch in the X1 jack of an Xbox Adaptive Controller holds the sustain pedal | A `controllerButton` step with `"control": "leftStickUp", "pressed": { "message": "controlChange" }`. A control change starts as controller 64, the sustain pedal. |
-| The trigger of a Logitech Extreme 3D Pro joystick plays middle C | A `controllerButton` step with `"device": { "name": "Logitech Extreme 3D", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 }`. |
+| The trigger of a Logitech Extreme 3D Pro joystick plays middle C | A `controllerButton` step with `"device": { "name": "Extreme 3D pro", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 }`. |
 | The same joystick's throttle lever sets the volume | A `controllerAxis` step with the same `device`, `"control": "slider", "message": "controlChange", "number": 7`. Its throttle sends its lowest value pushed all the way forward, so add `"shape": { "invert": true }` to turn that into the loudest. |
 | A note on the canvas, such as "Bass below middle C" | An `annotation` with `"text": "Bass below middle C"`, placed near what it describes. Nothing connects to it. |
 | Keep pitch bend range changes away from a synth | An `rpnFilter` step with `"action": "keepOut", "parameters": [ { "type": "rpn", "bank": 0, "index": 0 } ]`. |
@@ -1575,7 +1575,7 @@ A `controllerButton` or `controllerAxis` step with a `device` reads a controller
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `name` | text | empty | The controller's name as Windows shows it, such as `Logitech Extreme 3D`. Capital letters don't matter. |
+| `name` | text | empty | The controller's name as Windows shows it, such as `Extreme 3D pro`. Capital letters don't matter. |
 | `vendorId`, `productId` | 0 to 65535 | 0 | The USB vendor and product numbers, as ordinary numbers: VID_046D is `1133`. |
 | `path` | text | empty | Kept by the app, which writes Windows' own path to the device. Leave it out. |
 
@@ -1593,7 +1593,7 @@ A stick, twist, rudder, or steering wheel rests in the middle, and an accelerato
 For example, the Extreme 3D Pro's trigger plays middle C:
 
 ```json
-{ "id": "trigger-note", "type": "controllerButton", "name": "Trigger", "x": 60, "y": 100, "settings": { "device": { "name": "Logitech Extreme 3D", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 } } }
+{ "id": "trigger-note", "type": "controllerButton", "name": "Trigger", "x": 60, "y": 100, "settings": { "device": { "name": "Extreme 3D pro", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 } } }
 ```
 
 ### (N)RPN filter
