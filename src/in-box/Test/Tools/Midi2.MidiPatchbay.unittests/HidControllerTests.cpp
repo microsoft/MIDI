@@ -42,7 +42,7 @@ namespace
 
     HidDeviceId Joystick(wchar_t const* path)
     {
-        return HidDeviceId{ L"Logitech Extreme 3D", 0x046D, 0xC215, path };
+        return HidDeviceId{ L"Extreme 3D pro", 0x046D, 0xC215, path };
     }
 
     bool Near(double a, double b) { return std::abs(a - b) < 0.000001; }
@@ -113,6 +113,63 @@ void HidControllerTests::ValuesSpanTheLogicalRange()
     // Past the end is the end, and a range with no width is nothing.
     VERIFY_ARE_EQUAL(1.0, NormalizeHidValue(1023, 0, 1000, 10));
     VERIFY_IS_TRUE(std::isnan(NormalizeHidValue(5, 5, 5, 8)));
+}
+
+void HidControllerTests::OneStepFlickerIsIgnored()
+{
+    // An untouched Extreme 3D Pro's twist flickered between 123 and 124 of 255, 20 times a second.
+    auto const step = HidValueStep(0, 255, 8);
+    VERIFY_IS_TRUE(Near(1.0 / 255.0, step));
+    VERIFY_IS_TRUE(Near(1.0 / 65535.0, HidValueStep(0, -1, 16)));
+    VERIFY_IS_TRUE(std::isnan(HidValueStep(5, 5, 8)));
+
+    auto const at = [](uint32_t raw) { return NormalizeHidValue(raw, 0, 255, 8); };
+
+    int8_t direction{ 0 };
+    auto value = SteadyHidValue(std::numeric_limits<double>::quiet_NaN(), at(124), step, direction);
+    VERIFY_ARE_EQUAL(at(124), value);
+
+    // The first change counts; after that, back and forth by one step doesn't.
+    value = SteadyHidValue(value, at(123), step, direction);
+    VERIFY_ARE_EQUAL(at(123), value);
+
+    for (int i = 0; i < 10; i++)
+    {
+        value = SteadyHidValue(value, at(124), step, direction);
+        VERIFY_ARE_EQUAL(at(123), value);
+        value = SteadyHidValue(value, at(123), step, direction);
+        VERIFY_ARE_EQUAL(at(123), value);
+    }
+
+    // Going on the same way counts a step at a time; turning back takes two.
+    value = SteadyHidValue(value, at(122), step, direction);
+    VERIFY_ARE_EQUAL(at(122), value);
+    value = SteadyHidValue(value, at(123), step, direction);
+    VERIFY_ARE_EQUAL(at(122), value);
+    value = SteadyHidValue(value, at(124), step, direction);
+    VERIFY_ARE_EQUAL(at(124), value);
+    value = SteadyHidValue(value, at(125), step, direction);
+    VERIFY_ARE_EQUAL(at(125), value);
+
+    // The ends always count, and a step back from one is flicker.
+    value = SteadyHidValue(value, at(255), step, direction);
+    VERIFY_ARE_EQUAL(1.0, value);
+    value = SteadyHidValue(value, at(254), step, direction);
+    VERIFY_ARE_EQUAL(1.0, value);
+    value = SteadyHidValue(value, at(253), step, direction);
+    VERIFY_ARE_EQUAL(at(253), value);
+    value = SteadyHidValue(value, at(254), step, direction);
+    VERIFY_ARE_EQUAL(at(253), value);
+    value = SteadyHidValue(value, at(255), step, direction);
+    VERIFY_ARE_EQUAL(1.0, value);
+
+    value = SteadyHidValue(value, at(0), step, direction);
+    VERIFY_ARE_EQUAL(0.0, value);
+    value = SteadyHidValue(value, at(1), step, direction);
+    VERIFY_ARE_EQUAL(0.0, value);
+
+    // Without a step size, every value counts.
+    VERIFY_ARE_EQUAL(0.6, SteadyHidValue(0.5, 0.6, std::numeric_limits<double>::quiet_NaN(), direction));
 }
 
 void HidControllerTests::TheHatPointsEightWays()
@@ -349,16 +406,16 @@ void HidControllerTests::DevicesMatchByPathThenModelThenName()
     VERIFY_ARE_EQUAL(-1, ChooseHidDevice(present, HidDeviceId{}));
 
     // The same model with another name still counts.
-    std::vector<HidDeviceId> const renamed{ HidDeviceId{ L"Extreme 3D", 0x046D, 0xC215, L"x" } };
+    std::vector<HidDeviceId> const renamed{ HidDeviceId{ L"Logitech Extreme 3D", 0x046D, 0xC215, L"x" } };
     VERIFY_ARE_EQUAL(0, ChooseHidDevice(renamed, Joystick(L"y")));
 }
 
 void HidControllerTests::XInputCollectionsAreLeftToXInput()
 {
-    // Paths read from the Xbox Adaptive Controller and a Logitech F310 on a test PC.
+    // Paths read from an Xbox Adaptive Controller, a Logitech F310 and an Extreme 3D Pro on a test PC.
     VERIFY_IS_TRUE(IsXInputDevicePath(L"\\\\?\\HID#VID_045E&PID_02FF&IG_00#9&2dce9272&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"));
     VERIFY_IS_TRUE(IsXInputDevicePath(L"\\\\?\\hid#vid_046d&pid_c21d&ig_00#a&34ff1454&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"));
-    VERIFY_IS_FALSE(IsXInputDevicePath(L"\\\\?\\HID#VID_046D&PID_C215#7&2b6a7d5c&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"));
+    VERIFY_IS_FALSE(IsXInputDevicePath(L"\\\\?\\HID#VID_046D&PID_C215#9&39e2db6a&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"));
     VERIFY_IS_FALSE(IsXInputDevicePath(L""));
 }
 
@@ -441,8 +498,8 @@ void HidControllerTests::TheGuidesJoystickExamplesRead()
         "fileVersion": 2,
         "endpoints": [ { "id": "synth", "displayName": "Synth" } ],
         "blocks": [
-            { "id": "trigger-note", "type": "controllerButton", "settings": { "device": { "name": "Logitech Extreme 3D", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 } } },
-            { "id": "throttle", "type": "controllerAxis", "settings": { "device": { "name": "Logitech Extreme 3D", "vendorId": 1133, "productId": 49685 }, "control": "slider", "message": "controlChange", "number": 7, "shape": { "invert": true } } }
+            { "id": "trigger-note", "type": "controllerButton", "settings": { "device": { "name": "Extreme 3D pro", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 } } },
+            { "id": "throttle", "type": "controllerAxis", "settings": { "device": { "name": "Extreme 3D pro", "vendorId": 1133, "productId": 49685 }, "control": "slider", "message": "controlChange", "number": 7, "shape": { "invert": true } } }
         ],
         "connections": [
             { "id": "c1", "source": "trigger-note", "destination": "synth" },
@@ -453,7 +510,7 @@ void HidControllerTests::TheGuidesJoystickExamplesRead()
 
     auto const* trigger = patch->FindBlock(L"trigger-note");
     VERIFY_IS_NOT_NULL(trigger);
-    VERIFY_IS_TRUE(trigger->Settings.ControllerButton.Device == (HidDeviceId{ L"Logitech Extreme 3D", 0x046D, 0xC215, L"" }));
+    VERIFY_IS_TRUE(trigger->Settings.ControllerButton.Device == (HidDeviceId{ L"Extreme 3D pro", 0x046D, 0xC215, L"" }));
     VERIFY_IS_TRUE(trigger->Settings.ControllerButton.DeviceControl == HidButtonControl(1));
 
     auto const* throttle = patch->FindBlock(L"throttle");

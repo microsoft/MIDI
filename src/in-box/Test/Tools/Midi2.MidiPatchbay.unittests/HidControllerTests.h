@@ -20,6 +20,7 @@ public:
 
     TEST_METHOD(EveryHidControlHasOneKey);
     TEST_METHOD(ValuesSpanTheLogicalRange);
+    TEST_METHOD(OneStepFlickerIsIgnored);
     TEST_METHOD(TheHatPointsEightWays);
     TEST_METHOD(ButtonsHatsAndAxisEndsPress);
     TEST_METHOD(ASliderHasNoDeadZoneAndNoRest);
