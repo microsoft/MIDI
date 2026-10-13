@@ -52,6 +52,8 @@ Many apps, DAWs especially, remember their setup by MIDI port. If a device is sw
 
 Choose it when you connect to an RTP-MIDI device, or later under **Details** on the device's row on the **Network devices** page. Changing it there doesn't disconnect the device. A device you connect to by address starts with **Remove immediately**, so change it under **Details** once it's listed. **Disconnect and forget** always removes the endpoint.
 
+Network MIDI 2.0 devices don't have this choice. Windows learns a Network MIDI 2.0 device's ports and protocol only when its endpoint is new, so the endpoint is always made again when the device comes back.
+
 ## You don't need to keep this app running
 
 This app is here to set connections up. It doesn't carry any MIDI data, and nothing depends on it once you've closed it.

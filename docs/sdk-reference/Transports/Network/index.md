@@ -97,3 +97,4 @@ To see what's saved, call `GetSavedHosts` and `GetSavedClients`. They read the c
 - Authentication isn't built yet. A host set up to require it is rejected when it's configured, instead of quietly accepting connections that aren't authenticated. See [issue 733](https://github.com/microsoft/MIDI/issues/733)
 - mDNS discovery only works on the local subnet. Direct connections don't have that limit
 - mDNS discovery can take a while to find everything. `midimdnsinfo.exe` in the MIDI tools helps you check what's visible on the network
+- A connection's endpoint exists only while the connection is up. Unlike RTP-MIDI and Bluetooth MIDI, there's no setting to keep it while the device is away. Windows runs endpoint discovery and protocol negotiation only for a new endpoint, and keeping one would need a big exception to that

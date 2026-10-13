@@ -75,6 +75,8 @@ Loopback endpoints, other than the two built-in diagnostic loopbacks, are either
 
 When the connection is lost or closed, the endpoint is removed and `Removed` fires.
 
+Unlike Bluetooth MIDI and RTP-MIDI, there's no setting to keep the endpoint while the device is away. Windows runs endpoint discovery and protocol negotiation only when an endpoint is new, and a device that comes back may answer differently, so the endpoint is created again each time the device connects.
+
 ### RTP-MIDI
 
 By default, when the connection is lost or closed, the endpoint is removed and `Removed` fires. A connection this PC makes can be set to keep its endpoint while the remote device is away. Then no `Removed` event fires, and the endpoint starts working again when the device comes back. When it's set to keep the endpoint always, the endpoint is also there from the moment the MIDI service starts. See [`MidiRtpOfflineRetention`]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/). When the customer disconnects or removes the connection, its endpoint is removed and `Removed` fires.
