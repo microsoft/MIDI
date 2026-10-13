@@ -49,6 +49,9 @@ public:
 
     bool IsUniqueIdentifierInUseForLoopback(_In_ std::wstring const& uniqueIdentifier);
 
+    // True when this identifier starts with another loopback's, or another loopback's starts with it
+    bool IsUniqueIdentifierOverlappingAnotherLoopback(_In_ std::wstring const& uniqueIdentifier);
+
     // The name is what an application sees, and it has no way to tell two endpoints called the
     // same thing apart. Optionally ignores one endpoint, so renaming one does not collide with
     // the name it already has.

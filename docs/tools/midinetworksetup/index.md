@@ -8,7 +8,7 @@ categories:
   - Device/Transport Configuration Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Network Setup connects this PC to MIDI devices over your local network, with no traditional MIDI cables between them. If you have an interface, a synth, or another computer that speaks Network MIDI 2.0 over Ethernet or WiFi, this is where you set up the connection.
 
@@ -266,11 +266,15 @@ The usual sign is a PC that other devices can see but can't use. Windows announc
 
 The **Firewall** page, at the bottom of the list of pages, does this for you:
 
-1. Read what the page says about the network this PC is connected to now. It tells you whether Windows Firewall lets the MIDI service in there.
-2. Choose **Private networks**, **Public networks**, or both. The type of network this PC is connected to now is marked **(connected now)**.
+1. Read what the page says about the networks this PC is connected to now. It lists each one by name, with its type and the network adapter it's on, and tells you whether Windows Firewall lets the MIDI service in there.
+2. Choose the types of network to allow: **Private networks**, **Public networks**, or both. Each type this PC is connected to now is marked **(connected now)**.
 3. Select **Allow through Windows Firewall**, and say yes when Windows asks for administrator permission.
 
-Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them. **Private networks** also covers a network your school or company runs, which Windows calls a domain network.
+Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them.
+
+On a PC that's joined to a domain, like one your school or company set up, the page also has **Domain networks**, for the network your organization runs. It's separate from **Private networks**, so allowing your home network doesn't also let devices on your organization's network connect, and the other way around.
+
+A PC can be on more than one network at once. A VPN, or a virtual network that virtual machine software sets up, counts as a network of its own, and Windows often treats it as public. If the page says the MIDI service is blocked on one of these, you only need to allow it there if the devices you want to connect are on that network.
 
 The button adds one rule to Windows Firewall, called **Windows MIDI Service (network MIDI)**. It lets in only the kind of network traffic that Network MIDI 2.0 and RTP-MIDI use (UDP), and only for the MIDI service. To change which networks the rule covers, change your choices and select the button again. The button is only available when your choices are different from what the rule already covers. Rules you made yourself in Windows Firewall are left alone.
 

@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;comctl32.lib;dwrite.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);hid.lib;windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;comctl32.lib;dwrite.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -147,6 +147,11 @@
     <ClInclude Include="RouteGraph.h" />
     <ClInclude Include="StatefulBlocks.h" />
     <ClInclude Include="LogicSteps.h" />
+    <ClInclude Include="ControllerSteps.h" />
+    <ClInclude Include="ControllerHub.h" />
+    <ClInclude Include="ControllerStepRunner.h" />
+    <ClInclude Include="HidControllers.h" />
+    <ClInclude Include="HidHub.h" />
     <ClInclude Include="PatchTrace.h" />
     <ClInclude Include="CapabilityInquiry.h" />
     <ClInclude Include="CiFileStore.h" />
@@ -236,6 +241,12 @@
     <ClCompile Include="LogicSteps.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ControllerSteps.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="HidControllers.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="PatchTrace.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -253,6 +264,10 @@
     <ClCompile Include="PatchStore.cpp" />
     <ClCompile Include="CiFileStore.cpp" />
     <ClCompile Include="RouteEngine.cpp" />
+    <ClCompile Include="ControllerHub.cpp" />
+    <ClCompile Include="HidHub.cpp" />
+    <ClCompile Include="ControllerStepRunner.cpp" />
+    <ClCompile Include="ControllerText.cpp" />
     <ClCompile Include="SendQueue.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ThemeBrushes.cpp" />
@@ -269,6 +284,7 @@
     <ClCompile Include="MainWindowMapSteps.cpp" />
     <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
     <ClCompile Include="MainWindowLogicSteps.cpp" />
+    <ClCompile Include="MainWindowControllerSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />

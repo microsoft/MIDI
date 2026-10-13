@@ -126,6 +126,33 @@ bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
 
 
 _Use_decl_annotations_
+bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierOverlappingAnotherLoopback(
+    std::wstring const& uniqueIdentifier)
+{
+    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
+
+    auto lock = m_devicesLock.lock_shared();
+
+    for (auto const& [key, device] : m_devices)
+    {
+        if (!device) continue;
+
+        auto definition = device->Definition;
+        if (!definition) continue;
+
+        auto otherId = internal::ToLowerTrimmedWStringCopy(definition->EndpointUniqueIdentifier);
+
+        if (cleanId.starts_with(otherId) || otherId.starts_with(cleanId))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+_Use_decl_annotations_
 bool MidiBasicLoopbackDeviceTable::IsEndpointNameInUse(
     std::wstring const& endpointName,
     std::wstring const& ignoredEndpointDeviceId)

@@ -27,9 +27,15 @@
     <ClInclude Include="MidiBasicLoopbackBenchmarks.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MidiBasicLoopbackStressTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiBasicLoopbackTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBasicLoopbackStressTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="DiscordReproTest.cpp">

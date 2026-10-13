@@ -332,6 +332,18 @@ namespace winrt::midipatchbay::implementation
         // What a Branch or a Switch tested last and the memories a step uses, for the activity section.
         winrt::hstring LogicStatusText(_In_ std::wstring const& blockId) noexcept;
 
+        // ---- game controller steps, in MainWindowControllerSteps.cpp ----
+        void BuildControllerStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void FillControllerStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& host) noexcept;
+
+        // Learn: the next control pressed or moved on any controller becomes the step's.
+        void StartControllerLearn(_In_ std::wstring const& blockId, _In_ bool forButton) noexcept;
+        void StopControllerLearn() noexcept;
+        void OnControllerLearned(_In_ std::wstring const& blockId, _In_ ::midipatchbay::LearnedControl const& learned) noexcept;
+
+        // "Controller 1 is connected", for the refresh that keeps the activity current.
+        winrt::hstring ControllerStatusText(_In_ std::wstring const& blockId) noexcept;
+
         // ---- tracing messages through the patch, in MainWindowTrace.cpp ----
         winrt::fire_and_forget ShowTraceDialogAsync();
 
@@ -428,6 +440,13 @@ namespace winrt::midipatchbay::implementation
 
         // A logic step's last test and its memories, under its activity.
         controls::TextBlock m_logicStatusText{ nullptr };
+
+        // A game controller step: whether its controller is there, and Learn while it listens.
+        controls::TextBlock m_controllerStatusText{ nullptr };
+        uint64_t m_controllerLearnToken{ 0 };
+        uint64_t m_controllerHidLearnToken{ 0 };
+        std::wstring m_controllerLearnBlockId{};
+        winrt::weak_ref<controls::StackPanel> m_controllerSettingsHost{};
 
         // The messages last traced, kept for the next trace, and where each one went.
         std::vector<::midipatchbay::TraceMessage> m_traceMessages{};

@@ -8,7 +8,7 @@ categories:
   - Diagnostic Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Troubleshooting and Repair is where you go when MIDI on this PC isn't behaving. It shows you what Windows MIDI Services thinks the state of the machine is, collects the reports support will ask for, and fixes the handful of things that commonly get broken by other software.
 

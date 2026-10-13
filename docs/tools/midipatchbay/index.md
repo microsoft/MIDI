@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Patchbay connects MIDI endpoints to each other. You drop the devices you care about onto a canvas, draw connections from one device's **Out** to another device's **In**, and from then on everything arriving on that connection point is passed along. Steps along the way can keep some messages out or change them, so one keyboard can play two instruments split at middle C, or a pedal that works backwards can be turned around.
 
@@ -111,9 +111,9 @@ To work with more than one endpoint or step at once, hold Ctrl or Shift and clic
 
 ## Steps
 
-Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator or an annotation is never put into a connection, so it's added on its own instead.
+Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator, a game controller step, or an annotation is never put into a connection, so it's added on its own instead.
 
-There are seven kinds:
+There are eight kinds:
 
 - **Filters** keep some messages out and let the rest through.
 - **Transforms** change messages on the way past.
@@ -122,14 +122,15 @@ There are seven kinds:
 - **Logic** steps send a message one way or another by what's in it, and remember things from one message to the next. See [Logic steps](#logic-steps).
 - **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. See [MIDI-CI steps](#midi-ci-steps).
 - **Generators** make messages of their own: MIDI clock, MIDI Time Code, and an LFO. See [Generators](#generators).
+- **Game controllers** turn the buttons, sticks, and triggers of an Xbox controller, a joystick, or a gamepad into MIDI messages. See [Game controllers](#game-controllers).
 
 The **Steps** tab also has **Annotation**, a note on the canvas. It isn't a step. See [Annotations](#annotations).
 
 Messages go through the steps in the order the connections lead them, and each step only sees what the steps before it let through. When an **Out** leads to more than one place, each one gets its own copy of every message, so a step on one path never changes what another path carries. When more than one connection leads into the same **In**, their messages are merged.
 
-Select a step to see what it does, in a sentence, under **Behavior**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the channel, group, note, control change, and program and bank mappers, the message throttler, the clock divider, the note distributor, the logic steps except the gate, the MIDI-CI responder and filter, MIDI clock, and MIDI Time Code. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
+Select a step to see what it does, in a sentence, under **Behavior**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the channel, group, note, control change, and program and bank mappers, the message throttler, the clock divider, the note distributor, the logic steps except the gate, the MIDI-CI responder and filter, MIDI clock, MIDI Time Code, and the game controller steps. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
 
-**Bypass** lets everything through a step unchanged, so you can hear the patch with and without it. A bypassed generator sends nothing.
+**Bypass** lets everything through a step unchanged, so you can hear the patch with and without it. A bypassed generator or game controller step sends nothing.
 
 Steps can't be connected in a circle, because nothing would ever leave it. Windows MIDI Patchbay won't draw a connection that would close one.
 
@@ -276,6 +277,55 @@ The clock and the time code go out on the group you pick. A connection to one gr
 Changing a generator while its patch is routing doesn't start it again. A new tempo, more or less swing, and every change to an LFO take effect right away. Changing the clock's group, its **Swing note value**, or **Send Start and Stop messages**, or anything about the time code, starts it again from the top. So does connecting a clock to an LFO, or taking it away.
 
 MIDI clock and MIDI Time Code don't follow a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch routes.
+
+## Game controllers
+
+Game controller steps turn a game controller into a MIDI controller. Press a button to play a note or hold the sustain pedal, run through programs with the D-pad, bend pitch with a stick, or set the volume with a joystick's throttle. They work with Xbox controllers, including the Xbox Adaptive Controller, and with the joysticks, flight sticks, wheels, and gamepads that Windows lists in **Game Controllers** in Control Panel.
+
+- **Controller button** sends a message when you press a button, and can send another when you hold it down. It can use any button, the D-pad or hat switch, a trigger pulled past halfway, or a stick pushed more than halfway in one direction.
+- **Controller stick or trigger** sends a value that follows a stick, a trigger, a slider, or a pedal as it moves: a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN.
+
+Each step uses one control, so add a step for each control you want to use. Like a generator, a game controller step only has an **Out**, and it runs for as long as its patch is routing. It keeps working while another app, such as a game or a DAW, is in front.
+
+**Which controller.** Pick an Xbox controller by its number, or any other controller by its name. Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so if you plug them in again in a different order, a step can follow a different controller. Any other controller is found by its name and the USB port it's plugged into. Plug it into another port and it's still found, unless you have two of the same. Select the step to see whether its controller is connected.
+
+**Joysticks and other controllers.** Their buttons have numbers, the same numbers Windows shows in **Game Controllers** in Control Panel. Their axes have the names Windows gives them. On most joysticks, **X axis** and **Y axis** are the stick, **Z rotation** is twisting it, and **Slider** is the throttle lever. The hat switch, the small thumb pad on top of many joysticks, works like a D-pad. In a **Controller button** step, either end of an axis can be a button too.
+
+**Learn.** Select **Learn**, then press the button, or move the stick or trigger, that you want. The step picks the controller and the control for you.
+
+**What a button sends.** Pick a message under **When pressed, send**:
+
+- A **note**, which plays while the button is down. Clear **Send a note off when you let go** for a sound that should ring on, such as a drum.
+- A **control change**, **pitch bend**, **channel pressure**, **poly pressure**, **RPN**, or **NRPN**, with a value for when you press, and if you like, another for when you let go. A new control change is a sustain pedal: controller 64, all the way down while you hold the button, and up when you let go.
+- A **program change**: one program, or the next or the previous program in a range you choose. Every step in the patch that sends the next or previous program on the same group and channel keeps one place in the range, so one button can go up and another down.
+- **Start**, **Continue**, or **Stop**.
+- **Message typed in**: any one message, typed as 1 to 4 words in hexadecimal.
+
+Messages go out as MIDI 2.0, with the finest steps, and Windows converts them for a MIDI 1.0 device. To send MIDI 1.0 messages instead, choose **MIDI 1.0** under **Message format**. An RPN or an NRPN always goes as MIDI 2.0.
+
+**Holding a button.** Under **When held, send**, pick a second message. It goes once you've held the button for the time you set. With **Repeat while held**, it goes again and again until you let go. That's handy on the D-pad: tap it to move one program, and hold it to run through them. With **Tap or hold, not both**, a short press sends only the pressed message, and a long press sends only the held message. The pressed message then waits until you let go, so it comes a little later.
+
+**On and off.** With **Switch on and off with each press**, one press sends the pressed message and the next press ends it, like a latching pedal. The held message isn't used.
+
+**Sticks and triggers.** A stick or trigger step only sends when the control moves, so nothing goes out when the patch starts.
+
+- **Dead zone** is how far the control moves from where it rests before its value starts to change. A stick never comes back to exactly the middle, so without one, a stick you aren't touching could keep sending.
+- A joystick's twist turns a little whenever you push the stick hard, so a twist step changes too. If that gets in the way, raise its dead zone, or use the twist for something that can take small changes.
+- **Range and curve** shape the value with the input and output ranges, the curve, and **Invert**, the same way as in [Shaping controller values](#shaping-controller-values).
+- **At most one message every** limits how many messages a quick move sends. Where the control stops is always sent.
+- A stick rests in the middle, the same as pitch bend, so the two are a good fit. A trigger rests at the bottom, which suits a control change.
+- A slider, a throttle, or a dial stays where you leave it. It has no dead zone, and nothing is sent for it when routing stops.
+
+**When it stops.** When the patch stops routing or the controller goes away, a note a button started gets its note off, a value gets its value for letting go, and a button that's switched on is switched off. A stick or trigger step with **Send where it rests when routing stops or the controller goes away** checked sends where the control rests, so a pitch bend isn't left bent.
+
+**The Xbox Adaptive Controller.** A switch in one of its jacks works like the button the jack is named for, so a switch in the A jack is the A button. The X1 and X2 jacks are different. A joystick in X1 is the left stick, and one in X2 is the right stick. A switch in X1 is left stick up, and one in X2 is left stick down, unless you changed them in the Xbox Accessories app. To use those switches, pick **Left stick up** or **Left stick down** in a **Controller button** step, or use **Learn**.
+
+Things game controller steps can't do:
+
+- **Up to four Xbox controllers,** numbered by Windows in the order they were plugged in.
+- **Only the controls every Xbox controller has.** Extra buttons, such as the paddles on an Elite controller, aren't seen unless the Xbox Accessories app maps them to one of the standard buttons.
+- **Two of the same joystick are told apart by USB port.** Plug each one back into the port it was in, or the steps for the two can swap.
+- **No force feedback, rumble, or lights.** The steps only read controllers.
 
 ## Annotations
 

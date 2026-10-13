@@ -9,6 +9,18 @@
 
 #pragma once
 
+// Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges. The table keeps a
+// copy of the device built at creation, so a copy gets a lock of its own instead of sharing one.
+class MidiLoopbackCallbackLock
+{
+public:
+    MidiLoopbackCallbackLock() = default;
+    MidiLoopbackCallbackLock(_In_ MidiLoopbackCallbackLock const&) noexcept {}
+    MidiLoopbackCallbackLock& operator=(_In_ MidiLoopbackCallbackLock const&) noexcept { return *this; }
+
+    wil::srwlock Lock;
+};
+
 // represents a loopback device. The device has exactly two
 // endpoints which are cross-wired to each other
 
@@ -52,6 +64,82 @@ public:
     {
         //m_bidiB = endpoint;
         m_callbackB = callback;
+    }
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    void ShutdownWithLock()
+    {
+        wil::com_ptr_nothrow<IMidiCallback> releasedA{ nullptr };
+        wil::com_ptr_nothrow<IMidiCallback> releasedB{ nullptr };
+
+        {
+            auto lock = m_callbackLock.Lock.lock_exclusive();
+
+            releasedA.swap(m_callbackA);
+            releasedB.swap(m_callbackB);
+        }
+
+        // released here, outside the lock
+    }
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    void RegisterEndpointAWithLock(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
+    {
+        {
+            auto lock = m_callbackLock.Lock.lock_exclusive();
+            m_callbackA.swap(callback);
+        }
+
+        // callback now holds the one it replaced, released here, outside the lock
+    }
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    void RegisterEndpointBWithLock(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
+    {
+        {
+            auto lock = m_callbackLock.Lock.lock_exclusive();
+            m_callbackB.swap(callback);
+        }
+
+        // callback now holds the one it replaced, released here, outside the lock
+    }
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges. Holds its own
+    // reference to the destination for the whole delivery, and keeps the muting and feedback
+    // protection behavior of the four Send functions below.
+    HRESULT SendMessageWithLock(
+        _In_ bool const directionAToB,
+        _In_ PVOID message,
+        _In_ UINT size,
+        _In_ LONGLONG position,
+        _In_ LONGLONG context)
+    {
+        wil::com_ptr_nothrow<IMidiCallback> destination{ nullptr };
+
+        {
+            auto lock = m_callbackLock.Lock.lock_shared();
+            destination = directionAToB ? m_callbackB : m_callbackA;
+        }
+
+        if (destination == nullptr)
+        {
+            return S_OK;
+        }
+
+        if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+        {
+            if (IsMuted)
+            {
+                return S_OK;
+            }
+
+            if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+            {
+                return SendThroughFeedbackGuard(directionAToB, destination, message, size, position, context);
+            }
+        }
+
+        return destination->Callback(MessageOptionFlags_None, message, size, position, context);
     }
 
     HRESULT SendMessageAToB(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
@@ -179,5 +267,8 @@ private:
 
     wil::com_ptr_nothrow<IMidiCallback> m_callbackA{ nullptr };
     wil::com_ptr_nothrow<IMidiCallback> m_callbackB{ nullptr };
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges.
+    MidiLoopbackCallbackLock m_callbackLock{};
 
 };

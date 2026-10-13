@@ -282,6 +282,7 @@ namespace winrt::midipatchbay::implementation
                     {
                         strong->m_closing = true;
                         strong->StopLearning();
+                        strong->StopControllerLearn();
                         strong->ShowLiveRouting(false);
 
                         patchbay::PatchLibrary::Current().Unsubscribe(strong->m_libraryToken);
@@ -1651,6 +1652,7 @@ namespace winrt::midipatchbay::implementation
                                              patchbay::BlockCategory::Logic,
                                              patchbay::BlockCategory::CapabilityInquiry,
                                              patchbay::BlockCategory::Generator,
+                                             patchbay::BlockCategory::GameController,
                                              patchbay::BlockCategory::Annotation })
                 {
                     controls::GridView grid{ nullptr };

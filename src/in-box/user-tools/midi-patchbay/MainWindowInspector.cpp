@@ -139,6 +139,8 @@ namespace winrt::midipatchbay::implementation
             m_activityElementId.clear();
             m_ciStatusText = nullptr;
             m_logicStatusText = nullptr;
+            m_controllerStatusText = nullptr;
+            StopControllerLearn();
             m_annotationTextBox = nullptr;
             m_inspectorSummary = nullptr;
             m_stepSettingsFocus = nullptr;
@@ -360,6 +362,16 @@ namespace winrt::midipatchbay::implementation
                 {
                     m_logicStatusText.Text(status);
                     m_logicStatusText.Visibility(status.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+                }
+            }
+
+            if (m_controllerStatusText != nullptr)
+            {
+                auto const status = ControllerStatusText(m_activityElementId);
+
+                if (m_controllerStatusText.Text() != status)
+                {
+                    m_controllerStatusText.Text(status);
                 }
             }
         }

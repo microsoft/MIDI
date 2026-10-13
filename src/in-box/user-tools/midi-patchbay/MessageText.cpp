@@ -703,6 +703,8 @@ namespace midipatchbay
             { BlockKind::SetTag, L"BlockNameSetTag", L"BlockShortSetTag", L"BlockBadgeSetTag", L"BlockHintSetTag" },
             { BlockKind::SetMemory, L"BlockNameSetMemory", L"BlockShortSetMemory", L"BlockBadgeSetMemory", L"BlockHintSetMemory" },
             { BlockKind::PutValue, L"BlockNamePutValue", L"BlockShortPutValue", L"BlockBadgePutValue", L"BlockHintPutValue" },
+            { BlockKind::ControllerButton, L"BlockNameControllerButton", L"BlockShortControllerButton", L"BlockBadgeControllerButton", L"BlockHintControllerButton" },
+            { BlockKind::ControllerAxis, L"BlockNameControllerAxis", L"BlockShortControllerAxis", L"BlockBadgeControllerAxis", L"BlockHintControllerAxis" },
         };
 
         KindText const* FindKindText(_In_ BlockKind kind) noexcept
@@ -759,6 +761,7 @@ namespace midipatchbay
         case BlockCategory::Distribution: return resources::GetString(L"BlockCategoryDistribution");
         case BlockCategory::CapabilityInquiry: return resources::GetString(L"BlockCategoryCapabilityInquiry");
         case BlockCategory::Logic:      return resources::GetString(L"BlockCategoryLogic");
+        case BlockCategory::GameController: return resources::GetString(L"BlockCategoryGameControllers");
         default:                        return resources::GetString(L"BlockCategoryFilters");
         }
     }
@@ -1261,6 +1264,11 @@ namespace midipatchbay
                     DescribeLfoLength(lfo.BeatsPerCycle)));
                 break;
             }
+
+            case BlockKind::ControllerButton:
+            case BlockKind::ControllerAxis:
+                text = Text(DescribeControllerStep(kind, settings));
+                break;
 
             case BlockKind::Annotation:
                 text = settings.Annotation.Text.empty()

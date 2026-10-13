@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Scratch Pad lets you type MIDI messages yourself and send them to a MIDI device. It's the tool to reach for when you want to answer questions like "does this synth actually respond to that controller?", "what does this SysEx message from the manual do?", or "can I reproduce that bug with one message?".
 

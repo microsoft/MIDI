@@ -160,6 +160,12 @@
   <data name="AssistantClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="AssistantLookingTitle" xml:space="preserve">
+    <value>Looking for MIDI devices…</value>
+  </data>
+  <data name="AssistantLooking" xml:space="preserve">
+    <value>This can take a moment on a PC with a lot of devices. They're added to the prompt when the search is done, and then you can copy it.</value>
+  </data>
   <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
   <data name="AssistantPromptIntroFormat" xml:space="preserve">
     <value>I want to make a patch for Windows MIDI Patchbay. Before you start, read the whole guide at {0} and follow it. If you can't open the guide, tell me and stop. Don't guess the file format: a guessed file opens without an error but doesn't do what I asked. Ask me what you need to know. Then give me a .midipatch file that I can import.</value>
@@ -4254,5 +4260,422 @@
   </data>
   <data name="CiOutcomeNewMuid" xml:space="preserve">
     <value>took a new MUID</value>
+  </data>
+
+  <!-- ============================================ game controllers -->
+  <data name="BlockCategoryGameControllers" xml:space="preserve">
+    <value>Game controllers</value>
+  </data>
+  <data name="BlockNameControllerButton" xml:space="preserve">
+    <value>Controller button</value>
+  </data>
+  <data name="BlockNameControllerAxis" xml:space="preserve">
+    <value>Controller stick or trigger</value>
+  </data>
+  <data name="BlockShortControllerButton" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="BlockShortControllerAxis" xml:space="preserve">
+    <value>Stick or trigger</value>
+  </data>
+  <data name="BlockBadgeControllerButton" xml:space="preserve">
+    <value>BTN</value>
+  </data>
+  <data name="BlockBadgeControllerAxis" xml:space="preserve">
+    <value>STK</value>
+  </data>
+  <data name="BlockHintControllerButton" xml:space="preserve">
+    <value>Sends messages when a button on a game controller or joystick is pressed, held, or let go. Works with the Xbox Adaptive Controller and its switches, and keeps working while another app is in front.</value>
+  </data>
+  <data name="BlockHintControllerAxis" xml:space="preserve">
+    <value>Turns a stick, trigger, slider, or pedal into a controller, pitch bend, pressure, or an RPN or NRPN value, at full MIDI 2.0 resolution.</value>
+  </data>
+  <data name="BlockDescControllerButtonFormat" xml:space="preserve">
+    <value>{0}, {1}: {2}</value>
+    <comment>{0} is a controller, such as "Xbox controller 1" or a joystick's name. {1} is a control such as "A" or "D-pad up". {2} is a message such as "note C3".</comment>
+  </data>
+  <data name="BlockDescControllerToggleFormat" xml:space="preserve">
+    <value>{0}, {1}: {2} on and off</value>
+    <comment>Each press switches the message on, the next switches it off. {0} is a controller, such as "Xbox controller 1". {1} is a control such as "A". {2} is a message such as "note C3".</comment>
+  </data>
+  <data name="BlockDescControllerHeldFormat" xml:space="preserve">
+    <value>{0}, held: {1}</value>
+    <comment>{0} is what a press sends, such as "Controller 1, A: note C4". {1} is what holding it sends, such as "next program".</comment>
+  </data>
+  <data name="BlockDescControllerTapOrHoldFormat" xml:space="preserve">
+    <value>{0}, or held: {1}</value>
+    <comment>A short press sends the first message and a long one only the second. {0} is what a press sends, such as "Controller 1, A: note C4". {1} is what holding it sends.</comment>
+  </data>
+  <data name="BlockDescControllerAxisFormat" xml:space="preserve">
+    <value>{0}, {1}: {2} on channel {3}</value>
+    <comment>{0} is a controller, such as "Xbox controller 1". {1} is a control such as "Left trigger". {2} is a message such as "pitch bend". {3} is a channel from 1 to 16.</comment>
+  </data>
+  <data name="ControllerPlayerFormat" xml:space="preserve">
+    <value>Xbox controller {0}</value>
+    <comment>{0} is the number Windows gives an Xbox controller, from 1 to 4.</comment>
+  </data>
+  <data name="ControllerSummaryNoteFormat" xml:space="preserve">
+    <value>note {0}</value>
+    <comment>{0} is a note such as "C4".</comment>
+  </data>
+  <data name="ControllerSummaryProgramFormat" xml:space="preserve">
+    <value>program {0}</value>
+    <comment>{0} is a program number from 0 to 127.</comment>
+  </data>
+  <data name="ControllerSummaryNextProgram" xml:space="preserve">
+    <value>next program</value>
+  </data>
+  <data name="ControllerSummaryPreviousProgram" xml:space="preserve">
+    <value>previous program</value>
+  </data>
+  <data name="ControllerSummaryStart" xml:space="preserve">
+    <value>start</value>
+  </data>
+  <data name="ControllerSummaryContinue" xml:space="preserve">
+    <value>continue</value>
+  </data>
+  <data name="ControllerSummaryStop" xml:space="preserve">
+    <value>stop</value>
+  </data>
+  <data name="ControllerSummaryWords" xml:space="preserve">
+    <value>a message typed in</value>
+  </data>
+  <data name="ControllerSummaryNothing" xml:space="preserve">
+    <value>nothing</value>
+  </data>
+  <data name="ControllerControlA" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="ControllerControlB" xml:space="preserve">
+    <value>B</value>
+  </data>
+  <data name="ControllerControlX" xml:space="preserve">
+    <value>X</value>
+  </data>
+  <data name="ControllerControlY" xml:space="preserve">
+    <value>Y</value>
+  </data>
+  <data name="ControllerControlLeftBumper" xml:space="preserve">
+    <value>Left bumper</value>
+  </data>
+  <data name="ControllerControlRightBumper" xml:space="preserve">
+    <value>Right bumper</value>
+  </data>
+  <data name="ControllerControlView" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="ControllerControlMenu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="ControllerControlLeftStickButton" xml:space="preserve">
+    <value>Left stick press</value>
+  </data>
+  <data name="ControllerControlRightStickButton" xml:space="preserve">
+    <value>Right stick press</value>
+  </data>
+  <data name="ControllerControlDPadUp" xml:space="preserve">
+    <value>D-pad up</value>
+  </data>
+  <data name="ControllerControlDPadDown" xml:space="preserve">
+    <value>D-pad down</value>
+  </data>
+  <data name="ControllerControlDPadLeft" xml:space="preserve">
+    <value>D-pad left</value>
+  </data>
+  <data name="ControllerControlDPadRight" xml:space="preserve">
+    <value>D-pad right</value>
+  </data>
+  <data name="ControllerControlLeftTrigger" xml:space="preserve">
+    <value>Left trigger</value>
+  </data>
+  <data name="ControllerControlRightTrigger" xml:space="preserve">
+    <value>Right trigger</value>
+  </data>
+  <data name="ControllerControlLeftStickX" xml:space="preserve">
+    <value>Left stick, left and right</value>
+  </data>
+  <data name="ControllerControlLeftStickY" xml:space="preserve">
+    <value>Left stick, up and down</value>
+  </data>
+  <data name="ControllerControlRightStickX" xml:space="preserve">
+    <value>Right stick, left and right</value>
+  </data>
+  <data name="ControllerControlRightStickY" xml:space="preserve">
+    <value>Right stick, up and down</value>
+  </data>
+  <data name="ControllerControlLeftStickUp" xml:space="preserve">
+    <value>Left stick up</value>
+  </data>
+  <data name="ControllerControlLeftStickDown" xml:space="preserve">
+    <value>Left stick down</value>
+  </data>
+  <data name="ControllerControlLeftStickLeft" xml:space="preserve">
+    <value>Left stick left</value>
+  </data>
+  <data name="ControllerControlLeftStickRight" xml:space="preserve">
+    <value>Left stick right</value>
+  </data>
+  <data name="ControllerControlRightStickUp" xml:space="preserve">
+    <value>Right stick up</value>
+  </data>
+  <data name="ControllerControlRightStickDown" xml:space="preserve">
+    <value>Right stick down</value>
+  </data>
+  <data name="ControllerControlRightStickLeft" xml:space="preserve">
+    <value>Right stick left</value>
+  </data>
+  <data name="ControllerControlRightStickRight" xml:space="preserve">
+    <value>Right stick right</value>
+  </data>
+  <data name="ControllerMessageNothing" xml:space="preserve">
+    <value>Nothing</value>
+  </data>
+  <data name="ControllerMessageNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="ControllerMessageControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="ControllerMessageProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="ControllerMessagePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="ControllerMessageChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="ControllerMessagePolyPressure" xml:space="preserve">
+    <value>Poly pressure</value>
+  </data>
+  <data name="ControllerMessageRpn" xml:space="preserve">
+    <value>RPN</value>
+  </data>
+  <data name="ControllerMessageNrpn" xml:space="preserve">
+    <value>NRPN</value>
+  </data>
+  <data name="ControllerMessageStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="ControllerMessageContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="ControllerMessageStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="ControllerMessageWords" xml:space="preserve">
+    <value>Message typed in</value>
+  </data>
+  <data name="ControllerPlayerHeader" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="ControllerLearnButtonHint" xml:space="preserve">
+    <value>Press the button you want, or push a stick or trigger most of the way.</value>
+  </data>
+  <data name="ControllerLearnAxisHint" xml:space="preserve">
+    <value>Move the stick or trigger you want most of the way.</value>
+  </data>
+  <data name="ControllerPlayerHint" xml:space="preserve">
+    <value>Windows numbers Xbox controllers 1 to 4 in the order they were plugged in. If you plug them in again in a different order, the numbers change.</value>
+  </data>
+  <data name="ControllerControlHeader" xml:space="preserve">
+    <value>Control</value>
+  </data>
+  <data name="ControllerAdaptiveHint" xml:space="preserve">
+    <value>On an Xbox Adaptive Controller, a switch in a jack works like the button the jack is named for. A switch in X1 is left stick up and one in X2 is left stick down, unless you changed them in the Xbox Accessories app.</value>
+  </data>
+  <data name="ControllerWhenPressed" xml:space="preserve">
+    <value>When pressed, send</value>
+  </data>
+  <data name="ControllerWhenHeld" xml:space="preserve">
+    <value>When held, send</value>
+  </data>
+  <data name="ControllerToggles" xml:space="preserve">
+    <value>Switch on and off with each press</value>
+  </data>
+  <data name="ControllerHoldMilliseconds" xml:space="preserve">
+    <value>Held for (ms)</value>
+  </data>
+  <data name="ControllerRepeats" xml:space="preserve">
+    <value>Repeat while held</value>
+  </data>
+  <data name="ControllerRepeatMilliseconds" xml:space="preserve">
+    <value>Repeat every (ms)</value>
+  </data>
+  <data name="ControllerTapOrHold" xml:space="preserve">
+    <value>Tap or hold, not both</value>
+  </data>
+  <data name="ControllerTapOrHoldHint" xml:space="preserve">
+    <value>A short press sends only the pressed message, and a long press sends only the held message. The pressed message waits until you let go, so it comes a little later.</value>
+  </data>
+  <data name="ControllerVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="ControllerValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="ControllerNoteOff" xml:space="preserve">
+    <value>Send a note off when you let go</value>
+  </data>
+  <data name="ControllerSendRelease" xml:space="preserve">
+    <value>Send a value when you let go</value>
+  </data>
+  <data name="ControllerReleaseValue" xml:space="preserve">
+    <value>Value when you let go</value>
+  </data>
+  <data name="ControllerProgramStepHeader" xml:space="preserve">
+    <value>Program to send</value>
+  </data>
+  <data name="ControllerProgramThis" xml:space="preserve">
+    <value>This program</value>
+  </data>
+  <data name="ControllerProgramNext" xml:space="preserve">
+    <value>Next program</value>
+  </data>
+  <data name="ControllerProgramPrevious" xml:space="preserve">
+    <value>Previous program</value>
+  </data>
+  <data name="ControllerLowestProgram" xml:space="preserve">
+    <value>Lowest program</value>
+  </data>
+  <data name="ControllerHighestProgram" xml:space="preserve">
+    <value>Highest program</value>
+  </data>
+  <data name="ControllerWraps" xml:space="preserve">
+    <value>Go around at the ends</value>
+  </data>
+  <data name="ControllerProgramShareHint" xml:space="preserve">
+    <value>Every step in this patch that sends the next or previous program on the same group and channel keeps one place in the list, so one button can go up and another down.</value>
+  </data>
+  <data name="ControllerWordsHeader" xml:space="preserve">
+    <value>Message words (hex)</value>
+  </data>
+  <data name="ControllerWordsPlaceholder" xml:space="preserve">
+    <value>For example 40903C00 C8000000</value>
+  </data>
+  <data name="ControllerWordsHint" xml:space="preserve">
+    <value>One whole message, 1 to 4 words in hexadecimal, sent exactly as typed. The group is part of the first word.</value>
+  </data>
+  <data name="ControllerWordsNotUnderstood" xml:space="preserve">
+    <value>That isn't one whole message. Type as many words as its message type uses, in hexadecimal.</value>
+  </data>
+  <data name="ControllerShapeHeader" xml:space="preserve">
+    <value>Range and curve</value>
+  </data>
+  <data name="ControllerDeadZone" xml:space="preserve">
+    <value>Dead zone (%)</value>
+  </data>
+  <data name="ControllerDeadZoneHint" xml:space="preserve">
+    <value>How far the control moves from where it rests before its value starts to change. A stick never comes back to exactly the middle.</value>
+  </data>
+  <data name="ControllerSendingHeader" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="ControllerInterval" xml:space="preserve">
+    <value>At most one message every (ms)</value>
+  </data>
+  <data name="ControllerIntervalHint" xml:space="preserve">
+    <value>0 sends every change. A bigger number sends fewer messages while the control moves. Where it stops is always sent.</value>
+  </data>
+  <data name="ControllerReturnToRest" xml:space="preserve">
+    <value>Send where it rests when routing stops or the controller goes away</value>
+  </data>
+  <data name="ControllerConnectedFormat" xml:space="preserve">
+    <value>{0} is connected.</value>
+    <comment>{0} is a controller, such as "Xbox controller 1" or a joystick's name.</comment>
+  </data>
+  <data name="ControllerMissingFormat" xml:space="preserve">
+    <value>{0} isn't connected. The step waits for it.</value>
+    <comment>{0} is a controller, such as "Xbox controller 1" or a joystick's name.</comment>
+  </data>
+  <data name="ControllerNoXInput" xml:space="preserve">
+    <value>Windows can't read Xbox controllers on this PC.</value>
+  </data>
+  <data name="ControllerDeviceNumberFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>A second controller of the same kind. {0} is its name, {1} is 2, 3 and so on.</comment>
+  </data>
+  <data name="ControllerDeviceMissingSuffixFormat" xml:space="preserve">
+    <value>{0} (not connected)</value>
+    <comment>{0} is a controller's name.</comment>
+  </data>
+  <data name="ControllerDeviceUnnamedFormat" xml:space="preserve">
+    <value>Game controller {0}</value>
+    <comment>For a controller with no name of its own. {0} is its USB vendor and product, such as 046D:C215.</comment>
+  </data>
+  <data name="ControllerDeviceHint" xml:space="preserve">
+    <value>Windows finds this controller by its name and the USB port it's plugged into. Plug it into another port and it's still found, unless you have two of the same.</value>
+  </data>
+  <data name="HidButtonFormat" xml:space="preserve">
+    <value>Button {0}</value>
+    <comment>{0} is the button's number on the controller, from 1.</comment>
+  </data>
+  <data name="HidAxisLowFormat" xml:space="preserve">
+    <value>{0}, low end</value>
+    <comment>An axis pushed most of the way to its lowest value, used as a button. {0} is an axis such as "X axis".</comment>
+  </data>
+  <data name="HidAxisHighFormat" xml:space="preserve">
+    <value>{0}, high end</value>
+    <comment>An axis pushed most of the way to its highest value, used as a button. {0} is an axis such as "X axis".</comment>
+  </data>
+  <data name="HidAxisX" xml:space="preserve">
+    <value>X axis</value>
+  </data>
+  <data name="HidAxisY" xml:space="preserve">
+    <value>Y axis</value>
+  </data>
+  <data name="HidAxisZ" xml:space="preserve">
+    <value>Z axis</value>
+  </data>
+  <data name="HidAxisRx" xml:space="preserve">
+    <value>X rotation</value>
+  </data>
+  <data name="HidAxisRy" xml:space="preserve">
+    <value>Y rotation</value>
+  </data>
+  <data name="HidAxisRz" xml:space="preserve">
+    <value>Z rotation</value>
+    <comment>On most joysticks, this is twisting the stick.</comment>
+  </data>
+  <data name="HidAxisSlider" xml:space="preserve">
+    <value>Slider</value>
+    <comment>On most joysticks, this is the throttle lever.</comment>
+  </data>
+  <data name="HidAxisSlider2" xml:space="preserve">
+    <value>Second slider</value>
+  </data>
+  <data name="HidAxisDial" xml:space="preserve">
+    <value>Dial</value>
+  </data>
+  <data name="HidAxisWheel" xml:space="preserve">
+    <value>Wheel</value>
+  </data>
+  <data name="HidAxisThrottle" xml:space="preserve">
+    <value>Throttle</value>
+  </data>
+  <data name="HidAxisRudder" xml:space="preserve">
+    <value>Rudder</value>
+  </data>
+  <data name="HidAxisAccelerator" xml:space="preserve">
+    <value>Accelerator</value>
+  </data>
+  <data name="HidAxisBrake" xml:space="preserve">
+    <value>Brake</value>
+  </data>
+  <data name="HidAxisSteering" xml:space="preserve">
+    <value>Steering</value>
+  </data>
+  <data name="HidHatUp" xml:space="preserve">
+    <value>Hat up</value>
+    <comment>The hat switch, a small thumb pad on top of many joysticks, pushed up.</comment>
+  </data>
+  <data name="HidHatDown" xml:space="preserve">
+    <value>Hat down</value>
+  </data>
+  <data name="HidHatLeft" xml:space="preserve">
+    <value>Hat left</value>
+  </data>
+  <data name="HidHatRight" xml:space="preserve">
+    <value>Hat right</value>
   </data>
 </root>

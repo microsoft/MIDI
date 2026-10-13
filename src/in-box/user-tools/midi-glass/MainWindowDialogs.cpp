@@ -547,7 +547,6 @@ namespace winrt::midiglass::implementation
         try
         {
             std::wstring const guide{ AssistantGuideUrl };
-            auto const devices = midiapp::FormatPromptList(midiapp::EndpointNamesForPrompt());
 
             // Built-in themes first, then the customer's own, which is the order the theme picker uses.
             std::vector<std::wstring> themeNames{};
@@ -557,29 +556,43 @@ namespace winrt::midiglass::implementation
                 themeNames.push_back(theme.Name);
             }
 
-            std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
-            prompt += L"\r\n\r\n";
+            auto const themes = midiapp::FormatPromptList(themeNames);
 
-            if (devices.empty())
-            {
-                prompt += resources::GetString(L"AssistantPromptNoDevices");
-            }
-            else
-            {
-                prompt += resources::GetString(L"AssistantPromptDevices");
-                prompt += L"\r\n";
-                prompt += devices;
-            }
+            auto const buildPrompt = [guide, themes](bool stillLooking)
+                {
+                    std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
+                    prompt += L"\r\n\r\n";
 
-            prompt += L"\r\n\r\n";
-            prompt += resources::GetString(L"AssistantPromptThemes");
-            prompt += L"\r\n";
-            prompt += midiapp::FormatPromptList(themeNames);
-            prompt += L"\r\n\r\n";
-            prompt += resources::GetString(L"AssistantPromptRequest");
+                    // Until the first look is done, an empty list doesn't mean there are no devices.
+                    if (!stillLooking)
+                    {
+                        auto const devices = midiapp::FormatPromptList(midiapp::EndpointNamesForPrompt());
 
-            // The customer types their request straight after it.
-            prompt += L" ";
+                        if (devices.empty())
+                        {
+                            prompt += resources::GetString(L"AssistantPromptNoDevices");
+                        }
+                        else
+                        {
+                            prompt += resources::GetString(L"AssistantPromptDevices");
+                            prompt += L"\r\n";
+                            prompt += devices;
+                        }
+
+                        prompt += L"\r\n\r\n";
+                    }
+
+                    prompt += resources::GetString(L"AssistantPromptThemes");
+                    prompt += L"\r\n";
+                    prompt += themes;
+                    prompt += L"\r\n\r\n";
+                    prompt += resources::GetString(L"AssistantPromptRequest");
+
+                    // The customer types their request straight after it.
+                    prompt += L" ";
+
+                    return winrt::hstring{ prompt };
+                };
 
             midiapp::AssistantPromptStrings strings{};
             strings.Title = resources::GetString(L"AssistantTitle");
@@ -590,9 +603,11 @@ namespace winrt::midiglass::implementation
             strings.CopiedButton = resources::GetString(L"AssistantCopied");
             strings.CopyFailedButton = resources::GetString(L"AssistantCopyFailed");
             strings.CloseButton = resources::GetString(L"DialogClose");
+            strings.LookingTitle = resources::GetString(L"AssistantLookingTitle");
+            strings.LookingMessage = resources::GetString(L"AssistantLooking");
 
             co_await midiapp::ShowAssistantPromptAsync(
-                Content().XamlRoot(), strings, winrt::hstring{ prompt }, foundation::Uri{ guide });
+                Content().XamlRoot(), strings, buildPrompt, foundation::Uri{ guide });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the AI assistant prompt.")
     }

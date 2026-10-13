@@ -152,6 +152,8 @@ namespace winrt::midipatchbay::implementation
         case patchbay::BlockKind::SetTag:
         case patchbay::BlockKind::SetMemory:
         case patchbay::BlockKind::PutValue:
+        case patchbay::BlockKind::ControllerButton:
+        case patchbay::BlockKind::ControllerAxis:
             return true;
 
         default:
@@ -972,6 +974,11 @@ namespace winrt::midipatchbay::implementation
             case patchbay::BlockKind::SetMemory:
             case patchbay::BlockKind::PutValue:
                 BuildLogicStepSettings(block, body);
+                break;
+
+            case patchbay::BlockKind::ControllerButton:
+            case patchbay::BlockKind::ControllerAxis:
+                BuildControllerStepSettings(block, body);
                 break;
 
             default:

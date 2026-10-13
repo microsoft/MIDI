@@ -41,11 +41,11 @@ On this page:
 ## What a patch is
 
 - A patch has **endpoints**: the devices on its canvas. A keyboard, a synth, a drum machine, or a loopback that leads to an app.
-- A patch has **steps**. Each step does one job, such as keeping out clock, letting only some notes through, or transposing. A step has one **In** and one **Out**. MIDI clock and MIDI Time Code have only an **Out**, and an LFO's **In** takes the clock it follows. A **branch** and a **switch** have one **Out** for each way a message can go.
+- A patch has **steps**. Each step does one job, such as keeping out clock, letting only some notes through, or transposing. A step has one **In** and one **Out**. MIDI clock, MIDI Time Code, and the game controller steps have only an **Out**, and an LFO's **In** takes the clock it follows. A **branch** and a **switch** have one **Out** for each way a message can go.
 - A patch has **connections**. Each one takes what comes out of an endpoint's or a step's **Out** and sends it to another endpoint's or step's **In**.
 - Messages go through the steps in the order the connections lead them. A chain of steps between a keyboard and a synth works like a cable with each step plugged in along the way.
 - When an **Out** has more than one connection, each connection gets its own copy of every message. What a step does to one copy doesn't change the others. When more than one connection goes into the same **In**, their messages are merged.
-- There are seven kinds of steps. **Filters** keep messages out. **Transforms** change messages. The **message throttler** slows messages down for a device that loses data when a lot arrives at once. **Distribution** steps decide which connection out each message takes: the **note distributor** plays several one-note synths as one. **Logic** steps look at what's in a message and decide what happens to it, and remember things from one message to the next: the **branch** and the **switch** send a message one way or another, **set tag** gives a message a value to carry, **set memory** remembers a value for later messages, **put value** writes a value into a message, and the **gate** lets messages through between one message and another. **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. **Generators** make messages of their own, such as MIDI clock, for as long as the patch is routing.
+- There are eight kinds of steps. **Filters** keep messages out. **Transforms** change messages. The **message throttler** slows messages down for a device that loses data when a lot arrives at once. **Distribution** steps decide which connection out each message takes: the **note distributor** plays several one-note synths as one. **Logic** steps look at what's in a message and decide what happens to it, and remember things from one message to the next: the **branch** and the **switch** send a message one way or another, **set tag** gives a message a value to carry, **set memory** remembers a value for later messages, **put value** writes a value into a message, and the **gate** lets messages through between one message and another. **MIDI-CI** steps answer MIDI-CI for a MIDI 1.0 device that can't, or keep MIDI-CI away from a device. **Generators** make messages of their own, such as MIDI clock, for as long as the patch is routing. **Game controller** steps turn the buttons, sticks, and triggers of an Xbox controller, a joystick, or a gamepad into MIDI messages, for as long as the patch is routing.
 - A patch can have **annotations**: notes on the canvas, such as which keyboard is which. Nothing goes into or comes out of an annotation, and it doesn't change what routes. The file keeps annotations in the same list as the steps.
 - A patch can **wait for send complete**. Then each message waits until the device's driver has taken the one before it. It covers every connection in the patch.
 - **Routing only happens while Windows MIDI Patchbay is running.** The app receives the messages and sends them on itself.
@@ -82,6 +82,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Windows MIDI 
 | Should Windows MIDI Patchbay send MIDI clock to some of the devices? At what tempo? Should it send Start and Stop? | That's a `clockGenerator` step, connected to each device that follows it. A device that should run at half speed gets the clock through a `clockDivider` step. |
 | Does a device need MIDI Time Code? At what frame rate, and from what time? | That's a `timeCodeGenerator` step. |
 | Should something move up and down by itself, such as a filter sweep or a wobble? Which controller, how fast, and over how much of its range? Should it keep in step with a clock? | That's an `lfoGenerator` step. To keep it in step, connect the clock to its **In**. |
+| Should a game controller play anything, such as an Xbox controller, an Xbox Adaptive Controller, or a joystick? Which buttons, sticks, or triggers, and what should each one send? Should holding a button do something else? | That's a `controllerButton` step for each button, and a `controllerAxis` step for each stick, trigger, or slider. Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so ask which one. For any other controller, ask for its name as **Game Controllers** in Control Panel shows it. Or suggest **Learn** in the step's settings. |
 | Would notes on the canvas help, such as which keyboard is which, or what a split is for? | That's an `annotation`: text on the canvas, one or more lines. It doesn't change what routes. |
 | Should an RPN or NRPN, such as pitch bend range, be kept out or sent as a different one? | That's an `rpnFilter` or an `rpnTransform` step. Ask for the bank and index, such as RPN 0/0. |
 | Should several one-note synths play together as one bigger synth? How should notes be shared out, and should knobs and pitch bend reach all of them? | That's a `noteDistributor` step, with one connection out to each synth, in the order they should be used. |
@@ -133,6 +134,12 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | Time code at 25 frames per second, from one hour in | A `timeCodeGenerator` step with `"frameRate": 25, "startTime": "01:00:00:00"`. |
 | A slow filter sweep on controller 74, two bars long | An `lfoGenerator` step with `"wave": "triangle", "beatsPerCycle": 8, "message": "controlChange", "number": 74`. |
 | An LFO in step with a clock | A connection from the clock into the `lfoGenerator` step. The clock can be a `clockGenerator`, a `clockDivider`, or a device that sends MIDI clock. |
+| The A button on an Xbox controller plays middle C | A `controllerButton` step with `"control": "a", "pressed": { "message": "note", "number": 60 }`, connected to the synth. |
+| The left stick bends pitch | A `controllerAxis` step with `"control": "leftStickX", "message": "pitchBend"`. Pitch bend rests in the middle, the same as the stick. |
+| D-pad up steps to the next of programs 1 to 8, and holding it runs through them | A `controllerButton` step with `"control": "dpadUp", "pressed": { "message": "programChange", "step": "next", "lowest": 0, "highest": 7 }`, the same object as `held`, and `"repeats": true`. A second step on `dpadDown` with `"step": "previous"` goes back. |
+| A switch in the X1 jack of an Xbox Adaptive Controller holds the sustain pedal | A `controllerButton` step with `"control": "leftStickUp", "pressed": { "message": "controlChange" }`. A control change starts as controller 64, the sustain pedal. |
+| The trigger of a Logitech Extreme 3D Pro joystick plays middle C | A `controllerButton` step with `"device": { "name": "Extreme 3D pro", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 }`. |
+| The same joystick's throttle lever sets the volume | A `controllerAxis` step with the same `device`, `"control": "slider", "message": "controlChange", "number": 7`. Its throttle sends its lowest value pushed all the way forward, so add `"shape": { "invert": true }` to turn that into the loudest. |
 | A note on the canvas, such as "Bass below middle C" | An `annotation` with `"text": "Bass below middle C"`, placed near what it describes. Nothing connects to it. |
 | Keep pitch bend range changes away from a synth | An `rpnFilter` step with `"action": "keepOut", "parameters": [ { "type": "rpn", "bank": 0, "index": 0 } ]`. |
 | Send NRPN 1/8 as NRPN 3/16, at half its range | An `rpnTransform` step with `"rows": [ { "from": { "type": "nrpn", "bank": 1, "index": 8 }, "to": { "bank": 3, "index": 16 }, "shape": { "outputMaximumPercent": 50 } } ]`. |
@@ -200,8 +207,8 @@ function Test-Map($Settings, [string]$Key, [int]$Highest, [string]$Where) {
         if (-not (Test-Number $entry.from) -or -not (Test-Number $entry.to) -or -not (Test-Range $entry.from 0 $Highest) -or -not (Test-Range $entry.to 0 $Highest)) { $problems.Add("$Where has a $Key entry without a from and a to from 0 to $Highest. The file counts from 0.") }
     }
 }
-function Test-Shape($Shape, [bool]$ForController, [string]$Where) {
-    $known = @('curve', 'inputMinimumPercent', 'inputMaximumPercent', 'outputMinimumPercent', 'outputMaximumPercent') + $(if ($ForController) { 'controller', 'invert' } else { @() })
+function Test-Shape($Shape, [bool]$ForController, [string]$Where, [bool]$CanInvert = $ForController) {
+    $known = @('curve', 'inputMinimumPercent', 'inputMaximumPercent', 'outputMinimumPercent', 'outputMaximumPercent') + $(if ($ForController) { 'controller' } else { @() }) + $(if ($CanInvert) { 'invert' } else { @() })
     Test-Keys $Shape $known $Where
     if ($ForController -and (-not (Test-Number $Shape.controller) -or -not (Test-Range $Shape.controller 0 127))) { $problems.Add("$Where shapes a controller that isn't 0 to 127, so that entry is left out.") }
     Test-Choice $Shape.curve @('linear', 'slowRise', 'fastRise') $Where 'curve'
@@ -232,6 +239,44 @@ function Test-Trigger($Trigger, [string]$Where) {
     if ($Trigger.message -ceq 'words') {
         $words = Get-List $Trigger.messageWords
         if ($words.Count -lt 1 -or $words.Count -gt 4 -or ($words | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 4294967295) })) { $problems.Add("$Where matches words, but messageWords isn't a list of 1 to 4 numbers from 0 to 4294967295. JSON has no hex, so write each word as an ordinary number.") }
+    }
+}
+
+# Which controller a game controller step reads: an Xbox controller by player, or any other by device.
+function Test-ControllerSource($Settings, [bool]$ForButton, [string]$Where) {
+    $axes = @('x', 'y', 'z', 'rx', 'ry', 'rz', 'slider', 'slider2', 'dial', 'wheel', 'throttle', 'rudder', 'accelerator', 'brake', 'steering')
+    $device = $Settings.device
+    if ($null -ne $device) {
+        Test-Keys $device @('name', 'vendorId', 'productId', 'path') "The device of $($Where.Substring(0, 1).ToLowerInvariant() + $Where.Substring(1))"
+        foreach ($key in 'vendorId', 'productId') { if (-not (Test-Range $device.$key 0 65535)) { $problems.Add("$Where has a device $key outside 0 to 65535. JSON has no hex: 046D is 1133.") } }
+        if (-not $device.name -and -not $device.vendorId -and -not $device.productId -and -not $device.path) { $problems.Add("$Where has an empty device, so it reads Xbox controller 1 instead.") }
+        if ($null -ne $Settings.player) { $problems.Add("$Where has a device, so its player is ignored.") }
+        $control = "$($Settings.control)"
+        $known = if ($ForButton) { $control -cmatch '^button([1-9][0-9]?|1[01][0-9]|12[0-8])$' -or $control -cin 'hatUp', 'hatDown', 'hatLeft', 'hatRight' -or ($axes | Where-Object { $control -ceq "${_}Low" -or $control -ceq "${_}High" }) } else { $control -cin $axes }
+        if ($null -ne $Settings.control -and -not $known) { $problems.Add("$Where has the control '$control', which a device doesn't have, so it uses $(if ($ForButton) { 'button1' } else { 'x' }).") }
+        return
+    }
+    if (-not (Test-Range $Settings.player 0 3)) { $problems.Add("$Where has a player outside 0 to 3. The file counts controllers from 0.") }
+    $controls = if ($ForButton) { @('a', 'b', 'x', 'y', 'leftBumper', 'rightBumper', 'view', 'menu', 'leftStickButton', 'rightStickButton', 'dpadUp', 'dpadDown', 'dpadLeft', 'dpadRight', 'leftTrigger', 'rightTrigger', 'leftStickUp', 'leftStickDown', 'leftStickLeft', 'leftStickRight', 'rightStickUp', 'rightStickDown', 'rightStickLeft', 'rightStickRight') } else { @('leftStickX', 'leftStickY', 'rightStickX', 'rightStickY', 'leftTrigger', 'rightTrigger') }
+    Test-Choice $Settings.control $controls $Where 'control'
+}
+
+# What a game controller button sends when it's pressed or held.
+function Test-ControllerMessage($Message, [string]$Where) {
+    if ($null -eq $Message) { return }
+    Test-Keys $Message @('message', 'group', 'channel', 'number', 'velocityPercent', 'noteOff', 'valuePercent', 'sendRelease', 'releasePercent', 'midi1', 'step', 'lowest', 'highest', 'wraps', 'messageWords') $Where
+    Test-Choice $Message.message @('nothing', 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'polyPressure', 'rpn', 'nrpn', 'start', 'continue', 'stop', 'words') $Where 'message'
+    Test-Choice $Message.step @('this', 'next', 'previous') $Where 'step'
+    if (-not (Test-Range $Message.group 0 15) -or -not (Test-Range $Message.channel 0 15)) { $problems.Add("$Where has a group or channel outside 0 to 15. The file counts from 0.") }
+    $largest = if ($Message.message -cin 'rpn', 'nrpn') { 16383 } else { 127 }
+    if (-not (Test-Range $Message.number 0 $largest)) { $problems.Add("$Where has a number outside 0 to $largest.") }
+    if (-not (Test-Range $Message.lowest 0 127) -or -not (Test-Range $Message.highest 0 127)) { $problems.Add("$Where has a lowest or highest program outside 0 to 127. The file counts programs from 0.") }
+    foreach ($key in 'velocityPercent', 'valuePercent', 'releasePercent') { if (-not (Test-Range $Message.$key 0 100)) { $problems.Add("$Where has $key outside 0 to 100.") } }
+    if ($Message.message -ceq 'words') {
+        $words = Get-List $Message.messageWords
+        $sizes = 1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4
+        if ($words.Count -lt 1 -or $words.Count -gt 4 -or ($words | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 4294967295) -or $_ -ne [Math]::Floor($_) })) { $problems.Add("$Where sends words, but messageWords isn't a list of 1 to 4 whole numbers from 0 to 4294967295. JSON has no hex, so write each word as an ordinary number.") }
+        elseif ($words.Count -ne $sizes[[int]([uint32]$words[0] -shr 28)]) { $problems.Add("$Where has $($words.Count) messageWords, but its message type takes $($sizes[[int]([uint32]$words[0] -shr 28)]), so it sends nothing.") }
     }
 }
 
@@ -428,9 +473,11 @@ $stepKeys = @{
     putValue            = @('part', 'word', 'highBit', 'lowBit', 'source', 'keepOutWhenEmpty', 'valueScale')
     ciResponder         = @('manufacturer', 'family', 'model', 'version', 'productInstanceId', 'processInquiry', 'passMidiCi', 'file')
     ciFilter            = @('action', 'categories')
+    controllerButton    = @('player', 'device', 'control', 'pressed', 'toggles', 'held', 'holdMilliseconds', 'repeats', 'repeatMilliseconds', 'tapOrHold', 'valueScale')
+    controllerAxis      = @('player', 'device', 'control', 'message', 'group', 'channel', 'number', 'midi1', 'deadZonePercent', 'shape', 'intervalMilliseconds', 'returnToRest', 'valueScale')
 }
-$generators = @('clockGenerator', 'timeCodeGenerator', 'lfoGenerator')
-$noInput = @('clockGenerator', 'timeCodeGenerator', 'annotation')
+$generators = @('clockGenerator', 'timeCodeGenerator', 'lfoGenerator', 'controllerButton', 'controllerAxis')
+$noInput = @('clockGenerator', 'timeCodeGenerator', 'annotation', 'controllerButton', 'controllerAxis')
 
 Test-Keys $patch @('_comment', 'fileVersion', 'name', 'description', 'provenance', 'activateAtStartup', 'waitForSendComplete', 'created', 'modified', 'endpoints', 'blocks', 'connections') 'The patch'
 if ($patch.fileVersion -ne 2) { $problems.Add('fileVersion isn''t 2, so Windows MIDI Patchbay reads this as an older patch and leaves out every step and connection.') }
@@ -652,6 +699,30 @@ foreach ($b in (Get-List $patch.blocks)) {
                 if (-not (Test-Range $s.number 0 $largest)) { $problems.Add("$where has a number outside 0 to $largest for $message.") }
             }
         }
+        'controllerButton' {
+            Test-ControllerSource $s $true $where
+            $name = $where.Substring(0, 1).ToLowerInvariant() + $where.Substring(1)
+            Test-ControllerMessage $s.pressed "The pressed message of $name"
+            Test-ControllerMessage $s.held "The held message of $name"
+            if (-not (Test-Range $s.holdMilliseconds 100 10000)) { $problems.Add("$where has holdMilliseconds outside 100 to 10000.") }
+            if (-not (Test-Range $s.repeatMilliseconds 20 5000)) { $problems.Add("$where has repeatMilliseconds outside 20 to 5000.") }
+            $held = $null -ne $s.held -and ($s.held.message ?? 'nothing') -cne 'nothing'
+            if ($s.toggles -eq $true -and $held) { $problems.Add("$where toggles, so its held message is never sent.") }
+            if (-not $held -and ($s.repeats -eq $true -or $s.tapOrHold -eq $true)) { $problems.Add("$where has no held message, so repeats and tapOrHold do nothing.") }
+            Test-Choice $s.valueScale @('percent', 'sevenBit') $where 'valueScale'
+        }
+        'controllerAxis' {
+            Test-ControllerSource $s $false $where
+            Test-Choice $s.message @('controlChange', 'pitchBend', 'channelPressure', 'polyPressure', 'rpn', 'nrpn') $where 'message'
+            if (-not (Test-Range $s.channel 0 15)) { $problems.Add("$where has a channel outside 0 to 15. The file counts channels from 0.") }
+            $message = $s.message ?? 'pitchBend'
+            if ($message -cin 'pitchBend', 'channelPressure') { if ($null -ne $s.number) { $problems.Add("$where has a number, but $message doesn't use one, so it's ignored.") } }
+            elseif (-not (Test-Range $s.number 0 $(if ($message -cin 'rpn', 'nrpn') { 16383 } else { 127 }))) { $problems.Add("$where has a number that's out of range for $message.") }
+            if (-not (Test-Range $s.deadZonePercent 0 50)) { $problems.Add("$where has deadZonePercent outside 0 to 50.") }
+            if ($null -ne $s.shape) { Test-Shape $s.shape $false "The shape in the step '$($b.name ?? $b.id)'" $true }
+            if (-not (Test-Range $s.intervalMilliseconds 0 1000)) { $problems.Add("$where has intervalMilliseconds outside 0 to 1000.") }
+            Test-Choice $s.valueScale @('percent', 'sevenBit') $where 'valueScale'
+        }
         'annotation' {
             if ($null -eq $s.text -or "$($s.text)".Trim().Length -eq 0) { $problems.Add("$where has no text, so the canvas shows only a hint.") }
             elseif ("$($s.text)".Length -gt 1000) { $problems.Add("$where has more than 1,000 characters of text. Windows MIDI Patchbay cuts it off.") }
@@ -851,7 +922,7 @@ Tell the customer about these before they find out on their own.
 - **It can't turn one kind of message into another.** No notes into controllers, no controller into an NRPN, and no aftertouch into a controller. Steps move messages to another channel, group, note, controller, program, bank, or RPN or NRPN, and reshape velocity, controller values, aftertouch, and RPN and NRPN values. A `putValue` step can move a value from one part of a message to another, such as a program number into the channel, but the message stays the kind it is.
 - **Logic steps don't do math.** They compare a value with numbers written in the file, and copy values. They can't add or subtract, and they can't compare two tags or two memories with each other.
 - **A memory isn't saved.** It starts empty each time Windows MIDI Patchbay starts, and keeps its value until the app closes. A tag lasts only for one message's trip through the patch, and doesn't get past a message throttler.
-- **No delays, echoes, arpeggios, or chords.** Only the generator steps make messages of their own: MIDI clock, MIDI Time Code, and an LFO.
+- **No delays, echoes, arpeggios, or chords.** Only the generators and the game controller steps make messages of their own.
 - **A note distributor doesn't remember notes it couldn't play.** With every voice busy, a new note either cuts the oldest short or is left out. When a voice comes free, a note that was left out doesn't come back.
 - **MIDI clock and MIDI Time Code don't follow anything.** They can't lock to a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch is routing. Only an LFO follows a clock, and only one connected to its **In**.
 - **It doesn't look inside system exclusive, except to tell MIDI-CI apart.** A message type filter lets it all through or keeps it all out. A message mask can't do better: a long system exclusive message is split into many packets, and a mask sees each packet on its own. Only the MIDI-CI steps know a MIDI-CI message from other system exclusive.
@@ -862,6 +933,7 @@ Tell the customer about these before they find out on their own.
 - **Messages without a group aren't routed.** Those are the MIDI 2.0 stream messages that devices use to describe themselves, and utility messages such as jitter reduction timestamps.
 - **It only sees its own connections.** A cable between two devices, or another routing app, can close a loop Windows MIDI Patchbay can't see.
 - **An annotation's text doesn't wrap.** Each `\n` in `text` starts a new line, and a long line stays one line, so break it yourself. Nothing can connect to an annotation.
+- **Game controller steps read up to four Xbox controllers, and other controllers by name.** Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so plugged in again in a different order, a step can follow a different one. Any other controller is found by its name and USB port, so two of the same can swap if they're moved to other ports. Extra buttons on an Xbox controller, such as the paddles on an Elite controller, aren't seen unless the Xbox Accessories app maps them to a standard button. Nothing uses force feedback, rumble, or lights.
 
 ## The patch file
 
@@ -972,7 +1044,7 @@ The steps are in the `blocks` list.
 | `type` | a type from the next table | required | What the step does. Capital letters matter. A step with a type Windows MIDI Patchbay doesn't know is left out, along with its connections. |
 | `name` | text | the type's name | The name on the canvas, such as "Below middle C". Leave it out to show the type's name, such as **Note filter**, in the customer's language. |
 | `x`, `y` | numbers | 0 | Where the step's top left corner sits on the canvas. See [Where things go on the canvas](#where-things-go-on-the-canvas). |
-| `bypassed` | `true`, `false` | `false` | A bypassed step lets everything through unchanged, and a bypassed generator sends nothing. Write `false`. |
+| `bypassed` | `true`, `false` | `false` | A bypassed step lets everything through unchanged, and a bypassed generator or game controller step sends nothing. Write `false`. |
 | `settings` | object | the type's defaults | What the step does. See [Step settings](#step-settings). |
 
 | `type` | Windows MIDI Patchbay calls it | What it does |
@@ -1009,6 +1081,8 @@ The steps are in the `blocks` list.
 | `clockGenerator` | MIDI clock | A generator. Sends MIDI clock at a tempo, for as long as the patch is routing. |
 | `timeCodeGenerator` | MIDI Time Code | A generator. Sends MIDI Time Code from a start time, for as long as the patch is routing. |
 | `lfoGenerator` | LFO | A generator. Sweeps a controller, pitch bend, aftertouch, or an RPN or NRPN up and down, for as long as the patch is routing. |
+| `controllerButton` | Controller button | A game controller step. Sends a message when a button on an Xbox controller, a joystick, or a gamepad is pressed, and another when it's held, for as long as the patch is routing. |
+| `controllerAxis` | Controller stick or trigger | A game controller step. Sends a value that follows a stick, a trigger, a slider, or a pedal, for as long as the patch is routing. |
 | `annotation` | Annotation | Not a step. A note on the canvas about the patch, one or more lines. Nothing goes in or comes out. |
 
 ### Connections
@@ -1023,7 +1097,7 @@ The steps are in the `blocks` list.
 | `destinationGroup` | -1 to 15 | -1 | Only when `destination` is an endpoint. The group messages go to, counted from 0. -1 keeps each message's own group. |
 | `muted` | `true`, `false` | `false` | A muted connection passes nothing. Write `false`. |
 
-A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock or MIDI Time Code step, which has no **In**, when it goes into or out of an annotation, when its `sourceOutput` names a way its branch or switch doesn't have, or when it repeats another connection between the same two points with the same groups and way. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
+A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock, MIDI Time Code, or game controller step, which has no **In**, when it goes into or out of an annotation, when its `sourceOutput` names a way its branch or switch doesn't have, or when it repeats another connection between the same two points with the same groups and way. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
 
 ### Where things go on the canvas
 
@@ -1032,7 +1106,7 @@ A connection is left out when it names an endpoint or step the patch doesn't hav
 - An endpoint is 280 pixels wide. With one group it's about 130 pixels high, and each extra group it shows adds 32.
 - A step is 208 pixels wide and 76 high. A branch or a switch is taller: add about 24 pixels for each way out.
 - An annotation is as wide as its longest line, about half its font size for each character, and each line is a little taller than its font size. **Auto arrange** leaves annotations where they are.
-- Put sources at `x` 60, one under another. A generator is a source too.
+- Put sources at `x` 60, one under another. A generator or a game controller step is a source too.
 - Put each step one column to the right of the step before it. Columns 280 pixels apart, starting at `x` 400, work well. Steps that come after the same step can share a column, at least 110 pixels apart from top to bottom.
 - Put destinations in a column after the last steps, 280 pixels further right.
 
@@ -1420,6 +1494,106 @@ For example, a slow triangle sweep of controller 74 on channel 1, which many syn
 
 ```json
 { "id": "clock-to-sweep", "source": "clock", "destination": "filter-sweep" }
+```
+
+### Controller button
+
+`"type": "controllerButton"`. A game controller step: it has no **In**. Sends a message when a button is pressed, and can send another when it's held, for as long as the patch is routing. It reads an Xbox controller, including the Xbox Adaptive Controller, or any joystick, wheel, or gamepad that **Game Controllers** in Control Panel lists, and keeps reading while another app is in front.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `player` | 0 to 3 | 0 | The Xbox controller, counted from 0. Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so the number can change when they're plugged in again in a different order. Leave it out with `device`. |
+| `device` | object | none | Any other controller: see [Joysticks, wheels, and gamepads](#joysticks-wheels-and-gamepads). With a `device`, the step reads it instead of an Xbox controller. |
+| `control` | a button, from the list below | `a` | The button. |
+| `pressed` | a message | a note on middle C, 60, at 78.74% | What it sends when the button goes down. |
+| `toggles` | `true`, `false` | `false` | One press sends `pressed`, and the next press ends it, like a latching pedal. `held` isn't used. |
+| `held` | a message | nothing | What it sends once the button has been down for `holdMilliseconds`. |
+| `holdMilliseconds` | 100 to 10000 | 500 | How long the button is held before `held` is sent. |
+| `repeats` | `true`, `false` | `false` | Sends `held` again every `repeatMilliseconds` until the button lets go. A repeat ends the last one first, so a note starts again. |
+| `repeatMilliseconds` | 20 to 5000 | 150 | How often it repeats. |
+| `tapOrHold` | `true`, `false` | `false` | A short press sends only `pressed`, and a long press sends only `held`. `pressed` then waits until the button lets go, and a note or a value it starts ends 100 milliseconds later. |
+| `valueScale` | `percent`, `sevenBit` | `percent` | How Windows MIDI Patchbay shows the values. The file always holds percentages. |
+
+The buttons on an Xbox controller are `a`, `b`, `x`, `y`, `leftBumper`, `rightBumper`, `view`, `menu`, `leftStickButton`, `rightStickButton`, `dpadUp`, `dpadDown`, `dpadLeft`, and `dpadRight`. `leftTrigger` and `rightTrigger` are pressed past halfway. `leftStickUp`, `leftStickDown`, `leftStickLeft`, `leftStickRight`, `rightStickUp`, `rightStickDown`, `rightStickLeft`, and `rightStickRight` are a stick pushed more than halfway that way.
+
+On an Xbox Adaptive Controller, a switch in a jack is the button the jack is named for. A switch in the X1 jack is `leftStickUp`, and one in X2 is `leftStickDown`, unless the customer changed them in the Xbox Accessories app. A joystick in X1 is the left stick, and one in X2 is the right stick.
+
+A message, for `pressed` and `held`:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `message` | `nothing`, `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `polyPressure`, `rpn`, `nrpn`, `start`, `continue`, `stop`, `words` | `note` for `pressed`, `nothing` for `held` | What it sends. |
+| `group`, `channel` | 0 to 15 | 0 | Counted from 0. `start`, `continue`, and `stop` use only the group, and `words` uses neither. |
+| `number` | depends on `message` | 60 for `note` and `polyPressure`, 64 for `controlChange`, and 0 for the rest | The note for `note` and `polyPressure`, the controller for `controlChange`, and the program for a `programChange` with `"step": "this"`, from 0 to 127. For `rpn` and `nrpn`, the bank times 128 plus the index, from 0 to 16383. |
+| `velocityPercent` | 0 to 100 | 78.74 | `note` only. How hard. 78.74 is 100 out of 127. |
+| `noteOff` | `true`, `false` | `true` | `note` only. Sends the note off when the button lets go. |
+| `valuePercent` | 0 to 100 | 100 | The value for `controlChange`, `pitchBend`, `channelPressure`, `polyPressure`, `rpn`, and `nrpn`. For pitch bend, 50 is the middle. |
+| `sendRelease` | `true`, `false` | `true`, and `false` for `rpn` and `nrpn` | Sends `releasePercent` when the button lets go. |
+| `releasePercent` | 0 to 100 | 0, and 50 for `pitchBend` | The value sent when the button lets go. |
+| `midi1` | `true`, `false` | `false` | Sends MIDI 1.0 messages instead of MIDI 2.0. Windows converts MIDI 2.0 messages for a MIDI 1.0 device, so leave it out unless the customer asks. `rpn` and `nrpn` always go as MIDI 2.0. |
+| `step` | `this`, `next`, `previous` | `this` | `programChange` only. `this` sends `number`. `next` and `previous` step through `lowest` to `highest`, starting at `lowest`. |
+| `lowest`, `highest` | 0 to 127 | 0 and 127 | The programs `next` and `previous` step through, counted from 0. |
+| `wraps` | `true`, `false` | `true` | Going past one end starts again at the other. |
+| `messageWords` | a list of 1 to 4 numbers from 0 to 4294967295 | none | `words` only. One whole Universal MIDI Packet, group included, as ordinary numbers. The list must be as long as its message type: 2 words for a MIDI 2.0 channel message. |
+
+A message with only `message` gets that kind's defaults. A `controlChange` is then the sustain pedal: controller 64, 100% while the button is down, and 0 when it lets go. A program change sends no bank. Every `next` and `previous` step in the patch on the same group and channel shares one place in the range, so one button can go up and another down.
+
+For example, D-pad up steps through programs 1 to 8 on channel 1, and holding it runs through them:
+
+```json
+{ "id": "next-program", "type": "controllerButton", "name": "Next program", "x": 60, "y": 100, "settings": { "player": 0, "control": "dpadUp", "pressed": { "message": "programChange", "step": "next", "lowest": 0, "highest": 7 }, "held": { "message": "programChange", "step": "next", "lowest": 0, "highest": 7 }, "holdMilliseconds": 500, "repeats": true, "repeatMilliseconds": 300 } }
+```
+
+### Controller stick or trigger
+
+`"type": "controllerAxis"`. A game controller step: it has no **In**. Sends a value that follows a stick, a trigger, a slider, or a pedal as it moves, for as long as the patch is routing. Nothing is sent when the patch starts: the first message goes when the control moves.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `player` | 0 to 3 | 0 | The Xbox controller, counted from 0, as for a [Controller button](#controller-button). |
+| `device` | object | none | Any other controller: see [Joysticks, wheels, and gamepads](#joysticks-wheels-and-gamepads). |
+| `control` | `leftStickX`, `leftStickY`, `rightStickX`, `rightStickY`, `leftTrigger`, `rightTrigger`, or an axis of a `device` | `leftStickX`, or `x` with a `device` | `X` is left to right and `Y` is down to up. A stick rests in the middle, and a trigger at the bottom. |
+| `message` | `controlChange`, `pitchBend`, `channelPressure`, `polyPressure`, `rpn`, `nrpn` | `pitchBend` | What it sends. |
+| `number` | depends on `message` | 1 for `controlChange`, 60 for `polyPressure`, and 0 for `rpn` and `nrpn` | The same as an [LFO's](#lfo) `number`. |
+| `channel`, `group` | 0 to 15 | 0 | Counted from 0. |
+| `midi1` | `true`, `false` | `false` | Sends MIDI 1.0 messages instead of MIDI 2.0. `rpn` and `nrpn` always go as MIDI 2.0. |
+| `deadZonePercent` | 0 to 50 | 10 | How far the control moves from where it rests before its value starts to change, as a percentage of the way to the end. A stick never comes back to exactly the middle. |
+| `shape` | object | changes nothing | `invert`, `curve`, and the four percentages from the table under [Control change values](#control-change-values). |
+| `intervalMilliseconds` | 0 to 1000 | 10 | At most one message this often. 0 sends every change. Where the control stops is always sent. |
+| `returnToRest` | `true`, `false` | `true` | When the patch stops routing or the controller goes away, sends where the control rests, so a pitch bend isn't left bent. Nothing is sent if the control never moved. |
+| `valueScale` | `percent`, `sevenBit` | `percent` | How Windows MIDI Patchbay shows the numbers. The file always holds percentages. |
+
+For example, the left stick bends pitch on channel 1:
+
+```json
+{ "id": "bend", "type": "controllerAxis", "name": "Bend", "x": 60, "y": 260, "settings": { "player": 0, "control": "leftStickX", "message": "pitchBend", "channel": 0 } }
+```
+
+### Joysticks, wheels, and gamepads
+
+A `controllerButton` or `controllerAxis` step with a `device` reads a controller that isn't an Xbox controller: a joystick, a flight stick, a wheel, or a gamepad that **Game Controllers** in Control Panel lists. An Xbox controller is always read by `player`, even if it shows up there too.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `name` | text | empty | The controller's name as Windows shows it, such as `Extreme 3D pro`. Capital letters don't matter. |
+| `vendorId`, `productId` | 0 to 65535 | 0 | The USB vendor and product numbers, as ordinary numbers: VID_046D is `1133`. |
+| `path` | text | empty | Kept by the app, which writes Windows' own path to the device. Leave it out. |
+
+Windows MIDI Patchbay looks for the same `path` first, then the same `vendorId` and `productId`, then the same `name`. Give at least the name, and the vendor and product too when you know them.
+
+The controls of a `device`, for `control`:
+
+- **Buttons:** `button1` to `button128`, numbered the way **Game Controllers** in Control Panel numbers them.
+- **Axes,** for a `controllerAxis` step: `x`, `y`, `z`, `rx`, `ry`, `rz`, `slider`, `slider2`, `dial`, `wheel`, `throttle`, `rudder`, `accelerator`, `brake`, `steering`. On most joysticks, `x` and `y` are the stick, `rz` is twisting it, and `slider` is the throttle lever.
+- **An axis pushed most of the way to one end,** as a button: the axis name with `Low` or `High`, such as `xLow` or `sliderHigh`.
+- **The hat switch,** as buttons: `hatUp`, `hatDown`, `hatLeft`, `hatRight`. A diagonal presses two.
+
+A stick, twist, rudder, or steering wheel rests in the middle, and an accelerator or brake pedal rests at the bottom. A slider, throttle, dial, or wheel stays where it's left, so `deadZonePercent` and `returnToRest` don't apply to it.
+
+For example, the Extreme 3D Pro's trigger plays middle C:
+
+```json
+{ "id": "trigger-note", "type": "controllerButton", "name": "Trigger", "x": 60, "y": 100, "settings": { "device": { "name": "Extreme 3D pro", "vendorId": 1133, "productId": 49685 }, "control": "button1", "pressed": { "message": "note", "number": 60 } } }
 ```
 
 ### (N)RPN filter
@@ -1898,4 +2072,10 @@ In a `ProgramList`, `bankPC` is the bank MSB, the bank LSB, and the program, eac
 > - A profile's `channel` is counted from 1. Channel 1 is `0` in the file.
 > - A profile ID is made up. Take it from the profile's specification or the device's manual.
 > - A `ciFilter` with `"action": "letThrough"` is in front of a device that needs notes. It keeps out everything but the MIDI-CI it names.
+> - A game controller step's `player` is counted from 1. The first controller is `0` in the file.
+> - A `controllerButton` uses a whole stick, such as `leftStickX`, or a `controllerAxis` uses a button. A button step takes a stick direction, such as `leftStickUp`.
+> - A switch in an Xbox Adaptive Controller's X1 or X2 jack is set up as a button such as `a`. It's `leftStickUp` or `leftStickDown`.
+> - A `controllerButton` that `toggles` has a `held` message. A toggle never sends it.
+> - A step with a `device` uses an Xbox control name, such as `a`, instead of `button1`, or has a `player` too, which is ignored.
+> - A `device`'s `vendorId` or `productId` is written in hex. VID_046D is `1133`.
 > - The patch depends on something in [What Windows MIDI Patchbay can't do](#what-patchbay-cant-do).

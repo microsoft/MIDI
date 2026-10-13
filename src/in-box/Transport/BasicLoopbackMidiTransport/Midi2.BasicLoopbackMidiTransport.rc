@@ -115,6 +115,8 @@ BEGIN
     IDS_ERROR_INVALID_ASSOCIATION_ID    "Association id is not a valid GUID."
     IDS_ERROR_ENDPOINT_NAME_IN_USE      "Another basic loopback is already using this name."
     IDS_ERROR_INVALID_FEEDBACK_PROTECTION   "Feedback protection must be ""mute"" or ""off""."
+    IDS_ERROR_OVERLAPPING_UNIQUE_ID     "Unique identifier starts with another basic loopback's unique identifier, or that one starts with this one. Removing either loopback would also remove the other."
+    IDS_ERROR_RESERVED_UNIQUE_ID        "Unique identifier is reserved for the basic loopback transport itself."
     //IDS_ERROR_MISSING_ENTRY_IDENTIFIER   "Missing or blank entry identifier."
 
 

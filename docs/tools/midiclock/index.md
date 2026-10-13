@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Clock sends MIDI beat clock to your instruments so their arpeggiators, sequencers, delays, and drum machines run at a tempo you set, and run together.
 

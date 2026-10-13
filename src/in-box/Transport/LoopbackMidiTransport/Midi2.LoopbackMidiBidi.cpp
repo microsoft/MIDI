@@ -115,13 +115,27 @@ CMidi2LoopbackMidiBidi::Initialize(
 
     if (device)
     {
-        if (m_isEndpointA)
+        if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
         {
-            device->RegisterEndpointA(this);
+            if (m_isEndpointA)
+            {
+                device->RegisterEndpointAWithLock(this);
+            }
+            else
+            {
+                device->RegisterEndpointBWithLock(this);
+            }
         }
         else
         {
-            device->RegisterEndpointB(this);
+            if (m_isEndpointA)
+            {
+                device->RegisterEndpointA(this);
+            }
+            else
+            {
+                device->RegisterEndpointB(this);
+            }
         }
     }
     else
@@ -162,7 +176,19 @@ CMidi2LoopbackMidiBidi::Shutdown()
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-    m_callback = nullptr;
+    if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+    {
+        wil::com_ptr_nothrow<IMidiCallback> released{ nullptr };
+
+        {
+            auto lock = m_callbackLock.lock_exclusive();
+            released.swap(m_callback);
+        }
+    }
+    else
+    {
+        m_callback = nullptr;
+    }
 
     return S_OK;
 }
@@ -188,6 +214,11 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
+
+    if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
+    {
+        return SendToOtherSideWithLock(Message, Size, Position);
+    }
 
     if (m_isEndpointA)
     {
@@ -274,11 +305,58 @@ CMidi2LoopbackMidiBidi::Callback(
 
     // message received from the client
 
-    if (m_callback != nullptr)
+    if (Feature_Servicing_MIDI2LoopbackDeliveryDuringConnectionChanges::IsEnabled())
     {
-        return m_callback->Callback(optionFlags, Message, Size, Position, Context);
+        wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+
+        {
+            auto lock = m_callbackLock.lock_shared();
+            callback = m_callback;
+        }
+
+        if (callback != nullptr)
+        {
+            return callback->Callback(optionFlags, Message, Size, Position, Context);
+        }
+    }
+    else
+    {
+        if (m_callback != nullptr)
+        {
+            return m_callback->Callback(optionFlags, Message, Size, Position, Context);
+        }
     }
 
     return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiBidi::SendToOtherSideWithLock(
+    PVOID message,
+    UINT size,
+    LONGLONG position
+)
+{
+    auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
+
+    if (device)
+    {
+        return device->SendMessageWithLock(m_isEndpointA, message, size, position, m_callbackContext);
+    }
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+        TraceLoggingBool(m_isEndpointA, "is endpoint A"),
+        TraceLoggingWideString(L"Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
 }
 

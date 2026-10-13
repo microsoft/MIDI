@@ -100,6 +100,13 @@ CMidi2NetworkMidiEndpointManager::Initialize(
             );
         }));
 
+    // Before the creator worker, which starts the search for advertised hosts once a client entry needs it
+    {
+        auto lock = m_remoteHostWatcherLock.lock();
+
+        m_remoteHostWatcherAllowed = true;
+    }
+
     // start background thread that creates endpoints
     RETURN_IF_FAILED(StartBackgroundEndpointCreator());
     RETURN_IF_FAILED(StartBackgroundNegotiation());
@@ -121,9 +128,6 @@ CMidi2NetworkMidiEndpointManager::Initialize(
             TraceLoggingWideString(L"Unable to watch for network adapter changes. Hosts limited to an adapter will follow it at each scan instead.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
-
-    // start the device watcher so we see new hosts come online
-    RETURN_IF_FAILED(StartRemoteHostWatcher());
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -176,6 +180,50 @@ CMidi2NetworkMidiEndpointManager::StartRemoteHostWatcher()
     );
 
     return S_OK;
+}
+
+void
+CMidi2NetworkMidiEndpointManager::UpdateRemoteHostWatcher()
+{
+    auto const definitions = TransportState::Current().GetClientDefinitions();
+
+    bool const needed = std::any_of(definitions.begin(), definitions.end(), [](MidiNetworkClientDefinition const& definition)
+        {
+            return definition.Enabled &&
+                (!definition.MatchId.empty() || !definition.MatchProductInstanceId.empty() || !definition.MatchUmpEndpointName.empty());
+        });
+
+    {
+        auto lock = m_remoteHostWatcherLock.lock();
+
+        if (!m_remoteHostWatcherAllowed || needed == m_browser.IsRunning())
+        {
+            return;
+        }
+
+        if (needed)
+        {
+            LOG_IF_FAILED(StartRemoteHostWatcher());
+
+            return;
+        }
+
+        m_browser.Stop();
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Stopped looking for advertised hosts. No client entry finds its host by mDNS.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // nothing keeps these current once the search has stopped
+    auto lock = m_advertisedHostsLock.lock_exclusive();
+
+    m_foundAdvertisedHosts.clear();
 }
 
 // mDNS is an unbounded source: a remote can advertise arbitrary text of arbitrary length. Values
@@ -1242,6 +1290,8 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
             {
                 m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
             }
+
+            UpdateRemoteHostWatcher();
 
             // Negotiation runs on its own thread. It calls into the service and can block there
             // behind a PnP notification, which used to stop this loop creating any client at all.
@@ -2592,7 +2642,12 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_browser.Stop();
+    {
+        auto lock = m_remoteHostWatcherLock.lock();
+
+        m_remoteHostWatcherAllowed = false;
+        m_browser.Stop();
+    }
 
     // Before the creator thread stops, so a change arriving now cannot wake a thread that is gone
     m_networkChangeMonitor.Stop();

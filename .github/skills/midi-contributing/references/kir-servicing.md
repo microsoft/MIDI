@@ -69,7 +69,7 @@ If you find yourself adding a **second** gate check to the same function, stop a
 4. **The disabled path must reproduce the original exactly.**
 5. **The wrapping must be obvious to a human reviewer.** That is requirement 2, restated.
 6. **One gate = one rollback unit = one concern.** Do not reuse a gate for an unrelated fix, or rolling back one drags out the other.
-7. **A follow-on defect attributable to a gated change ships under that same gate.** Otherwise the gate gets rolled back as the apparent cause, and the original defect returns with it.
+7. **A follow-on fix gets its own new gate**, even when it fixes a defect in another gated change. Don't add code to an existing gate, because that gate may already be in a Windows build.
 
 ### An example of the call-site form
 

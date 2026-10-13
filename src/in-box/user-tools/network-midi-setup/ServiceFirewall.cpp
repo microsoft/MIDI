@@ -8,10 +8,14 @@
 #include "pch.h"
 #include "ServiceFirewall.h"
 #include "StringResources.h"
+#include "midi_network_adapters.h"
 
 #include <oleauto.h>
 #include <netfw.h>
 #include <netlistmgr.h>
+#include <lm.h>
+
+#pragma comment(lib, "netapi32.lib")
 
 // Again, now that oleauto.h is in: that is what makes WIL define unique_bstr and unique_variant.
 #include <wil/resource.h>
@@ -20,7 +24,8 @@ namespace res = ::midinetworksetup::resources;
 
 namespace midinetworksetup::firewall
 {
-    static_assert(PrivateNetworks == (NET_FW_PROFILE2_DOMAIN | NET_FW_PROFILE2_PRIVATE));
+    static_assert(DomainNetworks == NET_FW_PROFILE2_DOMAIN);
+    static_assert(PrivateNetworks == NET_FW_PROFILE2_PRIVATE);
     static_assert(PublicNetworks == NET_FW_PROFILE2_PUBLIC);
 
     namespace
@@ -28,13 +33,23 @@ namespace midinetworksetup::firewall
         constexpr wchar_t MidiServiceName[] = L"MidiSrv";
         constexpr std::wstring_view MidiServiceFileName{ L"\\midisrv.exe" };
 
-        // The elevated copy is started with exactly this switch and one choice of networks. The
-        // switch has to be the first argument, which a protocol activation can never produce:
-        // its first argument is always the URI.
+        // The elevated copy is started with exactly this switch and a list of network types, like
+        // "domain,private". The switch has to be the first argument, which a protocol activation
+        // can never produce: its first argument is always the URI.
         constexpr std::wstring_view AllowSwitch{ L"--allow-midi-service-through-firewall" };
-        constexpr std::wstring_view PrivateArgument{ L"private" };
-        constexpr std::wstring_view PublicArgument{ L"public" };
-        constexpr std::wstring_view BothArgument{ L"private,public" };
+
+        struct NetworkTypeArgument
+        {
+            std::wstring_view Name;
+            long Type;
+        };
+
+        constexpr std::array<NetworkTypeArgument, 3> NetworkTypeArguments
+        { {
+            { L"domain", DomainNetworks },
+            { L"private", PrivateNetworks },
+            { L"public", PublicNetworks },
+        } };
 
         // Changing one rule takes well under a second. This only stops a stuck copy from holding
         // the page forever.
@@ -69,6 +84,53 @@ namespace midinetworksetup::firewall
             auto const error = ::GetLastError();
 
             return error == ERROR_SUCCESS ? E_FAIL : HRESULT_FROM_WIN32(error);
+        }
+
+        std::wstring NetworksArgument(_In_ long const networks)
+        {
+            std::wstring text{};
+
+            for (auto const& argument : NetworkTypeArguments)
+            {
+                if ((networks & argument.Type) == 0)
+                {
+                    continue;
+                }
+
+                text += text.empty() ? L"" : L",";
+                text += argument.Name;
+            }
+
+            return text;
+        }
+
+        // Exactly what NetworksArgument writes: known types, each once. 0 for anything else.
+        long ParseNetworksArgument(_In_ std::wstring_view text) noexcept
+        {
+            long networks{ 0 };
+
+            for (;;)
+            {
+                auto const comma = text.find(L',');
+                auto const word = text.substr(0, comma);
+
+                auto const found = std::find_if(NetworkTypeArguments.begin(), NetworkTypeArguments.end(),
+                    [&](NetworkTypeArgument const& argument) { return argument.Name == word; });
+
+                if (found == NetworkTypeArguments.end() || (networks & found->Type) != 0)
+                {
+                    return 0;
+                }
+
+                networks |= found->Type;
+
+                if (comma == std::wstring_view::npos)
+                {
+                    return networks;
+                }
+
+                text.remove_prefix(comma + 1);
+            }
         }
 
         std::wstring TextOf(_In_ wil::unique_bstr const& value)
@@ -225,43 +287,118 @@ namespace midinetworksetup::firewall
             return S_OK;
         }
 
-        // The networks Windows lists as connected, as firewall network types. The firewall's own list
-        // of active types also counts virtual switches, like Hyper-V's Default Switch.
-        HRESULT GetConnectedNetworks(_Out_ long& networks) noexcept
+        // The adapters a network is reached through, by the names Windows Settings shows
+        std::vector<std::wstring> AdapterNamesOf(
+            _In_ INetwork* const network,
+            _In_ std::vector<::WindowsMidiServicesInternal::MidiNetworkAdapterInfo> const& adapters)
         {
-            networks = 0;
+            std::vector<std::wstring> names{};
 
-            wil::com_ptr_nothrow<INetworkListManager> networkList{};
-            RETURN_IF_FAILED(::CoCreateInstance(__uuidof(NetworkListManager), nullptr, CLSCTX_ALL, IID_PPV_ARGS(networkList.put())));
+            wil::com_ptr_nothrow<IEnumNetworkConnections> connections{};
 
-            wil::com_ptr_nothrow<IEnumNetworks> connected{};
-            RETURN_IF_FAILED(networkList->GetNetworks(NLM_ENUM_NETWORK_CONNECTED, connected.put()));
-            RETURN_HR_IF_NULL(E_UNEXPECTED, connected);
+            if (FAILED(network->GetNetworkConnections(connections.put())) || !connections)
+            {
+                return names;
+            }
 
             for (;;)
             {
-                wil::com_ptr_nothrow<INetwork> network{};
+                wil::com_ptr_nothrow<INetworkConnection> connection{};
                 ULONG fetched{ 0 };
+                GUID adapterId{};
 
-                if (connected->Next(1, network.put(), &fetched) != S_OK || fetched == 0)
+                if (connections->Next(1, connection.put(), &fetched) != S_OK || fetched == 0)
                 {
                     break;
                 }
 
-                NLM_NETWORK_CATEGORY category{ NLM_NETWORK_CATEGORY_PUBLIC };
-
-                if (FAILED(network->GetCategory(&category)))
+                if (FAILED(connection->GetAdapterId(&adapterId)))
                 {
                     continue;
                 }
 
-                networks |=
-                    category == NLM_NETWORK_CATEGORY_PRIVATE ? NET_FW_PROFILE2_PRIVATE :
-                    category == NLM_NETWORK_CATEGORY_DOMAIN_AUTHENTICATED ? NET_FW_PROFILE2_DOMAIN :
-                    NET_FW_PROFILE2_PUBLIC;
+                auto const adapter = std::find_if(adapters.begin(), adapters.end(),
+                    [&](::WindowsMidiServicesInternal::MidiNetworkAdapterInfo const& candidate) { return IsEqualGUID(candidate.Id, adapterId) != FALSE; });
+
+                if (adapter != adapters.end() && !adapter->Name.empty() &&
+                    std::find(names.begin(), names.end(), adapter->Name) == names.end())
+                {
+                    names.push_back(adapter->Name);
+                }
             }
 
-            return S_OK;
+            return names;
+        }
+
+        // The networks Windows lists as connected. The firewall's own list of active types also
+        // counts virtual switches, like Hyper-V's Default Switch.
+        HRESULT GetConnectedNetworks(_Out_ std::vector<ConnectedNetwork>& networks) noexcept
+        {
+            networks.clear();
+
+            try
+            {
+                wil::com_ptr_nothrow<INetworkListManager> networkList{};
+                RETURN_IF_FAILED(::CoCreateInstance(__uuidof(NetworkListManager), nullptr, CLSCTX_ALL, IID_PPV_ARGS(networkList.put())));
+
+                wil::com_ptr_nothrow<IEnumNetworks> connected{};
+                RETURN_IF_FAILED(networkList->GetNetworks(NLM_ENUM_NETWORK_CONNECTED, connected.put()));
+                RETURN_HR_IF_NULL(E_UNEXPECTED, connected);
+
+                auto const adapters = ::WindowsMidiServicesInternal::GetMidiNetworkAdapters();
+
+                for (;;)
+                {
+                    wil::com_ptr_nothrow<INetwork> network{};
+                    ULONG fetched{ 0 };
+
+                    if (connected->Next(1, network.put(), &fetched) != S_OK || fetched == 0)
+                    {
+                        break;
+                    }
+
+                    NLM_NETWORK_CATEGORY category{ NLM_NETWORK_CATEGORY_PUBLIC };
+
+                    if (FAILED(network->GetCategory(&category)))
+                    {
+                        continue;
+                    }
+
+                    ConnectedNetwork entry{};
+
+                    entry.Type =
+                        category == NLM_NETWORK_CATEGORY_PRIVATE ? PrivateNetworks :
+                        category == NLM_NETWORK_CATEGORY_DOMAIN_AUTHENTICATED ? DomainNetworks :
+                        PublicNetworks;
+
+                    if (wil::unique_bstr name{}; SUCCEEDED(network->GetName(name.put())))
+                    {
+                        entry.Name = TextOf(name);
+                    }
+
+                    entry.AdapterNames = AdapterNamesOf(network.get(), adapters);
+
+                    networks.push_back(std::move(entry));
+                }
+
+                return S_OK;
+            }
+            CATCH_RETURN();
+        }
+
+        bool IsJoinedToDomain() noexcept
+        {
+            LPWSTR name{ nullptr };
+            NETSETUP_JOIN_STATUS status{ NetSetupUnknownStatus };
+
+            if (::NetGetJoinInformation(nullptr, &name, &status) != NERR_Success)
+            {
+                return false;
+            }
+
+            ::NetApiBufferFree(name);
+
+            return status == NetSetupDomainName;
         }
 
         // A rule reaches the service when it names the executable the service runs from, or names
@@ -420,13 +557,33 @@ namespace midinetworksetup::firewall
             long connected{ 0 };
 
             // the firewall's own view is only the fallback, because it counts virtual switches too
-            if (FAILED(GetConnectedNetworks(connected)) &&
-                FAILED(policy->get_CurrentProfileTypes(&connected)))
+            if (SUCCEEDED(GetConnectedNetworks(state.Networks)))
             {
-                return state;
+                for (auto const& network : state.Networks)
+                {
+                    connected |= network.Type;
+                }
+            }
+            else
+            {
+                if (FAILED(policy->get_CurrentProfileTypes(&connected)))
+                {
+                    return state;
+                }
+
+                state.Networks.clear();
+
+                for (auto const type : { DomainNetworks, PrivateNetworks, PublicNetworks })
+                {
+                    if ((connected & type) != 0)
+                    {
+                        state.Networks.push_back(ConnectedNetwork{ .Type = type });
+                    }
+                }
             }
 
             state.ConnectedNetworks = connected & AllNetworks;
+            state.JoinedToDomain = IsJoinedToDomain();
 
             NET_FW_MODIFY_STATE modifyState{ NET_FW_MODIFY_STATE_OK };
 
@@ -517,6 +674,18 @@ namespace midinetworksetup::firewall
 
             state.OwnRuleNetworks = ownRule;
 
+            for (auto& network : state.Networks)
+            {
+                auto const type = network.Type;
+
+                network.Status =
+                    (enabled & type) == 0 ? FirewallStatus::Off :
+                    (blockAll & type) != 0 ? FirewallStatus::ClosedForAll :
+                    (blocked & type) != 0 ? FirewallStatus::ClosedByRule :
+                    ((allowed | defaultAllow) & type) == 0 ? FirewallStatus::Closed :
+                    FirewallStatus::Open;
+            }
+
             // Where the firewall is on, "block all incoming connections" beats every rule, a rule
             // that blocks beats one that allows, and otherwise something has to let the service in.
             auto const guarded = state.ConnectedNetworks & enabled;
@@ -555,23 +724,8 @@ namespace midinetworksetup::firewall
     {
         try
         {
-            std::wstring_view argument{};
-
-            switch (networks)
+            if (networks == 0 || (networks & ~AllNetworks) != 0)
             {
-            case PrivateNetworks:
-                argument = PrivateArgument;
-                break;
-
-            case PublicNetworks:
-                argument = PublicArgument;
-                break;
-
-            case AllNetworks:
-                argument = BothArgument;
-                break;
-
-            default:
                 return E_INVALIDARG;
             }
 
@@ -586,7 +740,7 @@ namespace midinetworksetup::firewall
 
             std::wstring parameters{ AllowSwitch };
             parameters += L' ';
-            parameters += argument;
+            parameters += NetworksArgument(networks);
 
             // ShellExecuteEx can hand work to shell extensions, which need COM
             ComScope com{};
@@ -651,18 +805,7 @@ namespace midinetworksetup::firewall
         }
 
         // Exactly what RequestAllow passes, and nothing else
-        long networks{ 0 };
-
-        if (count == 3)
-        {
-            std::wstring_view const choice{ arguments[2] };
-
-            networks =
-                choice == PrivateArgument ? PrivateNetworks :
-                choice == PublicArgument ? PublicNetworks :
-                choice == BothArgument ? AllNetworks :
-                0;
-        }
+        long const networks = count == 3 ? ParseNetworksArgument(arguments[2]) : 0;
 
         auto const result = networks == 0 ? E_INVALIDARG : AllowServiceThroughFirewall(networks);
 

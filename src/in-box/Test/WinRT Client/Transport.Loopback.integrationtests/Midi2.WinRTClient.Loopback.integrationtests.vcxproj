@@ -155,10 +155,12 @@
   <ItemGroup>
     <ClCompile Include="MidiLoopbackBenchmarks.cpp" />
     <ClCompile Include="MidiLoopbackEndpointTests.cpp" />
+    <ClCompile Include="MidiLoopbackStressTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiLoopbackBenchmarks.h" />
     <ClInclude Include="MidiLoopbackEndpointTests.h" />
+    <ClInclude Include="MidiLoopbackStressTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

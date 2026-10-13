@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Monitor shows you the MIDI messages arriving from a keyboard, controller, synth, or any other MIDI device on your PC. It's the tool to reach for when you want to answer questions like "is this knob actually sending anything?", "which channel is my keyboard on?", or "what exactly does my synth send when I press that button?".
 

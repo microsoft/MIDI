@@ -128,6 +128,14 @@ private:
     void ReconcileClients(_In_ std::stop_token const& stopToken);
     void RefreshCalculatedLatency();
 
+    // Discovery sends mDNS queries and takes in whatever any device on the network answers, so it
+    // runs only while an entry needs it or an app has asked for the list of devices recently.
+    // Entries need it to find a client's remote by name, and to name the remote of a connection.
+    void UpdateDiscovery();
+    void EnsureDiscoveryForRequest();
+    HRESULT StartDiscovery();
+    void OnDiscoveryAnswer() noexcept;
+
     HRESULT CreateEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     HRESULT RemoveEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool IsInstanceIdInUse(_In_ std::wstring const& instanceId);
@@ -152,6 +160,14 @@ private:
     bool m_winsockStarted{ false };
 
     WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
+
+    // Orders starting and stopping discovery with shutdown. Its callbacks never take this lock.
+    std::mutex m_discoveryLock;
+    bool m_discoveryAllowed{ false };
+    uint64_t m_discoveryStartedTick{ 0 };
+    uint64_t m_nextDiscoveryStartTick{ 0 };
+    std::atomic<uint64_t> m_lastAdvertisedRequestTick{ 0 };
+    std::atomic<uint64_t> m_lastDiscoveryAnswerTick{ 0 };
 
     // Guards the runtime maps. Never held across a call into a node or the device manager.
     std::mutex m_runtimeLock;

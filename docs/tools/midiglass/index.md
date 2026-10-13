@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
 
 Windows MIDI Glass lets you build your own MIDI controller on screen. You put faders, knobs, buttons, pads and keys on a page, choose what each one sends, and then play it with your fingers, a pen or a mouse. It's at its best on a touch screen, or on a second monitor next to your keyboard, but it works on any PC.
 

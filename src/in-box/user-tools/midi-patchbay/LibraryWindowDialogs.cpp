@@ -354,56 +354,67 @@ namespace winrt::midipatchbay::implementation
         {
             std::wstring const guide{ AssistantGuideUrl };
 
-            // Each endpoint with the groups it sends and receives on, because a patch names
-            // groups and an assistant cannot see the device to find out.
-            auto live = patchbay::PatchLibrary::Current().LiveEndpoints();
-
-            std::sort(live.begin(), live.end(), [](patchbay::LiveEndpoint const& a, patchbay::LiveEndpoint const& b)
+            auto const buildPrompt = [guide](bool stillLooking)
                 {
-                    return ::CompareStringOrdinal(a.Name.c_str(), -1, b.Name.c_str(), -1, TRUE) == CSTR_LESS_THAN;
-                });
+                    std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
+                    prompt += L"\r\n\r\n";
 
-            std::wstring devices{};
+                    // Until the first look is done, an empty list doesn't mean there are no devices.
+                    if (!stillLooking)
+                    {
+                        // The catalog's own list: the library's copy catches up a moment later.
+                        auto live = patchbay::EndpointCatalog::Current().Snapshot();
 
-            for (auto const& endpoint : live)
-            {
-                auto const name = patchbay::SanitizeStoredString(endpoint.Name);
+                        std::sort(live.begin(), live.end(), [](patchbay::LiveEndpoint const& a, patchbay::LiveEndpoint const& b)
+                            {
+                                return ::CompareStringOrdinal(a.Name.c_str(), -1, b.Name.c_str(), -1, TRUE) == CSTR_LESS_THAN;
+                            });
 
-                if (name.empty())
-                {
-                    continue;
-                }
+                        // Each endpoint with the groups it sends and receives on, because a patch names
+                        // groups and an assistant cannot see the device to find out.
+                        std::wstring devices{};
 
-                if (!devices.empty())
-                {
-                    devices += L"\r\n";
-                }
+                        for (auto const& endpoint : live)
+                        {
+                            auto const name = patchbay::SanitizeStoredString(endpoint.Name);
 
-                devices += resources::FormatString(L"AssistantPromptEndpointFormat",
-                    name,
-                    DescribeGroupsForPrompt(endpoint.SourceGroups),
-                    DescribeGroupsForPrompt(endpoint.DestinationGroups));
-            }
+                            if (name.empty())
+                            {
+                                continue;
+                            }
 
-            std::wstring prompt{ resources::FormatString(L"AssistantPromptIntroFormat", guide) };
-            prompt += L"\r\n\r\n";
+                            if (!devices.empty())
+                            {
+                                devices += L"\r\n";
+                            }
 
-            if (devices.empty())
-            {
-                prompt += resources::GetString(L"AssistantPromptNoDevices");
-            }
-            else
-            {
-                prompt += resources::GetString(L"AssistantPromptDevices");
-                prompt += L"\r\n";
-                prompt += devices;
-            }
+                            devices += resources::FormatString(L"AssistantPromptEndpointFormat",
+                                name,
+                                DescribeGroupsForPrompt(endpoint.SourceGroups),
+                                DescribeGroupsForPrompt(endpoint.DestinationGroups));
+                        }
 
-            prompt += L"\r\n\r\n";
-            prompt += resources::GetString(L"AssistantPromptRequest");
+                        if (devices.empty())
+                        {
+                            prompt += resources::GetString(L"AssistantPromptNoDevices");
+                        }
+                        else
+                        {
+                            prompt += resources::GetString(L"AssistantPromptDevices");
+                            prompt += L"\r\n";
+                            prompt += devices;
+                        }
 
-            // The customer types their request straight after it.
-            prompt += L" ";
+                        prompt += L"\r\n\r\n";
+                    }
+
+                    prompt += resources::GetString(L"AssistantPromptRequest");
+
+                    // The customer types their request straight after it.
+                    prompt += L" ";
+
+                    return winrt::hstring{ prompt };
+                };
 
             midiapp::AssistantPromptStrings strings{};
             strings.Title = resources::GetString(L"AssistantTitle");
@@ -414,9 +425,11 @@ namespace winrt::midipatchbay::implementation
             strings.CopiedButton = resources::GetString(L"AssistantCopied");
             strings.CopyFailedButton = resources::GetString(L"AssistantCopyFailed");
             strings.CloseButton = resources::GetString(L"AssistantClose");
+            strings.LookingTitle = resources::GetString(L"AssistantLookingTitle");
+            strings.LookingMessage = resources::GetString(L"AssistantLooking");
 
             co_await midiapp::ShowAssistantPromptAsync(
-                Content().XamlRoot(), strings, winrt::hstring{ prompt }, foundation::Uri{ guide });
+                Content().XamlRoot(), strings, buildPrompt, foundation::Uri{ guide });
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the AI assistant prompt.")
     }

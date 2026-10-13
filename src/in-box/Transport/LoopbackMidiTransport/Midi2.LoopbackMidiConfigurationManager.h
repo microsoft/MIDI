@@ -71,6 +71,12 @@ private:
         _In_ std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
         _Inout_ json::JsonObject& responseObject);
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackRejectOverlappingUniqueIds.
+    HRESULT ValidateNewUniqueIdentifiersDoNotOverlap(
+        _In_ MidiLoopbackDeviceDefinition const& definitionA,
+        _In_ MidiLoopbackDeviceDefinition const& definitionB,
+        _Inout_ json::JsonObject& responseObject);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     GUID m_TransportId;   // kept for convenience

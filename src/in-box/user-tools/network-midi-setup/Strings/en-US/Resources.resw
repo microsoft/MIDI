@@ -1234,7 +1234,76 @@
   </data>
   <data name="FirewallConnectedNowFormat" xml:space="preserve">
     <value>{0} (connected now)</value>
-    <comment>{0} is FirewallPrivateNetworks or FirewallPublicNetworks. Marks the type of network this PC is connected to now.</comment>
+    <comment>{0} is FirewallDomainNetworks, FirewallPrivateNetworks or FirewallPublicNetworks. Marks the type of network this PC is connected to now.</comment>
+  </data>
+  <data name="FirewallDomainNetworks" xml:space="preserve">
+    <value>Domain networks, like the one at your workplace or school</value>
+    <comment>A check box, shown only on a PC joined to a domain. Domain, private and public are the network types Windows Firewall uses.</comment>
+  </data>
+  <data name="FirewallDomainNetworksShort" xml:space="preserve">
+    <value>Domain networks</value>
+    <comment>Names the FirewallDomainNetworks check box inside a sentence.</comment>
+  </data>
+  <data name="FirewallPrivateNetworksShort" xml:space="preserve">
+    <value>Private networks</value>
+    <comment>Names the FirewallPrivateNetworks check box inside a sentence.</comment>
+  </data>
+  <data name="FirewallPublicNetworksShort" xml:space="preserve">
+    <value>Public networks</value>
+    <comment>Names the FirewallPublicNetworks check box inside a sentence.</comment>
+  </data>
+  <data name="FirewallDomainNetworkType" xml:space="preserve">
+    <value>a domain network</value>
+    <comment>Describes one network, as in "Contoso: a domain network, on Ethernet."</comment>
+  </data>
+  <data name="FirewallPrivateNetworkType" xml:space="preserve">
+    <value>a private network</value>
+    <comment>Describes one network, as in "Home: a private network, on Wi-Fi."</comment>
+  </data>
+  <data name="FirewallPublicNetworkType" xml:space="preserve">
+    <value>a public network</value>
+    <comment>Describes one network, as in "Unidentified network: a public network, on Ethernet 2."</comment>
+  </data>
+  <data name="FirewallNamePairFormat" xml:space="preserve">
+    <value>{0} and {1}</value>
+    <comment>Joins two names, like two network names or two adapter names.</comment>
+  </data>
+  <data name="FirewallNameSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>Goes between the names in a list of three or more. FirewallNameSeriesFormat adds the last name.</comment>
+  </data>
+  <data name="FirewallNameSeriesFormat" xml:space="preserve">
+    <value>{0}, and {1}</value>
+    <comment>{0} is all but the last name, joined with FirewallNameSeparator. {1} is the last name.</comment>
+  </data>
+  <data name="FirewallNetworksHeader.Text" xml:space="preserve">
+    <value>Networks this PC is connected to now</value>
+  </data>
+  <data name="FirewallNetworkFormat" xml:space="preserve">
+    <value>{0}: {1}, on {2}. {3}</value>
+    <comment>One line for each network. {0} is the name Windows gives the network, {1} is FirewallPrivateNetworkType or one of the other types, {2} is the names of the network adapters it is on, like "Wi-Fi", and {3} is FirewallNetworkOpen or one of the other states.</comment>
+  </data>
+  <data name="FirewallNetworkNoAdapterFormat" xml:space="preserve">
+    <value>{0}: {1}. {2}</value>
+    <comment>FirewallNetworkFormat for a network whose adapter has no name.</comment>
+  </data>
+  <data name="FirewallNetworkWithoutName" xml:space="preserve">
+    <value>A network with no name</value>
+  </data>
+  <data name="FirewallNetworkOpen" xml:space="preserve">
+    <value>Windows Firewall lets the MIDI service in.</value>
+  </data>
+  <data name="FirewallNetworkClosed" xml:space="preserve">
+    <value>Windows Firewall blocks the MIDI service.</value>
+  </data>
+  <data name="FirewallNetworkClosedByRule" xml:space="preserve">
+    <value>A rule in Windows Firewall blocks the MIDI service.</value>
+  </data>
+  <data name="FirewallNetworkClosedForAll" xml:space="preserve">
+    <value>Windows Firewall blocks all incoming connections.</value>
+  </data>
+  <data name="FirewallNetworkOff" xml:space="preserve">
+    <value>Windows Firewall is off.</value>
   </data>
   <data name="FirewallNetworkTypeHelp.Text" xml:space="preserve">
     <value>Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them.</value>
@@ -1260,21 +1329,33 @@
   <data name="FirewallHelpLink.Content" xml:space="preserve">
     <value>How to allow the MIDI service through Windows Firewall yourself</value>
   </data>
-  <data name="FirewallStateOpen" xml:space="preserve">
-    <value>Windows Firewall lets the MIDI service in on the network this PC is connected to now.</value>
+  <data name="FirewallStateOpenFormat" xml:space="preserve">
+    <value>Windows Firewall lets the MIDI service in on {0}.</value>
+    <comment>{0} is the names of the networks this PC is connected to, like "Home" or "Home and Unidentified network". A network with no name is given as FirewallPrivateNetworkType or one of the other types.</comment>
   </data>
-  <data name="FirewallStateClosed" xml:space="preserve">
-    <value>Windows Firewall is blocking the MIDI service on the network this PC is connected to now. Check that type of network below, then select Allow through Windows Firewall.</value>
-    <comment>"Allow through Windows Firewall" is FirewallAllowButton.Content.</comment>
+  <data name="FirewallStateOffFormat" xml:space="preserve">
+    <value>Windows Firewall is turned off on {0}, so it is not blocking the MIDI service. If your PC uses a different firewall, see below.</value>
+    <comment>{0} is the names of the networks this PC is connected to, as in FirewallStateOpenFormat.</comment>
   </data>
-  <data name="FirewallStateClosedByRule" xml:space="preserve">
-    <value>A rule in Windows Firewall blocks the MIDI service on the network this PC is connected to now. A rule that blocks wins over one that allows, so turn that rule off or remove it in Windows Firewall first.</value>
+  <data name="FirewallStateClosedFormat" xml:space="preserve">
+    <value>Windows Firewall is blocking the MIDI service on {0}.</value>
+    <comment>{0} is the names of the blocked networks, as in FirewallStateOpenFormat.</comment>
   </data>
-  <data name="FirewallStateClosedForAll" xml:space="preserve">
-    <value>Windows Firewall is set to block all incoming connections on the network this PC is connected to now. That blocks allowed apps too, so turn that setting off in Windows Security first.</value>
+  <data name="FirewallStatePartlyClosedFormat" xml:space="preserve">
+    <value>Windows Firewall lets the MIDI service in on {0}, but blocks it on {1}.</value>
+    <comment>{0} is the names of the networks the service is let in on, and {1} the names of the blocked ones, as in FirewallStateOpenFormat.</comment>
   </data>
-  <data name="FirewallStateOff" xml:space="preserve">
-    <value>Windows Firewall is turned off on the network this PC is connected to now, so it is not blocking the MIDI service. If your PC uses a different firewall, see below.</value>
+  <data name="FirewallStateAllowFormat" xml:space="preserve">
+    <value>{0} If the devices you want to connect are on {1}, check {2} below, then select Allow through Windows Firewall.</value>
+    <comment>{0} is FirewallStateClosedFormat or FirewallStatePartlyClosedFormat. {1} is the names of the networks no rule lets the service in on. {2} is FirewallDomainNetworksShort, FirewallPrivateNetworksShort or FirewallPublicNetworksShort, or more than one of them joined. "Allow through Windows Firewall" is FirewallAllowButton.Content.</comment>
+  </data>
+  <data name="FirewallStateRuleFormat" xml:space="preserve">
+    <value>{0} A rule in Windows Firewall blocks it there. A rule that blocks wins over one that allows, so turn that rule off or remove it in Windows Firewall first.</value>
+    <comment>{0} is FirewallStateClosedFormat or FirewallStatePartlyClosedFormat.</comment>
+  </data>
+  <data name="FirewallStateBlockAllFormat" xml:space="preserve">
+    <value>{0} Windows Firewall is set to block all incoming connections there. That blocks allowed apps too, so turn that setting off in Windows Security first.</value>
+    <comment>{0} is FirewallStateClosedFormat or FirewallStatePartlyClosedFormat.</comment>
   </data>
   <data name="FirewallStateServiceNotFound" xml:space="preserve">
     <value>The MIDI service is not installed on this PC, so there is nothing to allow.</value>
