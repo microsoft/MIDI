@@ -109,8 +109,8 @@ TransportState::GetRemoteClientSettings(GUID const& hostId)
 }
 
 _Use_decl_annotations_
-std::optional<uint32_t>
-TransportState::FindRemoteClientSendSpeedLimit(GUID const& hostId, std::wstring const& remoteName)
+std::optional<RtpMidiRemoteClientSettings>
+TransportState::FindRemoteClientSettings(GUID const& hostId, std::wstring const& remoteName)
 {
     auto lock = std::scoped_lock{ m_definitionsLock };
 
@@ -124,7 +124,7 @@ TransportState::FindRemoteClientSendSpeedLimit(GUID const& hostId, std::wstring 
                 remoteName.c_str(), static_cast<int>(remoteName.size()),
                 TRUE) == CSTR_EQUAL)
         {
-            return settings.SendSpeedLimit;
+            return settings;
         }
     }
 

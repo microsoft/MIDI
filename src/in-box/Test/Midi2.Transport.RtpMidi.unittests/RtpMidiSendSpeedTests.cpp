@@ -693,3 +693,111 @@ void RtpMidiTransportTests::TestRemoteClientSpeedsAreCheckedAndKeptWithTheHost()
     VERIFY_IS_TRUE(laterHost != nullptr && laterHost.GetNamedArray(L"remoteClientSettings").Size() == 0,
         L"and starts with no speeds for its remotes");
 }
+
+namespace
+{
+    // A pitch wheel swept up and back down, a message for each step, with a note held through the
+    // middle: 2,002 messages, which take about 1.9 s on a MIDI 1.0 cable
+    std::vector<std::vector<uint8_t>> PitchSweep()
+    {
+        constexpr uint32_t BendCount{ 2000 };
+        std::vector<std::vector<uint8_t>> messages;
+
+        for (uint32_t i = 0; i < BendCount; i++)
+        {
+            auto const value = (std::min)(i, BendCount - 1 - i) * 16;
+            messages.push_back({ 0xE0, static_cast<uint8_t>(value & 0x7F), static_cast<uint8_t>((value >> 7) & 0x7F) });
+
+            if (i == BendCount / 4) messages.push_back({ 0x90, 0x3C, 0x64 });
+            if (i == 3 * BendCount / 4) messages.push_back({ 0x80, 0x3C, 0x00 });
+        }
+
+        return messages;
+    }
+
+    // Sends the messages as fast as the calls return, and gives how long it took until every one
+    // of them arrived, in order, or a negative number if they never did
+    double MillisecondsToDeliverEverything(
+        _In_ RtpMidiTest::OpenedEndpoint& opened,
+        _In_ Peer& remote,
+        _In_ std::vector<std::vector<uint8_t>> const& messages)
+    {
+        std::vector<uint8_t> expected;
+        for (auto const& message : messages) expected.insert(expected.end(), message.begin(), message.end());
+
+        auto const start = std::chrono::steady_clock::now();
+
+        for (auto const& message : messages)
+        {
+            uint32_t const word = 0x20000000u | (static_cast<uint32_t>(message[0]) << 16) | (static_cast<uint32_t>(message[1]) << 8) | message[2];
+            if (FAILED(opened.Send(&word, sizeof(word)))) return -1;
+        }
+
+        if (!WaitFor([&]() { return remote.Received().size() >= expected.size(); }, 5000)) return -1;
+
+        auto const milliseconds = MillisecondsSince(start);
+
+        return remote.Received() == expected ? milliseconds : -1;
+    }
+}
+
+void RtpMidiTransportTests::TestSendSpeedLimitSendsEveryValueWithSkippingOff()
+{
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Every Value Host\",\"sendSpeedLimit\":1,\"skipInBetweenValuesToCatchUp\":false", port);
+    AtExit removeHost([&]() { RemoveHost(hostId); });
+
+    auto const host = FindHost(hostId);
+    VERIFY_IS_TRUE(host != nullptr && !host.GetNamedBoolean(L"skipInBetweenValuesToCatchUp", true), L"the host reports that it doesn't skip");
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    Peer remote("Every Value Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds a loopback port pair");
+    remote.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 5000), L"the remote gets an endpoint");
+
+    RtpMidiTest::OpenedEndpoint opened(m_transport, m_deviceManager->Endpoints()[baseline].InterfaceId, 66);
+    VERIFY_IS_TRUE(opened.IsOpen(), L"the service opens the endpoint");
+
+    auto const milliseconds = MillisecondsToDeliverEverything(opened, remote, PitchSweep());
+
+    Log::Comment(String().Format(L"All 2,002 messages arrived after %.0f ms.", milliseconds));
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(milliseconds, 0.0, L"every message arrives, in the order it was sent");
+    VERIFY_IS_GREATER_THAN(milliseconds, 1500.0, L"still at about wire speed, because only the skipping is off");
+}
+
+void RtpMidiTransportTests::TestRemoteClientCanTurnOffSkipping()
+{
+    // the host itself skips to catch up
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Device Skipping Host\",\"sendSpeedLimit\":1", port);
+    AtExit removeHost([&]() { RemoveHost(hostId); });
+
+    VERIFY_IS_TRUE(IsSuccess(Send(RemoteClientSettingsSection(hostId,
+        L"{\"remoteName\":\"Every Value Peer\",\"sendSpeedLimit\":1,\"skipInBetweenValuesToCatchUp\":false}"))),
+        L"one remote is set to get every value");
+
+    auto const baseline = m_deviceManager->Endpoints().size();
+
+    Peer remote("Every Value Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds a loopback port pair");
+    remote.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return m_deviceManager->Endpoints().size() == baseline + 1; }, 5000), L"the remote gets an endpoint");
+
+    auto const connection = FindConnection(FindHost(hostId), L"Every Value Peer");
+    VERIFY_IS_TRUE(connection != nullptr && connection.GetNamedBoolean(L"usesRemoteClientSettings", false), L"the remote uses its own settings");
+    VERIFY_IS_FALSE(connection.GetNamedBoolean(L"skipInBetweenValuesToCatchUp", true), L"which don't skip");
+
+    RtpMidiTest::OpenedEndpoint opened(m_transport, m_deviceManager->Endpoints()[baseline].InterfaceId, 67);
+    VERIFY_IS_TRUE(opened.IsOpen(), L"the service opens the endpoint");
+
+    auto const milliseconds = MillisecondsToDeliverEverything(opened, remote, PitchSweep());
+
+    Log::Comment(String().Format(L"All 2,002 messages arrived after %.0f ms.", milliseconds));
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(milliseconds, 0.0, L"every message arrives, in the order it was sent");
+}

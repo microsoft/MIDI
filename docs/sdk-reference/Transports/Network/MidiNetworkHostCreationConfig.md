@@ -45,6 +45,7 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | `AllowNetworkAdapterFallback` | What the host does while its adapter is missing. When true, the default, it runs on every adapter until the adapter is back. When false, it doesn't run until the adapter is back |
 | `SendSpeedLimit` | How fast the host sends to each connected device. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | When true, a connection sends more slowly while the device keeps asking for data again, and speeds back up to `SendSpeedLimit` once it stops. False by default. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed) |
+| `SkipInBetweenValuesToCatchUp` | When true, and messages pile up behind `SendSpeedLimit`, a connection skips some in-between steps of long control change, pressure and pitch bend moves so the device catches up. True by default. Set it to false for devices that need every message, however late. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 

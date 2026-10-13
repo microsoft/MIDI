@@ -30,6 +30,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                 json::JsonObject entry;
                 entry.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY, json::JsonValue::CreateStringValue(settings.RemoteClientName()));
                 entry.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, json::JsonValue::CreateNumberValue(static_cast<int32_t>(settings.SendSpeedLimit())));
+                entry.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, json::JsonValue::CreateBooleanValue(settings.SkipInBetweenValuesToCatchUp()));
 
                 remoteClients.Append(entry);
             }

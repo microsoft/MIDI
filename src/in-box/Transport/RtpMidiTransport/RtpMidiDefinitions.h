@@ -44,6 +44,10 @@ struct RtpMidiHostDefinition
     // Changing it never restarts the host.
     uint32_t SendSpeedLimit{ 0 };
 
+    // Skips in-between values to catch up when messages back up behind the speed. Changing it
+    // never restarts the host.
+    bool SkipInBetweenValuesToCatchUp{ true };
+
     // Changing it never restarts the host, so connections already made stay up
     RtpMidiRemoteClientPolicy RemoteClientPolicy{ RtpMidiRemoteClientPolicy::AllowAny };
 
@@ -92,6 +96,10 @@ struct RtpMidiClientDefinition
     // Changing it never drops the connection.
     uint32_t SendSpeedLimit{ 0 };
 
+    // Skips in-between values to catch up when messages back up behind the speed. Changing it
+    // never drops the connection.
+    bool SkipInBetweenValuesToCatchUp{ true };
+
     // Seconds the endpoint stays after the connection ends. 0 removes it at once, as before there
     // was a choice, and MIDI_RTP_OFFLINE_RETENTION_KEEP_ALWAYS keeps it until the entry goes.
     int32_t OfflineRetentionSeconds{ 0 };
@@ -110,6 +118,8 @@ struct RtpMidiRemoteClientSettings
 
     // a multiple of MIDI 1.0 wire speed, 0 for no limit
     uint32_t SendSpeedLimit{ 0 };
+
+    bool SkipInBetweenValuesToCatchUp{ true };
 };
 
 

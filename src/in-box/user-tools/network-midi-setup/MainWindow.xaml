@@ -638,6 +638,8 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBox x:Name="ManualAddressTextBox"
@@ -701,6 +703,20 @@
                                 <TextBlock x:Uid="ReduceSendSpeedHelp"
                                            Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5"
                                            Text="When a device asks for data again, Windows sends more slowly, down to MIDI 1.0 wire speed. It speeds back up once the device stops asking."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <CheckBox x:Name="ManualSkipInBetweenValuesCheckBox"
+                                          x:Uid="SkipInBetweenValuesCheckBox"
+                                          Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
+                                          Margin="0,8,0,0"
+                                          Content="Skip in-between values to catch up"
+                                          IsChecked="True" />
+
+                                <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                                           Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -1742,6 +1758,8 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBox x:Name="RtpManualAddressTextBox"
@@ -1806,15 +1824,29 @@
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
+                                <CheckBox x:Name="RtpManualSkipInBetweenValuesCheckBox"
+                                          x:Uid="SkipInBetweenValuesCheckBox"
+                                          Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
+                                          Margin="0,8,0,0"
+                                          Content="Skip in-between values to catch up"
+                                          IsChecked="True" />
+
+                                <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                                           Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
                                 <CheckBox x:Name="RtpManualSendRecoveryJournalCheckBox"
                                           x:Uid="RtpSendRecoveryJournalCheckBox"
-                                          Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5"
+                                          Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="5"
                                           Margin="0,8,0,0"
                                           Content="Help other devices recover notes lost on the network"
                                           IsChecked="True" />
 
                                 <TextBlock x:Uid="RtpSendRecoveryJournalHelp"
-                                           Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5"
+                                           Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="5"
                                            Text="Each packet carries a short summary of recent notes, so a device that misses a packet can still end a note that would otherwise hang. Turn this off only for a device that plays extra notes, or notes that don't stop, while this is on."
                                            TextWrapping="Wrap"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
@@ -2490,6 +2522,14 @@
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <CheckBox x:Name="HostSkipInBetweenValuesCheckBox"
+                                  x:Uid="SkipInBetweenValuesCheckBox"
+                                  Content="Skip in-between values to catch up" />
+                        <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                                   Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
 
                     <CheckBox x:Name="HostCreateMidi1PortsCheckBox"
@@ -2660,6 +2700,15 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <TextBlock x:Uid="RtpNoReduceSendSpeedHelp"
                                    Text="Windows can't slow down by itself for RTP-MIDI devices, because they don't tell this PC when they miss data."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <CheckBox x:Name="RtpHostSkipInBetweenValuesCheckBox"
+                                  x:Uid="SkipInBetweenValuesCheckBox"
+                                  Content="Skip in-between values to catch up"
+                                  IsChecked="True" />
+                        <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                                   Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -2844,6 +2893,18 @@
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <!-- both transports -->
+                <StackPanel Spacing="4">
+                    <CheckBox x:Name="ChangeSkipInBetweenValuesCheckBox"
+                              x:Uid="SkipInBetweenValuesCheckBox"
+                              Content="Skip in-between values to catch up" />
+                    <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                               Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
             </StackPanel>
         </ContentDialog>
 
@@ -2899,6 +2960,18 @@
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <!-- both transports -->
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="ConnectSkipInBetweenValuesCheckBox"
+                                  x:Uid="SkipInBetweenValuesCheckBox"
+                                  Content="Skip in-between values to catch up" />
+                        <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                                   Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
 
                     <!-- RTP-MIDI only. Network MIDI 2.0 has no recovery journal. -->
                     <StackPanel x:Name="ConnectRtpSendRecoveryJournalPanel" Spacing="4" Margin="0,8,0,0">
@@ -3098,6 +3171,18 @@
                                        TextWrapping="Wrap"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <!-- both transports -->
+                            <StackPanel Spacing="4">
+                                <CheckBox x:Name="CustomizeSkipInBetweenValuesCheckBox"
+                                          x:Uid="SkipInBetweenValuesCheckBox"
+                                          Content="Skip in-between values to catch up" />
+                                <TextBlock x:Uid="SkipInBetweenValuesHelp"
+                                           Text="When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>

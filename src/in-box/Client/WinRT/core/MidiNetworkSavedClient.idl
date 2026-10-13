@@ -43,5 +43,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         // These include changes saved later with MidiNetworkClientUpdateConfig
         [noexcept] MidiNetworkSendSpeedLimit SendSpeedLimit{ get; };
         [noexcept] Boolean ReduceSendSpeedAutomatically{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkSavedClient2", UUID_IMidiNetworkSavedClient2)]
+        [contract(MidiTransportsNetworkApiContract, 2)]
+        {
+            // True when none is saved. Includes a change saved later with MidiNetworkClientUpdateConfig.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     };
 }

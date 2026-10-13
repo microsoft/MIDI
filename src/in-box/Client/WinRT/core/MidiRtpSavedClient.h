@@ -28,6 +28,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool IsEnabled() const noexcept { return m_isEnabled; }
         rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
@@ -49,5 +50,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool m_isEnabled{ true };
         rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         int32_t m_offlineRetentionSeconds{ 0 };
+        bool m_skipInBetweenValuesToCatchUp{ true };
     };
 }

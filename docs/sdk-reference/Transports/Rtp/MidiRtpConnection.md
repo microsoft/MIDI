@@ -32,6 +32,7 @@ Found in `MidiRtpConfiguredHost.Connections` and `MidiRtpConfiguredClient.Connec
 | `TotalCountMessagesReceived` | The number of MIDI messages received from the remote device |
 | `SendSpeedLimit` | How fast this PC is set up to send to the remote device. On a host, that's the device's own speed when `UsesRemoteClientSettings` is true, and the host's speed otherwise. On a client, it's the client entry's speed. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
 | `CurrentSendSpeedLimit` | How fast this PC is sending to the remote device right now. It's only different from `SendSpeedLimit` for a moment after a change |
+| `SkipInBetweenValuesToCatchUp` | True when this PC skips some in-between values to catch up when messages to the remote device pile up behind `SendSpeedLimit`. Like `SendSpeedLimit`, on a host it comes from the device's own settings or from the host's. Added in version 2 of `MidiTransportsRtpApiContract` |
 | `UsesRemoteClientSettings` | True when the host has a sending speed of this device's own, in `MidiRtpConfiguredHost.RemoteClientSettings`, and uses it instead of the host's. Always false on a client |
 
 ## Remarks

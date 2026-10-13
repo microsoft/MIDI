@@ -70,5 +70,14 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // True when the speed comes from the host's RemoteClientSettings for this remote. Always
         // false on a client's connection.
         [noexcept] Boolean UsesRemoteClientSettings{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpConnection2", UUID_IMidiRtpConnection2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // False when this PC sends the remote every message, however far behind it falls. On a
+            // host, the remote's own setting when the host has one for it, otherwise the host's.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     }
 }

@@ -66,12 +66,14 @@ public:
     TEST_METHOD(TestSendSpeedLimitChangesWithoutReconnecting);
     TEST_METHOD(TestSendSpeedLimitSlowsAFastSenderWithoutLosingAnything);
     TEST_METHOD(TestSendSpeedLimitThinsABackedUpSweep);
+    TEST_METHOD(TestSendSpeedLimitSendsEveryValueWithSkippingOff);
     TEST_METHOD(TestSendSpeedLimitReadsAnythingAboveTheMaximumAsUnlimited);
 
     // a speed of a remote's own on a host, also in RtpMidiSendSpeedTests.cpp
     TEST_METHOD(TestRemoteClientSpeedIsUsedInsteadOfTheHostSpeed);
     TEST_METHOD(TestRemoteClientSpeedChangesWithoutReconnecting);
     TEST_METHOD(TestRemoteClientSpeedsAreCheckedAndKeptWithTheHost);
+    TEST_METHOD(TestRemoteClientCanTurnOffSkipping);
 
     // the channel notes carry on the wire, and a host without a journal, in RtpMidiChannelTests.cpp
     TEST_METHOD(TestNotesKeepTheirChannelOnTheWire);

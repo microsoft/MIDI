@@ -13,7 +13,10 @@
 namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 {
     _Use_decl_annotations_
-    void MidiRtpConnection::InternalInitialize(json::JsonObject const& source, rtp::MidiRtpSendSpeedLimit const entrySendSpeedLimit) noexcept
+    void MidiRtpConnection::InternalInitialize(
+        json::JsonObject const& source,
+        rtp::MidiRtpSendSpeedLimit const entrySendSpeedLimit,
+        bool const entrySkipInBetweenValuesToCatchUp) noexcept
     {
         m_connectionId = MidiRtpSdkJson::Unsigned<uint32_t>(source, MIDI_CONFIG_JSON_RTP_MIDI_CONNECTION_ID_KEY);
         m_remoteName = MidiRtpSdkJson::String(source, MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY);
@@ -44,5 +47,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         m_sendSpeedLimit = speedOrEntry(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
         m_currentSendSpeedLimit = speedOrEntry(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY);
         m_usesRemoteClientSettings = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_USES_REMOTE_CLIENT_SETTINGS_KEY);
+        m_skipInBetweenValuesToCatchUp = MidiRtpSdkJson::Boolean(source, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, entrySkipInBetweenValuesToCatchUp);
     }
 }

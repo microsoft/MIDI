@@ -254,7 +254,10 @@ namespace midi2console
                 if (connection.UsesRemoteClientSettings())
                 {
                     table.AddRowDetail(FormatResourceString(IDS_NET_SEND_SPEED_OWN_FORMAT,
-                        FormatSendSpeedLimit(static_cast<uint32_t>(connection.SendSpeedLimit()))), fieldValueTextStyle);
+                        FormatSendSpeed(
+                            static_cast<uint32_t>(connection.SendSpeedLimit()),
+                            false,
+                            connection.SkipInBetweenValuesToCatchUp())), fieldValueTextStyle);
                 }
 
                 if (!connection.EndpointDeviceId().empty())
@@ -328,7 +331,10 @@ namespace midi2console
 
                 table.BeginRow();
                 table.AddCell(ToUtf8(settings.RemoteClientName()));
-                table.AddCell(FormatSendSpeedLimit(static_cast<uint32_t>(settings.SendSpeedLimit())));
+                table.AddCell(FormatSendSpeed(
+                    static_cast<uint32_t>(settings.SendSpeedLimit()),
+                    false,
+                    settings.SkipInBetweenValuesToCatchUp()));
             }
 
             table.Render();
@@ -389,7 +395,8 @@ namespace midi2console
             WriteField(ResourceString(IDS_NET_LABEL_REMOTE_POLICY),
                 FormatRemoteClientPolicy(host.RemoteClientPolicy()), fieldValueTextStyle);
             WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
-                FormatSendSpeedLimit(static_cast<uint32_t>(host.SendSpeedLimit())), fieldValueTextStyle);
+                FormatSendSpeed(static_cast<uint32_t>(host.SendSpeedLimit()), false, host.SkipInBetweenValuesToCatchUp()),
+                fieldValueTextStyle);
 
             if (host.LastErrorCode() != 0)
             {
@@ -550,7 +557,8 @@ namespace midi2console
             WriteField(ResourceString(IDS_RTP_LABEL_RECOVERY_JOURNAL),
                 FormatBoolean(client.SendRecoveryJournal()), BooleanStyle(client.SendRecoveryJournal()));
             WriteField(ResourceString(IDS_NET_LABEL_SEND_SPEED),
-                FormatSendSpeedLimit(static_cast<uint32_t>(client.SendSpeedLimit())), fieldValueTextStyle);
+                FormatSendSpeed(static_cast<uint32_t>(client.SendSpeedLimit()), false, client.SkipInBetweenValuesToCatchUp()),
+                fieldValueTextStyle);
 
             if (client.LastErrorCode() != 0)
             {

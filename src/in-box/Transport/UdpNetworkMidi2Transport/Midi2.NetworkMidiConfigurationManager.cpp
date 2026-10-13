@@ -740,6 +740,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     uint8_t const fallbackMidi1PortCount,
     uint32_t const sendSpeedLimit,
     bool const reduceSendSpeedAutomatically,
+    bool const skipInBetweenValuesToCatchUp,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -787,6 +788,7 @@ try
     clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
     clientDefinition.SendSpeedLimit = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(sendSpeedLimit);
     clientDefinition.ReduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+    clientDefinition.SkipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition.MatchDirectPort = remotePort;
@@ -833,6 +835,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     uint8_t const fallbackMidi1PortCount,
     uint32_t const sendSpeedLimit,
     bool const reduceSendSpeedAutomatically,
+    bool const skipInBetweenValuesToCatchUp,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -863,6 +866,7 @@ try
     clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
     clientDefinition.SendSpeedLimit = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(sendSpeedLimit);
     clientDefinition.ReduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+    clientDefinition.SkipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchId = matchId;
     clientDefinition.LocalEndpointName = umpEndpointName;
@@ -1491,6 +1495,10 @@ namespace
             json::JsonValue::CreateBooleanValue(definition.ReduceSendSpeedAutomatically));
 
         clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            json::JsonValue::CreateBooleanValue(definition.SkipInBetweenValuesToCatchUp));
+
+        clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_IS_SESSION_ACTIVE_KEY,
             json::JsonValue::CreateBooleanValue(client != nullptr && client->IsSessionActive()));
 
@@ -1766,6 +1774,10 @@ namespace
             json::JsonValue::CreateBooleanValue(connection->GetReduceSendSpeedAutomatically()));
 
         connectionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            json::JsonValue::CreateBooleanValue(connection->GetSkipInBetweenValuesToCatchUp()));
+
+        connectionObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY,
             json::JsonValue::CreateBooleanValue(connection->UsesRemoteClientSettings()));
 
@@ -1857,6 +1869,10 @@ namespace
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
             json::JsonValue::CreateBooleanValue(definition.ReduceSendSpeedAutomatically));
 
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            json::JsonValue::CreateBooleanValue(definition.SkipInBetweenValuesToCatchUp));
+
         json::JsonArray remoteClientSettingsArray;
 
         for (auto const& settings : definition.RemoteClientSettings)
@@ -1878,6 +1894,10 @@ namespace
             settingsObject.SetNamedValue(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
                 json::JsonValue::CreateBooleanValue(settings.ReduceSendSpeedAutomatically));
+
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+                json::JsonValue::CreateBooleanValue(settings.SkipInBetweenValuesToCatchUp));
 
             remoteClientSettingsArray.Append(settingsObject);
         }
@@ -2460,6 +2480,7 @@ try
                     OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
                     OptionalCommandArgumentSendSpeedLimit(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
+                    OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true),
                     responseObject);
             }
         },
@@ -2488,6 +2509,7 @@ try
                     OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
                     OptionalCommandArgumentSendSpeedLimit(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
+                    OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true),
                     responseObject);
             }
         },
@@ -2737,6 +2759,7 @@ namespace
 
                 settings.SendSpeedLimit = SafeGetNamedSendSpeedLimit(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
                 settings.ReduceSendSpeedAutomatically = SafeGetNamedBoolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
+                settings.SkipInBetweenValuesToCatchUp = SafeGetNamedBoolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
 
                 keys.push_back(std::move(key));
                 result.push_back(std::move(settings));
@@ -2791,6 +2814,11 @@ namespace
             entry,
             MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
             definition.ReduceSendSpeedAutomatically);
+
+        definition.SkipInBetweenValuesToCatchUp = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            definition.SkipInBetweenValuesToCatchUp);
     }
 
     void ApplyEntrySettings(
@@ -2824,6 +2852,11 @@ namespace
             entry,
             MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
             definition.ReduceSendSpeedAutomatically);
+
+        definition.SkipInBetweenValuesToCatchUp = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            definition.SkipInBetweenValuesToCatchUp);
 
         // An empty id is every adapter. One which is not a GUID is ignored.
         GUID networkAdapterId{};
@@ -2946,6 +2979,7 @@ try
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
                     stored.SendSpeedLimit = definition->SendSpeedLimit;
                     stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
+                    stored.SkipInBetweenValuesToCatchUp = definition->SkipInBetweenValuesToCatchUp;
                     stored.RemoteClientSettings = definition->RemoteClientSettings;
                     stored.NetworkAdapterId = definition->NetworkAdapterId;
                     stored.NetworkAdapterName = definition->NetworkAdapterName;
@@ -2959,6 +2993,7 @@ try
                 host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
                 host->SetCreateMidi1Ports(definition->CreateMidi1Ports);
                 host->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+                host->SetSkipInBetweenValuesToCatchUp(definition->SkipInBetweenValuesToCatchUp);
                 host->SetRemoteClientSettings(definition->RemoteClientSettings);
 
                 host->SetNetworkAdapter(
@@ -3029,12 +3064,14 @@ try
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
                     stored.SendSpeedLimit = definition->SendSpeedLimit;
                     stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
+                    stored.SkipInBetweenValuesToCatchUp = definition->SkipInBetweenValuesToCatchUp;
                 }));
 
             if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
             {
                 client->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
                 client->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+                client->SetSkipInBetweenValuesToCatchUp(definition->SkipInBetweenValuesToCatchUp);
             }
 
             for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForClient(entryIdentifier))
@@ -3042,6 +3079,7 @@ try
                 if (connection != nullptr)
                 {
                     connection->SetSendSpeedLimit(definition->SendSpeedLimit, definition->ReduceSendSpeedAutomatically);
+                    connection->SetSkipInBetweenValuesToCatchUp(definition->SkipInBetweenValuesToCatchUp);
                 }
             }
         }

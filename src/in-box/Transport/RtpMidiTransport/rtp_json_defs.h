@@ -57,6 +57,11 @@
 // 2.0. A change reaches a running entry within a moment, without dropping its connections.
 #define MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY          L"currentSendSpeedLimit"
 
+// When messages back up behind the send speed limit, some in-between values of long control change,
+// pressure and pitch bend moves are skipped so the remote catches up. Same key and meaning as
+// Network MIDI 2.0. Boolean, true when missing. Changing it drops no connection.
+#define MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY L"skipInBetweenValuesToCatchUp"
+
 // The network adapter a host is limited to. Same keys and meaning as Network MIDI 2.0: an empty
 // or missing id is every adapter, the hardware address finds the adapter again under a new GUID,
 // the name is only shown, and fallback (default true) runs the host on every adapter while its
@@ -81,7 +86,8 @@
 
 // Remotes with their own settings on a host, used for them instead of the host's. Under create
 // and keyed by host entry identifier like the decisions, each holding an array of objects with
-// remoteName and sendSpeedLimit. The array is always the whole list, so it replaces the one before.
+// remoteName, sendSpeedLimit and skipInBetweenValuesToCatchUp. The array is always the whole list,
+// so it replaces the one before.
 #define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY            L"remoteClientSettings"
 #define MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENTS_KEY                    L"remoteClients"
 

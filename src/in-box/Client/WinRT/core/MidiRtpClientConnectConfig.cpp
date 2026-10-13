@@ -57,6 +57,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
 
             // written even when immediate, because saving merges into the entry already in the file
             client.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, json::JsonValue::CreateStringValue(MidiRtpSdkJson::OfflineRetentionText(m_offlineRetentionSeconds)));
+            client.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, json::JsonValue::CreateBooleanValue(m_skipInBetweenValuesToCatchUp));
 
             json::JsonObject clients;
             clients.SetNamedValue(MidiRtpSdkJson::EntryKey(m_clientId), client);

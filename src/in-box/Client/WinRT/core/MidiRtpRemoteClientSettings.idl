@@ -29,5 +29,14 @@ namespace Windows.Devices.Midi2.Transports.Rtp
 
         // How fast the host sends to this remote. Unlimited by default.
         [noexcept] MidiRtpSendSpeedLimit SendSpeedLimit{ get; set; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpRemoteClientSettings2", UUID_IMidiRtpRemoteClientSettings2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // When messages back up behind SendSpeedLimit, skip some in-between values so this
+            // remote catches up. True by default.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; set; };
+        }
     }
 }

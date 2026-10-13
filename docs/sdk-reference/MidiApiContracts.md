@@ -35,6 +35,11 @@ Each Windows MIDI Services WinRT API namespace has its own API contract, and the
 
 ## Remarks
 
-All contracts above are at version `1`, except `MidiTransportsRtpApiContract`, which is at version `2`. Version 2 adds [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/), the `OfflineRetentionSeconds` properties that use it, and `MidiRtpConfiguredClient.EndpointDeviceId`.
+All contracts above are at version `1`, except `MidiTransportsRtpApiContract` and `MidiTransportsNetworkApiContract`, which are at version `2`.
+
+- Version 2 of `MidiTransportsRtpApiContract` adds [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/), the `OfflineRetentionSeconds` properties that use it, `MidiRtpConfiguredClient.EndpointDeviceId`, and the `SkipInBetweenValuesToCatchUp` properties.
+- Version 2 of `MidiTransportsNetworkApiContract` adds the `SkipInBetweenValuesToCatchUp` properties.
+
+`SkipInBetweenValuesToCatchUp` turns off skipping in-between values to catch up when messages pile up behind a sending speed. It's on by default. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
 
 To check for them, pass the contract's full name and version to `IsApiContractPresent`, for example `ApiInformation.IsApiContractPresent("Windows.Devices.Midi2.Transports.Rtp.MidiTransportsRtpApiContract", 2)`.

@@ -28,13 +28,14 @@ Describes a remote device for this PC to connect to. Pass it to `MidiRtpTranspor
 | `SendRecoveryJournal` | When true, each packet carries a recovery journal, so the remote device can repair a lost Note Off. Only turn it off for a device that can't read one |
 | `SendSpeedLimit` | How fast this PC sends to the remote device. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
 | `OfflineRetentionSeconds` | How long the endpoint and its MIDI 1.0 port stay while the remote device is away. `Immediate` by default. `KeepAlways` keeps them, so an app started while the device is off still finds its port. A number from 1 to 86400 keeps them that many seconds. See [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/). Added in version 2 of `MidiTransportsRtpApiContract` |
+| `SkipInBetweenValuesToCatchUp` | When true, and messages pile up behind `SendSpeedLimit`, the connection skips some in-between steps of long control change, pressure and pitch bend moves so the remote device catches up. True by default. Set it to false for a device that needs every message, however late. Added in version 2 of `MidiTransportsRtpApiContract` |
 
 ## Remarks
 
 Calling `ConnectRtpClientAsync` with a `ClientId` that already exists replaces that entry's settings. It doesn't create a copy. Sending the same settings again doesn't make the service try again, so to retry an existing entry without changing it, use `ReconnectRtpClientAsync`.
 
-To change only `SendSpeedLimit`, send the entry's other settings unchanged with the new speed. The new speed applies to the running connection straight away, without disconnecting. `OfflineRetentionSeconds` works the same way.
+To change only `SendSpeedLimit`, send the entry's other settings unchanged with the new speed. The new speed applies to the running connection straight away, without disconnecting. `OfflineRetentionSeconds` and `SkipInBetweenValuesToCatchUp` work the same way.
 
-When you change one setting this way, copy every other setting from `MidiRtpSavedClient`, `OfflineRetentionSeconds` included. A setting you leave out goes back to its default.
+When you change one setting this way, copy every other setting from `MidiRtpSavedClient`, `OfflineRetentionSeconds` and `SkipInBetweenValuesToCatchUp` included. A setting you leave out goes back to its default.
 
 See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Rtp/) for when the service tries again by itself.

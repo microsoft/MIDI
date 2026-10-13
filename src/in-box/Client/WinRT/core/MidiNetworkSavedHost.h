@@ -42,6 +42,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         collections::IVectorView<network::MidiNetworkRemoteClientSettings> RemoteClientSettings() const noexcept { return m_remoteClientSettings.GetView(); }
 
@@ -77,6 +78,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
 
         collections::IVector<network::MidiNetworkKnownRemoteClient> m_knownRemoteClients{ winrt::single_threaded_vector<network::MidiNetworkKnownRemoteClient>() };
         collections::IVector<network::MidiNetworkRemoteClientSettings> m_remoteClientSettings{ winrt::single_threaded_vector<network::MidiNetworkRemoteClientSettings>() };

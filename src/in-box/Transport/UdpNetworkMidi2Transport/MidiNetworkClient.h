@@ -49,6 +49,7 @@ struct MidiNetworkClientDefinition
     // limit. See MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY.
     uint32_t SendSpeedLimit{ 0 };
     bool ReduceSendSpeedAutomatically{ false };
+    bool SkipInBetweenValuesToCatchUp{ true };
 
 
     // protocol
@@ -120,6 +121,10 @@ public:
         m_reduceSendSpeedAutomatically = reduceAutomatically;
     }
 
+    // Used the next time this client builds a connection. A connection already up is updated in
+    // place by the configuration manager.
+    void SetSkipInBetweenValuesToCatchUp(_In_ bool const skip) noexcept { m_skipInBetweenValuesToCatchUp = skip; }
+
     // What the connection sends at right now, which automatic reduction may have lowered
     uint32_t GetCurrentSendSpeedLimit() { auto conn = GetConnection(); return conn ? conn->GetCurrentSendSpeedLimit() : m_sendSpeedLimit.load(); }
 
@@ -168,6 +173,7 @@ private:
     uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
     std::atomic<uint32_t> m_sendSpeedLimit{ 0 };
     std::atomic<bool> m_reduceSendSpeedAutomatically{ false };
+    std::atomic<bool> m_skipInBetweenValuesToCatchUp{ true };
 
     wil::critical_section m_connectionLock;
     std::shared_ptr<MidiNetworkClientConnection> m_networkConnection{ nullptr };

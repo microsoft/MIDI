@@ -85,5 +85,14 @@ namespace Windows.Devices.Midi2.Transports.Rtp
         // one, send and save a MidiRtpHostRemoteClientSettingsConfig holding this whole list with
         // the change made.
         [noexcept] Windows.Foundation.Collections.IVectorView<MidiRtpRemoteClientSettings> RemoteClientSettings{ get; };
+
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Rtp.IMidiRtpConfiguredHost2", UUID_IMidiRtpConfiguredHost2)]
+        [contract(MidiTransportsRtpApiContract, 2)]
+        {
+            // For each remote without its own settings: false when the host sends every message,
+            // however far behind its speed it falls
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     }
 }

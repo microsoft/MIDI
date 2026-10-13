@@ -27,6 +27,7 @@ Returned by `MidiRtpTransportManager.GetConfiguredHosts()`.
 | `SendRecoveryJournal` | True if the host sends a recovery journal with each packet |
 | `SendSpeedLimit` | How fast the host is set up to send to each connected device. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
 | `CurrentSendSpeedLimit` | How fast the running host is sending. It's only different from `SendSpeedLimit` for a moment after a change |
+| `SkipInBetweenValuesToCatchUp` | True when a connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsRtpApiContract` |
 | `NetworkAdapterId` | The network adapter the host is limited to, or an empty GUID for every adapter |
 | `NetworkAdapterName` | That adapter's name, from when it was chosen |
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |

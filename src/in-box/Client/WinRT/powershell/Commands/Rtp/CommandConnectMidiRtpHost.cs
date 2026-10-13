@@ -61,6 +61,11 @@ namespace WindowsMidiServices
         [Parameter]
         public MidiRtpSendSpeedLimit SendSpeedLimit { get; set; } = MidiRtpSendSpeedLimit.Unlimited;
 
+        // Send every message, however late, rather than skipping some in-between steps of long
+        // control change, pressure and pitch bend moves to catch up
+        [Parameter]
+        public SwitchParameter NoSkippingInBetweenValues { get; set; }
+
         // Leaves out the recovery journal, the short summary of recent notes in each packet that
         // lets the remote end a note whose Note Off was lost. Only for a device that plays extra
         // notes, or notes that don't stop, while the journal is on.
@@ -130,6 +135,7 @@ namespace WindowsMidiServices
                 Name = LocalEndpointName,
                 CustomEndpointName = EndpointName,
                 SendSpeedLimit = SendSpeedLimit,
+                SkipInBetweenValuesToCatchUp = !NoSkippingInBetweenValues.IsPresent,
                 SendRecoveryJournal = !NoRecoveryJournal.IsPresent,
                 OfflineRetentionSeconds = OfflineRetentionSeconds,
                 MatchCriteria = criteria

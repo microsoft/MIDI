@@ -190,6 +190,7 @@ namespace winrt::midinetworksetup::implementation
             replacement.AutoReconnect(savedClient.AutoReconnect());
             replacement.SendRecoveryJournal(savedClient.SendRecoveryJournal());
             replacement.SendSpeedLimit(savedClient.SendSpeedLimit());
+            replacement.SkipInBetweenValuesToCatchUp(savedClient.SkipInBetweenValuesToCatchUp());
             replacement.OfflineRetentionSeconds(seconds);
 
             auto const response = co_await midi2rtp::MidiRtpTransportManager::ConnectRtpClientAsync(replacement);

@@ -420,6 +420,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
         uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         // the text is only filled in for a device this PC has an entry for
         winrt::Microsoft::UI::Xaml::Visibility SendSpeedVisibility() const noexcept
@@ -456,10 +457,12 @@ namespace winrt::midinetworksetup::implementation
         void InternalUpdateSendSpeed(
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ winrt::hstring const& sendSpeedText) noexcept
         {
             UpdateField(m_sendSpeedLimit, sendSpeedLimit, L"SendSpeedLimit");
             UpdateField(m_reduceSendSpeedAutomatically, reduceSendSpeedAutomatically, L"ReduceSendSpeedAutomatically");
+            UpdateField(m_skipInBetweenValuesToCatchUp, skipInBetweenValuesToCatchUp, L"SkipInBetweenValuesToCatchUp");
 
             if (UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText"))
             {
@@ -595,6 +598,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_sendSpeedText{};
         uint32_t m_sendSpeedLimit{ 0 };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -619,6 +623,7 @@ namespace winrt::midinetworksetup::implementation
         // than taken from the host. Read to fill in the speed dialog.
         uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         bool UsesOwnSendSpeed() const noexcept { return m_usesOwnSendSpeed; }
 
         winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
@@ -696,12 +701,14 @@ namespace winrt::midinetworksetup::implementation
         void InternalUpdateSendSpeed(
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ bool const usesOwnSendSpeed,
             _In_ bool const canChangeSendSpeed,
             _In_ winrt::hstring const& sendSpeedText) noexcept
         {
             m_sendSpeedLimit = sendSpeedLimit;
             m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_skipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
             m_usesOwnSendSpeed = usesOwnSendSpeed;
 
             UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText");
@@ -773,6 +780,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_sendSpeedText{};
         uint32_t m_sendSpeedLimit{ 0 };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
         bool m_usesOwnSendSpeed{ false };
         bool m_canChangeSendSpeed{ false };
 
@@ -834,6 +842,7 @@ namespace winrt::midinetworksetup::implementation
 
         uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         bool IsRtpMidi() const noexcept { return m_isRtpMidi; }
 
@@ -848,6 +857,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& productInstanceId,
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ winrt::hstring const& sendSpeedText,
             _In_ bool const isRtpMidi) noexcept
         {
@@ -858,6 +868,7 @@ namespace winrt::midinetworksetup::implementation
             m_productInstanceId = productInstanceId;
             m_sendSpeedLimit = sendSpeedLimit;
             m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_skipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
             m_sendSpeedText = sendSpeedText;
             m_isRtpMidi = isRtpMidi;
         }
@@ -871,6 +882,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_sendSpeedText{};
         uint32_t m_sendSpeedLimit{ 0 };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
         bool m_isRtpMidi{ false };
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
@@ -907,6 +919,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
         uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         bool IsBusy() const noexcept { return m_isBusy; }
         void IsBusy(bool const value) noexcept { UpdateField(m_isBusy, value, L"IsBusy"); }
@@ -1009,10 +1022,12 @@ namespace winrt::midinetworksetup::implementation
         void InternalUpdateSendSpeed(
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ winrt::hstring const& sendSpeedText) noexcept
         {
             UpdateField(m_sendSpeedLimit, sendSpeedLimit, L"SendSpeedLimit");
             UpdateField(m_reduceSendSpeedAutomatically, reduceSendSpeedAutomatically, L"ReduceSendSpeedAutomatically");
+            UpdateField(m_skipInBetweenValuesToCatchUp, skipInBetweenValuesToCatchUp, L"SkipInBetweenValuesToCatchUp");
             UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText");
         }
 
@@ -1050,6 +1065,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_sendSpeedText{};
         uint32_t m_sendSpeedLimit{ 0 };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> m_connections{
             winrt::single_threaded_observable_vector<midinetworksetup::HostConnectionItem>() };
@@ -1158,6 +1174,7 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::hstring SendSpeedText() const noexcept { return m_sendSpeedText; }
         uint32_t SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
         // the text is only filled in for a session this PC has an entry for
         winrt::Microsoft::UI::Xaml::Visibility SendSpeedVisibility() const noexcept
@@ -1167,9 +1184,11 @@ namespace winrt::midinetworksetup::implementation
 
         void InternalUpdateSendSpeed(
             _In_ uint32_t const sendSpeedLimit,
+            _In_ bool const skipInBetweenValuesToCatchUp,
             _In_ winrt::hstring const& sendSpeedText) noexcept
         {
             UpdateField(m_sendSpeedLimit, sendSpeedLimit, L"SendSpeedLimit");
+            UpdateField(m_skipInBetweenValuesToCatchUp, skipInBetweenValuesToCatchUp, L"SkipInBetweenValuesToCatchUp");
 
             if (UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText"))
             {
@@ -1364,6 +1383,7 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::hstring m_sendSpeedText{};
         uint32_t m_sendSpeedLimit{ 0 };
+        bool m_skipInBetweenValuesToCatchUp{ true };
 
         int32_t m_offlineRetentionSeconds{ 0 };
         winrt::hstring m_offlineRetentionText{};

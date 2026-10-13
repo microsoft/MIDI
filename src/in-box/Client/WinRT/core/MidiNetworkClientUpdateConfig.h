@@ -37,6 +37,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically.value_or(false); }
         void ReduceSendSpeedAutomatically(_In_ bool const value) noexcept { m_reduceSendSpeedAutomatically = value; }
 
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp.value_or(true); }
+        void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -48,6 +51,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         // came later than the two above, so a caller which never sets them keeps the saved ones.
         std::optional<network::MidiNetworkSendSpeedLimit> m_sendSpeedLimit{};
         std::optional<bool> m_reduceSendSpeedAutomatically{};
+        std::optional<bool> m_skipInBetweenValuesToCatchUp{};
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Network::factory_implementation

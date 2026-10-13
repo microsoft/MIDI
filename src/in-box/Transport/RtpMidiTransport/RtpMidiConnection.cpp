@@ -291,7 +291,7 @@ try
             bool canQueue = HasRoomLocked(speedMultiple) || GetTickCount64() >= waitDeadline;
 
             // Thinning a backed up queue can make room without waiting
-            if (!canQueue && PrunePacedLocked(speedMultiple, bytes.size()))
+            if (!canQueue && EffectiveSkipInBetweenValuesToCatchUp(*node) && PrunePacedLocked(speedMultiple, bytes.size()))
             {
                 canQueue = HasRoomLocked(speedMultiple);
             }
@@ -574,6 +574,37 @@ RtpMidiConnection::EffectiveSendSpeedLimit(RtpMidiNode const& node) const noexce
     auto const own = m_ownSendSpeedLimit.load();
 
     return own >= 0 ? static_cast<uint32_t>(own) : node.SendSpeedLimit();
+}
+
+
+_Use_decl_annotations_
+void
+RtpMidiConnection::SetOwnSkipInBetweenValuesToCatchUp(std::optional<bool> const skip) noexcept
+{
+    int8_t const value = skip.has_value() ? (*skip ? int8_t{ 1 } : int8_t{ 0 }) : int8_t{ -1 };
+
+    if (m_ownSkipInBetweenValuesToCatchUp.exchange(value) == value) return;
+
+    TraceLoggingWrite(
+        MidiRtpMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Connection choice to skip in-between values changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_remoteName.c_str(), "remote name"),
+        TraceLoggingInt8(value, "1 skips, 0 sends every message, -1 for the entry's")
+    );
+}
+
+
+_Use_decl_annotations_
+bool
+RtpMidiConnection::EffectiveSkipInBetweenValuesToCatchUp(RtpMidiNode const& node) const noexcept
+{
+    auto const own = m_ownSkipInBetweenValuesToCatchUp.load();
+
+    return own >= 0 ? own != 0 : node.SkipInBetweenValuesToCatchUp();
 }
 
 

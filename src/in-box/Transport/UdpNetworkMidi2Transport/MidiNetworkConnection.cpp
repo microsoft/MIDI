@@ -3113,7 +3113,7 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
             bool canQueue = !m_sessionActive || OutgoingQueueHasRoom() || GetTickCount64() >= waitDeadline;
 
             // Thinning a backed up queue can make room without waiting
-            if (!canQueue && PruneOutgoingQueue(wireBytes))
+            if (!canQueue && m_skipInBetweenValuesToCatchUp && PruneOutgoingQueue(wireBytes))
             {
                 canQueue = OutgoingQueueHasRoom();
             }

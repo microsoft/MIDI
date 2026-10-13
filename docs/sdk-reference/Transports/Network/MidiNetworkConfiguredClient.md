@@ -32,6 +32,7 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 | `LastErrorCode` | Why the last invitation didn't open a session, such as `NoReplyToInvitation` or `AuthenticationRequired`. `NoErrorInformationAvailable` once a session opens. See `MidiNetworkClientConnectErrorCode` |
 | `SendSpeedLimit` | How fast this PC is set up to send to the remote host. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote host keeps asking for data again |
+| `SkipInBetweenValuesToCatchUp` | True when the connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 | `CurrentSendSpeedLimit` | How fast the connection is sending right now. It's lower than `SendSpeedLimit` while the connection has slowed down by itself, which is worth showing people |
 
 ## Remarks

@@ -95,6 +95,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             auto sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
             auto reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
+            auto skipInBetweenValuesToCatchUp = MidiSavedConfigJson::Boolean(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
 
             // The list is replaced whole each time it is saved, so the last one present wins
             auto remoteClientSettings = MidiSavedConfigJson::Array(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY);
@@ -113,6 +114,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                 sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, sendSpeedLimit);
                 reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, reduceSendSpeedAutomatically);
+                skipInBetweenValuesToCatchUp = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, skipInBetweenValuesToCatchUp);
 
                 if (auto const changed = MidiSavedConfigJson::Array(update, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY); changed != nullptr)
                 {
@@ -126,6 +128,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_fallbackMidi1PortCount = fallbackMidi1PortCount;
             m_sendSpeedLimit = static_cast<network::MidiNetworkSendSpeedLimit>(sendSpeedLimit);
             m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
+            m_skipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
 
             // The service ignores a decision missing either half of the identity, so it is left out
             auto const addKnownClients = [this, &entry](std::wstring_view const key, bool const isAllowed)
@@ -165,6 +168,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                 settings->ReduceSendSpeedAutomatically(
                     MidiSavedConfigJson::Boolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false));
+
+                settings->SkipInBetweenValuesToCatchUp(
+                    MidiSavedConfigJson::Boolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
 
                 m_remoteClientSettings.Append(*settings);
             }

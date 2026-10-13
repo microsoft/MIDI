@@ -597,6 +597,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                     entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SEND_SPEED_LIMIT_KEY, 0))),
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false));
 
+                            host->InternalSetSkipInBetweenValuesToCatchUp(
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
+
                             // remote clients on this host. The service reports an empty array when
                             // nothing has connected, so an older service simply yields no entries.
                             if (entryObject.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY))
@@ -644,6 +647,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                             host->ReduceSendSpeedAutomatically()),
                                         connectionObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY, false));
 
+                                    connection->InternalSetSkipInBetweenValuesToCatchUp(
+                                        connectionObject.GetNamedBoolean(
+                                            MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+                                            host->SkipInBetweenValuesToCatchUp()));
+
                                     host->InternalAddConnection(*connection);
                                 }
                             }
@@ -669,6 +677,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                                     settings->ReduceSendSpeedAutomatically(
                                         settingsObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false));
+
+                                    settings->SkipInBetweenValuesToCatchUp(
+                                        settingsObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
 
                                     host->InternalAddRemoteClientSettings(*settings);
                                 }
@@ -800,6 +811,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
                                 static_cast<network::MidiNetworkSendSpeedLimit>(static_cast<int32_t>(
                                     entryObject.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_SEND_SPEED_LIMIT_KEY, static_cast<double>(sendSpeedLimit)))));
+
+                            client->InternalSetSkipInBetweenValuesToCatchUp(
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
 
                             results.Append(*client);
                         }
@@ -1332,6 +1346,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             cmd.Arguments().Insert(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY,
                 creationConfig.ReduceSendSpeedAutomatically() ? L"true" : L"false");
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+                creationConfig.SkipInBetweenValuesToCatchUp() ? L"true" : L"false");
 
             co_await winrt::resume_background();
 

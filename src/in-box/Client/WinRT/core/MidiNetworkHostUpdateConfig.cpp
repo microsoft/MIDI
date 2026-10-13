@@ -104,6 +104,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     json::JsonValue::CreateBooleanValue(*m_reduceSendSpeedAutomatically));
             }
 
+            if (m_skipInBetweenValuesToCatchUp.has_value())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+                    json::JsonValue::CreateBooleanValue(*m_skipInBetweenValuesToCatchUp));
+            }
+
             json::JsonObject hostsContainer{};
             hostsContainer.SetNamedValue(
                 winrt::to_hstring(HostId()),

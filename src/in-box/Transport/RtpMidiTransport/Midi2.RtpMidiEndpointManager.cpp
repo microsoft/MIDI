@@ -653,7 +653,11 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             runtime.Definition = definition;
 
             // applies to a running host straight away, without dropping its connections
-            if (runtime.Node != nullptr) runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+            if (runtime.Node != nullptr)
+            {
+                runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+                runtime.Node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
+            }
 
             if (!definition.Enabled || runtime.Node != nullptr)
             {
@@ -715,6 +719,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             RtpMidiNode::Role::Host, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
 
         node->SetSendSpeedLimit(definition.SendSpeedLimit);
+        node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
 
         node->SetAdmissionCheck([hostId = definition.EntryId](std::wstring const& remoteName, std::wstring const& remoteAddress)
             {
@@ -848,7 +853,11 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
             runtime.Definition = definition;
 
             // applies to a running client straight away, without dropping its connection
-            if (runtime.Node != nullptr) runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+            if (runtime.Node != nullptr)
+            {
+                runtime.Node->SetSendSpeedLimit(definition.SendSpeedLimit);
+                runtime.Node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
+            }
 
             if (!definition.Enabled) continue;
             if (runtime.State == ClientEntryState::Live || runtime.State == ClientEntryState::Unavailable) continue;
@@ -913,6 +922,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
                 RtpMidiNode::Role::Client, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
 
             node->SetSendSpeedLimit(definition.SendSpeedLimit);
+            node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
 
             std::vector<std::pair<uint16_t, uint16_t>> const ranges
             {
@@ -1239,8 +1249,10 @@ CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> 
     // before its endpoint exists, so nothing is ever sent to the remote at the host's speed first
     if (connection->ThisPcIsHost())
     {
-        connection->SetOwnSendSpeedLimit(
-            TransportState::Current().FindRemoteClientSendSpeedLimit(connection->EntryId(), connection->RemoteName()));
+        auto const settings = TransportState::Current().FindRemoteClientSettings(connection->EntryId(), connection->RemoteName());
+
+        connection->SetOwnSendSpeedLimit(settings.has_value() ? std::optional<uint32_t>{ settings->SendSpeedLimit } : std::nullopt);
+        connection->SetOwnSkipInBetweenValuesToCatchUp(settings.has_value() ? std::optional<bool>{ settings->SkipInBetweenValuesToCatchUp } : std::nullopt);
     }
 
     if (!connection->ThisPcIsHost())
@@ -1457,8 +1469,10 @@ CMidi2RtpMidiEndpointManager::ApplyRemoteClientSettings(GUID const& hostId)
     {
         if (connection == nullptr || !connection->ThisPcIsHost()) continue;
 
-        connection->SetOwnSendSpeedLimit(
-            TransportState::Current().FindRemoteClientSendSpeedLimit(hostId, connection->RemoteName()));
+        auto const settings = TransportState::Current().FindRemoteClientSettings(hostId, connection->RemoteName());
+
+        connection->SetOwnSendSpeedLimit(settings.has_value() ? std::optional<uint32_t>{ settings->SendSpeedLimit } : std::nullopt);
+        connection->SetOwnSkipInBetweenValuesToCatchUp(settings.has_value() ? std::optional<bool>{ settings->SkipInBetweenValuesToCatchUp } : std::nullopt);
     }
 }
 
@@ -1567,6 +1581,8 @@ CMidi2RtpMidiEndpointManager::BuildConnectionsJson(std::shared_ptr<RtpMidiNode> 
             JsonNumber(usesOwnSpeed ? (*connection)->EffectiveSendSpeedLimit(*node) : entrySendSpeedLimit));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CURRENT_SEND_SPEED_LIMIT_KEY,
             JsonNumber(haveConnection ? (*connection)->EffectiveSendSpeedLimit(*node) : node->SendSpeedLimit()));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
+            JsonBoolean(haveConnection ? (*connection)->EffectiveSkipInBetweenValuesToCatchUp(*node) : node->SkipInBetweenValuesToCatchUp()));
 
         connections.Append(item);
     }
@@ -1627,6 +1643,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ALLOW_PORT_FALLBACK_KEY, JsonBoolean(definition.AllowPortFallback));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, JsonBoolean(definition.SendRecoveryJournal));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(definition.SendSpeedLimit));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(definition.SkipInBetweenValuesToCatchUp));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_CONFIGURED_PORT_KEY,
             JsonString(definition.Port == 0 ? std::wstring{ MIDI_CONFIG_JSON_RTP_MIDI_PORT_VALUE_AUTO } : std::to_wstring(definition.Port)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_HAS_STARTED_KEY, JsonBoolean(running));
@@ -1686,6 +1703,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
             json::JsonObject settingsItem;
             settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY, JsonString(settings.RemoteName));
             settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(settings.SendSpeedLimit));
+            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(settings.SkipInBetweenValuesToCatchUp));
 
             remoteClientSettings.Append(settingsItem);
         }
@@ -1752,6 +1770,7 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENABLED_KEY, JsonBoolean(definition.Enabled));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_RECOVERY_JOURNAL_KEY, JsonBoolean(definition.SendRecoveryJournal));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(definition.SendSpeedLimit));
+        item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(definition.SkipInBetweenValuesToCatchUp));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, JsonString(RtpMidiJson::OfflineRetentionToString(definition.OfflineRetentionSeconds)));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_ENTRY_STATE_KEY, JsonString(state));
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_LAST_ERROR_KEY, JsonHresult(view.LastError));

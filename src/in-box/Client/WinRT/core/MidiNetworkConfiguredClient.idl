@@ -62,6 +62,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         // ReduceSendSpeedAutomatically has slowed it down.
         [noexcept] MidiNetworkSendSpeedLimit CurrentSendSpeedLimit{ get; };
 
+        // Added after Preview 11, so a new interface rather than a change to the one above
+        [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkConfiguredClient2", UUID_IMidiNetworkConfiguredClient2)]
+        [contract(MidiTransportsNetworkApiContract, 2)]
+        {
+            // false when the client sends every message, however far behind its speed it falls
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+        }
     };
 }
 

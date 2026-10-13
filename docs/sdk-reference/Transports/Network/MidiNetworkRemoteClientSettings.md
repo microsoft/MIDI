@@ -23,10 +23,11 @@ Held in [MidiNetworkHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-refer
 | `RemoteClientProductInstanceId` | The product instance id the remote client announces |
 | `SendSpeedLimit` | How fast the host sends to this client. `Unlimited` by default. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | True to send more slowly while this client keeps asking for data again, down to MIDI 1.0 wire speed, and go back up to `SendSpeedLimit` once it stops. False by default |
+| `SkipInBetweenValuesToCatchUp` | True to skip some in-between steps of long control change, pressure and pitch bend moves when messages pile up behind `SendSpeedLimit`, so this client catches up. True by default. Set it to false for a device that needs every message, however late. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 
-Use this when one device connected to a host needs a different speed from the others. A hardware synth that loses data during a long SysEx dump can get MIDI 1.0 wire speed, while a computer connected to the same host gets no limit. For this client, these settings are used instead of the host's `SendSpeedLimit` and `ReduceSendSpeedAutomatically`.
+Use this when one device connected to a host needs a different speed from the others. A hardware synth that loses data during a long SysEx dump can get MIDI 1.0 wire speed, while a computer connected to the same host gets no limit. For this client, these settings are used instead of the host's `SendSpeedLimit`, `ReduceSendSpeedAutomatically` and `SkipInBetweenValuesToCatchUp`.
 
 A remote client is recognized by its name and product instance id together, ignoring uppercase and lowercase differences, the same way the host's allow and deny lists recognize it. Both are needed. An entry missing either one is left out when the configuration is sent or saved, because the service could never match it to a client.
 

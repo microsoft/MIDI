@@ -59,6 +59,11 @@ namespace Windows.Devices.Midi2.Transports.Rtp
             // or a number of seconds up to 86400. Immediate by default. Ignored without AutoReconnect.
             // Changing only this on an existing client does not drop its connection.
             [noexcept] Int32 OfflineRetentionSeconds;
+
+            // When messages back up behind SendSpeedLimit, skip some in-between values of long
+            // control change, pressure and pitch bend moves so the remote catches up. True by
+            // default. Changing only this on an existing client does not drop its connection.
+            [noexcept] Boolean SkipInBetweenValuesToCatchUp;
         }
     }
 }

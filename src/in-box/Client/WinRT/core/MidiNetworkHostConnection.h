@@ -39,6 +39,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
         bool UsesRemoteClientSettings() const noexcept { return m_usesRemoteClientSettings; }
 
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
+        void InternalSetSkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
+
         void InternalSetSendSpeed(
             _In_ network::MidiNetworkSendSpeedLimit const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
@@ -95,6 +98,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkSendSpeedLimit m_currentSendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         bool m_reduceSendSpeedAutomatically{ false };
+        bool m_skipInBetweenValuesToCatchUp{ true };
         bool m_usesRemoteClientSettings{ false };
     };
 }

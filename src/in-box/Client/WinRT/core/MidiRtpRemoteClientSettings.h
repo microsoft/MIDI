@@ -26,9 +26,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         rtp::MidiRtpSendSpeedLimit SendSpeedLimit() const noexcept { return m_sendSpeedLimit; }
         void SendSpeedLimit(_In_ rtp::MidiRtpSendSpeedLimit const& value) noexcept { m_sendSpeedLimit = value; }
 
+        bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
+        void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
+
     private:
         winrt::hstring m_remoteClientName{};
         rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
+        bool m_skipInBetweenValuesToCatchUp{ true };
     };
 }
 

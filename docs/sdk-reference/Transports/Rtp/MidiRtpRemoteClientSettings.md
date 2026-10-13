@@ -21,10 +21,11 @@ Held in [MidiRtpHostRemoteClientSettingsConfig]({{ site.baseurl }}/sdk-reference
 | -------- | ----------- |
 | `RemoteClientName` | The name the remote device sends |
 | `SendSpeedLimit` | How fast the host sends to this remote device. `Unlimited` by default. See [MidiRtpSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpSendSpeedLimitEnum/) |
+| `SkipInBetweenValuesToCatchUp` | True to skip some in-between steps of long control change, pressure and pitch bend moves when messages pile up behind `SendSpeedLimit`, so this device catches up. True by default. Set it to false for a device that needs every message, however late. Added in version 2 of `MidiTransportsRtpApiContract` |
 
 ## Remarks
 
-Use this when one device connected to a host needs a different speed from the others. A hardware synth that loses data during a long SysEx dump can get MIDI 1.0 wire speed, while a computer connected to the same host gets no limit. For this device, `SendSpeedLimit` is used instead of the host's.
+Use this when one device connected to a host needs a different speed from the others. A hardware synth that loses data during a long SysEx dump can get MIDI 1.0 wire speed, while a computer connected to the same host gets no limit. For this device, `SendSpeedLimit` and `SkipInBetweenValuesToCatchUp` are used instead of the host's.
 
 A remote device is known by the name it sends, ignoring uppercase and lowercase differences, the same way the host's remembered decisions know it. RTP-MIDI carries nothing else that stays the same from one connection to the next. An entry with no name is left out when the configuration is sent or saved.
 

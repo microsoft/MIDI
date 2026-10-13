@@ -277,6 +277,10 @@
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>ReduceSendSpeedAutomatically</Label>
+            <Width>28</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>SkipInBetweenValuesToCatchUp</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -293,6 +297,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>ReduceSendSpeedAutomatically</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>SkipInBetweenValuesToCatchUp</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -472,6 +479,10 @@
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>SendSpeedLimit</Label>
+            <Width>22</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>SkipInBetweenValuesToCatchUp</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -482,6 +493,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>SendSpeedLimit</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>SkipInBetweenValuesToCatchUp</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

@@ -247,6 +247,8 @@ A single note or knob turn is never held back, at any speed. Only a large amount
 
 When a fader, pitch wheel or aftertouch sends faster than the speed allows, Windows skips some of the in-between values so the device catches up. Where each move starts, turns around and ends always gets through, and so does a short move. A device that uses those messages in another way, such as an endless knob that sends how far it turned, is left alone in nearly every case. If it still loses steps, give that device a faster speed. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
 
+For a device that needs every message, however late, clear **Skip in-between values to catch up**. It's next to the sending speed everywhere you choose one: when you connect, when you create a host, under **Change**, and in **Customize**.
+
 For Network MIDI 2.0, **Slow down when a device misses data** lets Windows choose for you. When a device asks for data again, Windows sends to it more slowly, down to MIDI 1.0 wire speed, and speeds back up once the device stops asking. A connection that has slowed down says so in its status. RTP-MIDI devices can't tell this PC when they miss data, so for those, choose the speed yourself.
 
 A new speed applies straight away, and doesn't disconnect anything.
