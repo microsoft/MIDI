@@ -177,6 +177,7 @@ namespace midipatchbay
             LONG LogicalMinimum{ 0 };
             LONG LogicalMaximum{ 0 };
             USHORT BitSize{ 0 };
+            double Step{ 0.0 };
         };
 
         HANDLE Handle{ nullptr };
@@ -189,6 +190,9 @@ namespace midipatchbay
         std::vector<HIDP_DATA> Data{};
 
         HidReading Reading{};
+
+        // Which way each axis last moved.
+        std::array<int8_t, HidAxisCount> Directions{};
 
         PHIDP_PREPARSED_DATA Parsed() noexcept { return reinterpret_cast<PHIDP_PREPARSED_DATA>(Preparsed.data()); }
     };
@@ -512,7 +516,8 @@ namespace midipatchbay
                             continue;
                         }
 
-                        place(index, Device::Item{ Device::ItemKind::Axis, static_cast<uint16_t>(*axis), cap.ReportID, cap.LogicalMin, cap.LogicalMax, cap.BitSize });
+                        place(index, Device::Item{ Device::ItemKind::Axis, static_cast<uint16_t>(*axis), cap.ReportID, cap.LogicalMin, cap.LogicalMax, cap.BitSize,
+                            HidValueStep(cap.LogicalMin, cap.LogicalMax, cap.BitSize) });
                         device->Info.Axes.set(static_cast<size_t>(*axis));
                     }
                 }
@@ -581,7 +586,9 @@ namespace midipatchbay
                 break;
 
             case Device::ItemKind::Axis:
-                reading.Axes[item.Index] = NormalizeHidValue(data.RawValue, item.LogicalMinimum, item.LogicalMaximum, item.BitSize);
+                reading.Axes[item.Index] = SteadyHidValue(reading.Axes[item.Index],
+                    NormalizeHidValue(data.RawValue, item.LogicalMinimum, item.LogicalMaximum, item.BitSize),
+                    item.Step, device.Directions[item.Index]);
                 break;
 
             case Device::ItemKind::Hat:

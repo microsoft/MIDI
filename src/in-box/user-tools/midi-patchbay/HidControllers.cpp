@@ -113,6 +113,28 @@ namespace midipatchbay
             default:                        return false;
             }
         }
+
+        std::optional<std::pair<int64_t, int64_t>> LogicalRange(
+            _In_ int32_t logicalMinimum,
+            _In_ int32_t logicalMaximum,
+            _In_ uint16_t bitSize) noexcept
+        {
+            int64_t const lowest = logicalMinimum;
+            int64_t highest = logicalMaximum;
+
+            // A descriptor that writes an unsigned maximum in too few bytes reads as negative.
+            if (highest < lowest && lowest >= 0 && bitSize >= 1 && bitSize <= 32)
+            {
+                highest = (int64_t{ 1 } << bitSize) - 1;
+            }
+
+            if (highest <= lowest)
+            {
+                return std::nullopt;
+            }
+
+            return std::pair{ lowest, highest };
+        }
     }
 
     _Use_decl_annotations_
@@ -380,19 +402,14 @@ namespace midipatchbay
     _Use_decl_annotations_
     double NormalizeHidValue(uint32_t raw, int32_t logicalMinimum, int32_t logicalMaximum, uint16_t bitSize) noexcept
     {
-        int64_t lowest = logicalMinimum;
-        int64_t highest = logicalMaximum;
+        auto const range = LogicalRange(logicalMinimum, logicalMaximum, bitSize);
 
-        // A descriptor that writes an unsigned maximum in too few bytes reads as negative.
-        if (highest < lowest && lowest >= 0 && bitSize >= 1 && bitSize <= 32)
-        {
-            highest = (int64_t{ 1 } << bitSize) - 1;
-        }
-
-        if (highest <= lowest)
+        if (!range.has_value())
         {
             return std::numeric_limits<double>::quiet_NaN();
         }
+
+        auto const [lowest, highest] = *range;
 
         int64_t value = raw;
 
@@ -415,6 +432,50 @@ namespace midipatchbay
         value = std::clamp(value, lowest, highest);
 
         return static_cast<double>(value - lowest) / static_cast<double>(highest - lowest);
+    }
+
+    _Use_decl_annotations_
+    double HidValueStep(int32_t logicalMinimum, int32_t logicalMaximum, uint16_t bitSize) noexcept
+    {
+        auto const range = LogicalRange(logicalMinimum, logicalMaximum, bitSize);
+
+        return range.has_value()
+            ? 1.0 / static_cast<double>(range->second - range->first)
+            : std::numeric_limits<double>::quiet_NaN();
+    }
+
+    _Use_decl_annotations_
+    double SteadyHidValue(double last, double now, double step, int8_t& direction) noexcept
+    {
+        if (!std::isfinite(last) || !std::isfinite(now) || !(step > 0.0))
+        {
+            direction = 0;
+            return now;
+        }
+
+        if (now == last)
+        {
+            return last;
+        }
+
+        int8_t const way = now > last ? 1 : -1;
+
+        // The ends are always exact. A step back from one is flicker like any other.
+        if (now == 0.0 || now == 1.0)
+        {
+            direction = way;
+            return now;
+        }
+
+        auto const steps = std::abs(now - last) / step;
+
+        if (steps >= ((direction == 0 || way == direction) ? 0.5 : 1.5))
+        {
+            direction = way;
+            return now;
+        }
+
+        return last;
     }
 
     _Use_decl_annotations_

@@ -142,6 +142,13 @@ namespace midipatchbay
     // A negative logical minimum means the value is signed, in bitSize bits.
     double NormalizeHidValue(_In_ uint32_t raw, _In_ int32_t logicalMinimum, _In_ int32_t logicalMaximum, _In_ uint16_t bitSize) noexcept;
 
+    // One step of a value scaled 0 to 1. NaN when the range is empty.
+    double HidValueStep(_In_ int32_t logicalMinimum, _In_ int32_t logicalMaximum, _In_ uint16_t bitSize) noexcept;
+
+    // A control resting between two steps flickers between them, and each flicker would be a
+    // message. A value keeps going the way it moved a step at a time; turning back takes two.
+    double SteadyHidValue(_In_ double last, _In_ double now, _In_ double step, _Inout_ int8_t& direction) noexcept;
+
     // -1 for anything outside the logical range, the hat's centered position.
     int8_t HatPosition(_In_ uint32_t raw, _In_ int32_t logicalMinimum, _In_ int32_t logicalMaximum) noexcept;
 
