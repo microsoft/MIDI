@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="variants" content="saved,noadmin">
+<title>4. Share</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+<style>
+    .incl .check { min-height: 40px; border-bottom: 1px solid var(--divider); }
+    .incl .check:last-child { border-bottom: none; }
+    .incl .check .gl { font-size: 16px; color: var(--text3); width: 18px; text-align: center; }
+    .incl .check .what { margin-left: auto; font-size: 12px; color: var(--text3); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>4. Share.</b> One file that sets up another PC the same way, pictures included. The counts are from after the import on pages 6 and 7. Variants: <span class="mono">?state=saved</span>, <span class="mono">noadmin</span>.</p>
+
+  <div class="window">
+    <div class="titlebar">
+      <img class="appicon" src="appicon.png" alt="">
+      <span class="title">Configurations - Windows MIDI Settings</span>
+      <span class="preview-chiclet">PREVIEW</span>
+      <span class="spacer"></span>
+      <span class="caption-btn gl">&#xE921;</span>
+      <span class="caption-btn gl">&#xE922;</span>
+      <span class="caption-btn gl">&#xE8BB;</span>
+    </div>
+    <div class="body">
+      <div class="nav">
+        <div class="nav-toggle gl">&#xE700;</div>
+        <div class="nav-item"><span class="gl">&#xE81E;</span>Configurations</div>
+        <div class="nav-item"><span class="gl">&#xE81C;</span>Backups</div>
+        <div class="nav-item sel"><span class="gl">&#xE72D;</span>Share</div>
+        <div class="nav-item"><span class="gl">&#xE8B5;</span>Import</div>
+        <div class="grow"></div>
+        <div class="nav-foot">This PC is STAGE-LAPTOP</div>
+      </div>
+      <div class="content">
+        <div class="scroll">
+          <div class="h1">Share</div>
+          <div class="sub">Make one package that sets up another PC the same way. Pictures go along with it.</div>
+
+          <div class="infobar" data-only="noadmin" data-mark="1">
+            <span class="ib-icon">i</span>
+            <div class="ib-text"><span class="ib-title">Administrator rights are needed</span>You can look around and share. Changes need administrator rights.</div>
+            <span class="btn">Reopen as administrator</span>
+          </div>
+          <div class="infobar success" data-only="saved" data-mark="5">
+            <span class="ib-icon gl">&#xE73E;</span>
+            <div class="ib-text"><span class="ib-title">Saved "Live set.midiconfigpack"</span>On the other PC, open it from Import.</div>
+            <span class="btn">Show in folder</span>
+            <span class="ib-close">&#xE711;</span>
+          </div>
+
+          <div class="card vstack" style="gap:12px" data-mark="4">
+            <div class="field"><span class="flabel">Configuration</span><span class="combo" style="width:420px">Live set (in use)</span></div>
+            <div class="field"><span class="flabel">Package name</span><span class="textbox" style="width:420px">Live set</span></div>
+            <div class="field"><span class="flabel">Note for whoever opens it (optional)</span><span class="textbox ph" style="width:100%">What it's for, or who it's from</span></div>
+          </div>
+
+          <div class="card incl" data-mark="2">
+            <div class="label" style="font-weight:600; margin-bottom:4px">What to include</div>
+            <div class="check on mark-left" data-mark="3"><span class="box"></span><span class="gl">&#xE8EC;</span>Device names and pictures<span class="what">16 names, 8 pictures</span></div>
+            <div class="check on"><span class="box"></span><span class="gl">&#xE8EE;</span>Loopbacks<span class="what">3 loopbacks</span></div>
+            <div class="check on"><span class="box"></span><span class="gl">&#xE839;</span>Network MIDI 2.0<span class="what">2 hosts, 2 connections</span></div>
+            <div class="check on"><span class="box"></span><span class="gl">&#xE71B;</span>RTP-MIDI<span class="what">1 host</span></div>
+            <div class="check on"><span class="box"></span><span class="gl">&#xE702;</span>Bluetooth MIDI<span class="what">3 devices</span></div>
+            <div class="check on"><span class="box"></span><span class="gl">&#xE713;</span>Other settings<span class="what">Synthesizer mode, port names for older apps</span></div>
+          </div>
+
+          <div class="hstack" style="margin-top:4px">
+            <span class="btn accent"><span class="gl">&#xE74E;</span>Save package...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Share works without administrator rights</b> (<span class="mono">noadmin</span>), because it only reads. It's the one job that stays available.</li>
+    <li><b>Pick what goes along.</b> Everything is ticked to start. A part with nothing in it would be gray and left out.</li>
+    <li><b>Pictures travel with the device names</b> and loopbacks that use them, so the other PC shows the same artwork.</li>
+    <li><b>Which configuration, and what the other PC sees:</b> the name and note show up there when it's imported, along with this PC's name and the date.</li>
+    <li><b>Saved</b> (<span class="mono">saved</span>) says what to do next. The file is a zip made with the same code as Windows MIDI Glass and Windows MIDI Sequencer packages.</li>
+  </ol>
+</div>
+</body>
+</html>

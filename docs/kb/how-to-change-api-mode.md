@@ -52,7 +52,7 @@ Read the descriptions above first, rather than skipping straight here.
 
 ### Using the MIDI Troubleshooting and Repair app
 
-> This app starts shipping in Windows in Q1 CY 2027. Right now it's available to developers and technical users through our GitHub repo, [https://aka.ms/midirepo](https://aka.ms/midirepo).
+> This app starts shipping in Windows in 2027. Right now it's available to developers and technical users through our GitHub repo, [https://aka.ms/midirepo](https://aka.ms/midirepo).
 
 The **API mode** page in the MIDI Troubleshooting and Repair app shows which mode this PC is using, describes what each mode gives you and takes away, and changes it for you without any registry editing. The setting is machine-wide and only takes effect after a restart, so the app writes the value and then asks whether you want to restart now.
 

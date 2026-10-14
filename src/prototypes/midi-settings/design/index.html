@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Settings, Configurations window comps</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+<style>
+    .page { width: 1100px; gap: 14px; }
+    h1 { font-size: 22px; margin: 6px 0 0 0; }
+    h2 { font-size: 16px; margin: 14px 0 0 0; }
+    p, li { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 1040px; }
+    p { margin: 0; }
+    ul, ol { margin: 0; padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    li b, p b { color: var(--text); }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    a.item { display: block; text-decoration: none; color: var(--text); border-radius: 8px; border: 1px solid var(--stroke-strong); background: var(--card); padding: 14px 16px; }
+    a.item .n { font-size: 14px; font-weight: 600; }
+    a.item .d { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Windows MIDI Settings, Configurations window comps</h1>
+  <p>A window for everything people do with whole configurations: switch, back up, restore, share with another PC, and import. These are HTML: open any page in a browser, or run <span class="mono">capture.ps1</span> for pictures in <span class="mono">shots</span> and <span class="mono">check.ps1</span> for a layout check. They are pictures of the app, not the app. No product code has changed.</p>
+
+  <div class="list">
+    <a class="item" href="1-entry.html"><div class="n">1. Opening the window</div><div class="d">A Configurations button in the pinned group on the right of the toolbar, and a slimmer card in Global MIDI settings.</div></a>
+    <a class="item" href="2-configurations.html"><div class="n">2. Configurations</div><div class="d">The one in use and what's in it, the others on this PC, switching with a restart prompt, the ... menu, and the read-only state.</div></a>
+    <a class="item" href="3-backups.html"><div class="n">3. Backups</div><div class="d">Every backup with the reason it exists, what's in the one you pick compared with now, Restore, and deleting old backups.</div></a>
+    <a class="item" href="4-share.html"><div class="n">4. Share</div><div class="d">One package file with pictures, for another PC. Works without administrator rights.</div></a>
+    <a class="item" href="5-import.html"><div class="n">5. Import</div><div class="d">Where a package comes in, with pointers for people who wanted Share or Backups.</div></a>
+    <a class="item" href="6-import-review.html"><div class="n">6. What will happen</div><div class="d">One line per item saying what will happen: device names added or replaced, loopback and host names that clash, a host named after the other PC, a transport that isn't installed, other settings.</div></a>
+    <a class="item" href="7-import-done.html"><div class="n">7. Done</div><div class="d">The result per item, a restart only when something needs one, and Undo this import.</div></a>
+  </div>
+
+  <h2>How it would be built</h2>
+  <ul>
+    <li><b>An engine with no user interface,</b> in its own folder of plain C++: no XAML, no app strings, no precompiled header from the app. It returns data and reason codes, and the window turns those into words. When MIDI Settings is redesigned for Windows, the new UI keeps the engine and replaces only the window.
+      <ul>
+        <li><span class="mono">ConfigLibrary</span>: list, create, rename, duplicate, delete, and switch the configuration in use. Today's file functions in <span class="mono">MidiConfig.cpp</span> move here.</li>
+        <li><span class="mono">ConfigBackups</span>: today's <span class="mono">MidiConfigBackups.cpp</span>, plus a reason in each backup's name and the delete-old-backups rule.</li>
+        <li><span class="mono">ConfigInventory</span>: reads a configuration or a package into parts (device names, pictures, loopbacks, Network MIDI 2.0, RTP-MIDI, Bluetooth, other settings) with counts and items.</li>
+        <li><span class="mono">ConfigPackage</span>: writes and reads <span class="mono">.midiconfigpack</span> with the shared <span class="mono">ZipWriter</span> and <span class="mono">ZipReader</span> in <span class="mono">midi-app-shared</span>, the same code Glass and Sequencer use. Inside: <span class="mono">package.json</span> (name, note, PC name, date, parts, port naming), the configuration, and <span class="mono">pictures/</span>.</li>
+        <li><span class="mono">ImportPlan</span>: compares a package with this PC and decides each item's status, problem and default choice. It reads this PC through calls the API already has: <span class="mono">GetEndpointCustomizations</span>, <span class="mono">GetSavedLoopbackEntries</span> (both loopback kinds), <span class="mono">GetSavedHosts</span> and <span class="mono">GetSavedClients</span> (Network MIDI 2.0 and RTP-MIDI), <span class="mono">GetSavedDevices</span> (Bluetooth), and <span class="mono">GetInstalledTransportPlugins</span>.</li>
+        <li><span class="mono">ImportApply</span>: backs up first, then applies each item with the existing config classes (endpoint customization, loopback, basic loopback, network host and client, RTP-MIDI host and client, Bluetooth connect, synth) through <span class="mono">SaveUpdate</span> and <span class="mono">SendUpdate</span>. Pictures go through <span class="mono">EndpointImageAssets</span>, which already reuses identical files and renames clashes. It returns one result per item. Undo restores the backup.</li>
+      </ul>
+    </li>
+    <li><b>No new API.</b> The only direct file access is what MIDI Settings already does as an in-box tool: listing configurations and backups, and reading the configuration inside a package. The engine files that do it carry the DO NOT COPY banner.</li>
+    <li><b>Tests:</b> a TAEF project for the engine, like Patchbay's engine tests: package round trip, clash and rename rules, other-PC detection, and what a plain <span class="mono">.midiconfig.json</span> without pictures does.</li>
+    <li><b>Other-PC detection:</b> a package says which PC made it. A plain file doesn't, so a host whose name or service name starts with another PC's name counts as named after another PC. New hosts are named after the PC by default (<span class="mono">&lt;PC name&gt;_windows_midisrv</span>), which is what makes this work.</li>
+    <li><b>To check before building:</b> that <span class="mono">SaveUpdate</span> saves a section for a transport that isn't installed (the RTP-MIDI case), and which items need <span class="mono">SendUpdate</span> as well as <span class="mono">SaveUpdate</span> to work without a restart.</li>
+  </ul>
+
+  <h2>Questions for you</h2>
+  <ol>
+    <li><b>Import live, or write the file and restart?</b> The comps apply items through the running service, so most of an import works at once and Undo is a restore. Writing the file instead always needs a restart.</li>
+    <li><b>Defaults when a package disagrees with this PC.</b> The comps keep the customer's own device names, synthesizer sound and port names, and leave out a loopback or host whose name is taken unless its box is ticked. A host named after the other PC takes this PC's name, ticked by default. OK?</li>
+    <li><b>File type and name.</b> <span class="mono">.midiconfigpack</span>, like Glass's <span class="mono">.midilayoutpack</span>? And should the installer register it, so double-clicking a package opens Import?</li>
+    <li><b>Port naming in packages.</b> It lives in the registry, not in the configuration file. The comps carry it in the package as an "other setting". Keep it?</li>
+    <li><b>Backup reasons</b> ("Before importing from STUDIO-PC") need the reason in the backup's file name, next to the stamp. Daily backups from the API are recognized by their date-only stamp. OK?</li>
+    <li><b>Global MIDI settings:</b> OK to take Create, Back up now, Add and Restore out of the dialog, leaving the name of the one in use and Manage configurations?</li>
+  </ol>
+</div>
+</body>
+</html>

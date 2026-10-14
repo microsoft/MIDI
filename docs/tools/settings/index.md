@@ -8,7 +8,7 @@ categories:
   - Core Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
 
 Windows MIDI Settings is the front door to MIDI on this PC. It shows every MIDI endpoint Windows knows about, lets you name them and give them a picture, and launches the rest of the MIDI tools.
 

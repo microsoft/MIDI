@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
 
 Windows MIDI Keyboard is an on-screen keyboard for playing MIDI instruments. It's the quickest way to answer "is this thing making a sound?" without unpacking a controller, and it's genuinely playable with a mouse, a touchscreen, or your computer keyboard.
 

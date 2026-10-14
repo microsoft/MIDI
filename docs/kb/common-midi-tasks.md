@@ -9,7 +9,7 @@ categories:
 
 Windows MIDI Services comes with a lot of tools, and most jobs can be done more than one way. This page starts from the job instead of the tool. Each answer is short, and points you to the tool page that has the details. Select a question to see its answer.
 
-> The apps on this page will be released to consumers in Q1 CY 2027. For developers and technical customers, you may download the latest preview releases from [GitHub](https://aka.ms/midireleases). Everyone else should wait until the software is delivered with Windows 11. Bluetooth MIDI, Network MIDI 2.0, RTP-MIDI, and the General MIDI synthesizer are previews too, and they're installed separately.
+> The apps on this page will be released to consumers in 2027. For developers and technical customers, you may download the latest preview releases from [GitHub](https://aka.ms/midireleases). Everyone else should wait until the software is delivered with Windows 11. Bluetooth MIDI, Network MIDI 2.0, RTP-MIDI, and the General MIDI synthesizer are previews too, and they're installed separately.
 
 On this page:
 
