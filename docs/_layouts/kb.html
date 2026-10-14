@@ -19,6 +19,19 @@ layout: default
     </div>
 </section>
 
+<style>
+/* style.css is generated from assets/scss, so these rules live here instead */
+.tutorial-content details { border-bottom: 1px solid #e6e6e6; padding: 10px 0; }
+.tutorial-content details > summary { position: relative; display: block; padding-left: 22px; cursor: pointer; list-style: none; font-weight: 500; color: #333333; }
+.tutorial-content details > summary::-webkit-details-marker { display: none; }
+.tutorial-content details > summary::before { content: "\25B8"; position: absolute; left: 0; top: 0; width: 14px; text-align: center; color: #767676; transition: transform ease 0.15s; }
+.tutorial-content details[open] > summary::before { transform: rotate(90deg); }
+.tutorial-content details > summary:hover { color: #216cbc; }
+.tutorial-content details > summary:focus-visible { outline: 2px solid #0D65B0; outline-offset: 2px; }
+.tutorial-content details[open] > summary { margin-bottom: 12px; }
+.tutorial-content details > :last-child { margin-bottom: 10px; }
+</style>
+
 {% include support_area.html %}
 {% include footer.html %}
 
@@ -32,4 +45,12 @@ layout: default
 
     headings[i].appendChild(anchorLink);
   }
+
+  // A link to a question has to open it, because a closed <details> shows only its summary.
+  function openLinkedDetails() {
+    var target = window.location.hash ? document.getElementById(window.location.hash.substring(1)) : null;
+    if (target && target.tagName === "DETAILS") { target.open = true; }
+  }
+  openLinkedDetails();
+  window.addEventListener("hashchange", openLinkedDetails);
 </script>
