@@ -34,7 +34,7 @@
       <div class="content">
         <div class="scroll">
           <div class="h1">Backups</div>
-          <div class="sub">Backups are made by themselves before changes, and you can make one any time.</div>
+          <div class="sub">Backups are made by themselves before changes, and you can make one any time. Each one keeps the configuration, its pictures and its settings.</div>
 
           <div class="hstack">
             <span class="btn" data-admin data-mark="1"><span class="gl">&#xE81C;</span>Back up Live set now</span>
@@ -56,7 +56,7 @@
               </div>
               <div class="row slim" data-mark="2">
                 <div class="ico gl">&#xE823;</div>
-                <div class="txt"><div class="t">Live set</div><div class="s">9:14 AM · Before the day's first change</div></div>
+                <div class="txt"><div class="t">Live set</div><div class="s">9:14 AM · Before the day's first change · Configuration only</div></div>
               </div>
               <div class="group-label">Yesterday</div>
               <div class="row slim">
@@ -65,7 +65,7 @@
               </div>
               <div class="row slim">
                 <div class="ico gl">&#xE823;</div>
-                <div class="txt"><div class="t">Live set</div><div class="s">8:55 AM · Before the day's first change</div></div>
+                <div class="txt"><div class="t">Live set</div><div class="s">8:55 AM · Before the day's first change · Configuration only</div></div>
               </div>
               <div class="group-label">Monday, October 12</div>
               <div class="row slim">
@@ -74,7 +74,7 @@
               </div>
               <div class="row slim">
                 <div class="ico gl">&#xE823;</div>
-                <div class="txt"><div class="t">Studio (STUDIO-PC)</div><div class="s">4:05 PM · Before the day's first change</div></div>
+                <div class="txt"><div class="t">Studio (STUDIO-PC)</div><div class="s">4:05 PM · Before the day's first change · Configuration only</div></div>
               </div>
               <div class="row slim" style="margin-top:8px">
                 <div class="ico gl">&#xE787;</div>
@@ -100,6 +100,7 @@
                   <div class="kv"><span class="k">Bluetooth devices</span><span class="v">1</span><span class="d">3</span></div>
                   <div class="kv"><span class="k">Synthesizer mode</span><span class="v">Compatible</span><span class="d">Compatible</span></div>
                 </div>
+                <div class="caption" style="margin-top:-4px">A full backup: the configuration, its 2 pictures and the port names setting for older apps.</div>
                 <div class="hstack">
                   <span class="btn accent" data-admin style="flex:1"><span class="gl">&#xE777;</span>Restore</span>
                   <span class="btn"><span class="gl">&#xE72D;</span>Share...</span>
@@ -117,7 +118,7 @@
       <div class="dialog wide">
         <div class="dlg-body">
           <div class="dlg-title" data-mark-right="3">Restore this backup?</div>
-          <div class="dlg-text">Live set goes back to how it was today at 3:20 PM, before the import from STUDIO-PC. What it has now is backed up first.</div>
+          <div class="dlg-text">Live set goes back to how it was today at 3:20 PM, before the import from STUDIO-PC, with its pictures and settings. What it has now is backed up first.</div>
           <div class="caption">Live set is in use, so the restored version takes over when the MIDI service restarts. Close your music apps first.</div>
         </div>
         <div class="dlg-foot">
@@ -147,8 +148,8 @@
 
   <ol class="callouts">
     <li><b>Back up now</b> for the configuration in use. The <b>...</b> menu on the Configurations page backs up any of the others.</li>
-    <li><b>Each backup says why it exists:</b> you made it, it was made before an import or a restore, or Windows MIDI Services made it before the first change on that day. The icon says the same thing.</li>
-    <li><b>Picking one shows what's in it next to what's there now,</b> so it's easy to find the one from before things went wrong. Restore asks first (<span class="mono">restore</span>), and restarts MIDI only when the configuration is in use.</li>
+    <li><b>Each backup says why it exists:</b> you made it, it was made before an import or a restore, or Windows MIDI Services made it before the first change on that day. The icon says the same thing. Backups made by MIDI Settings are full packages: the configuration, its pictures, and settings that live outside it, like port names. The daily ones from Windows MIDI Services hold only the configuration, and say so.</li>
+    <li><b>Picking one shows what's in it next to what's there now,</b> so it's easy to find the one from before things went wrong. Restore asks first (<span class="mono">restore</span>), brings back the pictures and settings too, and restarts the MIDI service to use it.</li>
     <li><b>Delete old backups</b> (<span class="mono">cleanup</span>) keeps a time window and the newest few of each configuration. Nothing deletes backups by itself, so they pile up until someone does this. One backup can be deleted with the Delete button beside Share.</li>
   </ol>
 </div>

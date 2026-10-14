@@ -168,7 +168,7 @@
         </div>
 
         <div class="footerbar">
-          <div class="note mark-near" data-mark="8"><span class="gl">&#xE81C;</span><span data-not="restart">Nothing changes until you choose Import. Live set is backed up first, so it can be undone.</span><span data-only="restart">Nothing changes until you choose Import, and Live set is backed up first. Afterward, restart the MIDI service. Apps lose their MIDI connections, and may need their ports picked again.</span></div>
+          <div class="note mark-near" data-mark="8"><span class="gl">&#xE81C;</span><span data-not="restart">Nothing changes until you choose Import, and Live set is backed up first. Afterward, the MIDI service restarts to use it.</span><span data-only="restart">Nothing changes until you choose Import, and Live set is backed up first. Afterward, the MIDI service restarts to use it, and apps may need their ports picked again.</span></div>
           <span class="btn" style="width:120px">Cancel</span>
           <span class="btn accent" style="width:120px">Import</span>
         </div>
@@ -183,8 +183,8 @@
     <li><b>Every row says what will happen, in the same place.</b> Devices that aren't plugged in still come across. If one can't be found later, today's "Some saved settings have no matching device" banner offers Review them.</li>
     <li><b>A loopback whose name is taken here isn't added,</b> and says why. Ticking the box adds it under a free name instead.</li>
     <li><b>A network host named after the other PC takes this PC's name,</b> ticked by default, so two PCs never claim the same name and identity. A taken host name works like a taken loopback name. A host tied to a missing Wi-Fi or Ethernet adapter uses any adapter here.</li>
-    <li><b>The customer's own synthesizer mode and port names are kept</b> unless they choose the package's. Then the line and the footer say a restart of the MIDI service will be needed, and what it means for open apps, before Import is chosen (<span class="mono">restart</span>).</li>
-    <li><b>Nothing changes until Import,</b> and the configuration is backed up first. The next page offers to undo the whole import.</li>
+    <li><b>The customer's own synthesizer mode and port names are kept</b> unless they choose the package's. Choosing the package's port names adds a warning to this line and to the footer, before Import is chosen (<span class="mono">restart</span>).</li>
+    <li><b>Nothing changes until Import,</b> and the configuration is backed up first, pictures and settings included. Import writes the configuration file, so the MIDI service always restarts to use it. The next page offers the restart and Undo this import.</li>
   </ol>
 </div>
 </body>

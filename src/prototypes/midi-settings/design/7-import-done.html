@@ -10,7 +10,6 @@
 <body>
 <div class="page">
   <p class="caption-above"><b>7. Done.</b> What happened, in plain sentences, with anything that didn't happen called out. Variant: <span class="mono">?state=restart</span>, when the customer chose the package's port names.</p>
-
   <div class="window">
     <div class="titlebar">
       <img class="appicon" src="appicon.png" alt="">
@@ -40,7 +39,7 @@
               <div class="ico big success gl">&#xE930;</div>
               <div class="txt">
                 <div class="t big">Studio is now part of Live set</div>
-                <div class="s" style="color:var(--text2)">Everything below works now, except where it says otherwise.</div>
+                <div class="s" style="color:var(--text2)">It starts working when the MIDI service restarts.</div>
               </div>
             </div>
             <div class="result"><span class="gl ok">&#xE73E;</span><span>11 device names and 6 pictures added. Your names for 3 devices were kept.</span></div>
@@ -56,9 +55,9 @@
             <div class="result" data-only="restart"><span class="gl warn">&#xE7BA;</span><span>Port names for older apps will change after the MIDI service restarts.</span></div>
           </div>
 
-          <div class="infobar caution" data-only="restart" data-mark="3">
+          <div class="infobar caution" data-mark="3">
             <span class="ib-icon">!</span>
-            <div class="ib-text"><span class="ib-title">Restart the MIDI service to finish</span>Close your music apps first. Anything using MIDI loses its connections.</div>
+            <div class="ib-text"><span class="ib-title">Restart the MIDI service to finish</span>Close your music apps first. Anything using MIDI loses its connections<span data-only="restart">, and apps may need their ports picked again</span>.</div>
             <span class="btn">Restart MIDI service</span>
           </div>
 
@@ -72,9 +71,9 @@
   </div>
 
   <ol class="callouts">
-    <li><b>One line per result,</b> green when it happened, yellow when it didn't or is waiting for a restart, blue when it's waiting for something else.</li>
-    <li><b>Undo this import</b> restores the backup made just before it. The same backup is on the Backups page, labeled "Before importing from STUDIO-PC".</li>
-    <li><b>A restart is asked for only when something needs one</b> (<span class="mono">restart</span>). Device names, loopbacks, network and Bluetooth go to the running MIDI service, so they work right away. Port names for older apps are worked out when the service starts.</li>
+    <li><b>One line per result,</b> green when it's in the configuration, yellow when it was left out or needs extra care, blue when it's waiting for something else.</li>
+    <li><b>Undo this import</b> restores the full backup made just before it: configuration, pictures and settings. The same backup is on the Backups page, labeled "Before importing from STUDIO-PC".</li>
+    <li><b>Import writes the configuration file, so the MIDI service always restarts to use it.</b> Done leaves the banner until it does. When the package's port names were chosen (<span class="mono">restart</span>), the banner also says apps may need their ports picked again.</li>
   </ol>
 </div>
 </body>
