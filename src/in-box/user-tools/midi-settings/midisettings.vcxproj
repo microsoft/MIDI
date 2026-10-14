@@ -173,6 +173,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MidiConfig.cpp" />
+    <ClCompile Include="MidiConfigBackups.cpp" />
     <ClCompile Include="MidiPanic.cpp" />
     <ClCompile Include="NotificationSettings.cpp" />
     <ClCompile Include="MainWindowNotifications.cpp" />
@@ -194,6 +195,9 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowGlobal.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowConfigBackups.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowPortNames.cpp">

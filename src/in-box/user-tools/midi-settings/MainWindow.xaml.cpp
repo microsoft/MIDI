@@ -101,6 +101,7 @@ namespace winrt::midisettings::implementation
             midiapp::MakeLiveStatusRegion(Midi1PortNamesStatusText());
             midiapp::MakeLiveStatusRegion(SynthStatusText());
             midiapp::MakeLiveStatusRegion(GlobalStatusText());
+            midiapp::MakeLiveStatusRegion(ConfigFileStatusText());
             midiapp::MakeLiveStatusRegion(NotificationsStatusText());
 
             midiapp::WindowChromeElements elements{};
@@ -132,6 +133,7 @@ namespace winrt::midisettings::implementation
             DetailDestinationPortsList().ItemsSource(m_destinationPortItems);
             TransportFilterComboBox().ItemsSource(m_transportChoices);
             ConfigFileComboBox().ItemsSource(m_configFileChoices);
+            ConfigBackupComboBox().ItemsSource(m_configBackupChoices);
 
             ApplyViewMode();
             BuildToolbarItems();

@@ -17,6 +17,7 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="Elevation.cpp" />
     <ClCompile Include="MidiConfig.cpp" />
+    <ClCompile Include="MidiConfigBackups.cpp" />
     <ClCompile Include="MidiPanic.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="ToolLauncher.cpp" />

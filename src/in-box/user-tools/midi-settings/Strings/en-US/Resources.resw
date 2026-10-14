@@ -855,13 +855,43 @@
     <value>Create</value>
   </data>
   <data name="NewConfigNameHelp.Text" xml:space="preserve">
-    <value>Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file.</value>
+    <value>Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file also makes it the active configuration. Restart the MIDI service to use it.</value>
   </data>
   <data name="ConfigFileCopyLabel.Text" xml:space="preserve">
     <value>Back up the active configuration</value>
   </data>
   <data name="CopyConfigButton.Content" xml:space="preserve">
     <value>Save a copy of the active file...</value>
+  </data>
+  <data name="BackUpConfigButton.Content" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="ConfigFileCopyHelp.Text" xml:space="preserve">
+    <value>Back up now keeps a copy on this PC, in the list under Restore from a backup. Save a copy puts one anywhere you choose, such as a USB drive, so you can add it on another PC.</value>
+  </data>
+  <data name="ConfigFileAddLabel.Text" xml:space="preserve">
+    <value>Add a saved configuration</value>
+  </data>
+  <data name="AddConfigButton.Content" xml:space="preserve">
+    <value>Add a configuration file...</value>
+  </data>
+  <data name="ConfigFileAddHelp.Text" xml:space="preserve">
+    <value>Adds a copy you saved, from this PC or another one, and makes it the active configuration. If a configuration with the same file name is already here, it is backed up first.</value>
+  </data>
+  <data name="ConfigFileRestoreLabel.Text" xml:space="preserve">
+    <value>Restore from a backup</value>
+  </data>
+  <data name="ConfigBackupComboBox.PlaceholderText" xml:space="preserve">
+    <value>No backups yet</value>
+  </data>
+  <data name="ConfigBackupComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Backup to restore</value>
+  </data>
+  <data name="RestoreConfigBackupButton.Content" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="ConfigFileRestoreHelp.Text" xml:space="preserve">
+    <value>A backup is made when you choose Back up now, before Add or Restore replaces a configuration, and before the first change to a configuration each day. Restoring a backup makes it the active configuration, and the version it replaces is backed up first.</value>
   </data>
   <data name="GlobalPortNamingHeader.Text" xml:space="preserve">
     <value>Default MIDI 1.0 port naming</value>
@@ -985,6 +1015,70 @@
   </data>
   <data name="ConfigNameNotUsable" xml:space="preserve">
     <value>Enter a name using letters, numbers, spaces, hyphens or underscores.</value>
+  </data>
+  <data name="ConfigBackupChoiceFormat" xml:space="preserve">
+    <value>{0}, backed up {1} {2}</value>
+    <comment>{0} is the configuration name, {1} the date and {2} the time of the backup.</comment>
+  </data>
+  <data name="ConfigFileDialogFilterName" xml:space="preserve">
+    <value>MIDI configuration</value>
+  </data>
+  <data name="AllFilesDialogFilterName" xml:space="preserve">
+    <value>All files</value>
+  </data>
+  <data name="ConfigBackedUpFormat" xml:space="preserve">
+    <value>Backed up {0}. You can find it under Restore from a backup.</value>
+  </data>
+  <data name="ConfigAddedFormat" xml:space="preserve">
+    <value>Added {0}.</value>
+  </data>
+  <data name="ConfigRestoredFormat" xml:space="preserve">
+    <value>Restored {0}.</value>
+  </data>
+  <data name="ConfigAlreadyHereFormat" xml:space="preserve">
+    <value>{0} was already here, with exactly these settings.</value>
+  </data>
+  <data name="ConfigReplacedBackedUp" xml:space="preserve">
+    <value>The version it replaced was backed up first, so you can restore it.</value>
+  </data>
+  <data name="ConfigActiveRestartNeeded" xml:space="preserve">
+    <value>It is the active configuration. Restart the MIDI service to use it.</value>
+  </data>
+  <data name="ConfigNotMadeActiveFormat" xml:space="preserve">
+    <value>It could not be made the active configuration. {0}</value>
+  </data>
+  <data name="ConfigNoBackupSelected" xml:space="preserve">
+    <value>Choose a backup first.</value>
+  </data>
+  <data name="ConfigErrorNoFolder" xml:space="preserve">
+    <value>The MIDI configuration folder could not be found.</value>
+  </data>
+  <data name="ConfigErrorNameNotUsable" xml:space="preserve">
+    <value>That file name cannot be used for a configuration.</value>
+  </data>
+  <data name="ConfigErrorNotFound" xml:space="preserve">
+    <value>That file is not there anymore.</value>
+  </data>
+  <data name="ConfigErrorEmpty" xml:space="preserve">
+    <value>The active configuration is empty, so there is nothing to back up.</value>
+  </data>
+  <data name="ConfigErrorTooLarge" xml:space="preserve">
+    <value>That file is too large to be a MIDI configuration.</value>
+  </data>
+  <data name="ConfigErrorNotAConfiguration" xml:space="preserve">
+    <value>That file is not a Windows MIDI Services configuration.</value>
+  </data>
+  <data name="ConfigErrorReadFailed" xml:space="preserve">
+    <value>That file could not be read.</value>
+  </data>
+  <data name="ConfigErrorBackupFailed" xml:space="preserve">
+    <value>The backup could not be made.</value>
+  </data>
+  <data name="ConfigErrorNotReplaced" xml:space="preserve">
+    <value>Nothing was changed, because the configuration it would replace could not be backed up first.</value>
+  </data>
+  <data name="ConfigErrorWriteFailed" xml:space="preserve">
+    <value>The configuration could not be written.</value>
   </data>
   <data name="PortNamingChangedRestartNeeded" xml:space="preserve">
     <value>The default port naming was changed. Restart the MIDI service to use it.</value>

@@ -89,6 +89,9 @@ namespace winrt::midisettings::implementation
         winrt::fire_and_forget OnApplyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnBackUpConfigClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnAddConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnRestoreConfigBackupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnPortNamingChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSynthEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSynthOptionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -186,6 +189,13 @@ namespace winrt::midisettings::implementation
         void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
 
+        // --- configuration backups (MainWindowConfigBackups.cpp) ---
+        void ShowConfigFileStatus(_In_ winrt::hstring const& message) noexcept;
+        void RefreshConfigBackups() noexcept;
+        void FinishPutInPlace(
+            _In_ ::midisettings::config::ConfigFileOperationResult const& result,
+            _In_ std::wstring_view const doneKey) noexcept;
+
         // Another MIDI tool can ask this app to open the notifications dialog, either on the
         // command line or, when a copy is already running, by posting to its window. Only a
         // subclass can see that message: the window class belongs to XAML.
@@ -277,6 +287,9 @@ namespace winrt::midisettings::implementation
             winrt::single_threaded_observable_vector<foundation::IInspectable>() };
 
         collections::IObservableVector<foundation::IInspectable> m_configFileChoices{
+            winrt::single_threaded_observable_vector<foundation::IInspectable>() };
+
+        collections::IObservableVector<foundation::IInspectable> m_configBackupChoices{
             winrt::single_threaded_observable_vector<foundation::IInspectable>() };
 
         // Transport code to display name, from the service. Empty when it could not be asked.

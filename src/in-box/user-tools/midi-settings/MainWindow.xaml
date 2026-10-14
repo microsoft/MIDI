@@ -1334,7 +1334,7 @@
                                                 Click="OnCreateConfigFileClick" />
                                     </Grid>
                                     <TextBlock x:Uid="NewConfigNameHelp"
-                                               Text="Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file."
+                                               Text="Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file also makes it the active configuration. Restart the MIDI service to use it."
                                                TextWrapping="Wrap"
                                                Style="{StaticResource PropertyLabelStyle}" />
                                 </StackPanel>
@@ -1343,12 +1343,70 @@
                                     <TextBlock x:Uid="ConfigFileCopyLabel"
                                                Text="Back up the active configuration"
                                                Style="{StaticResource SettingsSubLabelStyle}" />
-                                    <Button x:Name="CopyConfigButton"
-                                            x:Uid="CopyConfigButton"
-                                            HorizontalAlignment="Left"
-                                            Content="Save a copy of the active file..."
-                                            Click="OnCopyConfigFileClick" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button x:Name="BackUpConfigButton"
+                                                x:Uid="BackUpConfigButton"
+                                                Content="Back up now"
+                                                Click="OnBackUpConfigClick" />
+                                        <Button x:Name="CopyConfigButton"
+                                                x:Uid="CopyConfigButton"
+                                                Content="Save a copy of the active file..."
+                                                Click="OnCopyConfigFileClick" />
+                                    </StackPanel>
+                                    <TextBlock x:Uid="ConfigFileCopyHelp"
+                                               Text="Back up now keeps a copy on this PC, in the list under Restore from a backup. Save a copy puts one anywhere you choose, such as a USB drive, so you can add it on another PC."
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource PropertyLabelStyle}" />
                                 </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileAddLabel"
+                                               Text="Add a saved configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Button x:Name="AddConfigButton"
+                                            x:Uid="AddConfigButton"
+                                            HorizontalAlignment="Left"
+                                            Content="Add a configuration file..."
+                                            Click="OnAddConfigFileClick" />
+                                    <TextBlock x:Uid="ConfigFileAddHelp"
+                                               Text="Adds a copy you saved, from this PC or another one, and makes it the active configuration. If a configuration with the same file name is already here, it is backed up first."
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource PropertyLabelStyle}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileRestoreLabel"
+                                               Text="Restore from a backup"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="ConfigBackupComboBox"
+                                                  x:Uid="ConfigBackupComboBox"
+                                                  Grid.Column="0"
+                                                  HorizontalAlignment="Stretch"
+                                                  PlaceholderText="No backups yet"
+                                                  ItemTemplate="{StaticResource ConfigFileChoiceTemplate}" />
+                                        <Button x:Name="RestoreConfigBackupButton"
+                                                x:Uid="RestoreConfigBackupButton"
+                                                Grid.Column="1"
+                                                Style="{StaticResource SettingsRowButtonStyle}"
+                                                Content="Restore"
+                                                Click="OnRestoreConfigBackupClick" />
+                                    </Grid>
+                                    <TextBlock x:Uid="ConfigFileRestoreHelp"
+                                               Text="A backup is made when you choose Back up now, before Add or Restore replaces a configuration, and before the first change to a configuration each day. Restoring a backup makes it the active configuration, and the version it replaces is backed up first."
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource PropertyLabelStyle}" />
+                                </StackPanel>
+
+                                <TextBlock x:Name="ConfigFileStatusText"
+                                           Visibility="Collapsed"
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                             </StackPanel>
                         </Border>

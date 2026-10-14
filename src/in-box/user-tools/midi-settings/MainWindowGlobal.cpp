@@ -153,6 +153,8 @@ namespace winrt::midisettings::implementation
 
             CopyConfigButton().IsEnabled(!native::config::CurrentFullPath().empty());
 
+            RefreshConfigBackups();
+
             m_suppressPortNamingHandling = true;
 
             auto const naming = native::config::DefaultMidi1PortNaming();
@@ -173,6 +175,7 @@ namespace winrt::midisettings::implementation
             RefreshSynthSettings();
 
             GlobalStatusText().Text({});
+            ShowConfigFileStatus({});
         }
         catch (...)
         {
@@ -440,7 +443,7 @@ namespace winrt::midisettings::implementation
 
             if (selected == nullptr)
             {
-                GlobalStatusText().Text(res::GetString(L"ConfigFileNoSelection"));
+                ShowConfigFileStatus(res::GetString(L"ConfigFileNoSelection"));
                 co_return;
             }
 
@@ -448,14 +451,15 @@ namespace winrt::midisettings::implementation
 
             if (!native::config::SetCurrentFileName(std::wstring{ selected.FileName() }, errorMessage))
             {
-                GlobalStatusText().Text(res::FormatString(
+                ShowConfigFileStatus(res::FormatString(
                     L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
                 co_return;
             }
 
-            GlobalStatusText().Text(res::GetString(L"ConfigFileChangedRestartNeeded"));
-
+            // the refresh clears the status line, so it goes first
             RefreshGlobalSettings();
+
+            ShowConfigFileStatus(res::GetString(L"ConfigFileChangedRestartNeeded"));
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the configuration file.")
 
@@ -473,7 +477,7 @@ namespace winrt::midisettings::implementation
 
             if (fileName.empty())
             {
-                GlobalStatusText().Text(res::GetString(L"ConfigNameNotUsable"));
+                ShowConfigFileStatus(res::GetString(L"ConfigNameNotUsable"));
                 return;
             }
 
@@ -481,7 +485,7 @@ namespace winrt::midisettings::implementation
 
             if (!native::config::CreateFile(configName, fileName, errorMessage))
             {
-                GlobalStatusText().Text(res::FormatString(
+                ShowConfigFileStatus(res::FormatString(
                     L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
                 return;
             }
@@ -489,7 +493,7 @@ namespace winrt::midisettings::implementation
             // A file nobody is using helps no one, so creating one also makes it the active one.
             if (!native::config::SetCurrentFileName(fileName, errorMessage))
             {
-                GlobalStatusText().Text(res::FormatString(
+                ShowConfigFileStatus(res::FormatString(
                     L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
                 return;
             }
@@ -498,7 +502,7 @@ namespace winrt::midisettings::implementation
 
             RefreshGlobalSettings();
 
-            GlobalStatusText().Text(res::GetString(L"ConfigFileCreatedRestartNeeded"));
+            ShowConfigFileStatus(res::GetString(L"ConfigFileCreatedRestartNeeded"));
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to create the configuration file.")
     }
@@ -512,7 +516,7 @@ namespace winrt::midisettings::implementation
 
             if (source.empty())
             {
-                GlobalStatusText().Text(res::GetString(L"ConfigFileNoneActive"));
+                ShowConfigFileStatus(res::GetString(L"ConfigFileNoneActive"));
                 return;
             }
 
@@ -537,14 +541,14 @@ namespace winrt::midisettings::implementation
 
             if (!native::config::CopyCurrentFileTo(destination, errorMessage))
             {
-                GlobalStatusText().Text(res::FormatString(
+                ShowConfigFileStatus(res::FormatString(
                     L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
                 return;
             }
 
             native::AppSettings::Current().LastConfigCopyFolder(ParentFolder(destination));
 
-            GlobalStatusText().Text(res::FormatString(
+            ShowConfigFileStatus(res::FormatString(
                 L"ConfigFileCopiedFormat", winrt::hstring{ destination }));
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to copy the configuration file.")

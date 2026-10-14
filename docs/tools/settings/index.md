@@ -119,7 +119,15 @@ These are shared by everyone who uses the PC, so they need administrator rights.
 
 ![The global MIDI settings, shared by everyone who uses the PC]({{ site.baseurl }}/assets/images/midisettings-global.png)
 
-**Configuration file** - your endpoint names, pictures and transport setup are stored in a configuration file under `%ALLUSERSPROFILE%\Microsoft\MIDI`. Only one is active at a time. You can switch between files, create a new one, and save a copy somewhere else for backup or to move to another PC.
+**Configuration file** - your device and port names, pictures, loopbacks, network and Bluetooth connections, and transport settings are stored in a configuration. You can keep more than one, but only one is active at a time, and a different one takes effect when the MIDI service restarts.
+
+- **Use this file** switches to the configuration you pick.
+- **Create** makes a new, empty configuration and makes it the active one.
+- **Back up now** keeps a copy of the active configuration on this PC. **Save a copy of the active file...** saves one anywhere you choose, such as a USB drive.
+- **Add a configuration file...** loads a copy you saved, from this PC or another one, and makes it the active configuration. This is how you move your setup to another PC.
+- **Restore** puts the backup you pick back in place, and makes it the active configuration. The list also has the backup Windows MIDI Services makes before the first change to a configuration each day.
+
+Adding or restoring never loses anything. If it would replace a configuration, that configuration is backed up first, so you can restore it if you change your mind. Use these buttons rather than copying configuration files yourself. Where they're kept and what's in them can change in any update.
 
 **Default MIDI 1.0 port naming** - how ports are named for older applications which use WinMM or WinRT MIDI 1.0. *Compatible with older Windows* keeps the names those applications have always seen. *New style* names ports from the endpoint and block names, which is clearer but will make applications that remember port names by string ask you to pick the device again.
 

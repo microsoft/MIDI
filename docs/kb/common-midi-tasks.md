@@ -190,9 +190,9 @@ If a connection sits at **Connecting**, look at the other device. It may be wait
 <details id="connect-a-pc-and-a-mac" markdown="1">
 <summary>Communicate between a PC and Mac over MIDI</summary>
 
-Use Network MIDI 2.0, which macOS now supports too. It carries both MIDI 2.0 and MIDI 1.0. On this PC, open [Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/). To connect to a host on the Mac, find it on the **Network devices** page and select **Connect**. To have the Mac connect to this PC, select **Create host** on the **This PC** page, then connect to it from the Mac. Either way, the connection shows up as a MIDI device in apps on both computers.
+Use Network MIDI 2.0, which macOS now supports too. It carries both MIDI 2.0 and MIDI 1.0. On the Mac, it's the **MIDI 2.0** option in **MIDI Network Setup**, in the Audio MIDI Setup app. On this PC, open [Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/). To connect to a host on the Mac, find it on the **Network devices** page and select **Connect**. To have the Mac connect to this PC, select **Create host** on the **This PC** page, then connect to it from the Mac. Either way, the connection shows up as a MIDI device in apps on both computers.
 
-RTP-MIDI is the second choice. It's older and carries only MIDI 1.0, but Macs, iPhones, and iPads have had it for years. On the Mac, it's in **MIDI Network Setup**, in the Audio MIDI Setup app. On this PC, it's on the **RTP-MIDI** pages of [Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/#rtp-midi), which appear once the RTP-MIDI transport is installed. They work the same way as the Network MIDI 2.0 pages.
+RTP-MIDI is the second choice. It's older and carries only MIDI 1.0, but Macs, iPhones, and iPads have had it for years. On the Mac, it's in the same **MIDI Network Setup** window. On this PC, it's on the **RTP-MIDI** pages of [Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/#rtp-midi), which appear once the RTP-MIDI transport is installed. They work the same way as the Network MIDI 2.0 pages.
 
 No network? A MIDI interface on each computer, with MIDI cables between them, works too.
 
@@ -452,7 +452,9 @@ Your device names, port names, loopbacks, network and Bluetooth connections, and
 <details id="back-up-my-configuration" markdown="1">
 <summary>Back up my configuration</summary>
 
-In [Windows MIDI Settings]({{ site.baseurl }}/tools/settings/#global-midi-settings), select **Global MIDI Settings**. Under **Back up the active configuration**, select **Save a copy of the active file...**, and choose where to save it. Keep it somewhere safe. Windows MIDI Settings can't load a saved copy yet, so for now it's a record of your setup, not a way to restore it.
+In [Windows MIDI Settings]({{ site.baseurl }}/tools/settings/#global-midi-settings), select **Global MIDI Settings**. Under **Back up the active configuration**, select **Back up now** to keep a copy on this PC. Select **Save a copy of the active file...** to keep one somewhere else too, such as a USB drive.
+
+To go back to a backup, pick it under **Restore from a backup**, select **Restore**, and then restart the MIDI service. For a copy you saved somewhere else, select **Add a configuration file...** instead. Either way, the configuration it replaces is backed up first, so you can change your mind. Windows MIDI Services also backs up a configuration before the first change to it each day, and those backups are in the same list.
 
 Your patches, layouts, and sequences are ordinary files in your Documents folder, in **MIDI Patches**, **MIDI Layouts**, and **MIDI Sequences**, and your SysEx files are in **SysEx Library**. Back them up along with your other files. Windows MIDI Glass can also back up a single layout with **Back up now**, on the layout's **…** menu.
 
@@ -478,7 +480,9 @@ Patches, layouts, and sequences move easily, because they're files:
 - **Windows MIDI Glass:** select **Pack for sharing…** on a layout's **…** menu, and use **Import a pack…** on the other PC.
 - **Windows MIDI Sequencer:** copy the `.midisequence` files from **Documents › MIDI Sequences**.
 
-The configuration, with your device and port names, loopbacks, and network connections, doesn't move yet. Windows MIDI Settings can save a copy of it, but it can't load one. Copying the file over yourself isn't supported, because where it's kept and what's in it can change in any update. For now, set up the other PC with the setup apps, or with a script that makes the same loopbacks and connections. See [Automate MIDI setup through scripting](#automate-midi-setup).
+To move the configuration, with your device and port names, loopbacks, and network connections, use [Windows MIDI Settings]({{ site.baseurl }}/tools/settings/#global-midi-settings). On this PC, select **Save a copy of the active file...** in **Global MIDI Settings**, and save it where the other PC can reach it, such as a USB drive. On the other PC, select **Add a configuration file...**, pick the copy, and restart the MIDI service. If that PC already has a configuration with the same file name, it's backed up first, so you can get it back with **Restore from a backup**. Use these buttons rather than copying the file yourself, because where it's kept and what's in it can change in any update.
+
+A device that reports a serial number gets its name and picture back as soon as it's plugged in. Other devices are matched by the port they're plugged into, so on a new PC their settings may not find them. Windows MIDI Settings then shows **Some saved settings have no matching device**. Select **Review them** to move the settings onto the right device.
 
 </details>
 
