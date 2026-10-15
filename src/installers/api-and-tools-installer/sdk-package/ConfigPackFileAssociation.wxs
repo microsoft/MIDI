@@ -1,0 +1,72 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+      Lets the customer double-click a .midiconfigpack file to open it on the Import page of the
+      Configurations window in Windows MIDI Settings. Referenced from the WindowsMIDIServices
+      feature in WindowsMidiServicesSdkRedist.wxs.
+
+      !! THIS DELIBERATELY DOES NOT TAKE THE DEFAULT ASSOCIATION. !!
+      Same rules as the other tools' file types: this registers a ProgId, adds it to the
+      extension's OpenWithProgIds list and publishes the app's capabilities. The extension's own
+      default value is never written, so Windows asks the customer once, on the first double-click.
+
+      Opening a package only shows what importing it would do. A package can come from anywhere,
+      so nothing changes until the customer chooses Import, which needs administrator rights.
+
+      The names are indirect string references into the executable (see resource.h there), so they
+      are localized along with the rest of the app.
+  -->
+  <Fragment>
+    <Component Id="ConfigPackFileAssociation"
+               Permanent="no"
+               Bitness="always64"
+               Directory="TOOLSROOT_INSTALLFOLDER"
+               Guid="088cae7a-2c2b-4a69-99ce-b7ec2892e843">
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiConfigPack" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Value="Windows MIDI Settings configuration package" />
+        <RegistryValue Type="string" Name="FriendlyTypeName" Value="@[#midisettingsExe],-101" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[#midisettingsExe],0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midisettingsExe]&quot; --import &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Adding to the list, not replacing the default. -->
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.midiconfigpack\OpenWithProgIds" Name="WindowsMidiServices.MidiConfigPack" Type="string" Value="" />
+
+      <!-- What puts the app in the Open With list, and gives it a name there. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Applications\midisettings.exe" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="FriendlyAppName" Value="@[#midisettingsExe],-102" />
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midisettingsExe]&quot; --import &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Key="SupportedTypes">
+          <RegistryValue Type="string" Name=".midiconfigpack" Value="" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Default apps in Settings reads this. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Settings\Capabilities" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="ApplicationName" Value="@[#midisettingsExe],-102" />
+        <RegistryValue Type="string" Name="ApplicationDescription" Value="@[#midisettingsExe],-103" />
+        <RegistryKey Key="FileAssociations">
+          <RegistryValue Type="string" Name=".midiconfigpack" Value="WindowsMidiServices.MidiConfigPack" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications"
+                     Name="Windows MIDI Settings"
+                     Type="string"
+                     Value="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Settings\Capabilities" />
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+        <RegistryValue Type="string" Name="ConfigPackFileAssociation" Value="registered" KeyPath="yes" />
+      </RegistryKey>
+
+    </Component>
+  </Fragment>
+
+</Wix>

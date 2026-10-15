@@ -44,7 +44,7 @@ $log = Join-Path $env:TEMP "glassspike-$Configuration-$Platform.log"
 if (-not (Test-Path (Join-Path $projectDir 'obj\project.assets.json')) -or $Target -eq 'Restore')
 {
     Write-Host "Restoring..." -ForegroundColor Cyan
-    & $msbuild $project /t:Restore /p:Configuration=$Configuration /p:Platform=$Platform "/p:SolutionDir=$solutionDir" /v:minimal /nologo /nodeReuse:false
+    & $msbuild $project /t:Restore /p:Configuration=$Configuration /p:Platform=$Platform "/p:SolutionDir=$solutionDir" /v:minimal /nologo /nodeReuse:false -low
 
     if ($LASTEXITCODE -ne 0) { throw "Restore failed with exit code $LASTEXITCODE." }
 
@@ -54,7 +54,7 @@ if (-not (Test-Path (Join-Path $projectDir 'obj\project.assets.json')) -or $Targ
 $buildTarget = if ($Target -eq 'Restore') { 'Build' } else { $Target }
 
 Write-Host "Building $Configuration $Platform..." -ForegroundColor Cyan
-& $msbuild $project /t:$buildTarget /p:Configuration=$Configuration /p:Platform=$Platform "/p:SolutionDir=$solutionDir" /v:minimal /nologo /nodeReuse:false > $log 2>&1
+& $msbuild $project /t:$buildTarget /p:Configuration=$Configuration /p:Platform=$Platform "/p:SolutionDir=$solutionDir" /v:minimal /nologo /nodeReuse:false -low > $log 2>&1
 $exitCode = $LASTEXITCODE
 
 Select-String -Path $log -Pattern ': error|: fatal error|warning C' | Select-Object -First 30 | ForEach-Object { $_.Line.Trim() }

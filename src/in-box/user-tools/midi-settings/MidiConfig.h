@@ -19,14 +19,6 @@ namespace midisettings
         Automatic = 3
     };
 
-    struct ConfigFileInfo
-    {
-        std::wstring FileName{};        // bare name, which is all the registry holds
-        std::wstring FullPath{};
-        std::wstring ConfigName{};      // "configName" from the file header
-        bool IsCurrent{ false };
-    };
-
     // ========================================================================================
     // IN-BOX MICROSOFT TOOL ONLY - DO NOT COPY THIS APPROACH
     //
@@ -48,6 +40,9 @@ namespace midisettings
     // Everything the customer can change here is machine wide, so a write needs administrator
     // rights. Each call reports failure through errorMessage rather than throwing, and the
     // caller turns that into a banner offering to relaunch elevated.
+    //
+    // Making, switching, backing up, sharing and importing configurations is in the
+    // configuration engine, in config-engine\.
     namespace config
     {
         // %ALLUSERSPROFILE%\Microsoft\MIDI\, expanded, with a trailing separator.
@@ -60,23 +55,10 @@ namespace midisettings
         // This is the "has the customer completed setup" test the invitation banner uses.
         std::wstring CurrentFullPath() noexcept;
 
-        std::vector<ConfigFileInfo> EnumerateFiles() noexcept;
-
         // The display name inside the file, falling back to the file name.
         std::wstring ReadConfigName(std::wstring const& fullPath) noexcept;
 
         bool SetCurrentFileName(std::wstring const& fileName, std::wstring& errorMessage) noexcept;
-
-        // Writes a new, empty configuration file. Fails rather than overwriting an existing one.
-        bool CreateFile(
-            std::wstring const& configName,
-            std::wstring const& fileName,
-            std::wstring& errorMessage) noexcept;
-
-        // Strips the characters a file name cannot carry and appends the required suffix.
-        std::wstring FileNameFromConfigName(std::wstring const& configName) noexcept;
-
-        bool CopyCurrentFileTo(std::wstring const& destinationPath, std::wstring& errorMessage) noexcept;
 
         Midi1PortNaming DefaultMidi1PortNaming() noexcept;
 
@@ -84,57 +66,5 @@ namespace midisettings
 
         // Stop and start midisrv. Blocking, so callers run it through BackgroundWork.
         bool RestartService(std::wstring& errorMessage) noexcept;
-
-        // Why a backup, an add or a restore did not happen. The window turns each one into its
-        // own message.
-        enum class ConfigFileError
-        {
-            None,
-            NoFolder,
-            NameNotUsable,
-            NotFound,
-            Empty,
-            TooLarge,
-            NotAConfiguration,
-            BackupFailed,
-            ReadFailed,
-            WriteFailed,
-            Unexpected,
-        };
-
-        struct ConfigFileOperationResult
-        {
-            ConfigFileError Error{ ConfigFileError::None };
-            DWORD SystemError{ ERROR_SUCCESS };     // the Win32 error behind the failure, if any
-            std::wstring ConfigFileName{};          // bare name of the configuration it was about
-            std::wstring BackupFileName{};          // set when an existing configuration was backed up
-            bool Unchanged{ false };                // the configuration already held exactly this
-        };
-
-        struct ConfigBackupInfo
-        {
-            std::wstring BackupFileName{};          // bare name, in the configuration folder
-            std::wstring ConfigFileName{};          // the configuration it came from and goes back to
-            std::wstring ConfigName{};              // "configName" from the backup itself
-            FILETIME WrittenAt{};
-        };
-
-        // Backups sit beside the configurations as <configuration file name>.<stamp>.bak, the
-        // same form as the API's own daily backups, so both kinds are listed and restored the
-        // same way. Newest first.
-        std::vector<ConfigBackupInfo> EnumerateBackups() noexcept;
-
-        // Writes a new backup of a configuration in the folder, as it is now.
-        ConfigFileOperationResult BackUpFile(_In_ std::wstring const& configFileName) noexcept;
-
-        // Puts a configuration saved anywhere into the folder, under its own file name. One
-        // already there with that name is backed up first, and is left alone if that fails.
-        ConfigFileOperationResult AddFromFile(_In_ std::wstring const& sourcePath) noexcept;
-
-        // Puts a backup back in place of the configuration it was taken from, the same way.
-        ConfigFileOperationResult RestoreBackup(_In_ std::wstring const& backupFileName) noexcept;
-
-        // The system's own text for a Win32 error. Empty for ERROR_SUCCESS.
-        std::wstring SystemErrorText(_In_ DWORD const error) noexcept;
     }
 }

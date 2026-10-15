@@ -217,6 +217,10 @@ function New-PackageLayout([string] $PlatformName, [string] $AppOutput, [string]
 $msbuild = Find-MSBuild
 $makeappx = Find-SdkTool 'makeappx.exe'
 
+# The same limits as build-all.ps1. The engine and its tests use /MP, one cl.exe per logical processor.
+$nodeCount = [Math]::Max(1, [int][Math]::Floor([Environment]::ProcessorCount * 2 / 3))
+$compilersPerProject = [Math]::Max(1, [int][Math]::Floor($nodeCount / 4))
+
 Write-Host "MSBuild   $msbuild"
 Write-Host "makeappx  $makeappx"
 Write-Host "Version   $Version"
@@ -228,12 +232,12 @@ $null = New-Item -ItemType Directory -Force -Path $PackageRoot
 
 $packages = @()
 
-Invoke-Checked 'Restore' { & $msbuild $Solution /t:Restore /p:Configuration=$Configuration /p:Platform=x64 /v:minimal /nologo }
+Invoke-Checked 'Restore' { & $msbuild $Solution /t:Restore /p:Configuration=$Configuration /p:Platform=x64 -low /v:minimal /nologo }
 
 foreach ($platformName in $Platform)
 {
     Invoke-Checked "Build $Configuration $platformName" {
-        & $msbuild $Solution /t:Build /p:Configuration=$Configuration /p:Platform=$platformName /p:PreferredToolArchitecture=x64 /m /v:minimal /nologo
+        & $msbuild $Solution /t:Build /p:Configuration=$Configuration /p:Platform=$platformName /p:PreferredToolArchitecture=x64 /m:$nodeCount /p:CL_MPCount=$compilersPerProject -low /v:minimal /nologo
     }
 
     if ($platformName -eq 'x64' -and -not $SkipTests)

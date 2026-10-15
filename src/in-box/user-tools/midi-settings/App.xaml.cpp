@@ -19,6 +19,8 @@ namespace winrt::midisettings::implementation
 {
     bool App::s_isElevated{ false };
     bool App::s_showNotificationsOnLaunch{ false };
+    std::wstring App::s_configurationsPageOnLaunch{};
+    std::wstring App::s_packageOnLaunch{};
 
     App::App()
     {

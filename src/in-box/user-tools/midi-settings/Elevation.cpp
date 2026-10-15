@@ -36,7 +36,8 @@ namespace midisettings
         return false;
     }
 
-    bool TryRelaunchElevated() noexcept
+    _Use_decl_annotations_
+    bool TryRelaunchElevated(std::wstring const& parameters) noexcept
     {
         try
         {
@@ -53,6 +54,7 @@ namespace midisettings
             info.fMask = SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI;
             info.lpVerb = L"runas";
             info.lpFile = modulePath;
+            info.lpParameters = parameters.empty() ? nullptr : parameters.c_str();
             info.nShow = SW_SHOWNORMAL;
 
             return ::ShellExecuteExW(&info) != FALSE;

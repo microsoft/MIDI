@@ -74,6 +74,9 @@ namespace winrt::midisettings::implementation
             }
 
             RefreshSynthSettings();
+
+            // The Configurations window may have made the first configuration.
+            ShowFirstRunInvitation();
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to refresh on activation.")
     }
@@ -101,7 +104,6 @@ namespace winrt::midisettings::implementation
             midiapp::MakeLiveStatusRegion(Midi1PortNamesStatusText());
             midiapp::MakeLiveStatusRegion(SynthStatusText());
             midiapp::MakeLiveStatusRegion(GlobalStatusText());
-            midiapp::MakeLiveStatusRegion(ConfigFileStatusText());
             midiapp::MakeLiveStatusRegion(NotificationsStatusText());
 
             midiapp::WindowChromeElements elements{};
@@ -132,8 +134,6 @@ namespace winrt::midisettings::implementation
             DetailSourcePortsList().ItemsSource(m_sourcePortItems);
             DetailDestinationPortsList().ItemsSource(m_destinationPortItems);
             TransportFilterComboBox().ItemsSource(m_transportChoices);
-            ConfigFileComboBox().ItemsSource(m_configFileChoices);
-            ConfigBackupComboBox().ItemsSource(m_configBackupChoices);
 
             ApplyViewMode();
             BuildToolbarItems();
@@ -151,6 +151,7 @@ namespace winrt::midisettings::implementation
                         strong->StopListeningForLaunchRequests();
                         strong->StopHealthTimer();
                         strong->StopWatchers();
+                        strong->CloseConfigurations();
                         ::midisettings::ShutDownPanicSession();
                         strong->m_chrome.SavePlacement();
                         strong->m_chrome.Shutdown();
@@ -176,6 +177,28 @@ namespace winrt::midisettings::implementation
                         }
                     });
             }
+
+            // Sent to the Configurations window: by Reopen as administrator, or by a package
+            // that was opened.
+            if ((!App::ConfigurationsPageOnLaunch().empty() || !App::PackageOnLaunch().empty()) && m_dispatcherQueue != nullptr)
+            {
+                m_dispatcherQueue.TryEnqueue(
+                    winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,
+                    [weak = get_weak()]()
+                    {
+                        if (auto strong = weak.get(); strong != nullptr && !strong->m_closing)
+                        {
+                            if (!App::PackageOnLaunch().empty())
+                            {
+                                strong->OpenConfigurationPackage(App::PackageOnLaunch());
+                            }
+                            else
+                            {
+                                strong->ShowConfigurations(App::ConfigurationsPageOnLaunch());
+                            }
+                        }
+                    });
+            }
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }
@@ -190,6 +213,7 @@ namespace winrt::midisettings::implementation
             native::AppSettings::Current().AlwaysOnTop(checkedState && checkedState.Value());
 
             m_chrome.ApplyAlwaysOnTop();
+            ApplyConfigurationsAlwaysOnTop();
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the always on top setting.")
     }
@@ -222,6 +246,7 @@ namespace winrt::midisettings::implementation
                     if (auto strong = weak.get())
                     {
                         strong->m_chrome.ApplyTheme();
+                        strong->ApplyConfigurationsAppearance();
                     }
                 });
         }
@@ -448,6 +473,7 @@ namespace winrt::midisettings::implementation
                 seenOnToolbar = seenOnToolbar || onToolbar[index];
             }
 
+            ApplyToolButtonMode(ConfigurationsButton(), ConfigurationsLabel(), compact);
             ApplyToolButtonMode(GlobalSettingsButton(), GlobalSettingsLabel(), compact);
             ApplyToolButtonMode(NotificationsButton(), NotificationsLabel(), compact);
 

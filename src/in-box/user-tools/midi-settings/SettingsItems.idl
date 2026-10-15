@@ -112,14 +112,4 @@ namespace midisettings
         Microsoft.UI.Xaml.Visibility ReasonVisibility{ get; };
         Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
     }
-
-    // A configuration file found in the machine configuration folder.
-    [default_interface]
-    runtimeclass ConfigFileChoice
-    {
-        ConfigFileChoice();
-
-        String DisplayName{ get; };
-        String FileName{ get; };
-    }
 }
