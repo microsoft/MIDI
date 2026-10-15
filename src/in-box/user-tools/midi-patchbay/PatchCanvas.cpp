@@ -88,7 +88,6 @@ namespace midipatchbay
 
         // Within this of a connection, a block dropped from the palette goes into it.
         constexpr double ConnectionHitDistance = 14.0;
-        constexpr int SamplesPerCurve = 24;
 
         // Room around an annotation's text, so the edge drawn when it is selected clears it.
         constexpr double AnnotationPaddingX = 6.0;
@@ -467,24 +466,6 @@ namespace midipatchbay
             }
 
             return shadow;
-        }
-
-        void AppendCurveSamples(
-            _Inout_ std::vector<foundation::Point>& samples,
-            _In_ foundation::Point const& p0,
-            _In_ foundation::Point const& p1,
-            _In_ foundation::Point const& p2,
-            _In_ foundation::Point const& p3)
-        {
-            for (int i = 0; i <= SamplesPerCurve; i++)
-            {
-                auto const t = static_cast<float>(i) / SamplesPerCurve;
-                auto const u = 1.0f - t;
-
-                samples.push_back(foundation::Point{
-                    u * u * u * p0.X + 3 * u * u * t * p1.X + 3 * u * t * t * p2.X + t * t * t * p3.X,
-                    u * u * u * p0.Y + 3 * u * u * t * p1.Y + 3 * u * t * t * p2.Y + t * t * t * p3.Y });
-            }
         }
 
         double DistanceToSegment(
@@ -964,6 +945,12 @@ namespace midipatchbay
             [&nodeId](NodeVisual const& n) { return n.NodeId == nodeId; });
 
         return it == m_nodes.end() ? nullptr : &(*it);
+    }
+
+    _Use_decl_annotations_
+    double PatchCanvas::HeightOf(NodeVisual const& node) noexcept
+    {
+        return node.Height > 0 ? node.Height : (node.IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
     }
 
     _Use_decl_annotations_
@@ -2205,226 +2192,6 @@ namespace midipatchbay
     }
     MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the connections.")
 
-    void PatchCanvas::RedrawConnections() noexcept
-    {
-        if (m_patch == nullptr)
-        {
-            return;
-        }
-
-        try
-        {
-            for (auto& visual : m_connections)
-            {
-                auto const* connection = m_patch->FindConnection(visual.ConnectionId);
-
-                if (connection == nullptr || visual.Line == nullptr)
-                {
-                    continue;
-                }
-
-                PortKey sourceKey{ connection->SourceId, true, connection->SourceGroupIndex };
-                PortKey destinationKey{ connection->DestinationId, false, connection->DestinationGroupIndex };
-
-                auto const from = PortPoint(sourceKey);
-                auto const to = PortPoint(destinationKey);
-
-                visual.Samples.clear();
-
-                if (!from.has_value() || !to.has_value())
-                {
-                    visual.Line.Visibility(xaml::Visibility::Collapsed);
-
-                    if (visual.Glow != nullptr)
-                    {
-                        visual.Glow.Visibility(xaml::Visibility::Collapsed);
-                    }
-
-                    if (visual.HitArea != nullptr)
-                    {
-                        visual.HitArea.Visibility(xaml::Visibility::Collapsed);
-                    }
-
-                    if (visual.Flash != nullptr)
-                    {
-                        visual.Flash.Visibility(xaml::Visibility::Collapsed);
-                    }
-
-                    if (visual.Pill != nullptr)
-                    {
-                        visual.Pill.Visibility(xaml::Visibility::Collapsed);
-                    }
-
-                    continue;
-                }
-
-                visual.Line.Visibility(xaml::Visibility::Visible);
-
-                if (visual.HitArea != nullptr)
-                {
-                    visual.HitArea.Visibility(xaml::Visibility::Visible);
-                }
-
-                if (visual.Flash != nullptr)
-                {
-                    visual.Flash.Visibility(xaml::Visibility::Visible);
-                }
-
-                if (visual.Pill != nullptr)
-                {
-                    visual.Pill.Visibility(xaml::Visibility::Visible);
-                }
-
-                auto const dx = std::abs(to->X - from->X);
-                auto const reach = static_cast<float>(std::clamp(dx * 0.55, 42.0, 140.0));
-
-                // Built twice on purpose: a Geometry is a DependencyObject and cannot be the
-                // Data of two Paths at once, so sharing one with the glow throws.
-                auto const buildGeometry = [&]()
-                    {
-                        media::PathGeometry geometry{};
-                        media::PathFigure figure{};
-
-                        figure.StartPoint(from.value());
-
-                        if (to->X < from->X + 20)
-                        {
-                            // A feedback connection: bow it under everything rather than
-                            // dragging it back through the nodes it came from.
-                            auto const bow = static_cast<float>(std::max(from->Y, to->Y) + 130.0);
-                            auto const mid = (from->X + to->X) / 2;
-
-                            media::BezierSegment first{};
-                            first.Point1(foundation::Point{ from->X + 90, from->Y });
-                            first.Point2(foundation::Point{ mid + 80, bow });
-                            first.Point3(foundation::Point{ mid, bow });
-
-                            media::BezierSegment second{};
-                            second.Point1(foundation::Point{ mid - 80, bow });
-                            second.Point2(foundation::Point{ to->X - 90, to->Y });
-                            second.Point3(to.value());
-
-                            figure.Segments().Append(first);
-                            figure.Segments().Append(second);
-                        }
-                        else
-                        {
-                            media::BezierSegment segment{};
-                            segment.Point1(foundation::Point{ from->X + reach, from->Y });
-                            segment.Point2(foundation::Point{ to->X - reach, to->Y });
-                            segment.Point3(to.value());
-
-                            figure.Segments().Append(segment);
-                        }
-
-                        geometry.Figures().Append(figure);
-
-                        return geometry;
-                    };
-
-                visual.Line.Data(buildGeometry());
-
-                // The same curves, as points, for finding what a drop landed on.
-                if (to->X < from->X + 20)
-                {
-                    auto const bow = static_cast<float>(std::max(from->Y, to->Y) + 130.0);
-                    auto const mid = (from->X + to->X) / 2;
-
-                    AppendCurveSamples(visual.Samples, from.value(),
-                        foundation::Point{ from->X + 90, from->Y }, foundation::Point{ mid + 80, bow }, foundation::Point{ mid, bow });
-                    AppendCurveSamples(visual.Samples, foundation::Point{ mid, bow },
-                        foundation::Point{ mid - 80, bow }, foundation::Point{ to->X - 90, to->Y }, to.value());
-                }
-                else
-                {
-                    AppendCurveSamples(visual.Samples, from.value(),
-                        foundation::Point{ from->X + reach, from->Y }, foundation::Point{ to->X - reach, to->Y }, to.value());
-                }
-
-                if (visual.HitArea != nullptr)
-                {
-                    visual.HitArea.Data(buildGeometry());
-                }
-
-                if (visual.Flash != nullptr)
-                {
-                    visual.Flash.Data(buildGeometry());
-                }
-
-                if (visual.Glow != nullptr)
-                {
-                    visual.Glow.Data(buildGeometry());
-                    ApplyConnectionAppearance(visual);
-                }
-
-                if (visual.PillText != nullptr)
-                {
-                    auto const sourceIsBlock = m_patch->IsBlock(connection->SourceId);
-                    auto const destinationIsBlock = m_patch->IsBlock(connection->DestinationId);
-
-                    winrt::hstring pill{};
-
-                    if (!sourceIsBlock && !destinationIsBlock)
-                    {
-                        pill = connection->SourceGroupIndex == AllGroups &&
-                            connection->DestinationGroupIndex == AllGroups
-                            ? resources::GetString(L"ConnectionPillAllGroups")
-                            : resources::FormatString(L"ConnectionPillFormat",
-                                connection->SourceGroupIndex == AllGroups
-                                    ? std::wstring{ resources::GetString(L"ConnectionPillAny") }
-                                    : std::to_wstring(connection->SourceGroupIndex + 1),
-                                connection->DestinationGroupIndex == AllGroups
-                                    ? std::wstring{ resources::GetString(L"ConnectionPillSame") }
-                                    : std::to_wstring(connection->DestinationGroupIndex + 1));
-                    }
-                    else if (!sourceIsBlock && connection->SourceGroupIndex != AllGroups)
-                    {
-                        // Only an endpoint end has a group, so only that end can say one.
-                        pill = resources::FormatString(L"ConnectionPillFromGroupFormat", connection->SourceGroupIndex + 1);
-                    }
-                    else if (!destinationIsBlock && connection->DestinationGroupIndex != AllGroups)
-                    {
-                        pill = resources::FormatString(L"ConnectionPillToGroupFormat", connection->DestinationGroupIndex + 1);
-                    }
-
-                    visual.PillText.Text(pill);
-
-                    if (visual.Pill != nullptr)
-                    {
-                        visual.Pill.Visibility(pill.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
-                    }
-                }
-
-                if (visual.Pill != nullptr && visual.Pill.Visibility() == xaml::Visibility::Visible)
-                {
-                    visual.Pill.Measure(foundation::Size{ 400, 40 });
-
-                    auto const size = visual.Pill.DesiredSize();
-
-                    // On the curve rather than between the endpoints: a bowed feedback
-                    // connection would otherwise label itself on top of a node.
-                    auto const mid = visual.Line.Data() != nullptr
-                        ? visual.Line.Data().Bounds()
-                        : foundation::Rect{};
-
-                    auto const pillX = to->X < from->X + 20
-                        ? mid.X + mid.Width / 2
-                        : (from->X + to->X) / 2;
-
-                    auto const pillY = to->X < from->X + 20
-                        ? mid.Y + mid.Height - size.Height / 2
-                        : (from->Y + to->Y) / 2;
-
-                    controls::Canvas::SetLeft(visual.Pill, pillX - size.Width / 2);
-                    controls::Canvas::SetTop(visual.Pill, pillY - size.Height / 2);
-                }
-            }
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the connections.")
-
-        RedrawAnswerPaths();
-    }
-
     void PatchCanvas::BuildAnswerPaths() noexcept
     {
         try
@@ -3400,6 +3167,7 @@ namespace midipatchbay
         m_retargeting = false;
         m_dragMoved = false;
         m_dragSourcePort = key;
+        m_dragAnchorNodeId = key.NodeId;
         m_dragWantsOutput = !key.IsOutput;
         m_hoverPort.reset();
 
@@ -3452,6 +3220,7 @@ namespace midipatchbay
             m_dragMoved = false;
             m_dragWantsOutput = movingSource;
             m_dragAnchor = anchor.value();
+            m_dragAnchorNodeId = movingSource ? connection->DestinationId : connection->SourceId;
             m_hoverPort.reset();
 
             if (m_dragLine != nullptr)
@@ -3543,22 +3312,7 @@ namespace midipatchbay
                 }
             }
 
-            auto const reach = static_cast<float>(std::clamp(std::abs(end.X - from.X) * 0.55, 42.0, 140.0));
-
-            media::PathGeometry geometry{};
-            media::PathFigure figure{};
-
-            figure.StartPoint(from);
-
-            media::BezierSegment segment{};
-            segment.Point1(foundation::Point{ from.X + reach, from.Y });
-            segment.Point2(foundation::Point{ end.X - reach, end.Y });
-            segment.Point3(end);
-
-            figure.Segments().Append(segment);
-            geometry.Figures().Append(figure);
-
-            m_dragLine.Data(geometry);
+            m_dragLine.Data(MakeCordGeometry(PlanDragLine(end, target)));
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the connection being made.")
     }

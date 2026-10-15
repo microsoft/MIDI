@@ -130,6 +130,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="CordPath.h" />
     <ClInclude Include="DialogParts.h" />
     <ClInclude Include="MessageFilter.h" />
     <ClInclude Include="MessageText.h" />
@@ -256,8 +257,12 @@
     <ClCompile Include="PatchFolderMove.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="CordPath.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MessageText.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
+    <ClCompile Include="PatchCanvasCords.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
     <ClCompile Include="PatchLibrary.cpp" />
     <ClCompile Include="PatchModel.cpp" />
