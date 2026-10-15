@@ -29,7 +29,7 @@ foreach ($name in 'midi-mcp-spike.exe', 'Windows.Devices.Midi2.dll', 'Windows.De
     catch { Rename-Item $path ('{0}.{1:yyyyMMddHHmmss}.old' -f $name, (Get-Date)); Write-Host "$name is in use, so it was moved aside. Restart the server in the MCP host to pick up the new build." }
 }
 
-& $msbuild (Join-Path $PSScriptRoot 'midi-mcp-spike.vcxproj') /t:Build /m /nologo /v:minimal `
+& $msbuild (Join-Path $PSScriptRoot 'midi-mcp-spike.vcxproj') /t:Build -low /p:CL_MPCount=4 /nologo /v:minimal `
     "/p:Configuration=$Configuration" "/p:Platform=$Platform"
 
 exit $LASTEXITCODE

@@ -25,6 +25,23 @@ namespace winrt::midisettings::implementation
         static void ShowNotificationsOnLaunch(_In_ bool const value) noexcept { s_showNotificationsOnLaunch = value; }
         static bool ShowNotificationsOnLaunch() noexcept { return s_showNotificationsOnLaunch; }
 
+        // The Configurations window to open once the main window is up: a page, or a package to
+        // import. Both empty means it isn't opened.
+        static void ConfigurationsOnLaunch(_In_ std::wstring const& page, _In_ std::wstring const& package) noexcept
+        {
+            try
+            {
+                s_configurationsPageOnLaunch = page;
+                s_packageOnLaunch = package;
+            }
+            catch (...)
+            {
+            }
+        }
+
+        static std::wstring const& ConfigurationsPageOnLaunch() noexcept { return s_configurationsPageOnLaunch; }
+        static std::wstring const& PackageOnLaunch() noexcept { return s_packageOnLaunch; }
+
     private:
         void OnUnhandledException(
             foundation::IInspectable const& sender,
@@ -32,6 +49,8 @@ namespace winrt::midisettings::implementation
 
         static bool s_isElevated;
         static bool s_showNotificationsOnLaunch;
+        static std::wstring s_configurationsPageOnLaunch;
+        static std::wstring s_packageOnLaunch;
 
         xaml::Window m_window{ nullptr };
     };

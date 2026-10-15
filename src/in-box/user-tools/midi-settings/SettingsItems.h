@@ -13,7 +13,6 @@
 #include "OrphanedCustomizationItem.g.h"
 #include "RelinkCandidateItem.g.h"
 #include "TransportChoice.g.h"
-#include "ConfigFileChoice.g.h"
 
 // The endpoint watcher updates rows in place rather than rebuilding the collection, so every
 // row type raises property changed. Nothing here throws: a failing notification must never
@@ -271,24 +270,6 @@ namespace winrt::midisettings::implementation
         winrt::hstring m_displayName{};
         winrt::hstring m_transportCode{};
     };
-
-    struct ConfigFileChoice : ConfigFileChoiceT<ConfigFileChoice>
-    {
-        ConfigFileChoice() = default;
-
-        ConfigFileChoice(winrt::hstring const& displayName, winrt::hstring const& fileName) :
-            m_displayName(displayName),
-            m_fileName(fileName)
-        {
-        }
-
-        winrt::hstring DisplayName() const noexcept { return m_displayName; }
-        winrt::hstring FileName() const noexcept { return m_fileName; }
-
-    private:
-        winrt::hstring m_displayName{};
-        winrt::hstring m_fileName{};
-    };
 }
 
 namespace winrt::midisettings::factory_implementation
@@ -299,5 +280,4 @@ namespace winrt::midisettings::factory_implementation
     struct OrphanedCustomizationItem : OrphanedCustomizationItemT<OrphanedCustomizationItem, implementation::OrphanedCustomizationItem> {};
     struct RelinkCandidateItem : RelinkCandidateItemT<RelinkCandidateItem, implementation::RelinkCandidateItem> {};
     struct TransportChoice : TransportChoiceT<TransportChoice, implementation::TransportChoice> {};
-    struct ConfigFileChoice : ConfigFileChoiceT<ConfigFileChoice, implementation::ConfigFileChoice> {};
 }

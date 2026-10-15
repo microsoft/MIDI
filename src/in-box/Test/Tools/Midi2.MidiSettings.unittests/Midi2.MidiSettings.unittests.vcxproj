@@ -69,7 +69,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-settings;$(ProjectDir)..\..\..\Inc;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-settings;$(ProjectDir)..\..\..\user-tools\midi-settings\config-engine;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(ProjectDir)..\..\..\Inc;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -95,14 +95,49 @@
   <ItemGroup>
     <ClInclude Include="EndpointSettingsTests.h" />
     <ClInclude Include="EndpointCustomizationHardwareTests.h" />
+    <ClInclude Include="ConfigEngineTestSupport.h" />
+    <ClInclude Include="ConfigPackageTests.h" />
+    <ClInclude Include="ConfigMergeTests.h" />
+    <ClInclude Include="ConfigFileTests.h" />
     <!-- shared by source with midisettings, so the dialogs' save logic is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-settings\EndpointSettings.h" />
+    <!-- the Configurations window's engine, also shared by source -->
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigEngine.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigJson.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigKeys.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigWrite.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigInventory.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigPackage.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigPictures.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigFiles.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigBackups.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ImportPlan.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ImportApply.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-settings\config-engine\ConfigShare.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\Deflate.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ZipArchive.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
     <ClCompile Include="EndpointSettingsTests.cpp" />
     <ClCompile Include="EndpointCustomizationHardwareTests.cpp" />
+    <ClCompile Include="ConfigEngineTestSupport.cpp" />
+    <ClCompile Include="ConfigPackageTests.cpp" />
+    <ClCompile Include="ConfigMergeTests.cpp" />
+    <ClCompile Include="ConfigFileTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-settings\EndpointSettings.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigJson.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigWrite.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigInventory.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigPackage.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigPictures.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigFiles.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigBackups.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ImportPlan.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ImportApply.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-settings\config-engine\ConfigShare.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\Deflate.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ZipArchive.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

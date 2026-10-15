@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="variants" content="restart">
+<title>7. Import, done</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>7. Done.</b> What happened, in plain sentences, with anything that didn't happen called out. Variant: <span class="mono">?state=restart</span>, when the customer chose the package's port names.</p>
+  <div class="window">
+    <div class="titlebar">
+      <img class="appicon" src="appicon.png" alt="">
+      <span class="title">Configurations - Windows MIDI Settings</span>
+      <span class="preview-chiclet">PREVIEW</span>
+      <span class="spacer"></span>
+      <span class="caption-btn gl">&#xE921;</span>
+      <span class="caption-btn gl">&#xE922;</span>
+      <span class="caption-btn gl">&#xE8BB;</span>
+    </div>
+    <div class="body">
+      <div class="nav">
+        <div class="nav-toggle gl">&#xE700;</div>
+        <div class="nav-item"><span class="gl">&#xE81E;</span>Configurations</div>
+        <div class="nav-item"><span class="gl">&#xE81C;</span>Backups</div>
+        <div class="nav-item"><span class="gl">&#xE72D;</span>Share</div>
+        <div class="nav-item sel"><span class="gl">&#xE8B5;</span>Import</div>
+        <div class="grow"></div>
+        <div class="nav-foot">This PC is STAGE-LAPTOP</div>
+      </div>
+      <div class="content">
+        <div class="scroll">
+          <div class="h1">Import</div>
+
+          <div class="card" style="padding:18px 16px 8px 16px" data-mark="1">
+            <div class="hstack" style="gap:16px; margin-bottom:10px">
+              <div class="ico big success gl">&#xE930;</div>
+              <div class="txt">
+                <div class="t big">Studio is now part of Live set</div>
+                <div class="s" style="color:var(--text2)">It starts working when the MIDI service restarts.</div>
+              </div>
+            </div>
+            <div class="result"><span class="gl ok">&#xE73E;</span><span>11 device names and 6 pictures added. Your names for 3 devices were kept.</span></div>
+            <div class="result"><span class="gl ok">&#xE73E;</span><span>The DAW Out loopback was added.</span></div>
+            <div class="result"><span class="gl warn">&#xE7BA;</span><span>The Max loopback wasn't added, because this PC already has one called Max.</span></div>
+            <div class="result"><span class="gl ok">&#xE73E;</span><span>The network host STUDIO-PC was added as STAGE-LAPTOP.</span></div>
+            <div class="result"><span class="gl warn">&#xE7BA;</span><span>The network host Practice wasn't added, because this PC already has one called Practice.</span></div>
+            <div class="result"><span class="gl ok">&#xE73E;</span><span>The connection to BomeBox was added. It works whenever BomeBox is on the network.</span></div>
+            <div class="result"><span class="gl ok">&#xE73E;</span><span>2 Bluetooth devices added. They connect when they're in range.</span></div>
+            <div class="result"><span class="gl info">&#xE946;</span><span>The RTP-MIDI host is saved, and starts working once RTP-MIDI is installed.</span></div>
+            <div class="result" data-not="restart"><span class="gl ok">&#xE73E;</span><span>Your synthesizer mode and port names weren't changed.</span></div>
+            <div class="result" data-only="restart"><span class="gl ok">&#xE73E;</span><span>Synthesizer mode set to Modern.</span></div>
+            <div class="result" data-only="restart"><span class="gl warn">&#xE7BA;</span><span>Port names for older apps will change after the MIDI service restarts.</span></div>
+          </div>
+
+          <div class="infobar caution" data-mark="3">
+            <span class="ib-icon">!</span>
+            <div class="ib-text"><span class="ib-title">Restart the MIDI service to finish</span>Close your music apps first. Anything using MIDI loses its connections<span data-only="restart">, and apps may need their ports picked again</span>.</div>
+            <span class="btn">Restart MIDI service</span>
+          </div>
+
+          <div class="hstack" style="margin-top:4px">
+            <span class="btn accent" style="width:120px">Done</span>
+            <span class="btn" data-mark-right="2"><span class="gl">&#xE7A7;</span>Undo this import</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>One line per result,</b> green when it's in the configuration, yellow when it was left out or needs extra care, blue when it's waiting for something else.</li>
+    <li><b>Undo this import</b> restores the full backup made just before it: configuration, pictures and settings. The same backup is on the Backups page, labeled "Before importing from STUDIO-PC".</li>
+    <li><b>Import writes the configuration file, so the MIDI service always restarts to use it.</b> Done leaves the banner until it does. When the package's port names were chosen (<span class="mono">restart</span>), the banner also says apps may need their ports picked again.</li>
+  </ol>
+</div>
+</body>
+</html>

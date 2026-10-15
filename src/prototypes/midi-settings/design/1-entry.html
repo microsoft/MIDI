@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>1. Opening the Configurations window</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+<style>
+    .frame { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.10); box-shadow: var(--shadow); }
+    .main-top { width: 1536px; height: 136px; background: #202020 url(main-window-top.png) 0 0 / 1536px auto no-repeat; }
+    .main-top .cover { position: absolute; left: 1222px; top: 41px; width: 314px; height: 81px; background: #202020; }
+    .main-top .sep { position: absolute; left: 1238px; top: 62px; width: 1px; height: 40px; background: #2C2C2C; }
+    .tb { position: absolute; top: 45px; width: 92px; height: 74px; border-radius: 4px; display: flex; flex-direction: column; align-items: center; }
+    .tb .gl { font-size: 20px; height: 24px; margin-top: 7px; display: flex; align-items: center; }
+    .tb .tb-label { font-size: 12px; line-height: 16px; text-align: center; margin-top: 3px; width: 84px; }
+    .global { width: 688px; }
+    .global .dlg-body { gap: 10px; }
+    .global .hdr { font-size: 14px; font-weight: 600; margin-top: 6px; }
+    .global .help { font-size: 12px; color: var(--text2); line-height: 16px; }
+    .global .card { padding: 14px 16px; }
+    .global .radio { min-height: 32px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="page wide">
+  <p class="caption-above"><b>1. Opening the window.</b> The top of today's main window, with one new button in the pinned group on the right of the toolbar. Below it, the slimmer configuration card in Global MIDI settings.</p>
+
+  <div class="frame main-top">
+    <div class="cover"></div>
+    <div class="sep"></div>
+    <div class="tb new" style="left:1246px" data-mark="1"><span class="gl">&#xE81E;</span><span class="tb-label">Configurations</span></div>
+    <div class="tb" style="left:1341px"><span class="gl">&#xE774;</span><span class="tb-label">Global MIDI Settings</span></div>
+    <div class="tb" style="left:1435px"><span class="gl">&#xEA8F;</span><span class="tb-label">Notifications</span></div>
+  </div>
+
+  <div class="frame global">
+    <div class="dialog global" style="border:none; box-shadow:none; border-radius:0">
+      <div class="dlg-body">
+        <div class="dlg-title">Global MIDI settings</div>
+        <div class="hdr">Configuration</div>
+        <div class="help">Your device names, pictures, loopbacks and connections are kept in a configuration. Only one is in use at a time.</div>
+        <div class="card hstack" style="gap:14px">
+          <div class="ico gl">&#xE81E;</div>
+          <div class="txt">
+            <div class="hstack"><span class="t">Live set</span><span class="chip accent">In use</span></div>
+            <div class="s">Switch, back up, restore, share or import in Configurations</div>
+          </div>
+          <span class="btn" data-mark="2">Manage configurations...</span>
+        </div>
+        <div class="hdr">Default MIDI 1.0 port naming</div>
+        <div class="help">How ports are named for older apps which use WinMM or WinRT MIDI 1.0. Changing this renames ports, so apps may need to be pointed at them again.</div>
+        <div class="card vstack" style="gap:2px">
+          <div class="radio on"><span class="dot"></span>Let Windows choose for each device (recommended)</div>
+          <div class="radio"><span class="dot"></span>New style, based on the endpoint and block names</div>
+          <div class="radio"><span class="dot"></span>Compatible with older Windows</div>
+        </div>
+      </div>
+      <div class="dlg-foot" style="justify-content:flex-end"><span class="btn" style="flex:0 0 316px">Close</span></div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Configurations joins the pinned group</b> on the right of the toolbar, beside Global MIDI Settings and Notifications. It opens the window, or brings it forward when it's already open. The pinned group never moves into the overflow menu, so the button is always there.</li>
+    <li><b>Global MIDI settings keeps only the name of the configuration in use</b> and a button that opens the window. Create, Back up now, Add a configuration file and Restore move to the window, so the card fits the dialog again.</li>
+  </ol>
+</div>
+</body>
+</html>

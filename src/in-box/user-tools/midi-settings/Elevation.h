@@ -12,6 +12,7 @@ namespace midisettings
     bool IsProcessElevated() noexcept;
 
     // Starts a second copy with the runas verb and hands back whether the prompt was accepted.
-    // The caller closes this window afterwards.
-    bool TryRelaunchElevated() noexcept;
+    // The caller closes this window afterwards. The parameters are the new copy's command line
+    // switches, so it can open where this one was.
+    bool TryRelaunchElevated(_In_ std::wstring const& parameters = {}) noexcept;
 }

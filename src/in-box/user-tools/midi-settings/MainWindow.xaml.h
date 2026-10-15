@@ -46,6 +46,7 @@ namespace winrt::midisettings::implementation
         void OnClockClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnGlassClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnTroubleshooterClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnConfigurationsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnGlobalSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnNotificationsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -86,9 +87,7 @@ namespace winrt::midisettings::implementation
         void OnRelinkCandidateSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         // Global settings
-        winrt::fire_and_forget OnApplyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnCreateConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnCopyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnManageConfigurationsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnPortNamingChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSynthEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSynthOptionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -186,6 +185,18 @@ namespace winrt::midisettings::implementation
         void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
 
+        // --- the Configurations window (MainWindowConfigurations.cpp) ---
+
+        // Opens the one Configurations window, or brings it forward, on a page or with a package.
+        void ShowConfigurations(_In_ std::wstring_view page) noexcept;
+        void OpenConfigurationPackage(_In_ std::wstring const& path) noexcept;
+        void CloseConfigurations() noexcept;
+        void ApplyConfigurationsAppearance() noexcept;
+        void ApplyConfigurationsAlwaysOnTop() noexcept;
+
+        // Release the single instance, start the elevated copy with these switches, and close.
+        bool RelaunchElevated(_In_ std::wstring const& parameters) noexcept;
+
         // Another MIDI tool can ask this app to open the notifications dialog, either on the
         // command line or, when a copy is already running, by posting to its window. Only a
         // subclass can see that message: the window class belongs to XAML.
@@ -201,6 +212,9 @@ namespace winrt::midisettings::implementation
             _In_ DWORD_PTR referenceData) noexcept;
 
         midiapp::WindowChrome m_chrome{};
+
+        // Owned by this window and closed with it. One at a time.
+        midisettings::ConfigurationsWindow m_configurationsWindow{ nullptr };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcherQueue{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_healthTimer{ nullptr };
@@ -274,9 +288,6 @@ namespace winrt::midisettings::implementation
             winrt::single_threaded_observable_vector<midisettings::Midi1PortItem>() };
 
         collections::IObservableVector<foundation::IInspectable> m_transportChoices{
-            winrt::single_threaded_observable_vector<foundation::IInspectable>() };
-
-        collections::IObservableVector<foundation::IInspectable> m_configFileChoices{
             winrt::single_threaded_observable_vector<foundation::IInspectable>() };
 
         // Transport code to display name, from the service. Empty when it could not be asked.

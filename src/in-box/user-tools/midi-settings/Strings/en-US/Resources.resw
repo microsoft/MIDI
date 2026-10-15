@@ -216,6 +216,15 @@
   <data name="TroubleshooterButtonText.Text" xml:space="preserve">
     <value>Troubleshoot and Fix</value>
   </data>
+  <data name="ConfigurationsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
+  <data name="ConfigurationsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Switch, back up, restore, share or import configurations</value>
+  </data>
+  <data name="ConfigurationsButtonText.Text" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
   <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Global MIDI Settings</value>
   </data>
@@ -357,7 +366,7 @@
     <value>Creating a configuration file lets your endpoint names, pictures and other settings survive a restart.</value>
   </data>
   <data name="FirstRunActionButton.Content" xml:space="preserve">
-    <value>Open MIDI settings</value>
+    <value>Open Configurations</value>
   </data>
   <data name="ServiceBar.Title" xml:space="preserve">
     <value>The MIDI service is not responding</value>
@@ -828,40 +837,22 @@
     <value>Restart as administrator</value>
   </data>
   <data name="GlobalConfigFileHeader.Text" xml:space="preserve">
-    <value>Configuration file</value>
+    <value>Configuration</value>
   </data>
   <data name="GlobalConfigFileHelp.Text" xml:space="preserve">
-    <value>Your endpoint names, pictures and transport setup are stored here. Only one file is active at a time.</value>
+    <value>Your device names, pictures, loopbacks and connections are kept in a configuration. Only one is in use at a time.</value>
   </data>
-  <data name="ConfigFileComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Configuration file</value>
+  <data name="GlobalConfigInUseChip.Text" xml:space="preserve">
+    <value>In use</value>
   </data>
-  <data name="ConfigFileActiveLabel.Text" xml:space="preserve">
-    <value>Active configuration</value>
+  <data name="GlobalConfigManageHelp.Text" xml:space="preserve">
+    <value>Switch, back up, restore, share or import in Configurations</value>
   </data>
-  <data name="ConfigFileApplyButton.Content" xml:space="preserve">
-    <value>Use this file</value>
+  <data name="GlobalConfigNone" xml:space="preserve">
+    <value>No configuration is in use yet</value>
   </data>
-  <data name="ConfigFileCreateLabel.Text" xml:space="preserve">
-    <value>Create a new configuration</value>
-  </data>
-  <data name="NewConfigNameTextBox.PlaceholderText" xml:space="preserve">
-    <value>New configuration name</value>
-  </data>
-  <data name="NewConfigNameTextBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>New configuration name</value>
-  </data>
-  <data name="CreateConfigButton.Content" xml:space="preserve">
-    <value>Create</value>
-  </data>
-  <data name="NewConfigNameHelp.Text" xml:space="preserve">
-    <value>Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file.</value>
-  </data>
-  <data name="ConfigFileCopyLabel.Text" xml:space="preserve">
-    <value>Back up the active configuration</value>
-  </data>
-  <data name="CopyConfigButton.Content" xml:space="preserve">
-    <value>Save a copy of the active file...</value>
+  <data name="ManageConfigurationsButton.Content" xml:space="preserve">
+    <value>Manage configurations...</value>
   </data>
   <data name="GlobalPortNamingHeader.Text" xml:space="preserve">
     <value>Default MIDI 1.0 port naming</value>
@@ -962,30 +953,6 @@
   <data name="RestartServiceButton.Content" xml:space="preserve">
     <value>Restart the MIDI service</value>
   </data>
-  <data name="ConfigFileCurrentFormat" xml:space="preserve">
-    <value>{0} (in use)</value>
-  </data>
-  <data name="ConfigFileNoSelection" xml:space="preserve">
-    <value>Choose a configuration file first.</value>
-  </data>
-  <data name="ConfigFileNoneActive" xml:space="preserve">
-    <value>There is no active configuration file to copy.</value>
-  </data>
-  <data name="ConfigFileFailedFormat" xml:space="preserve">
-    <value>That did not work. {0}</value>
-  </data>
-  <data name="ConfigFileChangedRestartNeeded" xml:space="preserve">
-    <value>The configuration file was changed. Restart the MIDI service to use it.</value>
-  </data>
-  <data name="ConfigFileCreatedRestartNeeded" xml:space="preserve">
-    <value>The configuration file was created and is now the active one. Restart the MIDI service to use it.</value>
-  </data>
-  <data name="ConfigFileCopiedFormat" xml:space="preserve">
-    <value>Copied to {0}</value>
-  </data>
-  <data name="ConfigNameNotUsable" xml:space="preserve">
-    <value>Enter a name using letters, numbers, spaces, hyphens or underscores.</value>
-  </data>
   <data name="PortNamingChangedRestartNeeded" xml:space="preserve">
     <value>The default port naming was changed. Restart the MIDI service to use it.</value>
   </data>
@@ -1003,5 +970,1483 @@
   </data>
   <data name="ElevationDeclined" xml:space="preserve">
     <value>Administrator rights were not granted, so these settings cannot be changed.</value>
+  </data>
+
+  <!-- ===================================================================================== -->
+  <!-- Configurations window                                                                  -->
+  <!-- ===================================================================================== -->
+
+  <data name="CfgWindowTitle" xml:space="preserve">
+    <value>Configurations - Windows MIDI Settings</value>
+  </data>
+  <data name="CfgThisPcFormat" xml:space="preserve">
+    <value>This PC is {0}</value>
+    <comment>{0} is the computer name.</comment>
+  </data>
+  <data name="CfgHandoffFailedMessage" xml:space="preserve">
+    <value>Windows MIDI Settings is running as administrator, so it can't open this package from here. In Windows MIDI Settings, open Configurations and choose the package on the Import page.</value>
+  </data>
+  <data name="CfgNavConfigurations.Content" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
+  <data name="CfgNavBackups.Content" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="CfgNavShare.Content" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  <data name="CfgNavImport.Content" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="CfgElevationBar.Title" xml:space="preserve">
+    <value>Administrator rights are needed</value>
+  </data>
+  <data name="CfgElevationBar.Message" xml:space="preserve">
+    <value>You can look around and share. Changes need administrator rights.</value>
+  </data>
+  <data name="CfgReopenElevatedButton.Content" xml:space="preserve">
+    <value>Reopen as administrator</value>
+  </data>
+  <data name="CfgElevationDeclinedTitle" xml:space="preserve">
+    <value>Windows MIDI Settings wasn't reopened as administrator</value>
+  </data>
+  <data name="CfgElevationDeclinedMessage" xml:space="preserve">
+    <value>Administrator rights weren't granted, so changes still can't be made here.</value>
+  </data>
+  <data name="CfgCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CfgNameHeader" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CfgNameTakenFormat" xml:space="preserve">
+    <value>There's already a configuration called {0}.</value>
+  </data>
+  <data name="CfgRestartServiceButton.Content" xml:space="preserve">
+    <value>Restart MIDI service</value>
+  </data>
+  <data name="CfgRestartServiceCommand" xml:space="preserve">
+    <value>Restart MIDI service</value>
+  </data>
+  <data name="CfgRestartLater" xml:space="preserve">
+    <value>Restart later</value>
+  </data>
+  <data name="CfgRestartMessage" xml:space="preserve">
+    <value>Close your music apps first. Anything using MIDI loses its connections.</value>
+  </data>
+  <data name="CfgRestartMessagePorts" xml:space="preserve">
+    <value>Close your music apps first. Anything using MIDI loses its connections, and apps may need their ports picked again.</value>
+  </data>
+  <data name="CfgRestartingTitle" xml:space="preserve">
+    <value>Restarting the MIDI service...</value>
+  </data>
+  <data name="CfgRestartedTitle" xml:space="preserve">
+    <value>The MIDI service restarted</value>
+  </data>
+  <data name="CfgRestartedMessage" xml:space="preserve">
+    <value>It's using the configuration now. Apps that use MIDI can connect again.</value>
+  </data>
+  <data name="CfgRestartFailedTitle" xml:space="preserve">
+    <value>The MIDI service didn't restart</value>
+  </data>
+  <data name="CfgSavedTitleFormat" xml:space="preserve">
+    <value>Saved "{0}"</value>
+    <comment>{0} is a file name.</comment>
+  </data>
+  <data name="CfgSavedMessage" xml:space="preserve">
+    <value>On the other PC, open it from Import.</value>
+  </data>
+  <data name="CfgSavedPicturesMissingOne" xml:space="preserve">
+    <value>1 picture wasn't on this PC, so it was left out.</value>
+  </data>
+  <data name="CfgSavedPicturesMissingFormat" xml:space="preserve">
+    <value>{0} pictures weren't on this PC, so they were left out.</value>
+  </data>
+  <data name="CfgShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="CfgTwoSentencesFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>Two sentences, one after the other.</comment>
+  </data>
+  <data name="CfgDotSeparatedFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="CfgListSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>Between the items of a short list, such as "8 device names, 2 loopbacks". Keep the space.</comment>
+  </data>
+  <data name="CfgNoValue" xml:space="preserve">
+    <value>–</value>
+    <comment>Shown in a table where there's no value.</comment>
+  </data>
+
+  <!-- dates and times -->
+  <data name="CfgDatePictureShort" xml:space="preserve">
+    <value>MMM d</value>
+    <comment>A date picture for GetDateFormatEx, such as "Oct 12".</comment>
+  </data>
+  <data name="CfgDatePictureShortWithYear" xml:space="preserve">
+    <value>MMM d, yyyy</value>
+    <comment>A date picture for GetDateFormatEx, such as "Oct 12, 2025".</comment>
+  </data>
+  <data name="CfgDatePictureDay" xml:space="preserve">
+    <value>dddd, MMMM d</value>
+    <comment>A date picture for GetDateFormatEx, such as "Monday, October 12".</comment>
+  </data>
+  <data name="CfgDatePictureDayWithYear" xml:space="preserve">
+    <value>dddd, MMMM d, yyyy</value>
+    <comment>A date picture for GetDateFormatEx.</comment>
+  </data>
+  <data name="CfgDatePictureLong" xml:space="preserve">
+    <value>MMMM d</value>
+    <comment>A date picture for GetDateFormatEx, such as "September 14".</comment>
+  </data>
+  <data name="CfgDatePictureLongWithYear" xml:space="preserve">
+    <value>MMMM d, yyyy</value>
+    <comment>A date picture for GetDateFormatEx.</comment>
+  </data>
+  <data name="CfgDatePictureFull" xml:space="preserve">
+    <value>MMM d, yyyy</value>
+    <comment>A date picture for GetDateFormatEx, such as "Oct 12, 2026".</comment>
+  </data>
+  <data name="CfgDatePictureFullWithYear" xml:space="preserve">
+    <value>MMM d, yyyy</value>
+    <comment>A date picture for GetDateFormatEx.</comment>
+  </data>
+  <data name="CfgWhenTodayFormat" xml:space="preserve">
+    <value>today at {0}</value>
+    <comment>{0} is a time, such as 3:20 PM.</comment>
+  </data>
+  <data name="CfgWhenTodayCapitalFormat" xml:space="preserve">
+    <value>Today at {0}</value>
+  </data>
+  <data name="CfgWhenYesterdayFormat" xml:space="preserve">
+    <value>yesterday at {0}</value>
+  </data>
+  <data name="CfgWhenYesterdayCapitalFormat" xml:space="preserve">
+    <value>Yesterday at {0}</value>
+  </data>
+  <data name="CfgWhenDateFormat" xml:space="preserve">
+    <value>on {0} at {1}</value>
+    <comment>{0} is a date, {1} a time.</comment>
+  </data>
+  <data name="CfgWhenDateCapitalFormat" xml:space="preserve">
+    <value>{0} at {1}</value>
+  </data>
+  <data name="CfgToday" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="CfgYesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+
+  <!-- counts: One is used for exactly one, Format for every other number -->
+  <data name="CfgCountDeviceNamesOne" xml:space="preserve">
+    <value>1 device name</value>
+  </data>
+  <data name="CfgCountDeviceNamesFormat" xml:space="preserve">
+    <value>{0} device names</value>
+  </data>
+  <data name="CfgCountPicturesOne" xml:space="preserve">
+    <value>1 picture</value>
+  </data>
+  <data name="CfgCountPicturesFormat" xml:space="preserve">
+    <value>{0} pictures</value>
+  </data>
+  <data name="CfgCountLoopbacksOne" xml:space="preserve">
+    <value>1 loopback</value>
+  </data>
+  <data name="CfgCountLoopbacksFormat" xml:space="preserve">
+    <value>{0} loopbacks</value>
+  </data>
+  <data name="CfgCountNetworkHostsOne" xml:space="preserve">
+    <value>1 network host</value>
+  </data>
+  <data name="CfgCountNetworkHostsFormat" xml:space="preserve">
+    <value>{0} network hosts</value>
+  </data>
+  <data name="CfgCountBluetoothDevicesOne" xml:space="preserve">
+    <value>1 Bluetooth device</value>
+  </data>
+  <data name="CfgCountBluetoothDevicesFormat" xml:space="preserve">
+    <value>{0} Bluetooth devices</value>
+  </data>
+  <data name="CfgCountHostsOne" xml:space="preserve">
+    <value>1 host</value>
+  </data>
+  <data name="CfgCountHostsFormat" xml:space="preserve">
+    <value>{0} hosts</value>
+  </data>
+  <data name="CfgCountConnectionsOne" xml:space="preserve">
+    <value>1 connection</value>
+  </data>
+  <data name="CfgCountConnectionsFormat" xml:space="preserve">
+    <value>{0} connections</value>
+  </data>
+  <data name="CfgCountNamesOne" xml:space="preserve">
+    <value>1 name</value>
+  </data>
+  <data name="CfgCountNamesFormat" xml:space="preserve">
+    <value>{0} names</value>
+  </data>
+  <data name="CfgCountDevicesOne" xml:space="preserve">
+    <value>1 device</value>
+  </data>
+  <data name="CfgCountDevicesFormat" xml:space="preserve">
+    <value>{0} devices</value>
+  </data>
+  <data name="CfgCountOtherTransportsOne" xml:space="preserve">
+    <value>Settings for 1 other transport</value>
+  </data>
+  <data name="CfgCountOtherTransportsFormat" xml:space="preserve">
+    <value>Settings for {0} other transports</value>
+  </data>
+  <data name="CfgCountOlderBackupsOne" xml:space="preserve">
+    <value>1 older backup</value>
+  </data>
+  <data name="CfgCountOlderBackupsFormat" xml:space="preserve">
+    <value>{0} older backups</value>
+  </data>
+  <data name="CfgNothingSetUp" xml:space="preserve">
+    <value>Nothing set up yet</value>
+  </data>
+  <data name="CfgContentsSynthesizer" xml:space="preserve">
+    <value>Synthesizer settings</value>
+  </data>
+  <data name="CfgContentsOtherSettings" xml:space="preserve">
+    <value>Other settings</value>
+  </data>
+  <data name="CfgContentsNetworkFormat" xml:space="preserve">
+    <value>Network MIDI 2.0: {0}</value>
+    <comment>{0} is a list such as "2 hosts, 2 connections".</comment>
+  </data>
+  <data name="CfgContentsRtpFormat" xml:space="preserve">
+    <value>RTP-MIDI: {0}</value>
+  </data>
+  <data name="CfgSynthModeCompatible" xml:space="preserve">
+    <value>Compatible</value>
+  </data>
+  <data name="CfgSynthModeModern" xml:space="preserve">
+    <value>Modern</value>
+  </data>
+  <data name="CfgDefaultPackageName" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="CfgPackageFileTypeName" xml:space="preserve">
+    <value>Configuration packages</value>
+  </data>
+  <data name="CfgPackageOrConfigFileTypeName" xml:space="preserve">
+    <value>Configuration packages and files</value>
+  </data>
+  <data name="CfgAllFilesFileTypeName" xml:space="preserve">
+    <value>All files</value>
+  </data>
+
+  <!-- why something didn't happen -->
+  <data name="CfgErrorNoFolder" xml:space="preserve">
+    <value>The configurations folder couldn't be opened.</value>
+  </data>
+  <data name="CfgErrorNameNotUsable" xml:space="preserve">
+    <value>That name can't be used. Try letters, numbers and spaces.</value>
+  </data>
+  <data name="CfgErrorNameTaken" xml:space="preserve">
+    <value>Something with that name is already there.</value>
+  </data>
+  <data name="CfgErrorNotFound" xml:space="preserve">
+    <value>It isn't there anymore.</value>
+  </data>
+  <data name="CfgErrorEmpty" xml:space="preserve">
+    <value>There's nothing in it.</value>
+  </data>
+  <data name="CfgErrorTooLarge" xml:space="preserve">
+    <value>It's too large to be a configuration.</value>
+  </data>
+  <data name="CfgErrorNotAConfiguration" xml:space="preserve">
+    <value>It isn't a Windows MIDI Services configuration.</value>
+  </data>
+  <data name="CfgErrorNotAPackage" xml:space="preserve">
+    <value>It isn't a configuration package.</value>
+  </data>
+  <data name="CfgErrorNewerPackage" xml:space="preserve">
+    <value>It was made by a newer version of Windows MIDI Settings. Update this PC to open it.</value>
+  </data>
+  <data name="CfgErrorDamaged" xml:space="preserve">
+    <value>The file is damaged.</value>
+  </data>
+  <data name="CfgErrorInUse" xml:space="preserve">
+    <value>It's in use. Switch to another configuration first.</value>
+  </data>
+  <data name="CfgErrorChangedSincePlanned" xml:space="preserve">
+    <value>It changed while you were looking at it. Look it over again, then try again.</value>
+  </data>
+  <data name="CfgErrorBackupFailed" xml:space="preserve">
+    <value>A backup couldn't be made first, so nothing was changed.</value>
+  </data>
+  <data name="CfgErrorReadFailed" xml:space="preserve">
+    <value>It couldn't be read.</value>
+  </data>
+  <data name="CfgErrorWriteFailed" xml:space="preserve">
+    <value>It couldn't be saved.</value>
+  </data>
+  <data name="CfgErrorLinkRefused" xml:space="preserve">
+    <value>It's a link to another file, so it was left alone.</value>
+  </data>
+  <data name="CfgErrorRegistryFailed" xml:space="preserve">
+    <value>Windows didn't accept the change.</value>
+  </data>
+  <data name="CfgErrorDeleteFailed" xml:space="preserve">
+    <value>It couldn't be deleted.</value>
+  </data>
+  <data name="CfgErrorUnexpected" xml:space="preserve">
+    <value>Something unexpected went wrong.</value>
+  </data>
+  <data name="CfgErrorWithSystemFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is one of the reasons above, {1} the reason Windows gave.</comment>
+  </data>
+
+  <!-- Configurations page -->
+  <data name="CfgConfigurationsTitle.Text" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
+  <data name="CfgConfigurationsIntro.Text" xml:space="preserve">
+    <value>Your device names, pictures, loopbacks and connections are kept in a configuration. Only one is in use at a time.</value>
+  </data>
+  <data name="CfgSwitchPendingBar.Message" xml:space="preserve">
+    <value>Close your music apps first. Anything using MIDI loses its connections.</value>
+  </data>
+  <data name="CfgSwitchPendingTitleFormat" xml:space="preserve">
+    <value>Restart the MIDI service to switch to {0}</value>
+  </data>
+  <data name="CfgChangesPendingBar.Title" xml:space="preserve">
+    <value>Restart the MIDI service to finish</value>
+  </data>
+  <data name="CfgChangesPendingBar.Message" xml:space="preserve">
+    <value>Close your music apps first. Anything using MIDI loses its connections.</value>
+  </data>
+  <data name="CfgInUseChip.Text" xml:space="preserve">
+    <value>In use</value>
+  </data>
+  <data name="CfgInUseUntilRestartChip.Text" xml:space="preserve">
+    <value>In use until the restart</value>
+  </data>
+  <data name="CfgRenameInUseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="CfgRenameNamedFormat" xml:space="preserve">
+    <value>Rename {0}</value>
+  </data>
+  <data name="CfgBackUpNowText.Text" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="CfgBackUpInUseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="CfgShareText.Text" xml:space="preserve">
+    <value>Share...</value>
+  </data>
+  <data name="CfgShareInUseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Share...</value>
+  </data>
+  <data name="CfgKeepUsingFormat" xml:space="preserve">
+    <value>Keep using {0}</value>
+  </data>
+  <data name="CfgNoConfigurationText.Text" xml:space="preserve">
+    <value>No configuration is in use yet, so nothing you set up is kept when the MIDI service restarts. Create one with New configuration, or use one below.</value>
+  </data>
+  <data name="CfgUnreadableConfiguration" xml:space="preserve">
+    <value>It can't be read, so it may be damaged.</value>
+  </data>
+  <data name="CfgAlsoOnThisPc.Text" xml:space="preserve">
+    <value>Also on this PC</value>
+  </data>
+  <data name="CfgNewConfigurationText.Text" xml:space="preserve">
+    <value>New configuration</value>
+  </data>
+  <data name="CfgNewConfigurationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New configuration</value>
+  </data>
+  <data name="CfgNewEmptyItem.Text" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="CfgNewCopyOfFormat" xml:space="preserve">
+    <value>Copy of {0}</value>
+  </data>
+  <data name="CfgNoOtherConfigurations.Text" xml:space="preserve">
+    <value>This is the only configuration on this PC.</value>
+  </data>
+  <data name="CfgStartsAfterRestartChip" xml:space="preserve">
+    <value>Starts after the restart</value>
+  </data>
+  <data name="CfgRowSubtitleFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>{0} says when it changed, {1} what's in it.</comment>
+  </data>
+  <data name="CfgUseThisOne" xml:space="preserve">
+    <value>Use this one</value>
+  </data>
+  <data name="CfgUseThisOneNamedFormat" xml:space="preserve">
+    <value>Use {0}</value>
+  </data>
+  <data name="CfgMoreOptions" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="CfgMoreOptionsFormat" xml:space="preserve">
+    <value>More options for {0}</value>
+  </data>
+  <data name="CfgMenuRename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="CfgMenuDuplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="CfgMenuBackUp" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="CfgMenuShare" xml:space="preserve">
+    <value>Share...</value>
+  </data>
+  <data name="CfgMenuDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CfgChangedToday" xml:space="preserve">
+    <value>Changed today</value>
+  </data>
+  <data name="CfgChangedYesterday" xml:space="preserve">
+    <value>Changed yesterday</value>
+  </data>
+  <data name="CfgChangedOnFormat" xml:space="preserve">
+    <value>Changed {0}</value>
+    <comment>{0} is a date, such as Oct 12.</comment>
+  </data>
+  <data name="CfgChangedTodayAtFormat" xml:space="preserve">
+    <value>Changed today at {0}</value>
+  </data>
+  <data name="CfgChangedYesterdayAtFormat" xml:space="preserve">
+    <value>Changed yesterday at {0}</value>
+  </data>
+  <data name="CfgCreatedToday" xml:space="preserve">
+    <value>Created today</value>
+  </data>
+  <data name="CfgCreatedYesterday" xml:space="preserve">
+    <value>Created yesterday</value>
+  </data>
+  <data name="CfgCreatedOnFormat" xml:space="preserve">
+    <value>Created {0}</value>
+  </data>
+  <data name="CfgImportedToday" xml:space="preserve">
+    <value>Imported today</value>
+  </data>
+  <data name="CfgImportedYesterday" xml:space="preserve">
+    <value>Imported yesterday</value>
+  </data>
+  <data name="CfgImportedOnFormat" xml:space="preserve">
+    <value>Imported on {0}</value>
+  </data>
+  <data name="CfgImportedFromTodayFormat" xml:space="preserve">
+    <value>Imported from {0} today</value>
+    <comment>{0} is a computer name.</comment>
+  </data>
+  <data name="CfgImportedFromYesterdayFormat" xml:space="preserve">
+    <value>Imported from {0} yesterday</value>
+  </data>
+  <data name="CfgImportedFromOnFormat" xml:space="preserve">
+    <value>Imported from {0} on {1}</value>
+  </data>
+  <data name="CfgAPackage" xml:space="preserve">
+    <value>a package</value>
+  </data>
+  <data name="CfgChangedWhenImportedFormat" xml:space="preserve">
+    <value>{0}, when you imported {1}</value>
+  </data>
+  <data name="CfgChangedWhenImportedFromFormat" xml:space="preserve">
+    <value>{0}, when you imported {1} from {2}</value>
+    <comment>{0} says when, {1} is the package's name, {2} a computer name.</comment>
+  </data>
+  <data name="CfgChangedWhenRestoredFormat" xml:space="preserve">
+    <value>{0}, when you restored a backup</value>
+  </data>
+  <data name="CfgSwitchTitleFormat" xml:space="preserve">
+    <value>Switch to {0}?</value>
+  </data>
+  <data name="CfgSwitchTextFormat" xml:space="preserve">
+    <value>{0} takes over when the MIDI service restarts. Close your music apps first, because anything using MIDI loses its connections.</value>
+  </data>
+  <data name="CfgSwitchCaptionFormat" xml:space="preserve">
+    <value>{0} stays on this PC, so you can switch back any time.</value>
+  </data>
+  <data name="CfgSwitchFailedFormat" xml:space="preserve">
+    <value>Couldn't switch to {0}</value>
+  </data>
+  <data name="CfgRenameTitleFormat" xml:space="preserve">
+    <value>Rename {0}</value>
+  </data>
+  <data name="CfgRenameButton" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="CfgRenameFailedFormat" xml:space="preserve">
+    <value>Couldn't rename {0}</value>
+  </data>
+  <data name="CfgCopyOfFormat" xml:space="preserve">
+    <value>Copy of {0}</value>
+  </data>
+  <data name="CfgNewConfigurationTitle" xml:space="preserve">
+    <value>New configuration</value>
+  </data>
+  <data name="CfgDuplicateTitle" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="CfgCreateButton" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CfgCreatedTitleFormat" xml:space="preserve">
+    <value>{0} is ready</value>
+  </data>
+  <data name="CfgCreatedMessage" xml:space="preserve">
+    <value>It's in the list below. Choose Use this one when you want it.</value>
+  </data>
+  <data name="CfgCreateFailedFormat" xml:space="preserve">
+    <value>Couldn't create {0}</value>
+  </data>
+  <data name="CfgBackedUpTitleFormat" xml:space="preserve">
+    <value>{0} is backed up</value>
+  </data>
+  <data name="CfgBackedUpMessage" xml:space="preserve">
+    <value>Find it on the Backups page.</value>
+  </data>
+  <data name="CfgBackUpFailedFormat" xml:space="preserve">
+    <value>Couldn't back up {0}</value>
+  </data>
+  <data name="CfgDeleteTitleFormat" xml:space="preserve">
+    <value>Delete {0}?</value>
+  </data>
+  <data name="CfgDeleteText" xml:space="preserve">
+    <value>It's backed up first, so you can get it back from Backups.</value>
+  </data>
+  <data name="CfgDeleteButton" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CfgDeletedTitleFormat" xml:space="preserve">
+    <value>{0} is deleted</value>
+  </data>
+  <data name="CfgDeletedMessage" xml:space="preserve">
+    <value>A backup of it is on the Backups page.</value>
+  </data>
+  <data name="CfgDeleteFailedFormat" xml:space="preserve">
+    <value>Couldn't delete {0}</value>
+  </data>
+
+  <!-- Backups page -->
+  <data name="CfgBackupsTitle.Text" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="CfgBackupsIntro.Text" xml:space="preserve">
+    <value>Backups are made by themselves before changes, and you can make one any time. Each one keeps the configuration, its pictures and its settings.</value>
+  </data>
+  <data name="CfgBackUpNamedNowFormat" xml:space="preserve">
+    <value>Back up {0} now</value>
+  </data>
+  <data name="CfgBackUpNow" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="CfgDeleteOldBackupsText.Text" xml:space="preserve">
+    <value>Delete old backups...</value>
+  </data>
+  <data name="CfgDeleteOldBackupsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Delete old backups...</value>
+  </data>
+  <data name="CfgBackupFilterComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show backups of</value>
+  </data>
+  <data name="CfgAllConfigurations" xml:space="preserve">
+    <value>All configurations</value>
+  </data>
+  <data name="CfgNoBackups.Text" xml:space="preserve">
+    <value>There are no backups yet. One is made before every import, restore and delete, and you can make one any time.</value>
+  </data>
+  <data name="CfgBackupList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="CfgShowOlderBackupsButton.Content" xml:space="preserve">
+    <value>Show them</value>
+  </data>
+  <data name="CfgOlderFromBeforeFormat" xml:space="preserve">
+    <value>From before {0}</value>
+    <comment>{0} is a date, such as September 14.</comment>
+  </data>
+  <data name="CfgBackupRowFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>{0} is a time, {1} why the backup was made.</comment>
+  </data>
+  <data name="CfgBackupRowConfigOnlyFormat" xml:space="preserve">
+    <value>{0} · {1} · Configuration only</value>
+  </data>
+  <data name="CfgBackupRowAccessibleFormat" xml:space="preserve">
+    <value>{0}, {1}. {2}</value>
+    <comment>Read by screen readers: the configuration, when, and why.</comment>
+  </data>
+  <data name="CfgReasonConfigOnlyFormat" xml:space="preserve">
+    <value>{0}. Configuration only</value>
+  </data>
+  <data name="CfgReasonDaily" xml:space="preserve">
+    <value>Before the day's first change</value>
+  </data>
+  <data name="CfgReasonDailySentence" xml:space="preserve">
+    <value>before the day's first change</value>
+  </data>
+  <data name="CfgReasonEarlier" xml:space="preserve">
+    <value>From an earlier version of MIDI Settings</value>
+  </data>
+  <data name="CfgReasonEarlierSentence" xml:space="preserve">
+    <value>made by an earlier version of MIDI Settings</value>
+  </data>
+  <data name="CfgReasonYou" xml:space="preserve">
+    <value>You backed it up</value>
+  </data>
+  <data name="CfgReasonYouSentence" xml:space="preserve">
+    <value>when you backed it up</value>
+  </data>
+  <data name="CfgReasonImport" xml:space="preserve">
+    <value>Before an import</value>
+  </data>
+  <data name="CfgReasonImportSentence" xml:space="preserve">
+    <value>before an import</value>
+  </data>
+  <data name="CfgReasonImportFromFormat" xml:space="preserve">
+    <value>Before importing from {0}</value>
+    <comment>{0} is a computer name.</comment>
+  </data>
+  <data name="CfgReasonImportFromSentenceFormat" xml:space="preserve">
+    <value>before importing from {0}</value>
+  </data>
+  <data name="CfgReasonRestore" xml:space="preserve">
+    <value>Before restoring an older backup</value>
+  </data>
+  <data name="CfgReasonRestoreSentence" xml:space="preserve">
+    <value>before an older backup was restored</value>
+  </data>
+  <data name="CfgReasonDelete" xml:space="preserve">
+    <value>Before it was deleted</value>
+  </data>
+  <data name="CfgReasonDeleteSentence" xml:space="preserve">
+    <value>before it was deleted</value>
+  </data>
+  <data name="CfgReasonOther" xml:space="preserve">
+    <value>Backed up</value>
+  </data>
+  <data name="CfgReasonOtherSentence" xml:space="preserve">
+    <value>when it was backed up</value>
+  </data>
+  <data name="CfgBackupWhenFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} says when, such as "Today at 3:20 PM", {1} why, such as "before importing from STUDIO-PC".</comment>
+  </data>
+  <data name="CfgBackupReading" xml:space="preserve">
+    <value>Reading the backup...</value>
+  </data>
+  <data name="CfgBackupUnreadable" xml:space="preserve">
+    <value>This backup can't be read, so it may be damaged.</value>
+  </data>
+  <data name="CfgTableWhatsInIt" xml:space="preserve">
+    <value>What's in it</value>
+  </data>
+  <data name="CfgTableThisBackup" xml:space="preserve">
+    <value>This backup</value>
+  </data>
+  <data name="CfgTableNow" xml:space="preserve">
+    <value>Now</value>
+  </data>
+  <data name="CfgTableDeviceNames" xml:space="preserve">
+    <value>Device names</value>
+  </data>
+  <data name="CfgTablePictures" xml:space="preserve">
+    <value>Pictures</value>
+  </data>
+  <data name="CfgTableLoopbacks" xml:space="preserve">
+    <value>Loopbacks</value>
+  </data>
+  <data name="CfgTableNetworkHosts" xml:space="preserve">
+    <value>Network hosts</value>
+  </data>
+  <data name="CfgTableNetworkConnections" xml:space="preserve">
+    <value>Network connections</value>
+  </data>
+  <data name="CfgTableRtpHosts" xml:space="preserve">
+    <value>RTP-MIDI hosts</value>
+  </data>
+  <data name="CfgTableBluetoothDevices" xml:space="preserve">
+    <value>Bluetooth devices</value>
+  </data>
+  <data name="CfgTableSynthMode" xml:space="preserve">
+    <value>Synthesizer mode</value>
+  </data>
+  <data name="CfgBackupConfigOnly" xml:space="preserve">
+    <value>Just the configuration. Pictures and the port names setting for older apps aren't in it.</value>
+  </data>
+  <data name="CfgBackupFullNoPictures" xml:space="preserve">
+    <value>A full backup: the configuration and the port names setting for older apps.</value>
+  </data>
+  <data name="CfgBackupFullPicturesOne" xml:space="preserve">
+    <value>A full backup: the configuration, its picture and the port names setting for older apps.</value>
+  </data>
+  <data name="CfgBackupFullPicturesFormat" xml:space="preserve">
+    <value>A full backup: the configuration, its {0} pictures and the port names setting for older apps.</value>
+  </data>
+  <data name="CfgRestoreText.Text" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="CfgRestoreBackupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="CfgShareBackupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Share...</value>
+  </data>
+  <data name="CfgDeleteBackupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Delete this backup</value>
+  </data>
+  <data name="CfgDeleteBackupTip" xml:space="preserve">
+    <value>Delete this backup</value>
+  </data>
+  <data name="CfgRestoreCaption.Text" xml:space="preserve">
+    <value>Restoring backs up what's there now first, so it can be undone too.</value>
+  </data>
+  <data name="CfgRestoreTitle" xml:space="preserve">
+    <value>Restore this backup?</value>
+  </data>
+  <data name="CfgRestoreButton" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="CfgRestoreReasonImportFormat" xml:space="preserve">
+    <value>before the import from {0}</value>
+  </data>
+  <data name="CfgRestoreTextFullFormat" xml:space="preserve">
+    <value>{0} goes back to how it was {1}, {2}, with its pictures and settings. What it has now is backed up first.</value>
+    <comment>{0} is the configuration, {1} says when, such as "today at 3:20 PM", {2} why the backup was made.</comment>
+  </data>
+  <data name="CfgRestoreTextFormat" xml:space="preserve">
+    <value>{0} goes back to how it was {1}, {2}. What it has now is backed up first.</value>
+  </data>
+  <data name="CfgRestoreTextMissingFormat" xml:space="preserve">
+    <value>{0} isn't on this PC anymore. Restoring brings it back the way it was {1}, {2}.</value>
+  </data>
+  <data name="CfgRestoreInUseCaptionFormat" xml:space="preserve">
+    <value>{0} is in use, so the restored version takes over when the MIDI service restarts. Close your music apps first.</value>
+  </data>
+  <data name="CfgRestoreNotInUseCaptionFormat" xml:space="preserve">
+    <value>{0} isn't in use, so nothing needs to restart.</value>
+  </data>
+  <data name="CfgRestoreFailedFormat" xml:space="preserve">
+    <value>Couldn't restore {0}</value>
+  </data>
+  <data name="CfgRestoredTitleFormat" xml:space="preserve">
+    <value>{0} is restored</value>
+  </data>
+  <data name="CfgRestoredInUseMessage" xml:space="preserve">
+    <value>It takes over when the MIDI service restarts. What it had before is backed up too, so this can be undone.</value>
+  </data>
+  <data name="CfgRestoredMessage" xml:space="preserve">
+    <value>What it had before is backed up too, so this can be undone.</value>
+  </data>
+  <data name="CfgShareFailedTitle" xml:space="preserve">
+    <value>The package couldn't be saved</value>
+  </data>
+  <data name="CfgDeleteBackupTitle" xml:space="preserve">
+    <value>Delete this backup?</value>
+  </data>
+  <data name="CfgDeleteBackupTextFormat" xml:space="preserve">
+    <value>The backup of {0} made {1} is deleted for good.</value>
+    <comment>{1} says when, such as "today at 3:20 PM" or "on Oct 12 at 4:05 PM".</comment>
+  </data>
+  <data name="CfgBackupDeletedTitle" xml:space="preserve">
+    <value>The backup is deleted</value>
+  </data>
+  <data name="CfgDeleteBackupFailedTitle" xml:space="preserve">
+    <value>The backup couldn't be deleted</value>
+  </data>
+  <data name="CfgCleanupTitle" xml:space="preserve">
+    <value>Delete old backups</value>
+  </data>
+  <data name="CfgCleanupText" xml:space="preserve">
+    <value>Keep the ones you're most likely to need, and delete the rest.</value>
+  </data>
+  <data name="CfgCleanupKeepHeader" xml:space="preserve">
+    <value>Keep</value>
+  </data>
+  <data name="CfgCleanupKeep7" xml:space="preserve">
+    <value>Backups from the last 7 days</value>
+  </data>
+  <data name="CfgCleanupKeep30" xml:space="preserve">
+    <value>Backups from the last 30 days</value>
+  </data>
+  <data name="CfgCleanupKeep90" xml:space="preserve">
+    <value>Backups from the last 90 days</value>
+  </data>
+  <data name="CfgCleanupKeepYear" xml:space="preserve">
+    <value>Backups from the last year</value>
+  </data>
+  <data name="CfgCleanupKeepNewestOne" xml:space="preserve">
+    <value>Always keep the newest one of each configuration</value>
+  </data>
+  <data name="CfgCleanupKeepNewestFormat" xml:space="preserve">
+    <value>Always keep the newest {0} of each configuration</value>
+  </data>
+  <data name="CfgCleanupNone" xml:space="preserve">
+    <value>No backups will be deleted.</value>
+  </data>
+  <data name="CfgCleanupCountOne" xml:space="preserve">
+    <value>1 backup will be deleted.</value>
+  </data>
+  <data name="CfgCleanupCountFormat" xml:space="preserve">
+    <value>{0} backups will be deleted.</value>
+  </data>
+  <data name="CfgCleanupButtonNone" xml:space="preserve">
+    <value>Delete backups</value>
+  </data>
+  <data name="CfgCleanupButtonOne" xml:space="preserve">
+    <value>Delete 1 backup</value>
+  </data>
+  <data name="CfgCleanupButtonFormat" xml:space="preserve">
+    <value>Delete {0} backups</value>
+  </data>
+  <data name="CfgCleanupDoneOne" xml:space="preserve">
+    <value>Deleted 1 backup</value>
+  </data>
+  <data name="CfgCleanupDoneFormat" xml:space="preserve">
+    <value>Deleted {0} backups</value>
+  </data>
+  <data name="CfgCleanupFailedOne" xml:space="preserve">
+    <value>1 backup couldn't be deleted.</value>
+  </data>
+  <data name="CfgCleanupFailedFormat" xml:space="preserve">
+    <value>{0} backups couldn't be deleted.</value>
+  </data>
+
+  <!-- Share page -->
+  <data name="CfgShareTitle.Text" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  <data name="CfgShareIntro.Text" xml:space="preserve">
+    <value>Make one package that sets up another PC the same way. Pictures go along with it.</value>
+  </data>
+  <data name="CfgShareSavedBar.Message" xml:space="preserve">
+    <value>On the other PC, open it from Import.</value>
+  </data>
+  <data name="CfgShowInFolderButton.Content" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="CfgShareConfigurationComboBox.Header" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="CfgSharePackageNameTextBox.Header" xml:space="preserve">
+    <value>Package name</value>
+  </data>
+  <data name="CfgShareNoteTextBox.Header" xml:space="preserve">
+    <value>Note for whoever opens it (optional)</value>
+  </data>
+  <data name="CfgShareNoteTextBox.PlaceholderText" xml:space="preserve">
+    <value>What it's for, or who it's from</value>
+  </data>
+  <data name="CfgWhatToInclude.Text" xml:space="preserve">
+    <value>What to include</value>
+  </data>
+  <data name="CfgSavePackageText.Text" xml:space="preserve">
+    <value>Save package...</value>
+  </data>
+  <data name="CfgSavePackageButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Save package...</value>
+  </data>
+  <data name="CfgNameInUseFormat" xml:space="preserve">
+    <value>{0} (in use)</value>
+  </data>
+  <data name="CfgPartDeviceNames" xml:space="preserve">
+    <value>Device names and pictures</value>
+  </data>
+  <data name="CfgPartLoopbacks" xml:space="preserve">
+    <value>Loopbacks</value>
+  </data>
+  <data name="CfgPartNetworkMidi2" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
+  </data>
+  <data name="CfgPartRtpMidi" xml:space="preserve">
+    <value>RTP-MIDI</value>
+  </data>
+  <data name="CfgPartBluetooth" xml:space="preserve">
+    <value>Bluetooth MIDI</value>
+  </data>
+  <data name="CfgPartOtherSettings" xml:space="preserve">
+    <value>Other settings</value>
+  </data>
+  <data name="CfgShareSynthMode" xml:space="preserve">
+    <value>Synthesizer mode</value>
+  </data>
+  <data name="CfgSharePortNames" xml:space="preserve">
+    <value>port names for older apps</value>
+    <comment>Follows another item in a list, so it starts in lowercase.</comment>
+  </data>
+  <data name="CfgSharePortNamesFirst" xml:space="preserve">
+    <value>Port names for older apps</value>
+  </data>
+  <data name="CfgShareOtherTransportsOne" xml:space="preserve">
+    <value>settings for 1 other transport</value>
+  </data>
+  <data name="CfgShareOtherTransportsFormat" xml:space="preserve">
+    <value>settings for {0} other transports</value>
+  </data>
+  <data name="CfgShareOtherTransportsFirstOne" xml:space="preserve">
+    <value>Settings for 1 other transport</value>
+  </data>
+  <data name="CfgShareOtherTransportsFirstFormat" xml:space="preserve">
+    <value>Settings for {0} other transports</value>
+  </data>
+  <data name="CfgShareNothing" xml:space="preserve">
+    <value>Nothing to share</value>
+  </data>
+  <data name="CfgShareIncludeNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>Read by screen readers: a part, and what's in it.</comment>
+  </data>
+  <data name="CfgShareNothingChosenTitle" xml:space="preserve">
+    <value>Nothing is ticked</value>
+  </data>
+  <data name="CfgShareNothingChosenMessage" xml:space="preserve">
+    <value>Tick at least one part to put in the package.</value>
+  </data>
+
+  <!-- Import page -->
+  <data name="CfgImportTitle.Text" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="CfgImportIntro.Text" xml:space="preserve">
+    <value>Bring in a configuration from another PC, or one someone shared with you.</value>
+  </data>
+  <data name="CfgDropPackageHere.Text" xml:space="preserve">
+    <value>Drop a package here</value>
+  </data>
+  <data name="CfgDropOr.Text" xml:space="preserve">
+    <value>or</value>
+  </data>
+  <data name="CfgChoosePackageButton.Content" xml:space="preserve">
+    <value>Choose a package...</value>
+  </data>
+  <data name="CfgOlderFilesWork.Text" xml:space="preserve">
+    <value>Configuration files saved by older versions of Windows MIDI Settings work too.</value>
+  </data>
+  <data name="CfgNotSureHeader.Text" xml:space="preserve">
+    <value>Not sure this is the right page?</value>
+  </data>
+  <data name="CfgMovingTitle.Text" xml:space="preserve">
+    <value>Moving to a new PC?</value>
+  </data>
+  <data name="CfgMovingText.Text" xml:space="preserve">
+    <value>On the old PC, open Configurations in Windows MIDI Settings and go to Share. Then bring the package here.</value>
+  </data>
+  <data name="CfgWantBackTitle.Text" xml:space="preserve">
+    <value>Want a configuration back the way it was?</value>
+  </data>
+  <data name="CfgWantBackText.Text" xml:space="preserve">
+    <value>Use Backups instead. It has earlier versions of each configuration on this PC.</value>
+  </data>
+  <data name="CfgDropCaption" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="CfgImportBusyTitle" xml:space="preserve">
+    <value>Wait for the change that's underway to finish, then try again.</value>
+  </data>
+  <data name="CfgOpenFailedFormat" xml:space="preserve">
+    <value>"{0}" can't be imported</value>
+    <comment>{0} is a file name.</comment>
+  </data>
+  <data name="CfgImportElevationBar.Title" xml:space="preserve">
+    <value>Administrator rights are needed</value>
+  </data>
+  <data name="CfgImportElevationBar.Message" xml:space="preserve">
+    <value>You can look at what this package would do. Importing it needs administrator rights.</value>
+  </data>
+  <data name="CfgChooseAnotherPackageButton.Content" xml:space="preserve">
+    <value>Choose another package</value>
+  </data>
+  <data name="CfgPlainFileChip" xml:space="preserve">
+    <value>Older configuration file</value>
+  </data>
+  <data name="CfgPlainFileDetail" xml:space="preserve">
+    <value>Saved by an older version of Windows MIDI Settings, so it has no pictures or settings.</value>
+  </data>
+  <data name="CfgFromPcFormat" xml:space="preserve">
+    <value>From {0}</value>
+    <comment>{0} is a computer name.</comment>
+  </data>
+  <data name="CfgSharedOnFormat" xml:space="preserve">
+    <value>Shared {0}</value>
+    <comment>{0} is a date, such as Oct 12, 2026.</comment>
+  </data>
+  <data name="CfgBackedUpOnFormat" xml:space="preserve">
+    <value>Backed up {0}</value>
+  </data>
+  <data name="CfgQuotedFormat" xml:space="preserve">
+    <value>"{0}"</value>
+    <comment>The note that came with the package, quoted.</comment>
+  </data>
+  <data name="CfgPutItInto.Text" xml:space="preserve">
+    <value>Put it into</value>
+  </data>
+  <data name="CfgIntoInUseTitleFormat" xml:space="preserve">
+    <value>{0}, the one in use</value>
+  </data>
+  <data name="CfgIntoInUseNoneTitle" xml:space="preserve">
+    <value>The one in use</value>
+  </data>
+  <data name="CfgIntoInUseNoneDetail" xml:space="preserve">
+    <value>No configuration is in use yet.</value>
+  </data>
+  <data name="CfgIntoInUseDetail" xml:space="preserve">
+    <value>Adds what's new and keeps what you have.</value>
+  </data>
+  <data name="CfgIntoInUseReplaceDetail" xml:space="preserve">
+    <value>Adds what's new. Your device names will be replaced.</value>
+  </data>
+  <data name="CfgImportIntoNewTitle.Text" xml:space="preserve">
+    <value>A new configuration</value>
+  </data>
+  <data name="CfgIntoNewTitle" xml:space="preserve">
+    <value>A new configuration</value>
+  </data>
+  <data name="CfgIntoNewDetailFormat" xml:space="preserve">
+    <value>Kept apart as {0}. Switch to it when you like.</value>
+  </data>
+  <data name="CfgWhatWillHappen.Text" xml:space="preserve">
+    <value>What will happen</value>
+  </data>
+  <data name="CfgNothingToImport" xml:space="preserve">
+    <value>There's nothing in this package to import.</value>
+  </data>
+  <data name="CfgPartWontBeImported" xml:space="preserve">
+    <value>Won't be imported</value>
+  </data>
+  <data name="CfgPartAllAdded" xml:space="preserve">
+    <value>All will be added</value>
+  </data>
+  <data name="CfgPartYoursReplaced" xml:space="preserve">
+    <value>Yours will be replaced</value>
+  </data>
+  <data name="CfgPartPackagesNamesUsed" xml:space="preserve">
+    <value>The package's names will be used</value>
+  </data>
+  <data name="CfgPartYoursKept" xml:space="preserve">
+    <value>Yours will be kept</value>
+  </data>
+  <data name="CfgOtherSynthAndPortNames" xml:space="preserve">
+    <value>Synthesizer mode and port names for older apps</value>
+  </data>
+  <data name="CfgOtherSynthMode" xml:space="preserve">
+    <value>Synthesizer mode</value>
+  </data>
+  <data name="CfgOtherPortNames" xml:space="preserve">
+    <value>Port names for older apps</value>
+  </data>
+  <data name="CfgSynthModeWillBeFormat" xml:space="preserve">
+    <value>Synthesizer mode will be {0}</value>
+  </data>
+  <data name="CfgPortNamesNotUsableShort" xml:space="preserve">
+    <value>This PC can't use the package's port names</value>
+  </data>
+  <data name="CfgPortNamesWillChange" xml:space="preserve">
+    <value>Port names will change after a MIDI service restart</value>
+  </data>
+  <data name="CfgPartSameAsYours" xml:space="preserve">
+    <value>Already the same as yours</value>
+  </data>
+  <data name="CfgPartNamesTakenOne" xml:space="preserve">
+    <value>1 name is already used here</value>
+  </data>
+  <data name="CfgPartNamesTakenFormat" xml:space="preserve">
+    <value>{0} names are already used here</value>
+  </data>
+  <data name="CfgPartRtpSaved" xml:space="preserve">
+    <value>Will be saved for when RTP-MIDI is installed on this PC</value>
+  </data>
+  <data name="CfgPartWillBeAddedOne" xml:space="preserve">
+    <value>1 will be added</value>
+  </data>
+  <data name="CfgPartWillBeAddedFormat" xml:space="preserve">
+    <value>{0} will be added</value>
+  </data>
+  <data name="CfgPartAlreadyHereOne" xml:space="preserve">
+    <value>1 is already here</value>
+  </data>
+  <data name="CfgPartAlreadyHereFormat" xml:space="preserve">
+    <value>{0} are already here</value>
+  </data>
+  <data name="CfgChoiceImport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="CfgChoiceDontImport" xml:space="preserve">
+    <value>Don't import</value>
+  </data>
+  <data name="CfgChoiceAddToMine" xml:space="preserve">
+    <value>Add to mine</value>
+  </data>
+  <data name="CfgChoiceReplaceMine" xml:space="preserve">
+    <value>Replace mine</value>
+  </data>
+  <data name="CfgChoiceKeepMine" xml:space="preserve">
+    <value>Keep mine</value>
+  </data>
+  <data name="CfgChoiceUsePackages" xml:space="preserve">
+    <value>Use the package's</value>
+  </data>
+  <data name="CfgPartChoiceNameFormat" xml:space="preserve">
+    <value>What to do with {0}</value>
+    <comment>Read by screen readers for a part's choice. {0} is the part, such as Loopbacks.</comment>
+  </data>
+  <data name="CfgShowDetailsFormat" xml:space="preserve">
+    <value>Show what happens to {0}</value>
+  </data>
+  <data name="CfgHideDetailsFormat" xml:space="preserve">
+    <value>Hide what happens to {0}</value>
+  </data>
+  <data name="CfgPartNotImportedNote" xml:space="preserve">
+    <value>None of these will be imported.</value>
+  </data>
+  <data name="CfgSharedDevicesChoiceName" xml:space="preserve">
+    <value>What to do with devices that already have your names</value>
+  </data>
+  <data name="CfgGroupHaveYourNamesOne" xml:space="preserve">
+    <value>1 of these devices already has your name</value>
+  </data>
+  <data name="CfgGroupHaveYourNamesFormat" xml:space="preserve">
+    <value>{0} of these devices already have your names</value>
+  </data>
+  <data name="CfgGroupLoseNames" xml:space="preserve">
+    <value>Will lose your names, because the package doesn't name them</value>
+  </data>
+  <data name="CfgGroupGetPackagesNames" xml:space="preserve">
+    <value>Will get the package's names instead of yours</value>
+  </data>
+  <data name="CfgGroupAlreadyHereOne" xml:space="preserve">
+    <value>1 name is already here</value>
+  </data>
+  <data name="CfgGroupAlreadyHereFormat" xml:space="preserve">
+    <value>{0} names are already here</value>
+  </data>
+  <data name="CfgGroupNewNamesOne" xml:space="preserve">
+    <value>1 new name</value>
+  </data>
+  <data name="CfgGroupNewNamesFormat" xml:space="preserve">
+    <value>{0} new names</value>
+  </data>
+  <data name="CfgShowAllFormat" xml:space="preserve">
+    <value>Show all {0}</value>
+  </data>
+  <data name="CfgWillKeepYourNameFormat" xml:space="preserve">
+    <value>Will keep your name, "{0}"</value>
+  </data>
+  <data name="CfgWillBeCalledFormat" xml:space="preserve">
+    <value>Will be called "{0}"</value>
+  </data>
+  <data name="CfgWillBeCalledInsteadFormat" xml:space="preserve">
+    <value>Will be called "{0}" instead of "{1}"</value>
+  </data>
+  <data name="CfgWillLoseYourNameFormat" xml:space="preserve">
+    <value>Will lose your name, "{0}"</value>
+  </data>
+  <data name="CfgWillLoseYourNameAndPictureFormat" xml:space="preserve">
+    <value>Will lose your name, "{0}", and its picture</value>
+  </data>
+  <data name="CfgWillKeepYourPicture" xml:space="preserve">
+    <value>Will keep your picture</value>
+  </data>
+  <data name="CfgWillKeepYourSettings" xml:space="preserve">
+    <value>Will keep your settings for it</value>
+  </data>
+  <data name="CfgWillGetPackagesPicture" xml:space="preserve">
+    <value>Will get the package's picture</value>
+  </data>
+  <data name="CfgWillGetPackagesSettings" xml:space="preserve">
+    <value>Will get the package's settings for it</value>
+  </data>
+  <data name="CfgWillLoseYourPicture" xml:space="preserve">
+    <value>Will lose your picture</value>
+  </data>
+  <data name="CfgWillLoseYourSettings" xml:space="preserve">
+    <value>Will lose your settings for it</value>
+  </data>
+  <data name="CfgAlreadyHereStays" xml:space="preserve">
+    <value>Already here, will stay as it is</value>
+  </data>
+  <data name="CfgWontBeImported" xml:space="preserve">
+    <value>Won't be imported</value>
+  </data>
+  <data name="CfgWillBeAdded" xml:space="preserve">
+    <value>Will be added</value>
+  </data>
+  <data name="CfgPluggedIn" xml:space="preserve">
+    <value>Plugged in</value>
+  </data>
+  <data name="CfgNotPluggedIn" xml:space="preserve">
+    <value>Not plugged in</value>
+  </data>
+  <data name="CfgUnknownDevice" xml:space="preserve">
+    <value>A device</value>
+  </data>
+  <data name="CfgDevicesNote" xml:space="preserve">
+    <value>Devices that aren't plugged in will get their names when they are. If one can't be found, MIDI Settings will ask you to match it up.</value>
+  </data>
+  <data name="CfgLoopbackPairFormat" xml:space="preserve">
+    <value>{0} (A) and (B)</value>
+    <comment>{0} is the name both ends of a loopback share.</comment>
+  </data>
+  <data name="CfgLoopbackEndsFormat" xml:space="preserve">
+    <value>{0} and {1}</value>
+  </data>
+  <data name="CfgLoopbackTakenFormat" xml:space="preserve">
+    <value>Won't be added. This PC already has a loopback called {0}.</value>
+  </data>
+  <data name="CfgThisPcsName" xml:space="preserve">
+    <value>this PC's name</value>
+  </data>
+  <data name="CfgHostItemFormat" xml:space="preserve">
+    <value>Host {0}</value>
+  </data>
+  <data name="CfgClientItemFormat" xml:space="preserve">
+    <value>Connection to {0}</value>
+  </data>
+  <data name="CfgHostTakenFormat" xml:space="preserve">
+    <value>Won't be added. This PC already has a host called {0}.</value>
+  </data>
+  <data name="CfgAddAsFormat" xml:space="preserve">
+    <value>Add as {0}</value>
+  </data>
+  <data name="CfgWillBeAddedAsFormat" xml:space="preserve">
+    <value>Will be added as {0}</value>
+  </data>
+  <data name="CfgTakesThisPcNameFormat" xml:space="preserve">
+    <value>Will be added as {0}, this PC's name</value>
+  </data>
+  <data name="CfgUseThisPcsName" xml:space="preserve">
+    <value>Use this PC's name</value>
+  </data>
+  <data name="CfgKeepsOtherPcNameFormat" xml:space="preserve">
+    <value>Will be added as {0}, the other PC's name</value>
+  </data>
+  <data name="CfgUsesAnyAdapter" xml:space="preserve">
+    <value>Will use any Wi-Fi or Ethernet adapter here, because the one it was set to isn't on this PC.</value>
+  </data>
+  <data name="CfgRtpNotInstalledNote" xml:space="preserve">
+    <value>RTP-MIDI isn't installed on this PC. These are saved now, and start working once it is.</value>
+  </data>
+  <data name="CfgWillBeInsteadFormat" xml:space="preserve">
+    <value>Will be {0} instead of {1}</value>
+  </data>
+  <data name="CfgStaysFormat" xml:space="preserve">
+    <value>Will stay {0}</value>
+  </data>
+  <data name="CfgPortNamesNotUsable" xml:space="preserve">
+    <value>This PC can't use the package's choice, so yours will be kept.</value>
+  </data>
+  <data name="CfgPortNamesWillChangeFormat" xml:space="preserve">
+    <value>Will be "{0}" after a MIDI service restart. Apps may need their ports picked again.</value>
+  </data>
+  <data name="CfgPortNamingClassic" xml:space="preserve">
+    <value>Compatible with older Windows</value>
+  </data>
+  <data name="CfgPortNamingNewStyle" xml:space="preserve">
+    <value>New style</value>
+  </data>
+  <data name="CfgPortNamingAutomatic" xml:space="preserve">
+    <value>Let Windows choose</value>
+  </data>
+  <data name="CfgOtherSectionItemFormat" xml:space="preserve">
+    <value>Settings for transport {0}</value>
+    <comment>{0} is the transport's ID.</comment>
+  </data>
+  <data name="CfgFooterIntoFormat" xml:space="preserve">
+    <value>Nothing changes until you choose Import, and {0} is backed up first. Afterward, the MIDI service restarts to use it.</value>
+  </data>
+  <data name="CfgFooterIntoPortsFormat" xml:space="preserve">
+    <value>Nothing changes until you choose Import, and {0} is backed up first. Afterward, the MIDI service restarts to use it, and apps may need their ports picked again.</value>
+  </data>
+  <data name="CfgFooterNew" xml:space="preserve">
+    <value>Nothing changes until you choose Import. The configuration in use isn't touched.</value>
+  </data>
+  <data name="CfgFooterNewPorts" xml:space="preserve">
+    <value>Nothing changes until you choose Import. The configuration in use isn't touched, but port names for older apps change after the MIDI service restarts.</value>
+  </data>
+  <data name="CfgImportCancelButton.Content" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CfgImportButton.Content" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="CfgImportChangedTitle" xml:space="preserve">
+    <value>The configuration changed while you were looking</value>
+  </data>
+  <data name="CfgImportChangedMessage" xml:space="preserve">
+    <value>This is what the package will do now. Look it over, then choose Import again.</value>
+  </data>
+  <data name="CfgImportFailedTitle" xml:space="preserve">
+    <value>Nothing was imported</value>
+  </data>
+
+  <!-- what the import did -->
+  <data name="CfgDoneIntoTitleFormat" xml:space="preserve">
+    <value>{0} is now part of {1}</value>
+    <comment>{0} is the package's name, {1} the configuration it went into.</comment>
+  </data>
+  <data name="CfgDoneIntoDetail" xml:space="preserve">
+    <value>It starts working when the MIDI service restarts.</value>
+  </data>
+  <data name="CfgDoneNewTitleFormat" xml:space="preserve">
+    <value>{0} is now on this PC</value>
+  </data>
+  <data name="CfgDoneNewDetail" xml:space="preserve">
+    <value>It's kept apart. Switch to it on the Configurations page when you like.</value>
+  </data>
+  <data name="CfgImportRestartBar.Title" xml:space="preserve">
+    <value>Restart the MIDI service to finish</value>
+  </data>
+  <data name="CfgImportDoneButton.Content" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="CfgUndoImportText.Text" xml:space="preserve">
+    <value>Undo this import</value>
+  </data>
+  <data name="CfgUndoImportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Undo this import</value>
+  </data>
+  <data name="CfgResultAddedFormat" xml:space="preserve">
+    <value>{0} added.</value>
+    <comment>{0} is a count, such as "11 device names".</comment>
+  </data>
+  <data name="CfgResultTwoAddedFormat" xml:space="preserve">
+    <value>{0} and {1} added.</value>
+    <comment>{0} and {1} are counts, such as "11 device names" and "6 pictures".</comment>
+  </data>
+  <data name="CfgResultNoNewNames" xml:space="preserve">
+    <value>No new device names.</value>
+  </data>
+  <data name="CfgResultNamesKeptOne" xml:space="preserve">
+    <value>Your name for 1 device was kept.</value>
+  </data>
+  <data name="CfgResultNamesKeptFormat" xml:space="preserve">
+    <value>Your names for {0} devices were kept.</value>
+  </data>
+  <data name="CfgResultNamesReplacedOne" xml:space="preserve">
+    <value>The package's name replaced yours for 1 device.</value>
+  </data>
+  <data name="CfgResultNamesReplacedFormat" xml:space="preserve">
+    <value>The package's names replaced yours for {0} devices.</value>
+  </data>
+  <data name="CfgResultNamesRemovedOne" xml:space="preserve">
+    <value>Your name for 1 device was removed.</value>
+  </data>
+  <data name="CfgResultNamesRemovedFormat" xml:space="preserve">
+    <value>Your names for {0} devices were removed.</value>
+  </data>
+  <data name="CfgResultNamesNotImported" xml:space="preserve">
+    <value>Device names and pictures weren't imported.</value>
+  </data>
+  <data name="CfgResultLoopbackAddedFormat" xml:space="preserve">
+    <value>The {0} loopback was added.</value>
+  </data>
+  <data name="CfgResultLoopbackAddedAsFormat" xml:space="preserve">
+    <value>The {0} loopback was added as {1}.</value>
+  </data>
+  <data name="CfgResultLoopbackLeftOutFormat" xml:space="preserve">
+    <value>The {0} loopback wasn't added, because this PC already has one called {0}.</value>
+  </data>
+  <data name="CfgResultLoopbacksNotImported" xml:space="preserve">
+    <value>Loopbacks weren't imported.</value>
+  </data>
+  <data name="CfgResultHostAddedFormat" xml:space="preserve">
+    <value>The network host {0} was added.</value>
+  </data>
+  <data name="CfgResultRtpHostAddedFormat" xml:space="preserve">
+    <value>The RTP-MIDI host {0} was added.</value>
+  </data>
+  <data name="CfgResultHostAddedAsFormat" xml:space="preserve">
+    <value>The network host {0} was added as {1}.</value>
+  </data>
+  <data name="CfgResultRtpHostAddedAsFormat" xml:space="preserve">
+    <value>The RTP-MIDI host {0} was added as {1}.</value>
+  </data>
+  <data name="CfgResultHostKeptNameFormat" xml:space="preserve">
+    <value>The network host {0} was added with the other PC's name. Don't use both PCs on the same network at once.</value>
+  </data>
+  <data name="CfgResultRtpHostKeptNameFormat" xml:space="preserve">
+    <value>The RTP-MIDI host {0} was added with the other PC's name. Don't use both PCs on the same network at once.</value>
+  </data>
+  <data name="CfgResultHostLeftOutFormat" xml:space="preserve">
+    <value>The network host {0} wasn't added, because this PC already has one called {0}.</value>
+  </data>
+  <data name="CfgResultRtpHostLeftOutFormat" xml:space="preserve">
+    <value>The RTP-MIDI host {0} wasn't added, because this PC already has one called {0}.</value>
+  </data>
+  <data name="CfgResultClientAddedFormat" xml:space="preserve">
+    <value>The connection to {0} was added. It works whenever {0} is on the network.</value>
+  </data>
+  <data name="CfgResultRtpClientAddedFormat" xml:space="preserve">
+    <value>The RTP-MIDI connection to {0} was added. It works whenever {0} is on the network.</value>
+  </data>
+  <data name="CfgResultNetworkNotImported" xml:space="preserve">
+    <value>Network MIDI 2.0 wasn't imported.</value>
+  </data>
+  <data name="CfgResultRtpNotImported" xml:space="preserve">
+    <value>RTP-MIDI wasn't imported.</value>
+  </data>
+  <data name="CfgResultRtpHostSaved" xml:space="preserve">
+    <value>The RTP-MIDI host is saved, and starts working once RTP-MIDI is installed.</value>
+  </data>
+  <data name="CfgResultRtpClientSaved" xml:space="preserve">
+    <value>The RTP-MIDI connection is saved, and starts working once RTP-MIDI is installed.</value>
+  </data>
+  <data name="CfgResultRtpSavedFormat" xml:space="preserve">
+    <value>The RTP-MIDI settings ({0}) are saved, and start working once RTP-MIDI is installed.</value>
+    <comment>{0} is a list such as "2 hosts, 1 connection".</comment>
+  </data>
+  <data name="CfgResultBluetoothAddedOne" xml:space="preserve">
+    <value>1 Bluetooth device added. It connects when it's in range.</value>
+  </data>
+  <data name="CfgResultBluetoothAddedFormat" xml:space="preserve">
+    <value>{0} Bluetooth devices added. They connect when they're in range.</value>
+  </data>
+  <data name="CfgResultBluetoothNotImported" xml:space="preserve">
+    <value>Bluetooth MIDI wasn't imported.</value>
+  </data>
+  <data name="CfgResultSynthModeSetFormat" xml:space="preserve">
+    <value>Synthesizer mode set to {0}.</value>
+  </data>
+  <data name="CfgResultPortNamingSet" xml:space="preserve">
+    <value>Port names for older apps will change after the MIDI service restarts.</value>
+  </data>
+  <data name="CfgResultPortNamingNotUsable" xml:space="preserve">
+    <value>This PC can't use the package's port names for older apps, so yours were kept.</value>
+  </data>
+  <data name="CfgResultPortNamingFailed" xml:space="preserve">
+    <value>The port names setting for older apps couldn't be changed.</value>
+  </data>
+  <data name="CfgResultOtherSettingsKept" xml:space="preserve">
+    <value>Your synthesizer mode and port names weren't changed.</value>
+  </data>
+  <data name="CfgResultOtherSectionAdded" xml:space="preserve">
+    <value>Settings for another transport were added.</value>
+  </data>
+  <data name="CfgResultPicturesFailedOne" xml:space="preserve">
+    <value>1 picture couldn't be copied to this PC.</value>
+  </data>
+  <data name="CfgResultPicturesFailedFormat" xml:space="preserve">
+    <value>{0} pictures couldn't be copied to this PC.</value>
+  </data>
+  <data name="CfgUndoneTitle" xml:space="preserve">
+    <value>The import is undone</value>
+  </data>
+  <data name="CfgUndoneIntoMessageFormat" xml:space="preserve">
+    <value>{0} is back the way it was before the import.</value>
+  </data>
+  <data name="CfgUndoneNewMessageFormat" xml:space="preserve">
+    <value>{0} was removed. A backup of it is on the Backups page.</value>
+  </data>
+  <data name="CfgUndoFailedTitle" xml:space="preserve">
+    <value>The import couldn't be undone</value>
   </data>
 </root>

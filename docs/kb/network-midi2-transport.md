@@ -103,7 +103,7 @@ Datagrams are capped at a 1400 byte UDP payload, which keeps the whole packet in
 
 Settings live in `C:\ProgramData\Microsoft\MIDI\WindowsMidiServices.midiconfig.json`, under the Network MIDI 2.0 transport's identifier.
 
-The file is designed to be portable: copying it to another PC carries your setup with it.
+To move your setup to another PC, don't copy this file. A copy replaces the other PC's whole configuration, and brings this PC's host names, host identity, and network adapter with it. Share a package from the **Configurations** window in [Windows MIDI Settings]({{ site.baseurl }}/tools/settings/#sharing-a-configuration) instead, and import it on the other PC. Importing adds your hosts and connections to what that PC already has, gives a host named after this PC the other PC's name, and lets a host use any network adapter there.
 
 A few rules apply to the whole file:
 

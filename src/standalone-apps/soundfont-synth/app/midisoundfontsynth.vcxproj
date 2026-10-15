@@ -215,7 +215,7 @@
     <PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260520.1" />
     <PackageReference Include="Microsoft.Windows.ImplementationLibrary" Version="1.0.260126.7" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
     <!-- The published Windows MIDI Services SDK, the same way any other app gets it. Its targets
          reference the winmd and copy the runtime beside the exe. -->
     <PackageReference Include="Windows.Devices.Midi2" Version="0.99.88-preview.10" />

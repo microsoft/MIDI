@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
 
 Windows MIDI Patchbay connects MIDI endpoints to each other. You drop the devices you care about onto a canvas, draw connections from one device's **Out** to another device's **In**, and from then on everything arriving on that connection point is passed along. Steps along the way can keep some messages out or change them, so one keyboard can play two instruments split at middle C, or a pedal that works backwards can be turned around.
 

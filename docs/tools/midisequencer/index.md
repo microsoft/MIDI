@@ -10,7 +10,7 @@ categories:
 
 > **This is a very early preview.** Windows MIDI Sequencer is new, and parts of it are still being built. Things will change, and some things don't work yet. Save often, and keep a copy of any sequence you care about. If something goes wrong, or you'd like something changed, tell us on [GitHub](https://github.com/microsoft/MIDI/issues).
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
 
 Windows MIDI Sequencer puts MIDI on a timeline, so you can build a song and play it back to your devices. Each track plays to one device. You can draw notes, set steps in a pattern, let a generator make a part for you, or record what you play. A clip launcher plays clips and scenes live, the way a groove box does.
 

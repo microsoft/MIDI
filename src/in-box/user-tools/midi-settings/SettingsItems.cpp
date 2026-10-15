@@ -14,7 +14,6 @@
 #include "OrphanedCustomizationItem.g.cpp"
 #include "RelinkCandidateItem.g.cpp"
 #include "TransportChoice.g.cpp"
-#include "ConfigFileChoice.g.cpp"
 
 #include "StringResources.h"
 

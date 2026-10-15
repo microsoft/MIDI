@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="variants" content="options,replace,restart">
+<title>6. Import, what will happen</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+<style>
+    .window.review { height: 1712px; }
+    .exp-head .combo { width: 168px; min-width: 0; }
+    .exp-body { padding-right: 54px; }
+    .item .name { font-weight: 600; font-size: 13px; }
+    .item .what { font-size: 13px; }
+    .item .state { font-size: 12px; color: var(--text3); white-space: nowrap; }
+    .item.text { font-size: 13px; color: var(--text2); }
+    .item .right .check { font-size: 13px; min-height: 30px; gap: 8px; width: 168px; justify-content: flex-start; }
+    .item .right .check .box { width: 18px; height: 18px; flex-basis: 18px; }
+    .thumb.blank { visibility: hidden; }
+    .item.group { font-size: 12px; font-weight: 600; color: var(--text2); min-height: 30px; padding-left: 28px; }
+    [data-mark].mark-near::before { left: -30px; top: 2px; }
+    .menu-item.selected { background: var(--control); position: relative; }
+    .menu-item.selected::after { content: ""; position: absolute; left: 0; top: 9px; width: 3px; height: 14px; border-radius: 2px; background: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>6. What will happen.</b> Opening a package shows what each part will do to this PC, before anything changes. Drawn taller than a real window so every section shows; the real list scrolls under the fixed footer. Variants: <span class="mono">?state=options</span>, <span class="mono">replace</span>, <span class="mono">restart</span>.</p>
+
+  <div class="window review">
+    <div class="titlebar">
+      <img class="appicon" src="appicon.png" alt="">
+      <span class="title">Configurations - Windows MIDI Settings</span>
+      <span class="preview-chiclet">PREVIEW</span>
+      <span class="spacer"></span>
+      <span class="caption-btn gl">&#xE921;</span>
+      <span class="caption-btn gl">&#xE922;</span>
+      <span class="caption-btn gl">&#xE8BB;</span>
+    </div>
+    <div class="body">
+      <div class="nav">
+        <div class="nav-toggle gl">&#xE700;</div>
+        <div class="nav-item"><span class="gl">&#xE81E;</span>Configurations</div>
+        <div class="nav-item"><span class="gl">&#xE81C;</span>Backups</div>
+        <div class="nav-item"><span class="gl">&#xE72D;</span>Share</div>
+        <div class="nav-item sel"><span class="gl">&#xE8B5;</span>Import</div>
+        <div class="grow"></div>
+        <div class="nav-foot">This PC is STAGE-LAPTOP</div>
+      </div>
+      <div class="content">
+        <div class="scroll" style="gap:10px">
+          <div class="h1">Import</div>
+
+          <div class="card hstack" style="gap:14px; padding:14px 16px" data-mark="1">
+            <div class="ico big accent gl">&#xE7B8;</div>
+            <div class="txt">
+              <div class="hstack"><span class="t big">Studio</span><span class="chip">From STUDIO-PC</span></div>
+              <div class="s">Shared Oct 12, 2026 · "Everything from the studio desktop"</div>
+            </div>
+            <span class="btn">Choose another package</span>
+          </div>
+
+          <div class="section" style="margin-top:4px"><span class="label">Put it into</span></div>
+          <div class="choice-cards" data-mark="2">
+            <div class="choice on">
+              <span class="radio on"><span class="dot"></span></span>
+              <div class="txt"><div class="t">Live set, the one in use</div><div class="s" data-not="replace">Adds what's new and keeps what you have.</div><div class="s" data-only="replace">Adds what's new. Your device names will be replaced.</div></div>
+            </div>
+            <div class="choice">
+              <span class="radio"><span class="dot"></span></span>
+              <div class="txt"><div class="t">A new configuration</div><div class="s">Kept apart as Studio (STUDIO-PC). Switch to it when you like.</div></div>
+            </div>
+          </div>
+
+          <div class="section" style="margin-top:4px"><span class="label">What will happen</span></div>
+
+          <div class="exp" style="position:relative">
+            <div class="exp-head">
+              <div class="ico gl">&#xE8EC;</div>
+              <div class="txt"><div class="t">Device names and pictures</div><div class="s" data-not="replace">14 device names, 6 pictures · Yours will be kept</div><div class="s" data-only="replace">14 device names, 6 pictures · Yours will be replaced</div></div>
+              <span class="combo" data-mark="3" data-not="replace">Add to mine</span>
+              <span class="combo" data-mark="3" data-only="replace">Replace mine</span>
+              <span class="chev">&#xE70E;</span>
+            </div>
+            <div class="flyout" data-only="options" style="right:50px; top:12px; width:176px; min-width:0">
+              <div class="menu-item selected">Add to mine</div>
+              <div class="menu-item">Replace mine</div>
+              <div class="menu-item">Don't import</div>
+            </div>
+            <div class="exp-body">
+              <div class="item group" data-not="replace">3 of these devices already have your names<span class="right"><span class="combo" style="width:168px; min-width:0; font-weight:normal; color:var(--text)">Keep mine</span></span></div>
+              <div class="item" data-not="replace"><span class="st same">&#xE73E;</span><span class="thumb" style="background:linear-gradient(135deg,#1e3d59,#5fa8d3)"></span><span class="name">Arturia KeyStep 37</span><span class="what">Will keep your name, "KeyStep"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item" data-not="replace"><span class="st same">&#xE73E;</span><span class="thumb blank"></span><span class="name">Novation Launchkey 49</span><span class="what">Will keep your name, "Launchkey"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item" data-not="replace"><span class="st same">&#xE73E;</span><span class="thumb blank"></span><span class="name">ESI M8U eX</span><span class="what">Will keep your name, "Rack MIDI"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item group" data-only="replace">Will lose your names, because the package doesn't name them</div>
+              <div class="item" data-only="replace"><span class="st warn">&#xE711;</span><span class="thumb blank"></span><span class="name">Behringer UMC404HD</span><span class="what">Will lose your name, "Interface"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item" data-only="replace"><span class="st warn">&#xE711;</span><span class="thumb" style="background:linear-gradient(135deg,#3a3a3a,#9a9a9a)"></span><span class="name">Yamaha P-125</span><span class="what">Will lose your name, "Piano", and its picture</span><span class="right"><span class="state">Not plugged in</span></span></div>
+              <div class="item group" data-only="replace">Will get the package's names instead of yours</div>
+              <div class="item" data-only="replace"><span class="st ok">&#xE73E;</span><span class="thumb" style="background:linear-gradient(135deg,#1e3d59,#5fa8d3)"></span><span class="name">Arturia KeyStep 37</span><span class="what">Will be called "KeyStep (Studio)" instead of "KeyStep"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item" data-only="replace"><span class="st ok">&#xE73E;</span><span class="thumb blank"></span><span class="name">Novation Launchkey 49</span><span class="what">Will be called "Launchkey (Studio)" instead of "Launchkey"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item" data-only="replace"><span class="st ok">&#xE73E;</span><span class="thumb blank"></span><span class="name">ESI M8U eX</span><span class="what">Will be called "Studio Rack" instead of "Rack MIDI"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item group">11 new names</div>
+              <div class="item"><span class="st ok">&#xE73E;</span><span class="thumb" style="background:linear-gradient(135deg,#6b3d22,#d49a5a)"></span><span class="name">Moog Matriarch</span><span class="what">Will be called "Matriarch (Studio A)"</span><span class="right"><span class="state">Plugged in</span></span></div>
+              <div class="item"><span class="st ok">&#xE73E;</span><span class="thumb" style="background:linear-gradient(135deg,#2b2b2b,#8a8a8a)"></span><span class="name">Elektron Digitakt II</span><span class="what">Will be called "Digitakt"</span><span class="right"><span class="state">Not plugged in</span></span></div>
+              <div class="item"><span class="st ok">&#xE73E;</span><span class="thumb blank"></span><span class="name">Roland UM-ONE</span><span class="what">Will be called "Desk MIDI"</span><span class="right"><span class="state">Not plugged in</span></span></div>
+              <div class="item"><span class="link small" style="margin-left:28px">Show all 11</span></div>
+              <div class="item note mark-left" style="padding-left:28px" data-mark="4">Devices that aren't plugged in will get their names when they are. If one can't be found, MIDI Settings will ask you to match it up.</div>
+            </div>
+          </div>
+
+          <div class="exp">
+            <div class="exp-head">
+              <div class="ico gl">&#xE8EE;</div>
+              <div class="txt"><div class="t">Loopbacks</div><div class="s">3 loopbacks · 1 name is already used here</div></div>
+              <span class="combo">Add to mine</span>
+              <span class="chev">&#xE70E;</span>
+            </div>
+            <div class="exp-body">
+              <div class="item"><span class="st ok">&#xE73E;</span><span class="name">DAW Out (A) and (B)</span><span class="what">Will be added</span></div>
+              <div class="item"><span class="st same">&#xE73E;</span><span class="name">Glass to DAW (A) and (B)</span><span class="what">Already here, will stay as it is</span></div>
+              <div class="item mark-left" data-mark="5"><span class="st warn">&#xE7BA;</span><span class="name">Max (A) and (B)</span><span class="what">Won't be added. This PC already has a loopback called Max.</span><span class="right"><span class="check"><span class="box"></span>Add as Max 2</span></span></div>
+            </div>
+          </div>
+
+          <div class="exp">
+            <div class="exp-head">
+              <div class="ico gl">&#xE839;</div>
+              <div class="txt"><div class="t">Network MIDI 2.0</div><div class="s">2 hosts, 2 connections · 1 name is already used here</div></div>
+              <span class="combo">Add to mine</span>
+              <span class="chev">&#xE70E;</span>
+            </div>
+            <div class="exp-body">
+              <div class="item mark-left" data-mark="6"><span class="st ok">&#xE73E;</span><span class="name">Host STUDIO-PC</span><span class="what">Will be added as STAGE-LAPTOP, this PC's name</span><span class="right"><span class="check on"><span class="box"></span>Use this PC's name</span></span></div>
+              <div class="item note" style="padding-left:28px">Will use any Wi-Fi or Ethernet adapter here, because the one it was set to isn't on this PC.</div>
+              <div class="item"><span class="st warn">&#xE7BA;</span><span class="name">Host Practice</span><span class="what">Won't be added. This PC already has a host called Practice.</span><span class="right"><span class="check"><span class="box"></span>Add as Practice 2</span></span></div>
+              <div class="item"><span class="st ok">&#xE73E;</span><span class="name">Connection to BomeBox</span><span class="what">Will be added</span></div>
+              <div class="item"><span class="st same">&#xE73E;</span><span class="name">Connection to Mac Studio</span><span class="what">Already here, will stay as it is</span></div>
+            </div>
+          </div>
+
+          <div class="exp">
+            <div class="exp-head">
+              <div class="ico gl">&#xE71B;</div>
+              <div class="txt"><div class="t">RTP-MIDI</div><div class="s">1 host · Will be saved for when RTP-MIDI is installed on this PC</div></div>
+              <span class="combo">Add to mine</span>
+              <span class="chev">&#xE70D;</span>
+            </div>
+          </div>
+
+          <div class="exp">
+            <div class="exp-head">
+              <div class="ico gl">&#xE702;</div>
+              <div class="txt"><div class="t">Bluetooth MIDI</div><div class="s">3 devices · 2 will be added, 1 is already here</div></div>
+              <span class="combo">Add to mine</span>
+              <span class="chev">&#xE70D;</span>
+            </div>
+          </div>
+
+          <div class="exp" data-mark="7">
+            <div class="exp-head">
+              <div class="ico gl">&#xE713;</div>
+              <div class="txt"><div class="t">Other settings</div><div class="s" data-not="restart">Synthesizer mode and port names for older apps · Yours will be kept</div><div class="s" data-only="restart" style="color:var(--caution)">Synthesizer mode will be Modern · Port names will change after a MIDI service restart</div></div>
+              <span class="combo" data-not="restart">Keep mine</span>
+              <span class="combo" data-only="restart">Use the package's</span>
+              <span class="chev">&#xE70D;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footerbar">
+          <div class="note mark-near" data-mark="8"><span class="gl">&#xE81C;</span><span data-not="restart">Nothing changes until you choose Import, and Live set is backed up first. Afterward, the MIDI service restarts to use it.</span><span data-only="restart">Nothing changes until you choose Import, and Live set is backed up first. Afterward, the MIDI service restarts to use it, and apps may need their ports picked again.</span></div>
+          <span class="btn" style="width:120px">Cancel</span>
+          <span class="btn accent" style="width:120px">Import</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Where it came from:</b> the configuration's name, the PC it was shared from, the date and the note.</li>
+    <li><b>Into the configuration in use, or kept apart</b> as a new one. Adding keeps everything already there, so the line under it is true by default. Kept apart skips the add-or-replace choices, but still fixes clashing names.</li>
+    <li><b>Each part has a choice.</b> Device names and pictures: Add to mine, Replace mine or Don't import (<span class="mono">options</span>), plus Keep mine or Use the package's for devices that already have your names. Replace lists exactly what it removes (<span class="mono">replace</span>). Loopbacks, network, RTP-MIDI and Bluetooth: Add to mine or Don't import. Other settings: Keep mine or Use the package's.</li>
+    <li><b>Every row says what will happen, in the same place.</b> Devices that aren't plugged in still come across. If one can't be found later, today's "Some saved settings have no matching device" banner offers Review them.</li>
+    <li><b>A loopback whose name is taken here isn't added,</b> and says why. Ticking the box adds it under a free name instead.</li>
+    <li><b>A network host named after the other PC takes this PC's name,</b> ticked by default, so two PCs never claim the same name and identity. A taken host name works like a taken loopback name. A host tied to a missing Wi-Fi or Ethernet adapter uses any adapter here.</li>
+    <li><b>The customer's own synthesizer mode and port names are kept</b> unless they choose the package's. Choosing the package's port names adds a warning to this line and to the footer, before Import is chosen (<span class="mono">restart</span>).</li>
+    <li><b>Nothing changes until Import,</b> and the configuration is backed up first, pictures and settings included. Import writes the configuration file, so the MIDI service always restarts to use it. The next page offers the restart and Undo this import.</li>
+  </ol>
+</div>
+</body>
+</html>

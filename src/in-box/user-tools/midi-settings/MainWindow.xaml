@@ -303,10 +303,6 @@
                              VerticalAlignment="Center" />
                 </Grid>
             </DataTemplate>
-
-            <DataTemplate x:Key="ConfigFileChoiceTemplate" x:DataType="local:ConfigFileChoice">
-                <TextBlock Text="{x:Bind DisplayName}" />
-            </DataTemplate>
         </Grid.Resources>
 
         <!-- hidden when a system backdrop is in use, so the material shows through -->
@@ -601,6 +597,19 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
                     <Rectangle x:Name="PinnedCommandsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
+                    <Button x:Name="ConfigurationsButton"
+                            x:Uid="ConfigurationsButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnConfigurationsClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE81E;" FontSize="20" HorizontalAlignment="Center" Height="24" />
+                            <TextBlock x:Name="ConfigurationsLabel"
+                                       x:Uid="ConfigurationsButtonText"
+                                       Text="Configurations"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="GlobalSettingsButton"
                             x:Uid="GlobalSettingsButton"
                             Style="{StaticResource ToolButtonStyle}"
@@ -649,8 +658,8 @@
                      Message="Creating a configuration file lets your endpoint names, pictures and other settings survive a restart.">
                 <InfoBar.ActionButton>
                     <Button x:Uid="FirstRunActionButton"
-                            Content="Open MIDI settings"
-                            Click="OnGlobalSettingsClick" />
+                            Content="Open Configurations"
+                            Click="OnConfigurationsClick" />
                 </InfoBar.ActionButton>
             </InfoBar>
 
@@ -1279,78 +1288,63 @@
 
                     <StackPanel Spacing="8">
                         <TextBlock x:Uid="GlobalConfigFileHeader"
-                                   Text="Configuration file"
+                                   Text="Configuration"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <TextBlock x:Uid="GlobalConfigFileHelp"
-                                   Text="Your endpoint names, pictures and transport setup are stored here. Only one file is active at a time."
+                                   Text="Your device names, pictures, loopbacks and connections are kept in a configuration. Only one is in use at a time."
                                    TextWrapping="Wrap"
                                    Style="{StaticResource PropertyLabelStyle}" />
 
+                        <!-- everything else about configurations is in the Configurations window -->
                         <Border Style="{StaticResource SettingsCardStyle}">
-                            <StackPanel Spacing="20">
+                            <Grid ColumnSpacing="14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                                <StackPanel Spacing="8">
-                                    <TextBlock x:Uid="ConfigFileActiveLabel"
-                                               Text="Active configuration"
-                                               Style="{StaticResource SettingsSubLabelStyle}" />
-                                    <Grid ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <ComboBox x:Name="ConfigFileComboBox"
-                                                  x:Uid="ConfigFileComboBox"
-                                                  Grid.Column="0"
-                                                  HorizontalAlignment="Stretch"
-                                                  ItemTemplate="{StaticResource ConfigFileChoiceTemplate}" />
-                                        <Button x:Name="ConfigFileApplyButton"
-                                                x:Uid="ConfigFileApplyButton"
-                                                Grid.Column="1"
-                                                Style="{StaticResource SettingsRowButtonStyle}"
-                                                Content="Use this file"
-                                                Click="OnApplyConfigFileClick" />
-                                    </Grid>
-                                </StackPanel>
+                                <FontIcon Glyph="&#xE81E;"
+                                          FontSize="20"
+                                          Width="24"
+                                          VerticalAlignment="Center"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                          AutomationProperties.AccessibilityView="Raw" />
 
-                                <StackPanel Spacing="8">
-                                    <TextBlock x:Uid="ConfigFileCreateLabel"
-                                               Text="Create a new configuration"
-                                               Style="{StaticResource SettingsSubLabelStyle}" />
-                                    <Grid ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="NewConfigNameTextBox"
-                                                 x:Uid="NewConfigNameTextBox"
-                                                 Grid.Column="0"
-                                                 HorizontalAlignment="Stretch"
-                                                 PlaceholderText="New configuration name" />
-                                        <Button x:Name="CreateConfigButton"
-                                                x:Uid="CreateConfigButton"
-                                                Grid.Column="1"
-                                                Style="{StaticResource SettingsRowButtonStyle}"
-                                                Content="Create"
-                                                Click="OnCreateConfigFileClick" />
-                                    </Grid>
-                                    <TextBlock x:Uid="NewConfigNameHelp"
-                                               Text="Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file."
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock x:Name="GlobalConfigNameText"
+                                                   MaxWidth="300"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                        <Grid x:Name="GlobalConfigInUseChip" Height="22" VerticalAlignment="Center">
+                                            <Rectangle RadiusX="4"
+                                                       RadiusY="4"
+                                                       UseLayoutRounding="False"
+                                                       Opacity="0.14"
+                                                       Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                                            <TextBlock x:Uid="GlobalConfigInUseChip"
+                                                       Text="In use"
+                                                       Margin="8,0,8,0"
+                                                       VerticalAlignment="Center"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                        </Grid>
+                                    </StackPanel>
+                                    <TextBlock x:Uid="GlobalConfigManageHelp"
+                                               Text="Switch, back up, restore, share or import in Configurations"
                                                TextWrapping="Wrap"
-                                               Style="{StaticResource PropertyLabelStyle}" />
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                 </StackPanel>
 
-                                <StackPanel Spacing="8">
-                                    <TextBlock x:Uid="ConfigFileCopyLabel"
-                                               Text="Back up the active configuration"
-                                               Style="{StaticResource SettingsSubLabelStyle}" />
-                                    <Button x:Name="CopyConfigButton"
-                                            x:Uid="CopyConfigButton"
-                                            HorizontalAlignment="Left"
-                                            Content="Save a copy of the active file..."
-                                            Click="OnCopyConfigFileClick" />
-                                </StackPanel>
-
-                            </StackPanel>
+                                <Button x:Name="ManageConfigurationsButton"
+                                        x:Uid="ManageConfigurationsButton"
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        Content="Manage configurations..."
+                                        Click="OnManageConfigurationsClick" />
+                            </Grid>
                         </Border>
                     </StackPanel>
 

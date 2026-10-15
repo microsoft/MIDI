@@ -212,7 +212,7 @@
     <PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260520.1" />
     <PackageReference Include="Microsoft.Windows.ImplementationLibrary" Version="1.0.260126.7" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">

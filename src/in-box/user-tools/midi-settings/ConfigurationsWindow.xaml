@@ -1,0 +1,1008 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midisettings.ConfigurationsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midisettings"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!-- Everything people do with whole configurations: switch, back up, restore, share with another
+         PC, and import. The lists, the backup details and the import review are built in code,
+         because what they hold depends on the files. The styles they use are here, so the colors
+         follow the theme. -->
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style x:Key="CfgPageTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}" />
+
+            <Style x:Key="CfgPageIntroStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="Margin" Value="0,-6,0,6" />
+            </Style>
+
+            <!-- 32 tall, like a row with a button in it, so a label alone takes the same room -->
+            <Style x:Key="CfgSectionLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Margin" Value="0,10,0,0" />
+                <Setter Property="Padding" Value="0,6,0,7" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="CfgCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="CfgCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="16" />
+            </Style>
+
+            <Style x:Key="CfgSubtleIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="Width" Value="32" />
+                <Setter Property="Height" Value="32" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
+
+            <!-- for what the pages build in code; styles keep the colors following the theme -->
+            <Style x:Key="CfgRowCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="16,10,14,10" />
+                <Setter Property="MinHeight" Value="64" />
+            </Style>
+
+            <!-- the radio button's own 6 px of top padding makes up the rest of the comps' 14 -->
+            <Style x:Key="CfgChoiceCardStyle" TargetType="Border" BasedOn="{StaticResource CfgCardStyle}">
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="16,8,16,14" />
+            </Style>
+
+            <Style x:Key="CfgChoiceCardSelectedStyle" TargetType="Border" BasedOn="{StaticResource CfgChoiceCardStyle}">
+                <Setter Property="BorderBrush" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+            </Style>
+
+            <Style x:Key="CfgPartBodyStyle" TargetType="Border">
+                <Setter Property="BorderBrush" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="0,1,0,0" />
+                <Setter Property="Padding" Value="66,10,54,12" />
+            </Style>
+
+            <Style x:Key="CfgDividerStyle" TargetType="Rectangle">
+                <Setter Property="Height" Value="1" />
+                <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Style>
+
+            <Style x:Key="CfgRowTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+
+            <Style x:Key="CfgRowSubtitleStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+
+            <Style x:Key="CfgPartSubtitleStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="CfgPartSubtitleCautionStyle" TargetType="TextBlock" BasedOn="{StaticResource CfgPartSubtitleStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="CfgGroupLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgContentsTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="CfgItemNameStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+            </Style>
+
+            <Style x:Key="CfgItemWhatStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="CfgItemStateStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+            </Style>
+
+            <Style x:Key="CfgItemGroupStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <Style x:Key="CfgTableHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="CfgTableKeyStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+
+            <Style x:Key="CfgTableValueStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="HorizontalAlignment" Value="Right" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+            </Style>
+
+            <Style x:Key="CfgTableNowStyle" TargetType="TextBlock" BasedOn="{StaticResource CfgTableValueStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgRowGlyphStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="20" />
+                <Setter Property="Width" Value="24" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgContentsGlyphStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgDoneGlyphStyle" TargetType="FontIcon">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Width" Value="16" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+            </Style>
+
+            <Style x:Key="CfgSameGlyphStyle" TargetType="FontIcon" BasedOn="{StaticResource CfgDoneGlyphStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgWarningGlyphStyle" TargetType="FontIcon" BasedOn="{StaticResource CfgDoneGlyphStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="CfgWaitingGlyphStyle" TargetType="FontIcon" BasedOn="{StaticResource CfgDoneGlyphStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgChipShapeStyle" TargetType="Rectangle">
+                <Setter Property="RadiusX" Value="4" />
+                <Setter Property="RadiusY" Value="4" />
+                <Setter Property="UseLayoutRounding" Value="False" />
+                <Setter Property="Fill" Value="{ThemeResource ControlFillColorDefaultBrush}" />
+            </Style>
+
+            <Style x:Key="CfgAccentChipShapeStyle" TargetType="Rectangle" BasedOn="{StaticResource CfgChipShapeStyle}">
+                <Setter Property="Fill" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                <Setter Property="Opacity" Value="0.14" />
+            </Style>
+
+            <Style x:Key="CfgCautionChipShapeStyle" TargetType="Rectangle" BasedOn="{StaticResource CfgChipShapeStyle}">
+                <Setter Property="Fill" Value="{ThemeResource SystemFillColorCautionBrush}" />
+                <Setter Property="Opacity" Value="0.12" />
+            </Style>
+
+            <Style x:Key="CfgChipTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Margin" Value="8,0,8,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgAccentChipTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CfgChipTextStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+            </Style>
+
+            <Style x:Key="CfgCautionChipTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CfgChipTextStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="CfgPictureFrameStyle" TargetType="Border">
+                <Setter Property="Width" Value="28" />
+                <Setter Property="Height" Value="28" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="{ThemeResource ControlStrongStrokeColorDefaultBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="CfgResultTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+            </Style>
+
+            <Style x:Key="CfgPartCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="6" />
+            </Style>
+
+            <Style x:Key="CfgShareRowStyle" TargetType="Border">
+                <Setter Property="BorderBrush" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                <Setter Property="MinHeight" Value="40" />
+            </Style>
+
+            <!-- the backups list: rows look like the cards on the other pages, and headings can't be picked -->
+            <Style x:Key="CfgBackupRowItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Margin" Value="0,2,0,2" />
+                <Setter Property="Padding" Value="16,9,14,9" />
+                <Setter Property="MinHeight" Value="56" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style>
+
+            <Style x:Key="CfgBackupHeadingItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Setter Property="IsTabStop" Value="False" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+                <Setter Property="MinHeight" Value="28" />
+                <Setter Property="Padding" Value="2,8,0,2" />
+                <Setter Property="VerticalContentAlignment" Value="Bottom" />
+            </Style>
+        </Grid.Resources>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="4"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+        </Grid>
+
+        <!-- ================================== Pages ================================== -->
+        <NavigationView x:Name="Navigation"
+                        Grid.Row="1"
+                        PaneDisplayMode="Left"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        IsTitleBarAutoPaddingEnabled="False"
+                        OpenPaneLength="232"
+                        SelectionChanged="OnNavigationSelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="ConfigurationsNavItem" x:Uid="CfgNavConfigurations" Content="Configurations" Tag="configurations">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE81E;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="BackupsNavItem" x:Uid="CfgNavBackups" Content="Backups" Tag="backups">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE81C;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="ShareNavItem" x:Uid="CfgNavShare" Content="Share" Tag="share">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE72D;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="ImportNavItem" x:Uid="CfgNavImport" Content="Import" Tag="import">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8B5;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <!-- sharing and importing are about which PC is which -->
+            <NavigationView.PaneFooter>
+                <TextBlock x:Name="ThisPcText"
+                           Margin="18,8,12,12"
+                           TextWrapping="Wrap"
+                           Style="{StaticResource CfgCaptionStyle}" />
+            </NavigationView.PaneFooter>
+
+            <Grid>
+                <!-- ============================ Configurations ============================ -->
+                <ScrollViewer x:Name="ConfigurationsPage" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="36,24,36,24" Spacing="12">
+                        <TextBlock x:Uid="CfgConfigurationsTitle" Text="Configurations" Style="{StaticResource CfgPageTitleStyle}" />
+                        <TextBlock x:Uid="CfgConfigurationsIntro"
+                                   Text="Your device names, pictures, loopbacks and connections are kept in a configuration. Only one is in use at a time."
+                                   Style="{StaticResource CfgPageIntroStyle}" />
+
+                        <InfoBar x:Name="ConfigurationsElevationBar"
+                                 x:Uid="CfgElevationBar"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Severity="Informational"
+                                 Title="Administrator rights are needed"
+                                 Message="You can look around and share. Changes need administrator rights.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="CfgReopenElevatedButton" Content="Reopen as administrator" Click="OnReopenElevatedClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+
+                        <InfoBar x:Name="SwitchPendingBar"
+                                 x:Uid="CfgSwitchPendingBar"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Severity="Warning"
+                                 Message="Close your music apps first. Anything using MIDI loses its connections.">
+                            <InfoBar.ActionButton>
+                                <Button x:Name="SwitchPendingRestartButton" x:Uid="CfgRestartServiceButton" Content="Restart MIDI service" Click="OnRestartServiceClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+
+                        <InfoBar x:Name="ChangesPendingBar"
+                                 x:Uid="CfgChangesPendingBar"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Severity="Warning"
+                                 Title="Restart the MIDI service to finish"
+                                 Message="Close your music apps first. Anything using MIDI loses its connections.">
+                            <InfoBar.ActionButton>
+                                <Button x:Name="ChangesPendingRestartButton" x:Uid="CfgRestartServiceButton" Content="Restart MIDI service" Click="OnRestartServiceClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+
+                        <InfoBar x:Name="ConfigurationsStatusBar" IsOpen="False" IsClosable="True" />
+
+                        <!-- the one in use -->
+                        <Border x:Name="InUseCard" Style="{StaticResource CfgCardStyle}" Padding="16,18,16,18">
+                            <StackPanel Spacing="14">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <FontIcon Grid.Column="0"
+                                              Glyph="&#xE81E;"
+                                              FontSize="32"
+                                              Width="36"
+                                              VerticalAlignment="Center"
+                                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                              AutomationProperties.AccessibilityView="Raw" />
+
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock x:Name="InUseNameText"
+                                                       MaxWidth="420"
+                                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
+                                            <Grid x:Name="InUseChip" Height="22" VerticalAlignment="Center">
+                                                <Rectangle Style="{StaticResource CfgAccentChipShapeStyle}" />
+                                                <TextBlock x:Uid="CfgInUseChip" Text="In use" Style="{StaticResource CfgAccentChipTextStyle}" />
+                                            </Grid>
+                                            <Grid x:Name="InUseUntilRestartChip" Height="22" VerticalAlignment="Center" Visibility="Collapsed">
+                                                <Rectangle Style="{StaticResource CfgCautionChipShapeStyle}" />
+                                                <TextBlock x:Uid="CfgInUseUntilRestartChip" Text="In use until the restart" Style="{StaticResource CfgCautionChipTextStyle}" />
+                                            </Grid>
+                                            <Button x:Name="RenameInUseButton"
+                                                    x:Uid="CfgRenameInUseButton"
+                                                    Style="{StaticResource CfgSubtleIconButtonStyle}"
+                                                    Click="OnRenameInUseClick">
+                                                <Button.Resources>
+                                                    <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="Transparent" />
+                                                    <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="Transparent" />
+                                                </Button.Resources>
+                                                <FontIcon Glyph="&#xE70F;" FontSize="16" />
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock x:Name="InUseChangedText" Style="{StaticResource CfgCaptionStyle}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Button x:Name="KeepUsingButton" Visibility="Collapsed" Click="OnKeepUsingClick" />
+                                        <Button x:Name="BackUpInUseButton" x:Uid="CfgBackUpInUseButton" Click="OnBackUpInUseClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE81C;" FontSize="16" />
+                                                <TextBlock x:Uid="CfgBackUpNowText" Text="Back up now" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="ShareInUseButton" x:Uid="CfgShareInUseButton" Click="OnShareInUseClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE72D;" FontSize="16" />
+                                                <TextBlock x:Uid="CfgShareText" Text="Share..." />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- each count is one unit that wraps like a word, so the line needs no wrap panel -->
+                                <RichTextBlock x:Name="InUseContentsText" TextWrapping="Wrap" IsTextSelectionEnabled="False" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="NoConfigurationCard" Style="{StaticResource CfgCardStyle}" Visibility="Collapsed">
+                            <TextBlock x:Uid="CfgNoConfigurationText"
+                                       Text="No configuration is in use yet, so nothing you set up is kept when the MIDI service restarts. Create one with New configuration, or use one below."
+                                       TextWrapping="Wrap" />
+                        </Border>
+
+                        <Grid Margin="0,10,0,0" MinHeight="32">
+                            <TextBlock x:Uid="CfgAlsoOnThisPc" Text="Also on this PC" Style="{StaticResource CfgSectionLabelStyle}" Margin="0" />
+                            <DropDownButton x:Name="NewConfigurationButton" x:Uid="CfgNewConfigurationButton" HorizontalAlignment="Right">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontSize="16" />
+                                    <TextBlock x:Uid="CfgNewConfigurationText" Text="New configuration" />
+                                </StackPanel>
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                        <MenuFlyoutItem x:Uid="CfgNewEmptyItem" Text="Empty" Click="OnNewEmptyClick" />
+                                        <MenuFlyoutItem x:Name="NewCopyItem" Click="OnNewCopyClick" />
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
+                        </Grid>
+
+                        <StackPanel x:Name="OtherConfigurationsPanel" Spacing="4" />
+
+                        <TextBlock x:Name="NoOtherConfigurationsText"
+                                   x:Uid="CfgNoOtherConfigurations"
+                                   Text="This is the only configuration on this PC."
+                                   Visibility="Collapsed"
+                                   Style="{StaticResource CfgCaptionStyle}" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ================================ Backups ================================ -->
+                <Grid x:Name="BackupsPage" Visibility="Collapsed" Margin="36,24,36,24" RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- a stack, not grid rows, because an empty grid row still gets the row spacing -->
+                    <StackPanel Grid.Row="0" Spacing="12">
+                        <TextBlock x:Uid="CfgBackupsTitle" Text="Backups" Style="{StaticResource CfgPageTitleStyle}" />
+                        <TextBlock x:Uid="CfgBackupsIntro"
+                                   Text="Backups are made by themselves before changes, and you can make one any time. Each one keeps the configuration, its pictures and its settings."
+                                   Style="{StaticResource CfgPageIntroStyle}" />
+
+                        <InfoBar x:Name="BackupsElevationBar"
+                                 x:Uid="CfgElevationBar"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Severity="Informational"
+                                 Title="Administrator rights are needed"
+                                 Message="You can look around and share. Changes need administrator rights.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="CfgReopenElevatedButton" Content="Reopen as administrator" Click="OnReopenElevatedClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+                        <InfoBar x:Name="BackupsStatusBar" IsOpen="False" IsClosable="True" />
+
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="BackUpNowButton" Grid.Column="0" Click="OnBackUpNowClick">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE81C;" FontSize="16" />
+                                    <TextBlock x:Name="BackUpNowText" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="DeleteOldBackupsButton" x:Uid="CfgDeleteOldBackupsButton" Grid.Column="1" Click="OnDeleteOldBackupsClick">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="16" />
+                                    <TextBlock x:Uid="CfgDeleteOldBackupsText" Text="Delete old backups..." />
+                                </StackPanel>
+                            </Button>
+                            <ComboBox x:Name="BackupFilterComboBox"
+                                      x:Uid="CfgBackupFilterComboBox"
+                                      Grid.Column="3"
+                                      MinWidth="200"
+                                      SelectionChanged="OnBackupFilterChanged" />
+                        </Grid>
+
+                        <TextBlock x:Name="NoBackupsText"
+                                   x:Uid="CfgNoBackups"
+                                   Text="There are no backups yet. One is made before every import, restore and delete, and you can make one any time."
+                                   Visibility="Collapsed"
+                                   Style="{StaticResource CfgCaptionStyle}" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="336" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Column="0" RowSpacing="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ListView x:Name="BackupList"
+                                      x:Uid="CfgBackupList"
+                                      SelectionMode="Single"
+                                      Padding="0,0,4,0"
+                                      SelectionChanged="OnBackupSelectionChanged" />
+
+                            <!-- the ones from before the last 30 days, until someone asks for them -->
+                            <Grid x:Name="OlderBackupsRow"
+                                  Grid.Row="1"
+                                  Visibility="Collapsed"
+                                  MinHeight="52"
+                                  Padding="16,6,14,6"
+                                  ColumnSpacing="14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE787;" Style="{StaticResource CfgRowGlyphStyle}" AutomationProperties.AccessibilityView="Raw" />
+                                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock x:Name="OlderBackupsTitle" Style="{StaticResource CfgRowTitleStyle}" />
+                                    <TextBlock x:Name="OlderBackupsCaption" Style="{StaticResource CfgRowSubtitleStyle}" />
+                                </StackPanel>
+                                <HyperlinkButton Grid.Column="2"
+                                                 x:Uid="CfgShowOlderBackupsButton"
+                                                 Content="Show them"
+                                                 VerticalAlignment="Center"
+                                                 Click="OnShowOlderBackupsClick" />
+                            </Grid>
+                        </Grid>
+
+                        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="0,12,0,0">
+                            <Border x:Name="BackupDetailCard" Style="{StaticResource CfgCardStyle}" Visibility="Collapsed" VerticalAlignment="Top">
+                                <StackPanel Spacing="12">
+                                    <StackPanel>
+                                        <TextBlock x:Name="BackupDetailName" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
+                                        <TextBlock x:Name="BackupDetailWhen" Style="{StaticResource CfgCaptionStyle}" />
+                                    </StackPanel>
+                                    <Grid x:Name="BackupDetailTable" />
+                                    <TextBlock x:Name="BackupDetailKind" Style="{StaticResource CfgCaptionStyle}" Margin="0,-4,0,0" />
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="RestoreBackupButton"
+                                                x:Uid="CfgRestoreBackupButton"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                Style="{StaticResource AccentButtonStyle}"
+                                                Click="OnRestoreBackupClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE777;" FontSize="16" />
+                                                <TextBlock x:Uid="CfgRestoreText" Text="Restore" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="ShareBackupButton" x:Uid="CfgShareBackupButton" Grid.Column="1" Click="OnShareBackupClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE72D;" FontSize="16" />
+                                                <TextBlock x:Uid="CfgShareText" Text="Share..." />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="DeleteBackupButton"
+                                                x:Uid="CfgDeleteBackupButton"
+                                                Grid.Column="2"
+                                                Width="32"
+                                                Padding="0"
+                                                Click="OnDeleteBackupClick">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="16" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock x:Uid="CfgRestoreCaption"
+                                               Text="Restoring backs up what's there now first, so it can be undone too."
+                                               Style="{StaticResource CfgCaptionStyle}" />
+                                </StackPanel>
+                            </Border>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+
+                <!-- ================================= Share ================================= -->
+                <ScrollViewer x:Name="SharePage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="36,24,36,24" Spacing="12">
+                        <TextBlock x:Uid="CfgShareTitle" Text="Share" Style="{StaticResource CfgPageTitleStyle}" />
+                        <TextBlock x:Uid="CfgShareIntro"
+                                   Text="Make one package that sets up another PC the same way. Pictures go along with it."
+                                   Style="{StaticResource CfgPageIntroStyle}" />
+
+                        <InfoBar x:Name="ShareElevationBar"
+                                 x:Uid="CfgElevationBar"
+                                 IsOpen="False"
+                                 IsClosable="False"
+                                 Severity="Informational"
+                                 Title="Administrator rights are needed"
+                                 Message="You can look around and share. Changes need administrator rights.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="CfgReopenElevatedButton" Content="Reopen as administrator" Click="OnReopenElevatedClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+
+                        <InfoBar x:Name="ShareSavedBar"
+                                 x:Uid="CfgShareSavedBar"
+                                 IsOpen="False"
+                                 IsClosable="True"
+                                 Severity="Success"
+                                 Message="On the other PC, open it from Import.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="CfgShowInFolderButton" Content="Show in folder" Click="OnShowInFolderClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+
+                        <InfoBar x:Name="ShareStatusBar" IsOpen="False" IsClosable="True" />
+
+                        <Border Style="{StaticResource CfgCardStyle}">
+                            <StackPanel Spacing="12">
+                                <ComboBox x:Name="ShareConfigurationComboBox"
+                                          x:Uid="CfgShareConfigurationComboBox"
+                                          Header="Configuration"
+                                          Width="420"
+                                          SelectionChanged="OnShareConfigurationChanged" />
+                                <TextBox x:Name="SharePackageNameTextBox"
+                                         x:Uid="CfgSharePackageNameTextBox"
+                                         Header="Package name"
+                                         Width="420"
+                                         HorizontalAlignment="Left" />
+                                <TextBox x:Name="ShareNoteTextBox"
+                                         x:Uid="CfgShareNoteTextBox"
+                                         Header="Note for whoever opens it (optional)"
+                                         PlaceholderText="What it's for, or who it's from"
+                                         MaxLength="2000" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CfgCardStyle}" Padding="16,12,16,8">
+                            <StackPanel>
+                                <TextBlock x:Uid="CfgWhatToInclude" Text="What to include" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,4" />
+                                <StackPanel x:Name="ShareIncludePanel" />
+                            </StackPanel>
+                        </Border>
+
+                        <Button x:Name="SavePackageButton"
+                                x:Uid="CfgSavePackageButton"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Margin="0,4,0,0"
+                                Click="OnSavePackageClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74E;" FontSize="16" />
+                                <TextBlock x:Uid="CfgSavePackageText" Text="Save package..." />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ================================= Import ================================ -->
+                <Grid x:Name="ImportPage" Visibility="Collapsed">
+                    <!-- where a package comes in -->
+                    <ScrollViewer x:Name="ImportStartPanel" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="36,24,36,24" Spacing="12">
+                            <TextBlock x:Uid="CfgImportTitle" Text="Import" Style="{StaticResource CfgPageTitleStyle}" />
+                            <TextBlock x:Uid="CfgImportIntro"
+                                       Text="Bring in a configuration from another PC, or one someone shared with you."
+                                       Style="{StaticResource CfgPageIntroStyle}" />
+
+                            <InfoBar x:Name="ImportStartStatusBar" IsOpen="False" IsClosable="True" />
+
+                            <Grid x:Name="ImportDropZone"
+                                  Height="250"
+                                  AllowDrop="True"
+                                  Background="Transparent"
+                                  DragOver="OnImportDragOver"
+                                  Drop="OnImportDrop">
+                                <Rectangle RadiusX="8"
+                                           RadiusY="8"
+                                           StrokeThickness="1"
+                                           StrokeDashArray="4,3"
+                                           UseLayoutRounding="False"
+                                           Stroke="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                                           Fill="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                                    <FontIcon Glyph="&#xE8B5;"
+                                              FontSize="44"
+                                              HorizontalAlignment="Center"
+                                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                              AutomationProperties.AccessibilityView="Raw" />
+                                    <TextBlock x:Uid="CfgDropPackageHere" Text="Drop a package here" FontSize="16" HorizontalAlignment="Center" />
+                                    <TextBlock x:Uid="CfgDropOr" Text="or" HorizontalAlignment="Center" Style="{StaticResource CfgCaptionStyle}" />
+                                    <Button x:Name="ChoosePackageButton"
+                                            x:Uid="CfgChoosePackageButton"
+                                            Content="Choose a package..."
+                                            HorizontalAlignment="Center"
+                                            Style="{StaticResource AccentButtonStyle}"
+                                            Click="OnChoosePackageClick" />
+                                    <TextBlock x:Uid="CfgOlderFilesWork"
+                                               Text="Configuration files saved by older versions of Windows MIDI Settings work too."
+                                               Margin="0,6,0,0"
+                                               HorizontalAlignment="Center"
+                                               Style="{StaticResource CfgCaptionStyle}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock x:Uid="CfgNotSureHeader" Text="Not sure this is the right page?" Style="{StaticResource CfgSectionLabelStyle}" />
+
+                            <StackPanel Spacing="4">
+                                <Grid ColumnSpacing="14" Padding="4,11,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE977;" FontSize="20" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" />
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock x:Uid="CfgMovingTitle" Text="Moving to a new PC?" />
+                                        <TextBlock x:Uid="CfgMovingText"
+                                                   Text="On the old PC, open Configurations in Windows MIDI Settings and go to Share. Then bring the package here."
+                                                   Style="{StaticResource CfgCaptionStyle}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid ColumnSpacing="14" Padding="4,11,0,11">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE81C;" FontSize="20" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw" />
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock x:Uid="CfgWantBackTitle" Text="Want a configuration back the way it was?" />
+                                        <TextBlock x:Uid="CfgWantBackText"
+                                                   Text="Use Backups instead. It has earlier versions of each configuration on this PC."
+                                                   Style="{StaticResource CfgCaptionStyle}" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- what will happen, before anything changes -->
+                    <Grid x:Name="ImportReviewPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <ScrollViewer x:Name="ImportReviewScroller" Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="36,24,36,24" Spacing="10">
+                                <TextBlock x:Uid="CfgImportTitle" Text="Import" Style="{StaticResource CfgPageTitleStyle}" />
+
+                                <InfoBar x:Name="ImportElevationBar"
+                                         x:Uid="CfgImportElevationBar"
+                                         IsOpen="False"
+                                         IsClosable="False"
+                                         Severity="Informational"
+                                         Title="Administrator rights are needed"
+                                         Message="You can look at what this package would do. Importing it needs administrator rights.">
+                                    <InfoBar.ActionButton>
+                                        <Button x:Uid="CfgReopenElevatedButton" Content="Reopen as administrator" Click="OnReopenElevatedClick" />
+                                    </InfoBar.ActionButton>
+                                </InfoBar>
+
+                                <InfoBar x:Name="ImportReviewStatusBar" IsOpen="False" IsClosable="True" />
+
+                                <Border Style="{StaticResource CfgCardStyle}" Padding="16,14,16,14">
+                                    <Grid ColumnSpacing="14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon Glyph="&#xE7B8;"
+                                                  FontSize="32"
+                                                  Width="36"
+                                                  VerticalAlignment="Center"
+                                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                                  AutomationProperties.AccessibilityView="Raw" />
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock x:Name="ImportSourceNameText" Style="{StaticResource SubtitleTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                                <Grid x:Name="ImportSourceChip" Height="22" VerticalAlignment="Center">
+                                                    <Rectangle Style="{StaticResource CfgChipShapeStyle}" />
+                                                    <TextBlock x:Name="ImportSourceChipText" Style="{StaticResource CfgChipTextStyle}" />
+                                                </Grid>
+                                            </StackPanel>
+                                            <TextBlock x:Name="ImportSourceDetailText" Style="{StaticResource CfgCaptionStyle}" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2"
+                                                x:Uid="CfgChooseAnotherPackageButton"
+                                                Content="Choose another package"
+                                                VerticalAlignment="Center"
+                                                Click="OnChoosePackageClick" />
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock x:Uid="CfgPutItInto" Text="Put it into" Style="{StaticResource CfgSectionLabelStyle}" Margin="0,4,0,0" />
+
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="ImportIntoInUseCard" Grid.Column="0" Style="{StaticResource CfgChoiceCardSelectedStyle}">
+                                        <RadioButton x:Name="ImportIntoInUseRadio" GroupName="ImportTarget" Checked="OnImportTargetChanged" VerticalAlignment="Top">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock x:Name="ImportIntoInUseTitle" TextWrapping="Wrap" />
+                                                <TextBlock x:Name="ImportIntoInUseDetail" Style="{StaticResource CfgCaptionStyle}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Border>
+                                    <Border x:Name="ImportIntoNewCard" Grid.Column="1" Style="{StaticResource CfgChoiceCardStyle}">
+                                        <RadioButton x:Name="ImportIntoNewRadio" GroupName="ImportTarget" Checked="OnImportTargetChanged" VerticalAlignment="Top">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock x:Uid="CfgImportIntoNewTitle" Text="A new configuration" TextWrapping="Wrap" />
+                                                <TextBlock x:Name="ImportIntoNewDetail" Style="{StaticResource CfgCaptionStyle}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Border>
+                                </Grid>
+
+                                <TextBlock x:Uid="CfgWhatWillHappen" Text="What will happen" Style="{StaticResource CfgSectionLabelStyle}" Margin="0,4,0,0" />
+
+                                <StackPanel x:Name="ImportPartsPanel" Spacing="10" />
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <Border Grid.Row="1"
+                                Padding="36,14,36,14"
+                                BorderThickness="0,1,0,0"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE81C;" FontSize="16" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" AutomationProperties.AccessibilityView="Raw" />
+                                <TextBlock x:Name="ImportFooterText"
+                                           Grid.Column="1"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           FontSize="13"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <Button Grid.Column="2" x:Uid="CfgImportCancelButton" Content="Cancel" Width="120" Click="OnImportCancelClick" />
+                                <Button x:Name="ImportButton"
+                                        Grid.Column="3"
+                                        x:Uid="CfgImportButton"
+                                        Content="Import"
+                                        Width="120"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Click="OnImportClick" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- what happened -->
+                    <ScrollViewer x:Name="ImportDonePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="36,24,36,24" Spacing="12">
+                            <TextBlock x:Uid="CfgImportTitle" Text="Import" Style="{StaticResource CfgPageTitleStyle}" />
+
+                            <Border Style="{StaticResource CfgCardStyle}" Padding="16,18,16,8">
+                                <StackPanel>
+                                    <Grid ColumnSpacing="16" Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon Glyph="&#xE930;"
+                                                  FontSize="32"
+                                                  Width="36"
+                                                  VerticalAlignment="Center"
+                                                  Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                                                  AutomationProperties.AccessibilityView="Raw" />
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock x:Name="ImportDoneTitleText" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="ImportDoneDetailText" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <StackPanel x:Name="ImportResultsPanel" />
+                                </StackPanel>
+                            </Border>
+
+                            <InfoBar x:Name="ImportRestartBar"
+                                     x:Uid="CfgImportRestartBar"
+                                     IsOpen="False"
+                                     IsClosable="False"
+                                     Severity="Warning"
+                                     Title="Restart the MIDI service to finish">
+                                <InfoBar.ActionButton>
+                                    <Button x:Name="ImportRestartButton" x:Uid="CfgRestartServiceButton" Content="Restart MIDI service" Click="OnRestartServiceClick" />
+                                </InfoBar.ActionButton>
+                            </InfoBar>
+
+                            <InfoBar x:Name="ImportDoneStatusBar" IsOpen="False" IsClosable="True" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                <Button x:Uid="CfgImportDoneButton" Content="Done" Width="120" Style="{StaticResource AccentButtonStyle}" Click="OnImportDoneClick" />
+                                <Button x:Name="UndoImportButton" x:Uid="CfgUndoImportButton" Click="OnUndoImportClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE7A7;" FontSize="16" />
+                                        <TextBlock x:Uid="CfgUndoImportText" Text="Undo this import" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>

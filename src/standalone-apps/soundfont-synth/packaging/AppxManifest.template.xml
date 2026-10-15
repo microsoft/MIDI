@@ -31,8 +31,8 @@
 
     <!-- The Windows App SDK runtime the app was built against. The Store installs it with the app. -->
     <PackageDependency
-      Name="Microsoft.WindowsAppRuntime.1.8"
-      MinVersion="8000.731.1532.0"
+      Name="Microsoft.WindowsAppRuntime.2"
+      MinVersion="2.5.1.0"
       Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
   </Dependencies>
 

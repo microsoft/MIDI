@@ -8,7 +8,7 @@ categories:
   - Device/Transport Configuration Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
 
 Windows MIDI Loopback Setup creates loopback MIDI endpoints: virtual MIDI connections that exist only on this PC, with no cable and no hardware. Send MIDI to one and it arrives back in another app, which is how you get a sequencer talking to a software synth, a lighting program listening to your DAW, or a controller mapping tool sitting in between two other apps.
 
@@ -84,7 +84,7 @@ No two loopbacks may share a name, because a name is all an app has to tell them
 
 **Picture** lets you attach an image, which is then used as the icon for the endpoint. This is worth doing when you have several loopbacks and want to pick the right one at a glance. The section only appears if the version of Windows MIDI Services currently enabled on this PC supports endpoint pictures, so you aren't offered a picture that would never show up.
 
-> For most customers, the ability to use images in MIDI 2.0 loopbacks will be enabled in January 2027, along with muting.
+> For most customers, images and muting for MIDI 2.0 loopbacks will be enabled in 2027.
 
 **Keep this loopback after a restart** is ticked by default, and is almost always what you want. The loopback is written to the Windows MIDI Services configuration and comes back on its own.
 
@@ -181,7 +181,7 @@ The pin button next to the minimize button keeps the window above your other win
 
 Each kind of loopback is provided by its own part of Windows MIDI Services, and each page checks for its own. If a page tells you it isn't available, either that part isn't installed or enabled on this PC, or the version currently active isn't compatible with this tool.
 
-There's nothing to do about it by hand. A compatible version arrives with a Windows update. Updates to the existing MIDI 2.0 loopback come via a 30-day Controlled Feature Rollout, so for most customers they land between November 2026 and January 2027. The new MIDI 1.0-style Basic Loopback comes in a Windows update in Q1 CY 2027.
+There's nothing to do about it by hand. A compatible version arrives with a Windows update in 2027. Updates to the existing MIDI 2.0 loopback come via a 30-day Controlled Feature Rollout, and the new MIDI 1.0-style Basic Loopback comes in a Windows update too.
 
 The two pages are checked separately, so it's normal for one to work while the other doesn't while we roll out the updates.
 

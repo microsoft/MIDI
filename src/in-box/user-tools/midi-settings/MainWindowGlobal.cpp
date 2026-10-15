@@ -19,87 +19,6 @@ namespace res = ::midisettings::resources;
 
 namespace winrt::midisettings::implementation
 {
-    namespace
-    {
-        // The Win32 dialog rather than Windows.Storage.Pickers, for the same reason the picture
-        // picker uses it: the WinRT picker's completion never resumes when it is raised over an
-        // open ContentDialog, and this one always is.
-        std::wstring ShowSaveDialog(
-            _In_ HWND const owner,
-            _In_ std::wstring const& suggestedFileName,
-            _In_ std::wstring const& startFolder) noexcept
-        {
-            try
-            {
-                winrt::com_ptr<IFileSaveDialog> dialog{};
-
-                if (FAILED(::CoCreateInstance(
-                    CLSID_FileSaveDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(dialog.put()))))
-                {
-                    return {};
-                }
-
-                COMDLG_FILTERSPEC const filters[]
-                {
-                    { L"MIDI configuration", L"*.midiconfig.json" },
-                    { L"All files", L"*.*" },
-                };
-
-                LOG_IF_FAILED(dialog->SetFileTypes(ARRAYSIZE(filters), filters));
-                LOG_IF_FAILED(dialog->SetOptions(FOS_OVERWRITEPROMPT | FOS_PATHMUSTEXIST | FOS_FORCEFILESYSTEM));
-
-                if (!suggestedFileName.empty())
-                {
-                    LOG_IF_FAILED(dialog->SetFileName(suggestedFileName.c_str()));
-                }
-
-                if (!startFolder.empty())
-                {
-                    winrt::com_ptr<IShellItem> folder{};
-
-                    if (SUCCEEDED(::SHCreateItemFromParsingName(
-                        startFolder.c_str(), nullptr, IID_PPV_ARGS(folder.put()))))
-                    {
-                        LOG_IF_FAILED(dialog->SetDefaultFolder(folder.get()));
-                    }
-                }
-
-                // canceling is reported as a failure hresult, so this is not logged as an error
-                if (FAILED(dialog->Show(owner)))
-                {
-                    return {};
-                }
-
-                winrt::com_ptr<IShellItem> item{};
-
-                if (FAILED(dialog->GetResult(item.put())))
-                {
-                    return {};
-                }
-
-                wil::unique_cotaskmem_string path{};
-
-                if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, path.put())))
-                {
-                    return {};
-                }
-
-                return std::wstring{ path.get() };
-            }
-            catch (...)
-            {
-                return {};
-            }
-        }
-
-        std::wstring ParentFolder(_In_ std::wstring const& path) noexcept
-        {
-            auto const separator = path.find_last_of(L"\\/");
-
-            return separator == std::wstring::npos ? std::wstring{} : path.substr(0, separator);
-        }
-    }
-
     // The whole point of the banner is that a customer who has never opened this app has no
     // configuration file, so nothing they set here would survive a restart.
     void MainWindow::ShowFirstRunInvitation() noexcept
@@ -119,39 +38,30 @@ namespace winrt::midisettings::implementation
 
             GlobalElevationBar().IsOpen(!elevated);
 
-            ConfigFileApplyButton().IsEnabled(elevated);
-            CreateConfigButton().IsEnabled(elevated);
-            NewConfigNameTextBox().IsEnabled(elevated);
             PortNamingClassicRadio().IsEnabled(elevated);
             PortNamingNewStyleRadio().IsEnabled(elevated);
             RestartServiceButton().IsEnabled(elevated);
 
-            auto const files = native::config::EnumerateFiles();
+            // Only the name of the one in use. Everything else is in the Configurations window.
+            auto const currentPath = native::config::CurrentFullPath();
 
-            m_configFileChoices.Clear();
-
-            int32_t selectedIndex{ -1 };
-            int32_t index{ 0 };
-
-            for (auto const& file : files)
+            if (currentPath.empty())
             {
-                m_configFileChoices.Append(winrt::make<implementation::ConfigFileChoice>(
-                    file.IsCurrent ?
-                        res::FormatString(L"ConfigFileCurrentFormat", winrt::hstring{ file.ConfigName }) :
-                        winrt::hstring{ file.ConfigName },
-                    winrt::hstring{ file.FileName }));
+                GlobalConfigNameText().Text(res::GetString(L"GlobalConfigNone"));
+                GlobalConfigInUseChip().Visibility(xaml::Visibility::Collapsed);
+            }
+            else
+            {
+                auto name = native::config::ReadConfigName(currentPath);
 
-                if (file.IsCurrent)
+                if (name.empty())
                 {
-                    selectedIndex = index;
+                    name = native::config::CurrentFileName();
                 }
 
-                index++;
+                GlobalConfigNameText().Text(winrt::hstring{ name });
+                GlobalConfigInUseChip().Visibility(xaml::Visibility::Visible);
             }
-
-            ConfigFileComboBox().SelectedIndex(selectedIndex);
-
-            CopyConfigButton().IsEnabled(!native::config::CurrentFullPath().empty());
 
             m_suppressPortNamingHandling = true;
 
@@ -429,125 +339,16 @@ namespace winrt::midisettings::implementation
     }
 
     _Use_decl_annotations_
-    winrt::fire_and_forget MainWindow::OnApplyConfigFileClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        auto lifetime = get_strong();
-
-        try
-        {
-            auto const selected = ConfigFileComboBox().SelectedItem()
-                .try_as<midisettings::ConfigFileChoice>();
-
-            if (selected == nullptr)
-            {
-                GlobalStatusText().Text(res::GetString(L"ConfigFileNoSelection"));
-                co_return;
-            }
-
-            std::wstring errorMessage{};
-
-            if (!native::config::SetCurrentFileName(std::wstring{ selected.FileName() }, errorMessage))
-            {
-                GlobalStatusText().Text(res::FormatString(
-                    L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
-                co_return;
-            }
-
-            GlobalStatusText().Text(res::GetString(L"ConfigFileChangedRestartNeeded"));
-
-            RefreshGlobalSettings();
-        }
-        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the configuration file.")
-
-        co_return;
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnCreateConfigFileClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    void MainWindow::OnManageConfigurationsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         try
         {
-            std::wstring const configName{ NewConfigNameTextBox().Text() };
+            // The window is the place for it now, and a dialog in front of it would be in the way.
+            GlobalSettingsDialog().Hide();
 
-            auto const fileName = native::config::FileNameFromConfigName(configName);
-
-            if (fileName.empty())
-            {
-                GlobalStatusText().Text(res::GetString(L"ConfigNameNotUsable"));
-                return;
-            }
-
-            std::wstring errorMessage{};
-
-            if (!native::config::CreateFile(configName, fileName, errorMessage))
-            {
-                GlobalStatusText().Text(res::FormatString(
-                    L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
-                return;
-            }
-
-            // A file nobody is using helps no one, so creating one also makes it the active one.
-            if (!native::config::SetCurrentFileName(fileName, errorMessage))
-            {
-                GlobalStatusText().Text(res::FormatString(
-                    L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
-                return;
-            }
-
-            NewConfigNameTextBox().Text({});
-
-            RefreshGlobalSettings();
-
-            GlobalStatusText().Text(res::GetString(L"ConfigFileCreatedRestartNeeded"));
+            ShowConfigurations({});
         }
-        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to create the configuration file.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnCopyConfigFileClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        try
-        {
-            auto const source = native::config::CurrentFullPath();
-
-            if (source.empty())
-            {
-                GlobalStatusText().Text(res::GetString(L"ConfigFileNoneActive"));
-                return;
-            }
-
-            std::wstring suggested{ source };
-
-            auto const separator = suggested.find_last_of(L"\\/");
-
-            if (separator != std::wstring::npos)
-            {
-                suggested = suggested.substr(separator + 1);
-            }
-
-            auto const destination = ShowSaveDialog(
-                WindowHandle(), suggested, native::AppSettings::Current().LastConfigCopyFolder());
-
-            if (destination.empty())
-            {
-                return;
-            }
-
-            std::wstring errorMessage{};
-
-            if (!native::config::CopyCurrentFileTo(destination, errorMessage))
-            {
-                GlobalStatusText().Text(res::FormatString(
-                    L"ConfigFileFailedFormat", winrt::hstring{ errorMessage }));
-                return;
-            }
-
-            native::AppSettings::Current().LastConfigCopyFolder(ParentFolder(destination));
-
-            GlobalStatusText().Text(res::FormatString(
-                L"ConfigFileCopiedFormat", winrt::hstring{ destination }));
-        }
-        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to copy the configuration file.")
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to open the Configurations window.")
     }
 
     _Use_decl_annotations_

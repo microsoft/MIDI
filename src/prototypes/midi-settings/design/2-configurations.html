@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="variants" content="menu,pending,switch,noadmin">
+<title>2. Configurations</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>2. Configurations.</b> The window opens on the configuration in use and the others on this PC. Variants: <span class="mono">?state=menu</span>, <span class="mono">pending</span>, <span class="mono">switch</span>, <span class="mono">noadmin</span>.</p>
+
+  <div class="window">
+    <div class="titlebar">
+      <img class="appicon" src="appicon.png" alt="">
+      <span class="title">Configurations - Windows MIDI Settings</span>
+      <span class="preview-chiclet">PREVIEW</span>
+      <span class="spacer"></span>
+      <span class="caption-btn gl">&#xE921;</span>
+      <span class="caption-btn gl">&#xE922;</span>
+      <span class="caption-btn gl">&#xE8BB;</span>
+    </div>
+    <div class="body">
+      <div class="nav">
+        <div class="nav-toggle gl">&#xE700;</div>
+        <div class="nav-item sel"><span class="gl">&#xE81E;</span>Configurations</div>
+        <div class="nav-item"><span class="gl">&#xE81C;</span>Backups</div>
+        <div class="nav-item" data-mark-right="1"><span class="gl">&#xE72D;</span>Share</div>
+        <div class="nav-item"><span class="gl">&#xE8B5;</span>Import</div>
+        <div class="grow"></div>
+        <div class="nav-foot">This PC is STAGE-LAPTOP</div>
+      </div>
+      <div class="content">
+        <div class="scroll">
+          <div class="h1">Configurations</div>
+          <div class="sub">Your device names, pictures, loopbacks and connections are kept in a configuration. Only one is in use at a time.</div>
+
+          <div class="infobar" data-only="noadmin" data-mark="7">
+            <span class="ib-icon">i</span>
+            <div class="ib-text"><span class="ib-title">Administrator rights are needed</span>You can look around and share. Changes need administrator rights.</div>
+            <span class="btn">Reopen as administrator</span>
+          </div>
+          <div class="infobar caution" data-only="pending" data-mark="4">
+            <span class="ib-icon">!</span>
+            <div class="ib-text"><span class="ib-title">Restart the MIDI service to switch to Rehearsal</span>Close your music apps first. Anything using MIDI loses its connections.</div>
+            <span class="btn">Restart MIDI service</span>
+          </div>
+
+          <div class="card hero" data-mark="2">
+            <div class="hero-top">
+              <div class="ico big accent gl">&#xE81E;</div>
+              <div class="txt">
+                <div class="hstack">
+                  <span class="t big">Live set</span>
+                  <span class="chip accent" data-not="pending">In use</span>
+                  <span class="chip caution" data-only="pending">In use until the restart</span>
+                  <span class="btn subtle icon gl" data-admin>&#xE70F;</span>
+                </div>
+                <div class="s">Changed today at 3:20 PM, when you imported Studio from STUDIO-PC</div>
+              </div>
+              <div class="act">
+                <span class="btn" data-only="pending">Keep using Live set</span>
+                <span class="btn" data-admin data-not="pending"><span class="gl">&#xE81C;</span>Back up now</span>
+                <span class="btn"><span class="gl">&#xE72D;</span>Share...</span>
+              </div>
+            </div>
+            <div class="contents" data-mark-right="3">
+              <span class="c"><span class="gl">&#xE8EC;</span>16 device names</span>
+              <span class="c"><span class="gl">&#xE8B9;</span>8 pictures</span>
+              <span class="c"><span class="gl">&#xE8EE;</span>3 loopbacks</span>
+              <span class="c"><span class="gl">&#xE839;</span>Network MIDI 2.0: 2 hosts, 2 connections</span>
+              <span class="c"><span class="gl">&#xE71B;</span>RTP-MIDI: 1 host</span>
+              <span class="c"><span class="gl">&#xE702;</span>3 Bluetooth devices</span>
+              <span class="c"><span class="gl">&#xE8D6;</span>Synthesizer settings</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <span class="label">Also on this PC</span>
+            <span class="spacer"></span>
+            <span class="btn" data-admin data-mark-right="6"><span class="gl">&#xE710;</span>New configuration<span class="gl" style="font-size:12px">&#xE70D;</span></span>
+          </div>
+
+          <div class="rows">
+            <div class="row">
+              <div class="ico gl">&#xE81E;</div>
+              <div class="txt">
+                <div class="hstack"><span class="t">Rehearsal</span><span class="chip caution" data-only="pending">Starts after the restart</span></div>
+                <div class="s">Changed yesterday · 8 device names, 2 loopbacks, 1 network host</div>
+              </div>
+              <div class="act">
+                <span class="btn" data-admin data-not="pending" data-mark="4">Use this one</span>
+                <span class="btn subtle icon gl">&#xE712;</span>
+              </div>
+            </div>
+            <div class="row" style="position:relative">
+              <div class="ico gl">&#xE81E;</div>
+              <div class="txt">
+                <div class="t">Studio (STUDIO-PC)</div>
+                <div class="s">Imported from STUDIO-PC on Oct 12 · 14 device names, 6 pictures, 1 network host</div>
+              </div>
+              <div class="act">
+                <span class="btn" data-admin>Use this one</span>
+                <span class="btn subtle icon gl" data-only="menu" style="background:var(--control)">&#xE712;</span>
+                <span class="btn subtle icon gl" data-not="menu">&#xE712;</span>
+              </div>
+              <div class="flyout" data-only="menu" style="right:14px; top:52px;" data-mark="5">
+                <div class="menu-item"><span class="gl">&#xE8AC;</span>Rename</div>
+                <div class="menu-item hover"><span class="gl">&#xE8C8;</span>Duplicate</div>
+                <div class="menu-item"><span class="gl">&#xE81C;</span>Back up now</div>
+                <div class="menu-item"><span class="gl">&#xE72D;</span>Share...</div>
+                <div class="menu-sep"></div>
+                <div class="menu-item"><span class="gl">&#xE74D;</span>Delete</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="ico gl">&#xE81E;</div>
+              <div class="txt">
+                <div class="t">Empty</div>
+                <div class="s">Created Sep 30 · Nothing set up yet</div>
+              </div>
+              <div class="act">
+                <span class="btn" data-admin>Use this one</span>
+                <span class="btn subtle icon gl">&#xE712;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="smoke" data-only="switch">
+      <div class="dialog wide">
+        <div class="dlg-body">
+          <div class="dlg-title" data-mark-right="4">Switch to Rehearsal?</div>
+          <div class="dlg-text">Rehearsal takes over when the MIDI service restarts. Close your music apps first, because anything using MIDI loses its connections.</div>
+          <div class="caption">Live set stays on this PC, so you can switch back any time.</div>
+        </div>
+        <div class="dlg-foot">
+          <span class="btn accent">Restart MIDI service</span>
+          <span class="btn">Restart later</span>
+          <span class="btn">Cancel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Four jobs, four pages.</b> Configurations, Backups, Share and Import. This PC's name sits at the bottom, because sharing and importing are about which PC is which.</li>
+    <li><b>The one in use comes first.</b> The pencil renames it. Back up now and Share are one click away.</li>
+    <li><b>What's in it, in plain counts:</b> device names, pictures, loopbacks, network, Bluetooth and the synthesizer. Never the file itself.</li>
+    <li><b>Use this one asks first</b> (<span class="mono">switch</span>), because switching restarts the MIDI service, and that drops every app's MIDI connections. Restart later switches anyway and leaves a banner (<span class="mono">pending</span>) until the service restarts. Keep using Live set undoes the switch.</li>
+    <li><b>The ... menu</b> (<span class="mono">menu</span>) has Rename, Duplicate, Back up now, Share and Delete. The one in use can't be deleted.</li>
+    <li><b>New configuration</b> starts empty or as a copy of the one in use. This replaces the Create box in Global MIDI settings.</li>
+    <li><b>Without administrator rights</b> (<span class="mono">noadmin</span>), looking and Share still work. Anything that writes to the configurations folder is gray, Back up now included. Reopen as administrator opens this window again with the rights it needs.</li>
+  </ol>
+</div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Settings, Configurations window comps</title>
+<link rel="stylesheet" href="cfg.css">
+<script src="cfg.js"></script>
+<style>
+    .page { width: 1100px; gap: 14px; }
+    h1 { font-size: 22px; margin: 6px 0 0 0; }
+    h2 { font-size: 16px; margin: 14px 0 0 0; }
+    p, li { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 1040px; }
+    p { margin: 0; }
+    ul, ol { margin: 0; padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    li b, p b { color: var(--text); }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    a.item { display: block; text-decoration: none; color: var(--text); border-radius: 8px; border: 1px solid var(--stroke-strong); background: var(--card); padding: 14px 16px; }
+    a.item .n { font-size: 14px; font-weight: 600; }
+    a.item .d { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Windows MIDI Settings, Configurations window comps</h1>
+  <p>A window for everything people do with whole configurations: switch, back up, restore, share with another PC, and import. These are HTML: open any page in a browser, or run <span class="mono">capture.ps1</span> for pictures in <span class="mono">shots</span> and <span class="mono">check.ps1</span> for a layout check. They are pictures of the app, not the app. No product code has changed.</p>
+
+  <div class="list">
+    <a class="item" href="1-entry.html"><div class="n">1. Opening the window</div><div class="d">A Configurations button in the pinned group on the right of the toolbar, and a slimmer card in Global MIDI settings.</div></a>
+    <a class="item" href="2-configurations.html"><div class="n">2. Configurations</div><div class="d">The one in use and what's in it, the others on this PC, switching with a restart prompt, the ... menu, and the read-only state.</div></a>
+    <a class="item" href="3-backups.html"><div class="n">3. Backups</div><div class="d">Every backup with the reason it exists, what's in the one you pick compared with now, Restore, and deleting old backups.</div></a>
+    <a class="item" href="4-share.html"><div class="n">4. Share</div><div class="d">One package file with pictures, for another PC. Works without administrator rights.</div></a>
+    <a class="item" href="5-import.html"><div class="n">5. Import</div><div class="d">Where a package comes in, with pointers for people who wanted Share or Backups.</div></a>
+    <a class="item" href="6-import-review.html"><div class="n">6. What will happen</div><div class="d">One line per item saying what will happen: device names added or replaced, loopback and host names that clash, a host named after the other PC, a transport that isn't installed, other settings.</div></a>
+    <a class="item" href="7-import-done.html"><div class="n">7. Done</div><div class="d">The result per item, a restart only when something needs one, and Undo this import.</div></a>
+  </div>
+
+  <h2>Decided (Pete, October 14, 2026)</h2>
+  <ol>
+    <li><b>Import writes the configuration file,</b> then the MIDI service restarts to use it. It does not go through the running service.</li>
+    <li><b>When a package disagrees with this PC, the customer's version wins by default.</b> A loopback or host whose name is taken is left out unless its box is ticked. A host named after the other PC takes this PC's name, ticked by default.</li>
+    <li><b><span class="mono">.midiconfigpack</span></b> is the package file type, and the installer registers it so double-clicking a package opens Import.</li>
+    <li><b>Packages carry the port names setting,</b> in its own entry inside the package, outside the configuration file. Never a .reg file.</li>
+    <li><b>Backups made by MIDI Settings are full packages:</b> the configuration, its pictures, and settings like port names, with the reason and date inside, so file names stay short.</li>
+    <li><b>Global MIDI settings keeps only the name of the configuration in use and Manage configurations</b> once this window exists.</li>
+  </ol>
+
+  <h2>How it will be built</h2>
+  <p>The full plan, for whoever builds it, is <span class="mono">Configurations-window-plan.md</span> in this folder: package format, engine pieces, merge rules, phases, tests, and what already exists.</p>
+</div>
+</body>
+</html>

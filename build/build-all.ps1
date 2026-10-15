@@ -64,9 +64,11 @@
     The Artifact Signing metadata JSON used by -Sign. Defaults to MIDI_SIGNING_METADATA.
 
 .PARAMETER MaxCpuCount
-    How many projects MSBuild builds at once. Defaults to three quarters of the logical
-    processors so the machine stays usable while a build runs. 0 uses every logical processor,
-    which is a little faster and makes the desktop stutter.
+    How many projects MSBuild builds at once. Defaults to two thirds of the logical processors
+    so the machine stays usable while a build runs. A project that compiles several files at
+    once (/MP) is held to a quarter of this many compilers; otherwise it starts one per logical
+    processor on top of the other projects. 0 lifts both limits, which is a little faster and
+    makes the desktop stutter.
 
 .PARAMETER Priority
     Process priority for MSBuild and the compilers, which inherit it from this script.
@@ -108,7 +110,7 @@ param(
 
     # Parallel MSBuild nodes. 0 means one per logical processor.
     [ValidateRange(0, 256)]
-    [int] $MaxCpuCount = [Math]::Max(1, [int][Math]::Floor([Environment]::ProcessorCount * 0.75)),
+    [int] $MaxCpuCount = [Math]::Max(1, [int][Math]::Floor([Environment]::ProcessorCount * 2 / 3)),
 
     [ValidateSet('Normal', 'BelowNormal', 'Idle')]
     [string] $Priority = 'BelowNormal',
@@ -173,6 +175,7 @@ $CollectMidiLogsRoot = Join-Path $ApiRoot 'CollectMidiLogs'
 $SamplesRoot = Join-Path $RepoRoot 'samples'
 
 $StagingRoot = Join-Path $BuildRoot 'staging'
+$DependenciesRoot = Join-Path $BuildRoot 'dependencies'
 $ReleaseRoot = Join-Path $BuildRoot 'release'
 $VersionStagingFolder = Join-Path $StagingRoot 'version'
 $TransportStagingRoot = Join-Path $StagingRoot 'api'
@@ -948,6 +951,12 @@ function Invoke-MSBuild {
     # set, so MSBuild builds it twice in a single invocation. Both writes target the same
     # OutDir/IntDir, and in parallel they collide on the FileTracker logs (FTK1011).
     $msbuildArgs += if ($Serial) { '/m:1' } elseif ($MaxCpuCount -gt 0) { "/m:$MaxCpuCount" } else { '/m' }
+
+    # /m counts projects. A project with /MP would otherwise start one cl.exe per logical processor.
+    if ($MaxCpuCount -gt 0) { $msbuildArgs += "/p:CL_MPCount=$script:CompilersPerProject" }
+
+    # -low only ever lowers: an Idle build stays Idle.
+    if ($Priority -ne 'Normal') { $msbuildArgs += '-low' }
 
     if ($Targets.Count -gt 0) { $msbuildArgs += "/t:$($Targets -join ';')" }
 
@@ -2158,6 +2167,89 @@ function Get-InstallerPath {
     Join-Path $Installer.SolutionDir "main-bundle\bin\$BuildPlatform\$Configuration\$($Installer.BundleName).exe"
 }
 
+# The apps start only if the runtime the Tools bundle installs is the framework package they were
+# built against, at that version or newer. Preview 11 and 12 shipped the 2.4 runtime with 1.8 apps.
+function Test-WindowsAppRuntimeInstaller {
+    param([Parameter(Mandatory)] [string] $BuildPlatform)
+
+    $installer = Join-Path $DependenciesRoot "$BuildPlatform\WindowsAppRuntimeInstall-$BuildPlatform.exe"
+    if (-not (Test-Path $installer)) {
+        throw "Windows App Runtime installer not found: $installer"
+    }
+
+    $installerArchitecture = Get-FileArchitecture -Path $installer
+    if ($installerArchitecture -ne $BuildPlatform) {
+        throw "$installer is the $installerArchitecture installer. Download the $BuildPlatform one."
+    }
+
+    $sdkVersions = @(Get-ChildItem $UserToolsRoot -Recurse -Filter '*.vcxproj' |
+        Where-Object { $_.FullName -notmatch '\\(bin|obj|packages)\\' } |
+        Select-String -Pattern '<PackageReference\s+Include="Microsoft\.WindowsAppSDK"\s+Version="([^"]+)"' |
+        ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object -Unique)
+    if ($sdkVersions.Count -ne 1) {
+        throw "Expected one Microsoft.WindowsAppSDK version across the apps, found: $($sdkVersions -join ', ')"
+    }
+    $sdkVersion = $sdkVersions[0]
+
+    # What the apps ask for at startup is compiled in from this header.
+    $packagesRoot = if ($env:NUGET_PACKAGES) { $env:NUGET_PACKAGES } else { Join-Path $env:USERPROFILE '.nuget\packages' }
+    $versionHeader = Join-Path $packagesRoot "microsoft.windowsappsdk.runtime\$sdkVersion\include\WindowsAppSDK-VersionInfo.h"
+    if (-not (Test-Path $versionHeader)) {
+        throw "Not found: $versionHeader. Restore the apps first."
+    }
+    $headerText = Get-Content $versionHeader -Raw
+    $requiredName = [regex]::Match($headerText, 'WINDOWSAPPSDK_RUNTIME_PACKAGE_FRAMEWORK_PACKAGEFAMILYNAME\s+"([^"_]+)_').Groups[1].Value
+    $requiredVersion = [version][regex]::Match($headerText, 'WINDOWSAPPSDK_RUNTIME_VERSION_DOTQUADSTRING\s+"([^"]+)"').Groups[1].Value
+
+    # The installer carries each runtime package as an MSIX resource.
+    if (-not ('MidiBuild.ResourceReader' -as [type])) {
+        Add-Type -Namespace MidiBuild -Name ResourceReader -MemberDefinition @'
+[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)] static extern IntPtr LoadLibraryExW(string path, IntPtr file, uint flags);
+[DllImport("kernel32")] static extern bool FreeLibrary(IntPtr module);
+[DllImport("kernel32", CharSet = CharSet.Unicode)] static extern IntPtr FindResourceW(IntPtr module, string name, string type);
+[DllImport("kernel32")] static extern IntPtr LoadResource(IntPtr module, IntPtr resource);
+[DllImport("kernel32")] static extern IntPtr LockResource(IntPtr data);
+[DllImport("kernel32")] static extern uint SizeofResource(IntPtr module, IntPtr resource);
+
+public static byte[] Read(string path, string type, string name)
+{
+    // LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE: nothing in the file runs.
+    IntPtr module = LoadLibraryExW(path, IntPtr.Zero, 0x22);
+    if (module == IntPtr.Zero) throw new System.IO.IOException("Cannot open " + path, Marshal.GetHRForLastWin32Error());
+    try
+    {
+        IntPtr resource = FindResourceW(module, name, type);
+        if (resource == IntPtr.Zero) return null;
+        byte[] data = new byte[SizeofResource(module, resource)];
+        Marshal.Copy(LockResource(LoadResource(module, resource)), data, 0, data.Length);
+        return data;
+    }
+    finally { FreeLibrary(module); }
+}
+'@
+    }
+
+    $package = [MidiBuild.ResourceReader]::Read($installer, 'PACKAGE', "MSIX_FWPACKAGE_$($BuildPlatform.ToUpperInvariant())")
+    if ($null -eq $package) {
+        throw "$installer has no $BuildPlatform framework package. Is it a Windows App Runtime installer?"
+    }
+
+    Add-Type -AssemblyName System.IO.Compression
+    $zip = [System.IO.Compression.ZipArchive]::new([System.IO.MemoryStream]::new($package))
+    try {
+        $reader = [System.IO.StreamReader]::new($zip.GetEntry('AppxManifest.xml').Open())
+        try { $identity = ([xml]$reader.ReadToEnd()).Package.Identity } finally { $reader.Dispose() }
+    }
+    finally { $zip.Dispose() }
+
+    if ($identity.Name -ne $requiredName -or [version]$identity.Version -lt $requiredVersion) {
+        throw ("$installer installs $($identity.Name) $($identity.Version). The apps are built against " +
+            "Microsoft.WindowsAppSDK $sdkVersion, which needs $requiredName $requiredVersion or newer.")
+    }
+
+    Write-Detail "App runtime     $BuildPlatform installer has $($identity.Name) $($identity.Version), apps need $requiredVersion or newer"
+}
+
 function Invoke-SetupTarget {
     Write-Step 'Setup'
 
@@ -2165,6 +2257,10 @@ function Invoke-SetupTarget {
         if (-not (Test-Path $include)) {
             throw "Version include not found: $include. Run the Version target first."
         }
+    }
+
+    foreach ($plat in $Platform) {
+        Test-WindowsAppRuntimeInstaller -BuildPlatform $plat
     }
 
     New-SetupFileLists
@@ -2337,7 +2433,14 @@ if ($targets -contains 'Pack' -and $targets -notcontains 'Sdk') {
     throw 'Pack runs only together with Sdk, so the package can only ever hold binaries from the build it is part of.'
 }
 
-$parallelism = if ($MaxCpuCount -gt 0) { "$MaxCpuCount of $([Environment]::ProcessorCount)" } else { "all $([Environment]::ProcessorCount)" }
+$script:CompilersPerProject = [Math]::Max(1, [int][Math]::Floor($MaxCpuCount / 4))
+
+$parallelism = if ($MaxCpuCount -gt 0) {
+    "$MaxCpuCount of $([Environment]::ProcessorCount) logical processors, at most $script:CompilersPerProject compilers per project"
+}
+else {
+    "all $([Environment]::ProcessorCount) logical processors"
+}
 
 Write-Host ''
 Write-Host 'Windows MIDI Services - SDK, tools, apps and transports' -ForegroundColor White
@@ -2345,7 +2448,7 @@ Write-Detail "Repo          $RepoRoot"
 Write-Detail "Targets       $((@($(if ($Target -contains 'Clean') { 'Clean' })) + $targets | Where-Object { $_ }) -join ', ')"
 Write-Detail "Platforms     $($Platform -join ', ')"
 Write-Detail "Configuration $Configuration"
-Write-Detail "Parallelism   $parallelism logical processors, $Priority priority"
+Write-Detail "Parallelism   $parallelism, $Priority priority"
 
 if ($Sign) {
     if (-not $SigningMetadata) {

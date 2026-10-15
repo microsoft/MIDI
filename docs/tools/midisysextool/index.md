@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in Q1 CY 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
 
 The Windows MIDI SysEx Utility sends System Exclusive files to an instrument and captures System Exclusive data coming back from one. Although not intended to be a fully-featured librarian, it covers most of what people mean by "patch librarian" jobs: loading a bank of sounds you downloaded, backing up the sounds you've made, applying a firmware update, or capturing a dump to send to a manufacturer's support desk.
 

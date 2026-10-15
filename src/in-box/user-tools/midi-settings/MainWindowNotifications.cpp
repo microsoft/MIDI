@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "App.xaml.h"
+#include "DocumentHandoff.h"
 #include "Elevation.h"
 #include "StringResources.h"
 
@@ -27,6 +28,23 @@ namespace
             ::RegisterWindowMessageW(MIDI_SETTINGS_SHOW_NOTIFICATIONS_MESSAGE_NAME);
 
         return message;
+    }
+
+    UINT ShowConfigurationsMessage() noexcept
+    {
+        static UINT const message =
+            ::RegisterWindowMessageW(MIDI_SETTINGS_SHOW_CONFIGURATIONS_MESSAGE_NAME);
+
+        return message;
+    }
+
+    bool EndsWithText(_In_ std::wstring_view const text, _In_ std::wstring_view const suffix) noexcept
+    {
+        return text.size() >= suffix.size() &&
+            ::CompareStringOrdinal(
+                text.data() + text.size() - suffix.size(), static_cast<int>(suffix.size()),
+                suffix.data(), static_cast<int>(suffix.size()),
+                TRUE) == CSTR_EQUAL;
     }
 }
 
@@ -95,6 +113,63 @@ namespace winrt::midisettings::implementation
             }
 
             return 0;
+        }
+
+        // Like the notifications message, this only navigates: everything the window can change
+        // is still behind a click. WPARAM picks the page.
+        if (message == ShowConfigurationsMessage() && message != 0)
+        {
+            auto const self = reinterpret_cast<MainWindow*>(referenceData);
+
+            if (self != nullptr && !self->m_closing && self->m_dispatcherQueue != nullptr)
+            {
+                std::wstring const page{ wparam < std::size(MidiSettingsConfigurationsPages) ?
+                    MidiSettingsConfigurationsPages[wparam] :
+                    MidiSettingsConfigurationsPages[0] };
+
+                // opened outside this window procedure, because it makes a window
+                self->m_dispatcherQueue.TryEnqueue([weak = self->get_weak(), page]()
+                    {
+                        if (auto strong = weak.get(); strong != nullptr && !strong->m_closing)
+                        {
+                            strong->ShowConfigurations(page);
+                        }
+                    });
+            }
+
+            return 0;
+        }
+
+        // A package opened while this copy was running, handed over by the copy that opened it.
+        // The path is untrusted and only opens the review: nothing changes without Import.
+        if (message == WM_COPYDATA)
+        {
+            auto const self = reinterpret_cast<MainWindow*>(referenceData);
+            auto const paths = ::midiapp::ReadDocumentsFromCopyData(reinterpret_cast<COPYDATASTRUCT const*>(lparam));
+
+            if (self == nullptr || self->m_closing || paths.empty())
+            {
+                return ::DefSubclassProc(window, message, wparam, lparam);
+            }
+
+            auto const& path = paths.front();
+
+            if (EndsWithText(path, L".midiconfigpack") || EndsWithText(path, L".midiconfig.json"))
+            {
+                // opened after the sender has been answered, so it isn't held up by a slow disk
+                if (self->m_dispatcherQueue != nullptr)
+                {
+                    self->m_dispatcherQueue.TryEnqueue([weak = self->get_weak(), path]()
+                        {
+                            if (auto strong = weak.get(); strong != nullptr && !strong->m_closing)
+                            {
+                                strong->OpenConfigurationPackage(path);
+                            }
+                        });
+                }
+            }
+
+            return TRUE;
         }
 
         return ::DefSubclassProc(window, message, wparam, lparam);

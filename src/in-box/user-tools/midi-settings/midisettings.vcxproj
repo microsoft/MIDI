@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)config-engine;$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
@@ -148,6 +148,23 @@
     <ClInclude Include="MainWindow.xaml.h">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="ConfigurationsWindow.xaml.h">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="ConfigurationsSupport.h" />
+    <!-- the configuration engine behind the Configurations window: no XAML, no app strings, no pch -->
+    <ClInclude Include="config-engine\ConfigEngine.h" />
+    <ClInclude Include="config-engine\ConfigJson.h" />
+    <ClInclude Include="config-engine\ConfigKeys.h" />
+    <ClInclude Include="config-engine\ConfigWrite.h" />
+    <ClInclude Include="config-engine\ConfigInventory.h" />
+    <ClInclude Include="config-engine\ConfigPackage.h" />
+    <ClInclude Include="config-engine\ConfigPictures.h" />
+    <ClInclude Include="config-engine\ConfigFiles.h" />
+    <ClInclude Include="config-engine\ConfigBackups.h" />
+    <ClInclude Include="config-engine\ConfigShare.h" />
+    <ClInclude Include="config-engine\ImportPlan.h" />
+    <ClInclude Include="config-engine\ImportApply.h" />
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
@@ -159,6 +176,9 @@
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\DocumentHandoff.h" />
+    <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
+    <ClInclude Include="..\midi-app-shared\Deflate.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -202,6 +222,66 @@
     <ClCompile Include="MainWindowRelink.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MainWindowConfigurations.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsWindow.xaml.cpp">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsWindowConfigurations.cpp">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsWindowBackups.cpp">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsWindowShare.cpp">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsWindowImport.cpp">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsWindowImportReview.cpp">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="ConfigurationsSupport.cpp" />
+    <!-- the engine is compiled exactly as the unit tests compile it -->
+    <ClCompile Include="config-engine\ConfigJson.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigWrite.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigInventory.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigPackage.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigPictures.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigFiles.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigBackups.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ConfigShare.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ImportPlan.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="config-engine\ImportApply.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\Deflate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ZipArchive.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
@@ -218,12 +298,18 @@
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
+    <Midl Include="ConfigurationsWindow.idl">
+      <DependentUpon>ConfigurationsWindow.xaml</DependentUpon>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ConfigurationsWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
@@ -240,7 +326,7 @@
     <PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260520.1" />
     <PackageReference Include="Microsoft.Windows.ImplementationLibrary" Version="1.0.260126.7" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
