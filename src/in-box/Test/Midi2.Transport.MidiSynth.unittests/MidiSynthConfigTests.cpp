@@ -178,6 +178,47 @@ namespace
     {
         return L"{" + body + L"}";
     }
+
+
+    std::optional<std::wstring> ReadStatusString(std::wstring const& key)
+    {
+        auto const status = ReadStatusObject();
+
+        if (!status.has_value())
+        {
+            return std::nullopt;
+        }
+
+        std::optional<std::wstring> found{ std::nullopt };
+
+        std::function<void(winrt::Windows::Data::Json::JsonObject const&)> search =
+            [&](winrt::Windows::Data::Json::JsonObject const& object)
+            {
+                for (auto const& pair : object)
+                {
+                    auto const value = pair.Value();
+
+                    if (found.has_value() || value == nullptr)
+                    {
+                        continue;
+                    }
+
+                    if (pair.Key() == winrt::hstring{ key } &&
+                        value.ValueType() == winrt::Windows::Data::Json::JsonValueType::String)
+                    {
+                        found = std::wstring{ value.GetString() };
+                    }
+                    else if (value.ValueType() == winrt::Windows::Data::Json::JsonValueType::Object)
+                    {
+                        search(value.GetObject());
+                    }
+                }
+            };
+
+        search(status.value());
+
+        return found;
+    }
 }
 
 
@@ -340,6 +381,48 @@ void MidiSynthConfigTests::TestUnknownModeStringsAreRejected()
         BuildSettingsJson(L"\"" MIDI_SYNTH_JSON_BANK_SELECT_PROPERTY_KEY L"\":\"nonsense\""));
     VERIFY_IS_FALSE(badBankSelect.IsSuccess());
 
+    VERIFY_IS_TRUE(SynthAvailable());
+}
+
+
+// Exclusive mode used to be refused as not built. It is a real setting now, so the service has to
+// take it and report it back. ASIO is still not built, so it is still refused.
+void MidiSynthConfigTests::TestExclusiveAudioModeIsAccepted()
+{
+    if (!SynthAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"The General MIDI synthesizer transport is not available.");
+        return;
+    }
+
+    auto const original = ReadStatusString(MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY);
+
+    if (!original.has_value())
+    {
+        Log::Result(TestResults::Skipped, L"The status reply did not carry the audio mode.");
+        return;
+    }
+
+    auto restore = wil::scope_exit([&]()
+        {
+            SendSynthConfig(BuildSettingsJson(
+                L"\"" MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY L"\":\"" + original.value() + L"\""));
+        });
+
+    auto const exclusive = SendSynthConfig(BuildSettingsJson(
+        L"\"" MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY L"\":\"" MIDI_SYNTH_JSON_AUDIO_MODE_EXCLUSIVE L"\""));
+
+    VERIFY_IS_TRUE(exclusive.IsSuccess());
+
+    auto const after = ReadStatusString(MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY);
+
+    VERIFY_IS_TRUE(after.has_value());
+    VERIFY_IS_TRUE(after.value() == MIDI_SYNTH_JSON_AUDIO_MODE_EXCLUSIVE, L"The status reports exclusive.");
+
+    auto const asio = SendSynthConfig(BuildSettingsJson(
+        L"\"" MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY L"\":\"" MIDI_SYNTH_JSON_AUDIO_MODE_ASIO L"\""));
+
+    VERIFY_IS_FALSE(asio.IsSuccess());
     VERIFY_IS_TRUE(SynthAvailable());
 }
 

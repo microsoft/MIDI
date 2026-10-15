@@ -78,6 +78,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiSynth\Articulation.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\AudioEffect.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\AudioSampleFormat.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\AudioSink.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\ChorusEffect.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\DlsCollection.h" />
@@ -96,6 +97,7 @@
 
   <ItemGroup>
     <ClCompile Include="Articulation.cpp" />
+    <ClCompile Include="AudioSampleFormat.cpp" />
     <ClCompile Include="ChorusEffect.cpp" />
     <ClCompile Include="DlsCollection.cpp" />
     <ClCompile Include="ProgramList.cpp" />

@@ -353,10 +353,9 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
             RETURN_HR(E_INVALIDARG);
         }
 
-        // Neither exclusive mode nor ASIO is built yet. ASIO is not in the public API at all, and
-        // exclusive is, so both can still arrive here from a hand-edited configuration file.
-        // Silently falling back to shared would be worse than refusing: the caller would believe
-        // it had taken the device.
+        // ASIO is not built and is not in the public API, but it can still arrive here from a
+        // hand-edited configuration file. Silently falling back to shared would be worse than
+        // refusing: the caller would believe it had the mode it asked for.
         if (!settings.AudioModeIsImplemented())
         {
             internal::SetConfigurationResponseObjectFail(

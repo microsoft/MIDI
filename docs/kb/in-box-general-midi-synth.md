@@ -54,12 +54,22 @@ All of these are in the MIDI Settings app under global settings, and in MIDI Con
 | Setting | What it does |
 | --- | --- |
 | **Synthesizer mode** | **Modern** plays the sound set without the limits of the older Windows synthesizer. **Compatible** reproduces those limits on purpose: 32 voices, a 22050 Hz render rate, and no effects. Pick Compatible when you're comparing against how a file sounded on an older PC. This is the "retro" setting. |
-| **Audio output** | **Shared** is the normal setting and mixes with everything else. **Shared, low latency** asks the audio engine for smaller buffers, which tightens timing at the cost of some CPU. Not all audio devices support this low-latency Windows API. |
+| **Audio output** | **Shared** is the normal setting and mixes with everything else. **Shared, low latency** asks the audio engine for smaller buffers, which tightens timing at the cost of some CPU. Not all audio devices support this low-latency Windows API. **Exclusive** takes the audio device for the synthesizer alone, for the shortest delay. See [Exclusive mode](#exclusive-mode) below. |
 | **Bank select** | Which convention to read bank select messages in: follow the sender, Roland GS, Yamaha XG, or General MIDI 2. |
 | **Volume trim** | A volume control for the synthesizer alone, from -60 dB to +12 dB. The service runs in a place where Windows can't give it a slider in the Volume Mixer, so this is how you balance it against your other audio. |
 | **Reverb and chorus** | Turns the built-in effects on or off. They're always off in Compatible mode, because the synthesizer being reproduced didn't have them. |
 
 Changing the synthesizer mode, the bank select mode, or the effects setting rebuilds the sound engine, which clears every channel's program and controller state. Don't change them in the middle of a song. Volume trim is safe to change while music is playing.
+
+### Exclusive mode
+
+In shared mode, the synthesizer's sound goes through the Windows audio mixer along with every other app's sound. That mixing takes time, so there's a delay between a note arriving and you hearing it. Exclusive mode skips the mixer. The synthesizer talks to the audio device directly, with much smaller buffers, so you hear each note sooner. That matters most when you play the synthesizer live from a keyboard.
+
+The cost is that the audio device belongs to the synthesizer while it plays. Other apps can't play sound through that device until the synthesizer lets it go, a few seconds after the last note stops sounding. If you listen to music or join calls on the same device, use one of the shared settings.
+
+Sometimes the synthesizer can't take the device. Another app may already be using it on its own, or Windows may be set not to allow it. That's the **Allow applications to take exclusive control of this device** box in the device's advanced properties in Sound settings. When that happens, the synthesizer plays in shared mode so you still hear it, and it tries exclusive mode again the next time it opens the device. The setting still reads **Exclusive**.
+
+The synthesizer keeps the sample rate the device is already set to, so nothing that takes its clock from the device is disturbed.
 
 ## Getting the program list
 

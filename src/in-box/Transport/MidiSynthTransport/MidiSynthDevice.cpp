@@ -29,6 +29,10 @@ namespace
     // the gaps in a performance never reach it, short enough that a finished song does.
     constexpr uint64_t AudioIdleReleaseMilliseconds = 5000;
 
+    // Exclusive mode asks for the device's shortest period, but no shorter than this. Every period
+    // is a deadline for the render thread, and a missed one is heard as a dropout.
+    constexpr uint32_t ExclusivePeriodFloorMilliseconds = 3;
+
     // Long enough for the fade a voice ends with, short enough that a disconnect never hangs.
     constexpr DWORD DrainTimeoutMilliseconds = 100;
 
@@ -292,8 +296,37 @@ MidiSynthDevice::AcquireAudio()
     }
 
     auto sink = std::make_unique<WasapiAudioSink>();
+    bool opened{ false };
 
-    if (!sink->Open(settings.WantsLowLatency()))
+    if (settings.WantsExclusive())
+    {
+        auto const exclusiveResult = sink->OpenExclusive(ExclusivePeriodFloorMilliseconds);
+
+        if (SUCCEEDED(exclusiveResult))
+        {
+            opened = true;
+        }
+        else
+        {
+            // Another application holds the device, exclusive use is turned off for it in Sound
+            // settings, or it takes no format the synthesizer can write. Sound in shared mode beats
+            // silence, and exclusive is tried again the next time the device is opened.
+            TraceLoggingWrite(
+                MidiSynthTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Could not take the audio device in exclusive mode. Playing in shared mode.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(exclusiveResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+
+            sink = std::make_unique<WasapiAudioSink>();
+        }
+    }
+
+    // A failed exclusive open falls back to the lowest latency shared mode the device offers.
+    if (!opened && !sink->Open(settings.WantsLowLatency() || settings.WantsExclusive()))
     {
         TraceLoggingWrite(
             MidiSynthTransportTelemetryProvider::Provider(),
@@ -381,6 +414,7 @@ MidiSynthDevice::AcquireAudio()
         TraceLoggingUInt32(sink->SampleRate(), "sample rate"),
         TraceLoggingFloat64(sink->PeriodMilliseconds(), "period ms"),
         TraceLoggingBool(sink->UsingLowLatencyPath(), "low latency"),
+        TraceLoggingBool(sink->UsingExclusiveMode(), "exclusive"),
         TraceLoggingFloat64(acquireMilliseconds, "ms since requested"),
         TraceLoggingBool(!engineMatchesDevice, "engine rebuilt")
     );

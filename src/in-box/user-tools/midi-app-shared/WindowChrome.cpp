@@ -239,6 +239,25 @@ namespace midiapp
             UpdateTitleBarInsets();
             ApplyTheme();
             ApplyAlwaysOnTop();
+
+            // A window that starts minimized cannot be measured yet, and nothing else in the
+            // window changes when it is restored, so the insets are measured again then.
+            RevokeAppWindowChanged();
+            m_appWindow = GetAppWindow();
+
+            if (m_appWindow != nullptr)
+            {
+                m_appWindowChangedToken = m_appWindow.Changed(
+                    [this](wuw::AppWindow const&, wuw::AppWindowChangedEventArgs const& args)
+                    {
+                        // A restore from minimized is a size change, raised before the insets
+                        // have their final values.
+                        if (args.DidSizeChange() || args.DidPresenterChange() || args.DidVisibilityChange())
+                        {
+                            QueueTitleBarInsetsUpdate();
+                        }
+                    });
+            }
         }
         catch (...)
         {
@@ -457,8 +476,18 @@ namespace midiapp
         }
     }
 
+    void WindowChrome::RevokeAppWindowChanged() noexcept
+    {
+        if (m_appWindow != nullptr)
+        {
+            m_appWindow.Changed(m_appWindowChangedToken);
+            m_appWindow = nullptr;
+        }
+    }
+
     void WindowChrome::Shutdown() noexcept
     {
+        RevokeAppWindowChanged();
         ReleaseBackdropControllers();
     }
 
@@ -507,7 +536,24 @@ namespace midiapp
                 return;
             }
 
+            // Minimized or hidden, the window has no caption buttons to make room for, and the
+            // insets read then would leave none once it is back.
+            if (auto const handle = WindowHandle();
+                handle == nullptr || ::IsIconic(handle) || !::IsWindowVisible(handle))
+            {
+                return;
+            }
+
             auto const titleBar = appWindow.TitleBar();
+
+            auto const leftInset = titleBar.LeftInset();
+            auto const rightInset = titleBar.RightInset();
+
+            // seen part way through restoring a minimized window
+            if (leftInset < 0 || rightInset < 0)
+            {
+                return;
+            }
 
             auto scale = 1.0;
 
@@ -525,8 +571,44 @@ namespace midiapp
             }
 
             // insets are physical pixels; XAML columns are in DIPs
-            m_elements.LeftInset.Width(wux::GridLength{ titleBar.LeftInset() / scale, wux::GridUnitType::Pixel });
-            m_elements.RightInset.Width(wux::GridLength{ titleBar.RightInset() / scale, wux::GridUnitType::Pixel });
+            m_elements.LeftInset.Width(wux::GridLength{ leftInset / scale, wux::GridUnitType::Pixel });
+            m_elements.RightInset.Width(wux::GridLength{ rightInset / scale, wux::GridUnitType::Pixel });
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    void WindowChrome::QueueTitleBarInsetsUpdate() noexcept
+    {
+        try
+        {
+            if (m_titleBarInsetsUpdateQueued || m_elements.Window == nullptr)
+            {
+                return;
+            }
+
+            auto const queue = m_elements.Window.DispatcherQueue();
+
+            if (queue == nullptr)
+            {
+                return;
+            }
+
+            // The chrome is part of its window, so a live window means a live chrome.
+            winrt::weak_ref<wux::Window> weakWindow{ m_elements.Window };
+
+            m_titleBarInsetsUpdateQueued = queue.TryEnqueue(
+                winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,
+                [this, weakWindow]()
+                {
+                    if (auto const window = weakWindow.get())
+                    {
+                        m_titleBarInsetsUpdateQueued = false;
+                        UpdateTitleBarInsets();
+                    }
+                });
         }
         catch (...)
         {

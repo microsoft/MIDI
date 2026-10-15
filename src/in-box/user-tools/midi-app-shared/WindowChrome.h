@@ -93,11 +93,17 @@ namespace midiapp
     private:
         void UpdateBackdropConfiguration() noexcept;
         void ReleaseBackdropControllers() noexcept;
+        void RevokeAppWindowChanged() noexcept;
+        void QueueTitleBarInsetsUpdate() noexcept;
 
         winrt::Microsoft::UI::Windowing::AppWindow GetAppWindow() const noexcept;
 
         WindowChromeElements m_elements{};
         MidiAppSettings* m_settings{ nullptr };
+
+        winrt::Microsoft::UI::Windowing::AppWindow m_appWindow{ nullptr };
+        winrt::event_token m_appWindowChangedToken{};
+        bool m_titleBarInsetsUpdateQueued{ false };
 
         // the material is driven through the controllers rather than the XAML SystemBackdrop
         // property, because only the controllers expose TintColor

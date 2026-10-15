@@ -920,6 +920,12 @@
   <data name="SynthAudioModeSharedLowLatency.Content" xml:space="preserve">
     <value>Shared, low latency</value>
   </data>
+  <data name="SynthAudioModeExclusive.Content" xml:space="preserve">
+    <value>Exclusive</value>
+  </data>
+  <data name="SynthAudioModeHelp.Text" xml:space="preserve">
+    <value>Exclusive gives the shortest delay. While the synthesizer is playing, and for a few seconds after, no other app can play sound through that audio device.</value>
+  </data>
   <data name="SynthBankSelectCombo.Header" xml:space="preserve">
     <value>Bank select</value>
   </data>
