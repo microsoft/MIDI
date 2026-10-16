@@ -601,6 +601,18 @@ void ProcessingBlockTests::SettingsSurviveTheFile()
             settings.PutValue.Value.Name = L"Scene";
             settings.PutValue.KeepsOutWhenEmpty = true;
             break;
+
+        case BlockKind::MessageConverter:
+        {
+            auto row = DefaultConverterRow();
+            row.FromChannel = 2;
+            row.SameChannel = false;
+            row.To.Channel = 3;
+            row.Release = ConverterRelease::Toggle;
+
+            settings.Converter.Rows.push_back(row);
+            break;
+        }
         }
 
         // Only an annotation changes no message, whatever its settings.

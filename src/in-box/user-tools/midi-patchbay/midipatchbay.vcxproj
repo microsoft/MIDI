@@ -149,6 +149,7 @@
     <ClInclude Include="StatefulBlocks.h" />
     <ClInclude Include="LogicSteps.h" />
     <ClInclude Include="ControllerSteps.h" />
+    <ClInclude Include="MessageConverter.h" />
     <ClInclude Include="ControllerHub.h" />
     <ClInclude Include="ControllerStepRunner.h" />
     <ClInclude Include="HidControllers.h" />
@@ -245,6 +246,9 @@
     <ClCompile Include="ControllerSteps.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="MessageConverter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="HidControllers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -273,6 +277,7 @@
     <ClCompile Include="HidHub.cpp" />
     <ClCompile Include="ControllerStepRunner.cpp" />
     <ClCompile Include="ControllerText.cpp" />
+    <ClCompile Include="ConverterText.cpp" />
     <ClCompile Include="SendQueue.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -292,6 +297,7 @@
     <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
     <ClCompile Include="MainWindowLogicSteps.cpp" />
     <ClCompile Include="MainWindowControllerSteps.cpp" />
+    <ClCompile Include="MainWindowConverterSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />

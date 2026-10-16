@@ -60,6 +60,9 @@ namespace midipatchbay
 
         // Branch and Switch: where notes, held pedals and long messages went. Made with the step.
         std::unique_ptr<WayMemory> Ways{};
+
+        // Message converter: inputs held down, toggles on, and next and previous program. Made with the step.
+        std::unique_ptr<ConverterMemory> Converter{};
     };
 
     // Makes what a step of this kind needs before any message reaches it.
@@ -87,8 +90,8 @@ namespace midipatchbay
         void Add(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount, _In_ int32_t edge) noexcept;
     };
 
-    // Clock divider, (N)RPN filter and transform, note distributor, gate, the MIDI-CI steps, and
-    // Branch and Switch.
+    // Clock divider, (N)RPN filter and transform, note distributor, gate, the MIDI-CI steps,
+    // Branch and Switch, and the message converter.
     bool IsStatefulBlock(_In_ BlockKind kind) noexcept;
 
     // False keeps the message out. True with nothing in the output sends the message, as changed,

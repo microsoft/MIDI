@@ -13,6 +13,7 @@
 
 #include "MessageTransform.h"
 #include "ControllerSteps.h"
+#include "MessageConverter.h"
 
 // Shared with MIDI Glass and MIDI Clock, in midi-app-shared. All three are pure.
 #include "ChannelVoiceWords.h"
@@ -74,9 +75,11 @@ namespace midipatchbay
 
         ControllerButton = 33,
         ControllerAxis = 34,
+
+        MessageConverter = 35,
     };
 
-    constexpr size_t BlockKindCount = 35;
+    constexpr size_t BlockKindCount = 36;
 
     // The order the palette shows them in.
     constexpr BlockKind AllBlockKinds[BlockKindCount] =
@@ -87,6 +90,7 @@ namespace midipatchbay
         BlockKind::ChannelMap, BlockKind::GroupMap, BlockKind::NoteMap, BlockKind::Transpose,
         BlockKind::Velocity, BlockKind::Aftertouch, BlockKind::ControlChangeMap,
         BlockKind::ControlChangeValue, BlockKind::ProgramMap, BlockKind::ParameterTransform,
+        BlockKind::MessageConverter,
         BlockKind::ClockDivider,
         BlockKind::Throttle,
         BlockKind::NoteDistributor,
@@ -805,6 +809,7 @@ namespace midipatchbay
 
         ParameterFilterSettings ParameterFilter{};
         ParameterTransformSettings ParameterTransform{};
+        MessageConverterSettings Converter{};
         NoteDistributorSettings Distributor{};
         GateSettings Gate{};
 

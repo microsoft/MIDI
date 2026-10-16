@@ -32,6 +32,7 @@ public:
     TEST_METHOD(PutValuePutsAMemoryIntoTheChannel);
     TEST_METHOD(PutValueCopiesMidi2ValuesWhole);
     TEST_METHOD(PutValueNeverTurnsANoteOnIntoANoteOff);
+    TEST_METHOD(PutValueNeverChangesTheMessageType);
     TEST_METHOD(ValuesCompareTheSameInBothProtocols);
     TEST_METHOD(ALongMessageStaysInOnePiece);
     TEST_METHOD(ABypassedSwitchCanSendOnlyItsFirstWay);

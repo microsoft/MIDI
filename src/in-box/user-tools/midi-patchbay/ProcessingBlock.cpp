@@ -70,6 +70,7 @@ namespace midipatchbay
             { BlockKind::PutValue, BlockCategory::Logic, L"putValue" },
             { BlockKind::ControllerButton, BlockCategory::GameController, L"controllerButton" },
             { BlockKind::ControllerAxis, BlockCategory::GameController, L"controllerAxis" },
+            { BlockKind::MessageConverter, BlockCategory::Transform, L"messageConverter" },
         };
 
         static_assert(std::size(Kinds) == BlockKindCount);
@@ -1781,6 +1782,9 @@ namespace midipatchbay
         case BlockKind::ParameterTransform:
             return settings.ParameterTransform.Rows.empty();
 
+        case BlockKind::MessageConverter:
+            return settings.Converter.Rows.empty();
+
         // Both decide where each message goes, so they always run.
         case BlockKind::NoteDistributor:
         case BlockKind::Gate:
@@ -2028,6 +2032,10 @@ namespace midipatchbay
                 object.SetNamedValue(KeyRows, rows);
                 break;
             }
+
+            case BlockKind::MessageConverter:
+                MessageConverterToJson(settings.Converter, object);
+                break;
 
             case BlockKind::NoteDistributor:
             {
@@ -2409,6 +2417,10 @@ namespace midipatchbay
 
             case BlockKind::ControllerAxis:
                 settings.ControllerAxis = ControllerAxisFromJson(object);
+                break;
+
+            case BlockKind::MessageConverter:
+                settings.Converter = MessageConverterFromJson(object);
                 break;
 
             case BlockKind::ClockDivider:
@@ -2829,6 +2841,10 @@ namespace midipatchbay
                         std::to_wstring(row.ToBank) + L'.' + std::to_wstring(row.ToIndex) + L'~' +
                         ShapeSignature(row.Shape);
                 }
+                break;
+
+            case BlockKind::MessageConverter:
+                signature += MessageConverterSignature(settings.Converter);
                 break;
 
             case BlockKind::NoteDistributor:

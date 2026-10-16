@@ -729,6 +729,36 @@ namespace midipatchbay
 
             return true;
         }
+
+        // ----------------------------------------------------------- message converter
+
+        bool RunMessageConverter(
+            _In_ MessageConverterSettings const& converter,
+            _Inout_ BlockState& state,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint8_t wordCount,
+            _Inout_ StageOutput& output) noexcept
+        {
+            if (state.Converter == nullptr)
+            {
+                return true;
+            }
+
+            ConvertedMessages converted{};
+
+            if (!ConvertMessage(converter, *state.Converter, words, wordCount, converted))
+            {
+                return true;
+            }
+
+            for (uint8_t i = 0; i < converted.Count; i++)
+            {
+                output.Add(converted.Words[i].data(), converted.Counts[i], EveryEdge);
+            }
+
+            // A row that matched and has nothing to send for this message keeps it out.
+            return converted.Count > 0;
+        }
     }
 
     _Use_decl_annotations_
@@ -886,6 +916,7 @@ namespace midipatchbay
         case BlockKind::CiFilter:
         case BlockKind::Branch:
         case BlockKind::Switch:
+        case BlockKind::MessageConverter:
             return true;
 
         default:
@@ -904,6 +935,11 @@ namespace midipatchbay
         if (HasWays(kind) && state.Ways == nullptr)
         {
             state.Ways = std::make_unique<WayMemory>();
+        }
+
+        if (kind == BlockKind::MessageConverter && state.Converter == nullptr)
+        {
+            state.Converter = std::make_unique<ConverterMemory>();
         }
     }
 
@@ -938,6 +974,9 @@ namespace midipatchbay
 
         case BlockKind::Gate:
             return RunGate(settings.Gate, state, words, wordCount);
+
+        case BlockKind::MessageConverter:
+            return RunMessageConverter(settings.Converter, state, words, wordCount, output);
 
         default:
             return ProcessBlock(kind, settings, words, wordCount);

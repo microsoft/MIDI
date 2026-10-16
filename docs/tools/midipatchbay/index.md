@@ -128,7 +128,7 @@ The **Steps** tab also has **Annotation**, a note on the canvas. It isn't a step
 
 Messages go through the steps in the order the connections lead them, and each step only sees what the steps before it let through. When an **Out** leads to more than one place, each one gets its own copy of every message, so a step on one path never changes what another path carries. When more than one connection leads into the same **In**, their messages are merged.
 
-Select a step to see what it does, in a sentence, under **Behavior**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the channel, group, note, control change, and program and bank mappers, the message throttler, the clock divider, the note distributor, the logic steps except the gate, the MIDI-CI responder and filter, MIDI clock, MIDI Time Code, and the game controller steps. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
+Select a step to see what it does, in a sentence, under **Behavior**. When a step's settings are short, they're right there in the panel on the right, and a change takes effect as soon as you make it: the channel, group, and velocity filters, transpose, the channel, group, note, control change, and program and bank mappers, the message converter, the message throttler, the clock divider, the note distributor, the logic steps except the gate, the MIDI-CI responder and filter, MIDI clock, MIDI Time Code, and the game controller steps. Double-click one of those, and the panel is ready for you to change it. For the other steps, **Edit settings…**, or a double-click, opens their settings, as large as the patch window allows, so on a big screen a step with a lot of settings fits without scrolling. Nothing changes until you select **Apply**, and **Reset** puts the step back the way it started. Under **Name**, you can give a step a name of its own, such as "Bass side".
 
 **Bypass** lets everything through a step unchanged, so you can hear the patch with and without it. A bypassed generator or game controller step sends nothing.
 
@@ -166,6 +166,7 @@ Transforms change messages on the way past. Between them they do everything the 
 - **Program and bank mapper** picks a different sound on the destination, for an instrument whose programs aren't laid out the way the music expects. The program numbers are the ones on the wire, 0 to 127, with the General MIDI name beside each one. It can also remap the bank, as controller 0 and controller 32 on MIDI 1.0 and as the bank a MIDI 2.0 program change carries. Most instruments only use the MSB half.
 - **Clock divider** lets one MIDI clock pulse in every so many through, so a device that follows it runs at half the tempo, a third, and so on. Start sets the count back, so the first pulse after it always goes through. A song position is divided to match, and everything else goes through untouched.
 - **(N)RPN transform** sends one RPN or NRPN as another, and can reshape its value with a curve, an output range, and **Invert**. The first row that matches is used. A small graph beside each row shows its curve, the same way it does for **Control change values**. A MIDI 2.0 value is reshaped across its whole range. For a MIDI 1.0 device, the new bank and index are sent once both halves have arrived, and the coarse and fine values are reshaped together.
+- **Message converter** turns one kind of message into another, such as a pad's note into the control change a DAW listens for. See [Converting one kind of message to another](#converting-one-kind-of-message-to-another) below.
 
 ### Shaping controller values
 
@@ -181,6 +182,39 @@ Invert happens before the curve, so a backwards pedal is put the right way round
 A rule applies to the controller number as it arrives at the step. If a control change mapper before it moves CC 1 to CC 11, the rule for CC 11 is the one that shapes it. MIDI 2.0 controllers are shaped at their full resolution.
 
 Rules work on one message at a time. Some controllers split a value across two controller numbers for extra detail, such as CC 1 with CC 33. Those are best left without a rule, because each half would be shaped on its own.
+
+### Converting one kind of message to another
+
+Some DAW controllers send a note from a pad where the DAW wants a control change, or the other way around. A **Message converter** step fixes that. Each row says what to listen for, under **When it gets**, and what to send instead, under **Turn it into**. The first row that matches a message is used. A message that no row matches goes through unchanged.
+
+To turn note 27 on channel 3 into control change 27 with a value of 50 on channel 4:
+
+1. Put a **Message converter** step between the controller and the DAW, and select **Add a row**.
+2. Under **When it gets**, pick **Note** and **Channel 3**. Type 27 as both the lowest and the highest note.
+3. Under **Turn it into**, pick **Control change** and **Channel 4**. Leave **Same number** checked, so note 27 becomes CC 27.
+4. Clear **Same value**, and type 50 as the value.
+
+**What it listens for.** A note, a control change, a program change, pitch bend, channel pressure, or poly pressure, on any channel or on one. For notes, controllers, and programs, a row can listen for one number or a range of them.
+
+**What it sends.** A note, a control change, a program change, pitch bend, channel pressure, poly pressure, an RPN, an NRPN, Start, Continue, Stop, or a message typed in hex. **Same channel**, **Same number**, and **Same value** copy that part from the message that came in, so one row can turn a whole range of notes into the controllers with the same numbers. A value keeps its share of the range, so a note played at full velocity sends a controller at full value. **Message format** keeps the format the message came in with, or always sends MIDI 1.0 or MIDI 2.0. An RPN or an NRPN always goes out as MIDI 2.0, and Windows converts it for a MIDI 1.0 device.
+
+**Letting go.** A note off, or a MIDI 1.0 note on with velocity 0, means you let go of the pad. When a row turns a note into a note or into a value, such as a control change, pick what letting go does under **When you let go**:
+
+- **Send a note off**, or **Send a value**. A value starts at 0, and you can change it under **Value when you let go**.
+- **Send nothing**, for a DAW button that only wants the press.
+- **Switch on and off with each press**. One press sends the "on" message, the next press sends the "off" one, and letting go sends nothing. That turns a pad into a latching switch.
+
+**A controller as a button.** A control change, pitch bend, or pressure usually moves smoothly. Under **Read it as**, pick **A button** to treat it as one. **Pressed at** and above counts as pressed, and anything below it counts as let go. Only a change from one to the other sends anything, so a sustain pedal can play a note. **Pressed at** is shown in the step's **Value format**, as 0 to 127 or as a percentage.
+
+**Something that never lets go.** A program change, or a value read as **A value that moves**, has no release. When a row turns one into a note, the note off is sent right after the note on, so no note is left sounding.
+
+**Program changes.** Under **Program to send**, a row can send one program, or the next or the previous one in a range you set. Check **Go around at the ends** to start over at the other end. The step keeps one place in the range for each group and channel, and every row in the step shares it, so one footswitch can go up and another down.
+
+What the message converter can't do:
+
+- **It can't listen for RPN, NRPN, system exclusive, or system messages** such as clock and Start.
+- **No math.** It copies a number or a value, or sends one you pick. It doesn't add an offset or squeeze a range. To reshape a value, add a **Control change values** step after it.
+- **A message keeps its group.** To move it to another group, add a **Group mapper**.
 
 ### Showing values as 0 to 127 or as a percentage
 
@@ -228,7 +262,7 @@ What logic steps can't do:
 
 - **No math.** They compare values and copy them. They don't add, subtract, or multiply.
 - **They don't compare two tags or memories with each other.** A test compares one value with numbers you type.
-- **A message stays the kind it is.** Put value can move a program number into the channel, but it can't turn a note into a controller.
+- **Put value doesn't change what kind of message it is.** It can move a program number into the channel, but it can't turn a note into a controller. A [Message converter](#converting-one-kind-of-message-to-another) can.
 
 ## MIDI-CI steps
 
