@@ -785,9 +785,9 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingPortNameInputs, 961);            // DEVPRO
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_GM_SYNTH            ((uint16_t)1)
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_MIDI_KEYBOARD       ((uint16_t)2)
 
-// The Windows MIDI Sound Bank Synth app. It reports this family, so its number is kept here where
+// The Windows MIDI Sound Module app. It reports this family, so its number is kept here where
 // no other model can take it.
-#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_SOUND_BANK_SYNTH    ((uint16_t)3)
+#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_SOUND_MODULE        ((uint16_t)3)
 
 
 // for PKEY_MIDI_DeviceIdentification

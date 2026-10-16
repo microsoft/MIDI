@@ -187,11 +187,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSequencer.unittes
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midisequencer", "user-tools\midi-sequencer\midisequencer.vcxproj", "{BAF13437-1C06-452E-9D1A-84639BC8C910}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midisoundbanksynth", "user-tools\midi-sound-bank-synth\midisoundbanksynth.vcxproj", "{FFDF9FDD-4044-429A-8503-08A6A60F099E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midisoundmodule", "user-tools\midi-sound-module\midisoundmodule.vcxproj", "{FFDF9FDD-4044-429A-8503-08A6A60F099E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoundFontSynthEngine", "user-tools\midi-sound-bank-synth\engine\SoundFontSynthEngine.vcxproj", "{7499AD83-08DB-4A99-9CEB-34F3CA944F2A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoundFontSynthEngine", "user-tools\midi-sound-module\engine\SoundFontSynthEngine.vcxproj", "{7499AD83-08DB-4A99-9CEB-34F3CA944F2A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSoundBankSynth.unittests", "Test\Tools\Midi2.MidiSoundBankSynth.unittests\Midi2.MidiSoundBankSynth.unittests.vcxproj", "{A31B0A52-F740-4FF6-AD2E-09E9548DFDDC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSoundModule.unittests", "Test\Tools\Midi2.MidiSoundModule.unittests\Midi2.MidiSoundModule.unittests.vcxproj", "{A31B0A52-F740-4FF6-AD2E-09E9548DFDDC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
