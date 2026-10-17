@@ -1575,6 +1575,7 @@
     <Midl Include="MidiSequenceTextKindEnum.idl" />
     <Midl Include="MidiSequenceTimingModeEnum.idl" />
     <Midl Include="MidiSequencePlayerStateEnum.idl" />
+    <Midl Include="MidiSequenceChaseOptionsEnum.idl" />
     <Midl Include="MidiSequenceNote.idl" />
     <Midl Include="MidiSequenceBarPosition.idl" />
     <Midl Include="MidiSequenceTempoChange.idl" />

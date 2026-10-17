@@ -21,6 +21,7 @@
 #include <winrt/Windows.Devices.Midi2.h>
 
 #include "midi_file_sequence.h"
+#include "midi_sequence_playback_clock.h"
 
 // This compiles into the SDK and, until the player app is moved over, into the app as well. The
 // app defines richer tracing of its own; without it, fall back to the platform's error logging so
@@ -84,6 +85,27 @@ namespace midiplayer
         }
     };
 
+    // What is sent when playback starts part way into a sequence, so the instrument is left the
+    // way it would have been had the sequence played from the start. The values match
+    // Windows.Devices.Midi2.Utilities.Sequencing.MidiSequenceChaseOptions.
+    enum class ChaseOptions : uint32_t
+    {
+        None = 0x00000000,
+
+        // Bank, program, controllers and pitch bend: the last value the sequence gave each one.
+        ChannelSettings = 0x00000001,
+
+        // Notes that started before the starting point and end after it, started again with
+        // their own velocity. Off unless asked for, because starting a note part way through
+        // gives it a fresh attack. That is right for an organ stop held on a control channel or
+        // a pad, and wrong for a piano or a drum.
+        HeldNotes = 0x00000002,
+
+        All = ChannelSettings | HeldNotes
+    };
+
+    DEFINE_ENUM_FLAG_OPERATORS(ChaseOptions);
+
     // Plays a sequence to one endpoint.
     //
     // The service does the fine timing: every message is sent with the timestamp it is due at,
@@ -129,6 +151,33 @@ namespace midiplayer
         void Pause() noexcept;
         void Stop() noexcept;
         void SeekToMicroseconds(uint64_t microseconds) noexcept;
+
+        // How fast the sequence plays, as a multiple of the speed it was written at: 1.0 is as
+        // written and 0.5 is half speed. Every tempo in the file scales the same way and the
+        // notes themselves are untouched, so the pitch does not change. A value outside the
+        // limits is clamped, and one that is not a number is ignored. It stays set across Load.
+        //
+        // Safe at any time, including while playing. The new rate starts at the end of what has
+        // already been handed to the service, so it is heard within one look ahead window and
+        // nothing that is sounding is cut off. Position, ticks and tempo are still reported in
+        // the sequence's own time.
+        void SetPlaybackRate(_In_ double rate) noexcept;
+        double PlaybackRate() const noexcept;
+
+        static constexpr double MinimumPlaybackRate = PlaybackClock::MinimumRate;
+        static constexpr double MaximumPlaybackRate = PlaybackClock::MaximumRate;
+
+        // What Play and a seek send before the music, when they start part way in. ChannelSettings
+        // until an application says otherwise, which is how the engine has always behaved. Bits
+        // the engine does not know are ignored. It stays set across Load.
+        //
+        // Safe at any time, including while playing. It applies from the next play, seek, mute or
+        // solo. With HeldNotes on, muting or soloing while playing also restarts what the tracks
+        // that can still be heard should be holding, because the silence a mute or solo sends
+        // turns off every held note, not only those of the track that changed. Unmuting restarts
+        // that track's own held notes.
+        void SetChaseOptions(_In_ ChaseOptions options) noexcept;
+        ChaseOptions GetChaseOptions() const noexcept;
 
         PlaybackState State() const noexcept;
         PlaybackPosition Position() const noexcept;
@@ -213,9 +262,26 @@ namespace midiplayer
         void ScheduleDueEventsUnderLock(uint64_t nowTimestamp) noexcept;
         void RebaseClockUnderLock() noexcept;
         void SendPanicUnderLock(bool includeScheduledSweep) noexcept;
-        void SendPanicToDestinationUnderLock(size_t destinationIndex, bool includeScheduledSweep) noexcept;
-        void SendChaseStateUnderLock(size_t eventIndex) noexcept;
-        void SendChaseStateToDestinationUnderLock(size_t eventIndex, size_t destinationIndex) noexcept;
+        void SendPanicToDestinationUnderLock(_In_ size_t destinationIndex, _In_ uint64_t sweepTimestamp) noexcept;
+
+        // Restores what the sequence had set up by a point in it. onlyTrack restricts the notes
+        // restarted to one track, or is -1 for every track that can be heard.
+        void SendChaseStateUnderLock(
+            _In_ uint64_t positionMicroseconds,
+            _In_ ChaseOptions options,
+            _In_ int32_t onlyTrack) noexcept;
+
+        void SendChaseStateToDestinationUnderLock(
+            _In_ size_t eventsBefore,
+            _In_ size_t eventsThrough,
+            _In_ size_t destinationIndex,
+            _In_ uint64_t timestamp,
+            _In_ ChaseOptions options,
+            _In_ int32_t onlyTrack) noexcept;
+
+        // When a chase can go out: now, or just after a silence that is still on its way.
+        uint64_t ChaseTimestampUnderLock(_In_ uint64_t nowTimestamp) const noexcept;
+
         void SendWordsUnderLock(uint64_t timestamp, uint32_t wordOffset, uint32_t wordCount, size_t destinationIndex) noexcept;
         void RebuildDestinationsUnderLock() noexcept;
         size_t DestinationForTrackUnderLock(uint16_t trackIndex) const noexcept;
@@ -237,10 +303,17 @@ namespace midiplayer
 
         PlaybackState m_state{ PlaybackState::Empty };
 
-        // The instant, on the MIDI clock, that m_originMicroseconds in the sequence corresponds to.
-        uint64_t m_originTimestamp{ 0 };
-        uint64_t m_originMicroseconds{ 0 };
+        // Where the sequence's own time falls on the MIDI clock, and at what rate.
+        PlaybackClock m_clock{};
         uint64_t m_pausedMicroseconds{ 0 };
+
+        // When the second pass of the last silence lands: from a stop, pause or seek, or from a
+        // new sequence loaded while playing. It turns off every note and releases sustain and
+        // pitch bend, so anything a new start sent before then would be undone by it. A start
+        // waits for it instead. In the past once it has landed.
+        uint64_t m_sweepTimestamp{ 0 };
+
+        ChaseOptions m_chaseOptions{ ChaseOptions::ChannelSettings };
 
         size_t m_nextEventIndex{ 0 };
 

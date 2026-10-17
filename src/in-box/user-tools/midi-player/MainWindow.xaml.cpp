@@ -124,6 +124,8 @@ namespace winrt::midiplayer::implementation
                         });
                 });
 
+            ApplyChaseSetting();
+
             SingleInstancePublish();
 
             Closed([weak = get_weak()](auto&&, auto&&)
@@ -158,6 +160,7 @@ namespace winrt::midiplayer::implementation
             UpdateQueueVisibility();
             UpdateNowPlayingText();
             UpdateTransportState();
+            UpdateSpeedDisplay();
             RebuildQueueList();
             RebuildTrackList();
 
@@ -363,9 +366,86 @@ namespace winrt::midiplayer::implementation
                     {
                         strong->m_chrome.ApplyTheme();
                     }
-                });
+                },
+                BuildPlaybackSettingsPanel());
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to show the appearance settings.")
+    }
+
+    xaml::UIElement MainWindow::BuildPlaybackSettingsPanel() noexcept
+    {
+        try
+        {
+            auto const resources = xaml::Application::Current().Resources();
+
+            controls::StackPanel panel{};
+            panel.Spacing(8);
+
+            controls::TextBlock heading{};
+            heading.Text(res::GetString(L"SettingsPlaybackHeading"));
+            heading.Style(resources.Lookup(winrt::box_value(L"BodyStrongTextBlockStyle")).as<xaml::Style>());
+            panel.Children().Append(heading);
+
+            auto const label = res::GetString(L"SettingsChaseHeldNotes");
+            auto const hintText = res::GetString(L"SettingsChaseHeldNotesHint");
+
+            // A header that wraps, because a translation can run a good deal longer than this.
+            controls::TextBlock header{};
+            header.Text(label);
+            header.TextWrapping(xaml::TextWrapping::Wrap);
+
+            controls::ToggleSwitch toggle{};
+            toggle.Header(header);
+            toggle.IsOn(native::AppSettings::Current().ChaseHeldNotes());
+
+            // The header is an element rather than text, so the name is given outright.
+            xaml::Automation::AutomationProperties::SetName(toggle, label);
+            xaml::Automation::AutomationProperties::SetHelpText(toggle, hintText);
+            xaml::Automation::AutomationProperties::SetAutomationId(toggle, L"ChaseHeldNotesToggle");
+
+            toggle.Toggled([weak = get_weak()](foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+                {
+                    try
+                    {
+                        auto const control = sender.try_as<controls::ToggleSwitch>();
+
+                        if (control == nullptr)
+                        {
+                            return;
+                        }
+
+                        native::AppSettings::Current().ChaseHeldNotes(control.IsOn());
+
+                        if (auto strong = weak.get())
+                        {
+                            strong->ApplyChaseSetting();
+                        }
+                    }
+                    MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the held notes setting.")
+                });
+
+            panel.Children().Append(toggle);
+
+            controls::TextBlock hint{};
+            hint.Text(hintText);
+            hint.TextWrapping(xaml::TextWrapping::Wrap);
+            hint.Foreground(resources.Lookup(winrt::box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            panel.Children().Append(hint);
+
+            return panel;
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to build the playback settings.")
+
+        return nullptr;
+    }
+
+    void MainWindow::ApplyChaseSetting() noexcept
+    {
+        // Bank, program and controllers always, as the player has always sent them. Held notes
+        // only once the customer has turned them on.
+        m_engine.SetChaseOptions(native::AppSettings::Current().ChaseHeldNotes()
+            ? native::ChaseOptions::ChannelSettings | native::ChaseOptions::HeldNotes
+            : native::ChaseOptions::ChannelSettings);
     }
 
     // ------------------------------------------------------------------------------------

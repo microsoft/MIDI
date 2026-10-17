@@ -96,7 +96,7 @@
   </data>
   <data name="LiveTempoFormat" xml:space="preserve">
     <value>{0} BPM</value>
-    <comment>{0} quarter notes per minute at the current playback position</comment>
+    <comment>{0} quarter notes per minute at the current playback position, as heard at the chosen speed</comment>
   </data>
   <data name="TempoText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Current tempo</value>
@@ -113,8 +113,22 @@
   <data name="PositionSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Position</value>
   </data>
+  <data name="PositionSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+Shift+B, Control+Shift+F</value>
+    <comment>Read by screen readers. Must match the keyboard shortcuts on the position slider: back 5 seconds, then forward 5 seconds.</comment>
+  </data>
+  <data name="PositionSlider.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Ctrl+Shift+B goes back 5 seconds, and Ctrl+Shift+F goes forward 5 seconds</value>
+  </data>
   <data name="OpenFilesButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Add MIDI files to the queue</value>
+  </data>
+  <data name="OpenFilesButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+O</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
+  <data name="OpenFilesButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add MIDI files to the queue (Ctrl+O)</value>
   </data>
   <data name="OpenFilesButtonLabel.Text" xml:space="preserve">
     <value>Add files</value>
@@ -122,11 +136,22 @@
   <data name="PreviousButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Previous</value>
   </data>
+  <data name="PreviousButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+B</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
   <data name="PreviousButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Start this file again, or go back to the one before it</value>
+    <value>Start this file again, or go back to the one before it (Ctrl+B)</value>
   </data>
   <data name="PlayPauseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Play</value>
+  </data>
+  <data name="PlayPauseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+P</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
+  <data name="PlayPauseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Play or pause (Ctrl+P)</value>
   </data>
   <data name="PlayPauseButtonPlay" xml:space="preserve">
     <value>Play</value>
@@ -137,14 +162,32 @@
   <data name="StopButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Stop</value>
   </data>
+  <data name="StopButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+S</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
+  <data name="StopButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop, and go back to the start (Ctrl+S)</value>
+  </data>
   <data name="NextButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Next</value>
+  </data>
+  <data name="NextButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+F</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
+  <data name="NextButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Go to the next file (Ctrl+F)</value>
   </data>
   <data name="RepeatToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Repeat the queue</value>
   </data>
+  <data name="RepeatToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+T</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
   <data name="RepeatToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Start again from the top when the last file finishes</value>
+    <value>Start again from the top when the last file finishes (Ctrl+T)</value>
   </data>
   <data name="QueueToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Show the queue</value>
@@ -157,6 +200,66 @@
   </data>
   <data name="KeyboardViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Switch between the track roll and notes falling towards a keyboard</value>
+  </data>
+
+  <!-- =================================== Speed =================================== -->
+  <data name="SpeedCaption.Text" xml:space="preserve">
+    <value>Speed</value>
+    <comment>Small label beside the playback speed slider</comment>
+  </data>
+  <data name="SpeedSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Playback speed, percent</value>
+    <comment>Screen readers read this, then the slider's number, so the unit belongs here</comment>
+  </data>
+  <data name="SpeedSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Slows the music down or speeds it up without changing its pitch. 100 is the speed the file was written at.</value>
+  </data>
+  <data name="SpeedSlider.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Slow the music down or speed it up. The pitch stays the same. Ctrl+Shift+S is slower, Ctrl+Shift+G is faster, and Ctrl+Shift+N is normal speed.</value>
+  </data>
+  <data name="SpeedSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+Shift+S, Control+Shift+G, Control+Shift+N</value>
+    <comment>Read by screen readers. Must match the keyboard shortcuts on the speed slider: slower, faster, then normal speed.</comment>
+  </data>
+  <data name="SpeedValueFormat" xml:space="preserve">
+    <value>{0}%</value>
+    <comment>{0} the playback speed as a whole percent of the speed the file was written at</comment>
+  </data>
+  <data name="ResetSpeedButton.Content" xml:space="preserve">
+    <value>Reset</value>
+    <comment>Button beside the speed slider that puts it back to 100 percent</comment>
+  </data>
+  <data name="ResetSpeedButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Reset speed to 100 percent</value>
+  </data>
+  <data name="ResetSpeedButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Go back to the speed the file was written at (Ctrl+Shift+N)</value>
+  </data>
+
+  <!-- ============================ Keyboard shortcuts ============================ -->
+  <!-- Spoken by screen readers after a shortcut, because focus does not move. -->
+  <data name="AnnouncePlaying" xml:space="preserve">
+    <value>Playing</value>
+  </data>
+  <data name="AnnouncePaused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="AnnounceStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="AnnounceRepeatOn" xml:space="preserve">
+    <value>Repeat on</value>
+  </data>
+  <data name="AnnounceRepeatOff" xml:space="preserve">
+    <value>Repeat off</value>
+  </data>
+  <data name="AnnounceSpeedFormat" xml:space="preserve">
+    <value>Speed {0} percent</value>
+    <comment>{0} the playback speed as a whole percent of the speed the file was written at</comment>
+  </data>
+  <data name="AnnouncePositionFormat" xml:space="preserve">
+    <value>{0} of {1}</value>
+    <comment>{0} the position in the file, {1} its length, both as minutes and seconds such as 1:25</comment>
   </data>
 
   <!-- =================================== Queue =================================== -->
@@ -310,7 +413,7 @@
 
   <!-- ================================= Appearance ================================= -->
   <data name="AppearanceTitle" xml:space="preserve">
-    <value>Appearance</value>
+    <value>Settings</value>
   </data>
   <data name="AppearanceTheme" xml:space="preserve">
     <value>Theme</value>
@@ -341,5 +444,16 @@
   </data>
   <data name="AppearanceColorPickerName" xml:space="preserve">
     <value>Window color</value>
+  </data>
+
+  <!-- ================================= Playback settings ================================= -->
+  <data name="SettingsPlaybackHeading" xml:space="preserve">
+    <value>Playback</value>
+  </data>
+  <data name="SettingsChaseHeldNotes" xml:space="preserve">
+    <value>Restart held notes when you resume or move the position</value>
+  </data>
+  <data name="SettingsChaseHeldNotesHint" xml:space="preserve">
+    <value>Turn this on for organ stops, drones, and long pads. Leave it off for piano and drums, where restarting a note partway through sounds wrong.</value>
   </data>
 </root>

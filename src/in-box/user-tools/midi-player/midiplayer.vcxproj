@@ -135,6 +135,7 @@
     <ClInclude Include="..\..\Inc\midi_file_sequence.h" />
     <ClInclude Include="NoteRollRenderer.h" />
     <ClInclude Include="KeyboardRollRenderer.h" />
+    <ClInclude Include="..\..\Inc\midi_sequence_playback_clock.h" />
     <ClInclude Include="..\..\Inc\midi_sequence_playback_engine.h" />
     <ClInclude Include="PlayQueue.h" />
     <ClInclude Include="QueueItem.h" />

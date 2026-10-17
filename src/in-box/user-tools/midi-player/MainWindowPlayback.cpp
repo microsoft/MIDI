@@ -24,6 +24,17 @@ namespace winrt::midiplayer::implementation
     {
         constexpr double PositionSliderSteps = 1000.0;
 
+        // The speed slider counts in percent of the speed the file was written at.
+        constexpr double SpeedSliderWrittenSpeed = 100.0;
+
+        // How far one press of a seek or speed shortcut moves. Seeking is in the file's own time,
+        // so five seconds is five seconds of music at any speed.
+        constexpr int64_t ShortcutSeekMicroseconds = 5'000'000;
+        constexpr double ShortcutSpeedStepPercent = 5.0;
+
+        // Groups the shortcut announcements, so a newer one replaces one not yet spoken.
+        constexpr wchar_t ShortcutAnnouncementActivity[] = L"midiplayer.shortcut";
+
         constexpr wchar_t PlayGlyph[] = L"\uE768";
         constexpr wchar_t PauseGlyph[] = L"\uE769";
 
@@ -900,6 +911,9 @@ namespace winrt::midiplayer::implementation
     {
         auto strong = get_strong();
 
+        // A waiting "Playing" belongs to this start only, however it ends.
+        auto const forgetAnnouncement = wil::scope_exit([this]() noexcept { m_announceNextPlay = false; });
+
         try
         {
             if (m_busy)
@@ -1031,6 +1045,11 @@ namespace winrt::midiplayer::implementation
             {
                 m_engine.Play();
                 StartPositionTimer();
+
+                if (m_announceNextPlay)
+                {
+                    AnnounceShortcutResult(res::GetString(L"AnnouncePlaying"));
+                }
             }
 
             UpdateTransportState();
@@ -1229,6 +1248,299 @@ namespace winrt::midiplayer::implementation
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek.")
     }
 
+    // ------------------------------------------------------------------------------------
+    // Speed
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnSpeedSliderValueChanged(
+        foundation::IInspectable const&,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        try
+        {
+            // Safe while playing: the engine starts the new speed after what it has already
+            // handed to the service, so nothing is cut off.
+            m_engine.SetPlaybackRate(args.NewValue() / SpeedSliderWrittenSpeed);
+
+            // The slider takes its first value while the window is still being built, before the
+            // text beside it exists.
+            if (!m_initialized)
+            {
+                return;
+            }
+
+            UpdateSpeedDisplay();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the speed.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnResetSpeedClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // The button turns itself off at 100 percent. Moving focus first means a keyboard or
+            // screen reader user is not left on a control that has just gone away.
+            SpeedSlider().Focus(xaml::FocusState::Programmatic);
+            SpeedSlider().Value(SpeedSliderWrittenSpeed);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to reset the speed.")
+    }
+
+    void MainWindow::UpdateSpeedDisplay() noexcept
+    {
+        try
+        {
+            auto const percent = static_cast<int32_t>(std::lround(SpeedSlider().Value()));
+
+            SpeedText().Text(res::FormatString(L"SpeedValueFormat", percent));
+            ResetSpeedButton().IsEnabled(percent != static_cast<int32_t>(SpeedSliderWrittenSpeed));
+
+            // The tempo shown is the tempo heard, so it follows the slider straight away.
+            UpdateTempoDisplay(m_engine.Position().BeatsPerMinute * m_engine.PlaybackRate());
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to show the speed.")
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Keyboard shortcuts
+    //
+    // Each shortcut is defined in the XAML on the control it stands in for, so the control's
+    // tooltip and its accessible accelerator key describe it, and it is off whenever that control
+    // is. Handling Invoked rather than letting the control be invoked is what lets each one say
+    // what it did: focus does not move, so a screen reader would otherwise say nothing.
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnPlayPauseShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            // With nothing loaded yet, this press loads the file in the background and starts it
+            // from there, so the announcement waits until it has.
+            m_announceNextPlay = m_engine.State() == native::PlaybackState::Empty;
+
+            OnPlayPauseClick(nullptr, nullptr);
+
+            switch (m_engine.State())
+            {
+            case native::PlaybackState::Playing:
+                AnnounceShortcutResult(res::GetString(L"AnnouncePlaying"));
+                break;
+
+            case native::PlaybackState::Paused:
+                AnnounceShortcutResult(res::GetString(L"AnnouncePaused"));
+                break;
+
+            default:
+                // Still loading. A problem with the file or the endpoint is announced by the
+                // status bar.
+                break;
+            }
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to play or pause from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnStopShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            OnStopClick(nullptr, nullptr);
+
+            AnnounceShortcutResult(res::GetString(L"AnnounceStopped"));
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to stop from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnPreviousShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            OnPreviousClick(nullptr, nullptr);
+
+            AnnounceCurrentTitle();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to go to the previous file from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNextShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            OnNextClick(nullptr, nullptr);
+
+            AnnounceCurrentTitle();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to go to the next file from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSeekBackShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SeekFromShortcut(-ShortcutSeekMicroseconds);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek back from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSeekForwardShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SeekFromShortcut(ShortcutSeekMicroseconds);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek forward from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSlowerShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SetSpeedFromShortcut(SpeedSlider().Value() - ShortcutSpeedStepPercent);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to slow down from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnFasterShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SetSpeedFromShortcut(SpeedSlider().Value() + ShortcutSpeedStepPercent);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to speed up from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNormalSpeedShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SetSpeedFromShortcut(SpeedSliderWrittenSpeed);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to go back to normal speed from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRepeatShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            auto const repeat = !RepeatToggle().IsChecked().GetBoolean();
+
+            RepeatToggle().IsChecked(repeat);
+            OnRepeatToggled(nullptr, nullptr);
+
+            AnnounceShortcutResult(res::GetString(repeat ? L"AnnounceRepeatOn" : L"AnnounceRepeatOff"));
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the repeat setting from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SeekFromShortcut(int64_t offsetMicroseconds) noexcept
+    {
+        try
+        {
+            auto const position = m_engine.Position();
+
+            if (position.DurationMicroseconds == 0)
+            {
+                return;
+            }
+
+            auto target = position.Microseconds;
+
+            if (offsetMicroseconds < 0)
+            {
+                auto const back = static_cast<uint64_t>(-offsetMicroseconds);
+
+                target = target > back ? target - back : uint64_t{ 0 };
+            }
+            else
+            {
+                target = (std::min)(target + static_cast<uint64_t>(offsetMicroseconds), position.DurationMicroseconds);
+            }
+
+            m_engine.SeekToMicroseconds(target);
+
+            UpdatePositionDisplay();
+
+            AnnounceShortcutResult(res::FormatString(
+                L"AnnouncePositionFormat",
+                native::FormatDuration(target),
+                native::FormatDuration(position.DurationMicroseconds)));
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SetSpeedFromShortcut(double percent) noexcept
+    {
+        try
+        {
+            // The slider keeps the value inside its range and on a whole step, and changing it
+            // is what changes the speed, so the shortcut and the slider cannot disagree.
+            SpeedSlider().Value(percent);
+
+            AnnounceShortcutResult(res::FormatString(
+                L"AnnounceSpeedFormat",
+                static_cast<int32_t>(std::lround(SpeedSlider().Value()))));
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the speed from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::AnnounceShortcutResult(winrt::hstring const& message) noexcept
+    {
+        try
+        {
+            // Any element in the window will do; the message is what is read.
+            midiapp::AnnounceToScreenReader(NowPlayingTitleText(), message, ShortcutAnnouncementActivity);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to announce the result of a shortcut.")
+    }
+
+    void MainWindow::AnnounceCurrentTitle() noexcept
+    {
+        try
+        {
+            auto const current = m_queue.Current();
+
+            if (current.has_value())
+            {
+                AnnounceShortcutResult(winrt::hstring{ current.value().Title });
+            }
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to announce the file.")
+    }
+
     void MainWindow::StartPositionTimer() noexcept
     {
         try
@@ -1302,7 +1614,7 @@ namespace winrt::midiplayer::implementation
             UpdateTrackActivity(position.Tick);
             UpdateChordDisplay(position.Tick);
             UpdateLyricDisplay(position.Tick);
-            UpdateTempoDisplay(position.BeatsPerMinute);
+            UpdateTempoDisplay(position.BeatsPerMinute * m_engine.PlaybackRate());
 
             if (position.State != native::PlaybackState::Playing)
             {

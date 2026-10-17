@@ -58,6 +58,23 @@ namespace winrt::midiplayer::implementation
             foundation::IInspectable const& sender,
             controls::Primitives::RangeBaseValueChangedEventArgs const& args);
 
+        void OnSpeedSliderValueChanged(
+            _In_ foundation::IInspectable const& sender,
+            _In_ controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnResetSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // Keyboard shortcuts. Each is defined on the control it stands in for.
+        void OnPlayPauseShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnStopShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnPreviousShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnNextShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnSeekBackShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnSeekForwardShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnSlowerShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnFasterShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnNormalSpeedShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnRepeatShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnGroupSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
@@ -65,6 +82,12 @@ namespace winrt::midiplayer::implementation
         void InitializeWindowChrome() noexcept;
         void InitializeStaticText() noexcept;
         void SingleInstancePublish() noexcept;
+
+        // The playback part of the settings flyout, below the shared appearance controls.
+        xaml::UIElement BuildPlaybackSettingsPanel() noexcept;
+
+        // Hands the saved chase choice to the engine.
+        void ApplyChaseSetting() noexcept;
 
         // Files handed over by a second launch arrive as WM_COPYDATA, which XAML does not
         // surface, so the window's Win32 handle is subclassed for it.
@@ -106,11 +129,19 @@ namespace winrt::midiplayer::implementation
         void UpdateTrackActivity(uint32_t tick) noexcept;
         void UpdateChordDisplay(uint32_t tick) noexcept;
         void UpdateTempoDisplay(double beatsPerMinute) noexcept;
+        void UpdateSpeedDisplay() noexcept;
         void UpdateLyricDisplay(uint32_t tick) noexcept;
         void UpdateNowPlayingText() noexcept;
         void UpdateTransportState() noexcept;
         void UpdatePositionDisplay() noexcept;
         void UpdateQueueVisibility() noexcept;
+
+        // What the keyboard shortcuts share. Focus does not move when a shortcut is used, so each
+        // one says what it did.
+        void SeekFromShortcut(_In_ int64_t offsetMicroseconds) noexcept;
+        void SetSpeedFromShortcut(_In_ double percent) noexcept;
+        void AnnounceShortcutResult(_In_ winrt::hstring const& message) noexcept;
+        void AnnounceCurrentTitle() noexcept;
 
         void StartPositionTimer() noexcept;
         void StopPositionTimer() noexcept;
@@ -191,6 +222,10 @@ namespace winrt::midiplayer::implementation
         // The saved endpoint was not there when the app started. Playback waits for a choice
         // rather than picking something else and sending notes to the wrong instrument.
         bool m_savedEndpointMissing{ false };
+
+        // Set when the play shortcut had to load the first file before it could start, so that
+        // it can say "Playing" once it actually does.
+        bool m_announceNextPlay{ false };
     };
 }
 

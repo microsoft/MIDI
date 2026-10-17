@@ -881,6 +881,9 @@
     <Midl Include="MidiSequencePlayerStateEnum.idl">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>
+    <Midl Include="MidiSequenceChaseOptionsEnum.idl">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </Midl>
     <Midl Include="MidiSequenceTempoChange.idl">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>

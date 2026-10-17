@@ -19,6 +19,7 @@ namespace midiplayer
         constexpr wchar_t ValueRepeatQueue[] = L"RepeatQueue";
         constexpr wchar_t ValueShowQueue[] = L"ShowQueue";
         constexpr wchar_t ValueKeyboardView[] = L"KeyboardView";
+        constexpr wchar_t ValueChaseHeldNotes[] = L"ChaseHeldNotes";
     }
 
     AppSettings::AppSettings() noexcept :
@@ -44,6 +45,7 @@ namespace midiplayer
         m_repeatQueue = ReadDword(ValueRepeatQueue, 0) != 0;
         m_showQueue = ReadDword(ValueShowQueue, 1) != 0;
         m_keyboardView = ReadDword(ValueKeyboardView, 0) != 0;
+        m_chaseHeldNotes = ReadDword(ValueChaseHeldNotes, 0) != 0;
     }
 
     _Use_decl_annotations_
@@ -100,5 +102,17 @@ namespace midiplayer
 
         m_keyboardView = value;
         WriteDword(ValueKeyboardView, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ChaseHeldNotes(bool value) noexcept
+    {
+        if (m_chaseHeldNotes == value)
+        {
+            return;
+        }
+
+        m_chaseHeldNotes = value;
+        WriteDword(ValueChaseHeldNotes, value ? 1 : 0);
     }
 }

@@ -326,7 +326,8 @@
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
 
-                <!-- Tempo changes as a file plays, so this is the value at the playhead. -->
+                <!-- Tempo changes as a file plays, so this is the value at the playhead, as heard at
+                     the chosen speed. -->
                 <StackPanel x:Name="TempoPanel"
                             Grid.Column="1"
                             Spacing="0"
@@ -398,7 +399,12 @@
                         PointerPressed="OnPositionSliderPointerPressed"
                         PointerReleased="OnPositionSliderPointerReleased"
                         PointerCaptureLost="OnPositionSliderPointerReleased"
-                        ValueChanged="OnPositionSliderValueChanged" />
+                        ValueChanged="OnPositionSliderValueChanged">
+                    <Slider.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="B" Invoked="OnSeekBackShortcut" />
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="F" Invoked="OnSeekForwardShortcut" />
+                    </Slider.KeyboardAccelerators>
+                </Slider>
 
                 <TextBlock x:Name="DurationTextBlock"
                            Grid.Column="2"
@@ -424,6 +430,9 @@
                             AutomationProperties.AutomationId="OpenFilesButton"
                             Height="34"
                             Click="OnOpenFilesClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="O" />
+                        </Button.KeyboardAccelerators>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE8E5;" FontSize="14" />
                             <TextBlock x:Uid="OpenFilesButtonLabel" />
@@ -431,12 +440,17 @@
                     </Button>
                 </StackPanel>
 
+                <!-- The shortcuts are the ones Windows Media Player has always used, which many
+                     screen reader users already know. -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                     <Button x:Name="PreviousButton"
                             x:Uid="PreviousButton"
                             AutomationProperties.AutomationId="PreviousButton"
                             Width="40" Height="40" Padding="0"
                             Click="OnPreviousClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="B" Invoked="OnPreviousShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE892;" FontSize="14" />
                     </Button>
 
@@ -447,6 +461,9 @@
                             CornerRadius="26"
                             Style="{ThemeResource AccentButtonStyle}"
                             Click="OnPlayPauseClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="P" Invoked="OnPlayPauseShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE768;" FontSize="18" />
                     </Button>
 
@@ -455,6 +472,9 @@
                             AutomationProperties.AutomationId="StopButton"
                             Width="40" Height="40" Padding="0"
                             Click="OnStopClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="S" Invoked="OnStopShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE71A;" FontSize="14" />
                     </Button>
 
@@ -463,6 +483,9 @@
                             AutomationProperties.AutomationId="NextButton"
                             Width="40" Height="40" Padding="0"
                             Click="OnNextClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="OnNextShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE893;" FontSize="14" />
                     </Button>
                 </StackPanel>
@@ -482,6 +505,9 @@
                                   AutomationProperties.AutomationId="RepeatToggle"
                                   Width="40" Height="34" Padding="0"
                                   Click="OnRepeatToggled">
+                        <ToggleButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="T" Invoked="OnRepeatShortcut" />
+                        </ToggleButton.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE8EE;" FontSize="14" />
                     </ToggleButton>
 
@@ -494,6 +520,58 @@
                     </ToggleButton>
                 </StackPanel>
             </Grid>
+
+            <!-- Speed. Its own row, because the transport row has no room for a slider at the
+                 narrowest window. The caption and the value are already in the slider's
+                 accessible name and value, so screen readers skip them. -->
+            <StackPanel x:Name="SpeedPanel"
+                        Orientation="Horizontal"
+                        Spacing="10"
+                        Margin="0,-4,0,0"
+                        HorizontalAlignment="Center">
+                <TextBlock x:Uid="SpeedCaption"
+                           VerticalAlignment="Center"
+                           AutomationProperties.AccessibilityView="Raw"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                <Slider x:Name="SpeedSlider"
+                        x:Uid="SpeedSlider"
+                        AutomationProperties.AutomationId="SpeedSlider"
+                        Width="200"
+                        Minimum="25"
+                        Maximum="200"
+                        Value="100"
+                        StepFrequency="5"
+                        SmallChange="5"
+                        LargeChange="25"
+                        IsThumbToolTipEnabled="False"
+                        VerticalAlignment="Center"
+                        ValueChanged="OnSpeedSliderValueChanged">
+                    <Slider.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="S" Invoked="OnSlowerShortcut" />
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="G" Invoked="OnFasterShortcut" />
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="N" Invoked="OnNormalSpeedShortcut" />
+                    </Slider.KeyboardAccelerators>
+                </Slider>
+
+                <TextBlock x:Name="SpeedText"
+                           MinWidth="36"
+                           VerticalAlignment="Center"
+                           AutomationProperties.AccessibilityView="Raw"
+                           FontFamily="Consolas"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                <Button x:Name="ResetSpeedButton"
+                        x:Uid="ResetSpeedButton"
+                        AutomationProperties.AutomationId="ResetSpeedButton"
+                        Height="28"
+                        Padding="10,0,10,0"
+                        VerticalAlignment="Center"
+                        IsEnabled="False"
+                        Click="OnResetSpeedClick" />
+            </StackPanel>
         </StackPanel>
 
 <!-- ========================= Notes, tracks and the queue ========================= -->

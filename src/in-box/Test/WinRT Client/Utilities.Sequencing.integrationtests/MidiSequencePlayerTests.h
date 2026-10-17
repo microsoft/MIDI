@@ -53,4 +53,21 @@ class MidiSequencePlayerTests
     TEST_METHOD(SettingANullSequenceClearsIt);
     TEST_METHOD(OutOfRangeTrackIndexesAreHarmless);
     TEST_METHOD(SeekingBeyondTheEndIsClamped);
+
+    // ---- playback rate, MidiSequencingUtilityApiContract 2 ----
+    TEST_METHOD(PlaybackRateStartsAtOneAndIsClamped);
+    TEST_METHOD(PlaysFasterAndSlowerInTheSequencesOwnTime);
+    TEST_METHOD(ChangingTheRateWhilePlayingKeepsEveryNoteInOrder);
+
+    // ---- chase, MidiSequencingUtilityApiContract 2 ----
+    TEST_METHOD(ChaseOptionsStartAtChannelSettings);
+    TEST_METHOD(ResumingRestartsHeldNotesWhenAsked);
+    TEST_METHOD(HeldNotesAreNotRestartedByDefault);
+    TEST_METHOD(ANoteEndingAtTheStartingPointIsNotRestarted);
+    TEST_METHOD(MutedTracksDoNotRestartTheirHeldNotes);
+    TEST_METHOD(MutingWithHeldNotesKeepsTheOtherTracksSounding);
+
+    // ---- what a seek while playing leaves sounding ----
+    TEST_METHOD(SeekingWhilePlayingLetsTheNewPositionSound);
+    TEST_METHOD(SeekingWhilePlayingKeepsRestartedNotesSounding);
 };
