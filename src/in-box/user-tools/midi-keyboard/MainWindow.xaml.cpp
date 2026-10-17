@@ -796,6 +796,13 @@ namespace winrt::midikeyboard::implementation
                     native::AppSettings::Current().TransmitChannelNumber(options.ChannelNumber.value());
                 }
 
+                if (!options.ProgramsEndpointDeviceId.empty())
+                {
+                    m_programsEndpointId = options.ProgramsEndpointDeviceId;
+                    m_programsGroupIndex = static_cast<uint8_t>(options.ProgramsGroupNumber.value_or(1) - 1);
+                    m_programsForEndpointId = options.EndpointDeviceId;
+                }
+
                 InitializeControlsFromSettings();
 
                 // connecting first, for the reason given in OnEndpointSelectionChanged
@@ -922,7 +929,7 @@ namespace winrt::midikeyboard::implementation
             EndAllNotes();
             settings.TransmitGroupNumber(groupNumber);
 
-            m_ciPresence.Group(TransmitGroupIndex());
+            m_ciPresence.Group(ProgramsGroupIndex());
 
             // a connection on its way up asks for the programs itself once it is through
             if (!m_reconnectInProgress)
@@ -962,9 +969,25 @@ namespace winrt::midikeyboard::implementation
 
                 auto const endpointId = native::AppSettings::Current().EndpointDeviceId();
 
-                co_await native::RunOnBackgroundAsync([this, endpointId, &result]()
+                // Program names from the device the notes end up on, over a connection of their
+                // own, when the keyboard was started that way and still plays where it did.
+                auto const programsId = ProgramsComeFromAnotherDevice() ? m_programsEndpointId : std::wstring{};
+
+                co_await native::RunOnBackgroundAsync([this, endpointId, programsId, &result]()
                     {
                         result = m_output.ConnectEndpoint(endpointId);
+
+                        if (result == native::ConnectResult::Success && !programsId.empty())
+                        {
+                            if (m_programsConnection.ConnectEndpoint(programsId) != native::ConnectResult::Success)
+                            {
+                                MIDI_KEYBOARD_LOG_INFO_WITH_ENDPOINT(L"Unable to connect to the device for program names.", programsId.c_str());
+                            }
+                        }
+                        else
+                        {
+                            m_programsConnection.Disconnect();
+                        }
                     });
 
                 if (!m_reconnectRequested)
@@ -985,8 +1008,9 @@ namespace winrt::midikeyboard::implementation
                 // discovers this app rather than the other way round.
                 auto const weak = get_weak();
                 auto const queue = m_dispatcherQueue;
+                auto const ciConnection = m_programsConnection.IsConnected() ? m_programsConnection.Connection() : m_output.Connection();
 
-                m_ciPresence.Open(m_output.Connection(), TransmitGroupIndex(),
+                m_ciPresence.Open(ciConnection, ProgramsGroupIndex(),
                     [weak, queue]()
                     {
                         if (queue == nullptr)
@@ -1034,6 +1058,7 @@ namespace winrt::midikeyboard::implementation
             co_await native::RunOnBackgroundAsync([strong]()
                 {
                     strong->m_output.Disconnect();
+                    strong->m_programsConnection.Disconnect();
                 });
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to close the MIDI connection.")
@@ -1514,6 +1539,63 @@ namespace winrt::midikeyboard::implementation
     uint8_t MainWindow::TransmitChannelIndex() const noexcept
     {
         return static_cast<uint8_t>(native::AppSettings::Current().TransmitChannelNumber() - 1);
+    }
+
+    bool MainWindow::ProgramsComeFromAnotherDevice() const noexcept
+    {
+        try
+        {
+            return !m_programsEndpointId.empty() &&
+                midiapp::EndpointIdsMatch(winrt::hstring{ native::AppSettings::Current().EndpointDeviceId() }, winrt::hstring{ m_programsForEndpointId });
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    uint8_t MainWindow::ProgramsGroupIndex() const noexcept
+    {
+        return ProgramsComeFromAnotherDevice() ? m_programsGroupIndex : TransmitGroupIndex();
+    }
+
+    void MainWindow::UpdateProgramListHeader() noexcept
+    {
+        try
+        {
+            if (!m_patchControlsInitialized)
+            {
+                return;
+            }
+
+            // The header from the resources, kept before it's ever replaced.
+            if (m_programListHeader.empty())
+            {
+                m_programListHeader = winrt::unbox_value_or<winrt::hstring>(ProgramListComboBox().Header(), L"");
+            }
+
+            auto header = m_programListHeader;
+
+            if (ProgramsComeFromAnotherDevice() && m_programsConnection.IsConnected())
+            {
+                std::wstring name{ m_programsEndpointId };
+
+                for (auto const& device : m_endpointDevices)
+                {
+                    if (midiapp::EndpointIdsMatch(device.EndpointDeviceId(), winrt::hstring{ m_programsEndpointId }))
+                    {
+                        name = std::wstring{ device.Name() };
+                        break;
+                    }
+                }
+
+                header = res::FormatString(L"ProgramListFromFormat", name);
+            }
+
+            ProgramListComboBox().Header(winrt::box_value(header));
+            xaml::Automation::AutomationProperties::SetName(ProgramListComboBox(), header);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to say where the program names come from.")
     }
 
     _Use_decl_annotations_
@@ -2683,6 +2765,7 @@ namespace winrt::midikeyboard::implementation
             SendPatchOnStartupCheckBox().IsChecked(settings.SendPatchOnStartup());
 
             m_patchControlsInitialized = true;
+            UpdateProgramListHeader();
 
             // the device may well have answered before this flyout was ever opened
             if (m_programListQueryRan)
@@ -2838,6 +2921,7 @@ namespace winrt::midikeyboard::implementation
 
             // Whatever name was showing belonged to the list just thrown away.
             UpdatePatchDisplay();
+            UpdateProgramListHeader();
 
             auto const session = m_ciPresence.Session();
 

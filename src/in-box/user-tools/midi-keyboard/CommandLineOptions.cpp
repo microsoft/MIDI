@@ -79,6 +79,8 @@ namespace midikeyboard
         {
             std::optional<uint8_t> group{};
             std::optional<uint8_t> channel{};
+            std::optional<uint8_t> programsGroup{};
+            std::wstring programsEndpoint{};
             bool sawPositional{ false };
 
             for (size_t i = 0; i < arguments.size(); i++)
@@ -146,16 +148,52 @@ namespace midikeyboard
                     continue;
                 }
 
+                if (name == L"programs-from")
+                {
+                    if (i + 1 >= arguments.size() || arguments[i + 1].empty() || IsSwitch(arguments[i + 1]))
+                    {
+                        return MakeError(L"CommandLineErrorMissingValue", argument);
+                    }
+
+                    programsEndpoint = arguments[++i];
+                    continue;
+                }
+
+                if (name == L"programs-group")
+                {
+                    if (i + 1 >= arguments.size())
+                    {
+                        return MakeError(L"CommandLineErrorMissingValue", argument);
+                    }
+
+                    uint8_t value{ 0 };
+
+                    if (!TryParseNumberInRange(arguments[++i], 1, 16, value))
+                    {
+                        return MakeError(L"CommandLineErrorInvalidGroup", arguments[i]);
+                    }
+
+                    programsGroup = value;
+                    continue;
+                }
+
                 return MakeError(L"CommandLineErrorUnknownOption", argument);
             }
 
-            if ((group.has_value() || channel.has_value()) && options.EndpointDeviceId.empty())
+            if ((group.has_value() || channel.has_value() || !programsEndpoint.empty()) && options.EndpointDeviceId.empty())
+            {
+                return MakeError(L"CommandLineErrorGroupWithoutEndpoint", L"");
+            }
+
+            if (programsGroup.has_value() && programsEndpoint.empty())
             {
                 return MakeError(L"CommandLineErrorGroupWithoutEndpoint", L"");
             }
 
             options.GroupNumber = group;
             options.ChannelNumber = channel;
+            options.ProgramsEndpointDeviceId = programsEndpoint;
+            options.ProgramsGroupNumber = programsGroup;
         }
         catch (...)
         {
