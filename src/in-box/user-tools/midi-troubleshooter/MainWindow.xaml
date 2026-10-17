@@ -343,6 +343,13 @@
                         <FontIcon Glyph="&#xE95E;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <!-- "latency" is kept for the MIDI device latency page that is planned -->
+                <NavigationViewItem x:Name="LatencyCheckNavigationItem" x:Uid="LatencyCheckNavigationItem"
+                                    Content="DPC latency check" Tag="dpclatency">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE916;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
 
                 <NavigationViewItemHeader x:Name="ServiceHealthHeader" x:Uid="ServiceHealthHeader"
                                           Content="Service health" />
@@ -636,6 +643,10 @@
                              Style="{StaticResource OutputTextBoxStyle}"
                              TextWrapping="Wrap" MinHeight="120" />
                 </Grid>
+
+                <!-- ============================ DPC latency check ============================ -->
+                <!-- a control of its own, in LatencyCheckPanel.xaml -->
+                <local:LatencyCheckPanel x:Name="LatencyPanel" Grid.Row="1" Visibility="Collapsed" />
 
                 <!-- ============================= Active sessions ============================= -->
                 <Grid x:Name="SessionsPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"

@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;version.lib;setupapi.lib;newdev.lib;cfgmgr32.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib;version.lib;setupapi.lib;newdev.lib;cfgmgr32.lib;tdh.lib;avrt.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -153,6 +153,21 @@
     <ClInclude Include="ReportViewerWindow.xaml.h">
       <DependentUpon>ReportViewerWindow.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="LatencyCheckPanel.xaml.h">
+      <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="LatencyCheckText.h" />
+    <!-- the DPC latency check engine: plain C++ and Win32, so it builds and is tested without the app -->
+    <ClInclude Include="LatencyAnalyzer.h" />
+    <ClInclude Include="LatencyAssessment.h" />
+    <ClInclude Include="LatencyCheck.h" />
+    <ClInclude Include="LatencyDriverInfo.h" />
+    <ClInclude Include="LatencyDriverNames.h" />
+    <ClInclude Include="LatencyKernelEvents.h" />
+    <ClInclude Include="LatencyModel.h" />
+    <ClInclude Include="LatencyProbe.h" />
+    <ClInclude Include="LatencyReportWriter.h" />
+    <ClInclude Include="LatencyTraceSession.h" />
     <!-- the report parser lives with mididiag, so partners can copy it from one place -->
     <ClInclude Include="..\mididiag\mididiag_report_parser.h" />
     <ClInclude Include="..\mididiag\mididiag_field_defs.h" />
@@ -216,6 +231,41 @@
     <ClCompile Include="ReportViewerWindow.xaml.cpp">
       <DependentUpon>ReportViewerWindow.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="LatencyCheckPanel.xaml.cpp">
+      <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="LatencyCheckPanelResults.cpp">
+      <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="LatencyCheckText.cpp" />
+    <!-- the DPC latency check engine: standard C++ and Win32 only, so no precompiled header -->
+    <ClCompile Include="LatencyAnalyzer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyAnalyzerFinish.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyAnalyzerSchedule.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyAssessment.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyCheck.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyDriverInfo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyProbe.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyReportWriter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LatencyTraceSession.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <!-- standard C++ only, so it doesn't use this project's precompiled header -->
     <ClCompile Include="..\mididiag\mididiag_report_parser.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -243,6 +293,9 @@
     <Midl Include="ReportViewerWindow.idl">
       <DependentUpon>ReportViewerWindow.xaml</DependentUpon>
     </Midl>
+    <Midl Include="LatencyCheckPanel.idl">
+      <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -252,6 +305,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="ReportViewerWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="LatencyCheckPanel.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

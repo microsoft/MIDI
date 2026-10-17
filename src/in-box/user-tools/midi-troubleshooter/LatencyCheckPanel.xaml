@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="miditroubleshooter.LatencyCheckPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:miditroubleshooter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!-- the same look as the cards on the other pages, which keep theirs in the main window -->
+        <Style x:Key="LatencyCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <Style x:Key="LatencyCardTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="IsTextSelectionEnabled" Value="True" />
+        </Style>
+
+        <Style x:Key="LatencyBodyTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="IsTextSelectionEnabled" Value="True" />
+        </Style>
+
+        <Style x:Key="LatencySecondaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="IsTextSelectionEnabled" Value="True" />
+        </Style>
+
+        <Style x:Key="LatencyLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer x:Name="RootScroller" Padding="16,12,16,16">
+        <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock x:Uid="LatencyPageTitle" Text="DPC latency check"
+                       AutomationProperties.HeadingLevel="Level1"
+                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+            <TextBlock x:Uid="LatencyPageDescription"
+                       Text="Finds what on your PC holds up audio and MIDI."
+                       Style="{StaticResource LatencyBodyTextStyle}" />
+
+            <InfoBar x:Uid="LatencyNotBenchmarkBar" IsOpen="True" IsClosable="False" Severity="Informational"
+                     Title="This isn't a benchmark"
+                     Message="Use it when you already hear clicks, pops or dropouts." />
+
+            <HyperlinkButton x:Uid="LatencyLearnMoreLink"
+                             Content="Read about DPC latency and this check"
+                             NavigateUri="https://microsoft.github.io/MIDI/kb/dpc-latency/"
+                             Padding="0" />
+
+            <!-- ================================ Options ================================ -->
+            <Border Style="{StaticResource LatencyCardStyle}">
+                <StackPanel Spacing="8">
+                    <ComboBox x:Name="DurationBox" x:Uid="LatencyDurationBox"
+                              Header="How long to check" SelectedIndex="1" MinWidth="220">
+                        <ComboBoxItem x:Uid="LatencyDurationOneMinute" Content="1 minute" />
+                        <ComboBoxItem x:Uid="LatencyDurationTwoMinutes" Content="2 minutes" />
+                        <ComboBoxItem x:Uid="LatencyDurationFiveMinutes" Content="5 minutes" />
+                        <ComboBoxItem x:Uid="LatencyDurationTenMinutes" Content="10 minutes" />
+                        <ComboBoxItem x:Uid="LatencyDurationUntilStopped" Content="Until I stop it" />
+                    </ComboBox>
+
+                    <CheckBox x:Name="ProbeCheck" x:Uid="LatencyProbeCheck"
+                              Content="Use a test thread" IsChecked="True" />
+                    <TextBlock x:Uid="LatencyProbeCaption" Margin="28,-6,0,0"
+                               Text="Recommended. It works like an audio app's audio thread."
+                               Style="{StaticResource LatencySecondaryTextStyle}" />
+
+                    <CheckBox x:Name="SaveTraceCheck" x:Uid="LatencySaveTraceCheck"
+                              Content="Save a trace file for Windows Performance Analyzer" />
+                    <TextBlock x:Uid="LatencySaveTraceCaption" Margin="28,-6,0,0"
+                               Text="For experts and driver makers."
+                               Style="{StaticResource LatencySecondaryTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- ================================ Actions ================================ -->
+            <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="StartButton" x:Uid="LatencyStartButton" Content="Start check"
+                            Style="{StaticResource AccentButtonStyle}" Click="OnStartClick" />
+                    <Button x:Name="StopButton" x:Uid="LatencyStopButton" Content="Stop"
+                            IsEnabled="False" Click="OnStopClick" />
+                    <Button x:Name="OpenTraceButton" x:Uid="LatencyOpenTraceButton" Content="Open a trace file..."
+                            Click="OnOpenTraceClick" />
+                    <Button x:Name="CancelReadButton" x:Uid="LatencyCancelReadButton" Content="Cancel"
+                            Visibility="Collapsed" Click="OnCancelReadClick" />
+                    <ProgressRing x:Name="BusyRing" x:Uid="LatencyBusyRing" Width="20" Height="20"
+                                  IsActive="False" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- wraps rather than trims: a failure message is often long, and all of it matters -->
+                <TextBlock x:Name="StatusText" Style="{StaticResource LatencySecondaryTextStyle}" />
+            </StackPanel>
+
+            <!-- ============================ While it runs ============================ -->
+            <Border x:Name="LiveCard" Style="{StaticResource LatencyCardStyle}" Visibility="Collapsed">
+                <StackPanel Spacing="8">
+                    <ProgressBar x:Name="LiveProgress" x:Uid="LatencyLiveProgress" Maximum="100" />
+
+                    <Grid ColumnSpacing="16" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock x:Uid="LatencyLiveDpcLabel" Grid.Row="0" Grid.Column="0"
+                                   Text="Longest DPC" Style="{StaticResource LatencyLabelStyle}" />
+                        <TextBlock x:Name="LiveDpcValue" Grid.Row="0" Grid.Column="1"
+                                   Style="{StaticResource LatencyBodyTextStyle}" />
+
+                        <TextBlock x:Uid="LatencyLiveIsrLabel" Grid.Row="1" Grid.Column="0"
+                                   Text="Longest interrupt" Style="{StaticResource LatencyLabelStyle}" />
+                        <TextBlock x:Name="LiveIsrValue" Grid.Row="1" Grid.Column="1"
+                                   Style="{StaticResource LatencyBodyTextStyle}" />
+
+                        <TextBlock x:Uid="LatencyLiveHoldUpLabel" Grid.Row="2" Grid.Column="0"
+                                   Text="Audio held up" Style="{StaticResource LatencyLabelStyle}" />
+                        <TextBlock x:Name="LiveHoldUpValue" Grid.Row="2" Grid.Column="1"
+                                   Style="{StaticResource LatencyBodyTextStyle}" />
+                    </Grid>
+
+                    <TextBlock x:Uid="LatencyLiveTip"
+                               Text="Keep using your PC the way you do when audio drops out."
+                               Style="{StaticResource LatencySecondaryTextStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- ================================ Results ================================ -->
+            <StackPanel x:Name="ResultsPanel" Spacing="12" Visibility="Collapsed">
+                <InfoBar x:Name="VerdictBar" IsOpen="True" IsClosable="False" />
+
+                <TextBlock x:Name="HeldUpText" Style="{StaticResource LatencyBodyTextStyle}" />
+                <TextBlock x:Name="MidiHeldUpText" Style="{StaticResource LatencyBodyTextStyle}" />
+                <TextBlock x:Name="BufferText" Style="{StaticResource LatencyBodyTextStyle}" />
+
+                <TextBlock x:Name="CulpritsHeading" x:Uid="LatencyCulpritsHeading"
+                           Text="What held audio up"
+                           AutomationProperties.HeadingLevel="Level2"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <StackPanel x:Name="CulpritsPanel" Spacing="8" />
+
+                <TextBlock x:Name="AdviceHeading" x:Uid="LatencyAdviceHeading"
+                           Text="Also worth trying"
+                           AutomationProperties.HeadingLevel="Level2"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <StackPanel x:Name="AdvicePanel" Spacing="4" />
+
+                <TextBlock x:Name="RanLongHeading" x:Uid="LatencyRanLongHeading"
+                           Text="Also ran long"
+                           AutomationProperties.HeadingLevel="Level2"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Name="RanLongCaption" x:Uid="LatencyRanLongCaption"
+                           Text="These drivers kept a processor busy, but didn't hold anything up."
+                           Style="{StaticResource LatencySecondaryTextStyle}" />
+                <StackPanel x:Name="RanLongPanel" Spacing="4" />
+
+                <StackPanel x:Name="NotesPanel" Spacing="4" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="ViewReportButton" x:Uid="LatencyViewReportButton"
+                            Content="View technical report" Click="OnViewReportClick" />
+                    <Button x:Name="SaveReportButton" x:Uid="LatencySaveReportButton"
+                            Content="Save report..." Click="OnSaveReportClick" />
+                    <Button x:Name="CopyReportButton" x:Uid="LatencyCopyReportButton"
+                            Content="Copy report" Click="OnCopyReportClick" />
+                    <Button x:Name="ShowTraceButton" x:Uid="LatencyShowTraceButton"
+                            Content="Show trace file" Visibility="Collapsed" Click="OnShowTraceClick" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

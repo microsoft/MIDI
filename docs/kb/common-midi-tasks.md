@@ -508,6 +508,15 @@ Apps can share a device, so one app using it doesn't stop another from using it 
 
 </details>
 
+<details id="find-what-makes-audio-drop-out" markdown="1">
+<summary>Find out what makes my audio click, pop or drop out</summary>
+
+Run the **DPC latency check** in [Windows MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/#dpc-latency-check) while you play your project in your audio app. It names the drivers that actually held up audio and MIDI, such as a Wi-Fi, graphics or USB driver, and says what to try for each one. It isn't a benchmark: run it when you already hear glitches at a buffer size that should be big enough for your project.
+
+[Find what makes audio late on your PC (DPC latency)]({{ site.baseurl }}/kb/dpc-latency/) explains what it measures and how to read the results.
+
+</details>
+
 <details id="collect-diagnostics" markdown="1">
 <summary>Collect what support needs for a bug report</summary>
 

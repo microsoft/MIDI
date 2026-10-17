@@ -71,6 +71,23 @@ A time travel trace makes the package much larger, but it is very often the thin
 
 Time travel tracing isn't available on every build of Windows, and it can be refused if the service is running with certain security mitigations. If that happens, the capture carries on without it and says so in the log, rather than failing.
 
+## DPC latency check
+
+Clicks, pops and dropouts are sometimes caused by a driver somewhere else on the PC, such as the Wi-Fi, graphics or storage driver, that keeps a processor busy for too long. This page finds out which one.
+
+It isn't a benchmark. Use it when you already hear clicks, pops or dropouts at a buffer size that should be big enough for your project. If your audio sounds fine, there's nothing to fix.
+
+Choose how long to check, select **Start check**, and use your PC the way you do when you hear problems, ideally playing your project in your audio app. Recording needs administrator rights. When it's done, you get:
+
+- **the answer**, in one line: whether anything actually held up audio, MIDI or the test thread while the check ran, and for how long
+- **what held audio up**: each driver that did, the company that made it, its version and the device it drives, how long it held a processor, and what to try
+- **what also ran long**: drivers that kept a processor busy but didn't hold anything up, which are only worth a look if glitches go on
+- **a technical report** in the same format as mididiag's, for support and for driver makers, and optionally a trace file for Windows Performance Analyzer
+
+**Open a trace file** checks a trace you saved earlier, or one from Windows Performance Recorder, without administrator rights.
+
+The check changes nothing on your PC, installs no driver, and works on x64 and Arm64. There's much more about what it measures and what to do about it in [Find what makes audio late on your PC (DPC latency)]({{ site.baseurl }}/kb/dpc-latency/).
+
 ## Active sessions
 
 Every application currently connected to the MIDI service, with the process it belongs to and when it started. Expand one to see which endpoints and MIDI 1.0 ports it has open, how many times each is open, and since when.

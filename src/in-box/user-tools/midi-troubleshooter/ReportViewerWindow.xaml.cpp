@@ -15,6 +15,7 @@
 
 #include "AppSettings.h"
 #include "BackgroundWork.h"
+#include "LatencyReportWriter.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -196,6 +197,9 @@ namespace miditroubleshooter
             _In_ std::wstring const& value) const;
 
         std::wstring FieldValue(_In_ std::wstring_view const section, _In_ std::wstring_view const label) const;
+
+        // a DPC latency check report, which the viewer names for what it is
+        bool IsLatencyReport() const;
 
         xaml::UIElement BuildSummaryCard();
         xaml::UIElement BuildFindingsCard();
@@ -401,6 +405,11 @@ namespace miditroubleshooter
         expander.StartBringIntoView();
     }
 
+    bool ReportPresenter::IsLatencyReport() const
+    {
+        return FieldValue(MIDIDIAG_SECTION_LABEL_HEADER, L"report_type") == ::miditroubleshooter::latency::ReportType;
+    }
+
     xaml::UIElement ReportPresenter::BuildSummaryCard()
     {
         auto const& report = *m_report;
@@ -417,9 +426,12 @@ namespace miditroubleshooter
         heading.Spacing(12);
 
         auto const created = FieldValue(MIDIDIAG_SECTION_LABEL_HEADER, MIDIDIAG_FIELD_LABEL_CURRENT_TIME);
+        auto const latencyReport = IsLatencyReport();
 
         auto title = MakeText(
-            created.empty() ? res::GetString(L"ReportSummaryTitle") : res::FormatString(L"ReportSummaryTitleFormat", created),
+            created.empty() ?
+                res::GetString(latencyReport ? L"ReportSummaryLatencyTitle" : L"ReportSummaryTitle") :
+                res::FormatString(latencyReport ? L"ReportSummaryLatencyTitleFormat" : L"ReportSummaryTitleFormat", created),
             L"ReportSectionTitleStyle");
         title.VerticalAlignment(xaml::VerticalAlignment::Center);
 
@@ -609,7 +621,7 @@ namespace miditroubleshooter
 
         if (report.Findings.empty())
         {
-            addRow(L"ReportSuccessGlyphStyle", res::GetString(L"ReportNoFindings"), {});
+            addRow(L"ReportSuccessGlyphStyle", res::GetString(IsLatencyReport() ? L"ReportNoFindingsLatency" : L"ReportNoFindings"), {});
         }
 
         // The id is what a script checks, so it's shown under the sentence.

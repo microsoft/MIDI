@@ -25,6 +25,10 @@ namespace miditroubleshooter
         // straight to the right place.
         std::wstring StartPage{};
 
+        // Opens the DPC latency check page and reads this saved trace. Reading a trace needs no
+        // administrator rights, so the tool doesn't ask for them at startup.
+        std::wstring LatencyTracePath{};
+
         static CommandLineOptions Parse(std::vector<std::wstring> const& arguments) noexcept;
         static CommandLineOptions ParseProcessCommandLine() noexcept;
     };

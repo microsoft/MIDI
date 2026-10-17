@@ -50,6 +50,11 @@ namespace miditroubleshooter
                 {
                     options.StartPage = Lowered(arguments[++i]);
                 }
+                else if (argument == L"--latency-trace" && i + 1 < arguments.size())
+                {
+                    // a path, so its case is kept
+                    options.LatencyTracePath = arguments[++i];
+                }
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to parse the command line.")

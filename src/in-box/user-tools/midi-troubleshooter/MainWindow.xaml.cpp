@@ -11,6 +11,7 @@
 
 #include "App.xaml.h"
 #include "Elevation.h"
+#include "LatencyCheckPanel.xaml.h"
 #include "ReportViewerWindow.xaml.h"
 #include "StringResources.h"
 #include "ToolPaths.h"
@@ -111,12 +112,50 @@ namespace winrt::miditroubleshooter::implementation
                 res::GetString(L"CaptureProfileMissing") :
                 res::FormatString(L"CaptureProfileFoundFormat", winrt::hstring{ tools.ReproProfile }));
 
+            // The DPC latency check page is a control of its own, and borrows what it needs
+            // from this window.
+            {
+                LatencyCheckPanel::Host host{};
+                host.Elevated = m_elevated;
+                host.System = m_systemInformation;
+
+                host.RequireElevation = [weak = get_weak()]()
+                    {
+                        auto strong = weak.get();
+                        return strong != nullptr && strong->RequireElevation();
+                    };
+
+                host.ShowReport = [weak = get_weak()](native::LoadedReport report)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ShowReportViewer(std::move(report));
+                        }
+                    };
+
+                host.WindowHandle = [weak = get_weak()]() -> HWND
+                    {
+                        auto strong = weak.get();
+                        return strong != nullptr ? strong->WindowHandle() : nullptr;
+                    };
+
+                winrt::get_self<LatencyCheckPanel>(LatencyPanel())->Initialize(std::move(host));
+            }
+
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
                     {
                         strong->m_closing = true;
                         strong->StopRefreshTimer();
+
+                        // a trace session left recording would keep going until Windows restarts
+                        try
+                        {
+                            winrt::get_self<LatencyCheckPanel>(strong->LatencyPanel())->Shutdown();
+                        }
+                        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to stop the DPC latency check.")
+
                         strong->m_chrome.SavePlacement();
                         strong->m_chrome.Shutdown();
 
@@ -140,10 +179,16 @@ namespace winrt::miditroubleshooter::implementation
             auto pageIndex = native::AppSettings::Current().SelectedPageIndex();
 
             auto const& startPage = App::StartupOptions().StartPage;
+            auto const& latencyTrace = App::StartupOptions().LatencyTracePath;
 
             if (!startPage.empty())
             {
                 pageIndex = PageIndexForTag(winrt::hstring{ startPage });
+            }
+
+            if (!latencyTrace.empty())
+            {
+                pageIndex = native::AppSettings::PageIndexLatencyCheck;
             }
 
             // the panels first, because selecting an item which is already selected raises no
@@ -156,6 +201,11 @@ namespace winrt::miditroubleshooter::implementation
 
                 // The title bar gear is first in tab order, so focus would otherwise start there.
                 item.Focus(xaml::FocusState::Programmatic);
+            }
+
+            if (!latencyTrace.empty())
+            {
+                winrt::get_self<LatencyCheckPanel>(LatencyPanel())->OpenTraceFile(latencyTrace);
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to finish loading the window.")
@@ -257,6 +307,7 @@ namespace winrt::miditroubleshooter::implementation
         if (tag == L"service")      return native::AppSettings::PageIndexService;
         if (tag == L"registry")     return native::AppSettings::PageIndexRegistry;
         if (tag == L"drivers")      return native::AppSettings::PageIndexDrivers;
+        if (tag == L"dpclatency")   return native::AppSettings::PageIndexLatencyCheck;
 
         return native::AppSettings::PageIndexApiMode;
     }
@@ -275,6 +326,7 @@ namespace winrt::miditroubleshooter::implementation
             case native::AppSettings::PageIndexService:     return ServiceNavigationItem();
             case native::AppSettings::PageIndexRegistry:    return RegistryNavigationItem();
             case native::AppSettings::PageIndexDrivers:     return DriversNavigationItem();
+            case native::AppSettings::PageIndexLatencyCheck: return LatencyCheckNavigationItem();
             default:                                        return ApiModeNavigationItem();
             }
         }
@@ -327,10 +379,16 @@ namespace winrt::miditroubleshooter::implementation
             ServicePanel().Visibility(visibility(native::AppSettings::PageIndexService));
             RegistryPanel().Visibility(visibility(native::AppSettings::PageIndexRegistry));
             DriversPanel().Visibility(visibility(native::AppSettings::PageIndexDrivers));
+            LatencyPanel().Visibility(visibility(native::AppSettings::PageIndexLatencyCheck));
 
             if (pageIndex == native::AppSettings::PageIndexApiMode)
             {
                 LoadApiMode();
+            }
+
+            if (pageIndex == native::AppSettings::PageIndexLatencyCheck)
+            {
+                winrt::get_self<LatencyCheckPanel>(LatencyPanel())->OnShown();
             }
 
             // Only the pages that show live service state pay for polling.

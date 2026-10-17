@@ -65,8 +65,10 @@ namespace winrt::miditroubleshooter::implementation
 
             // Almost everything this tool does writes HKLM or drives the service control
             // manager, so it asks once up front rather than failing an action at a time.
-            // A declined prompt still leaves a usable read-only tool.
-            if (!s_isElevated && !s_startupOptions.NoElevate && !s_startupOptions.Relaunched)
+            // A declined prompt still leaves a usable read-only tool. Reading a saved latency
+            // trace needs no rights at all, so that doesn't ask.
+            if (!s_isElevated && !s_startupOptions.NoElevate && !s_startupOptions.Relaunched &&
+                s_startupOptions.LatencyTracePath.empty())
             {
                 // The elevated copy takes the single instance check before it has a window, so
                 // ownership has to be given up before it starts or it turns itself away and
