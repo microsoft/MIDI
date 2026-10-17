@@ -84,14 +84,17 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="PlaybackClockTests.h" />
     <ClInclude Include="SmfReaderTests.h" />
     <ClInclude Include="SmfTestFileBuilder.h" />
     <!-- shared by source with midiplayer, so the reader is tested exactly as it ships -->
     <ClInclude Include="..\..\..\Inc\midi_file_sequence.h" />
     <ClInclude Include="..\..\..\Inc\midi_file_smf_reader.h" />
+    <ClInclude Include="..\..\..\Inc\midi_sequence_playback_clock.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
+    <ClCompile Include="PlaybackClockTests.cpp" />
     <ClCompile Include="SmfReaderTests.cpp" />
     <ClCompile Include="SmfTestFileBuilder.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />
