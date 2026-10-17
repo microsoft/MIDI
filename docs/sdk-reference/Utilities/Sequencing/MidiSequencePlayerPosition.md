@@ -25,3 +25,5 @@ description: Everything a transport display needs, read in one call
 **Read this on a timer, instead of waiting for an event.** It's a struct, not an event, because a display updates tens of times a second, and an event for every frame would cost more than the drawing does. The player has no position event, on purpose.
 
 Every field is read at the same moment, so the bar, beat, and time can't disagree with each other, the way they could if you read four separate properties.
+
+**Times and tempo are the sequence's own, whatever the player's `PlaybackRate`.** At half speed, `Microseconds` moves forward half a second for every second that passes, and `BeatsPerMinute` is still the tempo written in the sequence. Multiply it by `PlaybackRate` for the tempo you hear.
