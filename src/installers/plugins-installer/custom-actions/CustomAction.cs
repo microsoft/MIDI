@@ -320,25 +320,18 @@ namespace custom_actions
                 @"SOFTWARE\Microsoft\Windows MIDI Services\Endpoint Processing Plugins",
             };
 
+            // Only the transports this installer registers. Windows locks the COM registrations it
+            // writes for its own MIDI components so that only TrustedInstaller can change them.
+            // Taking those over is what let an earlier preview's uninstall delete them, and this
+            // installer never writes them, so they are left alone: KS, KS Aggregate, Loopback,
+            // Virtual MIDI, Diagnostics, Midisrv and the four message transforms.
             string[] hkcrRegKeysToOwn =
             {
-                @"CLSID\{0f273b18-e372-4d95-87ac-c31c3d22e937}",  // KS Aggregate Transport
-                @"CLSID\{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}",  // KS Transport
-                @"CLSID\{942BF02D-93C0-4EA8-B03E-D51156CA75E1}",  // Loopback Transport
-                @"CLSID\{8FEAAD91-70E1-4A19-997A-377720A719C1}",  // Virtual MIDI Transport
-                @"CLSID\{ac9b5417-3fe0-4e62-960f-034ee4235a1a}",  // Diagnostics Transport
                 @"CLSID\{5dc87270-f318-4838-a4f9-6aadc63e925f}",  // Bluetooth MIDI Transport
                 @"CLSID\{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}",  // Network MIDI 2.0 Transport
                 @"CLSID\{54c9b2f6-c235-4000-a675-9f6958a1a4fa}",  // RTP-MIDI Transport
                 @"CLSID\{10088473-9478-4E62-850B-3D2315E135B8}",  // Basic Loopback MIDI Transport
                 @"CLSID\{7605713E-FEA9-409D-A90F-A81233200D0A}",  // General MIDI Synthesizer Transport
-
-                @"CLSID\{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}",  // Main Midisrv Transport
-
-                @"CLSID\{A8798C54-6066-45F0-9ADB-648BC0641ABF}",  // Bytestream 2 UMP Transform
-                @"CLSID\{96121591-8D68-479F-9B48-2BF0B90113F7}",  // UMP 2 Bytestream Transform
-                @"CLSID\{a42cde44-7fa9-4597-a8ee-b40b96bcddb1}",  // Message Scheduler
-                @"CLSID\{dc638b31-cf31-48ed-9e79-02740bf5d013}",  // Protocol Downscaler
             };
 
             const uint SeTakeOwnership = 9;

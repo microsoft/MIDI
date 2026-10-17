@@ -514,8 +514,16 @@ namespace miditroubleshooter
         addFact(L"ReportSummaryApiModeLabel",
             FieldValue(MIDIDIAG_SECTION_LABEL_API_MODE, MIDIDIAG_FIELD_LABEL_API_MODE));
 
-        addFact(L"ReportSummaryServiceLabel",
-            FieldValue(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS, MIDIDIAG_FIELD_LABEL_SERVICE_STATE_BEFORE_REPORT));
+        // a service that isn't installed has no state, so without this the line would be left out
+        std::wstring serviceState{ FieldValue(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS, MIDIDIAG_FIELD_LABEL_SERVICE_STATE_BEFORE_REPORT) };
+
+        if (serviceState.empty() &&
+            FieldValue(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS, MIDIDIAG_FIELD_LABEL_SERVICE_INSTALLED) == L"false")
+        {
+            serviceState = res::GetString(L"ReportSummaryServiceNotInstalled");
+        }
+
+        addFact(L"ReportSummaryServiceLabel", serviceState);
 
         addFact(L"ReportSummaryElevatedLabel",
             FieldValue(MIDIDIAG_SECTION_LABEL_HEADER, MIDIDIAG_FIELD_LABEL_RUNNING_ELEVATED));

@@ -503,6 +503,10 @@
   <data name="ReportSummaryServiceLabel" xml:space="preserve">
     <value>MIDI service</value>
   </data>
+  <data name="ReportSummaryServiceNotInstalled" xml:space="preserve">
+    <value>Not installed</value>
+    <comment>Shown next to "MIDI service" in a report's summary when the MIDI service isn't installed on the PC the report came from</comment>
+  </data>
   <data name="ReportSummaryElevatedLabel" xml:space="preserve">
     <value>Ran as administrator</value>
   </data>
@@ -616,8 +620,14 @@
   <data name="ReportSection_service_status" xml:space="preserve">
     <value>MIDI service</value>
   </data>
+  <data name="ReportSection_inbox_components" xml:space="preserve">
+    <value>Files that come with Windows</value>
+  </data>
   <data name="ReportSection_service_history" xml:space="preserve">
     <value>MIDI service history</value>
+  </data>
+  <data name="ReportSection_install_history" xml:space="preserve">
+    <value>Installs and updates</value>
   </data>
   <data name="ReportSection_feature_enablement" xml:space="preserve">
     <value>Features</value>

@@ -59,6 +59,10 @@ namespace mididiag
         bool ServiceRunningBeforeReport{ false };
         uint32_t ServiceProcessIdBeforeReport{ 0 };
 
+        // from the in-box components section: the files that come with Windows are all in
+        // System32, but some of them aren't registered
+        bool InboxRegistrationIncomplete{ false };
+
         // filled by the endpoint section and used to name what each session has open. The keys
         // are device ids in lower case.
         std::map<std::wstring, std::wstring> EndpointNames{};
