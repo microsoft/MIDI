@@ -148,7 +148,7 @@ Some devices don't announce themselves on the network, or are on a part of the n
 
 ![Connecting to a device by address]({{ site.baseurl }}/assets/images/midinetworksetup-by-address.png)
 
-Enter the host name or IP address and the port, and optionally the two names: **Name that device will see** is how this PC introduces itself, and **Name to show in Windows** is what you'll call the device here. You can also choose a **Sending speed**.
+Enter the host name or IP address and the port, and optionally the two names: **Name that device will see** is how this PC introduces itself, and **Name to show in Windows** is what you'll call the device here. Leave the first one empty to use this PC's name, the same as for a device you connect to from the list. You can also choose a **Sending speed**.
 
 Windows keeps the entry and keeps trying, so if the device isn't switched on yet it will connect later when it appears.
 
@@ -160,7 +160,7 @@ The **This PC** page is the other direction: making this computer something othe
 
 ![The This PC page]({{ site.baseurl }}/assets/images/midinetworksetup-this-pc.png)
 
-Most people need only one host, and it stays there once created.
+Most people need only one host, and it stays there once created. You can make more, and a device can connect to each of them. Each of those connections then shows up in your apps as a separate device, which is one way to keep different gear apart.
 
 ### Creating a host
 
