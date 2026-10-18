@@ -212,6 +212,15 @@ namespace winrt::midikeyboard::implementation
         InitializeComponent();
 
         m_dispatcherQueue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+        // The MIDI-CI code is shared with MIDI Sequencer, so its errors come back here to be
+        // logged as the keyboard's own.
+        midiapp::SetMidiCiErrorHandler([](std::wstring_view message, winrt::hresult code)
+        {
+            std::wstring const text{ message };
+            winrt::hresult_error const error{ code };
+            MIDI_KEYBOARD_LOG_HRESULT_EXCEPTION(error, text.c_str());
+        });
     }
 
     void MainWindow::RestoreWindowPlacement() noexcept
