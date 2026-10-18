@@ -49,13 +49,15 @@ namespace NetworkMidiTest
 
     // Creates a client which connects directly to the given address and port. The entry
     // identifier is the GUID string the service uses to track the connection, and is what
-    // RemoveClient needs later.
+    // RemoveClient needs later. localEndpointName is the name this PC gives the remote, saved in
+    // the entry the way the SDK saves it. Empty leaves it out.
     ServiceConfigResult CreateDirectClient(
         _In_ std::wstring const& entryIdentifier,
         _In_ std::wstring const& hostNameOrAddress,
         _In_ uint16_t const port,
         _In_ bool const createMidi1Ports = false,
-        _In_ std::wstring const& customEndpointName = L"");
+        _In_ std::wstring const& customEndpointName = L"",
+        _In_ std::wstring const& localEndpointName = L"");
 
     // Disconnects and removes a client created above. Safe to call for an identifier which is
     // no longer present.

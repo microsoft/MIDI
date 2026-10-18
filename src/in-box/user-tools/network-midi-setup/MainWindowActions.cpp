@@ -2217,12 +2217,9 @@ namespace winrt::midinetworksetup::implementation
 
         auto const port = portValue;
 
-        auto name = TextOf(ManualNameTextBox());
-
-        if (name.empty())
-        {
-            name = address;
-        }
+        // Left empty, the service gives the remote this PC's computer name, the same as for a host
+        // picked from the list. The remote's own address is not a name for this PC.
+        auto const name = TextOf(ManualNameTextBox());
 
         auto const customName = TextOf(ManualCustomNameTextBox());
 
@@ -2259,7 +2256,7 @@ namespace winrt::midinetworksetup::implementation
                 auto const saved = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 
                 message = saved != nullptr && saved.Success() ?
-                    res::FormatString(L"ConnectRequestedFormat", name) :
+                    res::FormatString(L"ConnectRequestedFormat", address) :
                     NotSavedMessage(saved);
             }
             else

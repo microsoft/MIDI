@@ -57,6 +57,8 @@ If you need to keep other devices off a host, put it on a network you control, o
 
 **A device that does not advertise can be connected by address.** Advertised connections are more efficient, because Windows waits for an announcement rather than repeatedly probing an address.
 
+**A device can connect to more than one host on this PC.** Each connection gets an endpoint of its own, so apps see a separate device for each one. What's turned down is one device connected both ways at once, as a client of a host here and as a host this PC is a client of, when it uses the same name and product instance id both ways. That would be two endpoints for one device, so the second connection is refused.
+
 **A device with more than one address is tried at each one in turn.** A device can have an IPv4 address and several IPv6 addresses, and its announcement doesn't say which one to use. Windows tries them in the same order it uses for every other app on this PC. That's usually IPv6 first, but an IPv6 address starting with `fd` comes after IPv4, and an address this PC has no way to reach is skipped. If the device doesn't answer at one address, Windows tries the next one right away. Once a connection works, Windows tries that address first next time. To always use one particular address, connect to the device by that address. An administrator can also make the whole PC [prefer IPv4 over IPv6](https://learn.microsoft.com/troubleshoot/windows-server/networking/configure-ipv6-in-windows).
 
 **Naming.** Leave the name empty and Windows uses whatever the device calls itself. Give a name and that is what appears everywhere in Windows, including your DAW's device list.
@@ -218,6 +220,7 @@ A client identity is `{ "umpEndpointName": "...", "productInstanceId": "..." }`.
 | Key | Type | Notes |
 |---|---|---|
 | `networkProtocol` | string | Only `"udp"` |
+| `umpEndpointName` | string | The name this PC gives the device. Missing or empty uses the computer name, which is also what a new host on this PC is called. The device knows this PC by this name and the product instance id, so it's kept after a restart |
 | `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for this device |
 | `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create when the device declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
 | `sendSpeedLimit` | number | Default 0, no limit. How fast this PC sends to the device, as a multiple of MIDI 1.0 wire speed: 1, 2, 4, 8, 16 or 32. See [Sending speed](#sending-speed) |

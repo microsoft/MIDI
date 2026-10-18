@@ -23,7 +23,7 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 | `Comment` | An optional comment saved with the entry in the configuration. The service doesn't use it |
 | `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created with them |
 | `FallbackMidi1PortCount` | How many source and destination ports to create when the remote host declares no function blocks. 1 to 16, and 1 by default. Ignored when the host does describe itself, and when `CreateOnlyUmpEndpoints` is true |
-| `UmpEndpointName` | The UMP Endpoint Name to use for this PC's end of the connection |
+| `UmpEndpointName` | The UMP Endpoint Name to use for this PC's end of the connection. Leave it empty to use the computer name. Whatever you choose is kept when the connection is read back after a restart, because the remote device knows this PC by this name and its product instance id |
 | `CustomEndpointName` | The name the person chose for the MIDI endpoint this connection creates. It's applied before the endpoint is turned on, so the endpoint and its MIDI 1.0 ports never appear under the remote device's own name first. Leave it empty to use the name the remote device announces |
 | `MatchCriteria` | A `MidiNetworkClientMatchCriteria` that says which remote host to connect to |
 | `SendSpeedLimit` | How fast this PC sends to the remote host. `Unlimited` by default. Choose a slower speed for a device that loses data when a lot of it arrives at once, like a long SysEx dump. A lone message is never delayed. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |

@@ -214,7 +214,8 @@ namespace NetworkMidiTest
         std::wstring const& hostNameOrAddress,
         uint16_t const port,
         bool const createMidi1Ports,
-        std::wstring const& customEndpointName)
+        std::wstring const& customEndpointName,
+        std::wstring const& localEndpointName)
     {
         std::wstring customNameEntry{};
 
@@ -223,12 +224,20 @@ namespace NetworkMidiTest
             customNameEntry = L"\"customEndpointName\":\"" + EscapeJsonString(customEndpointName) + L"\",";
         }
 
+        std::wstring localNameEntry{};
+
+        if (!localEndpointName.empty())
+        {
+            localNameEntry = L"\"umpEndpointName\":\"" + EscapeJsonString(localEndpointName) + L"\",";
+        }
+
         // directPort is read with GetNamedString, so it has to be quoted
         std::wstring json =
             L"{\"create\":{\"clients\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{"
             L"\"networkProtocol\":\"udp\","
             L"\"enabled\":true,"
             + customNameEntry +
+            localNameEntry +
             L"\"createMidi1Ports\":" + std::wstring(createMidi1Ports ? L"true" : L"false") + L","
             L"\"match\":{"
             L"\"directHostNameOrIP\":\"" + EscapeJsonString(hostNameOrAddress) + L"\","

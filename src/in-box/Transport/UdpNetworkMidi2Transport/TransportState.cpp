@@ -145,6 +145,29 @@ TransportState::GetEffectiveProductInstanceId()
 }
 
 
+// Every way a client starts has to arrive at this same name. A host knows this PC by the name
+// and the product instance id, so a name that changes between the first connection and a
+// restart makes this PC look like a new device to it. The computer name as Windows reports it,
+// which is also what a new host on this PC is called, because the spec asks a device to use one
+// name whether it is the host or the client.
+std::wstring
+TransportState::GetEffectiveLocalEndpointName()
+{
+    DWORD nameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    std::wstring machineName;
+    machineName.resize(nameLength);
+
+    if (GetComputerName(machineName.data(), &nameLength) && nameLength > 0)
+    {
+        machineName.resize(nameLength);
+
+        return machineName;
+    }
+
+    return L"windows-midisrv";
+}
+
+
 HRESULT
 TransportState::ConstructEndpointManager()
 {

@@ -437,6 +437,11 @@ static std::wstring BuildEndpointDeviceInstanceId(
     _In_ std::wstring const& endpointName,
     _In_ std::wstring const& productInstanceId);
 
+static std::wstring BuildHostEndpointDeviceInstanceId(
+    _In_ std::wstring const& endpointName,
+    _In_ std::wstring const& productInstanceId,
+    _In_ std::wstring const& hostEntryIdentifier);
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::QueueEndpointWork(EndpointWorkItem item)
@@ -494,7 +499,11 @@ try
 
     if (!clientUmpEndpointName.empty() && !clientProductInstanceId.empty())
     {
-        item.DeviceInstanceId = BuildEndpointDeviceInstanceId(clientUmpEndpointName, clientProductInstanceId);
+        // The id the creation will use. The host connection hands creation the same string.
+        item.DeviceInstanceId = BuildHostEndpointDeviceInstanceId(
+            clientUmpEndpointName,
+            clientProductInstanceId,
+            internal::GuidToString(connection->ConfigIdentifier()));
     }
 
     return QueueEndpointWork(std::move(item));
@@ -1144,26 +1153,6 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
             return S_FALSE;
         }
 
-        // reserve() does not change size(), so the name has to be sized before it is written into
-        // and resized to the returned length afterward. Otherwise every read of it sees an empty
-        // string and the generated names degrade to "-midisrv".
-        DWORD nameLen = MAX_COMPUTERNAME_LENGTH + 1;
-        std::wstring machineName;
-        machineName.resize(nameLen);
-
-        std::wstring root;
-
-        if (GetComputerName(machineName.data(), &nameLen))
-        {
-            machineName.resize(nameLen);
-
-            root = internal::ToLowerTrimmedWStringCopy(machineName) + L"-midisrv";
-        }
-        else
-        {
-            root = L"windows-midisrv";
-        }
-
         // The local identity is filled in on this copy only. The stored definition keeps what
         // was configured, so a changed computer name is picked up on the next connection.
         auto definition = clientDefinition;
@@ -1176,7 +1165,8 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
 
         if (definition.LocalEndpointName.empty())
         {
-            definition.LocalEndpointName = root;
+            // The same name whether this connection was just made or read back after a restart
+            definition.LocalEndpointName = TransportState::Current().GetEffectiveLocalEndpointName();
         }
 
 
@@ -1996,13 +1986,14 @@ static std::wstring FormatHash64(_In_ uint64_t const value)
 //
 // Deliberately excludes IP address, port and role. Clients "may use a new UDP port number for
 // every Session" (spec 3.3), addresses move with DHCP, and a device connecting in both roles
-// presents identical identity in both (spec section 12).
-static std::wstring BuildEndpointDeviceInstanceId(
+// presents identical identity in both (spec section 12). That device is refused a second session
+// by IsRemoteConnectedInOtherRole, not by the two ids matching.
+//
+// The readable part is the remote's name. The hash carries the identity.
+static std::wstring FormatEndpointDeviceInstanceId(
     _In_ std::wstring const& endpointName,
-    _In_ std::wstring const& productInstanceId)
+    _In_ std::wstring const& identityKey)
 {
-    auto identityKey = productInstanceId + L"|" + endpointName;
-
     // Device instance ids allow only -_ and ASCII alphanumerics, so the name is reduced to a
     // readable hint and the hash carries the actual identity.
     auto readableName = internal::RemoveInvalidSWDUniqueIdCharacters(endpointName);
@@ -2017,6 +2008,29 @@ static std::wstring BuildEndpointDeviceInstanceId(
         readableName +
         L"_" +
         FormatHash64(StableHash64(identityKey)));
+}
+
+// This PC as a client of a remote host. This PC has one client identity, so the remote host's
+// identity is enough.
+static std::wstring BuildEndpointDeviceInstanceId(
+    _In_ std::wstring const& endpointName,
+    _In_ std::wstring const& productInstanceId)
+{
+    return FormatEndpointDeviceInstanceId(endpointName, productInstanceId + L"|" + endpointName);
+}
+
+// A remote client of one of this PC's hosts. Each host is a UMP endpoint of its own, so the same
+// remote connected to two hosts here is two sessions with two different endpoints, and each needs
+// an id of its own. The host's entry identifier rather than its name, so renaming a host leaves
+// its endpoints where they are.
+static std::wstring BuildHostEndpointDeviceInstanceId(
+    _In_ std::wstring const& endpointName,
+    _In_ std::wstring const& productInstanceId,
+    _In_ std::wstring const& hostEntryIdentifier)
+{
+    return FormatEndpointDeviceInstanceId(
+        endpointName,
+        productInstanceId + L"|" + endpointName + L"|" + hostEntryIdentifier);
 }
 
 _Use_decl_annotations_
@@ -2086,6 +2100,45 @@ CMidi2NetworkMidiEndpointManager::ResolveEndpointCustomization(
 }
 
 _Use_decl_annotations_
+bool
+CMidi2NetworkMidiEndpointManager::IsRemoteConnectedInOtherRole(
+    MidiNetworkConnectionRole const thisServiceRole,
+    std::wstring const& remoteEndpointName,
+    std::wstring const& remoteProductInstanceId)
+{
+    std::vector<std::wstring> otherRoleEndpointDeviceIds{ };
+
+    {
+        auto lock = m_createdEndpointsLock.lock();
+
+        // Compared exactly, the way the instance ids compared when they were what caught this
+        for (auto const& record : m_createdEndpoints)
+        {
+            if (record.Role != thisServiceRole &&
+                std::wstring_view{ record.TransportSuppliedEndpointName } == remoteEndpointName &&
+                std::wstring_view{ record.ProductInstanceId } == remoteProductInstanceId)
+            {
+                otherRoleEndpointDeviceIds.push_back(std::wstring{ record.EndpointDeviceId });
+            }
+        }
+    }
+
+    // Outside the lock, because TransportState takes its own. An endpoint whose session has ended
+    // is only waiting to be removed, and doesn't stop the remote connecting the other way.
+    for (auto const& endpointDeviceId : otherRoleEndpointDeviceIds)
+    {
+        auto const connection = TransportState::Current().GetSessionConnection(endpointDeviceId);
+
+        if (connection != nullptr && connection->IsSessionActive())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+_Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     MidiNetworkConnectionRole thisServiceRole,
@@ -2145,8 +2198,31 @@ try
     // endpoint existed when it arrived, which is what makes this work for a connection the user
     // names as they create it.
     // Computed here rather than at activation because a saved customization is matched on it.
-    // It is derived from the remote's identity, so it is the same on every reconnect.
-    std::wstring instanceId = BuildEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId);
+    // It is derived from the remote's identity, and for a host from which host accepted the
+    // session, so it is the same on every reconnect.
+    std::wstring instanceId = thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsHost ?
+        BuildHostEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId, configIdentifier) :
+        BuildEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId);
+
+    // The same device as a host and a client of this PC at once would be two endpoints for one
+    // device. Refused the way an instance id which is already taken is refused, below.
+    if (IsRemoteConnectedInOtherRole(thisServiceRole, endpointName, remoteEndpointProductInstanceId))
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"This device is already connected to this PC in the other role, so a second session for it was not created.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(instanceId.c_str(), "instance id"),
+            TraceLoggingWideString(endpointName.c_str(), "endpoint name"),
+            TraceLoggingWideString(remoteEndpointProductInstanceId.c_str(), "product instance id"),
+            TraceLoggingWideString(hostName != nullptr ? hostName.CanonicalName().c_str() : L"", "remote address")
+        );
+
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
+    }
 
     WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
     matchCriteria.DeviceInstanceId = instanceId;
@@ -2308,9 +2384,9 @@ try
     RETURN_IF_FAILED(activateHR);
 
     // S_FALSE means this instance id is already active, so nothing was created and no interface
-    // id was returned. Now that identity is role-free, this is how a device which is already
-    // connected in the other role shows up. Treated as a failure here so the caller can decline
-    // the session rather than proceed with an endpoint it does not have.
+    // id was returned. That is the same remote a second time on the same host, or a second
+    // session from this PC to the same remote host. Treated as a failure here so the caller can
+    // decline the session rather than proceed with an endpoint it does not have.
     if (activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr)
     {
         TraceLoggingWrite(
@@ -2354,7 +2430,8 @@ try
             winrt::hstring{ createdNewDeviceInstanceId },
             winrt::hstring{ endpointName },
             winrt::hstring{ remoteEndpointProductInstanceId },
-            umpOnly ? (uint8_t)0 : ClampFallbackMidi1PortCount(fallbackMidi1PortCount) });
+            umpOnly ? (uint8_t)0 : ClampFallbackMidi1PortCount(fallbackMidi1PortCount),
+            thisServiceRole });
     }
 
     // Everything the node could not be created with. A network endpoint is never live when its

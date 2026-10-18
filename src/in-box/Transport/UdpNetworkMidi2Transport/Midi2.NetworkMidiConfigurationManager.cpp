@@ -93,6 +93,34 @@ namespace
         }
     }
 
+    // The name a client entry has this PC give the remote, or empty for the default. The connect
+    // commands and a saved entry read back after a restart both come through here, so they
+    // cannot disagree. Network MIDI Setup used to fill an empty "Name that device will see" with
+    // the address it was connecting to, which nobody chose, so that is treated as no name.
+    winrt::hstring ConfiguredLocalEndpointName(
+        _In_ winrt::hstring const& configuredName,
+        _In_ winrt::hstring const& remoteAddress) noexcept
+    {
+        try
+        {
+            auto name = internal::TrimmedHStringCopy(configuredName);
+
+            if (!name.empty() &&
+                internal::ToLowerTrimmedHStringCopy(name) == internal::ToLowerTrimmedHStringCopy(remoteAddress))
+            {
+                return winrt::hstring{ };
+            }
+
+            return name;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+
+            return winrt::hstring{ };
+        }
+    }
+
     bool SafeGetNamedBoolean(
         _In_ json::JsonObject const& parent,
         _In_ winrt::hstring const& name,
@@ -792,7 +820,7 @@ try
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition.MatchDirectPort = remotePort;
-    clientDefinition.LocalEndpointName = umpEndpointName;
+    clientDefinition.LocalEndpointName = ConfiguredLocalEndpointName(umpEndpointName, remoteAddress);
     clientDefinition.CustomEndpointName = customEndpointName;
 
     // Registered before it is started, or nothing can retry it, revive it, or report it in
@@ -869,7 +897,7 @@ try
     clientDefinition.SkipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchId = matchId;
-    clientDefinition.LocalEndpointName = umpEndpointName;
+    clientDefinition.LocalEndpointName = ConfiguredLocalEndpointName(umpEndpointName, winrt::hstring{ });
     clientDefinition.CustomEndpointName = customEndpointName;
 
     LOG_IF_FAILED(TransportState::Current().AddClientDefinition(clientDefinition));
@@ -3358,10 +3386,7 @@ CMidi2NetworkMidiConfigurationManager::TryReadClientDefinition(
     // paths read them. The definition is new, so an absent key takes its default.
     ApplyEntrySettings(clientEntry, definition);
 
-    // TODO: Add ability for config file to specify the localEndpointName and localProductInstanceId
-    definition.LocalEndpointName = GetComputerNameOrEmpty();
-
-    // TODO: we may want to provide the local product instance id as a system-wide setting. Same with name
+    // TODO: we may want to provide the local product instance id as a system-wide setting
     definition.LocalProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
 
     auto matchSection = SafeGetNamedObject(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY);
@@ -3383,6 +3408,13 @@ CMidi2NetworkMidiConfigurationManager::TryReadClientDefinition(
 
     definition.MatchProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
     definition.MatchUmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
+
+    // The name this PC gives the remote, saved with the connection when it was made. Read the way
+    // the connect commands read it, so a restart doesn't change it. Empty takes the default when
+    // the client starts, which is the same default a new connection gets.
+    definition.LocalEndpointName = ConfiguredLocalEndpointName(
+        SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, L""),
+        definition.MatchDirectHostNameOrIPAddress);
 
     return true;
 }

@@ -3115,3 +3115,311 @@ void NetworkMidiApprovalTests::HostAppliesARemoteClientsOwnSendSpeedWhenItConnec
         connection != nullptr && connection.GetNamedBoolean(L"reduceSendSpeedAutomatically", false),
         L"and slows down by itself, as its own setting says");
 }
+
+
+namespace
+{
+    // Generous, because the endpoint creator also tears down the previous test's endpoints, and a
+    // teardown is slow.
+    constexpr auto BothWaysInvitationTimeout = std::chrono::milliseconds(30000);
+    constexpr auto BothWaysSessionTimeout = std::chrono::milliseconds(40000);
+
+    HostEndpointAddress LoopbackHostAddress(_In_ uint16_t const port)
+    {
+        HostEndpointAddress address{ };
+
+        address.HostNameOrAddress = L"127.0.0.1";
+        address.Port = port;
+        address.DiscoveredVia = L"created by the test";
+
+        return address;
+    }
+
+    // A host made by the test which lets any device connect, once it has started. Returns the
+    // port it listens on, or nothing, having logged why.
+    std::optional<uint16_t> CreateStartedHost(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId,
+        _In_ std::wstring const& serviceInstanceName)
+    {
+        auto const created = CreateHost(entryIdentifier, umpEndpointName, productInstanceId, serviceInstanceName, false);
+
+        if (!created.IsSuccess())
+        {
+            Log::Comment(String().Format(L"Could not create host '%s': %s", umpEndpointName.c_str(), created.ResponseJson.c_str()));
+            return std::nullopt;
+        }
+
+        if (!WaitForHostStarted(entryIdentifier, PendingPollTimeout))
+        {
+            Log::Comment(String().Format(L"Host '%s' never started", umpEndpointName.c_str()));
+            return std::nullopt;
+        }
+
+        return ReadActualPort(entryIdentifier);
+    }
+
+    // The endpoint a host lists for a remote's session. Empty if none appears.
+    std::wstring WaitForConnectionEndpointDeviceId(
+        _In_ std::wstring const& hostEntryIdentifier,
+        _In_ std::string const& umpEndpointName,
+        _In_ std::string const& productInstanceId)
+    {
+        auto const deadline = std::chrono::steady_clock::now() + ReplyTimeout;
+
+        do
+        {
+            auto const connection = FindHostConnection(hostEntryIdentifier, umpEndpointName, productInstanceId);
+
+            if (connection != nullptr)
+            {
+                auto const endpointDeviceId = std::wstring{ connection.GetNamedString(L"endpointDeviceId", L"") };
+
+                if (!endpointDeviceId.empty())
+                {
+                    return endpointDeviceId;
+                }
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+
+        } while (std::chrono::steady_clock::now() < deadline);
+
+        return std::wstring{ };
+    }
+
+    bool WasAccepted(_In_ UdpTestClient const& client)
+    {
+        for (auto const& packet : client.ReceivedPackets())
+        {
+            if (packet.Contains(CommandCode::InvitationReplyAccepted))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+
+// The same remote on two hosts here is two sessions with two different UMP endpoints, because each
+// host is an endpoint of its own. The endpoint's instance id used to come from the remote's
+// identity alone, so the second host found it taken and turned the remote away with "This device
+// is already connected to this PC".
+void NetworkMidiApprovalTests::RemoteCanConnectToMoreThanOneHostOnThisPc()
+{
+    auto const suffix = std::to_wstring(GetTickCount64());
+
+    auto const firstEntryIdentifier = MakeEntryIdentifier();
+    auto const secondEntryIdentifier = MakeEntryIdentifier();
+
+    auto removeHosts = wil::scope_exit([&]()
+        {
+            RemoveHost(firstEntryIdentifier);
+            RemoveHost(secondEntryIdentifier);
+        });
+
+    auto const firstPort = CreateStartedHost(firstEntryIdentifier, L"Looper Host", L"LOOPERHOST", L"midi2-approval-test-looper-" + suffix);
+    auto const secondPort = CreateStartedHost(secondEntryIdentifier, L"Synth Host", L"SYNTHHOST", L"midi2-approval-test-synth-" + suffix);
+
+    VERIFY_IS_TRUE(firstPort.has_value(), L"The first host started");
+    VERIFY_IS_TRUE(secondPort.has_value(), L"The second host started");
+
+    if (!firstPort.has_value() || !secondPort.has_value()) return;
+
+    // One remote under one identity, the way a tablet connects to two hosts on a desktop. A
+    // socket for each session, which is what a Windows client uses.
+    auto& context = ProtocolTestContext::Current();
+    auto const name = context.MakeUniqueEndpointName("TwoHosts");
+    auto const productInstanceId = context.MakeUniqueProductInstanceId("TwoHosts");
+
+    UdpTestClient toFirstHost;
+    UdpTestClient toSecondHost;
+
+    auto endSessions = wil::scope_exit([&]()
+        {
+            EndSession(toFirstHost);
+            EndSession(toSecondHost);
+        });
+
+    VERIFY_IS_TRUE(toFirstHost.Open(LoopbackHostAddress(firstPort.value())), L"Socket for the first host opened");
+    VERIFY_IS_TRUE(toSecondHost.Open(LoopbackHostAddress(secondPort.value())), L"Socket for the second host opened");
+
+    VERIFY_IS_TRUE(EstablishSession(toFirstHost, name, productInstanceId), L"The first host accepted the remote");
+
+    VERIFY_IS_TRUE(
+        EstablishSession(toSecondHost, name, productInstanceId),
+        L"The second host accepted the same remote too, rather than turning it away as already connected");
+
+    auto const firstEndpointDeviceId = WaitForConnectionEndpointDeviceId(firstEntryIdentifier, name, productInstanceId);
+    auto const secondEndpointDeviceId = WaitForConnectionEndpointDeviceId(secondEntryIdentifier, name, productInstanceId);
+
+    Log::Comment(String().Format(L"First host's endpoint: '%s'", firstEndpointDeviceId.c_str()));
+    Log::Comment(String().Format(L"Second host's endpoint: '%s'", secondEndpointDeviceId.c_str()));
+
+    VERIFY_IS_FALSE(firstEndpointDeviceId.empty(), L"The first session has an endpoint");
+    VERIFY_IS_FALSE(secondEndpointDeviceId.empty(), L"The second session has an endpoint");
+
+    VERIFY_IS_TRUE(
+        _wcsicmp(firstEndpointDeviceId.c_str(), secondEndpointDeviceId.c_str()) != 0,
+        L"Each session has an endpoint of its own");
+}
+
+
+// This PC is a client of the remote's host, and the remote then invites a host on this PC under
+// the same identity. Spec section 12 has a device use one identity in both roles so that this can
+// be recognized, and a second endpoint for the same device would only confuse apps.
+void NetworkMidiApprovalTests::RemoteAlreadyHostingThisPcIsRefusedAsAClient()
+{
+    auto& context = ProtocolTestContext::Current();
+    auto const name = context.MakeUniqueEndpointName("BothWaysA");
+    auto const productInstanceId = context.MakeUniqueProductInstanceId("BothWaysA");
+
+    // The remote as a host, which this PC connects to
+    FakeNetworkHost remoteAsHost;
+    remoteAsHost.SetEndpointName(name);
+    remoteAsHost.SetProductInstanceId(productInstanceId);
+
+    VERIFY_IS_TRUE(remoteAsHost.Start(), L"The remote's host started");
+
+    auto const clientEntryIdentifier = MakeEntryIdentifier();
+
+    auto disconnectClient = wil::scope_exit([&]()
+        {
+            DisconnectClient(clientEntryIdentifier);
+            remoteAsHost.Stop();
+        });
+
+    VERIFY_IS_TRUE(
+        ConnectDirectClient(clientEntryIdentifier, FakeNetworkHost::Address(), remoteAsHost.Port()).IsSuccess(),
+        L"This PC asked to connect to the remote's host");
+
+    VERIFY_IS_TRUE(
+        remoteAsHost.WaitForCommand(CommandCode::Invitation, BothWaysInvitationTimeout).has_value(),
+        L"This PC invited the remote's host");
+
+    // UMP Data only goes out once this PC's endpoint for the remote exists
+    VERIFY_IS_TRUE(
+        remoteAsHost.WaitForCommand(CommandCode::UmpData, BothWaysSessionTimeout).has_value(),
+        L"This PC's session with the remote's host is up");
+
+    // The remote as a client, inviting a host on this PC under the same identity
+    auto const hostEntryIdentifier = MakeEntryIdentifier();
+
+    auto removeHost = wil::scope_exit([&hostEntryIdentifier]() { RemoveHost(hostEntryIdentifier); });
+
+    auto const port = CreateStartedHost(
+        hostEntryIdentifier,
+        L"Both Ways Host",
+        L"BOTHWAYSHOSTA",
+        L"midi2-approval-test-bothways-a-" + std::to_wstring(GetTickCount64()));
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host on this PC started");
+
+    if (!port.has_value()) return;
+
+    UdpTestClient remoteAsClient;
+
+    VERIFY_IS_TRUE(remoteAsClient.Open(LoopbackHostAddress(port.value())), L"The remote's client socket opened");
+
+    PacketBuilder invitation;
+    invitation.StartPacket().AddInvitation(name, productInstanceId);
+
+    VERIFY_IS_TRUE(remoteAsClient.Send(invitation), L"The remote invited the host on this PC");
+
+    auto const packet = remoteAsClient.WaitForCommand(CommandCode::Bye, PendingPollTimeout);
+
+    VERIFY_IS_TRUE(packet.has_value(), L"The host on this PC turned the remote away");
+    VERIFY_IS_FALSE(WasAccepted(remoteAsClient), L"and never accepted it");
+
+    if (!packet.has_value()) return;
+
+    auto const* bye = packet->Find(CommandCode::Bye);
+
+    VERIFY_IS_NOT_NULL(bye);
+
+    if (bye == nullptr) return;
+
+    Log::Comment(String().Format(L"Bye reason 0x%02X", static_cast<unsigned>(bye->GetByeReason())));
+
+    VERIFY_IS_TRUE(
+        bye->GetByeReason() == ByeReason::TooManyOpenSessions,
+        L"with Too Many Open Sessions, which is what a host gives");
+}
+
+
+// The other order. The remote is a client of a host on this PC, and this PC then connects to the
+// remote's host, which has the same identity. This PC withdraws once the remote accepts it.
+void NetworkMidiApprovalTests::RemoteAlreadyAClientOfThisPcIsRefusedAsAHost()
+{
+    auto& context = ProtocolTestContext::Current();
+    auto const name = context.MakeUniqueEndpointName("BothWaysB");
+    auto const productInstanceId = context.MakeUniqueProductInstanceId("BothWaysB");
+
+    auto const hostEntryIdentifier = MakeEntryIdentifier();
+
+    auto removeHost = wil::scope_exit([&hostEntryIdentifier]() { RemoveHost(hostEntryIdentifier); });
+
+    auto const port = CreateStartedHost(
+        hostEntryIdentifier,
+        L"Both Ways Host",
+        L"BOTHWAYSHOSTB",
+        L"midi2-approval-test-bothways-b-" + std::to_wstring(GetTickCount64()));
+
+    VERIFY_IS_TRUE(port.has_value(), L"The host on this PC started");
+
+    if (!port.has_value()) return;
+
+    // The remote as a client of the host on this PC
+    UdpTestClient remoteAsClient;
+
+    auto endSession = wil::scope_exit([&remoteAsClient]() { EndSession(remoteAsClient); });
+
+    VERIFY_IS_TRUE(remoteAsClient.Open(LoopbackHostAddress(port.value())), L"The remote's client socket opened");
+    VERIFY_IS_TRUE(EstablishSession(remoteAsClient, name, productInstanceId), L"The host on this PC accepted the remote");
+
+    // The remote as a host, which this PC now connects to
+    FakeNetworkHost remoteAsHost;
+    remoteAsHost.SetEndpointName(name);
+    remoteAsHost.SetProductInstanceId(productInstanceId);
+
+    VERIFY_IS_TRUE(remoteAsHost.Start(), L"The remote's host started");
+
+    auto const clientEntryIdentifier = MakeEntryIdentifier();
+
+    auto disconnectClient = wil::scope_exit([&]()
+        {
+            DisconnectClient(clientEntryIdentifier);
+            remoteAsHost.Stop();
+        });
+
+    VERIFY_IS_TRUE(
+        ConnectDirectClient(clientEntryIdentifier, FakeNetworkHost::Address(), remoteAsHost.Port()).IsSuccess(),
+        L"This PC asked to connect to the remote's host");
+
+    // The fake host accepts straight away, so the Bye comes once this PC sees who the host is
+    auto const packet = remoteAsHost.WaitForCommand(CommandCode::Bye, BothWaysSessionTimeout);
+
+    VERIFY_IS_TRUE(packet.has_value(), L"This PC withdrew from the remote's host");
+
+    VERIFY_ARE_EQUAL(
+        static_cast<size_t>(0),
+        remoteAsHost.CountReceived(CommandCode::UmpData),
+        L"and no MIDI went to it, because no endpoint was made");
+
+    if (!packet.has_value()) return;
+
+    auto const* bye = packet->Find(CommandCode::Bye);
+
+    VERIFY_IS_NOT_NULL(bye);
+
+    if (bye == nullptr) return;
+
+    Log::Comment(String().Format(L"Bye reason 0x%02X", static_cast<unsigned>(bye->GetByeReason())));
+
+    VERIFY_IS_TRUE(
+        bye->GetByeReason() == ByeReason::InvitationCanceled,
+        L"with Invitation Canceled, which is what a client gives");
+}

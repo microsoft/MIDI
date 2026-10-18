@@ -191,6 +191,15 @@ private:
         _Out_ std::wstring& customName,
         _Out_ std::wstring& customDescription);
 
+    // Spec section 12 has a device that is both a host and a client use one identity in both
+    // roles, so the devices it connects to can tell when it's already connected. True when this
+    // remote has an endpoint here in the other role and that session is still up. The same remote
+    // on two of this PC's hosts is not this case: each host is an endpoint of its own.
+    bool IsRemoteConnectedInOtherRole(
+        _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& remoteEndpointName,
+        _In_ std::wstring const& remoteProductInstanceId);
+
     // Shared by endpoint creation and the live refresh, so both produce the same blocks. The two
     // buffers are owned by the caller because the property entries point into them and must stay
     // valid until the device manager call returns.
@@ -240,6 +249,10 @@ private:
         // block back out of the device store. Zero means the endpoint was built UMP-only and has
         // no MIDI 1.0 ports to rebuild.
         uint8_t FallbackMidi1PortCount{ 0 };
+
+        // Which end of the session this PC is. A remote may connect to more than one host here,
+        // but not be a host and a client of this PC at the same time.
+        MidiNetworkConnectionRole Role{ MidiNetworkConnectionRole::ConnectionWindowsIsClient };
     };
 
     wil::critical_section m_createdEndpointsLock;
