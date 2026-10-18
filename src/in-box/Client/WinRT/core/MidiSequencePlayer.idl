@@ -131,6 +131,21 @@ namespace Windows.Devices.Midi2.Utilities.Sequencing
             // solo sends turns off every held note, not only those of the track that changed.
             // Unmuting a track restarts that track's held notes.
             MidiSequenceChaseOptions ChaseOptions;
+
+            // Moves every note up or down by this many semitones as it plays. Drums are left
+            // alone: notes on channel 10, and on any channel the sequence switches to a drum kit
+            // with a bank select or a GS or XG message, keep their note numbers, because there the
+            // number picks the drum rather than the pitch.
+            //
+            // Safe to change while playing. The change is heard within about a quarter of a
+            // second. A note that is already sounding keeps its pitch, and its end still reaches
+            // it. A note moved outside 0 to 127 is not played. A value outside the minimum and
+            // maximum is clamped, and reading it back gives the clamped value. It stays set when a
+            // new sequence is loaded.
+            Int32 TransposeSemitones;
+
+            Int32 MinimumTransposeSemitones{ get; };
+            Int32 MaximumTransposeSemitones{ get; };
         }
     };
 }

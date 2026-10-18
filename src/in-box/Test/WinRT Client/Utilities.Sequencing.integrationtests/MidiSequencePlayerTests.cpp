@@ -1805,3 +1805,327 @@ void MidiSequencePlayerTests::SeekingWhilePlayingKeepsRestartedNotesSounding()
     player.Stop();
     player.Close();
 }
+
+namespace
+{
+    // Sent on channel 1 once every note in a transposition fixture has ended, and long before the
+    // file does. What arrives before it is what the sequence played. The silence at the end of
+    // the file comes after it, so a note that silence had to turn off is still counted as left
+    // sounding.
+    constexpr uint8_t FinishedController = 102;
+
+    bool IsFinishedMarker(_In_ uint32_t const word)
+    {
+        return IsControlChange(word, FinishedController);
+    }
+
+    void AddFinishedMarker(_Inout_ std::vector<FileEvent>& track, _In_ uint32_t const tick)
+    {
+        track.push_back(FileEvent{ tick, { 0xB0, FinishedController, 1 } });
+
+        // Something after it, so the file does not end, and silence everything, at the marker.
+        track.push_back(FileEvent{ tick + TicksPerSecond / 2, { 0xB0, FinishedController, 0 } });
+    }
+
+    struct PlayedNote
+    {
+        uint8_t Channel{ 0 };
+        uint8_t Key{ 0 };
+    };
+
+    // Every note start before the marker, in order.
+    std::vector<PlayedNote> StartsBeforeMarker(_In_ std::vector<std::array<uint32_t, 4>> const& messages)
+    {
+        std::vector<PlayedNote> starts{};
+
+        for (auto const& message : messages)
+        {
+            auto const word = message[0];
+
+            if (IsFinishedMarker(word))
+            {
+                break;
+            }
+
+            if (IsNoteOnWithVelocity(word))
+            {
+                starts.push_back(PlayedNote{ ChannelOf(word), KeyOf(word) });
+            }
+        }
+
+        return starts;
+    }
+
+    // How many starts on each channel and key had no end by the marker. Ends with no start are
+    // harmless and are not counted.
+    size_t NotesLeftSoundingAtMarker(_In_ std::vector<std::array<uint32_t, 4>> const& messages)
+    {
+        std::array<std::array<uint32_t, 128>, 16> sounding{};
+
+        for (auto const& message : messages)
+        {
+            auto const word = message[0];
+
+            if (IsFinishedMarker(word))
+            {
+                break;
+            }
+
+            auto& count = sounding[ChannelOf(word)][KeyOf(word)];
+
+            if (IsNoteOnWithVelocity(word))
+            {
+                ++count;
+            }
+            else if (IsNoteEnd(word) && count > 0)
+            {
+                --count;
+            }
+        }
+
+        size_t left{ 0 };
+
+        for (uint8_t channel = 0; channel < 16; ++channel)
+        {
+            for (uint8_t key = 0; key < 128; ++key)
+            {
+                if (sounding[channel][key] != 0)
+                {
+                    LOG_OUTPUT(L"channel %d key %d: %d left sounding", channel, key, static_cast<int>(sounding[channel][key]));
+                    left += sounding[channel][key];
+                }
+            }
+        }
+
+        return left;
+    }
+
+    bool WaitForFinishedMarker(_In_ CaptureSession& capture, _In_ uint32_t const timeoutMilliseconds)
+    {
+        return WaitForMessages(capture, 0,
+            [](auto const& messages, size_t start)
+            {
+                return FindFrom(messages, start, [](uint32_t word) { return IsFinishedMarker(word); }) < messages.size();
+            },
+            timeoutMilliseconds);
+    }
+
+    constexpr uint8_t DrumChannel = 9;
+    constexpr uint8_t BassDrum = 36;
+    constexpr uint8_t Snare = 38;
+}
+
+void MidiSequencePlayerTests::TransposeStartsAtZeroAndIsClamped()
+{
+    CaptureSession capture{};
+    capture.Start(false);
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    VERIFY_ARE_EQUAL(0, player.TransposeSemitones());
+    VERIFY_ARE_EQUAL(-12, player.MinimumTransposeSemitones());
+    VERIFY_ARE_EQUAL(12, player.MaximumTransposeSemitones());
+
+    player.TransposeSemitones(5);
+    VERIFY_ARE_EQUAL(5, player.TransposeSemitones());
+
+    player.TransposeSemitones(40);
+    VERIFY_ARE_EQUAL(player.MaximumTransposeSemitones(), player.TransposeSemitones());
+
+    player.TransposeSemitones(-40);
+    VERIFY_ARE_EQUAL(player.MinimumTransposeSemitones(), player.TransposeSemitones());
+
+    player.TransposeSemitones(-3);
+
+    // It belongs to the player rather than to a sequence, so loading one leaves it alone.
+    player.SetSequenceAsync(ReadTestSequence(L"plain-scale.mid")).get();
+
+    VERIFY_ARE_EQUAL(-3, player.TransposeSemitones());
+
+    player.Close();
+}
+
+void MidiSequencePlayerTests::TransposesNotesButNotDrums()
+{
+    CaptureSession capture{};
+    capture.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    std::vector<FileEvent> track{};
+
+    // Channel 11 made a GS rhythm part: block A, value 1, with its checksum.
+    track.push_back(FileEvent{ 0, { 0xF0, 0x0A, 0x41, 0x10, 0x42, 0x12, 0x40, 0x1A, 0x15, 0x01, 0x10, 0xF7 } });
+
+    // Channel 3 switched to an XG drum kit bank.
+    track.push_back(FileEvent{ 0, { 0xB2, 0x00, 0x7F } });
+
+    // One short note at a time, so the order they arrive in is the order they were written.
+    AddFileNote(track, 0, 60, 100, 0, 120);
+    AddFileNote(track, DrumChannel, BassDrum, 100, 240, 360);
+    AddFileNote(track, 2, 40, 100, 480, 600);
+    AddFileNote(track, 10, Snare, 100, 720, 840);
+    AddFileNote(track, 3, 67, 100, 960, 1080);
+    AddFileNote(track, 0, 64, 100, 1200, 1320);
+
+    AddFinishedMarker(track, 1440);
+
+    player.TransposeSemitones(3);
+    player.SetSequenceAsync(ReadSequenceFromTracks({ track })).get();
+
+    player.Play();
+
+    VERIFY_IS_TRUE(WaitForFinishedMarker(capture, 6000));
+
+    auto const messages = capture.Snapshot();
+    auto const starts = StartsBeforeMarker(messages);
+
+    std::vector<PlayedNote> const expected{
+        { 0, 63 },
+        { DrumChannel, BassDrum },
+        { 2, 40 },
+        { 10, Snare },
+        { 3, 70 },
+        { 0, 67 } };
+
+    VERIFY_ARE_EQUAL(expected.size(), starts.size());
+
+    for (size_t index = 0; index < expected.size() && index < starts.size(); ++index)
+    {
+        LOG_OUTPUT(L"start %d: channel %d key %d", static_cast<int>(index), starts[index].Channel, starts[index].Key);
+
+        VERIFY_ARE_EQUAL(expected[index].Channel, starts[index].Channel);
+        VERIFY_ARE_EQUAL(expected[index].Key, starts[index].Key);
+    }
+
+    // Each end went to the note that started, not to the key the file wrote.
+    VERIFY_ARE_EQUAL(size_t{ 0 }, NotesLeftSoundingAtMarker(messages));
+
+    player.Stop();
+    player.Close();
+}
+
+void MidiSequencePlayerTests::ChangingTheKeyWhilePlayingEndsEveryNote()
+{
+    CaptureSession capture{};
+    capture.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    std::vector<FileEvent> track{};
+
+    // Chords held for a second, a long note across them, and one key struck again before its
+    // first strike has ended. Drums keep time underneath.
+    AddFileNote(track, 0, 60, 90, 0, 960);
+    AddFileNote(track, 0, 64, 90, 0, 960);
+    AddFileNote(track, 0, 67, 90, 0, 960);
+    AddFileNote(track, 0, 72, 90, 480, 1440);
+    AddFileNote(track, 0, 62, 90, 960, 1920);
+    AddFileNote(track, 0, 65, 90, 960, 1920);
+    AddFileNote(track, 0, 69, 90, 960, 1920);
+    AddFileNote(track, 0, 60, 90, 1152, 1728);
+    AddFileNote(track, 0, 60, 90, 1536, 2304);
+
+    for (uint32_t tick = 0; tick < 2400; tick += 240)
+    {
+        AddFileNote(track, DrumChannel, BassDrum, 100, tick, tick + 60);
+    }
+
+    AddFinishedMarker(track, 2880);
+
+    // Set before playing, so the first chord is a known distance from where it was written.
+    player.TransposeSemitones(1);
+    player.SetSequenceAsync(ReadSequenceFromTracks({ track })).get();
+
+    player.Play();
+
+    // Faster than the player hands messages over, so notes that started in one key are still
+    // waiting to end when another is chosen. That is the case that leaves notes hanging.
+    std::array<int32_t, 6> const keys{ -7, 12, -12, 0, 3, 1 };
+
+    auto const deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(3200);
+    size_t changes{ 0 };
+
+    while (player.State() == MidiSequencePlayerState::Playing && std::chrono::steady_clock::now() < deadline)
+    {
+        ::Sleep(90);
+
+        player.TransposeSemitones(keys[changes % keys.size()]);
+        ++changes;
+    }
+
+    LOG_OUTPUT(L"Changed key %d times while playing", static_cast<int>(changes));
+
+    VERIFY_IS_TRUE(WaitForFinishedMarker(capture, 6000));
+
+    auto const messages = capture.Snapshot();
+    auto const starts = StartsBeforeMarker(messages);
+
+    VERIFY_IS_TRUE(changes >= 10);
+
+    // The first chord, a semitone up.
+    VERIFY_IS_TRUE(starts.size() >= 3);
+    VERIFY_ARE_EQUAL(uint8_t{ 61 }, starts[0].Key);
+    VERIFY_ARE_EQUAL(uint8_t{ 65 }, starts[1].Key);
+    VERIFY_ARE_EQUAL(uint8_t{ 68 }, starts[2].Key);
+
+    // The drums never moved.
+    for (auto const& start : starts)
+    {
+        if (start.Channel == DrumChannel)
+        {
+            VERIFY_ARE_EQUAL(BassDrum, start.Key);
+        }
+    }
+
+    // And nothing was left for the silence at the end to turn off.
+    VERIFY_ARE_EQUAL(size_t{ 0 }, NotesLeftSoundingAtMarker(messages));
+
+    player.Stop();
+    player.Close();
+}
+
+void MidiSequencePlayerTests::RestartedHeldNotesAreTransposed()
+{
+    CaptureSession capture{};
+    capture.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    player.ChaseOptions(ChannelSettingsAndHeldNotes);
+    player.SetSequenceAsync(HeldNoteSequence()).get();
+
+    player.Play();
+    ::Sleep(600);
+    player.Pause();
+    ::Sleep(500);
+
+    player.TransposeSemitones(2);
+
+    auto const beforeResume = capture.Count();
+    auto const movedKey = static_cast<uint8_t>(HeldKey + 2);
+
+    player.Play();
+
+    // The held note comes back in the new key.
+    VERIFY_IS_TRUE(WaitForNoteOn(capture, beforeResume, movedKey, 2000));
+    ::Sleep(100);
+
+    auto const beforeStop = capture.Count();
+
+    player.Stop();
+
+    // And stopping turns off the note that is actually sounding.
+    VERIFY_IS_TRUE(WaitForMessages(capture, beforeStop,
+        [movedKey](auto const& messages, size_t from)
+        {
+            return FindFrom(messages, from, [movedKey](uint32_t word) { return IsNoteEnd(word) && KeyOf(word) == movedKey; }) < messages.size();
+        },
+        2000));
+
+    auto const messages = capture.Snapshot();
+
+    VERIFY_ARE_EQUAL(messages.size(), FindFrom(messages, beforeResume, [](uint32_t word) { return IsNoteOnFor(word, HeldKey); }));
+
+    player.Close();
+}

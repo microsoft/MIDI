@@ -70,4 +70,10 @@ class MidiSequencePlayerTests
     // ---- what a seek while playing leaves sounding ----
     TEST_METHOD(SeekingWhilePlayingLetsTheNewPositionSound);
     TEST_METHOD(SeekingWhilePlayingKeepsRestartedNotesSounding);
+
+    // ---- transposition, MidiSequencingUtilityApiContract 2 ----
+    TEST_METHOD(TransposeStartsAtZeroAndIsClamped);
+    TEST_METHOD(TransposesNotesButNotDrums);
+    TEST_METHOD(ChangingTheKeyWhilePlayingEndsEveryNote);
+    TEST_METHOD(RestartedHeldNotesAreTransposed);
 };

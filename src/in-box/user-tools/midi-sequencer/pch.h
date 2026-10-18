@@ -157,3 +157,4 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "EndpointChoice.h"
 #include "NamedChoice.h"
 #include "WrapPanel.h"
+#include "DeviceChoice.h"

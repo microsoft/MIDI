@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <format>
+#include <iterator>
 #include <random>
 #include <unordered_set>
 
@@ -538,6 +539,188 @@ namespace midisequencer
 
         std::swap((*location.Container)[location.Index], (*location.Container)[static_cast<size_t>(target)]);
         return true;
+    }
+
+    _Use_decl_annotations_
+    bool MoveTracks(Sequence& sequence, std::vector<std::wstring> const& trackIds, std::wstring_view folderId, std::wstring_view beforeId)
+    {
+        if (!folderId.empty())
+        {
+            auto const folder = FindTrack(sequence, folderId);
+
+            if (folder == nullptr || !folder->IsFolder)
+            {
+                return false;
+            }
+        }
+
+        // Each id once, and not when a folder moving too already carries it.
+        std::vector<std::wstring> moving{};
+
+        for (auto const& id : trackIds)
+        {
+            if (id.empty() || FindTrack(sequence, id) == nullptr || std::find(moving.begin(), moving.end(), id) != moving.end())
+            {
+                continue;
+            }
+
+            moving.push_back(id);
+        }
+
+        // Tracks inside a folder that's moving go with it, so only the outermost move themselves.
+        std::vector<std::wstring> outermost{};
+
+        for (auto const& id : moving)
+        {
+            auto const carried = std::any_of(moving.begin(), moving.end(), [&](std::wstring const& other)
+            {
+                return other != id && IsInside(sequence, id, other);
+            });
+
+            if (!carried)
+            {
+                outermost.push_back(id);
+            }
+        }
+
+        moving = std::move(outermost);
+
+        if (moving.empty())
+        {
+            return false;
+        }
+
+        // A folder can't go inside itself.
+        for (auto const& id : moving)
+        {
+            if (!folderId.empty() && IsInside(sequence, folderId, id))
+            {
+                return false;
+            }
+        }
+
+        // The place has to be in the destination list. A place that's moving itself means the
+        // first track after it that stays.
+        std::wstring anchor{ beforeId };
+
+        if (!anchor.empty())
+        {
+            auto const location = LocateTrack(sequence, anchor);
+            auto const parentId = location.Parent != nullptr ? std::wstring_view{ location.Parent->Id } : std::wstring_view{};
+
+            if (location.Container == nullptr || parentId != folderId)
+            {
+                return false;
+            }
+
+            anchor.clear();
+
+            for (auto i = location.Index; i < location.Container->size(); ++i)
+            {
+                auto const& candidate = (*location.Container)[i].Id;
+
+                if (std::find(moving.begin(), moving.end(), candidate) == moving.end())
+                {
+                    anchor = candidate;
+                    break;
+                }
+            }
+        }
+
+        // How deep everything ends up.
+        size_t destinationDepth{ 0 };
+
+        if (!folderId.empty())
+        {
+            ForEachTrack(sequence, [&](Track const& track, size_t depth)
+            {
+                if (track.Id == folderId)
+                {
+                    destinationDepth = depth + 1;
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        auto const deepest = [](auto const& self, Track const& track) -> size_t
+        {
+            size_t below{ 0 };
+
+            for (auto const& child : track.Children)
+            {
+                below = std::max(below, 1 + self(self, child));
+            }
+
+            return below;
+        };
+
+        SequenceLimits const limits{};
+
+        for (auto const& id : moving)
+        {
+            if (destinationDepth + deepest(deepest, *FindTrack(sequence, id)) >= limits.MaximumFolderDepth)
+            {
+                return false;
+            }
+        }
+
+        // Where every track sits now, to tell whether anything moved.
+        auto const shape = [&sequence]()
+        {
+            std::vector<std::pair<std::wstring, std::wstring>> rows{};
+
+            auto const walk = [&](auto const& self, std::vector<Track> const& tracks, std::wstring const& parent) -> void
+            {
+                for (auto const& track : tracks)
+                {
+                    rows.emplace_back(track.Id, parent);
+                    self(self, track.Children, track.Id);
+                }
+            };
+
+            walk(walk, sequence.Tracks, std::wstring{});
+            return rows;
+        };
+
+        auto const before = shape();
+
+        std::vector<Track> taken{};
+        taken.reserve(moving.size());
+
+        for (auto const& id : moving)
+        {
+            if (auto removed = RemoveTrack(sequence, id); removed.has_value())
+            {
+                taken.push_back(std::move(*removed));
+            }
+        }
+
+        auto container = &sequence.Tracks;
+
+        if (!folderId.empty())
+        {
+            container = &FindTrack(sequence, folderId)->Children;
+        }
+
+        auto at = container->size();
+
+        if (!anchor.empty())
+        {
+            for (size_t i = 0; i < container->size(); ++i)
+            {
+                if ((*container)[i].Id == anchor)
+                {
+                    at = i;
+                    break;
+                }
+            }
+        }
+
+        container->insert(container->begin() + static_cast<ptrdiff_t>(at), std::make_move_iterator(taken.begin()), std::make_move_iterator(taken.end()));
+
+        return shape() != before;
     }
 
     _Use_decl_annotations_

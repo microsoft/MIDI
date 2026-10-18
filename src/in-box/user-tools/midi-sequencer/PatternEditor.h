@@ -59,6 +59,7 @@ namespace midisequencer
         winrt::hstring BadgeNotFirst{};     // a step that plays on every pass but the first
         winrt::hstring UndoSteps{};
         winrt::hstring UndoVelocity{};
+        winrt::hstring UndoMoveLane{};
 
         // A lane's name, its note and length ("C1 (36), 16 steps"), and where it's playing, which
         // need resources.
@@ -95,12 +96,17 @@ namespace midisequencer
         PatternHit HitTest(_In_ foundation::Point point) const noexcept;
 
         // In the grid, a click turns a step on or off, and a drag up or down on a step that's on
-        // sets its velocity. A right click only selects. Returns true when it needs drawing again.
+        // sets its velocity. On a drum lane's name, a drag up or down moves the lane. A right
+        // click only selects. Returns true when it needs drawing again.
         bool PointerPressed(_In_ foundation::Point point, _In_ bool rightButton);
         bool PointerMoved(_In_ foundation::Point point);
         std::optional<PatternEdit> PointerReleased(_In_ foundation::Point point);
         void CancelGesture() noexcept;
         bool Wheel(_In_ int32_t delta);
+
+        // The lane whose name is pressed and hasn't moved yet. Let go like that, it's a click,
+        // which opens the lane's menu.
+        std::optional<size_t> PressedLaneName() const noexcept;
 
         // The selected step, which the inspector shows. It doesn't have to be on.
         bool HasSelection() const noexcept;
@@ -123,6 +129,8 @@ namespace midisequencer
             Step,
             Velocity,
             Flag,
+            LanePress,
+            LaneMove,
         };
 
         bool Melodic() const noexcept;
@@ -178,6 +186,9 @@ namespace midisequencer
         uint16_t m_startVelocity{ 0 };
         uint16_t m_dragVelocity{ 0 };
         bool m_pressedOn{ false };
+
+        // Where a dragged lane would go: before this lane, or last when it's the lane count.
+        size_t m_dropBefore{ SIZE_MAX };
 
         canvasText::CanvasTextFormat m_titleText{ nullptr };
         canvasText::CanvasTextFormat m_numberText{ nullptr };

@@ -29,6 +29,30 @@ namespace midiplayer
 
     void SizeNoteVisuals(_In_ NoteVisuals const& note, float left, float top, float width, float height) noexcept;
 
+    // Where a note is drawn: where it is heard. Drums are not transposed, so they do not move.
+    // Can be outside 0 to 127, for a note that is not played at all.
+    constexpr int32_t DisplayedNoteNumber(_In_ midifile::Note const& note, _In_ int32_t transposeSemitones) noexcept
+    {
+        return note.IsPercussion
+            ? static_cast<int32_t>(note.NoteNumber)
+            : static_cast<int32_t>(note.NoteNumber) + transposeSemitones;
+    }
+
+    // The notes a sequence plays, split by whether transposing moves them, so a view can make
+    // room for them in any key. Worked out once for each file.
+    struct NoteSpan
+    {
+        int32_t MelodicLowest{ 128 };
+        int32_t MelodicHighest{ -1 };
+        int32_t PercussionLowest{ 128 };
+        int32_t PercussionHighest{ -1 };
+
+        static NoteSpan Of(_In_ midifile::MidiSequence const& sequence) noexcept;
+
+        // The lowest and highest note heard with this transposition. False when none is.
+        bool Range(_In_ int32_t transposeSemitones, _Out_ int32_t& lowest, _Out_ int32_t& highest) const noexcept;
+    };
+
     // The scrolling note display, drawn with composition visuals rather than XAML elements.
     //
     // A file can hold millions of notes, so nothing is created per note. A fixed pool of sprite
@@ -42,6 +66,9 @@ namespace midiplayer
         void Shutdown() noexcept;
 
         void SetSequence(_In_ std::shared_ptr<midifile::MidiSequence const> const& sequence) noexcept;
+
+        // Draws notes where they are heard once transposed. Drums stay where they are.
+        void SetTransposeSemitones(_In_ int32_t semitones) noexcept;
 
         // Tracks which are silent are drawn dimmed rather than hidden, so the shape of the music
         // stays recognizable while a track is muted.
@@ -59,6 +86,7 @@ namespace midiplayer
     private:
         NoteVisuals TakeVisual(size_t index) noexcept;
         void HideFrom(size_t index) noexcept;
+        void RebuildRange() noexcept;
 
         // state packs the track, whether the track is audible and whether the note has already
         // been played; border selects the darker shade drawn around the note.
@@ -99,9 +127,12 @@ namespace midiplayer
         std::vector<midifile::GridLine> m_gridLines{};
 
         // A note display which rescales as the range grows would never sit still, so the range is
-        // decided once when the file is loaded.
+        // decided when the file is loaded, and again only when the key is changed.
         uint8_t m_lowestNote{ 0 };
         uint8_t m_highestNote{ 127 };
+
+        NoteSpan m_span{};
+        int32_t m_transposeSemitones{ 0 };
 
         static constexpr size_t MaximumVisibleNotes = 2048;
 

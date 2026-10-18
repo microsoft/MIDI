@@ -58,10 +58,25 @@ namespace winrt::midiplayer::implementation
             foundation::IInspectable const& sender,
             controls::Primitives::RangeBaseValueChangedEventArgs const& args);
 
+        // Page Up and Page Down for both sliders, which WinUI's slider ignores.
+        void OnSliderPreviewKeyDown(_In_ foundation::IInspectable const& sender, _In_ input::KeyRoutedEventArgs const& args);
+
+        // Go to a time, from Ctrl+J.
+        void OnGoToTimeDialogOpened(_In_ controls::ContentDialog const& sender, _In_ controls::ContentDialogOpenedEventArgs const& args);
+        void OnGoToTimePrimaryClick(_In_ controls::ContentDialog const& sender, _In_ controls::ContentDialogButtonClickEventArgs const& args);
+
         void OnSpeedSliderValueChanged(
             _In_ foundation::IInspectable const& sender,
             _In_ controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnResetSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        void OnTransposeSliderValueChanged(
+            _In_ foundation::IInspectable const& sender,
+            _In_ controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnResetTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // Puts speed and transpose side by side when they fit, and one above the other when not.
+        void OnNowPlayingPanelSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
 
         // Keyboard shortcuts. Each is defined on the control it stands in for.
         void OnPlayPauseShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
@@ -73,7 +88,11 @@ namespace winrt::midiplayer::implementation
         void OnSlowerShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnFasterShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnNormalSpeedShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnTransposeUpShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnTransposeDownShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnOriginalKeyShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnRepeatShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnGoToTimeShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
 
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnGroupSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -130,6 +149,7 @@ namespace winrt::midiplayer::implementation
         void UpdateChordDisplay(uint32_t tick) noexcept;
         void UpdateTempoDisplay(double beatsPerMinute) noexcept;
         void UpdateSpeedDisplay() noexcept;
+        void UpdateTransposeDisplay() noexcept;
         void UpdateLyricDisplay(uint32_t tick) noexcept;
         void UpdateNowPlayingText() noexcept;
         void UpdateTransportState() noexcept;
@@ -140,8 +160,17 @@ namespace winrt::midiplayer::implementation
         // one says what it did.
         void SeekFromShortcut(_In_ int64_t offsetMicroseconds) noexcept;
         void SetSpeedFromShortcut(_In_ double percent) noexcept;
+        void SetTransposeFromShortcut(_In_ int32_t semitones) noexcept;
         void AnnounceShortcutResult(_In_ winrt::hstring const& message) noexcept;
         void AnnounceCurrentTitle() noexcept;
+
+        // Says where playback is now, unless the position slider has focus: a screen reader
+        // already reads the slider's new value then, and would otherwise say it twice.
+        void AnnouncePosition() noexcept;
+        bool PositionSliderHasFocus() noexcept;
+
+        winrt::fire_and_forget ShowGoToTimeAsync();
+        void ShowGoToTimeProblem(_In_ winrt::hstring const& message) noexcept;
 
         void StartPositionTimer() noexcept;
         void StopPositionTimer() noexcept;
@@ -210,8 +239,10 @@ namespace winrt::midiplayer::implementation
         bool m_keyboardView{ false };
         bool m_busy{ false };
 
-        // The clock text only needs rewriting when the second changes, not on every frame.
+        // The clock text only needs rewriting when the second changes, not on every frame. The
+        // length is tracked too, so a new file shows its own length even when both start at 0:00.
         uint64_t m_lastDisplayedSecond{ UINT64_MAX };
+        uint64_t m_lastDisplayedDuration{ UINT64_MAX };
 
         // Reused every frame so the activity update does not allocate.
         std::vector<uint8_t> m_soundingCounts{};
@@ -226,6 +257,11 @@ namespace winrt::midiplayer::implementation
         // Set when the play shortcut had to load the first file before it could start, so that
         // it can say "Playing" once it actually does.
         bool m_announceNextPlay{ false };
+
+        // Go to time. Only one dialog can be open at once, and holding Ctrl+J down would ask for
+        // more. The target is what the Go button accepted, in microseconds.
+        bool m_goToTimeOpen{ false };
+        std::optional<uint64_t> m_goToTimeTarget{};
     };
 }
 

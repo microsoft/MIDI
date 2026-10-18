@@ -1501,3 +1501,31 @@ void PlaybackEngineTests::AnEditWhilePlayingSendsTheNewValue()
         return IsCutoff(message) && message.Words[1] == 0xE0000000u;
     }));
 }
+
+void PlaybackEngineTests::TheMeterShowsOnlyHeldNotes()
+{
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(KeysSequence()));
+    f.Engine.Play(0);
+
+    auto const levelOf = [&f](uint64_t from, uint64_t to)
+    {
+        auto const levels = f.Engine.HeldNoteLevels(from, to);
+        VERIFY_IS_TRUE(levels.size() <= 1);
+        return levels.empty() ? 0.0f : levels[0].second;
+    };
+
+    // Nothing before the first note starts, then its velocity while it's held.
+    VERIFY_ARE_EQUAL(0.0f, levelOf(PlayPressedAt, At(0)));
+    VERIFY_IS_TRUE(std::abs(levelOf(At(0), At(0) + 1000) - 0xC000 / 65535.0f) < 0.0001f);
+    VERIFY_ARE_EQUAL(std::wstring{ L"t-keys" }, f.Engine.HeldNoteLevels(At(0), At(0) + 1000)[0].first);
+
+    // Nothing once it's ended, however long the sound rings, but a look that spans it sees it.
+    f.Now = At(480) + 50000;
+    f.Engine.Sweep();
+    VERIFY_ARE_EQUAL(0.0f, levelOf(At(480) + 1000, At(480) + 50000));
+    VERIFY_IS_TRUE(levelOf(At(0) - 1000, At(480) + 50000) > 0.0f);
+
+    f.Engine.Stop();
+    VERIFY_ARE_EQUAL(0.0f, levelOf(0, At(Bar)));
+}

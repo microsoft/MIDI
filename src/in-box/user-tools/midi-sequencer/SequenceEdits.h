@@ -76,6 +76,17 @@ namespace midisequencer
     // Up or down within its list. False at either end.
     bool MoveTrackBy(_Inout_ Sequence& sequence, _In_ std::wstring_view trackId, _In_ int32_t delta);
 
+    // Moves tracks and folders, kept in the order given, so they sit together in folderId (the top
+    // level when it's empty), just before beforeId (at the end when it's empty). Anything inside a
+    // folder that's also moving goes with its folder. Changes nothing, and returns false, when a
+    // folder would go inside itself, the place doesn't exist, folders would nest deeper than
+    // SequenceLimits allows, or everything is already there.
+    bool MoveTracks(
+        _Inout_ Sequence& sequence,
+        _In_ std::vector<std::wstring> const& trackIds,
+        _In_ std::wstring_view folderId,
+        _In_ std::wstring_view beforeId);
+
     std::optional<Track> RemoveTrack(_Inout_ Sequence& sequence, _In_ std::wstring_view trackId);
 
     // Clips no placement or slot uses any more, taken out of the sequence and returned so the

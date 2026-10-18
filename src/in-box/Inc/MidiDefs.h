@@ -789,6 +789,9 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingPortNameInputs, 961);            // DEVPRO
 // no other model can take it.
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_SOUND_MODULE        ((uint16_t)3)
 
+// The Windows MIDI Sequencer app, when it asks a device for its program list over MIDI-CI.
+#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_MIDI_SEQUENCER      ((uint16_t)4)
+
 
 // for PKEY_MIDI_DeviceIdentification
 struct MidiDeviceIdentityProperty

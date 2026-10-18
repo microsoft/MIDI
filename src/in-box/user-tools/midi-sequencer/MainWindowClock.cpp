@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "DialogParts.h"
 #include "MidiTimeCode.h"
 #include "StringResources.h"
 
@@ -15,126 +16,19 @@ namespace res = ::midisequencer::resources;
 
 namespace winrt::midisequencer::implementation
 {
+    using namespace dialogparts;
+
     namespace
     {
-        // The clock table's columns, the same in its heading and in every row (comp 6).
-        constexpr std::array<double, 7> ClockColumns{ 220, 200, 56, 100, 100, 112, 36 };
-        constexpr double ClockColumnSpacing{ 8 };
+        // The device and group lists, the same widths everywhere in the dialog.
+        constexpr double DeviceListWidth{ 220 };
+        constexpr double GroupListWidth{ 200 };
 
-        // The notes wrap to the table's width: the dialog scrolls sideways, so nothing else stops them.
-        constexpr double ClockTableWidth()
-        {
-            auto width = ClockColumnSpacing * static_cast<double>(ClockColumns.size() - 1);
-
-            for (auto const column : ClockColumns)
-            {
-                width += column;
-            }
-
-            return width;
-        }
+        // The notes wrap to this: the dialog scrolls sideways, so nothing else stops them.
+        constexpr double ClockPanelWidth{ 620 };
 
         // midiapp::MidiTimeCodeFrameRate values, in the order the list shows them.
         constexpr std::array<wchar_t const*, 4> RateNames{ L"TimeCodeRate24", L"TimeCodeRate25", L"TimeCodeRate2997", L"TimeCodeRate30" };
-
-        controls::Grid MakeClockRowGrid()
-        {
-            controls::Grid grid{};
-            grid.ColumnSpacing(ClockColumnSpacing);
-
-            for (auto const width : ClockColumns)
-            {
-                controls::ColumnDefinition column{};
-                column.Width(xaml::GridLength{ width, xaml::GridUnitType::Pixel });
-                grid.ColumnDefinitions().Append(column);
-            }
-
-            return grid;
-        }
-
-        void PlaceIn(controls::Grid const& grid, xaml::FrameworkElement const& element, int32_t column)
-        {
-            controls::Grid::SetColumn(element, column);
-            grid.Children().Append(element);
-        }
-
-        controls::TextBlock Heading(winrt::hstring const& text)
-        {
-            controls::TextBlock heading{};
-            heading.Text(text);
-            heading.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
-            heading.Margin(xaml::Thickness{ 0, 12, 0, 2 });
-            automation::AutomationProperties::SetHeadingLevel(heading, automation::Peers::AutomationHeadingLevel::Level2);
-            return heading;
-        }
-
-        controls::TextBlock Note(winrt::hstring const& text, media::Brush const& brush)
-        {
-            controls::TextBlock note{};
-            note.Text(text);
-            note.TextWrapping(xaml::TextWrapping::Wrap);
-            note.FontSize(12);
-            note.Foreground(brush);
-            return note;
-        }
-
-        controls::CheckBox TableCheck(bool value)
-        {
-            controls::CheckBox check{};
-            check.IsChecked(value);
-            check.MinWidth(0);
-            check.Padding(xaml::Thickness{ 0, 0, 0, 0 });
-            check.HorizontalAlignment(xaml::HorizontalAlignment::Center);
-            check.VerticalAlignment(xaml::VerticalAlignment::Center);
-            return check;
-        }
-
-        bool IsChecked(controls::CheckBox const& check)
-        {
-            return check.IsChecked() != nullptr && check.IsChecked().GetBoolean();
-        }
-
-        // One row of the clock table. The device a row started with is kept as it was saved
-        // until another is picked, so a device that isn't plugged in keeps its name.
-        struct ClockRow
-        {
-            seq::ClockOutputSetting Original{};
-            bool DeviceChanged{ false };
-            controls::Grid Grid{ nullptr };
-            controls::ComboBox Device{ nullptr };
-            controls::ComboBox Group{ nullptr };
-            controls::CheckBox Clock{ nullptr };
-            controls::CheckBox StartStop{ nullptr };
-            controls::CheckBox SongPosition{ nullptr };
-            controls::NumberBox Offset{ nullptr };
-            controls::Button Remove{ nullptr };
-        };
-
-        using ClockRows = std::vector<std::shared_ptr<ClockRow>>;
-
-        // The endpoint a list's choice means: the one saved, until the person picks another.
-        seq::EndpointRef ChosenEndpoint(controls::ComboBox const& combo, seq::EndpointRef const& original, bool changed)
-        {
-            if (!changed)
-            {
-                return original;
-            }
-
-            auto const choice = combo.SelectedItem().try_as<appshared::EndpointChoice>();
-
-            if (choice == nullptr || choice.EndpointDeviceId().empty())
-            {
-                return {};
-            }
-
-            return seq::EndpointRef{ std::wstring{ choice.DisplayName() }, std::wstring{ choice.EndpointDeviceId() } };
-        }
-
-        uint8_t ChosenGroup(controls::ComboBox const& combo, uint8_t fallback)
-        {
-            auto const choice = combo.SelectedItem().try_as<appshared::NamedChoice>();
-            return choice != nullptr ? static_cast<uint8_t>(std::clamp(choice.Value(), 0, 15)) : fallback;
-        }
     }
 
     void MainWindow::ShowClockDialog()
@@ -153,7 +47,7 @@ namespace winrt::midisequencer::implementation
                 controls::StackPanel panel{};
                 panel.Spacing(8);
                 panel.Padding(xaml::Thickness{ 0, 0, 16, 0 });
-                panel.MaxWidth(ClockTableWidth() + 16);
+                panel.MaxWidth(ClockPanelWidth);
 
                 panel.Children().Append(Note(res::GetString(L"ClockDialogIntro"), secondary));
 
@@ -199,14 +93,14 @@ namespace winrt::midisequencer::implementation
                 followRow.Margin(xaml::Thickness{ 28, 0, 0, 0 });
 
                 controls::ComboBox followDevice{};
-                followDevice.Width(ClockColumns[0]);
+                followDevice.Width(DeviceListWidth);
                 followDevice.ItemTemplate(endpointTemplate);
                 strong->FillEndpointCombo(followDevice, true, followEndpoint);
                 automation::AutomationProperties::SetName(followDevice, res::GetString(L"FollowDeviceName"));
                 followRow.Children().Append(followDevice);
 
                 controls::ComboBox followGroup{};
-                followGroup.Width(ClockColumns[1]);
+                followGroup.Width(GroupListWidth);
                 followGroup.ItemTemplate(namedTemplate);
                 strong->FillGroupCombo(followGroup, true, followEndpoint, follow.Group, false);
                 automation::AutomationProperties::SetName(followGroup, res::GetString(L"FollowGroupName"));
@@ -253,263 +147,62 @@ namespace winrt::midisequencer::implementation
                 fromDevice.Checked([enableFollowRow](auto&&, auto&&) { enableFollowRow(); });
                 fromDevice.Unchecked([enableFollowRow](auto&&, auto&&) { enableFollowRow(); });
 
-                // ---- devices that get the clock ----
+                // ---- devices that get the clock: what each one gets is chosen in Studio setup ----
 
                 panel.Children().Append(Heading(res::GetString(L"ClockSendHeading")));
 
-                auto const header = MakeClockRowGrid();
+                std::vector<std::wstring> followers{};
 
-                for (auto const& [key, column] : std::array<std::pair<wchar_t const*, int32_t>, 6>{ {
-                    { L"ClockColumnDevice", 0 }, { L"ClockColumnGroup", 1 }, { L"ClockColumnClock", 2 },
-                    { L"ClockColumnStartStop", 3 }, { L"ClockColumnSongPosition", 4 }, { L"ClockColumnOffset", 5 } } })
+                for (auto const& output : settings.ClockOutputs())
                 {
-                    controls::TextBlock text{};
-                    text.Text(res::GetString(key));
-                    text.FontSize(12);
-                    text.Foreground(secondary);
-                    text.TextWrapping(xaml::TextWrapping::Wrap);
-                    text.HorizontalAlignment(column >= 2 && column <= 4 ? xaml::HorizontalAlignment::Center : xaml::HorizontalAlignment::Left);
-                    text.TextAlignment(column >= 2 && column <= 4 ? xaml::TextAlignment::Center : xaml::TextAlignment::Left);
+                    seq::EndpointRef const endpoint{ output.EndpointName, output.EndpointId };
 
-                    if (column == 5)
+                    // A group Studio setup turned off gets nothing.
+                    if ((strong->GroupsTurnedOff(endpoint, true) & (1u << (output.Group & 0x0F))) != 0)
                     {
-                        controls::ToolTipService::SetToolTip(text, winrt::box_value(res::GetString(L"ClockOffsetToolTip")));
+                        continue;
                     }
 
-                    PlaceIn(header, text, column);
+                    auto const summary = strong->m_directory->Resolve(endpoint);
+                    auto name = summary.has_value() ? summary->Live.Name : output.EndpointName;
+
+                    if (name.empty())
+                    {
+                        name = std::wstring{ res::GetString(L"UnknownEndpoint") };
+                    }
+
+                    if (std::find(followers.begin(), followers.end(), name) == followers.end())
+                    {
+                        followers.push_back(std::move(name));
+                    }
                 }
 
-                panel.Children().Append(header);
+                panel.Children().Append(Note(followers.empty() ? res::GetString(L"ClockNoDevices") : res::FormatString(L"ClockSentToFormat", JoinNames(followers)), secondary));
+                panel.Children().Append(Note(res::GetString(L"ClockStudioHelp"), secondary));
 
-                controls::StackPanel rowsPanel{};
-                rowsPanel.Spacing(6);
-                panel.Children().Append(rowsPanel);
-
-                auto const empty = Note(res::GetString(L"ClockNoDevices"), secondary);
-                panel.Children().Append(empty);
-
-                auto const rows = std::make_shared<ClockRows>();
-                std::weak_ptr<ClockRows> const weakRows{ rows };
-
-                controls::Button add{};
-                add.Style(strong->RootGrid().Resources().Lookup(winrt::box_value(L"SmallButtonStyle")).as<xaml::Style>());
+                controls::Button studio{};
+                studio.Style(strong->RootGrid().Resources().Lookup(winrt::box_value(L"SmallButtonStyle")).as<xaml::Style>());
+                studio.HorizontalAlignment(xaml::HorizontalAlignment::Left);
 
                 {
                     controls::StackPanel content{};
                     content.Orientation(controls::Orientation::Horizontal);
                     content.Spacing(6);
 
-                    controls::FontIcon plus{};
-                    plus.Glyph(L"\uE710");
-                    plus.FontSize(12);
-                    content.Children().Append(plus);
+                    controls::FontIcon glyph{};
+                    glyph.Glyph(L"\uE772");
+                    glyph.FontSize(12);
+                    content.Children().Append(glyph);
 
                     controls::TextBlock label{};
-                    label.Text(res::GetString(L"ClockAddDevice"));
+                    label.Text(res::GetString(L"StudioSetupButton"));
                     content.Children().Append(label);
 
-                    add.Content(content);
-                    automation::AutomationProperties::SetName(add, res::GetString(L"ClockAddDevice"));
+                    studio.Content(content);
+                    automation::AutomationProperties::SetName(studio, res::GetString(L"StudioSetupButton"));
                 }
 
-                // Handlers hold weak references: a control that held its own panel would never be freed.
-                auto const refresh = [weakEmpty = winrt::make_weak(empty), weakAdd = winrt::make_weak(add), weakRows]()
-                {
-                    auto const list = weakRows.lock();
-                    auto const emptyText = weakEmpty.get();
-                    auto const addButton = weakAdd.get();
-
-                    if (list && emptyText && addButton)
-                    {
-                        emptyText.Visibility(list->empty() ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-                        addButton.IsEnabled(list->size() < seq::AppSettings::MaximumClockOutputs);
-                    }
-                };
-
-                // Each control in a row says which device it's for, or a screen reader hears the same
-                // names on every row.
-                auto const nameRow = [](ClockRow const& row)
-                {
-                    auto const choice = row.Device.SelectedItem().try_as<appshared::EndpointChoice>();
-                    auto const device = choice != nullptr && !choice.EndpointDeviceId().empty()
-                        ? std::wstring{ choice.DisplayName() }
-                        : std::wstring{ res::GetString(L"ClockRowNoDevice") };
-
-                    automation::AutomationProperties::SetName(row.Device, res::FormatString(L"ClockRowDeviceFormat", device));
-                    automation::AutomationProperties::SetName(row.Group, res::FormatString(L"ClockRowGroupFormat", device));
-                    automation::AutomationProperties::SetName(row.Clock, res::FormatString(L"ClockRowClockFormat", device));
-                    automation::AutomationProperties::SetName(row.StartStop, res::FormatString(L"ClockRowStartStopFormat", device));
-                    automation::AutomationProperties::SetName(row.SongPosition, res::FormatString(L"ClockRowSongPositionFormat", device));
-                    automation::AutomationProperties::SetName(row.Offset, res::FormatString(L"ClockRowOffsetFormat", device));
-                    automation::AutomationProperties::SetName(row.Remove, res::FormatString(L"ClockRowRemoveFormat", device));
-                    controls::ToolTipService::SetToolTip(row.Remove, winrt::box_value(res::FormatString(L"ClockRowRemoveFormat", device)));
-                };
-
-                auto const addRow = [weak, weakRows, weakPanel = winrt::make_weak(rowsPanel), refresh, nameRow, endpointTemplate, namedTemplate](seq::ClockOutputSetting const& setting)
-                {
-                    auto window = weak.get();
-                    auto list = weakRows.lock();
-                    auto rowsHost = weakPanel.get();
-
-                    if (!window || !list || !rowsHost)
-                    {
-                        return;
-                    }
-
-                    auto row = std::make_shared<ClockRow>();
-                    row->Original = setting;
-                    row->Grid = MakeClockRowGrid();
-
-                    seq::EndpointRef const endpoint{ setting.EndpointName, setting.EndpointId };
-
-                    row->Device = controls::ComboBox{};
-                    row->Device.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-                    row->Device.ItemTemplate(endpointTemplate);
-                    window->FillEndpointCombo(row->Device, false, endpoint);
-                    PlaceIn(row->Grid, row->Device, 0);
-
-                    row->Group = controls::ComboBox{};
-                    row->Group.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-                    row->Group.ItemTemplate(namedTemplate);
-                    window->FillGroupCombo(row->Group, false, endpoint, setting.Group, false);
-                    PlaceIn(row->Grid, row->Group, 1);
-
-                    row->Clock = TableCheck(setting.Clock);
-                    PlaceIn(row->Grid, row->Clock, 2);
-
-                    row->StartStop = TableCheck(setting.StartStop);
-                    PlaceIn(row->Grid, row->StartStop, 3);
-
-                    row->SongPosition = TableCheck(setting.SongPosition);
-                    PlaceIn(row->Grid, row->SongPosition, 4);
-
-                    row->Offset = controls::NumberBox{};
-                    row->Offset.Minimum(-seq::AppSettings::MaximumClockOffsetMilliseconds);
-                    row->Offset.Maximum(seq::AppSettings::MaximumClockOffsetMilliseconds);
-                    row->Offset.Value(setting.OffsetMilliseconds);
-                    row->Offset.SmallChange(1);
-                    row->Offset.LargeChange(10);
-                    row->Offset.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
-                    row->Offset.VerticalAlignment(xaml::VerticalAlignment::Center);
-                    PlaceIn(row->Grid, row->Offset, 5);
-
-                    row->Remove = controls::Button{};
-                    row->Remove.Width(32);
-                    row->Remove.Height(32);
-                    row->Remove.Padding(xaml::Thickness{ 0, 0, 0, 0 });
-                    row->Remove.Background(window->BrushFor(winrt::Microsoft::UI::Colors::Transparent()));
-                    row->Remove.BorderThickness(xaml::Thickness{ 0, 0, 0, 0 });
-
-                    controls::FontIcon bin{};
-                    bin.Glyph(L"\uE74D");
-                    bin.FontSize(13);
-                    row->Remove.Content(bin);
-                    PlaceIn(row->Grid, row->Remove, 6);
-
-                    nameRow(*row);
-
-                    std::weak_ptr<ClockRow> const weakRow{ row };
-
-                    row->Device.SelectionChanged([weak, weakRow, nameRow](auto&&, auto&&)
-                    {
-                        auto const window = weak.get();
-                        auto const current = weakRow.lock();
-
-                        if (!window || !current)
-                        {
-                            return;
-                        }
-
-                        current->DeviceChanged = true;
-                        window->FillGroupCombo(current->Group, false, ChosenEndpoint(current->Device, {}, true), 0, false);
-                        nameRow(*current);
-                    });
-
-                    row->Remove.Click([weakRow, weakRows, weakPanel = winrt::make_weak(rowsHost), refresh](auto&&, auto&&)
-                    {
-                        auto const current = weakRow.lock();
-                        auto const list = weakRows.lock();
-                        auto const host = weakPanel.get();
-
-                        if (!current || !list || !host)
-                        {
-                            return;
-                        }
-
-                        uint32_t index{ 0 };
-
-                        if (host.Children().IndexOf(current->Grid, index))
-                        {
-                            host.Children().RemoveAt(index);
-                        }
-
-                        std::erase(*list, current);
-                        refresh();
-                    });
-
-                    rowsHost.Children().Append(row->Grid);
-                    list->push_back(std::move(row));
-                    refresh();
-                };
-
-                for (auto const& output : settings.ClockOutputs())
-                {
-                    addRow(output);
-                }
-
-                refresh();
-
-                add.Click([addRow, weakRows](auto&&, auto&&)
-                {
-                    auto const list = weakRows.lock();
-
-                    if (list && list->size() < seq::AppSettings::MaximumClockOutputs)
-                    {
-                        addRow(seq::ClockOutputSetting{});
-
-                        // Straight to the new row's device list.
-                        if (!list->empty())
-                        {
-                            list->back()->Device.Focus(xaml::FocusState::Programmatic);
-                        }
-                    }
-                });
-
-                controls::Grid actions{};
-                actions.ColumnSpacing(16);
-
-                {
-                    controls::ColumnDefinition first{};
-                    first.Width(xaml::GridLength{ 1, xaml::GridUnitType::Auto });
-                    actions.ColumnDefinitions().Append(first);
-
-                    controls::ColumnDefinition second{};
-                    second.Width(xaml::GridLength{ 1, xaml::GridUnitType::Star });
-                    actions.ColumnDefinitions().Append(second);
-                }
-
-                add.VerticalAlignment(xaml::VerticalAlignment::Top);
-                PlaceIn(actions, add, 0);
-                panel.Children().Append(actions);
-
-                controls::CheckBox sendTempo{};
-                sendTempo.IsChecked(settings.ClockSendsTempo());
-                sendTempo.Margin(xaml::Thickness{ 0, 4, 0, 0 });
-                automation::AutomationProperties::SetName(sendTempo, res::GetString(L"ClockSendTempo"));
-
-                {
-                    controls::StackPanel content{};
-                    content.Spacing(2);
-
-                    controls::TextBlock title{};
-                    title.Text(res::GetString(L"ClockSendTempo"));
-                    title.TextWrapping(xaml::TextWrapping::Wrap);
-                    content.Children().Append(title);
-                    content.Children().Append(Note(res::GetString(L"ClockSendTempoHelp"), secondary));
-                    sendTempo.Content(content);
-                }
-
-                panel.Children().Append(sendTempo);
+                panel.Children().Append(studio);
 
                 // ---- MIDI Time Code ----
 
@@ -538,14 +231,14 @@ namespace winrt::midisequencer::implementation
                 timeCodeRow.Children().Append(sendTo);
 
                 controls::ComboBox timeCodeDevice{};
-                timeCodeDevice.Width(ClockColumns[0]);
+                timeCodeDevice.Width(DeviceListWidth);
                 timeCodeDevice.ItemTemplate(endpointTemplate);
                 strong->FillEndpointCombo(timeCodeDevice, false, timeCodeEndpoint);
                 automation::AutomationProperties::SetName(timeCodeDevice, res::GetString(L"TimeCodeDeviceName"));
                 timeCodeRow.Children().Append(timeCodeDevice);
 
                 controls::ComboBox timeCodeGroup{};
-                timeCodeGroup.Width(ClockColumns[1]);
+                timeCodeGroup.Width(GroupListWidth);
                 timeCodeGroup.ItemTemplate(namedTemplate);
                 strong->FillGroupCombo(timeCodeGroup, false, timeCodeEndpoint, timeCode.Group, false);
                 automation::AutomationProperties::SetName(timeCodeGroup, res::GetString(L"TimeCodeGroupName"));
@@ -644,7 +337,7 @@ namespace winrt::midisequencer::implementation
 
                 controls::ContentDialog dialog{};
                 dialog.XamlRoot(strong->Content().XamlRoot());
-                dialog.Resources().Insert(winrt::box_value(L"ContentDialogMaxWidth"), winrt::box_value(940.0));
+                dialog.Resources().Insert(winrt::box_value(L"ContentDialogMaxWidth"), winrt::box_value(ClockPanelWidth + 80.0));
                 dialog.Title(winrt::box_value(res::GetString(L"ClockDialogTitle")));
                 dialog.Content(scroller);
                 dialog.PrimaryButtonText(res::GetString(L"DialogDone"));
@@ -654,28 +347,25 @@ namespace winrt::midisequencer::implementation
 
                 // Following needs a device; time code that's on needs a device and a start it can
                 // read. The dialog stays open to say so.
-                dialog.PrimaryButtonClick([fromDevice, followDevice, followEndpoint, followChanged, followError, timeCodeOn, timeCodeDevice, rate, start, timeCodeError, timeCodeChanged, timeCodeEndpoint](auto&&, controls::ContentDialogButtonClickEventArgs const& args)
+                auto const valid = [fromDevice, followDevice, followEndpoint, followChanged, followError, timeCodeOn, timeCodeDevice, rate, start, timeCodeError, timeCodeChanged, timeCodeEndpoint]()
                 {
-                    if (fromDevice.IsChecked() != nullptr && fromDevice.IsChecked().GetBoolean() &&
-                        ChosenEndpoint(followDevice, followEndpoint, *followChanged).IsEmpty())
+                    if (IsChecked(fromDevice) && ChosenEndpoint(followDevice, followEndpoint, *followChanged).IsEmpty())
                     {
                         followError.Text(res::GetString(L"FollowNoDevice"));
                         followError.Visibility(xaml::Visibility::Visible);
-                        args.Cancel(true);
-                        return;
+                        return false;
                     }
 
                     if (!timeCodeOn.IsOn())
                     {
-                        return;
+                        return true;
                     }
 
                     if (ChosenEndpoint(timeCodeDevice, timeCodeEndpoint, *timeCodeChanged).IsEmpty())
                     {
                         timeCodeError.Text(res::GetString(L"TimeCodeNoDevice"));
                         timeCodeError.Visibility(xaml::Visibility::Visible);
-                        args.Cancel(true);
-                        return;
+                        return false;
                     }
 
                     midiapp::MidiTimeCodePosition position{};
@@ -684,43 +374,41 @@ namespace winrt::midisequencer::implementation
                     {
                         timeCodeError.Text(res::GetString(L"TimeCodeBadStart"));
                         timeCodeError.Visibility(xaml::Visibility::Visible);
+                        return false;
+                    }
+
+                    return true;
+                };
+
+                dialog.PrimaryButtonClick([valid](auto&&, controls::ContentDialogButtonClickEventArgs const& args)
+                {
+                    if (!valid())
+                    {
                         args.Cancel(true);
+                    }
+                });
+
+                // Only one dialog can be open at a time, so this one keeps what's chosen and closes
+                // before Studio setup opens.
+                auto const toStudio = std::make_shared<bool>(false);
+
+                studio.Click([valid, toStudio, weakDialog = winrt::make_weak(dialog)](auto&&, auto&&)
+                {
+                    if (valid())
+                    {
+                        *toStudio = true;
+
+                        if (auto const shown = weakDialog.get())
+                        {
+                            shown.Hide();
+                        }
                     }
                 });
 
                 auto const result = co_await dialog.ShowAsync();
 
-                if (result == controls::ContentDialogResult::Primary && !strong->m_closing)
+                if ((result == controls::ContentDialogResult::Primary || *toStudio) && !strong->m_closing)
                 {
-                    std::vector<seq::ClockOutputSetting> outputs{};
-
-                    for (auto const& row : *rows)
-                    {
-                        seq::EndpointRef const original{ row->Original.EndpointName, row->Original.EndpointId };
-                        auto const endpoint = ChosenEndpoint(row->Device, original, row->DeviceChanged);
-
-                        if (endpoint.IsEmpty())
-                        {
-                            continue;
-                        }
-
-                        auto const offset = row->Offset.Value();
-
-                        seq::ClockOutputSetting output{};
-                        output.EndpointName = endpoint.Name;
-                        output.EndpointId = endpoint.Id;
-                        output.Group = ChosenGroup(row->Group, row->Original.Group);
-                        output.Clock = IsChecked(row->Clock);
-                        output.StartStop = IsChecked(row->StartStop);
-                        output.SongPosition = IsChecked(row->SongPosition);
-                        output.OffsetMilliseconds = std::isnan(offset) ? 0 : static_cast<int32_t>(std::clamp(std::lround(offset),
-                            -static_cast<long>(seq::AppSettings::MaximumClockOffsetMilliseconds), static_cast<long>(seq::AppSettings::MaximumClockOffsetMilliseconds)));
-                        outputs.push_back(std::move(output));
-                    }
-
-                    settings.ClockOutputs(outputs);
-                    settings.ClockSendsTempo(IsChecked(sendTempo));
-
                     auto updated = timeCode;
                     auto const endpoint = ChosenEndpoint(timeCodeDevice, timeCodeEndpoint, *timeCodeChanged);
                     updated.Enabled = timeCodeOn.IsOn() && !endpoint.IsEmpty();
@@ -741,7 +429,7 @@ namespace winrt::midisequencer::implementation
 
                     auto followUpdated = follow;
                     auto const followChosen = ChosenEndpoint(followDevice, followEndpoint, *followChanged);
-                    followUpdated.Enabled = fromDevice.IsChecked() != nullptr && fromDevice.IsChecked().GetBoolean() && !followChosen.IsEmpty();
+                    followUpdated.Enabled = IsChecked(fromDevice) && !followChosen.IsEmpty();
 
                     if (!followChosen.IsEmpty())
                     {
@@ -762,8 +450,10 @@ namespace winrt::midisequencer::implementation
                     strong->UpdateStatusBar();
                 }
 
-                // The rows' controls refer back to the list; let them go with the dialog.
-                rows->clear();
+                if (*toStudio && !strong->m_closing)
+                {
+                    strong->ShowStudioSetup();
+                }
             }
             MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the clock settings.")
         }(get_strong());

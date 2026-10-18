@@ -135,6 +135,9 @@
   <data name="MenuOpen.Text" xml:space="preserve">
     <value>Open…</value>
   </data>
+  <data name="MenuOpenRecent.Text" xml:space="preserve">
+    <value>Open recent…</value>
+  </data>
   <data name="MenuSave.Text" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -412,9 +415,6 @@
   <data name="ClockColumnDevice" xml:space="preserve">
     <value>Device</value>
   </data>
-  <data name="ClockColumnGroup" xml:space="preserve">
-    <value>Group</value>
-  </data>
   <data name="ClockColumnClock" xml:space="preserve">
     <value>Clock</value>
   </data>
@@ -435,12 +435,6 @@
   </data>
   <data name="ClockAddDevice" xml:space="preserve">
     <value>Add a device</value>
-  </data>
-  <data name="ClockSendTempo" xml:space="preserve">
-    <value>Also send the tempo itself to devices that speak MIDI 2.0</value>
-  </data>
-  <data name="ClockSendTempoHelp" xml:space="preserve">
-    <value>A MIDI 2.0 Set Tempo message, so they know a change is coming before the clock shows it.</value>
   </data>
   <data name="ClockRowNoDevice" xml:space="preserve">
     <value>the new row</value>
@@ -865,6 +859,106 @@
   <data name="LauncherToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Show the clip launcher</value>
   </data>
+  <data name="MixerToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show the MIDI Mixer</value>
+  </data>
+  <data name="MixerToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show the MIDI Mixer: volume, pan and sends for each track, sent to its device as MIDI</value>
+  </data>
+  <data name="MixerToggleText.Text" xml:space="preserve">
+    <value>MIDI Mixer</value>
+  </data>
+
+  <!-- ==================================== Mixer ==================================== -->
+  <data name="MixerTitle.Text" xml:space="preserve">
+    <value>MIDI Mixer</value>
+  </data>
+  <data name="MixerHint.Text" xml:space="preserve">
+    <value>Volume, pan and sends for each track. A change is kept as the track's start-up value, or on its lane at the playhead. With W on, playing records your moves into a lane. Double-click a knob or fader to put it back.</value>
+  </data>
+  <data name="MixerCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Close the MIDI Mixer</value>
+  </data>
+  <data name="MixerCloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close the MIDI Mixer</value>
+  </data>
+  <data name="MixerEmpty" xml:space="preserve">
+    <value>Add a track to see its volume, pan and sends here.</value>
+  </data>
+  <data name="MixerVolume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="MixerPan" xml:space="preserve">
+    <value>Pan</value>
+  </data>
+  <data name="MixerPanShort" xml:space="preserve">
+    <value>Pan</value>
+    <comment>A short label beside a small slider, three or four letters.</comment>
+  </data>
+  <data name="MixerExpression" xml:space="preserve">
+    <value>Expression</value>
+  </data>
+  <data name="MixerExpressionShort" xml:space="preserve">
+    <value>Exp</value>
+    <comment>Short for Expression, beside a small slider.</comment>
+  </data>
+  <data name="MixerReverb" xml:space="preserve">
+    <value>Reverb</value>
+  </data>
+  <data name="MixerReverbShort" xml:space="preserve">
+    <value>Rev</value>
+    <comment>Short for Reverb, beside a small slider.</comment>
+  </data>
+  <data name="MixerChorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="MixerChorusShort" xml:space="preserve">
+    <value>Cho</value>
+    <comment>Short for Chorus, beside a small slider.</comment>
+  </data>
+  <data name="MixerPanCenter" xml:space="preserve">
+    <value>C</value>
+    <comment>Pan in the middle, short for center.</comment>
+  </data>
+  <data name="MixerPanLeftFormat" xml:space="preserve">
+    <value>L{0}</value>
+    <comment>Pan to the left by {0}.</comment>
+  </data>
+  <data name="MixerPanRightFormat" xml:space="preserve">
+    <value>R{0}</value>
+    <comment>Pan to the right by {0}.</comment>
+  </data>
+  <data name="MixerPanCenterSpoken" xml:space="preserve">
+    <value>center</value>
+    <comment>What a screen reader says when pan is in the middle.</comment>
+  </data>
+  <data name="MixerPanLeftSpokenFormat" xml:space="preserve">
+    <value>left {0}</value>
+    <comment>What a screen reader says for pan to the left by {0}.</comment>
+  </data>
+  <data name="MixerPanRightSpokenFormat" xml:space="preserve">
+    <value>right {0}</value>
+    <comment>What a screen reader says for pan to the right by {0}.</comment>
+  </data>
+  <data name="MixerMeterToolTip" xml:space="preserve">
+    <value>How hard this track's notes are playing. A note shows until it's let go, not for as long as the sound rings.</value>
+    <comment>The meter beside a track's volume fader. It shows note velocity from note on to note off.</comment>
+  </data>
+  <data name="MixerControlNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} is a control such as Volume, {1} the track's name.</comment>
+  </data>
+  <data name="MixerControlTipFormat" xml:space="preserve">
+    <value>{0} (controller {1})</value>
+    <comment>{0} is a control such as Volume, {1} the MIDI controller number it sends.</comment>
+  </data>
+  <data name="MixerFollowsLane" xml:space="preserve">
+    <value>Follows its automation lane</value>
+  </data>
+  <data name="MixerWriteFormat" xml:space="preserve">
+    <value>Write automation for {0}: while the sequence plays, moving a control records it into a lane</value>
+    <comment>{0} is a track's name.</comment>
+  </data>
   <data name="AddTrackRowText" xml:space="preserve">
     <value>Add a track</value>
   </data>
@@ -1021,6 +1115,46 @@
   </data>
   <data name="MenuMoveToFolder" xml:space="preserve">
     <value>Move to folder</value>
+  </data>
+  <data name="MenuCompact" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="MenuCompactTracks" xml:space="preserve">
+    <value>Compact the selected tracks</value>
+  </data>
+  <data name="MenuStandardHeight" xml:space="preserve">
+    <value>Standard height</value>
+  </data>
+  <data name="MenuRenameTag" xml:space="preserve">
+    <value>Rename tag…</value>
+  </data>
+  <data name="MenuDeleteTag" xml:space="preserve">
+    <value>Delete tag</value>
+  </data>
+  <data name="MenuTagStandardColor" xml:space="preserve">
+    <value>Standard</value>
+    <comment>The color a tag has when no color was chosen for it.</comment>
+  </data>
+  <data name="RenameTagTitle" xml:space="preserve">
+    <value>Rename tag</value>
+  </data>
+  <data name="HeaderSplitterName" xml:space="preserve">
+    <value>Track list width</value>
+  </data>
+  <data name="HeaderSplitterTip" xml:space="preserve">
+    <value>Drag to make the track list wider or narrower. Double-click to put it back.</value>
+  </data>
+  <data name="LauncherSplitterName" xml:space="preserve">
+    <value>Clip launcher width</value>
+  </data>
+  <data name="LauncherSplitterTip" xml:space="preserve">
+    <value>Drag to make the clip launcher wider or narrower. Double-click to put it back.</value>
+  </data>
+  <data name="SplitterHelp" xml:space="preserve">
+    <value>Use the Left and Right arrow keys to change the width. Hold Shift for small steps.</value>
+  </data>
+  <data name="RowGripTip" xml:space="preserve">
+    <value>Drag to make this row taller or shorter. Double-click for the standard height.</value>
   </data>
   <data name="MenuTopLevel" xml:space="preserve">
     <value>Out of its folder</value>
@@ -1546,6 +1680,28 @@
   <data name="UndoAddTag" xml:space="preserve">
     <value>Add tag</value>
   </data>
+  <data name="UndoMoveTag" xml:space="preserve">
+    <value>Move tag</value>
+  </data>
+  <data name="UndoRenameTag" xml:space="preserve">
+    <value>Rename tag</value>
+  </data>
+  <data name="UndoTagColor" xml:space="preserve">
+    <value>Tag color</value>
+  </data>
+  <data name="UndoDeleteTag" xml:space="preserve">
+    <value>Delete tag</value>
+  </data>
+  <data name="UndoCopyClip" xml:space="preserve">
+    <value>Copy clip</value>
+  </data>
+  <data name="UndoRecordAutomation" xml:space="preserve">
+    <value>Record automation</value>
+  </data>
+  <data name="UndoMixerFormat" xml:space="preserve">
+    <value>Change {0}</value>
+    <comment>{0} is a mixer control's name, such as Volume or Pan.</comment>
+  </data>
   <data name="UndoAddScene" xml:space="preserve">
     <value>Add scene</value>
   </data>
@@ -1809,7 +1965,7 @@
     <value>Start-up messages</value>
   </data>
   <data name="StartupNone" xml:space="preserve">
-    <value>None. Messages here are sent before the first note, such as a bank and program.</value>
+    <value>Nothing else. The MIDI Mixer adds volume, pan and the rest here when you set them.</value>
   </data>
   <data name="NoSourceChoice" xml:space="preserve">
     <value>Nothing</value>
@@ -2387,6 +2543,9 @@
   <data name="UndoStepVelocity" xml:space="preserve">
     <value>Change velocity</value>
   </data>
+  <data name="UndoMovePatternLane" xml:space="preserve">
+    <value>Move lane</value>
+  </data>
   <data name="UndoPatternSettings" xml:space="preserve">
     <value>Change pattern</value>
   </data>
@@ -2578,9 +2737,6 @@
   <data name="GeneratorTypeLabel.Text" xml:space="preserve">
     <value>Type</value>
   </data>
-  <data name="GeneratorTypeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Generator type</value>
-  </data>
   <data name="GeneratorBarsLabel.Text" xml:space="preserve">
     <value>Bars</value>
   </data>
@@ -2594,10 +2750,92 @@
     <value>How long each step is</value>
   </data>
   <data name="GeneratorChangesToggle.Content" xml:space="preserve">
-    <value>Changes each pass</value>
+    <value>Changes</value>
   </data>
   <data name="GeneratorChangesToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Off, every pass plays the same. On, chance and choices are made again each time round, from the seed.</value>
+    <value>Chance and choices are made again each time round, from the seed and the pass number</value>
+  </data>
+  <data name="GeneratorSameToggle.Content" xml:space="preserve">
+    <value>Same</value>
+  </data>
+  <data name="GeneratorSameToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Every pass plays what the first one did</value>
+  </data>
+  <data name="GeneratorEachPassLabel.Text" xml:space="preserve">
+    <value>Each pass</value>
+  </data>
+  <data name="GeneratorTypeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Generator type</value>
+  </data>
+  <data name="GeneratorSeedLabel.Text" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="GeneratorSeedBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="GeneratorSeedBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>The number chance starts from, in hex. The same seed always plays the same way. The button next to it picks a new one.</value>
+  </data>
+  <data name="GeneratorNewSeedButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New seed</value>
+  </data>
+  <data name="GeneratorNewSeedButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pick a new seed, so chance and choices come out differently</value>
+  </data>
+  <data name="GeneratorSeedInvalid" xml:space="preserve">
+    <value>A seed is up to eight hex digits, 0 to 9 and A to F.</value>
+  </data>
+  <data name="UndoSeed" xml:space="preserve">
+    <value>Change seed</value>
+  </data>
+  <data name="GeneratorRingsDrawing" xml:space="preserve">
+    <value>The rings, drawn</value>
+  </data>
+  <data name="GeneratorRingsTip" xml:space="preserve">
+    <value>Drag around a ring to turn it. Use the mouse wheel on a ring to add or take away pulses, and hold Shift to add or take away steps.</value>
+  </data>
+  <data name="GeneratorWhatItPlays" xml:space="preserve">
+    <value>What it plays, two bars</value>
+  </data>
+  <data name="GeneratorPassStepFormat" xml:space="preserve">
+    <value>Pass {0} · step {1} of {2}</value>
+  </data>
+  <data name="GeneratorStepsFormat" xml:space="preserve">
+    <value>{0} steps each pass</value>
+  </data>
+  <data name="GeneratorRange" xml:space="preserve">
+    <value>Range</value>
+  </data>
+  <data name="GeneratorRangeTo" xml:space="preserve">
+    <value>to</value>
+    <comment>Between two values of a range, as in "E3 to E4".</comment>
+  </data>
+  <data name="GeneratorVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="GeneratorFirstPasses" xml:space="preserve">
+    <value>The first four passes (new notes are outlined)</value>
+  </data>
+  <data name="GeneratorEveryPass" xml:space="preserve">
+    <value>What every pass plays</value>
+  </data>
+  <data name="GeneratorPassFormat" xml:space="preserve">
+    <value>Pass {0}</value>
+  </data>
+  <data name="GeneratorFirstPass" xml:space="preserve">
+    <value>First pass</value>
+  </data>
+  <data name="GeneratorEveryPassDetail" xml:space="preserve">
+    <value>Same each pass</value>
+  </data>
+  <data name="GeneratorNewNoteOne" xml:space="preserve">
+    <value>1 new note</value>
+  </data>
+  <data name="GeneratorNewNotesFormat" xml:space="preserve">
+    <value>{0} new notes</value>
+  </data>
+  <data name="GeneratorMakeNotesFromPasses" xml:space="preserve">
+    <value>Make notes from these passes</value>
   </data>
   <data name="GeneratorTypeEuclidean" xml:space="preserve">
     <value>Euclidean rhythm</value>
@@ -2639,10 +2877,10 @@
     <value>Rotate</value>
   </data>
   <data name="GeneratorVelocityHeader" xml:space="preserve">
-    <value>Velocity (%)</value>
+    <value>Velocity</value>
   </data>
   <data name="GeneratorChanceHeader" xml:space="preserve">
-    <value>Chance (%)</value>
+    <value>Chance</value>
   </data>
   <data name="GeneratorRingNoteFormat" xml:space="preserve">
     <value>Ring {0} note</value>
@@ -2687,22 +2925,22 @@
     <value>Highest note</value>
   </data>
   <data name="GeneratorBusy" xml:space="preserve">
-    <value>How busy (%)</value>
+    <value>How busy</value>
   </data>
   <data name="GeneratorKeep" xml:space="preserve">
-    <value>Keep from the last pass (%)</value>
+    <value>Keep from the last pass</value>
   </data>
   <data name="GeneratorKeepHelp" xml:space="preserve">
     <value>100% plays the same notes every pass. 0% is new every time.</value>
   </data>
   <data name="GeneratorKeepOff" xml:space="preserve">
-    <value>Turn on Changes each pass to use this.</value>
+    <value>Choose Changes under Each pass to use this.</value>
   </data>
   <data name="GeneratorVelocityFrom" xml:space="preserve">
-    <value>Velocity from (%)</value>
+    <value>Lowest velocity</value>
   </data>
   <data name="GeneratorVelocityTo" xml:space="preserve">
-    <value>Velocity to (%)</value>
+    <value>Highest velocity</value>
   </data>
   <data name="GeneratorNoteLength" xml:space="preserve">
     <value>Note length (% of a step)</value>
@@ -2742,6 +2980,9 @@
   </data>
   <data name="ArpOrderRandom" xml:space="preserve">
     <value>Random</value>
+  </data>
+  <data name="ArpRate" xml:space="preserve">
+    <value>Rate</value>
   </data>
   <data name="ArpOctaves" xml:space="preserve">
     <value>Octaves</value>
@@ -3080,5 +3321,526 @@
   <data name="ImportedWithCopyrightFormat" xml:space="preserve">
     <value>{0}, “{1}”</value>
     <comment>{0} is a file name. {1} is the copyright notice in that file.</comment>
+  </data>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>Goes between the names in a list, such as the tracks that play to a device. Keep the space.</comment>
+  </data>
+  <data name="ProtocolMidi1" xml:space="preserve">
+    <value>MIDI 1.0</value>
+  </data>
+  <data name="ProtocolMidi1Cable" xml:space="preserve">
+    <value>MIDI 1.0 at 5-pin cable speed</value>
+    <comment>A group that stands for an old MIDI cable, which carries about a thousand messages a second.</comment>
+  </data>
+  <data name="ProtocolMidi2" xml:space="preserve">
+    <value>MIDI 2.0</value>
+  </data>
+  <data name="GroupsRangeFormat" xml:space="preserve">
+    <value>Groups {0}–{1}</value>
+    <comment>{0} and {1} are the first and last group numbers.</comment>
+  </data>
+  <data name="SourceDetailsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>About the device it records from</value>
+  </data>
+  <data name="SourceDetailsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>About the device it records from</value>
+  </data>
+  <data name="DestinationDetailsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>About the device it plays to</value>
+  </data>
+  <data name="DestinationDetailsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>About the device it plays to</value>
+  </data>
+  <data name="DeviceDetailsNameFormat" xml:space="preserve">
+    <value>About {0}</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="DeviceNotConnected" xml:space="preserve">
+    <value>Not connected. The sequence keeps it and uses it again when it's back.</value>
+  </data>
+  <data name="DeviceNotConnectedShort" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="DeviceUsesHeading" xml:space="preserve">
+    <value>In this sequence</value>
+  </data>
+  <data name="DeviceUsesPlaysFormat" xml:space="preserve">
+    <value>Tracks that play to it: {0}</value>
+    <comment>{0} is a list of track names.</comment>
+  </data>
+  <data name="DeviceUsesRecordsFormat" xml:space="preserve">
+    <value>Tracks that record from it: {0}</value>
+    <comment>{0} is a list of track names.</comment>
+  </data>
+  <data name="DeviceUsesMetronome" xml:space="preserve">
+    <value>The metronome clicks on it.</value>
+  </data>
+  <data name="DeviceUsesSyncFormat" xml:space="preserve">
+    <value>Group {0} gets: {1}</value>
+    <comment>{0} is a group number. {1} is a list such as "Clock, Start and stop, Tempo".</comment>
+  </data>
+  <data name="DeviceUsesTimeCodeFormat" xml:space="preserve">
+    <value>Group {0} gets MIDI Time Code.</value>
+    <comment>{0} is a group number.</comment>
+  </data>
+  <data name="DeviceUsesFollowFormat" xml:space="preserve">
+    <value>The sequencer follows its clock on group {0}.</value>
+    <comment>{0} is a group number.</comment>
+  </data>
+  <data name="DeviceUsesNothing" xml:space="preserve">
+    <value>Nothing in this sequence uses it.</value>
+  </data>
+  <data name="DeviceDetailsReading" xml:space="preserve">
+    <value>Asking Windows MIDI Services about it…</value>
+  </data>
+  <data name="DeviceDetailsUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services can't say more about it right now.</value>
+  </data>
+  <data name="DeviceGroupsHeading" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="DeviceGroupsNone" xml:space="preserve">
+    <value>It doesn't describe its groups, so the sequencer offers all 16.</value>
+  </data>
+  <data name="DeviceGroupsFromFunctionBlocks" xml:space="preserve">
+    <value>From the device's function blocks. The sequencer sends each group MIDI 2.0 or MIDI 1.0 to match.</value>
+  </data>
+  <data name="DeviceGroupsFromTerminalBlocks" xml:space="preserve">
+    <value>From the device's group terminal blocks, because it has no function blocks. The sequencer sends each group MIDI 2.0 or MIDI 1.0 to match.</value>
+  </data>
+  <data name="DeviceBlockUnnamed" xml:space="preserve">
+    <value>Unnamed</value>
+  </data>
+  <data name="DeviceBlockReceives" xml:space="preserve">
+    <value>Receives</value>
+    <comment>The device takes messages on these groups, so the sequencer can play to it.</comment>
+  </data>
+  <data name="DeviceBlockSends" xml:space="preserve">
+    <value>Sends</value>
+    <comment>The device sends messages on these groups, so the sequencer can record from it.</comment>
+  </data>
+  <data name="DeviceBlockSendsAndReceives" xml:space="preserve">
+    <value>Sends and receives</value>
+  </data>
+  <data name="DeviceBlockInactive" xml:space="preserve">
+    <value>Not active right now</value>
+  </data>
+  <data name="DeviceSendingHeading" xml:space="preserve">
+    <value>Sending to it</value>
+  </data>
+  <data name="DeviceOffsetNone" xml:space="preserve">
+    <value>Sent on time. If it sounds late, set an offset for it in MIDI Settings.</value>
+  </data>
+  <data name="DeviceOffsetSettingsFormat" xml:space="preserve">
+    <value>Sent {0} ms early, as set in MIDI Settings, so it sounds on time.</value>
+    <comment>{0} is a number of milliseconds.</comment>
+  </data>
+  <data name="DeviceOffsetTransportFormat" xml:space="preserve">
+    <value>Sent {0} ms early, as its connection worked out, so it sounds on time.</value>
+    <comment>{0} is a number of milliseconds. Bluetooth and network connections work this out themselves.</comment>
+  </data>
+  <data name="DeviceOffsetOffFormat" xml:space="preserve">
+    <value>MIDI Settings has a {0} ms offset for it, but sending early is turned off in Clock and sync.</value>
+    <comment>{0} is a number of milliseconds.</comment>
+  </data>
+  <data name="DeviceIntervalFormat" xml:space="preserve">
+    <value>Automation ramps and mixer moves go to it no more often than every {0} ms, as set in MIDI Settings.</value>
+    <comment>{0} is a number of milliseconds.</comment>
+  </data>
+  <data name="DeviceIntervalNoneFormat" xml:space="preserve">
+    <value>Automation ramps go to it no more often than every {0} ms. If it can't keep up, set an automation interval for it in MIDI Settings.</value>
+    <comment>{0} is a number of milliseconds.</comment>
+  </data>
+  <data name="DeviceMpe" xml:space="preserve">
+    <value>Takes MIDI Polyphonic Expression (MPE), as set in MIDI Settings.</value>
+  </data>
+  <data name="DeviceNoteOff" xml:space="preserve">
+    <value>Needs real note off messages, as set in MIDI Settings. The sequencer always sends those.</value>
+  </data>
+  <data name="DeviceAboutHeading" xml:space="preserve">
+    <value>About the device</value>
+  </data>
+  <data name="DeviceFactManufacturer" xml:space="preserve">
+    <value>Manufacturer</value>
+  </data>
+  <data name="DeviceFactConnectedThrough" xml:space="preserve">
+    <value>Connected through</value>
+  </data>
+  <data name="DeviceFactSerialNumber" xml:space="preserve">
+    <value>Serial number</value>
+  </data>
+  <data name="DeviceFactProductInstance" xml:space="preserve">
+    <value>Product instance</value>
+  </data>
+  <data name="DeviceFactUsbIds" xml:space="preserve">
+    <value>USB vendor and product</value>
+  </data>
+  <data name="DeviceFactSystemExclusiveId" xml:space="preserve">
+    <value>System exclusive ID</value>
+  </data>
+  <data name="DeviceFactFamilyModel" xml:space="preserve">
+    <value>Family and model</value>
+  </data>
+  <data name="DeviceFactSoftwareRevision" xml:space="preserve">
+    <value>Software version</value>
+  </data>
+  <data name="DeviceFactUmpVersion" xml:space="preserve">
+    <value>UMP version</value>
+  </data>
+  <data name="DeviceChangeInSettings" xml:space="preserve">
+    <value>Change its name, picture, description, offset and automation interval in MIDI Settings.</value>
+  </data>
+  <data name="OpenMidiSettings" xml:space="preserve">
+    <value>Open MIDI Settings</value>
+  </data>
+  <data name="MidiSettingsNotFound" xml:space="preserve">
+    <value>MIDI Settings isn't installed on this PC.</value>
+  </data>
+  <data name="StudioDialogTitle" xml:space="preserve">
+    <value>Studio setup</value>
+  </data>
+  <data name="StudioSetupButton" xml:space="preserve">
+    <value>Studio setup</value>
+  </data>
+  <data name="MenuStudioSetup.Text" xml:space="preserve">
+    <value>Studio setup…</value>
+  </data>
+  <data name="DevicesStatusButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Studio setup: the devices this sequence uses, and what each one gets</value>
+  </data>
+  <data name="StudioIntro" xml:space="preserve">
+    <value>Every device and group this sequence plays to or records from. Choose whether the sequencer uses each one, and what else it sends. These choices belong to this PC, so every sequence that uses a device uses them.</value>
+  </data>
+  <data name="StudioDevicesHeading" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="StudioColumnUsedBy" xml:space="preserve">
+    <value>Used by</value>
+  </data>
+  <data name="StudioColumnTempo" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="StudioTempoHelp" xml:space="preserve">
+    <value>Tempo is a MIDI 2.0 message sent at each tempo change, so a device knows the new tempo before the clock shows it. A group that speaks MIDI 1.0 can't take it, so its box is off.</value>
+  </data>
+  <data name="StudioNoDevices" xml:space="preserve">
+    <value>This sequence doesn't use any device yet.</value>
+  </data>
+  <data name="StudioAddDeviceHelp" xml:space="preserve">
+    <value>Add a device that only follows the clock, such as a drum machine no track plays to.</value>
+  </data>
+  <data name="StudioRowLabelFormat" xml:space="preserve">
+    <value>{0}, group {1}</value>
+    <comment>{0} is a device's name. {1} is a group number. Screen readers hear this in the name of each control on a row.</comment>
+  </data>
+  <data name="StudioRowTempoFormat" xml:space="preserve">
+    <value>Send tempo to {0}</value>
+    <comment>{0} is a device and group, such as "Moog One, group 1".</comment>
+  </data>
+  <data name="StudioRowDetailsFormat" xml:space="preserve">
+    <value>About {0}</value>
+    <comment>{0} is a device, or a device and group, such as "Moog One, group 1".</comment>
+  </data>
+  <data name="StudioUsedByMetronome" xml:space="preserve">
+    <value>Metronome</value>
+  </data>
+  <data name="StudioUsedByTimeCode" xml:space="preserve">
+    <value>Time code</value>
+  </data>
+  <data name="StudioUsedByClockOnly" xml:space="preserve">
+    <value>Only the clock</value>
+  </data>
+  <data name="StudioOtherDevicesFormat" xml:space="preserve">
+    <value>Other MIDI devices on this PC ({0})</value>
+    <comment>{0} is how many there are.</comment>
+  </data>
+  <data name="StudioTooManyFormat" xml:space="preserve">
+    <value>This PC can send to {0} devices at most. Turn some off to add others.</value>
+    <comment>{0} is a number.</comment>
+  </data>
+  <data name="ClockSentToFormat" xml:space="preserve">
+    <value>Sent to {0}.</value>
+    <comment>{0} is a list of device names.</comment>
+  </data>
+  <data name="ClockStudioHelp" xml:space="preserve">
+    <value>Studio setup lists the devices this sequence plays to, and what each one gets: the clock, start and stop, song position and tempo.</value>
+  </data>
+  <data name="LaneIntervalShortFormat" xml:space="preserve">
+    <value>every {0} ms</value>
+    <comment>{0} is a number of milliseconds: how often a ramp goes to the device.</comment>
+  </data>
+  <data name="LaneIntervalToolTipFormat" xml:space="preserve">
+    <value>Ramps go to {0} no more often than every {1} ms, its automation interval in MIDI Settings.</value>
+    <comment>{0} is a device's name. {1} is a number of milliseconds.</comment>
+  </data>
+  <data name="LaneIntervalDefaultToolTipFormat" xml:space="preserve">
+    <value>Ramps go to {0} no more often than every {1} ms. If it can't keep up, set an automation interval for it in MIDI Settings.</value>
+    <comment>{0} is a device's name. {1} is a number of milliseconds.</comment>
+  </data>
+  <data name="StudioColumnPlayTo" xml:space="preserve">
+    <value>Play to</value>
+    <comment>Column heading in Studio setup: whether the sequencer sends anything to this device's group.</comment>
+  </data>
+  <data name="StudioColumnRecordFrom" xml:space="preserve">
+    <value>Record from</value>
+    <comment>Column heading in Studio setup: whether the sequencer listens to what this device's group sends.</comment>
+  </data>
+  <data name="StudioPlayToHelp" xml:space="preserve">
+    <value>When this is off, the sequencer sends nothing to this group: no notes, no clock and no time code. A device it uses for nothing else isn't even opened.</value>
+  </data>
+  <data name="StudioRecordFromHelp" xml:space="preserve">
+    <value>When this is off, the sequencer ignores everything this group sends, including its clock.</value>
+  </data>
+  <data name="StudioRowPlayToFormat" xml:space="preserve">
+    <value>Play to {0}</value>
+    <comment>{0} is a device and group, such as "Moog One, group 1". A screen reader reads it for a check box.</comment>
+  </data>
+  <data name="StudioRowRecordFromFormat" xml:space="preserve">
+    <value>Record from {0}</value>
+    <comment>{0} is a device and group, such as "Moog One, group 1". A screen reader reads it for a check box.</comment>
+  </data>
+  <data name="StudioRowMonitorFormat" xml:space="preserve">
+    <value>Watch {0} in MIDI Monitor</value>
+    <comment>{0} is a device, or a device and group, such as "Moog One, group 1".</comment>
+  </data>
+  <data name="StudioUsedByRecordingFormat" xml:space="preserve">
+    <value>Records into {0}</value>
+    <comment>{0} is a list of track names: the tracks that record what this device sends.</comment>
+  </data>
+  <data name="StudioUsedBySetsTempo" xml:space="preserve">
+    <value>Sets the tempo</value>
+    <comment>In Studio setup's Used by column: the sequencer follows this device's clock.</comment>
+  </data>
+  <data name="StudioUsedByNotInSequence" xml:space="preserve">
+    <value>Not in this sequence</value>
+  </data>
+  <data name="StudioPortsHelp" xml:space="preserve">
+    <value>Some devices stop working when an app sends them a message they don't expect. The sequencer opens only the devices this sequence uses, and sends a device nothing until you play, try a sound or move a mixer control. If a device still has trouble, turn off Play to for its group.</value>
+  </data>
+  <data name="TurnedOffSuffix" xml:space="preserve">
+    <value>(turned off)</value>
+    <comment>After a device's name or a group: Studio setup turned it off.</comment>
+  </data>
+  <data name="DestinationTurnedOffNote" xml:space="preserve">
+    <value>Play to is turned off in Studio setup, so this track plays nothing.</value>
+  </data>
+  <data name="SourceTurnedOffNote" xml:space="preserve">
+    <value>Record from is turned off in Studio setup, so this track records nothing.</value>
+  </data>
+  <data name="DeviceUsesPlayToOffFormat" xml:space="preserve">
+    <value>Play to is turned off for {0}.</value>
+    <comment>{0} is a list of groups, such as "Group 1, Group 3".</comment>
+  </data>
+  <data name="DeviceUsesRecordFromOffFormat" xml:space="preserve">
+    <value>Record from is turned off for {0}.</value>
+    <comment>{0} is a list of groups, such as "Group 1, Group 3".</comment>
+  </data>
+  <data name="KeyboardTurnedOff" xml:space="preserve">
+    <value>Play to is turned off for that group in Studio setup, so MIDI Keyboard wasn't opened on it.</value>
+  </data>
+  <data name="MonitorNotFound" xml:space="preserve">
+    <value>Windows MIDI Monitor isn't installed beside this app.</value>
+  </data>
+  <data name="WatchInMonitor" xml:space="preserve">
+    <value>Watch in MIDI Monitor</value>
+  </data>
+  <data name="DialogClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="RecentDialogTitle" xml:space="preserve">
+    <value>Open recent</value>
+  </data>
+  <data name="RecentFindPlaceholder" xml:space="preserve">
+    <value>Find a sequence by name or folder</value>
+  </data>
+  <data name="RecentFindName" xml:space="preserve">
+    <value>Find a recent sequence</value>
+  </data>
+  <data name="RecentPinnedHeading" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="RecentHeading" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="RecentPinFormat" xml:space="preserve">
+    <value>Pin {0}, so it stays in this list</value>
+    <comment>{0} is a sequence's name.</comment>
+  </data>
+  <data name="RecentUnpinFormat" xml:space="preserve">
+    <value>Unpin {0}</value>
+    <comment>{0} is a sequence's name.</comment>
+  </data>
+  <data name="RecentPinLimitFormat" xml:space="preserve">
+    <value>You can pin up to {0} sequences. Unpin one to pin another.</value>
+  </data>
+  <data name="RecentOpenFormat" xml:space="preserve">
+    <value>Open {0}</value>
+    <comment>{0} is a sequence's name.</comment>
+  </data>
+  <data name="RecentRemoveFormat" xml:space="preserve">
+    <value>Remove {0} from this list</value>
+    <comment>{0} is a sequence's name. The file itself stays where it is.</comment>
+  </data>
+  <data name="RecentMissingFormat" xml:space="preserve">
+    <value>Not found in {0}</value>
+    <comment>{0} is the folder the sequence was in.</comment>
+  </data>
+  <data name="RecentCantOpenFormat" xml:space="preserve">
+    <value>{0} isn't where it was. It may have been moved, renamed or deleted. Remove it from the list, or open it from its new place with Open.</value>
+  </data>
+  <data name="RecentEmpty" xml:space="preserve">
+    <value>Sequences you open or save show up here.</value>
+  </data>
+  <data name="RecentNoneFound" xml:space="preserve">
+    <value>No sequence in the list has that in its name or folder.</value>
+  </data>
+  <data name="SoundButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Choose the sound for this track</value>
+  </data>
+  <data name="SoundButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose the program, and bank, this track asks its device for each time playback starts</value>
+  </data>
+  <data name="SoundNotChosen" xml:space="preserve">
+    <value>No sound chosen</value>
+  </data>
+  <data name="SoundNotChosenDetail" xml:space="preserve">
+    <value>The device keeps whatever sound it has.</value>
+  </data>
+  <data name="SoundChosenDetail" xml:space="preserve">
+    <value>Sent each time playback starts.</value>
+  </data>
+  <data name="SoundChosenWithBankFormat" xml:space="preserve">
+    <value>{0}. Sent each time playback starts.</value>
+    <comment>{0} is a bank, such as "Bank 121:2".</comment>
+  </data>
+  <data name="SoundBankFormat" xml:space="preserve">
+    <value>Bank {0}:{1}</value>
+    <comment>{0} is the bank select MSB and {1} the LSB, each from 0 to 127.</comment>
+  </data>
+  <data name="SoundProgramFormat" xml:space="preserve">
+    <value>Program {0}</value>
+    <comment>{0} is a program number, counted from 1.</comment>
+  </data>
+  <data name="SoundGeneralMidiFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>{0} is a program number, counted from 1. {1} is its General MIDI name, such as "Lead 1 (square)", which isn't translated.</comment>
+  </data>
+  <data name="SoundDialogTitleFormat" xml:space="preserve">
+    <value>Sound for {0}</value>
+    <comment>{0} is a track's name.</comment>
+  </data>
+  <data name="SoundEnabled" xml:space="preserve">
+    <value>Choose this track's sound</value>
+  </data>
+  <data name="SoundEnabledHelp" xml:space="preserve">
+    <value>When this is on, the track sends a program change each time playback starts, with a bank when you choose one. When it's off, the device keeps whatever sound it has.</value>
+  </data>
+  <data name="SoundFindPlaceholder" xml:space="preserve">
+    <value>Find a sound</value>
+  </data>
+  <data name="SoundFindName" xml:space="preserve">
+    <value>Find a sound by name</value>
+  </data>
+  <data name="SoundListName" xml:space="preserve">
+    <value>Sounds</value>
+  </data>
+  <data name="SoundNamesGeneralMidi" xml:space="preserve">
+    <value>General MIDI names. A device that isn't General MIDI may have other sounds at these numbers.</value>
+  </data>
+  <data name="SoundNamesDrums" xml:space="preserve">
+    <value>General MIDI drum kits, because this track plays on channel 10. A device that isn't General MIDI may have other kits at these numbers.</value>
+  </data>
+  <data name="SoundNamesDeviceFormat" xml:space="preserve">
+    <value>{0}'s own names for its sounds, from the device over MIDI-CI.</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundProgramLabel" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="SoundProgramName" xml:space="preserve">
+    <value>Program number, from 1 to 128</value>
+  </data>
+  <data name="SoundBankLabel" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="SoundBankMsbLabel" xml:space="preserve">
+    <value>MSB</value>
+    <comment>The bank select's most significant byte, controller 0.</comment>
+  </data>
+  <data name="SoundBankLsbLabel" xml:space="preserve">
+    <value>LSB</value>
+    <comment>The bank select's least significant byte, controller 32.</comment>
+  </data>
+  <data name="SoundBankMsbName" xml:space="preserve">
+    <value>Bank select MSB, controller 0, from 0 to 127</value>
+  </data>
+  <data name="SoundBankLsbName" xml:space="preserve">
+    <value>Bank select LSB, controller 32, from 0 to 127</value>
+  </data>
+  <data name="SoundTryNote" xml:space="preserve">
+    <value>Choosing a sound sends it to the device right away, so you can hear it. Cancel puts the old one back.</value>
+  </data>
+  <data name="SoundAskFormat" xml:space="preserve">
+    <value>Ask {0} for its sound names</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundAskHelpFormat" xml:space="preserve">
+    <value>This asks {0} for its own list over MIDI-CI. The sequencer never asks a device anything unless you select this. A few older devices don't handle MIDI-CI well.</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundAskTurnedOff" xml:space="preserve">
+    <value>Play to is turned off for this group in Studio setup, so the sequencer won't send it anything.</value>
+  </data>
+  <data name="SoundAskNotConnectedFormat" xml:space="preserve">
+    <value>{0} isn't connected, so it can't be asked, and choosing a sound won't play it.</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundAskingFormat" xml:space="preserve">
+    <value>Asking {0}…</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundFoundFormat" xml:space="preserve">
+    <value>{0} sounds from {1}.</value>
+    <comment>{0} is a number of sounds. {1} is a device's name.</comment>
+  </data>
+  <data name="SoundEmptyFormat" xml:space="preserve">
+    <value>{0} shared a list of its sounds, but it was empty.</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundNotSupportedFormat" xml:space="preserve">
+    <value>{0} answered, but doesn't share a list of its sounds. You can still choose a program by number.</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="SoundNoResponseFormat" xml:space="preserve">
+    <value>{0} didn't answer, so it may not use MIDI-CI. You can still choose a program by number.</value>
+    <comment>{0} is a device's name.</comment>
+  </data>
+  <data name="UndoSound" xml:space="preserve">
+    <value>Change the sound</value>
+  </data>
+  <data name="ControllerModulation" xml:space="preserve">
+    <value>Modulation</value>
+  </data>
+  <data name="ControllerSustain" xml:space="preserve">
+    <value>Sustain pedal</value>
+  </data>
+  <data name="StartupControllerFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>{0} is a control such as Volume, {1} its value, such as 100 or L24.</comment>
+  </data>
+  <data name="StartupControllerNumberFormat" xml:space="preserve">
+    <value>Controller {0}: {1}</value>
+    <comment>{0} is a MIDI controller number, {1} its value from 0 to 127.</comment>
+  </data>
+  <data name="StartupPressureFormat" xml:space="preserve">
+    <value>Pressure {0}</value>
+  </data>
+  <data name="StartupPitchBendFormat" xml:space="preserve">
+    <value>Pitch bend {0}</value>
+    <comment>{0} is how far from the middle, from -8192 to 8191.</comment>
+  </data>
+  <data name="StartupSystemExclusive" xml:space="preserve">
+    <value>System exclusive</value>
   </data>
 </root>

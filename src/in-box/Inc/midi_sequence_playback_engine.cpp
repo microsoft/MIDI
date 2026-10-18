@@ -261,9 +261,15 @@ namespace midiplayer
 
             auto scratch = winrt::single_threaded_vector<uint8_t>();
 
+            // Followed in playing order, so each event knows which channels are drum kits when
+            // it plays, wherever playback starts.
+            midifile::PercussionTracker percussion{};
+
             for (auto const& event : sequence->Events)
             {
                 auto const bytes = sequence->BytesOf(event);
+
+                percussion.Observe(event, bytes);
 
                 if (bytes.empty())
                 {
@@ -276,6 +282,7 @@ namespace midiplayer
                 entry.Tick = event.Tick;
                 entry.WordOffset = static_cast<uint32_t>(words.size());
                 entry.TrackIndex = event.TrackIndex;
+                entry.PercussionChannels = percussion.PercussionChannels();
 
                 if (event.Kind == midifile::EventKind::UniversalPacket)
                 {
@@ -341,15 +348,15 @@ namespace midiplayer
 
                 if (event.Kind == midifile::EventKind::NoteOn || event.Kind == midifile::EventKind::NoteOff)
                 {
-                    entry.NoteNumber = bytes.size() > 1 ? static_cast<uint8_t>(bytes[1] & 0x7F) : uint8_t{ 0 };
-                    entry.Channel = event.Channel;
-
                     auto const velocity = bytes.size() > 2 ? static_cast<uint8_t>(bytes[2] & 0x7F) : uint8_t{ 0 };
 
                     entry.Action = (event.Kind == midifile::EventKind::NoteOn && velocity > 0)
                         ? NoteAction::Start
                         : NoteAction::End;
                 }
+
+                entry.NamesNotes = NoteTransposer::NamesAnyNote(
+                    std::span<uint32_t const>{ words.data() + entry.WordOffset, entry.WordCount });
 
                 if (entry.WordCount > widestEvent)
                 {
@@ -386,14 +393,16 @@ namespace midiplayer
                 m_trackRoutes.resize(sequence->Tracks.size());
                 RebuildDestinationsUnderLock();
 
-                // Sized once so a rewritten send never allocates on the sweep.
+                // Sized once so a rewritten send never allocates on the sweep. Twice the widest
+                // event, because transposing can end a note before starting one.
                 m_sendScratch.clear();
-                m_sendScratch.reserve(widestEvent);
+                m_sendScratch.reserve(static_cast<size_t>(widestEvent) * 2);
 
                 m_state = PlaybackState::Stopped;
                 m_pausedMicroseconds = 0;
                 m_nextEventIndex = 0;
                 m_soundingNotes.fill(0);
+                m_transposer.Clear();
             }
 
             return true;
@@ -422,6 +431,7 @@ namespace midiplayer
             m_pausedMicroseconds = 0;
             m_nextEventIndex = 0;
             m_soundingNotes.fill(0);
+            m_transposer.Clear();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to unload the sequence.")
     }
@@ -569,6 +579,21 @@ namespace midiplayer
     {
         std::lock_guard<std::recursive_mutex> const guard{ m_lock };
         return m_clock.RequestedRate();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetTransposeSemitones(int32_t semitones) noexcept
+    {
+        // Nothing to wake: what is already with the service keeps its pitch, and the worker's
+        // next pass, at most one sweep interval away, hands over everything after it transposed.
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        m_transposer.SetSemitones(semitones);
+    }
+
+    int32_t PlaybackEngine::TransposeSemitones() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        return m_transposer.Semitones();
     }
 
     _Use_decl_annotations_
@@ -858,21 +883,9 @@ namespace midiplayer
             // still go, so nothing hangs and the sound stays correct when it is unmuted.
             if (entry.Action != NoteAction::Start || IsTrackAudibleUnderLock(entry.TrackIndex))
             {
-                SendWordsUnderLock(
+                SendEventUnderLock(
                     timestamp <= nowTimestamp ? midi2::MidiClock::TimestampConstantSendImmediately() : timestamp,
-                    entry.WordOffset,
-                    entry.WordCount,
-                    DestinationForTrackUnderLock(entry.TrackIndex));
-
-                if (entry.Action == NoteAction::Start)
-                {
-                    m_soundingNotes[entry.NoteNumber] |= static_cast<uint16_t>(1u << (entry.Channel & 0x0F));
-                }
-            }
-
-            if (entry.Action == NoteAction::End)
-            {
-                m_soundingNotes[entry.NoteNumber] &= static_cast<uint16_t>(~(1u << (entry.Channel & 0x0F)));
+                    entry);
             }
 
             ++m_nextEventIndex;
@@ -915,19 +928,99 @@ namespace midiplayer
         return m_clock.MicrosecondsAtTimestamp(nowTimestamp);
     }
 
-    void PlaybackEngine::SendWordsUnderLock(
-        uint64_t timestamp,
-        uint32_t wordOffset,
-        uint32_t wordCount,
-        size_t destinationIndex) noexcept
+    _Use_decl_annotations_
+    void PlaybackEngine::SendEventUnderLock(uint64_t timestamp, PreparedEvent const& entry) noexcept
     {
-        if (wordCount == 0 || static_cast<size_t>(wordOffset) + wordCount > m_words.size() ||
+        auto const destinationIndex = DestinationForTrackUnderLock(entry.TrackIndex);
+
+        if (entry.WordCount == 0 || static_cast<size_t>(entry.WordOffset) + entry.WordCount > m_words.size() ||
             destinationIndex >= m_destinations.size())
         {
             return;
         }
 
         auto const& destination = m_destinations[destinationIndex];
+
+        if (!entry.NamesNotes && !destination.RewritesMessages)
+        {
+            auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
+
+            if (connection == nullptr)
+            {
+                return;
+            }
+
+            connection.SendMultipleMessagesWordArray(
+                timestamp,
+                entry.WordOffset,
+                entry.WordCount,
+                winrt::array_view<uint32_t const>{ m_words.data(), m_words.data() + m_words.size() });
+
+            return;
+        }
+
+        std::span<uint32_t const> const original{ m_words.data() + entry.WordOffset, entry.WordCount };
+
+        // The scratch buffer was sized at load to twice the widest event; none of this allocates.
+        if (entry.NamesNotes)
+        {
+            // Every note goes through the transposer, moved or not, so an end always finds the
+            // pitch its start went out at.
+            m_sendScratch.resize(original.size() * 2);
+
+            auto const written = m_transposer.Rewrite(original, m_sendScratch, entry.PercussionChannels);
+
+            m_sendScratch.resize(written);
+
+            // Before the route changes the channel: what is sounding is kept by the sequence's
+            // own channel, and the silence works out each route's channel from it.
+            if (entry.Action != NoteAction::None)
+            {
+                TrackSoundingNotesUnderLock(m_sendScratch);
+            }
+
+            if (m_sendScratch.empty())
+            {
+                return;
+            }
+        }
+        else
+        {
+            m_sendScratch.assign(original.begin(), original.end());
+        }
+
+        // The group is baked into the words at load time, so a track sent to a different group or
+        // channel gets a rewritten copy.
+        if (destination.RewritesMessages)
+        {
+            size_t index = 0;
+
+            while (index < m_sendScratch.size())
+            {
+                auto const messageType = MessageTypeOf(m_sendScratch[index]);
+                auto const packetWords = PacketWordCounts[messageType];
+
+                if (index + packetWords > m_sendScratch.size())
+                {
+                    break;
+                }
+
+                if (MessageTypeCarriesGroup(messageType))
+                {
+                    m_sendScratch[index] = (m_sendScratch[index] & 0xF0FFFFFFu)
+                        | (static_cast<uint32_t>(destination.GroupIndex & 0x0F) << 24);
+                }
+
+                if (destination.ChannelOverride >= 0 && MessageTypeCarriesChannel(messageType))
+                {
+                    m_sendScratch[index] = (m_sendScratch[index] & 0xFFF0FFFFu)
+                        | (static_cast<uint32_t>(destination.ChannelOverride & 0x0F) << 16);
+                }
+
+                index += packetWords;
+            }
+        }
+
         auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
 
         if (connection == nullptr)
@@ -935,56 +1028,38 @@ namespace midiplayer
             return;
         }
 
-        if (!destination.RewritesMessages)
-        {
-            connection.SendMultipleMessagesWordArray(
-                timestamp,
-                wordOffset,
-                wordCount,
-                winrt::array_view<uint32_t const>{ m_words.data(), m_words.data() + m_words.size() });
-
-            return;
-        }
-
-        // The group is baked into the words at load time, so a track sent to a different group or
-        // channel gets a rewritten copy. The scratch buffer was sized at load; this does not
-        // allocate.
-        m_sendScratch.assign(
-            m_words.begin() + wordOffset,
-            m_words.begin() + wordOffset + wordCount);
-
-        size_t index = 0;
-
-        while (index < m_sendScratch.size())
-        {
-            auto const messageType = MessageTypeOf(m_sendScratch[index]);
-            auto const packetWords = PacketWordCounts[messageType];
-
-            if (index + packetWords > m_sendScratch.size())
-            {
-                break;
-            }
-
-            if (MessageTypeCarriesGroup(messageType))
-            {
-                m_sendScratch[index] = (m_sendScratch[index] & 0xF0FFFFFFu)
-                    | (static_cast<uint32_t>(destination.GroupIndex & 0x0F) << 24);
-            }
-
-            if (destination.ChannelOverride >= 0 && MessageTypeCarriesChannel(messageType))
-            {
-                m_sendScratch[index] = (m_sendScratch[index] & 0xFFF0FFFFu)
-                    | (static_cast<uint32_t>(destination.ChannelOverride & 0x0F) << 16);
-            }
-
-            index += packetWords;
-        }
-
         connection.SendMultipleMessagesWordArray(
             timestamp,
             0,
-            wordCount,
+            static_cast<uint32_t>(m_sendScratch.size()),
             winrt::array_view<uint32_t const>{ m_sendScratch.data(), m_sendScratch.data() + m_sendScratch.size() });
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::TrackSoundingNotesUnderLock(std::span<uint32_t const> words) noexcept
+    {
+        for (size_t index = 0; index < words.size(); index += PacketWordCounts[MessageTypeOf(words[index])])
+        {
+            auto const word = words[index];
+
+            if (MessageTypeOf(word) != Midi1ChannelVoiceMessageType)
+            {
+                continue;
+            }
+
+            auto const status = static_cast<uint8_t>((word >> 16) & 0xF0);
+            auto const channelBit = static_cast<uint16_t>(1u << ((word >> 16) & 0x0F));
+            auto const note = static_cast<size_t>((word >> 8) & 0x7F);
+
+            if (status == StatusNoteOn && (word & 0x7F) != 0)
+            {
+                m_soundingNotes[note] |= channelBit;
+            }
+            else if (status == StatusNoteOn || status == StatusNoteOff)
+            {
+                m_soundingNotes[note] &= static_cast<uint16_t>(~channelBit);
+            }
+        }
     }
 
     winrt::Windows::Devices::Midi2::MidiEndpointConnection PlaybackEngine::ConnectionForDestinationUnderLock(
@@ -1150,6 +1225,9 @@ namespace midiplayer
         }
 
         m_soundingNotes.fill(0);
+
+        // Every note is off, so none has a pitch left to remember.
+        m_transposer.Clear();
     }
 
     _Use_decl_annotations_
@@ -1356,11 +1434,22 @@ namespace midiplayer
         // The velocity of each note the receiver was left holding, or zero for one it was not.
         std::array<std::array<uint8_t, 128>, 16> heldVelocity{};
 
+        // Which channels are drum kits at the starting point, so the notes restarted there are
+        // transposed the same way the rest of the sequence is. Every track counts, the same as
+        // when the sequence was prepared.
+        midifile::PercussionTracker percussion{};
+
         program.fill(-1);
 
         for (size_t index = 0; index < limit; ++index)
         {
             auto const& event = events[index];
+            auto const bytes = m_sequence->BytesOf(event);
+
+            if (chaseNotes)
+            {
+                percussion.Observe(event, bytes);
+            }
 
             if (event.Channel == midifile::ChannelNone || event.Channel > 15)
             {
@@ -1371,8 +1460,6 @@ namespace midiplayer
             {
                 continue;
             }
-
-            auto const bytes = m_sequence->BytesOf(event);
 
             if (bytes.size() < 2)
             {
@@ -1548,24 +1635,52 @@ namespace midiplayer
         {
             auto const outgoing = effectiveChannel(channel);
             auto const outgoingBit = static_cast<uint16_t>(1u << outgoing);
+            auto const channelBit = static_cast<uint16_t>(1u << channel);
             auto const noteOnStatus = static_cast<uint8_t>(StatusNoteOn | outgoing);
+            auto const isPercussion = percussion.IsPercussion(channel);
 
             for (uint8_t note = 0; note < 128; ++note)
             {
                 auto const velocity = heldVelocity[channel][note];
 
-                if (velocity == 0 || (started[note] & outgoingBit) != 0)
+                if (velocity == 0)
                 {
                     continue;
                 }
 
-                started[note] |= outgoingBit;
+                // Transposed like every other note, and remembered, so its end reaches it.
+                auto const start = m_transposer.StartNote(channel, note, isPercussion);
+
+                if (start.EndFirst >= 0)
+                {
+                    auto const previous = static_cast<uint8_t>(start.EndFirst);
+
+                    connection.SendSingleMessageWords(
+                        timestamp,
+                        BuildMidi1Word(groupIndex, static_cast<uint8_t>(StatusNoteOff | outgoing), previous, 0));
+
+                    m_soundingNotes[previous] &= static_cast<uint16_t>(~channelBit);
+                }
+
+                if (start.Note < 0)
+                {
+                    continue;
+                }
+
+                auto const pitch = static_cast<uint8_t>(start.Note);
+
+                if ((started[pitch] & outgoingBit) != 0)
+                {
+                    continue;
+                }
+
+                started[pitch] |= outgoingBit;
 
                 connection.SendSingleMessageWords(
-                    timestamp, BuildMidi1Word(groupIndex, noteOnStatus, note, velocity));
+                    timestamp, BuildMidi1Word(groupIndex, noteOnStatus, pitch, velocity));
 
                 // Tracked like any other note, so a pause, stop, mute or the end turns it off.
-                m_soundingNotes[note] |= static_cast<uint16_t>(1u << channel);
+                m_soundingNotes[pitch] |= channelBit;
             }
         }
     }

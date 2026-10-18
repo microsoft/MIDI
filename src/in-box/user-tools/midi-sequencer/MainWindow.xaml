@@ -279,8 +279,19 @@
                     <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
                 </Style>
 
-                <DataTemplate x:Key="EndpointChoiceTemplate" x:DataType="shared:EndpointChoice">
-                    <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                <!-- A device's picture from MIDI Settings, or its transport's, beside its name. One line,
+                     because the closed list shows the chosen item with this same template. -->
+                <DataTemplate x:Key="EndpointChoiceTemplate" x:DataType="local:DeviceChoice">
+                    <Grid AutomationProperties.Name="{x:Bind DisplayName}" ToolTipService.ToolTip="{x:Bind Tip}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Image Source="{x:Bind Picture}" Visibility="{x:Bind PictureVisibility}" Width="18" Height="18"
+                               Margin="0,0,8,0" Stretch="Uniform" VerticalAlignment="Center"
+                               AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </Grid>
                 </DataTemplate>
 
                 <DataTemplate x:Key="NamedChoiceTemplate" x:DataType="shared:NamedChoice">
@@ -428,6 +439,10 @@
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
                                 <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="O" /></MenuFlyoutItem.KeyboardAccelerators>
                             </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuOpenRecent" Click="OnOpenRecentClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE81C;" /></MenuFlyoutItem.Icon>
+                                <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control,Shift" Key="O" /></MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
                             <MenuFlyoutItem x:Uid="MenuSave" Click="OnSaveClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74E;" /></MenuFlyoutItem.Icon>
                                 <MenuFlyoutItem.KeyboardAccelerators><KeyboardAccelerator Modifiers="Control" Key="S" /></MenuFlyoutItem.KeyboardAccelerators>
@@ -458,6 +473,9 @@
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Uid="MenuStudioSetup" Click="OnStudioSetupClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE772;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                             <MenuFlyoutItem x:Uid="MenuRemoteControl" Click="OnRemoteControlClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AF;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
@@ -659,6 +677,17 @@
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <!-- Volume, pan and sends for every track, where the editor goes. -->
+                <ToggleButton x:Name="MixerToggle"
+                              x:Uid="MixerToggle"
+                              Style="{StaticResource SmallToggleStyle}"
+                              Click="OnMixerToggleClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE9E9;" FontSize="12" />
+                        <TextBlock x:Uid="MixerToggleText" />
+                    </StackPanel>
+                </ToggleButton>
+
                 <Button x:Name="BackToTimelineButton" x:Uid="BackToTimelineButton" Style="{StaticResource SmallButtonStyle}" Click="OnBackToTimelineClick" />
 
                 <Button x:Name="SilenceButton" x:Uid="SilenceButton" Style="{StaticResource SmallButtonStyle}" Click="OnSilenceClick">
@@ -701,7 +730,7 @@
         <!-- ================================ Arrangement ================================ -->
         <Grid x:Name="ArrangeGrid" Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="268" />
+                <ColumnDefinition x:Name="HeaderColumn" Width="268" />
                 <ColumnDefinition x:Name="LauncherColumn" Width="500" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition x:Name="InspectorColumn" Width="0" />
@@ -734,14 +763,14 @@
                 <Button x:Name="AddTrackButton" x:Uid="AddTrackButton" Style="{StaticResource SmallButtonStyle}" Click="OnAddTrackClick">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE710;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <TextBlock x:Uid="AddTrackButtonText" />
+                        <TextBlock x:Name="AddTrackButtonText" x:Uid="AddTrackButtonText" />
                     </StackPanel>
                 </Button>
 
                 <Button x:Name="AddFolderButton" x:Uid="AddFolderButton" Grid.Column="1" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnAddFolderClick">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE8B7;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <TextBlock x:Uid="AddFolderButtonText" />
+                        <TextBlock x:Name="AddFolderButtonText" x:Uid="AddFolderButtonText" />
                     </StackPanel>
                 </Button>
 
@@ -875,8 +904,20 @@
                                 <FontIcon Glyph="&#xE72B;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <TextBlock x:Uid="RecordFromHeading" Style="{StaticResource SectionHeadStyle}" />
                             </StackPanel>
-                            <ComboBox x:Name="SourceEndpointCombo" x:Uid="SourceEndpointCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
-                                      ItemTemplate="{StaticResource EndpointChoiceTemplate}" SelectionChanged="OnSourceChanged" />
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="SourceEndpointCombo" x:Uid="SourceEndpointCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                          ItemTemplate="{StaticResource EndpointChoiceTemplate}" SelectionChanged="OnSourceChanged" />
+                                <Button x:Name="SourceDetailsButton" x:Uid="SourceDetailsButton" Grid.Column="1" Style="{StaticResource SubtleSmallButtonStyle}"
+                                        Width="28" Padding="0" Click="OnSourceDetailsClick">
+                                    <FontIcon Glyph="&#xE946;" FontSize="13" />
+                                </Button>
+                            </Grid>
+                            <TextBlock x:Name="SourceDescription" FontSize="11" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" Visibility="Collapsed" />
                             <ComboBox x:Name="SourceGroupCombo" x:Uid="SourceGroupCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
                                       ItemTemplate="{StaticResource NamedChoiceTemplate}" SelectionChanged="OnSourceChanged" />
                             <ComboBox x:Name="SourceChannelCombo" x:Uid="SourceChannelCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
@@ -914,8 +955,20 @@
                                 <FontIcon Glyph="&#xE72A;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <TextBlock x:Uid="PlayToHeading" Style="{StaticResource SectionHeadStyle}" />
                             </StackPanel>
-                            <ComboBox x:Name="DestinationEndpointCombo" x:Uid="DestinationEndpointCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
-                                      ItemTemplate="{StaticResource EndpointChoiceTemplate}" SelectionChanged="OnDestinationChanged" />
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="DestinationEndpointCombo" x:Uid="DestinationEndpointCombo" Style="{StaticResource SmallComboStyle}" HorizontalAlignment="Stretch"
+                                          ItemTemplate="{StaticResource EndpointChoiceTemplate}" SelectionChanged="OnDestinationChanged" />
+                                <Button x:Name="DestinationDetailsButton" x:Uid="DestinationDetailsButton" Grid.Column="1" Style="{StaticResource SubtleSmallButtonStyle}"
+                                        Width="28" Padding="0" Click="OnDestinationDetailsClick">
+                                    <FontIcon Glyph="&#xE946;" FontSize="13" />
+                                </Button>
+                            </Grid>
+                            <TextBlock x:Name="DestinationDescription" FontSize="11" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" Visibility="Collapsed" />
                             <Grid ColumnSpacing="8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -944,10 +997,60 @@
 
                         <StackPanel x:Name="StartupSection" Spacing="6">
                             <TextBlock x:Uid="StartupHeading" Style="{StaticResource SectionHeadStyle}" />
+                            <Button x:Name="SoundButton"
+                                    x:Uid="SoundButton"
+                                    Style="{StaticResource SmallButtonStyle}"
+                                    Height="Auto"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Padding="10,6,8,7"
+                                    Click="OnSoundClick">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE8D6;" FontSize="14" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Name="SoundButtonTitle" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Name="SoundButtonDetail" FontSize="11" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+                                    <FontIcon Grid.Column="2" Glyph="&#xE76C;" FontSize="10" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </Button>
                             <StackPanel x:Name="StartupList" Spacing="2" />
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
+            </Grid>
+
+            <!-- Drag these to make the track list and the clip launcher wider or narrower. Placed in
+                 code, on the line between the columns, and last so they sit above the canvases. -->
+            <Grid x:Name="HeaderSplitter"
+                  Grid.Row="0"
+                  Grid.RowSpan="4"
+                  Grid.ColumnSpan="3"
+                  Width="8"
+                  HorizontalAlignment="Left"
+                  Background="Transparent"
+                  IsTabStop="True"
+                  UseSystemFocusVisuals="True"
+                  Tag="header">
+                <Rectangle Width="2" HorizontalAlignment="Center" Opacity="0" IsHitTestVisible="False" Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+            </Grid>
+
+            <Grid x:Name="LauncherSplitter"
+                  Grid.Row="0"
+                  Grid.RowSpan="4"
+                  Grid.ColumnSpan="3"
+                  Width="8"
+                  HorizontalAlignment="Left"
+                  Background="Transparent"
+                  IsTabStop="True"
+                  UseSystemFocusVisuals="True"
+                  Tag="launcher">
+                <Rectangle Width="2" HorizontalAlignment="Center" Opacity="0" IsHitTestVisible="False" Fill="{ThemeResource AccentFillColorDefaultBrush}" />
             </Grid>
         </Grid>
 
@@ -991,7 +1094,7 @@
                         <TextBlock x:Name="EditorKindChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </Grid>
 
-                    <Grid Height="22" VerticalAlignment="Center">
+                    <Grid x:Name="EditorLengthChipFrame" Height="22" VerticalAlignment="Center">
                         <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
                                    Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
                         <TextBlock x:Name="EditorLengthChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -1065,20 +1168,60 @@
                         <ToggleButton x:Name="PatternKeepLengthToggle" x:Uid="PatternKeepLengthToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnPatternKeepLengthClick" />
                     </StackPanel>
 
-                    <!-- A generator clip's settings. -->
+                    <!-- A generator clip's settings (comp 4). -->
                     <StackPanel x:Name="GeneratorTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
                         <TextBlock x:Uid="GeneratorTypeLabel" Style="{StaticResource TransportLabelStyle}" />
-                        <ComboBox x:Name="GeneratorTypeCombo" x:Uid="GeneratorTypeCombo" Style="{StaticResource SmallComboStyle}" Width="170" SelectionChanged="OnGeneratorTypeChanged" />
+                        <!-- Each type with what it does under its name, so it's a button with a list rather than a combo box. -->
+                        <DropDownButton x:Name="GeneratorTypeButton"
+                                        x:Uid="GeneratorTypeButton"
+                                        Height="26"
+                                        MinHeight="0"
+                                        MinWidth="170"
+                                        Padding="9,0,8,0"
+                                        FontSize="12"
+                                        VerticalAlignment="Center"
+                                        HorizontalContentAlignment="Left">
+                            <DropDownButton.Flyout>
+                                <Flyout x:Name="GeneratorTypeFlyout" Placement="BottomEdgeAlignedLeft">
+                                    <StackPanel x:Name="GeneratorTypeList" Width="300" Spacing="4" />
+                                </Flyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
                         <TextBlock x:Uid="GeneratorBarsLabel" Style="{StaticResource TransportLabelStyle}" />
                         <NumberBox x:Name="GeneratorBarsBox" x:Uid="GeneratorBarsBox" Width="92" Minimum="1" Maximum="16" SmallChange="1" LargeChange="4"
                                    SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnGeneratorBarsChanged" />
-                        <TextBlock x:Uid="GeneratorStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <TextBlock x:Name="GeneratorStepSizeText" x:Uid="GeneratorStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
                         <ComboBox x:Name="GeneratorStepSizeCombo" x:Uid="GeneratorStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnGeneratorStepSizeChanged" />
-                        <ToggleButton x:Name="GeneratorChangesToggle" x:Uid="GeneratorChangesToggle" Style="{StaticResource SmallToggleStyle}" Click="OnGeneratorChangesClick" />
                     </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <!-- A generator's seed and whether each pass is the same, on the right as in comp 4. -->
+                    <StackPanel x:Name="GeneratorSeedTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <TextBlock x:Uid="GeneratorSeedLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <TextBox x:Name="GeneratorSeedBox"
+                                     x:Uid="GeneratorSeedBox"
+                                     Width="84"
+                                     Height="26"
+                                     MinHeight="0"
+                                     Padding="8,3,6,3"
+                                     FontSize="12"
+                                     FontFamily="Cascadia Mono,Consolas"
+                                     VerticalAlignment="Center"
+                                     MaxLength="8"
+                                     KeyDown="OnGeneratorSeedKeyDown"
+                                     LostFocus="OnGeneratorSeedCommitted" />
+                            <Button x:Name="GeneratorNewSeedButton" x:Uid="GeneratorNewSeedButton" Style="{StaticResource SubtleSmallButtonStyle}" Width="28" Padding="0" Click="OnPatternVaryClick">
+                                <FontIcon Glyph="&#xE8B1;" FontSize="12" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock x:Uid="GeneratorEachPassLabel" Style="{StaticResource TransportLabelStyle}" />
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton x:Name="GeneratorSameToggle" x:Uid="GeneratorSameToggle" Style="{StaticResource SmallToggleStyle}" CornerRadius="4,0,0,4" Click="OnGeneratorSameClick" />
+                            <ToggleButton x:Name="GeneratorChangesToggle" x:Uid="GeneratorChangesToggle" Style="{StaticResource SmallToggleStyle}" CornerRadius="0,4,4,0" Margin="-1,0,0,0" Click="OnGeneratorChangesClick" />
+                        </StackPanel>
+                    </StackPanel>
                     <StackPanel x:Name="PatternActions" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
                         <Button x:Name="PatternVaryButton" x:Uid="PatternVaryButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternVaryClick">
                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -1098,22 +1241,23 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Drag the top edge to make the editor taller or shorter. -->
+            <!-- Drag the top edge to make the editor taller or shorter. Above the mixer too. -->
             <Grid x:Name="EditorSplitter"
                   Grid.Row="0"
                   Height="6"
                   Margin="0,-3,0,0"
                   VerticalAlignment="Top"
+                  Canvas.ZIndex="1"
                   Background="Transparent"
                   PointerPressed="OnSplitterPressed"
                   PointerMoved="OnSplitterMoved"
                   PointerReleased="OnSplitterReleased"
                   PointerCaptureLost="OnSplitterCaptureLost" />
 
-            <Grid Grid.Row="1">
+            <Grid x:Name="EditorBody" Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="236" />
+                    <ColumnDefinition x:Name="EditorInspectorColumn" Width="236" />
                 </Grid.ColumnDefinitions>
 
                 <Grid x:Name="EditorCanvasHost" />
@@ -1144,6 +1288,50 @@
                     </ScrollViewer>
                 </Grid>
             </Grid>
+
+            <!-- The mixer takes the editor's place while it's shown. Its strips are built in code. -->
+            <Grid x:Name="MixerPanel"
+                  Grid.Row="0"
+                  Grid.RowSpan="2"
+                  Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Padding="12,0,12,0" ColumnSpacing="12" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource SeqDividerBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE9E9;" FontSize="15" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="MixerTitle" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <TextBlock x:Uid="MixerHint"
+                               Grid.Column="1"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <Button x:Name="MixerCloseButton" x:Uid="MixerCloseButton" Grid.Column="2" Width="28" Height="28" Padding="0"
+                            Background="Transparent" BorderBrush="Transparent" Click="OnMixerCloseClick">
+                        <FontIcon Glyph="&#xE711;" FontSize="11" />
+                    </Button>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1"
+                              HorizontalScrollBarVisibility="Auto"
+                              HorizontalScrollMode="Enabled"
+                              VerticalScrollBarVisibility="Disabled"
+                              VerticalScrollMode="Disabled">
+                    <StackPanel x:Name="MixerStrips" Orientation="Horizontal" Padding="10,8,10,8" Spacing="6" />
+                </ScrollViewer>
+            </Grid>
         </Grid>
 
         <!-- ================================ Status bar ================================ -->
@@ -1163,7 +1351,11 @@
                     <TextBlock x:Name="ClockStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </StackPanel>
                 <TextBlock x:Name="ClockOutStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                <TextBlock x:Name="DevicesStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <!-- The devices the sequence uses: opens Studio setup, which lists them. -->
+                <Button x:Name="DevicesStatusButton" x:Uid="DevicesStatusButton" Height="22" MinHeight="0" Padding="5,0,5,0" Margin="-5,0,-5,0"
+                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center" Visibility="Collapsed" Click="OnStudioSetupClick">
+                    <TextBlock x:Name="DevicesStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center" HorizontalAlignment="Right">
                 <StackPanel x:Name="RecordingStatus" Orientation="Horizontal" Spacing="5" Visibility="Collapsed">

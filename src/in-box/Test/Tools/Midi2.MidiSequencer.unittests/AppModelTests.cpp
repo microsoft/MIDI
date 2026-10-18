@@ -473,6 +473,206 @@ void AppModelTests::RowsAreFoundByPosition()
     VERIFY_IS_TRUE(layout.PinnedRowAt(1)->Kind == ArrangeRowKind::Tempo);
 }
 
+void AppModelTests::RowsUseTheirOwnHeights()
+{
+    auto sequence = FolderSequence();
+
+    // A tall track, a compact one, a taller folder, and a height past the limit.
+    sequence.Tracks[0].Height = 120;
+    sequence.Tracks[1].Height = 40;
+    sequence.Tracks[1].Children[0].Height = MinimumTrackRowHeight;
+    sequence.Tracks[1].Children[1].Height = 60000;
+    sequence.TempoRowHeight = 90;
+
+    auto const layout = BuildArrangeLayout(sequence);
+
+    VERIFY_ARE_EQUAL(90.0, layout.Pinned[0].Height);
+    VERIFY_ARE_EQUAL(90.0, layout.PinnedHeight);
+
+    VERIFY_ARE_EQUAL(120.0, layout.FindRow(L"t-drums")->Height);
+    VERIFY_ARE_EQUAL(40.0, layout.FindRow(L"f-synths")->Height);
+    VERIFY_ARE_EQUAL(CompactRowHeight, layout.FindRow(L"t-bass")->Height);
+    VERIFY_ARE_EQUAL(static_cast<double>(MaximumTrackRowHeight), layout.FindRow(L"t-pad")->Height);
+
+    // Each row starts where the one above it ends.
+    VERIFY_ARE_EQUAL(120.0, layout.FindRow(L"f-synths")->Top);
+    VERIFY_ARE_EQUAL(160.0, layout.FindRow(L"t-bass")->Top);
+    VERIFY_ARE_EQUAL(160.0 + CompactRowHeight, layout.FindRow(L"t-pad")->Top);
+
+    // The Tempo and meter row is never shorter than its standard height.
+    sequence.TempoRowHeight = 10;
+    VERIFY_ARE_EQUAL(TempoRowHeight, BuildArrangeLayout(sequence).PinnedHeight);
+
+    // 0 is the standard height for each kind of row.
+    sequence.Tracks[0].Height = 0;
+    sequence.Tracks[1].Height = 0;
+    auto const standard = BuildArrangeLayout(sequence);
+    VERIFY_ARE_EQUAL(TrackRowHeight, standard.FindRow(L"t-drums")->Height);
+    VERIFY_ARE_EQUAL(FolderRowHeight, standard.FindRow(L"f-synths")->Height);
+}
+
+void AppModelTests::RowHeightsSurviveSaving()
+{
+    auto sequence = FolderSequence();
+    sequence.Tracks[0].Height = 96;
+    sequence.Tracks[1].Children[0].Height = MinimumTrackRowHeight;
+    sequence.TempoRowHeight = 120;
+
+    auto const text = WriteSequenceJson(sequence);
+    VERIFY_IS_TRUE(text.find(L"\"height\": 96") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"tempoHeight\": 120") != std::wstring::npos);
+
+    // A track at its standard height writes nothing: only Drums and Bass have one.
+    size_t heights{ 0 };
+
+    for (auto at = text.find(L"\"height\":"); at != std::wstring::npos; at = text.find(L"\"height\":", at + 1))
+    {
+        ++heights;
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, heights);
+
+    Sequence read{};
+    VERIFY_IS_TRUE(ReadSequenceJson(text, read).Succeeded());
+    VERIFY_ARE_EQUAL(uint16_t{ 96 }, read.Tracks[0].Height);
+    VERIFY_ARE_EQUAL(uint16_t{ 0 }, read.Tracks[1].Height);
+    VERIFY_ARE_EQUAL(MinimumTrackRowHeight, read.Tracks[1].Children[0].Height);
+    VERIFY_ARE_EQUAL(uint16_t{ 0 }, read.Tracks[1].Children[1].Height);
+    VERIFY_ARE_EQUAL(uint16_t{ 120 }, read.TempoRowHeight);
+    VERIFY_ARE_EQUAL(text, WriteSequenceJson(read));
+
+    // A height from a damaged or hostile file is kept in range.
+    auto changed = text;
+    auto const at = changed.find(L"\"height\": 96");
+    changed.replace(at, 12, L"\"height\": 3");
+
+    Sequence small{};
+    VERIFY_IS_TRUE(ReadSequenceJson(changed, small).Succeeded());
+    VERIFY_ARE_EQUAL(MinimumTrackRowHeight, small.Tracks[0].Height);
+}
+
+void AppModelTests::DraggedTracksGoIntoFolders()
+{
+    auto sequence = FolderSequence();
+
+    // Into a folder, at its end.
+    VERIFY_IS_TRUE(MoveTracks(sequence, { L"t-drums" }, L"f-synths", L""));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Tracks.size());
+    VERIFY_ARE_EQUAL(size_t{ 3 }, sequence.Tracks[0].Children.size());
+    VERIFY_ARE_EQUAL(L"t-drums", sequence.Tracks[0].Children[2].Id);
+
+    // Into a folder, before one of its tracks.
+    VERIFY_IS_TRUE(MoveTracks(sequence, { L"t-drums" }, L"f-synths", L"t-bass"));
+    VERIFY_ARE_EQUAL(L"t-drums", sequence.Tracks[0].Children[0].Id);
+
+    // Out to the top level, before the folder.
+    VERIFY_IS_TRUE(MoveTracks(sequence, { L"t-pad" }, L"", L"f-synths"));
+    VERIFY_IS_TRUE((TopLevelIds(sequence) == std::vector<std::wstring>{ L"t-pad", L"f-synths" }));
+
+    // A place that isn't in the list it names, or a folder that isn't one, moves nothing.
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"t-pad" }, L"", L"t-bass"));
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"t-pad" }, L"t-drums", L""));
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"t-unknown" }, L"f-synths", L""));
+    VERIFY_IS_TRUE((TopLevelIds(sequence) == std::vector<std::wstring>{ L"t-pad", L"f-synths" }));
+}
+
+void AppModelTests::DraggedTracksKeepTheirOrder()
+{
+    auto sequence = FolderSequence();
+
+    Track lead{};
+    lead.Id = L"t-lead";
+    sequence.Tracks.push_back(lead);
+
+    // Drums and Lead, from two places, land together in the order given, before Bass.
+    VERIFY_IS_TRUE(MoveTracks(sequence, { L"t-drums", L"t-lead" }, L"f-synths", L"t-bass"));
+    VERIFY_IS_TRUE((TopLevelIds(sequence) == std::vector<std::wstring>{ L"f-synths" }));
+
+    std::vector<std::wstring> inside{};
+
+    for (auto const& child : sequence.Tracks[0].Children)
+    {
+        inside.push_back(child.Id);
+    }
+
+    VERIFY_IS_TRUE((inside == std::vector<std::wstring>{ L"t-drums", L"t-lead", L"t-bass", L"t-pad" }));
+
+    // Moving a folder with one of its own tracks moves the folder, with the track still inside.
+    Track keys{};
+    keys.Id = L"t-keys";
+    sequence.Tracks.push_back(keys);
+
+    VERIFY_IS_TRUE(MoveTracks(sequence, { L"t-bass", L"f-synths" }, L"", L""));
+    VERIFY_IS_TRUE((TopLevelIds(sequence) == std::vector<std::wstring>{ L"t-keys", L"f-synths" }));
+    VERIFY_ARE_EQUAL(size_t{ 4 }, sequence.Tracks[1].Children.size());
+
+    // Placed before a track that's moving too, it goes before the next one that isn't.
+    VERIFY_IS_TRUE(MoveTracks(sequence, { L"t-pad", L"t-drums" }, L"f-synths", L"t-drums"));
+    inside.clear();
+
+    for (auto const& child : sequence.Tracks[1].Children)
+    {
+        inside.push_back(child.Id);
+    }
+
+    VERIFY_IS_TRUE((inside == std::vector<std::wstring>{ L"t-pad", L"t-drums", L"t-lead", L"t-bass" }));
+}
+
+void AppModelTests::ADraggedFolderCantGoInsideItself()
+{
+    auto sequence = FolderSequence();
+
+    Track inner{};
+    inner.Id = L"f-inner";
+    inner.IsFolder = true;
+    sequence.Tracks[1].Children.push_back(inner);
+
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"f-synths" }, L"f-synths", L""));
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"f-synths" }, L"f-inner", L""));
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"t-drums", L"f-synths" }, L"f-inner", L""));
+    VERIFY_IS_TRUE((TopLevelIds(sequence) == std::vector<std::wstring>{ L"t-drums", L"f-synths" }));
+
+    // Nor can folders nest deeper than a file is allowed to.
+    Sequence deep{};
+    Track root{};
+    root.Id = L"f-0";
+    root.IsFolder = true;
+
+    auto* level = &root;
+
+    for (size_t i = 1; i < SequenceLimits{}.MaximumFolderDepth; ++i)
+    {
+        Track child{};
+        child.Id = L"f-" + std::to_wstring(i);
+        child.IsFolder = true;
+        level->Children.push_back(child);
+        level = &level->Children.back();
+    }
+
+    Track nested{};
+    nested.Id = L"f-nested";
+    nested.IsFolder = true;
+    nested.Children.push_back(Track{});
+    nested.Children.back().Id = L"t-nested";
+
+    deep.Tracks = { root, nested };
+
+    auto const deepest = L"f-" + std::to_wstring(SequenceLimits{}.MaximumFolderDepth - 1);
+    VERIFY_IS_FALSE(MoveTracks(deep, { L"f-nested" }, deepest, L""));
+    VERIFY_ARE_EQUAL(size_t{ 2 }, deep.Tracks.size());
+}
+
+void AppModelTests::DraggingTracksWhereTheyAreChangesNothing()
+{
+    auto sequence = FolderSequence();
+    auto const before = WriteSequenceJson(sequence);
+
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"t-drums" }, L"", L"f-synths"));
+    VERIFY_IS_FALSE(MoveTracks(sequence, { L"t-pad" }, L"f-synths", L""));
+    VERIFY_IS_FALSE(MoveTracks(sequence, {}, L"", L""));
+    VERIFY_ARE_EQUAL(before, WriteSequenceJson(sequence));
+}
+
 void AppModelTests::TheSampleIsWholeAndSurvivesSaving()
 {
     SampleText text{};

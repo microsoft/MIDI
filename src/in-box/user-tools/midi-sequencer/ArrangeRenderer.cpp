@@ -245,7 +245,7 @@ namespace midisequencer
         constexpr double LaneTop = 4294967295.0;
 
         // The tempo row's line sits under its labels: 23 pixels from the top, 6 from the bottom.
-        constexpr float TempoTopPadding = 23.0f;
+        constexpr float TempoTopPadding = TempoTagBandHeight;
         constexpr float TempoBottomPadding = 6.0f;
     }
 
@@ -665,11 +665,34 @@ namespace midisequencer
         auto const& colors = *context.Colors;
         auto const height = static_cast<float>(row.Height);
         auto const muted = track.Muted || row.InsideMutedFolder;
+        auto const drag = context.ClipDrag.has_value() ? &*context.ClipDrag : nullptr;
 
         for (size_t i = 0; i < track.Timeline.size(); ++i)
         {
             auto const selected = context.SelectedTrackId == track.Id && context.SelectedPlacement == i;
+
+            // A clip being moved stays faded where it was until it lands.
+            if (drag != nullptr && !drag->Copy && drag->FromTrackId == track.Id && drag->FromPlacement == i)
+            {
+                auto faded = ds.CreateLayer(0.35f);
+                DrawClipBlock(ds, track, track.Timeline[i], false, muted, top, height, width, context);
+                faded.Close();
+                continue;
+            }
+
             DrawClipBlock(ds, track, track.Timeline[i], selected, muted, top, height, width, context);
+        }
+
+        if (drag != nullptr && drag->ToTrackId == track.Id && drag->ToTick >= 0)
+        {
+            Placement ghost{};
+            ghost.ClipId = drag->ClipId;
+            ghost.Tick = drag->ToTick;
+            ghost.Length = drag->Length;
+
+            auto layer = ds.CreateLayer(0.8f);
+            DrawClipBlock(ds, track, ghost, true, false, top, height, width, context);
+            layer.Close();
         }
 
         // A take being recorded grows from where it started to the playhead.
@@ -680,8 +703,9 @@ namespace midisequencer
 
             if (x1 > x0 && x1 > 0 && x0 < width)
             {
-                auto const y0 = top + ClipInset;
-                auto const h = height - ClipInset * 2;
+                auto const inset = height < static_cast<float>(OneLineRowHeight) ? 2.0f : ClipInset;
+                auto const y0 = top + inset;
+                auto const h = height - inset * 2;
                 auto const fill = WithAlpha(colors.Record, 0.30);
                 auto const geometry = canvasGeometry::CanvasGeometry::CreateRoundedRectangle(ds, x0, y0, x1 - x0, h, 4.0f, 4.0f);
 
@@ -756,7 +780,27 @@ namespace midisequencer
     Rect ArrangeRenderer::BackToTimelineButtonBounds(float rowTop, float rowHeight) const noexcept
     {
         auto const x = 12.0f + m_overlayTextWidth + 8.0f;
-        return Rect{ x, rowTop + (rowHeight - 1.0f - 26.0f) / 2.0f, std::max(60.0f, m_overlayButtonWidth), 26.0f };
+        auto const buttonHeight = std::clamp(rowHeight - 5.0f, 16.0f, 26.0f);
+        return Rect{ x, rowTop + (rowHeight - 1.0f - buttonHeight) / 2.0f, std::max(60.0f, m_overlayButtonWidth), buttonHeight };
+    }
+
+    _Use_decl_annotations_
+    Rect ArrangeRenderer::TagLabelBounds(Tag const& tag, float x, float top, float height, bool atTop)
+    {
+        if (tag.Text.empty())
+        {
+            return Rect{ x, top, 0, 0 };
+        }
+
+        EnsureFormats();
+
+        canvasText::CanvasTextLayout layout{ canvas::CanvasDevice::GetSharedDevice(), winrt::hstring{ tag.Text }, m_tagText, 10000.0f, 100.0f };
+        auto const textWidth = std::min(220.0f, static_cast<float>(layout.LayoutBounds().Width));
+        auto const labelWidth = 12.0f + textWidth + 6.0f;
+        auto const labelHeight = 16.0f;
+        auto const y = atTop ? top + 3.0f : top + height - 5.0f - labelHeight;
+
+        return Rect{ x, y, labelWidth, labelHeight };
     }
 
     _Use_decl_annotations_
@@ -1042,8 +1086,9 @@ namespace midisequencer
             return;
         }
 
-        auto const y0 = top + ClipInset;
-        auto const h = height - ClipInset * 2;
+        auto const inset = height < static_cast<float>(OneLineRowHeight) ? 2.0f : ClipInset;
+        auto const y0 = top + inset;
+        auto const h = height - inset * 2;
         auto const w = x1 - x0;
 
         auto const tc = ClipColor(*clip, track);
@@ -1356,7 +1401,35 @@ namespace midisequencer
                 }
 
                 ds.Antialiasing(canvas::CanvasAntialiasing::Antialiased);
-                DrawCell(ds, *track, scene, Rect{ slotX, top, slotWidth, rowHeight }, muted, context);
+
+                Rect const slot{ slotX, top, slotWidth, rowHeight };
+                auto const drag = context.ClipDrag.has_value() ? &*context.ClipDrag : nullptr;
+
+                if (drag != nullptr && !drag->Copy && drag->FromSlot == scene && drag->FromTrackId == track->Id)
+                {
+                    auto faded = ds.CreateLayer(0.35f);
+                    DrawCell(ds, *track, scene, slot, muted, context);
+                    faded.Close();
+                }
+                else
+                {
+                    DrawCell(ds, *track, scene, slot, muted, context);
+                }
+
+                // Where a dragged clip would land.
+                if (drag != nullptr && drag->ToSlot == scene && drag->ToTrackId == track->Id)
+                {
+                    auto const inset = rowHeight < static_cast<float>(OneLineRowHeight) ? 2.0f : 4.0f;
+                    Rect const cell{ slot.X + inset, slot.Y + inset, slot.Width - inset * 2.0f - 1.0f, slot.Height - inset * 2.0f - 1.0f };
+
+                    ds.FillRoundedRectangle(cell, 4.0f, 4.0f, WithAlpha(colors.SelectionStroke, colors.Light ? 0.14 : 0.22));
+                    ds.DrawRoundedRectangle(cell.X - 0.5f, cell.Y - 0.5f, cell.Width + 1.0f, cell.Height + 1.0f, 4.5f, 4.5f, colors.SelectionStroke, 2.0f, DashedStroke(4.0f, 2.0f));
+
+                    if (auto const clip = FindClip(doc, drag->ClipId); clip != nullptr)
+                    {
+                        ds.DrawText(winrt::hstring{ clip->Name }, cell.X + 6.0f, cell.Y, std::max(1.0f, cell.Width - 10.0f), std::min(cell.Height, 20.0f), colors.Text, m_cellName);
+                    }
+                }
             }
         }
 
@@ -1382,8 +1455,12 @@ namespace midisequencer
     {
         auto const& colors = *context.Colors;
 
-        // seq.css .slot: 4 pixels of padding inside a slot whose right pixel is the divider.
-        Rect const cell{ slot.X + 4.0f, slot.Y + 4.0f, slot.Width - 9.0f, slot.Height - 9.0f };
+        // seq.css .slot: 4 pixels of padding inside a slot whose right pixel is the divider. A
+        // compact track's slots have room for the name and nothing else.
+        auto const compact = slot.Height < static_cast<float>(OneLineRowHeight);
+        auto const inset = compact ? 2.0f : 4.0f;
+        Rect const cell{ slot.X + inset, slot.Y + inset, slot.Width - inset * 2.0f - 1.0f, slot.Height - inset * 2.0f - 1.0f };
+        auto const textTop = compact ? cell.Y + (cell.Height - 13.0f) / 2.0f : cell.Y + 3.0f;
 
         auto const clipId = scene < track.Slots.size() ? track.Slots[scene] : std::wstring{};
         auto const armed = context.Armed != nullptr && context.Armed->contains(track.Id);
@@ -1469,13 +1546,14 @@ namespace midisequencer
             ds.DrawRoundedRectangle(cell.X - 1.5f, cell.Y - 1.5f, cell.Width + 3.0f, cell.Height + 3.0f, 5.0f, 5.0f, colors.SelectionStroke, 1.5f);
         }
 
-        ds.DrawText(L"\uE768", cell.X + 4.0f, cell.Y + 3.0f, 10.0f, 13.0f, glyphColor, m_cellGlyph);
-        ds.DrawText(winrt::hstring{ clip->Name }, cell.X + 16.0f, cell.Y + 3.0f, std::max(1.0f, cell.Width - 20.0f), 13.0f, colors.Text, m_cellName);
+        ds.DrawText(L"\uE768", cell.X + 4.0f, textTop, 10.0f, 13.0f, glyphColor, m_cellGlyph);
+        ds.DrawText(winrt::hstring{ clip->Name }, cell.X + 16.0f, textTop, std::max(1.0f, cell.Width - 20.0f), 13.0f, colors.Text, m_cellName);
 
-        auto const kindColor = colors.Light ? Rgba(0, 0, 0, 0.6) : Rgba(255, 255, 255, 0.8);
-        DrawKindMark(ds, clip->Kind, cell.X + cell.Width - 13.0f, cell.Y + cell.Height - 13.0f, 10.0f, kindColor);
-
+        if (!compact)
         {
+            auto const kindColor = colors.Light ? Rgba(0, 0, 0, 0.6) : Rgba(255, 255, 255, 0.8);
+            DrawKindMark(ds, clip->Kind, cell.X + cell.Width - 13.0f, cell.Y + cell.Height - 13.0f, 10.0f, kindColor);
+
             Rect const mini{ cell.X + 4.0f, cell.Y + 17.0f, std::max(1.0f, cell.Width - 18.0f), std::max(1.0f, cell.Height - 21.0f) };
             auto layer = ds.CreateLayer(1.0f, mini);
             auto const pixelsPerTick = static_cast<double>(mini.Width) / static_cast<double>(clip->Length);

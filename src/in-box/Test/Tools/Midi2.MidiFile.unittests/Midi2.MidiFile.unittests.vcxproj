@@ -84,19 +84,30 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ChordTextTests.h" />
+    <ClInclude Include="PercussionTests.h" />
     <ClInclude Include="PlaybackClockTests.h" />
     <ClInclude Include="SmfReaderTests.h" />
     <ClInclude Include="SmfTestFileBuilder.h" />
+    <ClInclude Include="TimeTextTests.h" />
+    <ClInclude Include="TransposerTests.h" />
     <!-- shared by source with midiplayer, so the reader is tested exactly as it ships -->
     <ClInclude Include="..\..\..\Inc\midi_file_sequence.h" />
     <ClInclude Include="..\..\..\Inc\midi_file_smf_reader.h" />
     <ClInclude Include="..\..\..\Inc\midi_sequence_playback_clock.h" />
+    <ClInclude Include="..\..\..\Inc\midi_sequence_transposer.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-player\ChordText.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-player\TimeText.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ChordTextTests.cpp" />
     <ClCompile Include="Module.cpp" />
+    <ClCompile Include="PercussionTests.cpp" />
     <ClCompile Include="PlaybackClockTests.cpp" />
     <ClCompile Include="SmfReaderTests.cpp" />
     <ClCompile Include="SmfTestFileBuilder.cpp" />
+    <ClCompile Include="TimeTextTests.cpp" />
+    <ClCompile Include="TransposerTests.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_smf_reader.cpp" />
   </ItemGroup>

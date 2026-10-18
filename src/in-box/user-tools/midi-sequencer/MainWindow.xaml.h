@@ -12,8 +12,15 @@
 #include "AppSettings.h"
 #include "ArrangeLayout.h"
 #include "ArrangeRenderer.h"
+#include "DeviceProperties.h"
+#include "MidiCiAppPresence.h"
+#include "MidiCiProgramListQuery.h"
+#include "RecentSequences.h"
+#include "StudioSetup.h"
+#include "TrackSound.h"
 #include "EndpointDirectory.h"
 #include "DawProject.h"
+#include "GeneratorView.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
 #include "ClipLaneStrip.h"
@@ -34,6 +41,9 @@ namespace winrt::midisequencer::implementation
 {
     namespace seq = ::midisequencer;
 
+    // What the Sound dialog shows (MainWindowSound.cpp).
+    struct SoundDialogState;
+
     struct MainWindow : MainWindowT<MainWindow>
     {
         MainWindow();
@@ -51,6 +61,7 @@ namespace winrt::midisequencer::implementation
         void OnNewClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnOpenSampleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnOpenClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnOpenRecentClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSaveClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSaveAsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnImportStandardMidiFileClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -65,6 +76,7 @@ namespace winrt::midisequencer::implementation
         void OnLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSequenceInfoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRemoteControlClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnStudioSetupClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnCloseWindowClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnGoToStartClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -87,6 +99,8 @@ namespace winrt::midisequencer::implementation
         void OnAddTrackClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAddFolderClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLauncherToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnMixerToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnMixerCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnVerticalScrollChanged(_In_ foundation::IInspectable const& sender, _In_ primitives::RangeBaseValueChangedEventArgs const& args);
         void OnHorizontalScrollChanged(_In_ foundation::IInspectable const& sender, _In_ primitives::RangeBaseValueChangedEventArgs const& args);
 
@@ -95,9 +109,12 @@ namespace winrt::midisequencer::implementation
         void OnTrackNameKeyDown(_In_ foundation::IInspectable const& sender, _In_ input::KeyRoutedEventArgs const& args);
         void OnTrackPinClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSourceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnSourceDetailsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEchoToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRecordFromKeyboardClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnDestinationChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnDestinationDetailsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSoundClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTrySoundClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnEditorDrawClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -113,10 +130,12 @@ namespace winrt::midisequencer::implementation
         void OnPatternKeepLengthClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnPatternVaryClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnPatternMakeNotesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnGeneratorTypeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnGeneratorBarsChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnGeneratorStepSizeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnGeneratorSameClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnGeneratorChangesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnGeneratorSeedKeyDown(_In_ foundation::IInspectable const& sender, _In_ input::KeyRoutedEventArgs const& args);
+        void OnGeneratorSeedCommitted(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSplitterPressed(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
@@ -166,6 +185,15 @@ namespace winrt::midisequencer::implementation
         // untouched new one. Otherwise the other sequence opens in a window of its own.
         bool CanReplaceDocument() const noexcept;
         void OpenInNewWindow(_In_ std::wstring const& path, _In_ bool sample = false) noexcept;
+
+        // ---- the recent sequences and the pinned ones (MainWindowRecent.cpp) ----
+
+        // Reads the list as it is now, changes it and writes it back, one window at a time. A
+        // null edit just reads it.
+        std::vector<seq::RecentSequence> EditRecentSequences(_In_ std::function<void(std::vector<seq::RecentSequence>&)> const& edit) noexcept;
+        void RememberRecentSequence(_In_ std::wstring const& path) noexcept;
+        void OpenRecentSequence(_In_ std::wstring const& path) noexcept;
+        void ShowRecentSequences();
         std::wstring ShowFileDialog(_In_ bool save, _In_ std::wstring const& defaultName, _In_ std::vector<std::pair<std::wstring, std::wstring>> const& filters, _In_ bool folders = false, _In_ std::wstring const& startFolder = {}) noexcept;
         std::wstring DocumentsFolder(_In_ std::wstring const& subfolder) noexcept;
 
@@ -247,6 +275,99 @@ namespace winrt::midisequencer::implementation
         void ShowTextPrompt(_In_ winrt::hstring const& title, _In_ winrt::hstring const& initial, _In_ std::function<void(std::wstring const&)> done);
         void OnArrangeSizeChanged() noexcept;
         void SetLauncherVisible(_In_ bool visible) noexcept;
+
+        // ---- sizing, selecting and dragging in the arrangement (MainWindowArrangeDrag.cpp) ----
+        void InitializeArrangeSplitters();
+        void ApplyArrangeColumns() noexcept;
+        void OnColumnSplitterPressed(_In_ controls::Grid const& splitter, _In_ input::PointerRoutedEventArgs const& args);
+        void OnColumnSplitterMoved(_In_ controls::Grid const& splitter, _In_ input::PointerRoutedEventArgs const& args);
+        void OnColumnSplitterReleased(_In_ controls::Grid const& splitter);
+        void SetColumnWidth(_In_ bool header, _In_ double width, _In_ bool save) noexcept;
+
+        // A row's height: a grip along the bottom of its header, and what it changes.
+        void AddRowGrip(_In_ controls::Grid const& header, _In_ seq::ArrangeRow const& row);
+        void OnHeaderCanvasMoved(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
+        void OnHeaderCanvasReleased(_In_ bool pinned, _In_ bool canceled);
+        void RelayoutRows() noexcept;
+        void SetTracksHeight(_In_ std::vector<std::wstring> const& trackIds, _In_ uint16_t height) noexcept;
+        void KeepViewChange() noexcept;
+
+        // Several tracks can be selected: Ctrl+click adds or takes one away, Shift+click adds a run.
+        bool IsTrackSelected(_In_ std::wstring_view trackId) const noexcept;
+        std::vector<std::wstring> SelectedTrackIds() const;
+        void ClickTrack(_In_ std::wstring const& trackId, _In_ bool control, _In_ bool shift) noexcept;
+        void RefreshHeaderBackgrounds() noexcept;
+
+        // Dragging a track's header moves it, and the selected tracks with it.
+        void OnHeaderPressed(_In_ std::wstring const& trackId, _In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
+        void OnHeaderMoved(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
+        void UpdateTrackDrop(_In_ foundation::Point inArrange) noexcept;
+        void FinishTrackDrag(_In_ bool drop) noexcept;
+
+        // Dragging clips: on the timeline, between tracks, between launcher slots, and from one to
+        // the other. Ctrl copies.
+        struct ArrangeSpot
+        {
+            enum class Area : uint8_t { None, Timeline, Launcher };
+
+            Area Where{ Area::None };
+            bool Pinned{ false };
+            foundation::Point Position{};
+        };
+
+        ArrangeSpot ArrangeSpotAt(_In_ foundation::Point inArrange) noexcept;
+        void BeginSlotDrag(_In_ bool pinned, _In_ std::wstring const& trackId, _In_ size_t scene, _In_ input::PointerRoutedEventArgs const& args);
+        void OnLauncherMoved(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
+        void OnLauncherReleased(_In_ bool pinned, _In_ bool canceled);
+        void UpdateClipDrop(_In_ foundation::Point inArrange, _In_ bool copy) noexcept;
+        void FinishClipDrag(_In_ bool drop) noexcept;
+        void StartDragScroll() noexcept;
+        void OnDragScrollTick() noexcept;
+
+        // Tags: dragged along their row, renamed, colored and deleted.
+        struct TagHit
+        {
+            std::wstring TrackId{};
+            size_t Index{ SIZE_MAX };
+            bool Valid() const noexcept { return Index != SIZE_MAX; }
+        };
+
+        TagHit HitTestTag(_In_ seq::ArrangeRow const& row, _In_ float rowTop, _In_ foundation::Point point) noexcept;
+        void BeginTagDrag(_In_ bool pinned, _In_ TagHit const& hit, _In_ input::PointerRoutedEventArgs const& args);
+        void OnTagDragMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void FinishTagDrag() noexcept;
+        void ShowTagMenu(_In_ TagHit const& hit, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void EditTag(_In_ TagHit const& hit, _In_ std::wstring const& undoName, _In_ std::function<void(std::vector<seq::Tag>&, size_t)> const& edit);
+        void RenameTag(_In_ TagHit const& hit);
+
+        // The loop on the ruler: its ends and its middle can be dragged.
+        enum class LoopGrab : uint8_t { None, Start, End, Whole };
+        LoopGrab HitTestLoop(_In_ foundation::Point point) const noexcept;
+
+        // ---- the mixer (MainWindowMixer.cpp) ----
+        bool MixerShown() noexcept;
+        void ShowMixer(_In_ bool show) noexcept;
+        void RebuildMixer() noexcept;
+        void RefreshMixer() noexcept;
+        void UpdateMixer(_In_ int64_t tick) noexcept;
+        xaml::UIElement MakeMixerStrip(_In_ seq::Track const& track);
+        std::optional<uint32_t> MixerValue(_In_ seq::Track const& track, _In_ uint8_t controller, _In_ int64_t tick, _Out_ bool& followsLane) const;
+        void OnMixerValueChanged(_In_ std::wstring const& trackId, _In_ uint8_t controller, _In_ uint32_t value) noexcept;
+
+        // A move goes to the device no more often than its automation interval from MIDI
+        // Settings. One that comes sooner waits, and the newest one waiting is always sent.
+        void SendMixerValue(_In_ seq::Track const& track, _In_ uint8_t controller, _In_ uint32_t value) noexcept;
+        void SendWaitingMixerValues() noexcept;
+        void ScheduleMixerSend(_In_ std::chrono::steady_clock::time_point due) noexcept;
+
+        // A mixer change waits for its control to rest before it's kept. Anything else that
+        // changes the sequence, undoes or saves puts it on the history first (RecordMixerEdit),
+        // so the history stays in the order things were done. CommitMixerEdit also shows it.
+        bool RecordMixerEdit() noexcept;
+        void CommitMixerEdit() noexcept;
+
+        // Undo and redo show what they bring back, even on a control that was just moved.
+        void ReleaseMixerControls() noexcept;
         void UpdateLeds() noexcept;
         int64_t SnapGrid() const noexcept;
         std::wstring NextClipName(_In_ wchar_t const* stemKey = L"DefaultClipName") const;
@@ -315,8 +436,26 @@ namespace winrt::midisequencer::implementation
         void InitializeGeneratorEditor() noexcept;
         void UpdateGeneratorToolbar() noexcept;
         void UpdateGeneratorPanel() noexcept;
+        void UpdateGeneratorFooter() noexcept;
         void UpdateGeneratorInspector() noexcept;
         void EditGenerator(_In_ std::wstring const& name, _In_ std::function<void(seq::GeneratorSettings&)> const& edit) noexcept;
+        void SetGeneratorType(_In_ seq::GeneratorType type) noexcept;
+        void CommitGeneratorSeed() noexcept;
+        seq::Color ClipColor(_In_ seq::Clip const& clip) const;
+
+        // The layouts of comp 4, and the drawings in them: a Euclidean rhythm's rings and what it
+        // plays, and a chance melody's first passes. The rings turn when dragged round.
+        void AddEuclidSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
+        void AddMelodySettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
+        canvasXaml::CanvasControl MakeGeneratorCanvas(_In_ std::function<void(canvas::CanvasDrawingSession const&, float, float)> draw);
+        controls::Slider MakeGeneratorSlider(_In_ winrt::hstring const& name, _In_ double maximum, _In_ double value, _In_ controls::TextBlock const& readout, _In_ std::function<void(double)> commit);
+        void FitGeneratorPanel() noexcept;
+        void UpdatePassCaption() noexcept;
+        void RefreshRingRows() noexcept;
+        void OnRingPressed(_In_ input::PointerRoutedEventArgs const& args);
+        void OnRingMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnRingReleased();
+        void OnRingWheel(_In_ input::PointerRoutedEventArgs const& args);
 
         // The arpeggiator (MainWindowArpeggiator.cpp): its settings, Make notes, and the keys
         // played on the sources of tracks it plays from.
@@ -394,11 +533,75 @@ namespace winrt::midisequencer::implementation
         void UpdateEchoRoutes() noexcept;
         void SendNow(_In_ seq::TrackDestination const& destination, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
         void AuditionNote(_In_ uint8_t note, _In_ bool on) noexcept;
-        void LaunchKeyboard(_In_ std::wstring const& endpointId, _In_ uint8_t group, _In_ int8_t channel) noexcept;
+        void LaunchKeyboard(_In_ std::wstring const& endpointId, _In_ uint8_t group, _In_ int8_t channel, _In_ std::wstring const& programsFromId = {}, _In_ uint8_t programsGroup = 0) noexcept;
         void ShowMetronomeFlyout();
 
         // ---- clock and sync (MainWindowClock.cpp) ----
         void ShowClockDialog();
+
+        // ---- what Windows MIDI Services says about each device (MainWindowDevices.cpp) ----
+        void ShowDeviceDetails(_In_ seq::EndpointRef const& endpoint, _In_ xaml::FrameworkElement const& anchor) noexcept;
+        void AddDeviceProperties(_In_ controls::StackPanel const& host, _In_ controls::TextBlock const& kind, _In_ seq::DeviceProperties const& properties);
+        std::vector<std::wstring> DeviceUses(_In_ seq::EndpointRef const& endpoint) const;
+        controls::Image DevicePictureFor(_In_ seq::EndpointRef const& endpoint, _In_ double size) const;
+        void SetDeviceToolTip(_In_ xaml::DependencyObject const& element, _In_ seq::EndpointRef const& endpoint) const;
+        winrt::hstring DestinationToolTip(_In_ seq::Track const& track) const;
+
+        // How often a lane's ramps go to the track's device, and why.
+        winrt::hstring LaneIntervalToolTip(_In_ seq::Track const& track) const;
+        void UpdateDeviceDescriptions() noexcept;
+        void OpenMidiSettings() noexcept;
+
+        // MIDI Monitor on a device, or on one of its groups. -1 is all of them.
+        void LaunchMonitor(_In_ std::wstring const& endpointId, _In_ int32_t group) noexcept;
+
+        // The same for two saved endpoints that mean the same device here.
+        std::wstring EndpointKeyOf(_In_ seq::EndpointRef const& endpoint) const;
+
+        // ---- what each device gets besides its notes (MainWindowStudio.cpp) ----
+        void ShowStudioSetup();
+
+        // ---- groups turned off in Studio setup (MainWindowPorts.cpp) ----
+        std::vector<seq::PortSwitch> SavedPortSwitches() const;
+
+        // The groups of a device the sequencer doesn't play to, or doesn't record from, one bit each.
+        uint16_t GroupsTurnedOff(_In_ seq::EndpointRef const& endpoint, _In_ bool playTo) const;
+
+        // The groups a device sends on, one bit each: 0 when it isn't here for SourceGroupMask,
+        // the first group for AnySourceGroups.
+        uint16_t SourceGroupMask(_In_ seq::EndpointRef const& endpoint) const;
+        uint16_t AnySourceGroups(_In_ seq::EndpointRef const& endpoint) const;
+        bool DestinationTurnedOff(_In_ seq::TrackDestination const& destination) const;
+
+        // True only when every group the track records from is turned off.
+        bool SourceTurnedOff(_In_ seq::TrackSource const& source) const;
+
+        // Leaves out the devices whose every group in use is turned off, and tells the output and
+        // the sources which groups to drop. The maps say which groups each one is used on.
+        void LeaveOutGroupsOff(
+            _Inout_ std::vector<seq::EndpointRef>& destinations,
+            _In_ std::map<std::pair<std::wstring, std::wstring>, uint16_t> const& sendsTo,
+            _Inout_ std::vector<std::wstring>& sources,
+            _In_ std::map<std::wstring, uint16_t> const& listensTo);
+
+        // ---- the sound a track picks before it plays (MainWindowSound.cpp) ----
+        bool IsGeneralMidiDevice(_In_ seq::EndpointRef const& endpoint) const;
+
+        // The track's sound by name, or empty when it doesn't choose one.
+        std::wstring SoundDisplayName(_In_ seq::Track const& track) const;
+        void UpdateSoundSection() noexcept;
+        void ShowSoundDialog();
+        void FillSoundList(_Inout_ SoundDialogState& state);
+        void ShowSoundNumbers(_Inout_ SoundDialogState& state);
+        void TrySound(_Inout_ SoundDialogState& state);
+        winrt::fire_and_forget AskDeviceForSounds(_In_ std::shared_ptr<SoundDialogState> state);
+        void OnDeviceSounds(_In_ std::wstring const& key, _In_ midiapp::ProgramListResult result, _In_ std::vector<midiapp::ProgramListEntry> entries) noexcept;
+
+        // This app's MIDI-CI presence on a device, made the first time it's asked anything. Blocks
+        // on the service: never call it on the UI thread.
+        winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquirySession CiSessionFor(
+            _In_ midi2::MidiSession const& midiSession, _In_ std::wstring const& endpointId, _In_ uint8_t group);
+        void CloseCiLinks() noexcept;
 
         // ---- remote control and MIDI Glass (MainWindowRemote.cpp) ----
         winrt::fire_and_forget StartRemoteControlAsync();
@@ -499,6 +702,222 @@ namespace winrt::midisequencer::implementation
         bool m_splitterDragging{ false };
         double m_splitterStartY{ 0 };
         double m_splitterStartHeight{ 0 };
+
+        // How wide the track list and the clip launcher are, and dragging the bars between them.
+        double m_headerWidth{ seq::AppSettings::DefaultHeaderWidth };
+        double m_launcherWidth{ seq::AppSettings::DefaultLauncherWidth };
+        bool m_columnDragging{ false };
+        bool m_columnDragHeader{ true };
+        double m_columnDragStartX{ 0 };
+        double m_columnDragStartWidth{ 0 };
+
+        // Dragging a row's grip. Tempo is the Tempo and meter row; otherwise TrackId's row.
+        struct RowResize
+        {
+            bool Active{ false };
+            bool Moved{ false };
+            bool Tempo{ false };
+            std::wstring TrackId{};
+            double StartY{ 0 };
+            double StartHeight{ 0 };
+        };
+
+        RowResize m_rowResize{};
+
+        // Every selected track, m_selectedTrackId among them, and where Shift+click runs from.
+        std::vector<std::wstring> m_selectedTrackIds{};
+        std::wstring m_selectionAnchorId{};
+
+        // A track header being dragged, and where its tracks would go: into FolderId (the top level
+        // when empty), before BeforeId (the end when empty). IntoFolderId is the folder whose own
+        // row it's over, drawn with a box rather than a line.
+        struct TrackDrag
+        {
+            bool Pressed{ false };
+            bool Active{ false };
+            bool Pinned{ false };
+            foundation::Point Start{};
+            std::vector<std::wstring> TrackIds{};
+
+            bool Valid{ false };
+            std::wstring FolderId{};
+            std::wstring BeforeId{};
+            std::wstring IntoFolderId{};
+        };
+
+        TrackDrag m_trackDrag{};
+        shapes::Rectangle m_dropLine{ nullptr };
+        shapes::Rectangle m_dropBox{ nullptr };
+
+        // A clip being dragged from the timeline or from a launcher slot.
+        struct ClipDrag
+        {
+            bool Pressed{ false };
+            bool Active{ false };
+            bool FromLauncher{ false };
+            bool Pinned{ false };
+            foundation::Point Start{};
+            std::wstring ClipId{};
+            std::wstring FromTrackId{};
+            size_t FromPlacement{ SIZE_MAX };
+            size_t FromSlot{ SIZE_MAX };
+
+            // Ticks from the clip's start to where it was picked up, and how long it plays.
+            int64_t GrabOffset{ 0 };
+            int64_t Length{ 0 };
+
+            seq::ClipDragView View{};
+        };
+
+        ClipDrag m_clipDrag{};
+        xaml::DispatcherTimer m_dragScrollTimer{ nullptr };
+        foundation::Point m_dragPoint{};
+        bool m_dragCopy{ false };
+
+        // A tag being dragged along its row.
+        struct TagDrag
+        {
+            bool Active{ false };
+            bool Moved{ false };
+            bool Pinned{ false };
+            TagHit Tag{};
+            foundation::Point Start{};
+            int64_t OriginalTick{ 0 };
+            int64_t Tick{ 0 };
+        };
+
+        TagDrag m_tagDrag{};
+
+        // Dragging the loop's ends or its middle on the ruler.
+        LoopGrab m_loopGrab{ LoopGrab::None };
+        int64_t m_loopGrabStart{ 0 };
+        int64_t m_loopGrabEnd{ 0 };
+
+        // When a press last added an automation point or a tempo change, so the second press of a
+        // double click doesn't take it away again.
+        std::chrono::steady_clock::time_point m_pointAddedAt{};
+
+        // Which cursor each lane canvas shows: -1 not set yet, 0 the arrow, 1 for a clip's end.
+        std::array<int8_t, 2> m_laneCursorSizing{ -1, -1 };
+
+        // The mixer: a strip for each track, and each control on it.
+        struct MixerControl
+        {
+            std::wstring TrackId{};
+            uint8_t Controller{ 0 };
+            controls::Slider Slider{ nullptr };
+            controls::TextBlock Value{ nullptr };
+            xaml::UIElement LaneMark{ nullptr };
+
+            // When it was last moved by hand, so its lane doesn't move it back meanwhile.
+            std::chrono::steady_clock::time_point TouchedAt{};
+        };
+
+        struct MixerStripView
+        {
+            std::wstring TrackId{};
+            controls::TextBlock Name{ nullptr };
+            controls::TextBlock Destination{ nullptr };
+            shapes::Rectangle Bar{ nullptr };
+            primitives::ToggleButton Mute{ nullptr };
+            primitives::ToggleButton Solo{ nullptr };
+            primitives::ToggleButton Write{ nullptr };
+
+            // The outline that shows the track is selected.
+            controls::Border Frame{ nullptr };
+            bool Selected{ false };
+            bool SelectionShown{ false };
+
+            // The meter's segments, from the bottom, and how many are lit.
+            std::vector<shapes::Rectangle> Meter{};
+            int32_t MeterLit{ -1 };
+        };
+
+        std::vector<MixerControl> m_mixerControls{};
+        std::vector<MixerStripView> m_mixerStrips{};
+        std::vector<std::wstring> m_mixerTrackIds{};
+        bool m_mixerUpdating{ false };
+
+        // The strips' look, from MainWindowMixerStrip.cpp: one template for every knob and fader,
+        // and when the meters last looked at the engine.
+        controls::ControlTemplate m_mixerSliderTemplate{ nullptr };
+        uint64_t m_meterFrom{ 0 };
+
+        // The name plate's color, with black or white text, whichever reads better on it.
+        void ColorMixerPlate(_In_ MixerStripView const& view, _In_ uint32_t rgb);
+        void UpdateMixerSelection() noexcept;
+
+        // Each meter shows how hard its track's notes play, from the engine's note ons and offs.
+        void UpdateMixerMeters() noexcept;
+
+        // Tracks whose mixer moves are written into lanes while the sequence plays. Not saved.
+        std::unordered_set<std::wstring> m_automationArmed{};
+
+        // A mixer change being made: kept as one edit once the control rests.
+        struct MixerEdit
+        {
+            enum class Kind : uint8_t { None, Startup, Point, Write };
+
+            Kind What{ Kind::None };
+            std::wstring TrackId{};
+            uint8_t Controller{ 0 };
+            std::vector<seq::Track> TracksBefore{};
+
+            // The track as the last move left it. A change only ever touches its own track, so
+            // this and TracksBefore are the whole edit, whatever else changed the tracks since.
+            std::optional<seq::Track> TrackAfter{};
+
+            // Writing: the lane, its points before, and what's been written, by tick, and when the
+            // last point was written.
+            std::wstring LaneId{};
+            std::vector<seq::LanePoint> PointsBefore{};
+            std::map<int64_t, uint32_t> Drawn{};
+            std::chrono::steady_clock::time_point WrittenAt{};
+            std::chrono::steady_clock::time_point PublishedAt{};
+        };
+
+        MixerEdit m_mixerEdit{};
+        xaml::DispatcherTimer m_mixerCommitTimer{ nullptr };
+
+        // What each track's controller last sent, and the newest move waiting for its turn. Kept
+        // apart from the controls, so building the strips again doesn't lose a waiting move.
+        struct MixerSend
+        {
+            std::chrono::steady_clock::time_point SentAt{};
+            std::optional<uint32_t> Waiting{};
+        };
+
+        std::map<std::pair<std::wstring, uint8_t>, MixerSend> m_mixerSends{};
+        xaml::DispatcherTimer m_mixerSendTimer{ nullptr };
+        std::chrono::steady_clock::time_point m_mixerSendDue{};
+
+        // The generator editor's drawings, redrawn as the clip plays, and where the clip is.
+        canvasXaml::CanvasControl m_ringCanvas{ nullptr };
+        controls::TextBlock m_passCaption{ nullptr };
+        controls::TextBlock m_generatorFooter{ nullptr };
+        std::vector<canvasXaml::CanvasControl> m_generatorCanvases{};
+        std::vector<controls::Grid> m_ringRows{};
+        int64_t m_editorPlayhead{ -1 };
+        uint64_t m_editorPass{ 0 };
+        size_t m_selectedRing{ SIZE_MAX };
+
+        // A Euclidean rhythm's roll, and its title, which go beside the rings table when there's
+        // room and under it when there isn't.
+        xaml::FrameworkElement m_ringsRollTitle{ nullptr };
+        xaml::FrameworkElement m_ringsRoll{ nullptr };
+
+        // A ring being turned: the rings as they'd be, kept as one edit when it's let go.
+        struct RingDrag
+        {
+            bool Active{ false };
+            bool Moved{ false };
+            size_t Ring{ SIZE_MAX };
+            double StartTurn{ 0 };
+            uint8_t StartRotate{ 0 };
+            std::vector<seq::EuclidRing> Rings{};
+        };
+
+        RingDrag m_ringDrag{};
 
         // Dragging a point on an automation lane or a tempo change, or drawing on a lane.
         struct PointDrag
@@ -683,6 +1102,21 @@ namespace winrt::midisequencer::implementation
         std::optional<seq::RemoteState> m_remoteShown{};
         xaml::DispatcherTimer m_remoteTimer{ nullptr };
         uint32_t m_remoteTicks{ 0 };
+
+        // MIDI-CI: a connection and presence for each device asked for its sounds, kept until
+        // the window closes so the device sees one identifier. The lists it shared are kept by
+        // device, group and channel, on the UI thread.
+        struct CiLink
+        {
+            midi2::MidiEndpointConnection Connection{ nullptr };
+            std::unique_ptr<midiapp::MidiCiPresence> Presence{};
+        };
+
+        std::mutex m_ciLock{};
+        std::map<std::wstring, CiLink> m_ciLinks{};
+        std::shared_ptr<midiapp::MidiCiProgramListQuery> m_soundQuery{};
+        std::map<std::wstring, std::vector<midiapp::ProgramListEntry>> m_deviceSounds{};
+        std::weak_ptr<SoundDialogState> m_soundDialog{};
 
         xaml::DispatcherTimer m_frameTimer{ nullptr };
         xaml::DispatcherTimer m_serviceTimer{ nullptr };

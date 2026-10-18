@@ -78,6 +78,11 @@ namespace winrt::midisequencer::implementation
                 MIDI_SEQUENCER_LOG_INFO(std::wstring{ message }.c_str());
             });
 
+            midiapp::SetMidiCiErrorHandler([](std::wstring_view message, winrt::hresult)
+            {
+                MIDI_SEQUENCER_LOG_INFO(std::wstring{ message }.c_str());
+            });
+
             InitializeStaticText();
             InitializeWindowChrome();
             ApplyPalette();
@@ -134,7 +139,10 @@ namespace winrt::midisequencer::implementation
             }
 
             LauncherToggle().IsChecked(settings.ShowLauncher());
-            LauncherColumn().Width(xaml::GridLengthHelper::FromPixels(settings.ShowLauncher() ? 500 : 0));
+            m_headerWidth = settings.HeaderWidth();
+            m_launcherWidth = settings.LauncherWidth();
+            InitializeArrangeSplitters();
+            ApplyArrangeColumns();
             EditorPanel().Height(settings.EditorHeight());
 
             m_roll.SetPalette(&m_palette);
@@ -151,6 +159,11 @@ namespace winrt::midisequencer::implementation
 
             InitializePatternEditor();
             InitializeGeneratorEditor();
+
+            if (settings.ShowMixer())
+            {
+                ShowMixer(true);
+            }
 
             m_frameTimer = xaml::DispatcherTimer{};
             m_frameTimer.Interval(FrameInterval);
@@ -289,6 +302,9 @@ namespace winrt::midisequencer::implementation
                     strong->RebuildHeaders();
                     strong->InvalidateArrange();
                     strong->InvalidateEditor();
+
+                    // The strips take their colors from the theme when they're built.
+                    strong->RebuildMixer();
                 }
             });
         }
@@ -582,6 +598,9 @@ namespace winrt::midisequencer::implementation
                 DevicesStatusText().Text(res::FormatString(used.size() == 1 ? L"DevicesInUseOneMissingFormat" : L"DevicesInUseMissingFormat", used.size(), missing));
             }
 
+            // It opens Studio setup, which lists those devices, so it's only there when there are some.
+            DevicesStatusButton().Visibility(used.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
             ClockOutStatusText().Text(L"");
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the status bar.")
@@ -734,6 +753,9 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // A mixer change still waiting is a change to save like any other.
+            CommitMixerEdit();
+
             if (m_closeConfirmed || !m_dirty || m_readOnly)
             {
                 return;
@@ -813,6 +835,7 @@ namespace winrt::midisequencer::implementation
             }
 
             StopRemoteControl();
+            CloseCiLinks();
 
             if (m_sources != nullptr)
             {

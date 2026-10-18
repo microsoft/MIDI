@@ -55,6 +55,27 @@ namespace midisequencer
     float TempoY(_In_ double beatsPerMinute, _In_ TempoRange const& range, _In_ float top, _In_ float height) noexcept;
     double TempoAtY(_In_ float y, _In_ TempoRange const& range, _In_ float top, _In_ float height) noexcept;
 
+    // The band along the top of the Tempo and meter row where its tags sit. Below it is the
+    // tempo line.
+    inline constexpr float TempoTagBandHeight = 23.0f;
+
+    // A clip being dragged: where it came from, drawn faded when it moves rather than copies, and
+    // where it would land, drawn on the timeline or in a launcher slot.
+    struct ClipDragView
+    {
+        std::wstring ClipId{};
+        bool Copy{ false };
+
+        std::wstring FromTrackId{};
+        size_t FromPlacement{ SIZE_MAX };
+        size_t FromSlot{ SIZE_MAX };
+
+        std::wstring ToTrackId{};
+        int64_t ToTick{ -1 };
+        int64_t Length{ 0 };
+        size_t ToSlot{ SIZE_MAX };
+    };
+
     struct ArrangeDrawContext
     {
         Sequence const* Doc{ nullptr };
@@ -95,6 +116,8 @@ namespace midisequencer
         // While a tempo change is dragged, the row keeps the scale it had when the drag began, so
         // the line doesn't slide away under the pointer.
         std::optional<TempoRange> TempoScale{};
+
+        std::optional<ClipDragView> ClipDrag{};
 
         double SceneWidth{ 100 };
         double SceneScrollX{ 0 };
@@ -141,6 +164,10 @@ namespace midisequencer
         // Where the "Back to timeline" button is drawn on a track covered by a launched clip, so a
         // click there can be told apart from a click on the lane. Known once it has been drawn.
         foundation::Rect BackToTimelineButtonBounds(_In_ float rowTop, _In_ float rowHeight) const noexcept;
+
+        // Where a tag's label is drawn, so it can be picked up. atTop is true on the Tempo and
+        // meter row, where tags sit along the top; a track's sit along its bottom.
+        foundation::Rect TagLabelBounds(_In_ Tag const& tag, _In_ float x, _In_ float top, _In_ float height, _In_ bool atTop);
 
         // The clip's pitch range is worked out once per clip and kept until the sequence changes.
         void InvalidateCaches() noexcept { m_pitchRanges.clear(); }

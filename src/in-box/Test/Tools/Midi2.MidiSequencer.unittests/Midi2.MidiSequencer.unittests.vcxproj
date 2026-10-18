@@ -110,6 +110,9 @@
     <ClInclude Include="SequenceProvenanceTests.h" />
     <ClInclude Include="HostileFileTests.h" />
     <ClInclude Include="ArpeggiatorTests.h" />
+    <ClInclude Include="StudioSetupTests.h" />
+    <ClInclude Include="RecentSequencesTests.h" />
+    <ClInclude Include="TrackSoundTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -130,6 +133,9 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\RemoteControl.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\GlassLayoutWriter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\StudioSetup.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\RecentSequences.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\TrackSound.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
@@ -158,6 +164,9 @@
     <ClCompile Include="SequenceProvenanceTests.cpp" />
     <ClCompile Include="HostileFileTests.cpp" />
     <ClCompile Include="ArpeggiatorTests.cpp" />
+    <ClCompile Include="StudioSetupTests.cpp" />
+    <ClCompile Include="RecentSequencesTests.cpp" />
+    <ClCompile Include="TrackSoundTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
@@ -181,6 +190,9 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\GlassLayoutWriter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SampleSequence.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\StudioSetup.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecentSequences.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\TrackSound.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ClockFollower.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />

@@ -281,6 +281,12 @@ namespace midisequencer
         // What arpeggiators played since the last call, oldest first. Any thread.
         std::vector<ArpeggiatedNote> TakeArpeggiated();
 
+        // How hard each track's notes play between two times: the highest velocity, from 0 to 1,
+        // of the notes it holds then, timed as the device gets them. A note counts from its note
+        // on to its note off and no longer: how long the sound rings on is up to the device, and
+        // nothing here knows it. Tracks holding nothing aren't listed. Any thread.
+        std::vector<std::pair<std::wstring, float>> HeldNoteLevels(_In_ uint64_t from, _In_ uint64_t to) const;
+
         // Hands over everything due before now plus the look-ahead.
         void Sweep();
 
@@ -305,6 +311,9 @@ namespace midisequencer
 
             // The device's offset, in clock ticks, already taken off both timestamps.
             uint64_t Lead{ 0 };
+
+            // How hard it was played, 0 to 65535, for the mixer's meter.
+            uint16_t Velocity{ 0 };
 
             bool HandedOver{ false };
         };
@@ -379,7 +388,8 @@ namespace midisequencer
             _In_ uint64_t lead,
             _In_reads_(wordCount) uint32_t const* words,
             _In_ uint8_t wordCount,
-            _In_ uint64_t limit);
+            _In_ uint64_t limit,
+            _In_ uint16_t velocity = 0);
         void SendDueNoteOffs(_In_ uint64_t limit);
         uint64_t LookAheadTicks() const noexcept;
         void SweepMetronome(_In_ uint64_t now);

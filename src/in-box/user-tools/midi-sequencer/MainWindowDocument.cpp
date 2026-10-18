@@ -267,8 +267,13 @@ namespace winrt::midisequencer::implementation
             m_autosaved = false;
             m_undo.Clear();
             m_selectedTrackId.clear();
+            m_selectedTrackIds.clear();
+            m_selectionAnchorId.clear();
             m_selectedPlacement = SIZE_MAX;
             m_wantsDefaultDestination = true;
+            m_mixerEdit = MixerEdit{};
+            m_automationArmed.clear();
+            m_mixerTrackIds.clear();
             ++m_version;
 
             if (m_engine != nullptr)
@@ -284,6 +289,7 @@ namespace winrt::midisequencer::implementation
             Publish();
             OpenFirstClipInEditor();
             RebuildHeaders();
+            RefreshMixer();
 
             // Put the synth on the new tracks straight away when it's already been found.
             RefreshEndpoints();
@@ -299,7 +305,8 @@ namespace winrt::midisequencer::implementation
 
     bool MainWindow::CanReplaceDocument() const noexcept
     {
-        return m_path.empty() && !m_dirty;
+        // A mixer change that hasn't been kept yet is still a change.
+        return m_path.empty() && !m_dirty && m_mixerEdit.What == MixerEdit::Kind::None;
     }
 
     void MainWindow::OpenFirstClipInEditor() noexcept
@@ -502,7 +509,12 @@ namespace winrt::midisequencer::implementation
             m_undo.Clear();
             m_wantsDefaultDestination = false;
             m_selectedTrackId.clear();
+            m_selectedTrackIds.clear();
+            m_selectionAnchorId.clear();
             m_selectedPlacement = SIZE_MAX;
+            m_mixerEdit = MixerEdit{};
+            m_automationArmed.clear();
+            m_mixerTrackIds.clear();
             m_position = 0;
             m_scrollX = 0;
             m_scrollY = 0;
@@ -513,6 +525,7 @@ namespace winrt::midisequencer::implementation
             Publish();
             OpenFirstClipInEditor();
             RebuildHeaders();
+            RefreshMixer();
             PrepareConnectionsAsync();
 
             UpdateTitle();
@@ -536,6 +549,8 @@ namespace winrt::midisequencer::implementation
             catch (...)
             {
             }
+
+            RememberRecentSequence(path);
 
             return true;
         }
@@ -902,6 +917,9 @@ namespace winrt::midisequencer::implementation
 
         try
         {
+            // A mixer change still waiting goes on the history before it goes in the file.
+            CommitMixerEdit();
+
             auto path = m_path;
 
             // A file from a newer version is never saved over: its settings this version doesn't
@@ -961,6 +979,8 @@ namespace winrt::midisequencer::implementation
             catch (...)
             {
             }
+
+            RememberRecentSequence(path);
 
             if (m_closeConfirmed)
             {
@@ -1197,6 +1217,8 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::Commit(std::wstring const& name, seq::ChangeList changes)
     {
+        // A mixer change still waiting was made first, so it goes on the history first.
+        RecordMixerEdit();
         m_undo.Commit(name, std::move(changes));
         DocumentChanged();
     }
@@ -1228,6 +1250,7 @@ namespace winrt::midisequencer::implementation
             RebuildLayout();
             Publish();
             RefreshEditor();
+            RefreshMixer();
 
             // Later, not now: an edit made from one of the inspector's own lists would otherwise
             // replace that list's items while it's still raising its selection event.
@@ -1276,11 +1299,19 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // A mixer change still waiting is the last thing done, so it's the first undone.
+            auto const recorded = RecordMixerEdit();
+
             if (m_undo.Undo(m_doc))
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
                 ClearAutomationSelection();
+                ReleaseMixerControls();
+                DocumentChanged();
+            }
+            else if (recorded)
+            {
                 DocumentChanged();
             }
         }
@@ -1291,11 +1322,19 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // A mixer change still waiting is a new edit, which leaves nothing to redo.
+            auto const recorded = RecordMixerEdit();
+
             if (m_undo.Redo(m_doc))
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
                 ClearAutomationSelection();
+                ReleaseMixerControls();
+                DocumentChanged();
+            }
+            else if (recorded)
+            {
                 DocumentChanged();
             }
         }

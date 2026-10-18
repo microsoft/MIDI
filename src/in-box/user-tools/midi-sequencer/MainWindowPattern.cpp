@@ -149,6 +149,7 @@ namespace winrt::midisequencer::implementation
             strings.BadgeNotFirst = res::GetString(L"PatternBadgeNotFirst");
             strings.UndoSteps = res::GetString(L"UndoEditSteps");
             strings.UndoVelocity = res::GetString(L"UndoStepVelocity");
+            strings.UndoMoveLane = res::GetString(L"UndoMovePatternLane");
 
             // The editor belongs to this window and only calls these while it draws.
             strings.LaneName = [this](seq::PatternLane const& lane) { return PatternLaneName(lane, seq::PatternMode::Drums); };
@@ -252,9 +253,11 @@ namespace winrt::midisequencer::implementation
 
             if (auto const track = EditorTrack(); track != nullptr)
             {
-                left = std::wstring{ res::FormatString(L"PatternPlaysToFormat", DescribeDestination(*track)) };
+                // "Plays to" only goes in front of a device. A track without one says so on its own.
+                left = track->Destination.Endpoint.IsEmpty() ? DescribeDestination(*track) :
+                    std::wstring{ res::FormatString(L"PatternPlaysToFormat", DescribeDestination(*track)) };
 
-                if (track->Destination.Channel < 0)
+                if (track->Destination.Channel < 0 && !track->Destination.Endpoint.IsEmpty())
                 {
                     left += L" \u00B7 " + std::wstring{ res::FormatString(L"ChannelShortFormat", static_cast<int32_t>(pattern.Channel) + 1) };
                 }
@@ -1024,9 +1027,16 @@ namespace winrt::midisequencer::implementation
         }
 
         case seq::PatternTarget::LaneName:
-            ShowPatternLaneMenu(hit.Lane, m_editorCanvas, position);
-            args.Handled(true);
-            return;
+            // A right click opens the lane's menu straight away. A click opens it when it's let
+            // go, because pressing and dragging moves the lane instead.
+            if (right)
+            {
+                ShowPatternLaneMenu(hit.Lane, m_editorCanvas, position);
+                args.Handled(true);
+                return;
+            }
+
+            break;
 
         case seq::PatternTarget::AddLane:
             if (!right)
@@ -1075,7 +1085,9 @@ namespace winrt::midisequencer::implementation
 
         m_patternGesture = false;
 
-        auto edit = m_pattern.PointerReleased(args.GetCurrentPoint(m_editorCanvas).Position());
+        auto const position = args.GetCurrentPoint(m_editorCanvas).Position();
+        auto const clickedLane = m_pattern.PressedLaneName();
+        auto edit = m_pattern.PointerReleased(position);
         m_editorCanvas.ReleasePointerCaptures();
 
         if (edit.has_value())
@@ -1086,6 +1098,11 @@ namespace winrt::midisequencer::implementation
         {
             UpdatePatternInspector();
             InvalidateEditor();
+
+            if (clickedLane.has_value())
+            {
+                ShowPatternLaneMenu(*clickedLane, m_editorCanvas, position);
+            }
         }
     }
 

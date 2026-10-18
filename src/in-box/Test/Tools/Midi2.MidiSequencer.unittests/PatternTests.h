@@ -33,4 +33,5 @@ public:
     TEST_METHOD(ThePreviewFollowsThePattern);
     TEST_METHOD(MakeNotesPlaysWhatThePatternPlays);
     TEST_METHOD(PatternEditsUndo);
+    TEST_METHOD(DraggedLanesMoveInPlace);
 };

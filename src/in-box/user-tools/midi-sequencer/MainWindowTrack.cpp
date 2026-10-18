@@ -239,30 +239,11 @@ namespace winrt::midisequencer::implementation
             FillGroupCombo(DestinationGroupCombo(), false, track->Destination.Endpoint, track->Destination.Group, false);
             FillChannelCombo(DestinationChannelCombo(), track->Destination.Channel, true);
 
+            UpdateDeviceDescriptions();
             UpdateProtocolNote();
 
-            // Start-up messages, as their words, until there's an editor for them.
-            StartupList().Children().Clear();
-
-            if (track->Startup.empty())
-            {
-                controls::TextBlock none{};
-                none.Text(res::GetString(L"StartupNone"));
-                none.FontSize(12);
-                none.Foreground(BrushFor(m_palette.Text3));
-                StartupList().Children().Append(none);
-            }
-            else
-            {
-                for (auto const& message : track->Startup)
-                {
-                    controls::TextBlock line{};
-                    line.Text(winrt::hstring{ seq::UmpToText(message) });
-                    line.FontSize(12);
-                    line.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
-                    StartupList().Children().Append(line);
-                }
-            }
+            // The sound, and the other start-up messages in words.
+            UpdateSoundSection();
 
             m_inspectorUpdating = false;
         }
@@ -278,7 +259,7 @@ namespace winrt::midisequencer::implementation
     {
         auto const items = winrt::single_threaded_observable_vector<foundation::IInspectable>();
 
-        items.Append(winrt::make<appshared::implementation::EndpointChoice>(res::GetString(sources ? L"NoSourceChoice" : L"NoDestinationChoice"), winrt::hstring{}, winrt::hstring{}));
+        items.Append(winrt::make<DeviceChoice>(res::GetString(sources ? L"NoSourceChoice" : L"NoDestinationChoice"), winrt::hstring{}, nullptr, winrt::hstring{}));
 
         int32_t selectedIndex{ 0 };
         auto const selectedId = selected.IsEmpty() ? std::wstring{} : m_directory->ResolveId(selected);
@@ -300,7 +281,8 @@ namespace winrt::midisequencer::implementation
                 found = true;
             }
 
-            items.Append(winrt::make<appshared::implementation::EndpointChoice>(winrt::hstring{ live.Name }, winrt::hstring{ live.EndpointDeviceId }, winrt::hstring{ live.ImagePath }));
+            items.Append(winrt::make<DeviceChoice>(winrt::hstring{ live.Name }, winrt::hstring{ live.EndpointDeviceId },
+                seq::DevicePicture(summary.PicturePath, 18), winrt::hstring{ live.Description }));
         }
 
         // A saved device that isn't here still shows, so the choice isn't lost by looking at it.
@@ -308,8 +290,8 @@ namespace winrt::midisequencer::implementation
         {
             auto const name = selected.Name.empty() ? std::wstring{ res::GetString(L"UnknownEndpoint") } : selected.Name;
             selectedIndex = static_cast<int32_t>(items.Size());
-            items.Append(winrt::make<appshared::implementation::EndpointChoice>(
-                winrt::hstring{ name + L" " + std::wstring{ res::GetString(L"NotConnectedSuffix") } }, winrt::hstring{ selected.Id }, winrt::hstring{}));
+            items.Append(winrt::make<DeviceChoice>(
+                winrt::hstring{ name + L" " + std::wstring{ res::GetString(L"NotConnectedSuffix") } }, winrt::hstring{ selected.Id }, nullptr, winrt::hstring{}));
         }
 
         combo.ItemsSource(items);
@@ -328,6 +310,7 @@ namespace winrt::midisequencer::implementation
         }
 
         auto const live = m_directory->Resolve(endpoint);
+        auto const off = GroupsTurnedOff(endpoint, !sources);
 
         for (int32_t group = 0; group < 16; ++group)
         {
@@ -356,6 +339,11 @@ namespace winrt::midisequencer::implementation
             if (!name.empty())
             {
                 text += L" \u00B7 " + name;
+            }
+
+            if ((off & (1u << group)) != 0)
+            {
+                text += L" " + std::wstring{ res::GetString(L"TurnedOffSuffix") };
             }
 
             items.Append(winrt::make<appshared::implementation::NamedChoice>(winrt::hstring{ text }, group));
@@ -552,7 +540,7 @@ namespace winrt::midisequencer::implementation
 
             auto source = track->Source;
 
-            if (auto const choice = SourceEndpointCombo().SelectedItem().try_as<appshared::EndpointChoice>(); choice != nullptr)
+            if (auto const choice = SourceEndpointCombo().SelectedItem().try_as<winrt::midisequencer::DeviceChoice>(); choice != nullptr)
             {
                 source.Endpoint = choice.EndpointDeviceId().empty()
                     ? seq::EndpointRef{}
@@ -662,6 +650,11 @@ namespace winrt::midisequencer::implementation
             auto const id = m_inspectorTrackId;
             auto const channel = track->Destination.Channel;
 
+            // The keyboard plays into the loopback, but its program names come from the device
+            // the track plays to.
+            auto const programsFrom = m_directory->ResolveId(track->Destination.Endpoint);
+            auto const programsGroup = track->Destination.Group;
+
             EditTracks(std::wstring{ res::GetString(L"UndoChangeSource") }, [&](seq::Sequence& doc)
             {
                 if (auto t = seq::FindTrack(doc, id); t != nullptr)
@@ -677,7 +670,7 @@ namespace winrt::midisequencer::implementation
             PrepareConnectionsAsync();
             RebuildHeaders();
 
-            LaunchKeyboard(sideA->EndpointDeviceId, 0, channel);
+            LaunchKeyboard(sideA->EndpointDeviceId, 0, channel, programsFrom, programsGroup);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to record from MIDI Keyboard.")
     }
@@ -701,7 +694,7 @@ namespace winrt::midisequencer::implementation
 
             auto destination = track->Destination;
 
-            if (auto const choice = DestinationEndpointCombo().SelectedItem().try_as<appshared::EndpointChoice>(); choice != nullptr)
+            if (auto const choice = DestinationEndpointCombo().SelectedItem().try_as<winrt::midisequencer::DeviceChoice>(); choice != nullptr)
             {
                 destination.Endpoint = choice.EndpointDeviceId().empty()
                     ? seq::EndpointRef{}

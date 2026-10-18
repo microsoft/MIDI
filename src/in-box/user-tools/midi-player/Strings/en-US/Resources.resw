@@ -114,11 +114,11 @@
     <value>Position</value>
   </data>
   <data name="PositionSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
-    <value>Control+Shift+B, Control+Shift+F</value>
-    <comment>Read by screen readers. Must match the keyboard shortcuts on the position slider: back 5 seconds, then forward 5 seconds.</comment>
+    <value>Control+Shift+B, Control+Shift+F, Control+J</value>
+    <comment>Read by screen readers. Must match the keyboard shortcuts on the position slider: back 5 seconds, forward 5 seconds, then go to a time.</comment>
   </data>
   <data name="PositionSlider.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Ctrl+Shift+B goes back 5 seconds, and Ctrl+Shift+F goes forward 5 seconds</value>
+    <value>Ctrl+Shift+B goes back 5 seconds, Ctrl+Shift+F goes forward 5 seconds, and Ctrl+J goes to a time</value>
   </data>
   <data name="OpenFilesButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Add MIDI files to the queue</value>
@@ -236,6 +236,48 @@
     <value>Go back to the speed the file was written at (Ctrl+Shift+N)</value>
   </data>
 
+  <!-- ================================= Transpose ================================= -->
+  <data name="TransposeCaption.Text" xml:space="preserve">
+    <value>Transpose</value>
+    <comment>Small label beside the slider that plays the music in another key</comment>
+  </data>
+  <data name="TransposeSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transpose, semitones</value>
+    <comment>Screen readers read this, then the slider's number, so the unit belongs here. A semitone is one key on a piano, black or white.</comment>
+  </data>
+  <data name="TransposeSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Moves every note up or down so you can play along in another key. Drums stay as they are. 0 is the key the file was written in, and 12 is an octave.</value>
+  </data>
+  <data name="TransposeSlider.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Play the music in another key. Drums stay the same. Ctrl+Shift+U is up a semitone, Ctrl+Shift+D is down a semitone, and Ctrl+Shift+K is the original key.</value>
+  </data>
+  <data name="TransposeSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+Shift+U, Control+Shift+D, Control+Shift+K</value>
+    <comment>Read by screen readers. Must match the keyboard shortcuts on the transpose slider: up, down, then the original key.</comment>
+  </data>
+  <data name="TransposeValueUpFormat" xml:space="preserve">
+    <value>+{0}</value>
+    <comment>{0} how many semitones the music is moved up. Shown beside the transpose slider.</comment>
+  </data>
+  <data name="TransposeValueDownFormat" xml:space="preserve">
+    <value>−{0}</value>
+    <comment>{0} how many semitones the music is moved down. The character before it is a minus sign. Shown beside the transpose slider.</comment>
+  </data>
+  <data name="TransposeValueOriginal" xml:space="preserve">
+    <value>0</value>
+    <comment>Shown beside the transpose slider when the music plays in the key it was written in</comment>
+  </data>
+  <data name="ResetTransposeButton.Content" xml:space="preserve">
+    <value>Reset</value>
+    <comment>Button beside the transpose slider that puts the music back in its original key</comment>
+  </data>
+  <data name="ResetTransposeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Reset to the original key</value>
+  </data>
+  <data name="ResetTransposeButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Go back to the key the file was written in (Ctrl+Shift+K)</value>
+  </data>
+
   <!-- ============================ Keyboard shortcuts ============================ -->
   <!-- Spoken by screen readers after a shortcut, because focus does not move. -->
   <data name="AnnouncePlaying" xml:space="preserve">
@@ -257,9 +299,56 @@
     <value>Speed {0} percent</value>
     <comment>{0} the playback speed as a whole percent of the speed the file was written at</comment>
   </data>
+  <data name="AnnounceTransposeUpOne" xml:space="preserve">
+    <value>Transposed up 1 semitone</value>
+  </data>
+  <data name="AnnounceTransposeUpFormat" xml:space="preserve">
+    <value>Transposed up {0} semitones</value>
+    <comment>{0} how many semitones the music is moved up, from 2 to 12</comment>
+  </data>
+  <data name="AnnounceTransposeDownOne" xml:space="preserve">
+    <value>Transposed down 1 semitone</value>
+  </data>
+  <data name="AnnounceTransposeDownFormat" xml:space="preserve">
+    <value>Transposed down {0} semitones</value>
+    <comment>{0} how many semitones the music is moved down, from 2 to 12</comment>
+  </data>
+  <data name="AnnounceTransposeOriginal" xml:space="preserve">
+    <value>Original key</value>
+    <comment>Spoken when the music goes back to the key the file was written in</comment>
+  </data>
   <data name="AnnouncePositionFormat" xml:space="preserve">
     <value>{0} of {1}</value>
-    <comment>{0} the position in the file, {1} its length, both as minutes and seconds such as 1:25</comment>
+    <comment>{0} the position in the file, {1} its length, both as minutes and seconds such as 1:25. Also what screen readers read as the position slider's value.</comment>
+  </data>
+
+  <!-- ================================ Go to time ================================ -->
+  <data name="GoToTimeDialog.Title" xml:space="preserve">
+    <value>Go to a time</value>
+  </data>
+  <data name="GoToTimeDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Go</value>
+  </data>
+  <data name="GoToTimeDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="GoToTimeBox.Header" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="GoToTimeBox.PlaceholderText" xml:space="preserve">
+    <value>1:25</value>
+    <comment>An example of a time to type, in minutes and seconds</comment>
+  </data>
+  <data name="GoToTimeHintFormat" xml:space="preserve">
+    <value>Type a time like 1:25, or a number of seconds. It's at {0} now, and the file is {1} long.</value>
+    <comment>{0} the position now, {1} the file's length, both as minutes and seconds such as 1:25</comment>
+  </data>
+  <data name="GoToTimeNotATime" xml:space="preserve">
+    <value>That isn't a time. Type it like 1:25, or as a number of seconds.</value>
+  </data>
+  <data name="GoToTimePastTheEndFormat" xml:space="preserve">
+    <value>That's past the end. The file is {0} long.</value>
+    <comment>{0} the file's length as minutes and seconds such as 3:40</comment>
   </data>
 
   <!-- =================================== Queue =================================== -->

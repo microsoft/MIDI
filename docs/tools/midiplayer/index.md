@@ -26,7 +26,7 @@ A MIDI file isn't audio. It's a list of instructions, and what it sounds like de
 6. **The queue.** Files play one after another. Double-click a file to jump to it.
 7. **Keyboard view** switches to notes falling towards a keyboard. **Repeat** starts the queue again from the top, and the last button shows or hides the queue.
 
-**Speed**, under the transport buttons, plays the music slower or faster without changing its pitch. See [Slowing down or speeding up](#slowing-down-or-speeding-up). The transport buttons, speed, and repeat all have [keyboard shortcuts](#keyboard-shortcuts).
+**Speed** and **Transpose**, under the transport buttons, play the music slower or faster, or in another key. See [Slowing down or speeding up](#slowing-down-or-speeding-up) and [Playing in another key](#playing-in-another-key). The transport buttons, speed, transpose, and repeat all have [keyboard shortcuts](#keyboard-shortcuts).
 
 You can also open a MIDI file straight from File Explorer. Windows MIDI Player is added to the **Open with** menu for `.mid`, `.midi`, `.kar`, `.rmi`, and `.smf` files, and appears in **Settings &rsaquo; Apps &rsaquo; Default apps** if you want it to be the app that opens them. It deliberately doesn't take that over during installation &mdash; Windows doesn't allow an installer to claim a file type for you, and apps that try get reset.
 
@@ -54,6 +54,17 @@ The top of the window is the file that's playing.
 
 **Chord symbols and lyrics are only there if the file has them.** Both panels stay out of the way completely on a file that doesn't, rather than showing you an empty label. Chord symbols in particular are uncommon &mdash; they turn up in lead sheet and karaoke files.
 
+## Moving around a file
+
+The position bar under the file name shows where you are. Drag it, or tab to it and use the keys:
+
+- The arrow keys move 5 seconds.
+- Page Up and Page Down move 30 seconds.
+- Home goes to the start, and End to the end.
+- **Ctrl+J** opens **Go to a time**. Type a time like 1:25, or a number of seconds, and press Enter. If it isn't a time, or it's past the end, the player says why and lets you try again.
+
+Screen readers read the position as a time, such as "1:25 of 3:40". While the music plays and the position bar has focus, it moves once a second, when the time changes, so your screen reader doesn't talk over the music.
+
 ## Slowing down or speeding up
 
 **Speed**, under the transport buttons, plays the music slower or faster without changing its pitch. It's there for learning a part by ear: slow a hard passage down, then bring it back up as you get it.
@@ -70,9 +81,24 @@ Slowing down a MIDI file doesn't make it sound worse, the way slowing down a rec
 
 **The speed isn't saved.** It stays the same for every file in the queue until you change it, and it's back to 100% the next time you open the player.
 
+## Playing in another key
+
+**Transpose**, beside **Speed**, moves every note up or down so you can play or sing along in a key that suits you. It counts in semitones. A semitone is the step from one key on a piano to the next one, black or white.
+
+- Transpose goes from 12 semitones down to 12 up. That's an octave each way. 0 is the key the file was written in.
+- **Drums don't move.** On a drum kit, each note number is a different drum, so moving it would turn a snare into a tom. Channel 10 is always left alone. So is any other channel the file switches to a drum kit, which many GS and XG files do.
+- You can change it while the music plays. The new key starts within about a quarter of a second. A note that's already sounding finishes in the old key, the way it does when you press transpose on a keyboard, so nothing gets cut off or left hanging.
+- A note moved past the top or bottom of the MIDI range isn't played.
+- The note views and the **CHORD** display show the music in the key you hear it in.
+- **Reset** goes back to the original key.
+- With the keyboard, tab to the slider. The arrow keys move it a semitone, and Page Up and Page Down move it an octave. Screen readers call it "Transpose, semitones".
+- From anywhere in the window, **Ctrl+Shift+U** moves it up a semitone, **Ctrl+Shift+D** moves it down a semitone, and **Ctrl+Shift+K** goes back to the original key.
+
+**Transpose isn't saved either.** It stays the same for every file in the queue until you change it, and it's back to 0 the next time you open the player.
+
 ## Keyboard shortcuts
 
-These work from anywhere in the window. They're the keys Windows Media Player has always used, so you may already know them.
+These work from anywhere in the window. Most are the keys Windows Media Player has always used, so you may already know them.
 
 | Press | To |
 |---|---|
@@ -82,15 +108,19 @@ These work from anywhere in the window. They're the keys Windows Media Player ha
 | **Ctrl+F** | Go to the next file |
 | **Ctrl+Shift+B** | Go back 5 seconds |
 | **Ctrl+Shift+F** | Go forward 5 seconds |
+| **Ctrl+J** | Go to a time you type |
 | **Ctrl+Shift+S** | Slow down by 5% |
 | **Ctrl+Shift+G** | Speed up by 5% |
 | **Ctrl+Shift+N** | Go back to normal speed |
+| **Ctrl+Shift+U** | Transpose up a semitone |
+| **Ctrl+Shift+D** | Transpose down a semitone |
+| **Ctrl+Shift+K** | Go back to the original key |
 | **Ctrl+T** | Turn repeat on or off |
 | **Ctrl+O** | Add files |
 
-**With a screen reader, each shortcut says what it did.** Focus doesn't move when you use one, so the player tells your screen reader the result instead: "Paused", "Speed 80 percent", the new position, such as "1:25 of 3:40", or the name of the file you moved to.
+**With a screen reader, each shortcut says what it did.** Focus doesn't move when you use one, so the player tells your screen reader the result instead: "Paused", "Speed 80 percent", "Transposed up 2 semitones", the new position, such as "1:25 of 3:40", or the name of the file you moved to. When the slider a shortcut changes has focus, your screen reader reads the slider's new value instead, so you don't hear it twice.
 
-Each button's tooltip shows its shortcut, and screen readers read the shortcut when you move to the button. A shortcut does nothing when its button can't be used, such as **Ctrl+S** when nothing is playing.
+Each control's tooltip shows its shortcuts, and screen readers read them when you move to the control. A shortcut does nothing when its control can't be used, such as **Ctrl+S** when nothing is playing.
 
 ## The two views
 
@@ -135,7 +165,7 @@ A file that couldn't be read stays in the list with a warning on it and says why
 
 Every MIDI file player has to deal with stuck notes, because MIDI notes are switched on and off separately and anything that interrupts the music between the two leaves a note sounding.
 
-MIDI File Player sends note offs for everything that's sounding, then sustain off, all notes off, all sound off, and pitch bend back to center, **when you stop, pause, seek, mute, solo, load a new file, close the app, and at the end of a file**. That last one matters more than it sounds: real MIDI files are quite often missing their final note offs. Changing the speed doesn't need any of this, so it doesn't cut anything off.
+MIDI File Player sends note offs for everything that's sounding, then sustain off, all notes off, all sound off, and pitch bend back to center, **when you stop, pause, seek, mute, solo, load a new file, close the app, and at the end of a file**. That last one matters more than it sounds: real MIDI files are quite often missing their final note offs. Changing the speed or the key doesn't need any of this, so it doesn't cut anything off.
 
 **It only does this on the channels the file actually uses.** Windows MIDI Services lets more than one application share a device, so blasting all sound off across all sixteen channels would silence whatever else is using the same instrument.
 

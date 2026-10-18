@@ -181,15 +181,49 @@ namespace winrt::midisequencer::implementation
                 {
                     std::vector<std::wstring> detail{};
 
+                    // The id of the endpoint that's here when there is one, so a device that
+                    // moved to another port is still read in full.
+                    auto const addDetail = [&strong, &detail](seq::EndpointRef const& endpoint)
+                    {
+                        if (endpoint.IsEmpty())
+                        {
+                            return;
+                        }
+
+                        auto id = strong->m_directory->ResolveId(endpoint);
+
+                        if (id.empty())
+                        {
+                            id = endpoint.Id;
+                        }
+
+                        if (!id.empty())
+                        {
+                            detail.push_back(std::move(id));
+                        }
+                    };
+
                     seq::ForEachTrack(strong->m_doc, [&](seq::Track const& track, size_t)
                     {
-                        if (!track.IsFolder && !track.Destination.Endpoint.Id.empty())
+                        if (!track.IsFolder)
                         {
-                            detail.push_back(track.Destination.Endpoint.Id);
+                            addDetail(track.Destination.Endpoint);
                         }
 
                         return true;
                     });
+
+                    // The devices Studio setup sends the clock and tempo to, and the metronome
+                    // and time code, so what each group speaks is known for them too.
+                    auto const& settings = seq::AppSettings::Current();
+
+                    for (auto const& output : settings.ClockOutputs())
+                    {
+                        addDetail(seq::EndpointRef{ output.EndpointName, output.EndpointId });
+                    }
+
+                    addDetail(seq::EndpointRef{ settings.MetronomeEndpointName(), settings.MetronomeEndpointId() });
+                    addDetail(seq::EndpointRef{ settings.TimeCode().EndpointName, settings.TimeCode().EndpointId });
 
                     auto const directory = strong->m_directory;
                     co_await ::midisequencer::RunOnBackgroundAsync([&]() { directory->Refresh(detail); });
@@ -245,6 +279,17 @@ namespace winrt::midisequencer::implementation
                     strong->RebuildHeaders();
                     strong->RefreshInspector();
                     strong->UpdateEditorHeader();
+
+                    // A pattern's or a generator's footer says where it plays.
+                    if (strong->EditorShowsPattern())
+                    {
+                        strong->UpdatePatternFooter();
+                    }
+                    else if (strong->EditorShowsGenerator())
+                    {
+                        strong->UpdateGeneratorFooter();
+                    }
+
                     strong->UpdateStatusBar();
                     strong->PrepareConnectionsAsync();
                 }
@@ -283,6 +328,17 @@ namespace winrt::midisequencer::implementation
                 std::vector<seq::EndpointRef> destinations{};
                 std::vector<std::wstring> sources{};
 
+                // The groups each one is used on, so the groups turned off in Studio setup can be
+                // left out.
+                std::map<std::pair<std::wstring, std::wstring>, uint16_t> sendsTo{};
+                std::map<std::wstring, uint16_t> listensTo{};
+
+                auto const sendTo = [&sendsTo](seq::EndpointRef const& endpoint, uint8_t const group)
+                {
+                    auto& groups = sendsTo[std::make_pair(endpoint.Name, endpoint.Id)];
+                    groups = static_cast<uint16_t>(groups | (1u << (group & 0x0F)));
+                };
+
                 seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
                 {
                     if (!track.IsFolder && !track.Destination.Endpoint.IsEmpty())
@@ -291,6 +347,8 @@ namespace winrt::midisequencer::implementation
                         {
                             destinations.push_back(track.Destination.Endpoint);
                         }
+
+                        sendTo(track.Destination.Endpoint, track.Destination.Group);
                     }
 
                     if (!track.IsFolder && !track.Source.Endpoint.IsEmpty() &&
@@ -301,6 +359,9 @@ namespace winrt::midisequencer::implementation
                         if (!id.empty())
                         {
                             sources.push_back(id);
+
+                            auto& groups = listensTo[id];
+                            groups = static_cast<uint16_t>(groups | (track.Source.Group >= 0 ? (1u << (track.Source.Group & 0x0F)) : AnySourceGroups(track.Source.Endpoint)));
                         }
                     }
 
@@ -318,6 +379,12 @@ namespace winrt::midisequencer::implementation
                     if (!followId.empty() && std::find(sources.begin(), sources.end(), followId) == sources.end())
                     {
                         sources.push_back(followId);
+                    }
+
+                    if (!followId.empty())
+                    {
+                        auto& groups = listensTo[followId];
+                        groups = static_cast<uint16_t>(groups | (1u << (follow.Group & 0x0F)));
                     }
 
                     std::scoped_lock guard{ m_inputLock };
@@ -338,26 +405,38 @@ namespace winrt::midisequencer::implementation
                     {
                         destinations.push_back(metronome);
                     }
+
+                    if (!metronome.IsEmpty())
+                    {
+                        sendTo(metronome, settings.MetronomeGroup());
+                    }
                 }
 
                 // The devices that follow the sequencer's clock, and where time code goes.
-                auto const addDestination = [&destinations](seq::EndpointRef const& endpoint)
+                auto const addDestination = [&destinations, &sendTo](seq::EndpointRef const& endpoint, uint8_t const group)
                 {
                     if (!endpoint.IsEmpty() && std::find(destinations.begin(), destinations.end(), endpoint) == destinations.end())
                     {
                         destinations.push_back(endpoint);
                     }
+
+                    if (!endpoint.IsEmpty())
+                    {
+                        sendTo(endpoint, group);
+                    }
                 };
 
                 for (auto const& clock : settings.ClockOutputs())
                 {
-                    addDestination(seq::EndpointRef{ clock.EndpointName, clock.EndpointId });
+                    addDestination(seq::EndpointRef{ clock.EndpointName, clock.EndpointId }, clock.Group);
                 }
 
                 if (settings.TimeCode().IsOn())
                 {
-                    addDestination(seq::EndpointRef{ settings.TimeCode().EndpointName, settings.TimeCode().EndpointId });
+                    addDestination(seq::EndpointRef{ settings.TimeCode().EndpointName, settings.TimeCode().EndpointId }, settings.TimeCode().Group);
                 }
+
+                LeaveOutGroupsOff(destinations, sendsTo, sources, listensTo);
 
                 auto* output = m_output.get();
                 auto* monitor = m_sources.get();
@@ -420,7 +499,7 @@ namespace winrt::midisequencer::implementation
                 clock.SendClock = output.Clock;
                 clock.SendStartStop = output.StartStop;
                 clock.SendSongPosition = output.SongPosition;
-                clock.SendTempo = settings.ClockSendsTempo();
+                clock.SendTempo = output.Tempo;
                 engine.ClockOutputs.push_back(std::move(clock));
             }
 
@@ -506,6 +585,9 @@ namespace winrt::midisequencer::implementation
             m_position = m_engine->PositionTick();
             m_engine->Stop();
             m_launchViews.clear();
+
+            // Writing from the mixer ends with the music.
+            CommitMixerEdit();
 
             UpdateTransport();
             UpdateLeds();
@@ -647,6 +729,7 @@ namespace winrt::midisequencer::implementation
 
             UpdateLeds();
             UpdateLaneChips(tick);
+            UpdateMixer(tick);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the displays.")
     }
@@ -1438,7 +1521,7 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::LaunchKeyboard(std::wstring const& endpointId, uint8_t group, int8_t channel) noexcept
+    void MainWindow::LaunchKeyboard(std::wstring const& endpointId, uint8_t group, int8_t channel, std::wstring const& programsFromId, uint8_t programsGroup) noexcept
     {
         try
         {
@@ -1452,13 +1535,32 @@ namespace winrt::midisequencer::implementation
 
             std::wstring arguments{};
 
+            // MIDI Keyboard asks the device it plays to, and the one it gets program names from,
+            // for their sound names with MIDI-CI. Neither may be a group turned off in Studio setup.
+            auto const turnedOff = [this](std::wstring const& id, uint8_t const groupIndex)
+            {
+                return (GroupsTurnedOff(seq::EndpointRef{ std::wstring{}, id }, true) & (1u << (groupIndex & 0x0F))) != 0;
+            };
+
             if (!endpointId.empty())
             {
+                if (turnedOff(endpointId, group))
+                {
+                    ShowMessage(res::GetString(L"KeyboardTurnedOff"));
+                    return;
+                }
+
                 arguments = L"\"" + endpointId + L"\" --group " + std::to_wstring(static_cast<uint32_t>(group) + 1);
 
                 if (channel >= 0)
                 {
                     arguments += L" --channel " + std::to_wstring(static_cast<int32_t>(channel) + 1);
+                }
+
+                // MIDI-CI program names come from the device the notes end up on.
+                if (!programsFromId.empty() && _wcsicmp(programsFromId.c_str(), endpointId.c_str()) != 0 && !turnedOff(programsFromId, programsGroup))
+                {
+                    arguments += L" --programs-from \"" + programsFromId + L"\" --programs-group " + std::to_wstring(static_cast<uint32_t>(programsGroup) + 1);
                 }
             }
 
@@ -1519,7 +1621,34 @@ namespace winrt::midisequencer::implementation
 
         std::wstring text = name;
 
-        if (track.Destination.Group > 0)
+        // On a device with several destination groups, such as an interface with several MIDI
+        // ports, the function block's name (or the group terminal block's) says which one this
+        // is. Only when no other group has the same name, or it says nothing a number doesn't.
+        std::wstring groupName{};
+
+        if (resolved.has_value() && resolved->Live.DestinationGroupCount() > 1)
+        {
+            auto const& live = resolved->Live;
+            auto const group = static_cast<int32_t>(track.Destination.Group & 0x0F);
+            auto const& candidate = live.GroupName(group, false);
+            auto shared = candidate.empty() || candidate == name;
+
+            for (int32_t other = 0; other < 16 && !shared; ++other)
+            {
+                shared = other != group && live.DestinationGroups[other] && live.GroupName(other, false) == candidate;
+            }
+
+            if (!shared)
+            {
+                groupName = candidate;
+            }
+        }
+
+        if (!groupName.empty())
+        {
+            text += L" \u00B7 " + groupName;
+        }
+        else if (track.Destination.Group > 0)
         {
             text += L" \u00B7 " + std::wstring{ res::FormatString(L"GroupShortFormat", static_cast<uint32_t>(track.Destination.Group) + 1) };
         }
@@ -1532,6 +1661,10 @@ namespace winrt::midisequencer::implementation
         if (!resolved.has_value())
         {
             text += L" " + std::wstring{ res::GetString(L"NotConnectedSuffix") };
+        }
+        else if (DestinationTurnedOff(track.Destination))
+        {
+            text += L" " + std::wstring{ res::GetString(L"TurnedOffSuffix") };
         }
 
         return text;
@@ -1558,6 +1691,10 @@ namespace winrt::midisequencer::implementation
         if (!resolved.has_value())
         {
             text += L" " + std::wstring{ res::GetString(L"NotConnectedSuffix") };
+        }
+        else if (SourceTurnedOff(track.Source))
+        {
+            text += L" " + std::wstring{ res::GetString(L"TurnedOffSuffix") };
         }
 
         return text;
@@ -1640,7 +1777,7 @@ namespace winrt::midisequencer::implementation
         endpoint.SelectionChanged([weak, endpoint, group](auto&&, auto&&)
         {
             auto strong = weak.get();
-            auto const choice = endpoint.SelectedItem().try_as<appshared::EndpointChoice>();
+            auto const choice = endpoint.SelectedItem().try_as<winrt::midisequencer::DeviceChoice>();
 
             if (!strong || choice == nullptr)
             {

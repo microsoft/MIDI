@@ -12,8 +12,12 @@
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
+#include "ChordText.h"
 #include "GeneralMidi.h"
 #include "StringResources.h"
+#include "TimeText.h"
+
+#include <limits>
 
 namespace native = ::midiplayer;
 namespace res = ::midiplayer::resources;
@@ -22,7 +26,23 @@ namespace winrt::midiplayer::implementation
 {
     namespace
     {
-        constexpr double PositionSliderSteps = 1000.0;
+        // The position slider counts seconds; the engine counts microseconds.
+        constexpr double MicrosecondsPerSecond = 1000000.0;
+
+        // Clamped to the file's length, because a slider at its far end can land just past it.
+        uint64_t MicrosecondsFromSliderSeconds(_In_ double seconds, _In_ uint64_t durationMicroseconds) noexcept
+        {
+            if (!(seconds > 0.0))
+            {
+                return 0;
+            }
+
+            auto const microseconds = seconds * MicrosecondsPerSecond;
+
+            return microseconds >= static_cast<double>(durationMicroseconds)
+                ? durationMicroseconds
+                : static_cast<uint64_t>(microseconds);
+        }
 
         // The speed slider counts in percent of the speed the file was written at.
         constexpr double SpeedSliderWrittenSpeed = 100.0;
@@ -31,6 +51,44 @@ namespace winrt::midiplayer::implementation
         // so five seconds is five seconds of music at any speed.
         constexpr int64_t ShortcutSeekMicroseconds = 5'000'000;
         constexpr double ShortcutSpeedStepPercent = 5.0;
+
+        // A key change from the keyboard is a semitone at a time.
+        constexpr int32_t ShortcutTransposeStepSemitones = 1;
+
+        // Speed and transpose sit this far apart side by side, and this far apart stacked.
+        constexpr double SpeedPanelSideBySideSpacing = 24.0;
+        constexpr double SpeedPanelStackedSpacing = 6.0;
+
+        // The transpose slider counts semitones. It only stops on whole ones, but a value is
+        // still rounded and held to the engine's limits before it is used.
+        int32_t SemitonesFromSlider(_In_ double value) noexcept
+        {
+            if (std::isnan(value))
+            {
+                return 0;
+            }
+
+            auto const clamped = std::clamp(
+                value,
+                static_cast<double>(native::PlaybackEngine::MinimumTransposeSemitones),
+                static_cast<double>(native::PlaybackEngine::MaximumTransposeSemitones));
+
+            return static_cast<int32_t>(std::lround(clamped));
+        }
+
+        // A screen reader already reads the new value of a slider that has focus, so a shortcut
+        // that changes that slider says nothing more, or the value would be heard twice.
+        bool HasKeyboardFocus(_In_ controls::Control const& control) noexcept
+        {
+            try
+            {
+                return control.FocusState() != xaml::FocusState::Unfocused;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
 
         // Groups the shortcut announcements, so a newer one replaces one not yet spoken.
         constexpr wchar_t ShortcutAnnouncementActivity[] = L"midiplayer.shortcut";
@@ -59,6 +117,21 @@ namespace winrt::midiplayer::implementation
                 CP_UTF8, 0, value.data(), static_cast<int>(value.size()), wide.data(), required);
 
             return wide;
+        }
+
+        // The key signature in force at a tick, as sharps, or flats when negative. C major when
+        // the file has none, which most do not.
+        int32_t KeySignatureAtTick(_In_ midifile::MidiSequence const& sequence, _In_ uint32_t tick) noexcept
+        {
+            auto const& changes = sequence.KeySignatureMap;
+
+            auto const after = std::upper_bound(
+                changes.begin(),
+                changes.end(),
+                tick,
+                [](uint32_t value, midifile::KeySignatureChange const& change) noexcept { return value < change.Tick; });
+
+            return after == changes.begin() ? 0 : static_cast<int32_t>(std::prev(after)->Accidentals);
         }
 
         winrt::hstring TagOfSender(foundation::IInspectable const& sender) noexcept
@@ -801,9 +874,27 @@ namespace winrt::midiplayer::implementation
 
             m_lastChord = chord;
 
-            ChordText().Text(chord == nullptr
-                ? winrt::hstring{}
-                : winrt::hstring{ WidenUtf8Text(chord->Text) });
+            if (chord == nullptr)
+            {
+                ChordText().Text(winrt::hstring{});
+                return;
+            }
+
+            auto const semitones = m_engine.TransposeSemitones();
+
+            if (semitones == 0)
+            {
+                ChordText().Text(winrt::hstring{ WidenUtf8Text(chord->Text) });
+                return;
+            }
+
+            // The chord the music plays now, spelled with the flats or sharps of the key it moved
+            // to.
+            auto const keySignature = native::TransposeKeySignature(
+                KeySignatureAtTick(*m_currentSequence, chord->Tick),
+                semitones);
+
+            ChordText().Text(winrt::hstring{ WidenUtf8Text(native::TransposeChordSymbol(chord->Text, semitones, keySignature)) });
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update the chord.")
     }
@@ -1210,9 +1301,7 @@ namespace winrt::midiplayer::implementation
                 return;
             }
 
-            auto const fraction = PositionSlider().Value() / PositionSliderSteps;
-
-            m_engine.SeekToMicroseconds(static_cast<uint64_t>(fraction * static_cast<double>(duration)));
+            m_engine.SeekToMicroseconds(MicrosecondsFromSliderSeconds(PositionSlider().Value(), duration));
 
             UpdatePositionDisplay();
         }
@@ -1226,7 +1315,8 @@ namespace winrt::midiplayer::implementation
     {
         try
         {
-            // Dragging is handled on release, so this only has to cover the keyboard.
+            // Dragging is handled on release, so this only has to cover the keyboard, and a
+            // screen reader setting the value.
             if (m_suppressPositionHandlers || m_scrubbing)
             {
                 return;
@@ -1239,13 +1329,43 @@ namespace winrt::midiplayer::implementation
                 return;
             }
 
-            auto const fraction = args.NewValue() / PositionSliderSteps;
-
-            m_engine.SeekToMicroseconds(static_cast<uint64_t>(fraction * static_cast<double>(duration)));
+            m_engine.SeekToMicroseconds(MicrosecondsFromSliderSeconds(args.NewValue(), duration));
 
             UpdatePositionDisplay();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSliderPreviewKeyDown(foundation::IInspectable const& sender, input::KeyRoutedEventArgs const& args)
+    {
+        try
+        {
+            // The slider moves by LargeChange when the track beside the thumb is clicked, but does
+            // nothing for Page Up and Page Down, which is where a keyboard user looks for it.
+            auto const key = args.Key();
+
+            if (key != winrt::Windows::System::VirtualKey::PageUp && key != winrt::Windows::System::VirtualKey::PageDown)
+            {
+                return;
+            }
+
+            auto const slider = sender.try_as<controls::Primitives::RangeBase>();
+
+            if (slider == nullptr || !slider.IsEnabled())
+            {
+                return;
+            }
+
+            auto const step = key == winrt::Windows::System::VirtualKey::PageUp ? slider.LargeChange() : -slider.LargeChange();
+
+            // The slider keeps the value inside its range, and its ValueChanged handler does the
+            // rest, exactly as for an arrow key.
+            slider.Value(slider.Value() + step);
+
+            args.Handled(true);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to move the slider by a page.")
     }
 
     // ------------------------------------------------------------------------------------
@@ -1301,6 +1421,110 @@ namespace winrt::midiplayer::implementation
             UpdateTempoDisplay(m_engine.Position().BeatsPerMinute * m_engine.PlaybackRate());
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to show the speed.")
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Transpose
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnTransposeSliderValueChanged(
+        foundation::IInspectable const&,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        try
+        {
+            auto const semitones = SemitonesFromSlider(args.NewValue());
+
+            // Safe while playing: a note already sounding keeps its pitch until it ends, and
+            // drums are never moved.
+            m_engine.SetTransposeSemitones(semitones);
+
+            // Both views draw notes where they are heard.
+            m_noteRoll.SetTransposeSemitones(semitones);
+            m_keyboardRoll.SetTransposeSemitones(semitones);
+
+            if (!m_initialized)
+            {
+                return;
+            }
+
+            UpdateTransposeDisplay();
+
+            // Drawn now, rather than at the next frame, which does not come while paused.
+            RenderNoteRoll();
+
+            // The chord on screen is spelled again in the new key.
+            m_lastChord = nullptr;
+            UpdateChordDisplay(m_engine.Position().Tick);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the key.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnResetTransposeClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // The button turns itself off in the original key. Moving focus first means a
+            // keyboard or screen reader user is not left on a control that has just gone away.
+            TransposeSlider().Focus(xaml::FocusState::Programmatic);
+            TransposeSlider().Value(0.0);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to go back to the original key.")
+    }
+
+    void MainWindow::UpdateTransposeDisplay() noexcept
+    {
+        try
+        {
+            auto const semitones = m_engine.TransposeSemitones();
+
+            if (semitones > 0)
+            {
+                TransposeText().Text(res::FormatString(L"TransposeValueUpFormat", semitones));
+            }
+            else if (semitones < 0)
+            {
+                TransposeText().Text(res::FormatString(L"TransposeValueDownFormat", -semitones));
+            }
+            else
+            {
+                TransposeText().Text(res::GetString(L"TransposeValueOriginal"));
+            }
+
+            ResetTransposeButton().IsEnabled(semitones != 0);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to show the key.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNowPlayingPanelSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const& args)
+    {
+        try
+        {
+            // Each group at the width it takes on one line, which is what it takes side by side.
+            foundation::Size const unlimited{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
+
+            SpeedGroup().Measure(unlimited);
+            TransposeGroup().Measure(unlimited);
+
+            auto const sideBySide = static_cast<double>(SpeedGroup().DesiredSize().Width)
+                + SpeedPanelSideBySideSpacing
+                + static_cast<double>(TransposeGroup().DesiredSize().Width);
+
+            // Stacked in a narrow window, or in a language with longer words.
+            auto const fits = sideBySide <= static_cast<double>(args.NewSize().Width);
+
+            auto const orientation = fits ? controls::Orientation::Horizontal : controls::Orientation::Vertical;
+
+            if (SpeedPanel().Orientation() != orientation)
+            {
+                SpeedPanel().Orientation(orientation);
+                SpeedPanel().Spacing(fits ? SpeedPanelSideBySideSpacing : SpeedPanelStackedSpacing);
+            }
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to arrange the speed and key controls.")
     }
 
     // ------------------------------------------------------------------------------------
@@ -1447,6 +1671,42 @@ namespace winrt::midiplayer::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnTransposeUpShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SetTransposeFromShortcut(m_engine.TransposeSemitones() + ShortcutTransposeStepSemitones);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to transpose up from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnTransposeDownShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SetTransposeFromShortcut(m_engine.TransposeSemitones() - ShortcutTransposeStepSemitones);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to transpose down from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnOriginalKeyShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            SetTransposeFromShortcut(0);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to go back to the original key from the keyboard.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::OnRepeatShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
     {
         try
@@ -1492,10 +1752,7 @@ namespace winrt::midiplayer::implementation
 
             UpdatePositionDisplay();
 
-            AnnounceShortcutResult(res::FormatString(
-                L"AnnouncePositionFormat",
-                native::FormatDuration(target),
-                native::FormatDuration(position.DurationMicroseconds)));
+            AnnouncePosition();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek from the keyboard.")
     }
@@ -1509,11 +1766,60 @@ namespace winrt::midiplayer::implementation
             // is what changes the speed, so the shortcut and the slider cannot disagree.
             SpeedSlider().Value(percent);
 
+            if (HasKeyboardFocus(SpeedSlider()))
+            {
+                return;
+            }
+
             AnnounceShortcutResult(res::FormatString(
                 L"AnnounceSpeedFormat",
                 static_cast<int32_t>(std::lround(SpeedSlider().Value()))));
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the speed from the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SetTransposeFromShortcut(int32_t semitones) noexcept
+    {
+        try
+        {
+            // The slider keeps the value inside its range, and changing it is what changes the
+            // key, so the shortcut and the slider cannot disagree.
+            TransposeSlider().Value(static_cast<double>(semitones));
+
+            if (HasKeyboardFocus(TransposeSlider()))
+            {
+                return;
+            }
+
+            auto const now = m_engine.TransposeSemitones();
+
+            winrt::hstring message{};
+
+            if (now == 0)
+            {
+                message = res::GetString(L"AnnounceTransposeOriginal");
+            }
+            else if (now == 1)
+            {
+                message = res::GetString(L"AnnounceTransposeUpOne");
+            }
+            else if (now == -1)
+            {
+                message = res::GetString(L"AnnounceTransposeDownOne");
+            }
+            else if (now > 0)
+            {
+                message = res::FormatString(L"AnnounceTransposeUpFormat", now);
+            }
+            else
+            {
+                message = res::FormatString(L"AnnounceTransposeDownFormat", -now);
+            }
+
+            AnnounceShortcutResult(message);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the key from the keyboard.")
     }
 
     _Use_decl_annotations_
@@ -1539,6 +1845,164 @@ namespace winrt::midiplayer::implementation
             }
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to announce the file.")
+    }
+
+    void MainWindow::AnnouncePosition() noexcept
+    {
+        try
+        {
+            if (PositionSliderHasFocus())
+            {
+                return;
+            }
+
+            auto const position = m_engine.Position();
+
+            AnnounceShortcutResult(res::FormatString(
+                L"AnnouncePositionFormat",
+                native::FormatDuration(position.Microseconds),
+                native::FormatDuration(position.DurationMicroseconds)));
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to announce the position.")
+    }
+
+    bool MainWindow::PositionSliderHasFocus() noexcept
+    {
+        try
+        {
+            return PositionSlider().FocusState() != xaml::FocusState::Unfocused;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Go to time
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnGoToTimeShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        try
+        {
+            args.Handled(true);
+
+            ShowGoToTimeAsync();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to open Go to time.")
+    }
+
+    winrt::fire_and_forget MainWindow::ShowGoToTimeAsync()
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            if (m_goToTimeOpen)
+            {
+                co_return;
+            }
+
+            auto const position = m_engine.Position();
+
+            if (position.DurationMicroseconds == 0)
+            {
+                co_return;
+            }
+
+            m_goToTimeOpen = true;
+
+            auto const closed = wil::scope_exit([this]() noexcept { m_goToTimeOpen = false; });
+
+            m_goToTimeTarget.reset();
+
+            // Where it is now and how long the file is, so the customer knows what makes sense.
+            auto const hint = res::FormatString(
+                L"GoToTimeHintFormat",
+                native::FormatDuration(position.Microseconds),
+                native::FormatDuration(position.DurationMicroseconds));
+
+            GoToTimeHintText().Text(hint);
+            xaml::Automation::AutomationProperties::SetHelpText(GoToTimeBox(), hint);
+
+            GoToTimeBox().Text(winrt::hstring{});
+            GoToTimeProblemText().Text(winrt::hstring{});
+
+            GoToTimeDialog().XamlRoot(Content().XamlRoot());
+            GoToTimeDialog().RequestedTheme(RootGrid().ActualTheme());
+
+            auto const result = co_await GoToTimeDialog().ShowAsync();
+
+            if (result != controls::ContentDialogResult::Primary || !m_goToTimeTarget.has_value())
+            {
+                co_return;
+            }
+
+            m_engine.SeekToMicroseconds(m_goToTimeTarget.value());
+
+            UpdatePositionDisplay();
+
+            AnnouncePosition();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to go to a time.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnGoToTimeDialogOpened(controls::ContentDialog const&, controls::ContentDialogOpenedEventArgs const&)
+    {
+        try
+        {
+            // Straight into the box, so the customer can type at once.
+            GoToTimeBox().Focus(xaml::FocusState::Programmatic);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to focus the time box.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnGoToTimePrimaryClick(controls::ContentDialog const&, controls::ContentDialogButtonClickEventArgs const& args)
+    {
+        try
+        {
+            auto const duration = m_engine.Position().DurationMicroseconds;
+            auto const seconds = native::ParseTimeText(GoToTimeBox().Text());
+
+            // Staying open with the reason read out beats closing and quietly doing nothing.
+            if (!seconds.has_value())
+            {
+                args.Cancel(true);
+                ShowGoToTimeProblem(res::GetString(L"GoToTimeNotATime"));
+                return;
+            }
+
+            auto const target = seconds.value() * static_cast<uint64_t>(MicrosecondsPerSecond);
+
+            if (target > duration)
+            {
+                args.Cancel(true);
+                ShowGoToTimeProblem(res::FormatString(L"GoToTimePastTheEndFormat", native::FormatDuration(duration)));
+                return;
+            }
+
+            m_goToTimeTarget = target;
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to read the time.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ShowGoToTimeProblem(winrt::hstring const& message) noexcept
+    {
+        try
+        {
+            // Cleared first, so the same problem twice in a row is still read out.
+            GoToTimeProblemText().Text(winrt::hstring{});
+            GoToTimeProblemText().Text(message);
+
+            GoToTimeBox().SelectAll();
+            GoToTimeBox().Focus(xaml::FocusState::Programmatic);
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to show the problem with the time.")
     }
 
     void MainWindow::StartPositionTimer() noexcept
@@ -1587,23 +2051,53 @@ namespace winrt::midiplayer::implementation
 
             auto const elapsedSeconds = position.Microseconds / 1000000;
 
-            if (elapsedSeconds != m_lastDisplayedSecond)
+            auto const timeChanged =
+                elapsedSeconds != m_lastDisplayedSecond ||
+                position.DurationMicroseconds != m_lastDisplayedDuration;
+
+            if (timeChanged)
             {
                 m_lastDisplayedSecond = elapsedSeconds;
+                m_lastDisplayedDuration = position.DurationMicroseconds;
 
-                ElapsedText().Text(winrt::hstring{ native::FormatDuration(position.Microseconds) });
-                DurationTextBlock().Text(winrt::hstring{ native::FormatDuration(position.DurationMicroseconds) });
+                auto const elapsedText = native::FormatDuration(position.Microseconds);
+                auto const durationText = native::FormatDuration(position.DurationMicroseconds);
+
+                ElapsedText().Text(winrt::hstring{ elapsedText });
+                DurationTextBlock().Text(winrt::hstring{ durationText });
+
+                // Set before the value moves below, because the move is what a screen reader
+                // hears, and it reads this text when it does.
+                PositionSlider().ValueText(res::FormatString(L"AnnouncePositionFormat", elapsedText, durationText));
             }
 
             if (!m_scrubbing)
             {
                 m_suppressPositionHandlers = true;
 
-                PositionSlider().Value(
-                    position.DurationMicroseconds == 0
-                        ? 0.0
-                        : (static_cast<double>(position.Microseconds) / static_cast<double>(position.DurationMicroseconds))
-                            * PositionSliderSteps);
+                auto const durationSeconds = static_cast<double>(position.DurationMicroseconds) / MicrosecondsPerSecond;
+
+                // The length first, or a position past the old length would be clamped to it.
+                if (durationSeconds > 0.0 && PositionSlider().Maximum() != durationSeconds)
+                {
+                    PositionSlider().Maximum(durationSeconds);
+                }
+
+                if (PositionSliderHasFocus())
+                {
+                    // A screen reader reads a focused slider every time its value changes. Moving
+                    // it once a second, when the time it reads changes, keeps it from talking
+                    // over the music thirty times a second.
+                    if (timeChanged)
+                    {
+                        PositionSlider().Value(static_cast<double>(elapsedSeconds));
+                    }
+                }
+                else
+                {
+                    // Nobody is listening to it, so it can move smoothly.
+                    PositionSlider().Value(static_cast<double>(position.Microseconds) / MicrosecondsPerSecond);
+                }
 
                 m_suppressPositionHandlers = false;
             }

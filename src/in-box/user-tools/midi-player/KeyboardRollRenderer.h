@@ -28,6 +28,10 @@ namespace midiplayer
         void SetSequence(_In_ std::shared_ptr<midifile::MidiSequence const> const& sequence) noexcept;
         void SetAudibleTracks(_In_ std::vector<bool> const& audible) noexcept;
 
+        // Draws notes, and lights keys, where they are heard once transposed. Drums stay where
+        // they are.
+        void SetTransposeSemitones(_In_ int32_t semitones) noexcept;
+
         void Render(uint64_t positionMicroseconds, double width, double height) noexcept;
 
         // How far ahead the falling notes are visible.
@@ -75,6 +79,9 @@ namespace midiplayer
 
         uint8_t m_lowestNote{ 21 };
         uint8_t m_highestNote{ 108 };
+
+        NoteSpan m_span{};
+        int32_t m_transposeSemitones{ 0 };
 
         double m_laidOutWidth{ 0.0 };
         double m_laidOutKeyboardTop{ -1.0 };

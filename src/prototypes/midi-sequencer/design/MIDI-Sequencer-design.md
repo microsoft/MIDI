@@ -240,7 +240,7 @@ The shape, as phase 1 writes it:
 }
 ```
 
-Groups and channels in the file count from 0, like MIDI Glass and MIDI Patchbay files. People and screens count from 1. Folders hold their tracks, the same way DAWproject nests them. A note is `[tick, length, channel, note, velocity]`, with release velocity, attribute type, attribute data and chance after those only when a note needs them, which keeps a big recording small. Per-note pitch bend and per-note controllers are ordinary messages in the clip, because that's what they are on the wire. Other messages, and start-up messages, are written as their UMP words in hex, the way MIDI Monitor shows them. Their group is ignored, because the destination decides the group. A placement's `length` is only there when it plays longer than its clip, looping. A lane's `target` is `controller`, `pitchBend`, `channelPressure`, `program`, `registered` (RPN) or `assignable` (NRPN). A controller lane has a `number`, and RPN and NRPN lanes have a `bank` and an `index` instead. A lane can also have a `name`. A point is `[tick, value]`, with `"hold"` after them when the value holds until the next point instead of ramping. Values run from 0 to 4,294,967,295 whatever the device takes, and playback scales them down. A track writes `"lanesOpen": false` only when its lanes are hidden. Clips can have `lanes` too, with ticks counted from the clip's start. Generator settings go in a `settings` object too (below). A file written at another `ticksPerQuarterNote` (by hand, or by another tool) is scaled to 960 when it's read, and keys this version doesn't know are kept and written back.
+Groups and channels in the file count from 0, like MIDI Glass and MIDI Patchbay files. People and screens count from 1. Folders hold their tracks, the same way DAWproject nests them. A note is `[tick, length, channel, note, velocity]`, with release velocity, attribute type, attribute data and chance after those only when a note needs them, which keeps a big recording small. Per-note pitch bend and per-note controllers are ordinary messages in the clip, because that's what they are on the wire. Other messages, and start-up messages, are written as their UMP words in hex, the way MIDI Monitor shows them. Their group is ignored, because the destination decides the group. A placement's `length` is only there when it plays longer than its clip, looping. A lane's `target` is `controller`, `pitchBend`, `channelPressure`, `program`, `registered` (RPN) or `assignable` (NRPN). A controller lane has a `number`, and RPN and NRPN lanes have a `bank` and an `index` instead. A lane can also have a `name`. A point is `[tick, value]`, with `"hold"` after them when the value holds until the next point instead of ramping. Values run from 0 to 4,294,967,295 whatever the device takes, and playback scales them down. A track writes `"lanesOpen": false` only when its lanes are hidden. A track or folder writes `"height"` only when someone has made its row taller or shorter (24 to 480), and the sequence writes `"tempoHeight"` for the Tempo and meter row the same way. Clips can have `lanes` too, with ticks counted from the clip's start. Generator settings go in a `settings` object too (below). A file written at another `ticksPerQuarterNote` (by hand, or by another tool) is scaled to 960 when it's read, and keys this version doesn't know are kept and written back.
 
 **A pattern clip** keeps its steps in `settings`. Its notes aren't saved, because they come from the steps:
 
@@ -494,7 +494,7 @@ Each phase ends with something you can use.
 | 4 | The clip launcher: scenes, quantized launching, recording into slots, Capture. | Mostly done (October 10). Select an empty slot on an armed track to record into it from the next launch point, for 1 to 16 bars (set in the slot's menu), and the take loops as soon as it ends. Selecting the slot again ends the take at the end of that bar. Checked on screen: recording into a slot, stopping part way, and Capture. Not yet seen on screen: a take looping as soon as it ends. |
 | 5 | Automation lanes and tempo map editing. | Mostly done (October 10). Lanes under each track for controllers, pitch bend, channel pressure, program change, RPN and NRPN: click to add a point, drag to move it, Ctrl and drag to draw. Tempo and meter editing on the Tempo and meter track and from the tempo display. Lanes are in the file, in playback (stepped at each device's automation interval, thinned at its resolution, and sent again when playback starts part way) and in exports. The sample sequence has an Expression lane on Bass. 102 tests. Checked on screen: adding, moving and drawing points, undo, the tempo flyout, the add-lane dialog, and hiding lanes. Not built yet: an editor for a clip's own lanes, line and curve tools, and LFO fills. |
 | 6 | Pattern clips. | Done (October 10), except locks. Drum and melodic patterns from the launcher's or the timeline's menu, edited in a grid like comp 3 with a step inspector beside it: velocity, chance, ratchet and its shape, condition, nudge and length, and note, accent and slide in melodic mode. Lanes with their own length, swing, step size, Vary and Make notes. The sample's Beat A is a pattern. 116 tests, including one that renders a busy pattern in small windows and matches the whole. Checked on screen: the grid, turning steps on, dragging velocity, the lane menu, adding a lane, and a melodic pattern made from a slot. |
-| 7 | Generator clips. | Mostly done (October 10). Euclidean rhythms and chance melodies, made from a slot's menu or the timeline's, with Vary and Make notes. Their settings take the piano roll's place in the editor. Checked on screen. Not built: the arpeggiator (it keeps its settings and plays nothing), the comp's ring drawing, and its four-pass preview. 127 tests in all. |
+| 7 | Generator clips. | Done. Euclidean rhythms, chance melodies and the arpeggiator, made from a slot's menu or the timeline's, with Vary and Make notes. Their settings take the piano roll's place in the editor. The comp's ring drawing and four-pass preview landed with the update in section 24. Checked on screen. |
 | 8 | Following another clock, MIDI Time Code out, remote control, and making a MIDI Glass layout from a sequence. | Done (October 10). Clock out with choices for each device, MIDI 2.0 Set Tempo, MIDI Time Code out, following another device's clock, the Clock and sync dialog, the remote control endpoint, and Make a MIDI Glass layout (sections 8 and 16). Checked on screen and through a loopback. Not built: carrying on at the last tempo when a followed clock stops. 148 tests in all. |
 | 9 | DAWproject import and export. | Done (October 10). File > Import and Export, and Open and drag and drop. A dialog picks a device for each track and says what was left out. Recorded controllers export as automation, and patterns and generators as notes (section 12). Checked on screen. Not built: per-note expressions. Not yet tried with a file from another DAW. 155 tests in all. |
 | 10 | Provenance screens, capture import and paste, docs, an agent guide, an accessibility pass. | Mostly done (October 11). Built: capture import and paste (section 10), About this sequence (section 13), and the lyrics track (section 23). Also done: the docs page with screenshots, `docs/tools/midisequencer`, which opens by saying the app is a very early preview. The security review bounded loops a file could make run for minutes, and the accessibility and en-US checks found nothing. Not built: an agent guide for `.midisequence` files. 181 tests in all. |
@@ -609,3 +609,162 @@ Pete asked for an optional lyrics track, looking at how Standard MIDI Files and 
 - **LRC.** One `[mm:ss.xx]` line for each line of lyrics, with `[ti:]` and `[la:]` tags, in UTF-8 with a byte order mark. An empty time stamp clears the words between verses when there's a gap.
 - **Seen on screen** with a probe (`seq-check-lyrics.ps1`, outside the repo): a song file with RP-017 lyrics comes in with its Lyrics row, and the words light up as it plays. The editor changes a word and keeps the times. Undo works, LRC export goes through the save dialog, and remove and undo work three times in a row.
 - **Not built:** reading Lyric Data back from a clip file. Those messages come in as ordinary clip events, and they still play.
+
+## 24. Update: changes from the first video review
+
+A reviewer's first look at the app asked for four things: more of it should work with the mouse, the layout should be adjustable, the generator editors should look like comp 4, and there should be a mixer. He also found that MIDI Keyboard, opened from a drum track, showed no program names. This section says what changed.
+
+### Layout
+
+- **Columns.** The edge between the track names and the timeline drags, and so does the edge between the timeline and the launcher. With keyboard focus, the arrow keys move them. A double-click puts each one back. Both widths are app settings, not part of the sequence.
+- **Rows.** Every track and folder, and Tempo and meter, has a grip along its bottom edge. Heights run from 24 to 480. At 36 or less, a header shows its name on one line. **Compact** (24) is in a track's menu.
+- **Several tracks at once.** Ctrl and Shift select more than one track. Compact and dragging work on all of them.
+- **In the file**, heights are `"height"` and `"tempoHeight"` (section 9). They're how the window looks rather than the music, so changing them marks the file as changed without being an undo step, the same as opening or closing a folder.
+
+### Dragging
+
+The reviewer's rule was "anywhere you can move or place things, dragging them should move them."
+
+- **Tracks** drag into folders, out of them, and between rows, several at once, in the order they had. A folder can't go inside itself, and nothing nests deeper than a file allows. A drop is one undo step.
+- **Clips** drag along the timeline, to other tracks, between launcher slots, and between the launcher and the timeline. Ctrl places the same clip again instead of moving it. A drag from the launcher to the timeline, or the other way, places the clip and leaves the original where it was. A faded copy shows where it will land, and nothing changes until it's let go.
+- **Tags** drag along the top of Tempo and meter. Right-click renames one, changes its color or deletes it. Double-clicking the strip adds one.
+- **The loop** drags on the ruler. Its edges set the start and end, and the middle moves it.
+- **Tempo changes.** A click on the tempo line adds one, a drag moves it, and a double-click deletes it. A double-click deletes an automation point too, unless that same click made it.
+- **Pattern lanes** drag by their names to a new place, with a line where they'd go. A click on a name still opens the lane's menu, and right-click opens it at once.
+
+### Generators, now like comp 4
+
+- **The header** has the type on the left, from a list that says what each one does, with the length in bars and the step size. On the right are the seed, a button for a new one, **Each pass** (Same or Changes) and Make notes. The seed shows in hex and can be typed. An arpeggiator's step size is its **Rate**, next to its octaves and note length as in comp 4. It shows the seed only with a random order, the only time it uses one.
+- **A Euclidean rhythm** draws its rings next to a table of them. Dragging around a ring turns it, and the mouse wheel adds or takes away hits. Two bars of what it plays go next to the table when there's room, and under it when there isn't.
+- **A chance melody** has its settings down the left, with sliders for how busy it is and how much it keeps. Its first four passes are on the right, with new notes outlined.
+- **The inspector** is hidden for generators, because everything it showed is in the panel now.
+
+### The mixer
+
+The reviewer said: "It does not have any MIDI mixer so you need to use the classic CC's." A MIDI mixer is a strip for each track with the controllers that General MIDI synths and most others respond to: volume (CC 7), pan (CC 10), expression (CC 11), reverb send (CC 91) and chorus send (CC 93). With it, nobody has to know those numbers or draw a lane to set a level.
+
+- **As built.** **Mixer** on the transport bar shows the strips where the editor goes. Each control shows the track's lane at the playhead when it has one, and the track's start-up value when it doesn't. When the track sets neither, it shows the General MIDI starting value, faded.
+- **Moving a control** sends the value straight away, on the track's channel. It's kept on the lane at the playhead, or as the start-up value when there's no lane. While the sequence plays, a control with a lane is only heard, because the lane plays over it.
+- **W** writes automation. While the sequence plays, moves go into the track's lane for that controller, which is made if it isn't there. A point goes in every 64th note, replacing what the lane had there, and the engine plays what's been written as it goes. Each gesture is one undo step. **M** and **S** are the track's own mute and solo.
+- **Not built:** strips for folders, meters (the sequencer never hears the audio), MIDI 2.0 per-note controls, and choosing other controllers for a strip.
+
+### MIDI Keyboard program names
+
+**Record from MIDI Keyboard** points the keyboard at Default App Loopback (A), so the sequencer can record what it plays. The keyboard asked that endpoint for its program list, and a loopback has none. So the reviewer's drum track, playing on the General MIDI Synth, showed no names. MIDI Keyboard now takes `--programs-from <endpoint id>` and `--programs-group <1-16>`. It asks that endpoint for the program list over a second connection, while notes and program changes still go where it plays. The sequencer passes the track's destination.
+
+### Proposed next
+
+- **Setting a ring's note from the roll.** Clicking a key on the left of What it plays would give the selected ring that note, and play it.
+- **A chance melody's range drawn on the keys.** Two handles on the pass rolls' keys, instead of two number boxes.
+- **Make notes from one pass.** Right-click a pass in the preview to keep just that one as a notes clip.
+- **Lane names in the pattern header**, as in comp 3 (General MIDI drums and others), and comp 3's legend under the lanes.
+- **Moving a meter change by dragging it.** Today it's set and removed from the Tempo and meter menu.
+- **A small volume and pan in each track header** when the row is tall enough, so the mixer isn't the only place to set them.
+
+## 25. Update, October 17: Windows MIDI Services device properties and Studio setup
+
+The ask: show what Windows MIDI Services knows about any device and use it throughout the app, the picture and description most of all, and also the automation interval and the function blocks (or group terminal blocks when there are none). And let each destination in use choose whether it gets the clock, start and stop, tempo and the rest, after the fact, in a Studio setup popup, rather than the way many DAWs make you set up the studio before you start.
+
+### What was already there
+
+The engine already used three of these, but nothing showed them: what each group speaks, from its function block or group terminal block (section 5), each device's offset (section 8), and its automation interval for ramps (section 7).
+
+### Device details
+
+- **Any device.** An info button next to Record from and Play to in the track setup, on every Studio setup row, and on every other device Studio setup lists opens a flyout about that device.
+- **What it shows.** The picture and description from MIDI Settings, the transport and the protocol the endpoint settled on, and what in the sequence uses it. Then its groups: each function block, or each group terminal block when it has none, with its groups, which way its messages go, and whether it speaks MIDI 2.0, MIDI 1.0, or MIDI 1.0 at 5-pin cable speed. Then how the sequencer sends to it: the offset and where it came from, the automation interval, and whether MIDI Settings says it takes MPE or needs real note offs. Last, its identity: manufacturer, serial number, product instance, USB ids, system exclusive id, family and model, software version and UMP version, where it has them.
+- **The same rules as the engine.** The details say MIDI 2.0 or MIDI 1.0 for a group by the same rules the engine uses to choose what to send, so what they say is what's sent.
+- **Read off the UI thread.** Everything past the picture and description asks the service, so it's read in the background and added when it's back. The values MIDI Settings writes are read from the endpoint's property bag, not the newest SDK members, so an older copy of the SDK in Windows can't be asked for something it doesn't have.
+- **MIDI Settings.** The flyout says where to change a device's name, picture, description, offset and automation interval, and opens MIDI Settings. MIDI Settings has no way to open at one device yet, which would be a good addition.
+- **Needs nothing from the engine.** The service doesn't act on "requires note off translation" or "supports MPE". They're hints for apps. The sequencer always sends real note offs to MIDI 1.0 devices, so the first needs no change. MPE would matter once per-note expression can be translated to MPE (section 5).
+
+### Pictures and descriptions throughout
+
+- **Device lists** show each device's picture beside its name: the customer's own from MIDI Settings, otherwise the transport's default (USB, Bluetooth, network and so on). The description is the item's tooltip. An item stays one line, because a ComboBox draws its closed box with the same template as its items.
+- **Track headers** show the picture of the device a track plays to, or records from while it's armed, when the row has room for two lines. A track without one keeps the space, so names line up. The description is the tooltip on the device line.
+- **The track setup** shows the description under each device list.
+- **Mixer strips** show the whole destination and the description as a tooltip.
+
+### Function blocks and group terminal blocks
+
+- **Which port.** On a device with several destination groups, such as an interface with several MIDI ports, a track's device line uses the block's name for its group ("mioXL · DIN 3 · Ch 1") instead of a number. Only when no other group has the same name, because one block can span several groups.
+- **Group lists** already used block names. Studio setup rows show each group's name and protocol.
+
+### The automation interval
+
+- **Mixer moves** go to a device no more often than its interval. A move that comes sooner waits, the newest waiting move always goes, and building the strips again doesn't lose one. A device without an interval gets every move, as before.
+- **Lanes** say "every 20 ms" when the device has an interval, with a tooltip that explains it, and the details say how often ramps go out either way.
+
+### Studio setup
+
+- **The rows.** One for each device and group the tracks play to or record from, in track order, with the tracks that use it. A track that records from any group gets a row for each group its device sends on. Then the metronome's device, then the clock the sequence follows, then devices only the PC's settings name, then where time code goes. A row that's in use stays even with nothing ticked.
+- **The choices.** Clock, Start and stop, Song position and Tempo, and a clock offset in milliseconds. Tempo is off for a group that speaks MIDI 1.0. These were already in the engine for each device. Tempo used to be one switch for every device that got the clock. Now it's a choice for each one, and devices saved before keep what that switch said.
+- **Add a device** adds a row with device and group lists, for something no track plays to, such as a drum machine that only follows the clock. Those rows, and rows only the settings name, can be removed.
+- **Other MIDI devices on this PC** lists every other endpoint with its picture, description and an info button, so any device can be looked at.
+- **Where it's kept.** The PC's settings, the same list Clock and sync kept before, because the choices describe the studio rather than the music. Every sequence that plays to a device uses them.
+- **Clock and sync** keeps where the tempo comes from, MIDI Time Code and Timing. Its table of devices became a line saying where the clock goes and a button that keeps what's chosen and opens Studio setup.
+- **Opening it.** File > Studio setup…, the device count in the status bar, and the button in Clock and sync.
+- **As built.** The rows come from a function with no XAML (StudioSetup.cpp), tested on its own: order, merging the saved choices, the first saved choice winning, the metronome and time code sharing a device's row, and choices that come back on the same rows.
+
+### Play to, Record from and MIDI Monitor
+
+- **The ask.** Turn each group the sequencer uses on or off, each way it goes, and open MIDI Monitor on a group that sends. The worry behind it: devices, often Arduino projects, that hang when an app sends them something they don't expect, such as the MIDI-CI Discovery or Identity Request some DAWs send every port when they start.
+- **What the sequencer sends unasked.** Nothing. It never sends MIDI-CI Discovery or an Identity Request on its own. Section 26 adds a button that asks a device for its sound names over MIDI-CI, and only that click sends it. It opens only the devices the sequence uses (where tracks play, the sources of armed tracks, the metronome, and the clock and time code devices), and sends nothing until play, an audition, a mixer move or MIDI Keyboard. So Studio setup isn't too late: when it's up, nothing has been sent to a device just because it's plugged in.
+- **Play to off.** The output leaves out every message for that group: notes, clock, tempo and time code alike. A device with every group it's used on turned off isn't opened at all. Turning a group off while the music plays stops it first, so the notes that group holds end while it can still hear them.
+- **Record from off.** What arrives on that group is dropped before recording, echo, the arpeggiators or the followed clock see it. A source with every group in use turned off isn't opened.
+- **Which rows get which switch.** Play to for a group the device receives on, Record from for one it sends on. A device that isn't here goes by what uses it. Clock, start and stop, song position, tempo and offset are only on groups it plays to, and wait while Play to is off.
+- **Shown where the device is.** Track headers, the editor's footer and mixer strips add "(turned off)", group lists mark turned-off groups, and the track setup and device details say so. Clock and sync leaves a turned-off group out of where the clock goes.
+- **MIDI Keyboard.** It always runs MIDI-CI Discovery on the device it opens on, and on the one it gets program names from. The sequencer won't open it on a group whose Play to is off, and won't name a turned-off group as where program names come from. MIDI Keyboard still asks whatever device it's opened on by other means.
+- **MIDI Monitor.** An eye button opens it on a device, and on the group where there's one: on each Studio setup row for a group that sends, on each other device that sends, and in the device details. MIDI Monitor sends nothing.
+- **Where it's kept.** The PC's settings, beside the clock choices, only for groups with something turned off.
+- **As built.** The same tested function makes the rows, now with sources, and keeps the switches. Which groups are turned off, and which group a message is for, are tested there too.
+
+### Not built
+
+- An app can't tell whether a device wants clock, or start and stop, from Windows MIDI Services. MidiDefs.h already lists "can receive MIDI clock" and similar as properties MIDI Settings could set for every app to read. That would need the service, the API and MIDI Settings, so it's an API gap for later.
+- Clock while stopped, for devices that keep their arpeggiators and LFOs in time between takes.
+- Time code to more than one device. The engine can do it, but the setting holds one.
+- A way for MIDI Keyboard to skip MIDI-CI for a device, such as not asking a MIDI 1.0 device, or a switch. That's a change to MIDI Keyboard, not the sequencer.
+
+## 26. Update, October 17: recent sequences, track sounds and the MIDI Mixer
+
+The ask: keep the last 100 sequences for an Open recent popup, newest first, with pins kept outside the sequence files. Let the start-up messages in the track setup wrap. Give a track a way to pick its patch: an optional program change before the track plays, chosen from the device's own list when it speaks MIDI-CI. Rename Mixer to MIDI Mixer. Make pan read left, center and right, with no fill from 0. And make the mixer look like the ones in other DAWs: comp 9 (9-mixer.html), approved as shown.
+
+### Recent sequences
+
+- **The list.** Every sequence opened or saved goes to the front. The newest 100 unpinned ones are kept, and the oldest drops off. Pinned ones never drop off, up to 100 more. Paths compare without case, with / and \ the same.
+- **Open recent…** on the File menu (Ctrl+Shift+O) opens a popup: a find box, then Pinned and Recent, newest first in each, with when each was last used, a pin, and a remove button. A file that's gone is marked after a check in the background, so a slow network drive doesn't hold up the popup. Opening it says where to look instead of failing quietly.
+- **Which window.** Like Open…, a sequence opens in this window when it holds an untouched new sequence, and in a new window otherwise. The sequence already open in this window isn't opened again.
+- **Where it's kept.** The app's settings for the Windows account, beside its other settings, not in the sequence files. Sharing a file shares no history. Two windows share the list: each change reads it again and writes it back under a named lock, so one window doesn't undo another's pin.
+- **As built.** RecentSequences.cpp has no XAML, and 11 tests cover order, trimming, keeping pins, the pin limit, case and slashes, and reading a damaged list.
+
+### Track sounds
+
+- **Was it there?** Partly. A track's start-up messages already went out each time playback starts, but the track setup only showed them as raw words, and nothing chose a program. Comp 5 drew a Program row that was never built.
+- **Where it is.** Track setup, under Start-up messages: a Sound button that shows the sound's name, or "No sound chosen". The rest of the start-up messages are now listed in words, and wrap.
+- **Optional.** Off by default, and the device keeps whatever sound it has. When on, the start-up messages begin with one MIDI 2.0 program change, with the bank in it when one is chosen. A device that speaks MIDI 1.0 gets bank select MSB and LSB, then the program change, from the same translation as everything else. A program change or bank select already in the start-up messages, such as from an imported file, is read as the track's sound, and replaced when a new one is chosen.
+- **Names.** The General MIDI names from midi-app-shared, the same list MIDI Keyboard uses, with drum kits on channel 10. The dialog says they're General MIDI names, which another device may not follow. The name picked is saved with the track ("soundName"), so a device's own name still shows later without asking again. A number typed in has no name.
+- **Hearing it.** Choosing a sound sends it to the device right away. Cancel sends the old one back.
+- **Asking the device.** "Ask … for its sound names" sends MIDI-CI Discovery, then asks for the program list, with the same code MIDI Keyboard uses. The sequencer asks only on that click. It never asks a group whose Play to is off, or a device that isn't connected. The answer is kept for that device, group and channel while the window is open. Once it has asked, the sequencer answers Discovery as itself, with model number 4 (MIDI_DEVICE_FAMILY_MODEL_NUMBER_MIDI_SEQUENCER, a new constant in MidiDefs.h), until the window closes. So section 25 still holds: nothing goes to a device that nobody asked for.
+- **As built.** TrackSound.cpp has no XAML, and 8 tests cover reading a sound back from start-up messages, setting it, banks, the saved name, and that a MIDI 1.0 device gets bank select and then the program change.
+
+### MIDI-CI code shared with MIDI Keyboard
+
+- MIDI Keyboard's MIDI-CI presence and program list query moved to midi-app-shared, as MidiCiAppPresence and MidiCiProgramListQuery. They were renamed because Inc\MidiCiProgramList.h is found first on the include path under the old name. MIDI Keyboard keeps two small headers with the old names and passes its own model number. Each app sends MIDI-CI errors to its own log.
+- MIDI Keyboard should behave as it did. It builds, but it hasn't been run against a MIDI-CI device since the move.
+
+### The MIDI Mixer
+
+- **The name.** "MIDI Mixer" on the button, the panel and the docs, which also say it sends MIDI to each device rather than mixing sound.
+- **The strip (comp 9).** Small knobs for expression, reverb and chorus. A larger pan knob, with L, C or R beside it. A long volume fader with a scale from 0 to 127, and the mark at 100 where General MIDI synths start. A meter beside the fader, the volume as a number, then M, S and W. At the bottom, the track's name on its color, in black or white, whichever has more contrast (WCAG). The selected track's strip has an outline in the accent color, and selecting the name selects the track.
+- **Pan.** Reads L24, C or R18, and a screen reader says "left 24". The lit arc starts at the center, so nothing fills from 0.
+- **Still sliders.** Each knob and the fader is a Slider whose template only shows what the code draws, so the keyboard, focus and screen readers work as they do for any slider. A drag moves from where the control was, so pressing it never makes it jump. Shift makes a drag four times finer. The wheel moves 2 steps, or 1 with Shift. A double-click puts the control back where General MIDI synths start.
+- **A gate meter.** It had to be right or not be there. MIDI tells the sequencer when a note starts, how hard, and when it's let go. It doesn't say how long the sound rings. So the meter shows the velocity of the notes the track holds, from the engine's own note on and note off times, and drops at note off. Each note stays 120 ms after it ends, so a short one still shows. It shows nothing while stopped, and nothing for what's played in live. Its tooltip says so.
+- **Colors.** The sizes and shapes are comp 9's, but not its plain grays. Pete asked for the strips to take on the app's colors, so the cards, knob bodies and grooves are see-through, like the editor, Track setup and the launcher's cells, and pick up the window's tint. The volume readout uses the same LCD fill as the position and tempo displays, and M, S and W match the track headers' buttons. The fader caps stay solid. The strips are built again when the theme changes.
+- **As built.** MixerSlots.h holds the controllers and how each value reads. MainWindowMixerStrip.cpp draws the strips. The engine now keeps each note's velocity and lets go of it 120 ms after it ends, for PlaybackEngine::HeldNoteLevels, with a test (TheMeterShowsOnlyHeldNotes).
+
+### Not built
+
+- Sound names from a device that doesn't speak MIDI-CI, such as from a file of names.
+- A meter for what's played in live, or one that knows how long the sound rings. The second can't be done from MIDI alone.
+- Asking every device for its names at once. Each track asks on its own, and only when someone selects Ask.

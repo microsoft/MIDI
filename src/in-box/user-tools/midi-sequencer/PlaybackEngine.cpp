@@ -27,6 +27,9 @@ namespace midisequencer
         // moment later, so they're sure to arrive first.
         constexpr uint64_t StartLeadMicroseconds = 20000;
 
+        // A note that ended is kept this long, so the mixer's meter sees even a short one.
+        constexpr uint64_t MeterHoldMicroseconds = 120000;
+
         // A metronome click is a sixteenth note long.
         constexpr int64_t ClickTicks = TicksPerQuarterNote / 4;
 
@@ -913,9 +916,9 @@ namespace midisequencer
         auto const limit = now + LookAheadTicks();
         auto const lead = static_cast<uint64_t>(info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
 
-        // Where each note started, by group, channel and note number, so its end can't be sent
-        // ahead of its start.
-        std::map<uint32_t, uint64_t> starts{};
+        // Where each note started, and how hard, by group, channel and note number, so its end
+        // can't be sent ahead of its start.
+        std::map<uint32_t, std::pair<uint64_t, uint16_t>> starts{};
 
         for (auto& message : messages)
         {
@@ -933,14 +936,19 @@ namespace midisequencer
             if (message.Kind == RenderedKind::NoteOff)
             {
                 auto const start = starts.find(key);
-                QueueNoteOff(track.Id, track.Destination.Endpoint, info.SpeaksMidi2, start != starts.end() ? start->second : 0,
-                    timestamp, lead, message.Words.data(), message.WordCount, limit);
+                QueueNoteOff(track.Id, track.Destination.Endpoint, info.SpeaksMidi2, start != starts.end() ? start->second.first : 0,
+                    timestamp, lead, message.Words.data(), message.WordCount, limit, start != starts.end() ? start->second.second : uint16_t{ 0 });
                 continue;
             }
 
             if (message.Kind == RenderedKind::NoteOn)
             {
-                starts[key] = timestamp;
+                // A MIDI 2.0 velocity is 16 bits; a MIDI 1.0 one is scaled up to match.
+                auto const type = message.Words[0] >> 28;
+                auto const velocity = type == 0x4 ? static_cast<uint16_t>(message.Words[1] >> 16)
+                    : static_cast<uint16_t>((message.Words[0] & 0x7F) << 9);
+
+                starts[key] = { timestamp, velocity };
             }
 
             SendTo(track.Destination.Endpoint, info.SpeaksMidi2, timestamp, message.Words.data(), message.WordCount);
@@ -957,7 +965,8 @@ namespace midisequencer
         uint64_t lead,
         uint32_t const* words,
         uint8_t wordCount,
-        uint64_t limit)
+        uint64_t limit,
+        uint16_t velocity)
     {
         if (endpoint.IsEmpty() || wordCount == 0)
         {
@@ -980,6 +989,7 @@ namespace midisequencer
         note.OnTimestamp = onTimestamp;
         note.OffTimestamp = std::max(offTimestamp, onTimestamp + 1);
         note.Lead = lead;
+        note.Velocity = velocity;
 
         if (note.OffTimestamp <= limit)
         {
@@ -1346,8 +1356,43 @@ namespace midisequencer
         SweepClockOutputs(now);
         SweepTimeCodeOutputs(now);
 
-        // Notes that have ended don't need ending again.
-        std::erase_if(m_sounding, [now](SoundingNote const& note) { return note.HandedOver && note.OffTimestamp <= now; });
+        // Notes that have ended don't need ending again. They stay a little longer, so a short one
+        // between two of the mixer's looks still shows on its meter.
+        auto const hold = MeterHoldMicroseconds * m_clock.TicksPerSecond / 1000000;
+        std::erase_if(m_sounding, [now, hold](SoundingNote const& note) { return note.HandedOver && note.OffTimestamp + note.Lead + hold <= now; });
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::pair<std::wstring, float>> PlaybackEngine::HeldNoteLevels(uint64_t from, uint64_t to) const
+    {
+        std::vector<std::pair<std::wstring, float>> levels{};
+        std::scoped_lock guard{ m_lock };
+
+        for (auto const& note : m_sounding)
+        {
+            // The device gets each message its offset early, so it sounds on time; this is when.
+            auto const on = note.OnTimestamp + note.Lead;
+            auto const off = note.OffTimestamp + note.Lead;
+
+            if (note.TrackId.empty() || note.Velocity == 0 || on >= to || off <= from)
+            {
+                continue;
+            }
+
+            auto const level = static_cast<float>(note.Velocity) / 65535.0f;
+            auto const found = std::find_if(levels.begin(), levels.end(), [&note](auto const& entry) { return entry.first == note.TrackId; });
+
+            if (found == levels.end())
+            {
+                levels.emplace_back(note.TrackId, level);
+            }
+            else
+            {
+                found->second = std::max(found->second, level);
+            }
+        }
+
+        return levels;
     }
 
     _Use_decl_annotations_

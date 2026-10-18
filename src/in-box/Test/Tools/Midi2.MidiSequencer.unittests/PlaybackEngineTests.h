@@ -55,6 +55,7 @@ public:
     TEST_METHOD(TheLoopSendsLaneValuesAgain);
     TEST_METHOD(AMidi1DestinationGetsALaneAsMidi1);
     TEST_METHOD(AnEditWhilePlayingSendsTheNewValue);
+    TEST_METHOD(TheMeterShowsOnlyHeldNotes);
 };
 
 class MessageTranslationTests : public WEX::TestClass<MessageTranslationTests>

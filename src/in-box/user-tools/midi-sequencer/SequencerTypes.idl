@@ -13,4 +13,20 @@ namespace midisequencer
     {
         WrapPanel();
     }
+
+    // One entry in a device list: the name, the id needed to connect, the device's picture from
+    // MIDI Settings (or its transport's), and its description for a tooltip.
+    [default_interface]
+    runtimeclass DeviceChoice
+    {
+        DeviceChoice();
+
+        String DisplayName{ get; };
+        String EndpointDeviceId{ get; };
+        Microsoft.UI.Xaml.Media.ImageSource Picture{ get; };
+        Microsoft.UI.Xaml.Visibility PictureVisibility{ get; };
+
+        // Null when there's nothing to say, so no empty tooltip shows.
+        Object Tip{ get; };
+    }
 }

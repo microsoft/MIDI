@@ -112,6 +112,8 @@ namespace midiplayer
         m_sequence = sequence;
         m_audible.clear();
 
+        m_span = m_sequence == nullptr ? NoteSpan{} : NoteSpan::Of(*m_sequence);
+
         RebuildRange();
 
         // Force the keyboard to be laid out again for the new range.
@@ -121,15 +123,35 @@ namespace midiplayer
         HideNotesFrom(0);
     }
 
+    _Use_decl_annotations_
+    void KeyboardRollRenderer::SetTransposeSemitones(int32_t semitones) noexcept
+    {
+        if (semitones == m_transposeSemitones)
+        {
+            return;
+        }
+
+        m_transposeSemitones = semitones;
+
+        RebuildRange();
+
+        // The keyboard is laid out again for the new range on the next frame.
+        m_laidOutWidth = 0.0;
+        m_laidOutKeyboardTop = -1.0;
+    }
+
     void KeyboardRollRenderer::RebuildRange() noexcept
     {
         int32_t low = 21;       // A0
         int32_t high = 108;     // C8
 
-        if (m_sequence != nullptr && !m_sequence->Notes.empty())
+        int32_t lowest{ 0 };
+        int32_t highest{ 0 };
+
+        if (m_sequence != nullptr && m_span.Range(m_transposeSemitones, lowest, highest))
         {
-            low = static_cast<int32_t>(m_sequence->LowestNote);
-            high = static_cast<int32_t>(m_sequence->HighestNote);
+            low = lowest;
+            high = highest;
 
             // Two octaves is the least that still reads as a keyboard.
             while (high - low < 24)
@@ -344,7 +366,9 @@ namespace midiplayer
                     break;
                 }
 
-                if (entry->NoteNumber < m_lowestNote || entry->NoteNumber > m_highestNote)
+                auto const noteNumber = DisplayedNoteNumber(*entry, m_transposeSemitones);
+
+                if (noteNumber < m_lowestNote || noteNumber > m_highestNote)
                 {
                     continue;
                 }
@@ -360,7 +384,7 @@ namespace midiplayer
                     continue;
                 }
 
-                auto const keyIndex = static_cast<size_t>(entry->NoteNumber - m_lowestNote);
+                auto const keyIndex = static_cast<size_t>(noteNumber - m_lowestNote);
                 auto const& key = m_keys[keyIndex];
 
                 auto const audible = entry->TrackIndex >= m_audible.size() || m_audible[entry->TrackIndex];

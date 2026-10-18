@@ -161,6 +161,7 @@ namespace winrt::midiplayer::implementation
             UpdateNowPlayingText();
             UpdateTransportState();
             UpdateSpeedDisplay();
+            UpdateTransposeDisplay();
             RebuildQueueList();
             RebuildTrackList();
 
@@ -297,6 +298,9 @@ namespace winrt::midiplayer::implementation
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
             midiapp::MakeLiveStatusRegion(StatusInfoBar());
+
+            // Interrupts, because the customer has just pressed Enter and is waiting to hear.
+            midiapp::MakeLiveStatusRegion(GoToTimeProblemText(), true);
 
             midiapp::WindowChromeElements elements{};
 

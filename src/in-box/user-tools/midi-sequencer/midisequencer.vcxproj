@@ -130,8 +130,12 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="ArrangeLayout.h" />
     <ClInclude Include="ArrangeRenderer.h" />
+    <ClInclude Include="GeneratorView.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="DeviceChoice.h" />
+    <ClInclude Include="DeviceProperties.h" />
+    <ClInclude Include="DialogParts.h" />
     <ClInclude Include="EndpointDirectory.h" />
     <ClInclude Include="MessageTranslation.h" />
     <ClInclude Include="MidiClipFile.h" />
@@ -155,6 +159,10 @@
     <ClInclude Include="SessionEngineOutput.h" />
     <ClInclude Include="SourceMonitor.h" />
     <ClInclude Include="StandardMidiFileBridge.h" />
+    <ClInclude Include="StudioSetup.h" />
+    <ClInclude Include="RecentSequences.h" />
+    <ClInclude Include="TrackSound.h" />
+    <ClInclude Include="MixerSlots.h" />
     <ClInclude Include="DawProject.h" />
     <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="DocumentFiles.h" />
@@ -190,6 +198,9 @@
     <ClInclude Include="..\midi-app-shared\MidiTimeCode.h" />
     <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\midi-app-shared\Deflate.h" />
+    <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
+    <ClInclude Include="..\midi-app-shared\MidiCiAppPresence.h" />
+    <ClInclude Include="..\midi-app-shared\MidiCiProgramListQuery.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -198,8 +209,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="ArrangeRenderer.cpp" />
+    <ClCompile Include="GeneratorView.cpp" />
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
+    <ClCompile Include="DeviceChoice.cpp" />
+    <ClCompile Include="DeviceProperties.cpp" />
     <ClCompile Include="EndpointDirectory.cpp" />
     <ClCompile Include="PianoRoll.cpp" />
     <ClCompile Include="ClipLaneStrip.cpp" />
@@ -231,7 +245,24 @@
     <ClCompile Include="MainWindowClipLanes.cpp" />
     <ClCompile Include="MainWindowKeyboard.cpp" />
     <ClCompile Include="MainWindowTrack.cpp" />
+    <ClCompile Include="MainWindowArrangeDrag.cpp" />
+    <ClCompile Include="MainWindowMixer.cpp" />
+    <ClCompile Include="MainWindowMixerStrip.cpp" />
+    <ClCompile Include="MainWindowDevices.cpp" />
+    <ClCompile Include="MainWindowStudio.cpp" />
+    <ClCompile Include="MainWindowPorts.cpp" />
+    <ClCompile Include="MainWindowRecent.cpp" />
+    <ClCompile Include="MainWindowSound.cpp" />
     <!-- the model and the engine are free of the pch and XAML so the unit tests compile them unchanged -->
+    <ClCompile Include="RecentSequences.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TrackSound.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StudioSetup.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ArrangeLayout.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -338,6 +369,11 @@
     <ClCompile Include="..\midi-app-shared\Deflate.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\midi-app-shared\GeneralMidi.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\MidiCiAppPresence.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiCiProgramListQuery.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

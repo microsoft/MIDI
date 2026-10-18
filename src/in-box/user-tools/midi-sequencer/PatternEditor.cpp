@@ -395,6 +395,12 @@ namespace midisequencer
 
                     DrawLaneHeader(ds, top, LaneHeight, m_color, name, detail, &lane);
 
+                    // The lane being dragged, faded where it was.
+                    if (m_gesture == Gesture::LaneMove && i == m_pressHit.Lane)
+                    {
+                        ds.FillRectangle(Rect{ 0, top, LaneHeaderWidth, LaneHeight }, WithAlpha(colors.RollBackground, 0.55));
+                    }
+
                     auto const playing = global == UINT64_MAX ? -1 : static_cast<int32_t>(global % laneSteps);
 
                     for (uint16_t column = 0; column < m_columns; ++column)
@@ -416,6 +422,13 @@ namespace midisequencer
                     Rect const box{ 12.0f, addTop, LaneHeaderWidth - 24.0f, SmallRowHeight };
                     ds.DrawRoundedRectangle(box, 4.0f, 4.0f, colors.EmptySlotStroke, 1.0f, dashed);
                     ds.DrawText(winrt::hstring{ L"+  " + std::wstring{ m_strings.AddLane } }, box, colors.Text, m_centerText);
+                }
+
+                // Where a dragged lane would go, in the gap between two lanes.
+                if (m_gesture == Gesture::LaneMove && m_dropBefore <= pattern.Lanes.size())
+                {
+                    auto const y = RowTop(m_dropBefore) - RowGap / 2.0f;
+                    ds.FillRoundedRectangle(Rect{ 8.0f, y - 1.0f, std::max(0.0f, width - 16.0f), 2.0f }, 1.0f, 1.0f, colors.Accent);
                 }
             }
 
@@ -741,8 +754,19 @@ namespace midisequencer
     bool PatternEditor::PointerPressed(Point point, bool rightButton)
     {
         m_gesture = Gesture::None;
+        m_dropBefore = SIZE_MAX;
 
         auto const hit = HitTest(point);
+
+        // A drum lane's name: let go where it was pressed, it's a click, and dragged up or down,
+        // the lane moves.
+        if (hit.Target == PatternTarget::LaneName && !rightButton && !Melodic())
+        {
+            m_pressHit = hit;
+            m_pressPoint = point;
+            m_gesture = Gesture::LanePress;
+            return true;
+        }
 
         if (hit.Target != PatternTarget::Step && hit.Target != PatternTarget::Accent && hit.Target != PatternTarget::Slide)
         {
@@ -778,6 +802,42 @@ namespace midisequencer
     _Use_decl_annotations_
     bool PatternEditor::PointerMoved(Point point)
     {
+        if (m_gesture == Gesture::LanePress || m_gesture == Gesture::LaneMove)
+        {
+            if (m_clip == nullptr || (m_gesture == Gesture::LanePress && std::abs(point.Y - m_pressPoint.Y) < 4.0f))
+            {
+                return false;
+            }
+
+            m_gesture = Gesture::LaneMove;
+
+            // Near the top or the bottom of the lanes, they scroll.
+            if (point.Y < GridTop() + 12.0f)
+            {
+                m_scrollY -= 6.0f;
+            }
+            else if (point.Y > GridBottom() - 12.0f)
+            {
+                m_scrollY += 6.0f;
+            }
+
+            ClampScroll();
+
+            auto const lanes = m_clip->Pattern->Lanes.size();
+            m_dropBefore = lanes;
+
+            for (size_t i = 0; i < lanes; ++i)
+            {
+                if (point.Y < RowTop(i) + RowHeight(i) / 2.0f)
+                {
+                    m_dropBefore = i;
+                    break;
+                }
+            }
+
+            return true;
+        }
+
         if ((m_gesture != Gesture::Step && m_gesture != Gesture::Velocity) || !m_pressedOn)
         {
             return false;
@@ -801,9 +861,11 @@ namespace midisequencer
     std::optional<PatternEdit> PatternEditor::PointerReleased(Point)
     {
         auto const gesture = m_gesture;
+        auto const dropBefore = m_dropBefore;
         m_gesture = Gesture::None;
+        m_dropBefore = SIZE_MAX;
 
-        if (gesture == Gesture::None || m_clip == nullptr)
+        if (gesture == Gesture::None || gesture == Gesture::LanePress || m_clip == nullptr)
         {
             return std::nullopt;
         }
@@ -814,6 +876,28 @@ namespace midisequencer
         if (m_pressHit.Lane >= edit.After.Lanes.size())
         {
             return std::nullopt;
+        }
+
+        if (gesture == Gesture::LaneMove)
+        {
+            // The selected step stays on its lane, wherever that lane goes.
+            auto const selectedId = m_selectedLane < edit.After.Lanes.size() ? edit.After.Lanes[m_selectedLane].Id : std::wstring{};
+
+            if (!MovePatternLane(edit.After, m_pressHit.Lane, dropBefore))
+            {
+                return std::nullopt;
+            }
+
+            for (size_t i = 0; i < edit.After.Lanes.size() && !selectedId.empty(); ++i)
+            {
+                if (edit.After.Lanes[i].Id == selectedId)
+                {
+                    m_selectedLane = i;
+                }
+            }
+
+            edit.Name = m_strings.UndoMoveLane;
+            return edit;
         }
 
         auto& lane = edit.After.Lanes[m_pressHit.Lane];
@@ -870,6 +954,12 @@ namespace midisequencer
     void PatternEditor::CancelGesture() noexcept
     {
         m_gesture = Gesture::None;
+        m_dropBefore = SIZE_MAX;
+    }
+
+    std::optional<size_t> PatternEditor::PressedLaneName() const noexcept
+    {
+        return m_gesture == Gesture::LanePress ? std::optional<size_t>{ m_pressHit.Lane } : std::nullopt;
     }
 
     _Use_decl_annotations_

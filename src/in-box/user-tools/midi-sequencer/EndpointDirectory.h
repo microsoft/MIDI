@@ -32,6 +32,10 @@ namespace midisequencer
         // How often a ramp may be sent to it, from MIDI Settings. 0 when it has none.
         uint32_t AutomationIntervalMilliseconds{ 0 };
 
+        // The customer's picture from MIDI Settings, or the transport's default when there isn't
+        // one. Empty when neither file is there.
+        std::wstring PicturePath{};
+
         bool Detailed{ false };
     };
 

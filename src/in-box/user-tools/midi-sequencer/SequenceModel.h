@@ -35,6 +35,11 @@ namespace midisequencer
 
     inline constexpr uint32_t CurrentFileVersion = 1;
 
+    // How tall a track's or folder's row can be made (Track::Height), in pixels at 100% scaling.
+    // The shortest is one line of the track's name: a compact track.
+    inline constexpr uint16_t MinimumTrackRowHeight = 24;
+    inline constexpr uint16_t MaximumTrackRowHeight = 480;
+
     // Ceilings for a file that arrives from anywhere. Far above anything a person builds.
     struct SequenceLimits
     {
@@ -466,11 +471,19 @@ namespace midisequencer
         // Folders only. Kept in the file so a sequence opens the way it was left.
         bool Open{ true };
 
+        // How tall the row is, in pixels at 100% scaling. 0 is the standard height for its kind.
+        // Kept in the file like Open, but changing it isn't an edit to undo.
+        uint16_t Height{ 0 };
+
         TrackSource Source{};
         TrackDestination Destination{};
 
         // Sent before the first note. Their ticks are ignored.
         std::vector<ClipEvent> Startup{};
+
+        // The name of the sound the start-up program change picks, as it was picked: from the
+        // device's own list or General MIDI's. Empty for a number typed in that's in neither.
+        std::wstring SoundName{};
 
         std::vector<Placement> Timeline{};
 
@@ -579,6 +592,10 @@ namespace midisequencer
         // Sorted by tick, and always starting at tick 0.
         std::vector<TempoPoint> Tempo{ TempoPoint{} };
         std::vector<MeterChange> Meter{ MeterChange{} };
+
+        // How tall the Tempo and meter row is, in pixels at 100% scaling. 0 is the standard
+        // height. Kept in the file like a track's height, and not an edit to undo either.
+        uint16_t TempoRowHeight{ 0 };
 
         // Tags on the Tempo and meter track: about the whole sequence.
         std::vector<Tag> Tags{};

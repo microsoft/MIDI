@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <string>
 #include <vector>
 #include <condition_variable>
@@ -22,6 +23,7 @@
 
 #include "midi_file_sequence.h"
 #include "midi_sequence_playback_clock.h"
+#include "midi_sequence_transposer.h"
 
 // This compiles into the SDK and, until the player app is moved over, into the app as well. The
 // app defines richer tracing of its own; without it, fall back to the platform's error logging so
@@ -167,6 +169,20 @@ namespace midiplayer
         static constexpr double MinimumPlaybackRate = PlaybackClock::MinimumRate;
         static constexpr double MaximumPlaybackRate = PlaybackClock::MaximumRate;
 
+        // Moves every note up or down by this many semitones, except drums: notes on channel 10,
+        // and on any channel the sequence has switched to a drum kit, keep their note numbers,
+        // because there the number picks the drum. A value outside the limits is clamped. It
+        // stays set across Load.
+        //
+        // Safe at any time, including while playing. The change is heard within one look ahead
+        // window. A note that is already sounding keeps its pitch, and its end still reaches it.
+        // A note moved outside 0 to 127 is not played.
+        void SetTransposeSemitones(_In_ int32_t semitones) noexcept;
+        int32_t TransposeSemitones() const noexcept;
+
+        static constexpr int32_t MinimumTransposeSemitones = NoteTransposer::MinimumSemitones;
+        static constexpr int32_t MaximumTransposeSemitones = NoteTransposer::MaximumSemitones;
+
         // What Play and a seek send before the music, when they start part way in. ChannelSettings
         // until an application says otherwise, which is how the engine has always behaved. Bits
         // the engine does not know are ignored. It stays set across Load.
@@ -225,11 +241,19 @@ namespace midiplayer
             uint32_t WordCount{ 0 };
             uint32_t Tick{ 0 };
 
-            // Only set for note messages, so a stop can turn off exactly what is sounding.
+            // Only set for MIDI 1.0 note messages, so a mute can hold back starts and a stop can
+            // turn off exactly what is sounding.
             NoteAction Action{ NoteAction::None };
-            uint8_t Channel{ 0 };
-            uint8_t NoteNumber{ 0 };
+
+            // Set when any packet in the event carries a note number, so it goes through the
+            // transposer.
+            bool NamesNotes{ false };
+
             uint16_t TrackIndex{ 0 };
+
+            // The channels playing a drum kit by this point in the sequence, one bit each. Their
+            // notes are not transposed.
+            uint16_t PercussionChannels{ 0 };
         };
 
         // One entry per track is one entry per event in m_prepared, and the largest files in the
@@ -282,7 +306,13 @@ namespace midiplayer
         // When a chase can go out: now, or just after a silence that is still on its way.
         uint64_t ChaseTimestampUnderLock(_In_ uint64_t nowTimestamp) const noexcept;
 
-        void SendWordsUnderLock(uint64_t timestamp, uint32_t wordOffset, uint32_t wordCount, size_t destinationIndex) noexcept;
+        // Transposes note events, then rewrites the group and channel when the track's route
+        // needs it, and sends the result.
+        void SendEventUnderLock(_In_ uint64_t timestamp, _In_ PreparedEvent const& entry) noexcept;
+
+        // Follows the note ons and offs among MIDI 1.0 packets on their way out.
+        void TrackSoundingNotesUnderLock(_In_ std::span<uint32_t const> words) noexcept;
+
         void RebuildDestinationsUnderLock() noexcept;
         size_t DestinationForTrackUnderLock(uint16_t trackIndex) const noexcept;
         winrt::Windows::Devices::Midi2::MidiEndpointConnection ConnectionForDestinationUnderLock(size_t destinationIndex) const noexcept;
@@ -327,13 +357,15 @@ namespace midiplayer
         std::vector<uint16_t> m_trackDestination{};
         bool m_hasCustomRoutes{ false };
 
-        // Only used when a destination has to rewrite a message. Sized at load so a send never
-        // allocates.
+        // Only used when a message has to be rewritten. Sized at load so a send never allocates.
         std::vector<uint32_t> m_sendScratch{};
 
         // What the player believes is sounding, so a stop can turn exactly those off rather than
-        // relying on a device honoring all notes off.
+        // relying on a device honoring all notes off. By the note that went out, after any
+        // transposition.
         std::array<uint16_t, 128> m_soundingNotes{};
+
+        NoteTransposer m_transposer{};
 
         std::function<void()> m_completionHandler{};
 

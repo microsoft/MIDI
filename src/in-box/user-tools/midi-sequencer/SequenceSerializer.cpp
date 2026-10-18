@@ -9,6 +9,7 @@
 #include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
+#include "TrackSound.h"
 
 #include <algorithm>
 #include <charconv>
@@ -30,6 +31,7 @@ namespace midisequencer
         constexpr wchar_t KeyCopyright[] = L"copyright";
         constexpr wchar_t KeyTicksPerQuarterNote[] = L"ticksPerQuarterNote";
         constexpr wchar_t KeyTempo[] = L"tempo";
+        constexpr wchar_t KeyTempoHeight[] = L"tempoHeight";
         constexpr wchar_t KeyMeter[] = L"meter";
         constexpr wchar_t KeyTags[] = L"tags";
         constexpr wchar_t KeyScenes[] = L"scenes";
@@ -50,9 +52,11 @@ namespace midisequencer
         constexpr wchar_t KeyMute[] = L"mute";
         constexpr wchar_t KeySolo[] = L"solo";
         constexpr wchar_t KeyOpen[] = L"open";
+        constexpr wchar_t KeyHeight[] = L"height";
         constexpr wchar_t KeySource[] = L"source";
         constexpr wchar_t KeyDestination[] = L"destination";
         constexpr wchar_t KeyStartup[] = L"startup";
+        constexpr wchar_t KeySoundName[] = L"soundName";
         constexpr wchar_t KeyTimeline[] = L"timeline";
         constexpr wchar_t KeySlots[] = L"slots";
         constexpr wchar_t KeyEndpoint[] = L"endpoint";
@@ -571,11 +575,18 @@ namespace midisequencer
             track.Muted = ReadBool(object, KeyMute, false);
             track.Soloed = ReadBool(object, KeySolo, false);
             track.Open = ReadBool(object, KeyOpen, true);
+            track.Height = static_cast<uint16_t>(ReadInteger(object, KeyHeight, 0, 0, MaximumTrackRowHeight));
+
+            if (track.Height > 0 && track.Height < MinimumTrackRowHeight)
+            {
+                track.Height = MinimumTrackRowHeight;
+            }
+
             track.Tags = ReadTags(context, ReadArray(object, KeyTags), tagCount);
 
             track.Unknown = UnknownKeys(object, {
-                KeyId, KeyKind, KeyName, KeyColor, KeyPinned, KeyMute, KeySolo, KeyOpen, KeyTags,
-                KeySource, KeyDestination, KeyStartup, KeyTimeline, KeySlots, KeyTracks, KeyLanes, KeyLanesOpen });
+                KeyId, KeyKind, KeyName, KeyColor, KeyPinned, KeyMute, KeySolo, KeyOpen, KeyHeight, KeyTags,
+                KeySource, KeyDestination, KeyStartup, KeySoundName, KeyTimeline, KeySlots, KeyTracks, KeyLanes, KeyLanesOpen });
 
             if (track.IsFolder)
             {
@@ -675,6 +686,7 @@ namespace midisequencer
             }
 
             track.Startup = ReadUmpTextArray(context, ReadArray(object, KeyStartup), 1024);
+            track.SoundName = ReadText(object, KeySoundName, MaximumSoundNameLength);
 
             if (auto const timeline = ReadArray(object, KeyTimeline); timeline != nullptr)
             {
@@ -1474,6 +1486,7 @@ namespace midisequencer
             if (track.Pinned) members.Bool(KeyPinned, true);
             if (track.Muted) members.Bool(KeyMute, true);
             if (track.Soloed) members.Bool(KeySolo, true);
+            if (track.Height > 0) members.Integer(KeyHeight, track.Height);
 
             if (track.IsFolder)
             {
@@ -1573,6 +1586,11 @@ namespace midisequencer
                 if (!track.Startup.empty())
                 {
                     members.Raw(KeyStartup, UmpTextArray(track.Startup));
+                }
+
+                if (!track.SoundName.empty())
+                {
+                    members.Text(KeySoundName, track.SoundName);
                 }
 
                 if (!track.Timeline.empty())
@@ -2229,10 +2247,11 @@ namespace midisequencer
         }
 
         sequence.Lyrics = ReadLyricsJson(root, limits, context.Skipped);
+        sequence.TempoRowHeight = static_cast<uint16_t>(ReadInteger(root, KeyTempoHeight, 0, 0, MaximumTrackRowHeight));
 
         sequence.Unknown = UnknownKeys(root, {
             KeyFileVersion, KeyName, midiapp::ProvenanceKey, KeyTicksPerQuarterNote, KeyTempo, KeyMeter,
-            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright });
+            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright, KeyTempoHeight });
 
         NormalizeSequence(sequence);
 
@@ -2274,6 +2293,11 @@ namespace midisequencer
         }
 
         root.Integer(KeyTicksPerQuarterNote, TicksPerQuarterNote);
+
+        if (sequence.TempoRowHeight > 0)
+        {
+            root.Integer(KeyTempoHeight, sequence.TempoRowHeight);
+        }
 
         root.Key(KeyTempo);
         out += L"[";

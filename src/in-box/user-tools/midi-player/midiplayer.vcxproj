@@ -129,6 +129,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
+    <ClInclude Include="ChordText.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
     <ClInclude Include="InstanceHandoff.h" />
@@ -137,11 +138,15 @@
     <ClInclude Include="KeyboardRollRenderer.h" />
     <ClInclude Include="..\..\Inc\midi_sequence_playback_clock.h" />
     <ClInclude Include="..\..\Inc\midi_sequence_playback_engine.h" />
+    <ClInclude Include="..\..\Inc\midi_sequence_transposer.h" />
     <ClInclude Include="PlayQueue.h" />
     <ClInclude Include="QueueItem.h" />
     <ClInclude Include="..\..\Inc\midi_file_smf_reader.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="TimeSlider.h" />
+    <ClInclude Include="TimeSliderAutomationPeer.h" />
+    <ClInclude Include="TimeText.h" />
     <ClInclude Include="TrackItem.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
@@ -174,6 +179,8 @@
     <ClCompile Include="PlayQueue.cpp" />
     <ClCompile Include="QueueItem.cpp" />
     <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="TimeSlider.cpp" />
+    <ClCompile Include="TimeSliderAutomationPeer.cpp" />
     <ClCompile Include="TrackItem.cpp" />
     <!-- The file readers, the sequence model and the General MIDI tables are deliberately free of
          pch.h, WinRT and XAML, so the unit test project can compile the same sources. -->
@@ -208,6 +215,7 @@
   <ItemGroup>
     <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
     <Midl Include="QueueItem.idl" />
+    <Midl Include="TimeSlider.idl" />
     <Midl Include="TrackItem.idl" />
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>

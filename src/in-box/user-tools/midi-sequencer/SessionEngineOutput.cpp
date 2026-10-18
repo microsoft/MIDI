@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SessionEngineOutput.h"
+#include "StudioSetup.h"
 
 namespace midi2 = winrt::Windows::Devices::Midi2;
 
@@ -133,19 +134,48 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    void SessionEngineOutput::SetGroupsOff(std::map<std::pair<std::wstring, std::wstring>, uint16_t> groupsOff)
+    {
+        std::scoped_lock guard{ m_lock };
+        m_groupsOff = std::move(groupsOff);
+    }
+
+    _Use_decl_annotations_
     void SessionEngineOutput::Send(EndpointRef const& endpoint, uint64_t timestamp, uint32_t const* words, uint8_t wordCount) noexcept
     {
         try
         {
             midi2::MidiEndpointConnection connection{ nullptr };
+            uint16_t groupsOff{ 0 };
 
             {
                 std::scoped_lock guard{ m_lock };
-                auto found = m_connections.find(std::make_pair(endpoint.Name, endpoint.Id));
+                auto const key = std::make_pair(endpoint.Name, endpoint.Id);
+                auto found = m_connections.find(key);
 
                 if (found != m_connections.end())
                 {
                     connection = found->second;
+                }
+
+                if (!m_groupsOff.empty())
+                {
+                    auto off = m_groupsOff.find(key);
+
+                    if (off != m_groupsOff.end())
+                    {
+                        groupsOff = off->second;
+                    }
+                }
+            }
+
+            if (groupsOff != 0 && wordCount > 0)
+            {
+                auto const group = MessageGroup(words[0]);
+
+                if (group >= 0 && (groupsOff & (1u << group)) != 0)
+                {
+                    return;
                 }
             }
 
