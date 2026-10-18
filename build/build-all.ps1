@@ -207,6 +207,7 @@ $ConsoleTools = @(
     'mididiag'
     'midiksinfo'
     'midi1monitor'
+    'midi1rtmonitor'
     'midi1enum'
 )
 

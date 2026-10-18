@@ -450,7 +450,7 @@ stages:
           $srcDir = "$(Build.SourcesDirectory)\src\app-sdk\vsfiles\out"
           $destDir = "$(Build.SourcesDirectory)\build\staging\app-sdk\$stagingPlatform"
 
-          $tools = @("mididiag", "midiksinfo", "midi1monitor", "midi1enum")
+          $tools = @("mididiag", "midiksinfo", "midi1monitor", "midi1rtmonitor", "midi1enum")
 
           foreach ($tool in $tools) {
             $toolPath = "$srcDir\$tool\$stagingPlatform\$(BuildConfiguration)\$tool.exe"
