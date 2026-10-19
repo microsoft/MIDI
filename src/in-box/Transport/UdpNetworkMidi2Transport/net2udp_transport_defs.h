@@ -34,6 +34,8 @@ struct MidiNetworkRemoteClientIdentity
     }
 };
 
+#include "network_midi1_port_groups.h"
+
 // One remote client's own settings on a host, used for it instead of the host's. Matched on the
 // identity the same way the allow and deny lists are.
 struct MidiNetworkRemoteClientSettings
@@ -44,6 +46,14 @@ struct MidiNetworkRemoteClientSettings
     uint32_t SendSpeedLimit{ 0 };
     bool ReduceSendSpeedAutomatically{ false };
     bool SkipInBetweenValuesToCatchUp{ true };
+
+    // The three above are ignored and the host's speed is used. Set when the entry is only there
+    // for the groups below.
+    bool UseHostSendSpeed{ false };
+
+    // The groups this remote client gets MIDI 1.0 ports for when it declares no function blocks,
+    // with their names. Empty means it gets the host's.
+    WindowsMidiServicesInternal::MidiNetworkMidi1PortGroupList FallbackMidi1PortGroups{};
 };
 
 // What a host sends to one remote client, and whether that came from the client's own settings

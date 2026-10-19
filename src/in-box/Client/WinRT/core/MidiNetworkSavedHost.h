@@ -9,6 +9,8 @@
 #pragma once
 #include "Transports.Network.MidiNetworkSavedHost.g.h"
 
+#include "MidiNetworkMidi1PortGroup.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkSavedHost : MidiNetworkSavedHostT<MidiNetworkSavedHost>
@@ -46,6 +48,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         collections::IVectorView<network::MidiNetworkRemoteClientSettings> RemoteClientSettings() const noexcept { return m_remoteClientSettings.GetView(); }
 
+        // A new copy each time, so a caller changing what it gets back changes nothing here
+        collections::IVectorView<network::MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups() const noexcept;
+
         // The saved entry, then each saved change to it in the order the service applies them
         void InternalInitialize(
             _In_ winrt::guid const& hostId,
@@ -63,6 +68,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         bool m_createOnlyUmpEndpoints{ false };
         uint8_t m_fallbackMidi1PortCount{ 1 };
+
+        // kept as read, and only turned into API objects when asked for
+        internal::MidiNetworkMidi1PortGroupList m_fallbackMidi1PortGroups{};
 
         bool m_useAutomaticPortAllocation{ true };
         winrt::hstring m_manuallyAssignedPort{};

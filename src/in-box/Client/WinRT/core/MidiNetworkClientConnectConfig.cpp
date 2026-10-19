@@ -13,6 +13,7 @@
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 #include "MidiEndpointMatchCriteria.h"
+#include "MidiNetworkMidi1PortGroup.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
@@ -71,6 +72,23 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
             json::JsonValue::CreateBooleanValue(SkipInBetweenValuesToCatchUp()));
+
+        // Left out when empty, which is what an entry made before there were groups looks like
+        try
+        {
+            auto const groups = MidiNetworkMidi1PortGroup::ToDefinitions(m_fallbackMidi1PortGroups);
+
+            if (!groups.empty())
+            {
+                clientObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+                    internal::WriteMidiNetworkMidi1PortGroups(groups));
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception writing the MIDI 1.0 port groups of a network client.");
+        }
 
         clientObject.SetNamedValue(
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey,

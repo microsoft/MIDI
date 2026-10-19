@@ -25,7 +25,9 @@ Devices that announce themselves on your network appear on their own, so there's
 3. **Connect** connects to the device. You're asked what to call it in Windows, and then it shows up in your DAW and other MIDI apps like any other MIDI device.
 4. **A connected device** shows a graph of its round trip time, which is how long a message takes to get there and back. **Disconnect and forget** ends the connection.
 5. **Details** shows the device's identity, its network addresses, and its endpoint device ID.
-6. **Connect to a device by address** is for a device that doesn't announce itself on the network.
+6. **Connect to a device by address** is for a device that doesn't announce itself on the network. It comes after the last device, so scroll down to it when the list is long.
+
+In a narrow window, the list of pages folds away behind the menu button at the top left. Each device then leaves out its address and its round trip graph, so its name, its status and its buttons still fit. Make the window wider to see them again.
 
 If a connection sits at **Connecting**, look at the other device. It may be waiting for you to allow the connection. See [The other device may be waiting for you too](#the-other-device-may-be-waiting-for-you-too).
 
@@ -80,7 +82,9 @@ To connect, select **Connect**. You'll be asked what to call the MIDI Endpoint f
 
 Leave the box empty and Windows uses whatever name the device reports for itself. Fill it in and that name is what you'll see everywhere in Windows, including in your DAW's device list. This is worth doing if you have several similar units, or if the device's own name is cryptic.
 
-**Sending speed** starts at **Unlimited**, which suits almost every device. Choose a slower speed for a device that loses data when a lot arrives at once. See [Choosing a sending speed](#choosing-a-sending-speed). Once you're connected, the device's row shows its sending speed, with a **Change** link next to it.
+**Sending speed** starts at **Unlimited**, which suits almost every device. Choose a slower speed for a device that loses data when a lot arrives at once. See [Choosing a sending speed](#choosing-a-sending-speed). Once you're connected, the device's row shows its sending speed, with a **Speed...** button next to it.
+
+**Customize groups and MIDI 1.0 ports** chooses the MIDI 1.0 ports this connection gets, and what your apps call them. See [Naming MIDI 1.0 ports](#naming-midi-10-ports). You can leave it alone for a device that describes itself, which most hardware does.
 
 ### The other device may be waiting for you too
 
@@ -99,7 +103,7 @@ When a connection doesn't work, the device's row says why, for example **The dev
 
 ### Watching a connection
 
-Once connected, each device shows a graph of round trip time, which is how long a message takes to get to the device and back.
+Once connected, each device shows a graph of round trip time, which is how long a message takes to get to the device and back. The graph needs room, so a narrow window leaves it out.
 
 The graph scrolls from right to left, with the newest measurement on the right, and covers roughly the last few minutes. Underneath it you'll see the current round trip, how many network packets have gone each way, and how many had to be resent.
 
@@ -136,7 +140,7 @@ The name you set here is the one your DAW sees, and it's carried down to the MID
 Two settings control the MIDI 1.0 ports:
 
 - **Create MIDI 1.0 ports for this device** turns them on or off. Because the ports are built along with the endpoint, this one takes effect the next time the device connects, not straight away.
-- **MIDI 1.0 ports to create if this device does not describe itself** applies immediately. Most devices tell Windows how many ports they have and this number isn't used for them; it's only for a device that never answers. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#midi-10-ports) for the detail.
+- **Customize groups and MIDI 1.0 ports** chooses which groups get ports, and what your apps call them. It applies straight away. Most devices tell Windows which groups they use, and this isn't used for them; it's for a device that never answers, such as another Windows PC. See [Naming MIDI 1.0 ports](#naming-midi-10-ports). With an older Network MIDI 2.0 transport, you choose a number of ports here instead.
 
 **Sending speed** is how fast this PC sends to the device, and **Slow down when a device misses data** lets Windows pick a slower speed by itself while the device is having trouble. Both apply straight away. See [Choosing a sending speed](#choosing-a-sending-speed).
 
@@ -148,7 +152,7 @@ Some devices don't announce themselves on the network, or are on a part of the n
 
 ![Connecting to a device by address]({{ site.baseurl }}/assets/images/midinetworksetup-by-address.png)
 
-Enter the host name or IP address and the port, and optionally the two names: **Name that device will see** is how this PC introduces itself, and **Name to show in Windows** is what you'll call the device here. Leave the first one empty to use this PC's name, the same as for a device you connect to from the list. You can also choose a **Sending speed**.
+Enter the host name or IP address and the port, and optionally the two names: **Name that device will see** is how this PC introduces itself, and **Name to show in Windows** is what you'll call the device here. Leave the first one empty to use this PC's name, the same as for a device you connect to from the list. You can also choose a **Sending speed**, and select **Customize groups and MIDI 1.0 ports** to choose and name the MIDI 1.0 ports. See [Naming MIDI 1.0 ports](#naming-midi-10-ports).
 
 Windows keeps the entry and keeps trying, so if the device isn't switched on yet it will connect later when it appears.
 
@@ -187,7 +191,7 @@ On a home studio network, letting any device connect is convenient. Anywhere you
 
 **Also create MIDI 1.0 ports for connected devices** makes connected devices usable from older software that doesn't understand the new combined MIDI 1.0/MIDI 2.0 API. Most apps today will fall under that category. It's on by default, and you'd normally leave it that way.
 
-Underneath it is **MIDI 1.0 ports to create for a device that does not describe itself**. Most devices say how many ports they have when Windows asks, and this number isn't used for them. It only applies to a device that never answers, which would otherwise get no ports at all. One pair is the right answer for almost everything; raise it only if you know a particular device carries more than one cable's worth of MIDI and doesn't say so.
+Underneath it is **Customize groups and MIDI 1.0 ports**, which chooses the groups each connected device gets MIDI 1.0 ports for. Most devices say which groups they use when Windows asks, and this isn't used for them. It only applies to a device that never answers, such as another Windows PC, which would otherwise get no ports at all. One source (In) and one destination (Out) on group 1 is the right answer for almost everything. Ports aren't named here, because every device that connects would get the same names; name them for each device once it has connected. See [Naming MIDI 1.0 ports](#naming-midi-10-ports). With an older Network MIDI 2.0 transport, you choose a number of ports here instead.
 
 ### When a device asks to connect
 
@@ -208,17 +212,19 @@ Each host lists the devices currently connected to it, with the same round trip 
 
 **Disconnect** ends the connection but doesn't stop the device reconnecting. **Block** ends it and refuses that device in future.
 
-Each connected device also shows how fast the host sends to it, and whether that's the host's speed or one set for that device. Select **Change** next to it to give the device a speed of its own. See [Choosing a sending speed](#choosing-a-sending-speed).
+Each connected device also shows how fast the host sends to it, and whether that's the host's speed or one set for that device. Select **Speed...** next to it to give the device a speed of its own. See [Choosing a sending speed](#choosing-a-sending-speed).
+
+Under that are the device's MIDI 1.0 ports, with a **Ports...** button of their own. See [Naming MIDI 1.0 ports](#naming-midi-10-ports).
 
 **Remembered decisions** appears when you've used **Always allow** or **Block**, and lets you undo those choices. If a device is being turned away and you can't work out why, look here first.
 
-**Devices with their own sending speed** appears when you've given a device a speed of its own. It lists those devices even when they aren't connected, so you can change a speed, or select **Use the host's speed** to remove it.
+**Devices with their own settings** appears when you've given a device a speed or MIDI 1.0 ports of its own. It lists those devices even when they aren't connected, so you can still change either one. **Use the host's speed** puts a device back on the host's speed and keeps its ports.
 
 **Stop** takes a host off the network without deleting it, and **Delete** removes it entirely.
 
 ### Choosing a network adapter
 
-A PC can be on more than one network at a time, like a wired network for your MIDI gear and Wi-Fi for everything else. A host is on all of them unless you say otherwise. To keep a host on just one, open **Advanced** when you create it, and pick the adapter under **Network adapter**. To change it later, open **Details** on the host and select **Change** next to **Network adapter**. RTP-MIDI hosts have the same choice.
+A PC can be on more than one network at a time, like a wired network for your MIDI gear and Wi-Fi for everything else. A host is on all of them unless you say otherwise. To keep a host on just one, open **Advanced** when you create it, and pick the adapter under **Network adapter**. To change it later, open **Details** on the host and select **Adapter...** next to **Network adapter**. RTP-MIDI hosts have the same choice.
 
 A host on one adapter only advertises itself there, and only answers devices that reach it through that adapter. That's handy at a show or in a studio, where you want your MIDI on the wired network and nothing else.
 
@@ -237,9 +243,9 @@ Changing a host's adapter restarts the host, so the devices connected to it are 
 
 A network is much faster than a MIDI 1.0 cable, and some devices can't keep up when a lot of data arrives at once. A hardware synth taking a long SysEx dump is the usual example, and so is a network to DIN bridge. If a device misses messages, give it a slower sending speed.
 
-- For a host, pick a **Sending speed** when you create it. To change it later, select **Change** next to the host's sending speed. The speed applies to every device connected to that host, except a device with a speed of its own.
-- For one device connected to a host, select **Change** next to that device's sending speed, under the host. Clear **Use the host's speed** and choose a speed for just that device. Windows remembers it, and uses it every time that device connects. The other devices on the host keep the host's speed.
-- For a device this PC connects to, choose a speed when you connect, or select **Change** next to the sending speed on the device's row. **Customize** has the same setting.
+- For a host, pick a **Sending speed** when you create it. To change it later, select **Speed...** next to the host's sending speed. The speed applies to every device connected to that host, except a device with a speed of its own.
+- For one device connected to a host, select **Speed...** next to that device's sending speed, under the host. Clear **Use the host's speed** and choose a speed for just that device. Windows remembers it, and uses it every time that device connects. The other devices on the host keep the host's speed.
+- For a device this PC connects to, choose a speed when you connect, or select **Speed...** next to the sending speed on the device's row. **Customize** has the same setting.
 
 The choices are **Unlimited**, which is the default, **MIDI 1.0 wire speed**, which is the speed of a DIN cable, and 2, 4, 8, 16 or 32 times that. Start with MIDI 1.0 wire speed for a device that was built for a cable, and go faster if it copes.
 
@@ -247,11 +253,33 @@ A single note or knob turn is never held back, at any speed. Only a large amount
 
 When a fader, pitch wheel or aftertouch sends faster than the speed allows, Windows skips some of the in-between values so the device catches up. Where each move starts, turns around and ends always gets through, and so does a short move. A device that uses those messages in another way, such as an endless knob that sends how far it turned, is left alone in nearly every case. If it still loses steps, give that device a faster speed. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
 
-For a device that needs every message, however late, clear **Skip in-between values to catch up**. It's next to the sending speed everywhere you choose one: when you connect, when you create a host, under **Change**, and in **Customize**.
+For a device that needs every message, however late, clear **Skip in-between values to catch up**. It's next to the sending speed everywhere you choose one: when you connect, when you create a host, under **Speed...**, and in **Customize**.
 
 For Network MIDI 2.0, **Slow down when a device misses data** lets Windows choose for you. When a device asks for data again, Windows sends to it more slowly, down to MIDI 1.0 wire speed, and speeds back up once the device stops asking. A connection that has slowed down says so in its status. RTP-MIDI devices can't tell this PC when they miss data, so for those, choose the speed yourself.
 
 A new speed applies straight away, and doesn't disconnect anything.
+
+### Naming MIDI 1.0 ports
+
+Most MIDI apps today use MIDI 1.0 ports. A Network MIDI 2.0 device that describes itself tells Windows which groups it uses, and gets a MIDI 1.0 source (In) and destination (Out) for each one, named after the device. Most hardware does this, and there's nothing to set.
+
+Some devices never describe themselves, and another Windows PC is the usual example. For those, you choose which groups get ports, and what your apps call them. Each group works like a separate MIDI cable, so a PC that plays four synths through one connection can have four ports, each named after its synth.
+
+Select **Customize groups and MIDI 1.0 ports** when you connect, or **Ports...** next to **MIDI 1.0 ports** on a device's row. Each of the 16 groups has a row:
+
+- **Source (In)** creates a port your apps receive from, which most apps list as a MIDI input. It brings in what the device sends on that group.
+- **Destination (Out)** creates a port your apps send to, which most apps list as a MIDI output. What they send goes to the device on that group.
+- **Name** is what your apps call the ports. Leave it empty and Windows names them after the device, the way it does for any other device. A name can be up to 31 characters, which is the most a MIDI 1.0 app can show.
+
+Two sources can't have the same name, and neither can two destinations, because your apps couldn't tell them apart. A source and a destination can share a name, which is what you want for a synth that's connected both ways.
+
+A change on a device's row applies straight away, without disconnecting. An app that has those ports open may lose them when they change, and need to open them again.
+
+If the device does describe itself, it gets ports for its own groups instead, as soon as Windows has finished asking it, and its row says so. A name you gave a group stays with that group, so a port the device has on the same group keeps your name.
+
+**On a host**, every device that connects gets the host's ports. You choose them when you create the host, or with **Ports...** next to **MIDI 1.0 ports for each device** on the host. The host's ports aren't named, because every device would get the same names. To name them for one device, select **Ports...** next to **MIDI 1.0 ports** under that device, clear **Use the host's ports**, and choose ports for just that device. Windows remembers them, and uses them every time that device connects.
+
+When two Windows PCs connect, each one names its own end. The PC that connects names the ports it creates for the host, and the host names the ports it creates for each device that connects to it.
 
 ## Transport settings
 

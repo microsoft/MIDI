@@ -39,6 +39,7 @@
 #include "MidiNetworkConfiguredHost.h"
 #include "MidiNetworkHostConnection.h"
 #include "MidiNetworkRemoteClientSettings.h"
+#include "MidiNetworkMidi1PortGroup.h"
 #include "MidiNetworkConfiguredClient.h"
 #include "MidiNetworkPendingRemoteClient.h"
 
@@ -680,6 +681,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                                     settings->SkipInBetweenValuesToCatchUp(
                                         settingsObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
+
+                                    settings->UseHostSendSpeed(
+                                        settingsObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY, false));
+
+                                    // an older service reports none, which reads as the host's groups
+                                    if (auto const groups = settingsObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, nullptr); groups != nullptr)
+                                    {
+                                        for (auto const& group : MidiNetworkMidi1PortGroup::FromDefinitions(internal::ReadMidiNetworkMidi1PortGroups(groups)))
+                                        {
+                                            settings->FallbackMidi1PortGroups().Append(group);
+                                        }
+                                    }
 
                                     host->InternalAddRemoteClientSettings(*settings);
                                 }
@@ -1338,6 +1351,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             cmd.Arguments().Insert(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
                 winrt::to_hstring(static_cast<uint32_t>(creationConfig.FallbackMidi1PortCount())));
+
+            // Like the count, it decides how the endpoint is built, so it travels with the
+            // connection. A command argument is a string, so the list goes as JSON text.
+            if (auto const groups = MidiNetworkMidi1PortGroup::ToDefinitions(creationConfig.FallbackMidi1PortGroups()); !groups.empty())
+            {
+                cmd.Arguments().Insert(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+                    internal::WriteMidiNetworkMidi1PortGroups(groups).Stringify());
+            }
 
             cmd.Arguments().Insert(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,

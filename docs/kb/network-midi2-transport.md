@@ -208,8 +208,10 @@ Lowering `maxHostConnections` does not disconnect clients that are already conne
 | `remoteClientPolicy` | string | `"allowAny"` or `"requireApproval"` |
 | `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for connected devices |
 | `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create for a device that declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
+| `fallbackMidi1PortGroups` | array | The groups to create MIDI 1.0 ports for, and their names, for a device that declares no function blocks and has none of its own. Used instead of `fallbackMidi1PortCount` when it isn't empty. See [MIDI 1.0 ports](#midi-10-ports) |
 | `sendSpeedLimit` | number | Default 0, no limit. How fast this host sends to each connected device, as a multiple of MIDI 1.0 wire speed: 1, 2, 4, 8, 16 or 32. See [Sending speed](#sending-speed) |
 | `reduceSendSpeedAutomatically` | boolean | Default false. Send more slowly while a device keeps asking for data again. See [Slowing down by itself](#slowing-down-by-itself) |
+| `remoteClientSettings` | array | Devices with settings of their own, used instead of the host's. Each has the device's `umpEndpointName` and `productInstanceId`, and any of `sendSpeedLimit`, `reduceSendSpeedAutomatically`, `skipInBetweenValuesToCatchUp`, `useHostSendSpeed` and `fallbackMidi1PortGroups`. See [Sending speed](#sending-speed) and [On a host](#on-a-host) |
 | `allowedClients` | array | Identity objects that may connect without asking |
 | `deniedClients` | array | Identity objects that are refused without asking |
 
@@ -223,6 +225,7 @@ A client identity is `{ "umpEndpointName": "...", "productInstanceId": "..." }`.
 | `umpEndpointName` | string | The name this PC gives the device. Missing or empty uses the computer name, which is also what a new host on this PC is called. The device knows this PC by this name and the product instance id, so it's kept after a restart |
 | `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for this device |
 | `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create when the device declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
+| `fallbackMidi1PortGroups` | array | The groups to create MIDI 1.0 ports for, and their names, when the device declares no function blocks. Used instead of `fallbackMidi1PortCount` when it isn't empty. See [MIDI 1.0 ports](#midi-10-ports) |
 | `sendSpeedLimit` | number | Default 0, no limit. How fast this PC sends to the device, as a multiple of MIDI 1.0 wire speed: 1, 2, 4, 8, 16 or 32. See [Sending speed](#sending-speed) |
 | `reduceSendSpeedAutomatically` | boolean | Default false. Send more slowly while the device keeps asking for data again. See [Slowing down by itself](#slowing-down-by-itself) |
 | `match` | object | How to find the device |
@@ -251,18 +254,60 @@ A configured client is in one of four states:
 
 A Network MIDI 2.0 device describes itself with **function blocks**, which it sends when Windows asks it to during endpoint discovery. Those say how many groups the device uses and in which direction, and Windows creates one MIDI 1.0 source and one destination per group from them. A device that describes itself properly needs nothing configured here.
 
-Not every device answers. Some never complete discovery, and unlike USB there are no group terminal blocks to fall back on, so Windows would have nothing to build ports from. For that case the transport supplies a block of its own, and `fallbackMidi1PortCount` says how wide it is: the value is the number of source ports and also the number of destination ports. It defaults to **1**, because a device which does not describe itself is usually a bridge with a single cable, and 16 would mean 32 ports of clutter in every MIDI 1.0 application.
+Not every device answers. Another Windows PC never does, and neither do some bridges, so Windows would have nothing to build ports from. For that case the transport describes the connection itself, with one group terminal block for each group that should have ports. Windows creates those ports as soon as the connection opens. There are two ways to say which groups they are:
 
-**The fallback is ignored the moment the device does describe itself.** Function blocks take precedence, so raising the count for a device that declares three groups changes nothing.
+- **`fallbackMidi1PortCount`** creates groups 1 to N, each with a source and a destination, named after the endpoint. It defaults to **1**, because a device which does not describe itself is usually a bridge with a single cable, and 16 would mean 32 ports of clutter in every MIDI 1.0 application.
+- **`fallbackMidi1PortGroups`** lists the groups one by one. Each group can have a source, a destination or both, and a name of its own. When the list isn't empty, it's used instead of the count.
 
-Two things behave differently when you change them:
+```json
+"fallbackMidi1PortGroups": [
+  { "groupIndex": 0, "name": "Juno", "hasSourcePort": true, "hasDestinationPort": true },
+  { "groupIndex": 1, "name": "TR-8", "hasSourcePort": false, "hasDestinationPort": true },
+  { "groupIndex": 3, "name": "", "hasSourcePort": true, "hasDestinationPort": false }
+]
+```
+
+| Key | Notes |
+|---|---|
+| `groupIndex` | Required. 0 to 15, so `0` is group 1. A later entry for the same group replaces an earlier one |
+| `name` | What MIDI 1.0 apps call the group's ports. Empty or missing means Windows names them after the endpoint, as it does for the count. Control characters are removed, spaces at either end are trimmed, and a name is cut to 31 characters, which is the longest name a MIDI 1.0 app can show |
+| `hasSourcePort` | Default true. A source port, which apps open as a MIDI input to receive what the device sends |
+| `hasDestinationPort` | Default true. A destination port, which apps open as a MIDI output to send to the device |
+
+An entry with neither port creates nothing and is skipped. A name you give works with either port naming style, because Windows always uses a name you gave a port before one it makes up.
+
+**The fallback is ignored once the device describes itself.** Function blocks take precedence, so for a device that declares three groups, the count or the list only decides its ports until discovery finishes. Then the device's own groups replace them. A name you gave a group stays with that group number, so if the device uses that group too, its port keeps your name.
+
+### On a host
+
+A host has `fallbackMidi1PortCount` and `fallbackMidi1PortGroups` too, for every device that connects to it. To give one device ports of its own, with names, add `fallbackMidi1PortGroups` to the device's entry in the host's `remoteClientSettings`. The host uses that list for the device instead of its own. The host knows the device by its name and product instance id, the same way it knows a device's own sending speed. An entry which is only there for the ports sets `useHostSendSpeed` to `true`, so the device still gets the host's sending speed:
+
+```json
+"remoteClientSettings": [
+  {
+    "umpEndpointName": "Studio PC",
+    "productInstanceId": "...",
+    "useHostSendSpeed": true,
+    "fallbackMidi1PortGroups": [
+      { "groupIndex": 0, "name": "Studio Juno" },
+      { "groupIndex": 1, "name": "Studio TR-8" }
+    ]
+  }
+]
+```
+
+When two Windows PCs connect, each one names its own end. The PC that connects names the ports it creates for the host, and the host names the ports it creates for each device that connects.
+
+### When changes apply
 
 | Setting | When it takes effect |
 |---|---|
-| `fallbackMidi1PortCount` | Straight away, on connections that are already up. Ports are added or removed without the session being interrupted |
+| `fallbackMidi1PortCount` and `fallbackMidi1PortGroups` | Straight away, on connections that are already up. Ports are added, removed or renamed without the session being interrupted |
 | `createMidi1Ports` | The next time the endpoint is created, so disconnect and reconnect, or restart the service |
 
 The difference is not arbitrary. Whether an endpoint has MIDI 1.0 ports at all is settled when the endpoint is built and cannot be changed underneath a running one; how many ports it has is driven by properties the service watches, so that can be rewritten live.
+
+A transport from before groups could be chosen ignores `fallbackMidi1PortGroups` and uses the count. Network MIDI Setup also saves a count that reaches the highest group in the list, so a device still gets enough ports there. An app can check for the `fallbackMidi1PortGroups` capability to find out whether the installed transport takes the list.
 
 ## Sending speed
 
@@ -270,7 +315,7 @@ Some devices lose data when a lot of it arrives at once. A hardware synth taking
 
 Every host and every client entry has a sending speed. It limits how fast this PC sends to the other device. It doesn't change what this PC receives.
 
-A host can also give one device a speed of its own. The host uses that speed for the device instead of its own, so a slow synth can get MIDI 1.0 wire speed while a computer connected to the same host gets no limit. The host knows the device by its name and product instance id, ignoring uppercase and lowercase differences, the same way it remembers whether to let the device in. So the device gets its own speed every time it connects, and right away if it's already connected. Network MIDI Setup shows each connected device's speed under its host, with a **Change** link. In PowerShell, use [`Set-MidiNetworkRemoteClientSendSpeed`]({{ site.baseurl }}/tools/powershell/#set-midinetworkremoteclientsendspeed-and-remove-midinetworkremoteclientsendspeed).
+A host can also give one device a speed of its own. The host uses that speed for the device instead of its own, so a slow synth can get MIDI 1.0 wire speed while a computer connected to the same host gets no limit. The host knows the device by its name and product instance id, ignoring uppercase and lowercase differences, the same way it remembers whether to let the device in. So the device gets its own speed every time it connects, and right away if it's already connected. Network MIDI Setup shows each connected device's speed under its host, with a **Speed...** button. In PowerShell, use [`Set-MidiNetworkRemoteClientSendSpeed`]({{ site.baseurl }}/tools/powershell/#set-midinetworkremoteclientsendspeed-and-remove-midinetworkremoteclientsendspeed).
 
 | `sendSpeedLimit` | Speed |
 |---|---|

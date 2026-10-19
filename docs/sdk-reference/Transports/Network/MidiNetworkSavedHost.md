@@ -30,8 +30,9 @@ A Network MIDI 2.0 host saved in the configuration file. The service starts it e
 | `SendSpeedLimit` | How fast the host sends to each connected device. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `ReduceSendSpeedAutomatically` | True when a connection sends more slowly while the device keeps asking for data again. This includes any change saved later with `MidiNetworkHostUpdateConfig` |
 | `SkipInBetweenValuesToCatchUp` | True when a connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. True when nothing was saved. This includes any change saved later with `MidiNetworkHostUpdateConfig`. Added in version 2 of `MidiTransportsNetworkApiContract` |
+| `FallbackMidi1PortGroups` | The groups a remote client gets MIDI 1.0 ports for when it doesn't describe itself and has none of its own, as [MidiNetworkMidi1PortGroup]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkMidi1PortGroup/) objects. Empty when none are saved, which means `FallbackMidi1PortCount` applies. This includes any change saved later with `MidiNetworkHostUpdateConfig`. A new copy each time you read it. Added in version 2 of `MidiTransportsNetworkApiContract` |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) objects |
-| `RemoteClientSettings` | Every saved remote client with a sending speed of its own, as [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/) objects |
+| `RemoteClientSettings` | Every saved remote client with a sending speed or MIDI 1.0 ports of its own, as [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/) objects |
 
 ## Remarks
 

@@ -280,6 +280,57 @@ namespace NetworkMidiTest
 
 
     _Use_decl_annotations_
+    ServiceConfigResult CreateDirectClientWithPortGroups(
+        std::wstring const& entryIdentifier,
+        std::wstring const& hostNameOrAddress,
+        uint16_t const port,
+        bool const createMidi1Ports,
+        std::wstring const& fallbackMidi1PortGroupsJson)
+    {
+        // directPort is read with GetNamedString, so it has to be quoted
+        std::wstring json =
+            L"{\"create\":{\"clients\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{"
+            L"\"networkProtocol\":\"udp\","
+            L"\"enabled\":true,"
+            L"\"createMidi1Ports\":" + std::wstring(createMidi1Ports ? L"true" : L"false") + L","
+            L"\"fallbackMidi1PortGroups\":" + fallbackMidi1PortGroupsJson + L","
+            L"\"match\":{"
+            L"\"directHostNameOrIP\":\"" + EscapeJsonString(hostNameOrAddress) + L"\","
+            L"\"directPort\":\"" + std::to_wstring(port) + L"\""
+            L"}}}}}";
+
+        Log::Comment(String().Format(
+            L"Creating client %s -> %s:%u with port groups %s",
+            entryIdentifier.c_str(),
+            hostNameOrAddress.c_str(),
+            port,
+            fallbackMidi1PortGroupsJson.c_str()));
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    _Use_decl_annotations_
+    ServiceConfigResult UpdateClientEntry(
+        std::wstring const& entryIdentifier,
+        std::wstring const& entryBodyJson)
+    {
+        return SendNetworkTransportConfig(
+            L"{\"updateEntries\":{\"clients\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{" + entryBodyJson + L"}}}}");
+    }
+
+
+    _Use_decl_annotations_
+    ServiceConfigResult UpdateHostEntry(
+        std::wstring const& entryIdentifier,
+        std::wstring const& entryBodyJson)
+    {
+        return SendNetworkTransportConfig(
+            L"{\"updateEntries\":{\"hosts\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{" + entryBodyJson + L"}}}}");
+    }
+
+
+    _Use_decl_annotations_
     ServiceConfigResult RenameEndpoint(
         std::wstring const& endpointDeviceId,
         std::wstring const& newName)

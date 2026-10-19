@@ -61,6 +61,32 @@ namespace NetworkMidiTest
         // Removing a customization puts the endpoint and its ports back to the remote's name.
         TEST_METHOD(RemovingACustomizationRevertsTheMidi1PortNames);
 
+        // Named groups for a remote which doesn't describe itself: exactly those ports, in those
+        // directions, with those names. https://github.com/microsoft/MIDI/issues/1284
+        TEST_METHOD(NamedPortGroupsGiveExactlyThosePorts);
+
+        // Changing the groups reaches an endpoint which is already up, a name can change on its
+        // own, and an empty list goes back to the count.
+        TEST_METHOD(ChangingPortGroupsAppliesWithoutReconnecting);
+
+        // A remote which describes itself gets its own groups once discovery finishes, and a name
+        // given to a group it also uses stays with that group.
+        TEST_METHOD(FunctionBlocksReplaceNamedPortGroups);
+
+        // UMP only means no MIDI 1.0 ports, whatever groups are listed.
+        TEST_METHOD(PortGroupsCreateNoPortsWhenUmpOnly);
+
+        // The list comes from a file anyone can edit, so an entry which can't be used is skipped
+        // on its own, and a name is cleaned and cut to what a MIDI 1.0 app can show.
+        TEST_METHOD(UnusablePortGroupEntriesAreSkipped);
+
+        // Windows is the host. A remote client with groups of its own gets them, named, and an
+        // entry which is only there for them keeps the host's sending speed.
+        TEST_METHOD(HostGivesARemoteClientItsOwnPortGroups);
+
+        // Windows is the host. The host's own groups go to a remote client with none of its own.
+        TEST_METHOD(HostPortGroupsApplyToRemoteClients);
+
     private:
 
         MidiTest::DeviceNodeTracker m_deviceNodeTracker{ };

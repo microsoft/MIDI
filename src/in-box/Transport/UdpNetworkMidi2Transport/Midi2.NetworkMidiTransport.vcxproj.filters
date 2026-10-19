@@ -150,6 +150,9 @@
     <ClInclude Include="network_json_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="network_midi1_port_groups.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="MidiNetworkCredentials.h">
       <Filter>Header Files</Filter>
     </ClInclude>

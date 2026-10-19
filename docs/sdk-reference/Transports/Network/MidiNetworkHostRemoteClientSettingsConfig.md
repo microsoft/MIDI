@@ -25,9 +25,11 @@ Pass this to `MidiServiceTransportPluginConfigManager.SendUpdate` to change a ru
 
 ## Remarks
 
-`RemoteClientSettings` must hold every remote client with settings of its own, not just the ones that changed. The host's whole list is replaced with what it holds. So start from `MidiNetworkConfiguredHost.RemoteClientSettings`, which is the list the running service holds, change it, and send the whole thing. Leaving a client out is how you put it back on the host's speed. An empty list puts every client back on the host's speed.
+`RemoteClientSettings` must hold every remote client with settings of its own, not just the ones that changed. The host's whole list is replaced with what it holds. So start from `MidiNetworkConfiguredHost.RemoteClientSettings`, which is the list the running service holds, change it, and send the whole thing. Leaving a client out is how you put it back on the host's speed and ports. An empty list puts every client back on the host's settings.
 
-`SendUpdate` changes the running host. Clients that are already connected change speed right away, and they aren't disconnected. A client that connects later gets its own speed from the start.
+An entry can hold a speed, MIDI 1.0 ports, or both. When you change one, keep the other: copy the client's `FallbackMidi1PortGroups` into its new entry when you change its speed, and its speed when you change its ports. To put a client back on the host's speed but keep its ports, keep the entry and set `UseHostSendSpeed` to true.
+
+`SendUpdate` changes the running host. Clients that are already connected change speed and ports right away, and they aren't disconnected. A client that connects later gets its own settings from the start.
 
 `SaveUpdate` keeps the list after the service restarts. The settings are saved with the host. If the host isn't saved, `SaveUpdate` returns `ErrorEntryNotSaved` and writes nothing. Send the change first, and save it only if the service took it.
 

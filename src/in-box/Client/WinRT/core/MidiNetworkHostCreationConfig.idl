@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiNetworkAuthenticationTypeEnum.idl";
+import "MidiNetworkMidi1PortGroup.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
 
@@ -104,6 +105,13 @@ namespace Windows.Devices.Midi2.Transports.Network
             // control change, pressure and pitch bend moves so the remote client catches up. True
             // by default.
             [noexcept] Boolean SkipInBetweenValuesToCatchUp;
+
+            // The groups to create MIDI 1.0 ports for, for a remote client which doesn't describe
+            // itself with function blocks. Used instead of FallbackMidi1PortCount when it isn't
+            // empty. A remote client with its own groups in MidiNetworkRemoteClientSettings gets
+            // those instead. A name here is given to the ports of every remote client which
+            // connects, so leave names empty unless only one will. Empty by default.
+            [noexcept] Windows.Foundation.Collections.IVector<MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups{ get; };
         }
     }
 }

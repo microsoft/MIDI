@@ -225,6 +225,8 @@ namespace midiapp
         return {};
     }
 
+    // Function blocks replace group terminal blocks when a device declares any, so the two are
+    // never combined. Combining them would describe groups the device no longer uses.
     winrt::hstring DescribeGroup(
         midi2enum::MidiEndpointDeviceInformation const& endpoint,
         uint8_t groupIndex) noexcept
@@ -235,12 +237,19 @@ namespace midiapp
             {
                 midi2::MidiGroup const group{ groupIndex };
 
-                for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
+                auto const functionBlocks = endpoint.GetDeclaredFunctionBlocks();
+
+                if (functionBlocks != nullptr && functionBlocks.Size() > 0)
                 {
-                    if (functionBlock.IncludesGroup(group) && !functionBlock.Name().empty())
+                    for (auto const& functionBlock : functionBlocks)
                     {
-                        return functionBlock.Name();
+                        if (functionBlock.IncludesGroup(group) && !functionBlock.Name().empty())
+                        {
+                            return functionBlock.Name();
+                        }
                     }
+
+                    return {};
                 }
 
                 for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
@@ -261,7 +270,8 @@ namespace midiapp
     }
 
     // A block covers GroupCount contiguous groups starting at FirstGroup, so FirstGroup 3
-    // with GroupCount 2 contributes groups 3 and 4.
+    // with GroupCount 2 contributes groups 3 and 4. Function blocks when there are any, else
+    // group terminal blocks, as above.
     std::array<bool, 16> DeclaredGroups(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept
     {
         std::array<bool, 16> declared{};
@@ -280,19 +290,26 @@ namespace midiapp
                         }
                     };
 
-                for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
+                auto const functionBlocks = endpoint.GetDeclaredFunctionBlocks();
+
+                if (functionBlocks != nullptr && functionBlocks.Size() > 0)
                 {
-                    if (auto const first = functionBlock.FirstGroup())
+                    for (auto const& functionBlock : functionBlocks)
                     {
-                        cover(first.Index(), functionBlock.GroupCount());
+                        if (auto const first = functionBlock.FirstGroup())
+                        {
+                            cover(first.Index(), functionBlock.GroupCount());
+                        }
                     }
                 }
-
-                for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
+                else
                 {
-                    if (auto const first = terminalBlock.FirstGroup())
+                    for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
                     {
-                        cover(first.Index(), terminalBlock.GroupCount());
+                        if (auto const first = terminalBlock.FirstGroup())
+                        {
+                            cover(first.Index(), terminalBlock.GroupCount());
+                        }
                     }
                 }
             }
@@ -343,35 +360,43 @@ namespace midiapp
                         }
                     };
 
-                for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
+                auto const functionBlocks = endpoint.GetDeclaredFunctionBlocks();
+
+                // function blocks when there are any, else group terminal blocks, never both
+                if (functionBlocks != nullptr && functionBlocks.Size() > 0)
                 {
-                    auto const direction = functionBlock.Direction();
-
-                    auto const source = direction == midi2enum::MidiFunctionBlockDirection::BlockOutput ||
-                        direction == midi2enum::MidiFunctionBlockDirection::Bidirectional;
-
-                    auto const destination = direction == midi2enum::MidiFunctionBlockDirection::BlockInput ||
-                        direction == midi2enum::MidiFunctionBlockDirection::Bidirectional;
-
-                    if (auto const first = functionBlock.FirstGroup())
+                    for (auto const& functionBlock : functionBlocks)
                     {
-                        cover(first.Index(), functionBlock.GroupCount(), source, destination);
+                        auto const direction = functionBlock.Direction();
+
+                        auto const source = direction == midi2enum::MidiFunctionBlockDirection::BlockOutput ||
+                            direction == midi2enum::MidiFunctionBlockDirection::Bidirectional;
+
+                        auto const destination = direction == midi2enum::MidiFunctionBlockDirection::BlockInput ||
+                            direction == midi2enum::MidiFunctionBlockDirection::Bidirectional;
+
+                        if (auto const first = functionBlock.FirstGroup())
+                        {
+                            cover(first.Index(), functionBlock.GroupCount(), source, destination);
+                        }
                     }
                 }
-
-                for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
+                else
                 {
-                    auto const direction = terminalBlock.Direction();
-
-                    auto const source = direction == midi2enum::MidiGroupTerminalBlockDirection::BlockOutput ||
-                        direction == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional;
-
-                    auto const destination = direction == midi2enum::MidiGroupTerminalBlockDirection::BlockInput ||
-                        direction == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional;
-
-                    if (auto const first = terminalBlock.FirstGroup())
+                    for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
                     {
-                        cover(first.Index(), terminalBlock.GroupCount(), source, destination);
+                        auto const direction = terminalBlock.Direction();
+
+                        auto const source = direction == midi2enum::MidiGroupTerminalBlockDirection::BlockOutput ||
+                            direction == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional;
+
+                        auto const destination = direction == midi2enum::MidiGroupTerminalBlockDirection::BlockInput ||
+                            direction == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional;
+
+                        if (auto const first = terminalBlock.FirstGroup())
+                        {
+                            cover(first.Index(), terminalBlock.GroupCount(), source, destination);
+                        }
                     }
                 }
             }

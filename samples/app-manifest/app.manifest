@@ -135,6 +135,7 @@
     <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostRemovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkHostUpdateConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkKnownRemoteClient" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkMidi1PortGroup" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientApprovalConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientDisconnectConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass name="Windows.Devices.Midi2.Transports.Network.MidiNetworkRemoteClientForgetConfig" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />

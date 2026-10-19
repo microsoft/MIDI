@@ -99,6 +99,7 @@ private:
         _In_ winrt::guid const& hostConfigEntryId,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    // fallbackMidi1PortGroups, when not empty, is used instead of fallbackMidi1PortCount
     HRESULT RunCommandConnectDirect(
         _In_ winrt::guid const& clientConfigEntryId,
         _In_ winrt::hstring const& remoteAddress,
@@ -107,6 +108,7 @@ private:
         _In_ winrt::hstring const& customEndpointName,
         _In_ bool const createMidi1Ports,
         _In_ uint8_t const fallbackMidi1PortCount,
+        _In_ internal::MidiNetworkMidi1PortGroupList const& fallbackMidi1PortGroups,
         _In_ uint32_t const sendSpeedLimit,
         _In_ bool const reduceSendSpeedAutomatically,
         _In_ bool const skipInBetweenValuesToCatchUp,
@@ -122,6 +124,7 @@ private:
         _In_ winrt::hstring const& customEndpointName,
         _In_ bool const createMidi1Ports,
         _In_ uint8_t const fallbackMidi1PortCount,
+        _In_ internal::MidiNetworkMidi1PortGroupList const& fallbackMidi1PortGroups,
         _In_ uint32_t const sendSpeedLimit,
         _In_ bool const reduceSendSpeedAutomatically,
         _In_ bool const skipInBetweenValuesToCatchUp,

@@ -23,6 +23,7 @@ A Network MIDI 2.0 client saved in the configuration file. The service connects 
 | `SendSpeedLimit` | How fast this PC sends to the remote device. This includes any change saved later with `MidiNetworkClientUpdateConfig` |
 | `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote device keeps asking for data again. This includes any change saved later with `MidiNetworkClientUpdateConfig` |
 | `SkipInBetweenValuesToCatchUp` | True when the connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. True when nothing was saved. This includes any change saved later with `MidiNetworkClientUpdateConfig`. Added in version 2 of `MidiTransportsNetworkApiContract` |
+| `FallbackMidi1PortGroups` | The groups the connection gets MIDI 1.0 ports for when the device doesn't describe itself, and their names, as [MidiNetworkMidi1PortGroup]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkMidi1PortGroup/) objects. Empty when none are saved, which means `FallbackMidi1PortCount` applies. This includes any change saved later with `MidiNetworkClientUpdateConfig`. A new copy each time you read it. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 

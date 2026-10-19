@@ -15,6 +15,7 @@
 #include "midi_dnssd_browser.h"
 
 #include "MidiNetworkTransportManager.h"
+#include "MidiNetworkMidi1PortGroup.h"
 
 // when this component goes in-box, move the json defs to the common json_defs.h
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
@@ -370,6 +371,23 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
             json::JsonValue::CreateBooleanValue(SkipInBetweenValuesToCatchUp()));
+
+        // Left out when empty, which is what a host made before there were groups looks like
+        try
+        {
+            auto const groups = MidiNetworkMidi1PortGroup::ToDefinitions(m_fallbackMidi1PortGroups);
+
+            if (!groups.empty())
+            {
+                hostObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+                    internal::WriteMidiNetworkMidi1PortGroups(groups));
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception writing the MIDI 1.0 port groups of a network host.");
+        }
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY,

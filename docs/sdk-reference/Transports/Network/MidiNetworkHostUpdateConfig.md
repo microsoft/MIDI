@@ -29,15 +29,18 @@ Pass to `MidiNetworkTransportManager.UpdateNetworkHostAsync`.
 | `SendSpeedLimit` | How fast the host sends to each connected device. See [MidiNetworkSendSpeedLimit]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkSendSpeedLimitEnum/) |
 | `ReduceSendSpeedAutomatically` | Whether a connection sends more slowly while the device keeps asking for data again |
 | `SkipInBetweenValuesToCatchUp` | Whether a connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsNetworkApiContract` |
+| `FallbackMidi1PortGroups` | The groups to create MIDI 1.0 ports for, and what to call them, for a device that declares no function blocks and has none of its own in `RemoteClientSettings`. A list of [MidiNetworkMidi1PortGroup]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkMidi1PortGroup/). Used instead of `FallbackMidi1PortCount` when it isn't empty. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 
-Only the properties you set are changed. Everything else about the host stays as it is.
+Only the properties you set are changed. Everything else about the host stays as it is. `FallbackMidi1PortGroups` counts as set once you change the list. Build the whole list, because it replaces the one the host has, and clear it to go back to `FallbackMidi1PortCount`.
 
 The host keeps running, unless you change `NetworkAdapterId`. Only the settings that can change on a running host take effect right away.
 
 `SendSpeedLimit`, `ReduceSendSpeedAutomatically` and `SkipInBetweenValuesToCatchUp` apply straight away, to the connections that are already up as well as to new ones, without disconnecting anything.
 
-`FallbackMidi1PortCount` applies to connections that are already running. Ports are added or removed without interrupting the session. `CreateMidi1Ports` applies the next time a remote device connects, because whether an endpoint has MIDI 1.0 ports at all is decided when the endpoint is built.
+`FallbackMidi1PortCount` and `FallbackMidi1PortGroups` apply to connections that are already running. Ports are added, removed or renamed without interrupting the session. `CreateMidi1Ports` applies the next time a remote device connects, because whether an endpoint has MIDI 1.0 ports at all is decided when the endpoint is built.
 
-Neither setting does anything for a device that describes itself with function blocks. Those come first, and the service builds one port per group from them. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#midi-10-ports).
+None of these do anything for a device that describes itself with function blocks. Those come first, and the service builds one port per group from them. See [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#midi-10-ports).
+
+A name in the host's list goes to every device that connects. To name the ports for one device, give it its own list in [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/).

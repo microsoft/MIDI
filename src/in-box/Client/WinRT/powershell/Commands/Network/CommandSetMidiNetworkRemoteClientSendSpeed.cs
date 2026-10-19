@@ -38,7 +38,7 @@ namespace WindowsMidiServices
             RequireMidiServices();
             RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, Strings.TransportNameNetwork);
 
-            var settingsList = GetOtherRemoteClientSettings(out _);
+            var settingsList = GetOtherRemoteClientSettings(out var existing);
 
             if (settingsList is null)
             {
@@ -56,6 +56,15 @@ namespace WindowsMidiServices
                 ReduceSendSpeedAutomatically = ReduceSendSpeedAutomatically.IsPresent,
                 SkipInBetweenValuesToCatchUp = !NoSkippingInBetweenValues.IsPresent
             };
+
+            // MIDI 1.0 ports set for this device stay as they are
+            if (existing is not null)
+            {
+                foreach (var group in existing.FallbackMidi1PortGroups)
+                {
+                    settings.FallbackMidi1PortGroups.Add(group);
+                }
+            }
 
             settingsList.Add(settings);
 

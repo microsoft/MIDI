@@ -70,14 +70,16 @@ public:
     winrt::hstring FindMatchingInstantiatedEndpoint(
         _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
 
-    // Rewrites the fallback group terminal block and the MIDI 1.0 port name table for an endpoint
+    // Rewrites the fallback group terminal blocks and the MIDI 1.0 port name table for an endpoint
     // which is already up. Both properties are ones the service watches, so writing them is what
-    // makes it re-sync the MIDI 1.0 ports: a changed port count takes effect, and a renamed
-    // endpoint carries its new name down to its ports, without the connection being torn down.
+    // makes it re-sync the MIDI 1.0 ports: a changed port count or group list takes effect, and a
+    // renamed endpoint carries its new name down to its ports, without the connection being torn
+    // down.
     //
     // Pass zero for the count to keep whatever the endpoint already spans, which is what a rename
-    // wants. Does nothing for an endpoint with no block, which is how a UMP-only one is told
-    // apart without having to find the entry it came from.
+    // wants. The groups are always read again from the entry the endpoint came from. Does nothing
+    // for an endpoint with no block, which is how a UMP-only one is told apart, or when nothing it
+    // would write has changed, because the write makes the service register the ports again.
     //
     // A caller which is applying a customization has to pass the name, because the endpoint's own
     // name does not reflect a custom name that was only just written. An empty string means the
@@ -200,12 +202,23 @@ private:
         _In_ std::wstring const& remoteEndpointName,
         _In_ std::wstring const& remoteProductInstanceId);
 
+    // The groups an endpoint gets MIDI 1.0 ports for when the remote declares no function blocks,
+    // read from the stored definitions so a later change to them reaches it. A remote client of a
+    // host uses its own list when it has one, and the host's otherwise. Empty means the count.
+    internal::MidiNetworkMidi1PortGroupList ResolveFallbackMidi1PortGroups(
+        _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
+        _In_ std::wstring const& remoteEndpointName,
+        _In_ std::wstring const& remoteEndpointProductInstanceId);
+
     // Shared by endpoint creation and the live refresh, so both produce the same blocks. The two
     // buffers are owned by the caller because the property entries point into them and must stay
-    // valid until the device manager call returns.
+    // valid until the device manager call returns. A non-empty group list is used instead of the
+    // count.
     HRESULT BuildFallbackMidi1PortProperties(
         _In_ std::wstring const& portName,
         _In_ uint8_t const fallbackMidi1PortCount,
+        _In_ internal::MidiNetworkMidi1PortGroupList const& fallbackMidi1PortGroups,
         _Inout_ std::vector<std::byte>& groupTerminalBlockData,
         _Inout_ WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable,
         _Inout_ std::vector<DEVPROPERTY>& properties);
@@ -253,6 +266,15 @@ private:
         // Which end of the session this PC is. A remote may connect to more than one host here,
         // but not be a host and a client of this PC at the same time.
         MidiNetworkConnectionRole Role{ MidiNetworkConnectionRole::ConnectionWindowsIsClient };
+
+        // The client or host entry the endpoint came from, so a refresh can find the groups that
+        // entry has now
+        std::wstring ConfigIdentifier{};
+
+        // The groups the blocks were built from, so a refresh which would write the same thing
+        // again can be skipped. Writing the blocks makes the service register every MIDI 1.0 port
+        // again, and that drops what a MIDI 1.0 app has open on them.
+        internal::MidiNetworkMidi1PortGroupList FallbackMidi1PortGroups{};
     };
 
     wil::critical_section m_createdEndpointsLock;

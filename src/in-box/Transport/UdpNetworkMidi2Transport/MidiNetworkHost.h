@@ -68,6 +68,10 @@ struct MidiNetworkHostDefinition
     // Only used when the remote client declares no function blocks. See the constant for why.
     uint8_t FallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
+    // The groups to create MIDI 1.0 ports for in that case, with their names, for every remote
+    // client which has none of its own. Used instead of the count when it is not empty.
+    WindowsMidiServicesInternal::MidiNetworkMidi1PortGroupList FallbackMidi1PortGroups{};
+
     // What this host sends to each remote client, as a multiple of MIDI 1.0 wire speed. 0 is no
     // limit. See MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY.
     uint32_t SendSpeedLimit{ 0 };
@@ -92,10 +96,11 @@ struct MidiNetworkHostDefinition
         return nullptr;
     }
 
-    // What this host sends to one remote client. One not identified yet gets the host's.
+    // What this host sends to one remote client. One not identified yet gets the host's, and so
+    // does one whose own settings are only there for its MIDI 1.0 port groups.
     MidiNetworkRemoteClientSendSpeed SendSpeedFor(_In_ MidiNetworkRemoteClientIdentity const& identity) const
     {
-        if (auto const settings = FindRemoteClientSettings(identity); settings != nullptr)
+        if (auto const settings = FindRemoteClientSettings(identity); settings != nullptr && !settings->UseHostSendSpeed)
         {
             return { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true, settings->SkipInBetweenValuesToCatchUp };
         }

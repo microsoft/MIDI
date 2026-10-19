@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiNetworkKnownRemoteClient.idl";
+import "MidiNetworkMidi1PortGroup.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
 import "MidiNetworkRemoteClientSettings.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
@@ -69,6 +70,10 @@ namespace Windows.Devices.Midi2.Transports.Network
         {
             // True when none is saved. Includes a change saved later with MidiNetworkHostUpdateConfig.
             [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+
+            // Empty when none are saved, which means FallbackMidi1PortCount applies. Includes a
+            // change saved later with MidiNetworkHostUpdateConfig. A new copy each time.
+            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups{ get; };
         }
     };
 }

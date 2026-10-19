@@ -2095,6 +2095,12 @@ namespace NetworkMidiTest
                     String().Format(L"Capability '%s' is reported unsupported", notSupported));
             }
         }
+
+        // Not required to run, but Network MIDI Setup only offers to choose and name the MIDI 1.0
+        // ports a connection gets when this is there. Ports are named through the connection's
+        // own settings, which is why customizePorts stays false.
+        VERIFY_IS_TRUE(capabilities.GetNamedBoolean(L"fallbackMidi1PortGroups", false),
+            L"Capability 'fallbackMidi1PortGroups' is declared and true");
     }
 
     void ClientTests::ConnectMdnsCreatesAnEntryMatchedByDeviceId()

@@ -2317,11 +2317,22 @@ try
     std::vector<std::byte> groupTerminalBlockData{};
     WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
 
+    // The groups the user chose for this connection, if any. Read before anything is activated,
+    // so the ports are created with their names rather than renamed a moment later.
+    internal::MidiNetworkMidi1PortGroupList fallbackMidi1PortGroups{};
+
     if (!umpOnly)
     {
+        fallbackMidi1PortGroups = ResolveFallbackMidi1PortGroups(
+            thisServiceRole,
+            configIdentifier,
+            endpointName,
+            remoteEndpointProductInstanceId);
+
         LOG_IF_FAILED(BuildFallbackMidi1PortProperties(
             friendlyName,
             fallbackMidi1PortCount,
+            fallbackMidi1PortGroups,
             groupTerminalBlockData,
             nameTable,
             interfaceDevProperties));
@@ -2431,7 +2442,9 @@ try
             winrt::hstring{ endpointName },
             winrt::hstring{ remoteEndpointProductInstanceId },
             umpOnly ? (uint8_t)0 : ClampFallbackMidi1PortCount(fallbackMidi1PortCount),
-            thisServiceRole });
+            thisServiceRole,
+            configIdentifier,
+            fallbackMidi1PortGroups });
     }
 
     // Everything the node could not be created with. A network endpoint is never live when its
@@ -2469,6 +2482,7 @@ HRESULT
 CMidi2NetworkMidiEndpointManager::BuildFallbackMidi1PortProperties(
     std::wstring const& portName,
     uint8_t const fallbackMidi1PortCount,
+    internal::MidiNetworkMidi1PortGroupList const& fallbackMidi1PortGroups,
     std::vector<std::byte>& groupTerminalBlockData,
     WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable,
     std::vector<DEVPROPERTY>& properties)
@@ -2477,22 +2491,67 @@ try
     // A Network MIDI 2.0 endpoint declares function blocks, never group terminal blocks, and the
     // service builds MIDI 1.0 ports from whichever it finds. A remote which never completes
     // endpoint discovery declares neither, so the service has nothing to work from and the
-    // endpoint ends up with no MIDI 1.0 ports at all. Publishing a group terminal block gives it
+    // endpoint ends up with no MIDI 1.0 ports at all. Publishing group terminal blocks gives it
     // something. Function blocks take precedence the moment they arrive, so a remote which does
     // describe itself is unaffected.
-    internal::GroupTerminalBlockInternal block{};
-
-    block.Number = 1;
-    block.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
-    block.FirstGroupIndex = 0;
-    block.GroupCount = ClampFallbackMidi1PortCount(fallbackMidi1PortCount);
-    block.Protocol = 0x11;      // 0x11 = MIDI 2.0
+    std::vector<internal::GroupTerminalBlockInternal> blocks{};
 
     // The remote chooses this name, and a name too long for a block descriptor would otherwise
     // make the write fail and leave the endpoint with no MIDI 1.0 ports at all.
-    block.Name = BoundBlockName(portName);
+    auto const endpointBlockName = BoundBlockName(portName);
 
-    std::vector<internal::GroupTerminalBlockInternal> blocks{ block };
+    if (fallbackMidi1PortGroups.empty())
+    {
+        internal::GroupTerminalBlockInternal block{};
+
+        block.Number = 1;
+        block.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
+        block.FirstGroupIndex = 0;
+        block.GroupCount = ClampFallbackMidi1PortCount(fallbackMidi1PortCount);
+        block.Protocol = 0x11;      // 0x11 = MIDI 2.0
+        block.Name = endpointBlockName;
+
+        blocks.push_back(block);
+    }
+    else
+    {
+        // One block per group the user chose, so each has its own name and its own directions.
+        // A block output is a MIDI 1.0 source port, and a block input is a destination port.
+        uint8_t blockNumber{ 1 };
+
+        for (auto const& group : fallbackMidi1PortGroups)
+        {
+            internal::GroupTerminalBlockInternal block{};
+
+            if (group.HasSourcePort && group.HasDestinationPort)
+            {
+                block.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
+            }
+            else if (group.HasSourcePort)
+            {
+                block.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;
+            }
+            else if (group.HasDestinationPort)
+            {
+                block.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;
+            }
+            else
+            {
+                continue;
+            }
+
+            block.Number = blockNumber++;
+            block.FirstGroupIndex = group.GroupIndex;
+            block.GroupCount = 1;
+            block.Protocol = 0x11;
+            block.Name = group.Name.empty() ? endpointBlockName : BoundBlockName(group.Name);
+
+            blocks.push_back(block);
+        }
+
+        // a list read through the shared reader never gets here, but nothing would be published
+        RETURN_HR_IF(E_INVALIDARG, blocks.empty());
+    }
 
     groupTerminalBlockData.clear();
 
@@ -2501,29 +2560,58 @@ try
     properties.push_back({ {PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_BINARY, static_cast<ULONG>(groupTerminalBlockData.size()), (PVOID)groupTerminalBlockData.data() });
 
-    // The names the service gives the ports come from this table, not from the block.
+    // The names the service gives the ports come from this table, not from the blocks.
     //
-    // Every group is named, not just the ones the block above spans. A function block may later
-    // land on any group, and naming all sixteen is also what puts the group number into the port
-    // name: the names only differ by group, so the naming library numbers them. A network port is
+    // Every group is named, not just the ones the blocks span. A function block may later land on
+    // any group, and naming all sixteen is also what puts the group number into the port name:
+    // the names only differ by group, so the naming library numbers them. A network port is
     // addressed by its group and there is no older name to stay compatible with, so that number
     // belongs there even when the endpoint currently has a single port. Narrowing this to the
     // spanned groups would silently drop the number from that case.
-    auto namingBlocks = blocks;
-    namingBlocks.front().GroupCount = MIDI_NETWORK_MIDI_GROUP_COUNT;
+    internal::GroupTerminalBlockInternal namingBlock{};
+
+    namingBlock.Number = 1;
+    namingBlock.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
+    namingBlock.FirstGroupIndex = 0;
+    namingBlock.GroupCount = MIDI_NETWORK_MIDI_GROUP_COUNT;
+    namingBlock.Protocol = 0x11;
+    namingBlock.Name = endpointBlockName;
+
+    std::vector<internal::GroupTerminalBlockInternal> namingBlocks{ namingBlock };
 
     // The endpoint name is passed as the parent as well as being the block name. It is what the
     // legacy WinMM form puts in its parentheses, and leaving it out gives "MIDIIN2 ()" for every
     // group past the first. The naming library strips the block name when it repeats the parent,
     // so the new style name does not end up doubled.
-    RETURN_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(block.Name, namingBlocks));
+    RETURN_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(namingBlock.Name, namingBlocks));
 
     if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
     {
         nameTable.SetPortNamesHaveLegacyEquivalent(false);
 
         // these ports are new style, so they need the same numbering as everything else
-        LOG_IF_FAILED(nameTable.RebuildNewStyleNames(std::wstring{ block.Name }, false));
+        LOG_IF_FAILED(nameTable.RebuildNewStyleNames(std::wstring{ namingBlock.Name }, false));
+    }
+
+    // The names the user gave groups go in as custom names, which the service prefers to both
+    // naming styles, so a MIDI 1.0 app shows exactly what was typed. The service also carries a
+    // custom name over when it rebuilds the table from function blocks, which is what keeps a name
+    // on its group when a remote that does describe itself replaces these blocks.
+    for (auto const& group : fallbackMidi1PortGroups)
+    {
+        if (group.Name.empty()) continue;
+
+        winrt::hstring const name{ group.Name };
+
+        if (group.HasSourcePort)
+        {
+            nameTable.UpdateSourceEntryCustomName(group.GroupIndex, name);
+        }
+
+        if (group.HasDestinationPort)
+        {
+            nameTable.UpdateDestinationEntryCustomName(group.GroupIndex, name);
+        }
     }
 
     RETURN_IF_FAILED(nameTable.WriteProperties(properties));
@@ -2533,6 +2621,53 @@ try
 catch (...)
 {
     RETURN_CAUGHT_EXCEPTION();
+}
+
+
+_Use_decl_annotations_
+internal::MidiNetworkMidi1PortGroupList
+CMidi2NetworkMidiEndpointManager::ResolveFallbackMidi1PortGroups(
+    MidiNetworkConnectionRole const thisServiceRole,
+    std::wstring const& configIdentifier,
+    std::wstring const& remoteEndpointName,
+    std::wstring const& remoteEndpointProductInstanceId)
+{
+    try
+    {
+        GUID parsed{};
+
+        if (!internal::TryParseGuidString(configIdentifier, parsed))
+        {
+            return internal::MidiNetworkMidi1PortGroupList{};
+        }
+
+        winrt::guid const entryId{ parsed };
+
+        // From the stored definitions, which configuration updates change, for the same reason the
+        // custom endpoint name is: a host keeps the copy it was started with.
+        if (thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+        {
+            if (auto const definition = TransportState::Current().GetClientDefinition(entryId); definition.has_value())
+            {
+                return definition->FallbackMidi1PortGroups;
+            }
+        }
+        else if (auto const definition = TransportState::Current().GetHostDefinition(entryId); definition.has_value())
+        {
+            MidiNetworkRemoteClientIdentity const identity{ remoteEndpointName, remoteEndpointProductInstanceId };
+
+            if (auto const settings = definition->FindRemoteClientSettings(identity);
+                settings != nullptr && !settings->FallbackMidi1PortGroups.empty())
+            {
+                return settings->FallbackMidi1PortGroups;
+            }
+
+            return definition->FallbackMidi1PortGroups;
+        }
+    }
+    CATCH_LOG();
+
+    return internal::MidiNetworkMidi1PortGroupList{};
 }
 
 
@@ -2563,6 +2698,10 @@ try
     // MIDI 1.0 ports to rebuild.
     std::wstring recordName{ };
     uint8_t recordCount{ 0 };
+    MidiNetworkConnectionRole recordRole{ MidiNetworkConnectionRole::ConnectionWindowsIsClient };
+    std::wstring recordConfigIdentifier{ };
+    std::wstring recordProductInstanceId{ };
+    internal::MidiNetworkMidi1PortGroupList recordGroups{ };
 
     {
         auto lock = m_createdEndpointsLock.lock();
@@ -2580,9 +2719,32 @@ try
 
         recordName = record->TransportSuppliedEndpointName;
         recordCount = record->FallbackMidi1PortCount;
+        recordRole = record->Role;
+        recordConfigIdentifier = record->ConfigIdentifier;
+        recordProductInstanceId = record->ProductInstanceId;
+        recordGroups = record->FallbackMidi1PortGroups;
     }
 
     RETURN_HR_IF(S_FALSE, recordCount == 0);
+
+    // Zero is a rename asking to keep the width it already has
+    auto const effectiveCount = fallbackMidi1PortCount == 0
+        ? recordCount
+        : ClampFallbackMidi1PortCount(fallbackMidi1PortCount);
+
+    // Outside the lock above, because the transport state takes its own
+    auto const groups = ResolveFallbackMidi1PortGroups(
+        recordRole,
+        recordConfigIdentifier,
+        recordName,
+        recordProductInstanceId);
+
+    // A host's endpoints are all refreshed when any of its remote clients' settings change, and
+    // most of them have nothing new to show
+    if (!portNameOverride.has_value() && effectiveCount == recordCount && groups == recordGroups)
+    {
+        return S_FALSE;
+    }
 
     // Without an override the current effective name has to be resolved. With one, the caller has
     // just written a name the device does not report back yet, and an empty one means the
@@ -2624,11 +2786,6 @@ try
 
     RETURN_HR_IF(S_FALSE, portName.empty());
 
-    // Zero is a rename asking to keep the width it already has
-    auto const effectiveCount = fallbackMidi1PortCount == 0
-        ? recordCount
-        : ClampFallbackMidi1PortCount(fallbackMidi1PortCount);
-
     std::vector<std::byte> groupTerminalBlockData{ };
     WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{ };
     std::vector<DEVPROPERTY> properties{ };
@@ -2636,6 +2793,7 @@ try
     RETURN_IF_FAILED(BuildFallbackMidi1PortProperties(
         portName,
         effectiveCount,
+        groups,
         groupTerminalBlockData,
         nameTable,
         properties));
@@ -2645,6 +2803,23 @@ try
         static_cast<ULONG>(properties.size()),
         properties.data()));
 
+    // What the endpoint is built from now. Without this a later rename, which keeps the width,
+    // put back the width the endpoint was created with.
+    {
+        auto lock = m_createdEndpointsLock.lock();
+
+        for (auto& record : m_createdEndpoints)
+        {
+            if (internal::NormalizeEndpointInterfaceIdWStringCopy(std::wstring{ record.EndpointDeviceId }) ==
+                internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId))
+            {
+                record.FallbackMidi1PortCount = effectiveCount;
+                record.FallbackMidi1PortGroups = groups;
+                break;
+            }
+        }
+    }
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -2653,7 +2828,8 @@ try
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Rebuilt the fallback MIDI 1.0 port properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingUInt8(effectiveCount, "fallback port count")
+        TraceLoggingUInt8(effectiveCount, "fallback port count"),
+        TraceLoggingUInt32(static_cast<uint32_t>(groups.size()), "fallback port group count")
     );
 
     return S_OK;

@@ -53,6 +53,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     json::JsonValue::CreateBooleanValue(*m_skipInBetweenValuesToCatchUp));
             }
 
+            // Written even when empty once changed, because an empty list is how the groups are
+            // cleared: the file merge replaces a list rather than adding to it
+            if (m_fallbackMidi1PortGroupsChanged->load())
+            {
+                clientObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+                    internal::WriteMidiNetworkMidi1PortGroups(MidiNetworkMidi1PortGroup::ToDefinitions(m_fallbackMidi1PortGroups)));
+            }
+
             json::JsonObject clientsContainer{};
             clientsContainer.SetNamedValue(
                 winrt::to_hstring(ClientId()),

@@ -36,10 +36,11 @@ namespace WindowsMidiServices
         protected string RemoteClientTarget => $"{RemoteClientName.Trim()} ({RemoteClientProductInstanceId.Trim()})";
 
         // The host's list without this device, or null when there is no such host. The service
-        // ignores case when it matches a device, so this does too.
-        protected List<MidiNetworkRemoteClientSettings>? GetOtherRemoteClientSettings(out bool hasThisRemoteClient)
+        // ignores case when it matches a device, so this does too. thisRemoteClient is the
+        // device's own entry, which can hold its MIDI 1.0 ports as well as a speed.
+        protected List<MidiNetworkRemoteClientSettings>? GetOtherRemoteClientSettings(out MidiNetworkRemoteClientSettings? thisRemoteClient)
         {
-            hasThisRemoteClient = false;
+            thisRemoteClient = null;
 
             MidiNetworkConfiguredHost? host = null;
             var hosts = MidiNetworkTransportManager.GetConfiguredHosts();
@@ -77,7 +78,7 @@ namespace WindowsMidiServices
                 if (string.Equals(settings.RemoteClientName.Trim(), RemoteClientName.Trim(), StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(settings.RemoteClientProductInstanceId.Trim(), RemoteClientProductInstanceId.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    hasThisRemoteClient = true;
+                    thisRemoteClient = settings;
                     continue;
                 }
 

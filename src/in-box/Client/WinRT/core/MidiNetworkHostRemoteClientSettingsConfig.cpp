@@ -13,6 +13,8 @@
 // when this component goes in-box, move the json defs to the common json_defs.h
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
+#include "MidiNetworkMidi1PortGroup.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     // A change to the host, under "updateEntries" like MidiNetworkHostUpdateConfig, so the
@@ -63,6 +65,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 settingsObject.SetNamedValue(
                     MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
                     json::JsonValue::CreateBooleanValue(settings.SkipInBetweenValuesToCatchUp()));
+
+                settingsObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY,
+                    json::JsonValue::CreateBooleanValue(settings.UseHostSendSpeed()));
+
+                // Always written, so a remote client's groups can be cleared by sending the list
+                // with them taken out
+                settingsObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+                    internal::WriteMidiNetworkMidi1PortGroups(MidiNetworkMidi1PortGroup::ToDefinitions(settings.FallbackMidi1PortGroups())));
 
                 settingsArray.Append(settingsObject);
             }

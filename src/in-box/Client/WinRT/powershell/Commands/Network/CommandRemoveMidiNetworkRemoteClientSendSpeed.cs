@@ -22,14 +22,15 @@ namespace WindowsMidiServices
             RequireMidiServices();
             RequireTransport(MidiNetworkTransportManager.IsTransportAvailable, Strings.TransportNameNetwork);
 
-            var settingsList = GetOtherRemoteClientSettings(out var hasThisRemoteClient);
+            var settingsList = GetOtherRemoteClientSettings(out var existing);
 
             if (settingsList is null)
             {
                 return;
             }
 
-            if (!hasThisRemoteClient)
+            // An entry which is only there for the device's MIDI 1.0 ports has no speed to remove
+            if (existing is null || existing.UseHostSendSpeed)
             {
                 WriteNonTerminating(
                     new ItemNotFoundException(Format(Strings.RemoteClientSpeedNotFoundFormat, RemoteClientTarget)),
@@ -43,6 +44,22 @@ namespace WindowsMidiServices
             if (!ShouldProcess(RemoteClientTarget, Strings.RemoteClientSpeedRemoveAction))
             {
                 return;
+            }
+
+            // MIDI 1.0 ports set for this device stay, and it goes back to the host's speed
+            if (existing.FallbackMidi1PortGroups.Count > 0)
+            {
+                var portsOnly = new MidiNetworkRemoteClientSettings(existing.RemoteClientName, existing.RemoteClientProductInstanceId)
+                {
+                    UseHostSendSpeed = true
+                };
+
+                foreach (var group in existing.FallbackMidi1PortGroups)
+                {
+                    portsOnly.FallbackMidi1PortGroups.Add(group);
+                }
+
+                settingsList.Add(portsOnly);
             }
 
             SendRemoteClientSettings(settingsList);

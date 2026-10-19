@@ -469,6 +469,10 @@
 #define UUID_IMidiNetworkHostRemoteClientSettingsConfigFactory  8087b303-0519-c0de-31d1-ff00F0324000
 
 // MidiTransportsNetworkApiContract 2, added after Preview 11
+#define UUID_IMidiNetworkMidi1PortGroup                         8087b303-0519-c0de-31d1-dd00F0325000
+#define UUID_IMidiNetworkMidi1PortGroupFactory                  8087b303-0519-c0de-31d1-ff00F0325000
+
+// MidiTransportsNetworkApiContract 2, added after Preview 11
 #define UUID_IMidiNetworkHostCreationConfig2                    8087b303-0519-c0de-31d1-dd00F0302002
 #define UUID_IMidiNetworkHostUpdateConfig2                      8087b303-0519-c0de-31d1-dd00F031A002
 #define UUID_IMidiNetworkConfiguredHost2                        8087b303-0519-c0de-31d1-dd00F030C002

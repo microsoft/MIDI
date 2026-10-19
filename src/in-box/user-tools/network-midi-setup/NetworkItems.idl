@@ -31,6 +31,44 @@ namespace midinetworksetup
         Boolean IsBusy;
     }
 
+    // One group in the MIDI 1.0 ports dialog. The name and both check boxes are bound both ways,
+    // and read back when the dialog closes.
+    [default_interface]
+    runtimeclass Midi1PortGroupItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        Midi1PortGroupItem();
+
+        UInt8 GroupIndex{ get; };
+        String GroupText{ get; };
+
+        String Name;
+        Boolean HasInput;
+        Boolean HasOutput;
+
+        // A host's ports go to every device which connects to it, so they aren't named there
+        Microsoft.UI.Xaml.Visibility NameVisibility{ get; };
+
+        // Each control is announced with its group, because the column headers aren't
+        String NameAutomationName{ get; };
+        String InputAutomationName{ get; };
+        String OutputAutomationName{ get; };
+    }
+
+    // Whether the window is narrow. The rows give way to it by binding to this one shared object
+    // through x:Bind's static path, so no row type needs anything of its own for it. The window
+    // sets it as its width crosses the line.
+    [default_interface]
+    runtimeclass PageLayout : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        static PageLayout Current{ get; };
+
+        Boolean IsNarrow{ get; };
+
+        // Visible only in a wide window: latency graphs, their statistics, and addresses. What
+        // the customer can act on stays in both.
+        Microsoft.UI.Xaml.Visibility WideVisibility{ get; };
+    }
+
     // One remote Network MIDI 2.0 host. Discovered hosts and this PC's configured client
     // entries are folded into a single row, because to the customer they are one thing.
     [default_interface]
@@ -104,6 +142,11 @@ namespace midinetworksetup
         Boolean SkipInBetweenValuesToCatchUp{ get; };
         Microsoft.UI.Xaml.Visibility SendSpeedVisibility{ get; };
 
+        // The MIDI 1.0 ports this PC creates for the device when it doesn't describe its own
+        // groups, as shown. Only for a device this PC has a saved entry for.
+        String Midi1PortsText{ get; };
+        Microsoft.UI.Xaml.Visibility Midi1PortsVisibility{ get; };
+
         // Round trip latency over the last several polls, newest at the right. Rendered as a
         // filled sparkline, so the geometry is produced here rather than in the template.
         Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
@@ -141,6 +184,13 @@ namespace midinetworksetup
         // always send.
         String SendSpeedText{ get; };
         Microsoft.UI.Xaml.Visibility ChangeSendSpeedVisibility{ get; };
+
+        // The MIDI 1.0 ports this device gets when it doesn't describe its own groups, and whether
+        // they're the host's or set for this device. Like the speed, changing them needs the
+        // device's identity.
+        String Midi1PortsText{ get; };
+        Microsoft.UI.Xaml.Visibility Midi1PortsVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ChangeMidi1PortsVisibility{ get; };
 
         Microsoft.UI.Xaml.Visibility MonitorVisibility{ get; };
 
@@ -189,6 +239,12 @@ namespace midinetworksetup
 
         // which transport's host the setting belongs to
         Boolean IsRtpMidi{ get; };
+
+        // Network MIDI 2.0 only. A device can have MIDI 1.0 ports of its own and keep the host's
+        // speed, so the speed's own button is only offered when it has a speed of its own.
+        String Midi1PortsText{ get; };
+        Microsoft.UI.Xaml.Visibility Midi1PortsVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility UseHostSpeedVisibility{ get; };
     }
 
     // One Network MIDI 2.0 host running on this PC.
@@ -229,6 +285,11 @@ namespace midinetworksetup
         UInt32 SendSpeedLimit{ get; };
         Boolean ReduceSendSpeedAutomatically{ get; };
         Boolean SkipInBetweenValuesToCatchUp{ get; };
+
+        // Network MIDI 2.0 only: the MIDI 1.0 ports each device gets when it doesn't describe its
+        // own groups and has none set for it
+        String Midi1PortsText{ get; };
+        Microsoft.UI.Xaml.Visibility Midi1PortsVisibility{ get; };
 
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
