@@ -148,4 +148,15 @@ namespace midipatchbay
 
     // One line for a controller button or a controller stick or trigger step.
     winrt::hstring DescribeControllerStep(_In_ BlockKind kind, _In_ BlockSettings const& settings) noexcept;
+
+    // ---- the message converter, in ConverterText.cpp ----
+
+    // "Note", "Control change", for a picker.
+    winrt::hstring DescribeConverterInput(_In_ ConverterInput input) noexcept;
+
+    // "Note D#0 on channel 3 becomes CC 27 on channel 4".
+    winrt::hstring DescribeConverterRow(_In_ ConverterRow const& row) noexcept;
+
+    // The one row a converter has, or how many. Empty when it has none.
+    winrt::hstring DescribeConverterStep(_In_ MessageConverterSettings const& settings) noexcept;
 }

@@ -96,12 +96,27 @@
 #define MIDIDIAG_FIELD_LABEL_SERVICE_PROCESS_ID                          L"service_process_id"
 #define MIDIDIAG_FIELD_LABEL_SERVICE_PROCESS                             L"service_process"
 
+#define MIDIDIAG_SECTION_LABEL_INBOX_COMPONENTS                          L"inbox_components"
+#define MIDIDIAG_FIELD_LABEL_INBOX_COMPONENT                             L"inbox_component"
+#define MIDIDIAG_FIELD_LABEL_INBOX_SUMMARY                               L"inbox_summary"
+#define MIDIDIAG_FIELD_LABEL_INBOX_STATE                                 L"inbox_state"
+
 #define MIDIDIAG_SECTION_LABEL_SERVICE_HISTORY                           L"service_history"
 #define MIDIDIAG_FIELD_LABEL_HISTORY_DAYS                                L"history_days"
 #define MIDIDIAG_FIELD_LABEL_SERVICE_EVENT_COUNT                         L"service_event_count"
 #define MIDIDIAG_FIELD_LABEL_SERVICE_EVENT                               L"service_event"
 #define MIDIDIAG_FIELD_LABEL_MIDI_APP_CRASH_COUNT                        L"midi_app_crash_count"
 #define MIDIDIAG_FIELD_LABEL_MIDI_APP_CRASH                              L"midi_app_crash"
+
+#define MIDIDIAG_SECTION_LABEL_INSTALL_HISTORY                           L"install_history"
+#define MIDIDIAG_FIELD_LABEL_OS_INSTALLED                                L"os_installed"
+#define MIDIDIAG_FIELD_LABEL_OS_UPGRADE                                  L"os_upgrade"
+#define MIDIDIAG_FIELD_LABEL_WINDOWS_UPDATE                              L"windows_update"
+#define MIDIDIAG_FIELD_LABEL_INSTALLED_PACKAGE                           L"installed_package"
+#define MIDIDIAG_FIELD_LABEL_PACKAGE_EVENT_COUNT                         L"package_event_count"
+#define MIDIDIAG_FIELD_LABEL_PACKAGE_EVENT                               L"package_event"
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_LOG_FROM                             L"system_log_from"
+#define MIDIDIAG_FIELD_LABEL_APPLICATION_LOG_FROM                        L"application_log_from"
 
 #define MIDIDIAG_SECTION_LABEL_FEATURE_ENABLEMENT                        L"feature_enablement"
 #define MIDIDIAG_FIELD_LABEL_ENABLED_FEATURE                             L"enabled_feature"

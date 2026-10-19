@@ -1,0 +1,102 @@
+/* PROTOTYPE. Aluminum and the window's color. The app lets you pick one window color, and the same
+   color is used in light and dark. Here it anodizes the metal: everything takes the color's hue
+   and some of its chroma, but each surface keeps the lightness it has in Aluminum (light) or
+   Aluminum, dark, so any color works in either theme, light or dark, vivid or quiet. The large
+   surfaces take only so much chroma, so a vivid color doesn't flood them.
+
+   - The strips (title bar, transport, status bar) are anodized deep in it: the chassis.
+   - The plates take a whisper of it. --anodize scales this, from 1 (as shown) to 0 (plain metal).
+   - The LCD readouts are backlit in it.
+   - The LEDs that mean "on", the selection, and the loop light up in it.
+   - What doesn't change: what you made (track colors, clips, notes), the keys and pads, which are
+     objects on the panel, and the colors that mean something: play, record, mute, and solo.
+
+   The page sets --tint, and the class "tinted" turns this on. In the app it's the same math in
+   OKLCH, worked out once when the color changes. */
+
+/* ---- light: over aluminum.css, which names some of its colors outright */
+
+html.study.aluminum.tinted:not(.aluminum-dark) {
+    --anodize: 1;
+
+    --strip: oklch(from var(--tint) 0.27 min(c, 0.07) h);
+    --strip-field: oklch(from var(--tint) 0.21 min(c, 0.05) h);
+    --base: oklch(from var(--tint) 0.83 calc(min(c * 0.40, 0.015) * var(--anodize)) h);
+    --plate: oklch(from var(--tint) 0.86 calc(min(c * 0.38, 0.014) * var(--anodize)) h);
+    --plate-light: oklch(from var(--tint) 0.885 calc(min(c * 0.32, 0.011) * var(--anodize)) h);
+    --well: oklch(from var(--tint) 0.79 calc(min(c * 0.40, 0.015) * var(--anodize)) h);
+    --ruler: oklch(from var(--tint) 0.82 calc(min(c * 0.40, 0.015) * var(--anodize)) h);
+    --folder: oklch(from var(--tint) 0.835 calc(min(c * 0.40, 0.015) * var(--anodize)) h);
+    --hdr-sel: oklch(from var(--tint) 0.895 calc(min(c * 0.42, 0.016) * var(--anodize)) h);
+    --roll: oklch(from var(--tint) 0.905 calc(min(c * 0.20, 0.007) * var(--anodize)) h);
+    --groove: oklch(from var(--tint) 0.70 calc(min(c * 0.30, 0.012) * var(--anodize)) h);
+    --divider: var(--groove);
+
+    /* a chroma cap that stays in sRGB at this lightness for every hue */
+    --accent: oklch(from var(--tint) 0.53 min(0.09, c * 4) h);
+    --accent-deep: var(--accent);
+    --led: oklch(from var(--tint) 0.80 min(0.13, c * 5) h);
+    --lcd-ink: oklch(from var(--tint) 0.88 min(0.085, c * 4) h);
+    --lcd-dim: oklch(from var(--tint) 0.62 min(0.06, c * 2) h);
+    --lcd-glass: oklch(from var(--tint) 0.17 min(c, 0.03) h);
+
+    /* deeper, for text: accent words and toggled keys stay above 4.5:1 */
+    --accent-ink: oklch(from var(--tint) 0.43 min(0.09, c * 4) h);
+}
+
+html.study.aluminum.tinted:not(.aluminum-dark) .btn.toggled { background: var(--folder); color: var(--accent-ink); }
+html.study.aluminum.tinted:not(.aluminum-dark) .chip.info, html.study.aluminum.tinted:not(.aluminum-dark) .tsub.accent { color: var(--accent-ink); }
+html.study.aluminum.tinted:not(.aluminum-dark) .transport .field { background: var(--strip-field); }
+html.study.aluminum.tinted:not(.aluminum-dark) .lcd { background: var(--lcd-glass); }
+html.study.aluminum.tinted:not(.aluminum-dark) .lcd .big { color: var(--lcd-ink); }
+html.study.aluminum.tinted:not(.aluminum-dark) .lcd .small, html.study.aluminum.tinted:not(.aluminum-dark) .lcd .unit { color: var(--lcd-dim); }
+html.study.aluminum.tinted:not(.aluminum-dark) .tbtn.on:not(.play)::after { background: var(--led); box-shadow: 0 0 6px var(--led); }
+
+html.study.aluminum.tinted:not(.aluminum-dark) .arow > .hdr,
+html.study.aluminum.tinted:not(.aluminum-dark) .arow > .launch { box-shadow: var(--engraved), inset -1px 0 0 var(--groove), inset -2px 0 0 rgba(255, 255, 255, .5); }
+html.study.aluminum.tinted:not(.aluminum-dark) .arow.track > .hdr[style] { background: var(--hdr-sel) !important; }
+html.study.aluminum.tinted:not(.aluminum-dark) .arow.folder > .hdr, html.study.aluminum.tinted:not(.aluminum-dark) .arow.auto > .hdr { background: var(--folder); }
+html.study.aluminum.tinted:not(.aluminum-dark) .pin-edge { background: linear-gradient(var(--groove), var(--well)); }
+html.study.aluminum.tinted:not(.aluminum-dark) .arow.ruler { background: var(--ruler); box-shadow: inset 0 -1px 0 var(--groove); }
+html.study.aluminum.tinted:not(.aluminum-dark) .arow.ruler > .hdr, html.study.aluminum.tinted:not(.aluminum-dark) .arow.ruler > .launch { background: var(--ruler); }
+html.study.aluminum.tinted:not(.aluminum-dark) .arow.ruler > .lane { background-color: var(--ruler); }
+html.study.aluminum.tinted:not(.aluminum-dark) .scene { border-right-color: var(--groove); }
+html.study.aluminum.tinted:not(.aluminum-dark) .loop-range { background: color-mix(in oklch, var(--accent) 45%, transparent); }
+html.study.aluminum.tinted:not(.aluminum-dark) .empty { background: var(--folder); }
+html.study.aluminum.tinted:not(.aluminum-dark) .lane-overlay { background: repeating-linear-gradient(135deg, color-mix(in oklch, var(--plate) 90%, transparent) 0 6px, color-mix(in oklch, var(--well) 82%, transparent) 6px 12px); }
+
+html.study.aluminum.tinted:not(.aluminum-dark) .editor { box-shadow: inset 0 3px 0 var(--groove), inset 0 4px 0 rgba(255, 255, 255, .55); }
+html.study.aluminum.tinted:not(.aluminum-dark) .roll, html.study.aluminum.tinted:not(.aluminum-dark) .vlane { background: var(--roll); }
+html.study.aluminum.tinted:not(.aluminum-dark) .inspector { background: var(--folder); }
+html.study.aluminum.tinted:not(.aluminum-dark) .rruler .loopbar { background: color-mix(in oklch, var(--accent) 35%, transparent); }
+
+/* ---- dark: over aluminum-dark.css, where every surface is already a variable */
+
+html.study.aluminum.aluminum-dark.tinted {
+    --anodize: 1;
+
+    --strip: oklch(from var(--tint) 0.235 min(c, 0.07) h);
+    --strip-field: oklch(from var(--tint) 0.17 min(c, 0.03) h);
+    --base: oklch(from var(--tint) 0.20 min(c, 0.03) h);
+    --groove: oklch(from var(--tint) 0.155 min(c, 0.03) h);
+    --well: oklch(from var(--tint) 0.255 calc(min(c * 0.50, 0.017) * var(--anodize)) h);
+    --empty: oklch(from var(--tint) 0.27 calc(min(c * 0.45, 0.0155) * var(--anodize)) h);
+    --ruler: oklch(from var(--tint) 0.285 calc(min(c * 0.45, 0.0155) * var(--anodize)) h);
+    --lane: oklch(from var(--tint) 0.30 calc(min(c * 0.42, 0.014) * var(--anodize)) h);
+    --folder: oklch(from var(--tint) 0.31 calc(min(c * 0.45, 0.0155) * var(--anodize)) h);
+    --inspector: oklch(from var(--tint) 0.31 calc(min(c * 0.45, 0.0155) * var(--anodize)) h);
+    --plate: oklch(from var(--tint) 0.335 calc(min(c * 0.50, 0.017) * var(--anodize)) h);
+    --hdr-sel: oklch(from var(--tint) 0.40 calc(min(c * 0.60, 0.020) * var(--anodize)) h);
+    --roll: oklch(from var(--tint) 0.255 calc(min(c * 0.30, 0.012) * var(--anodize)) h);
+
+    --accent: oklch(from var(--tint) 0.76 min(0.11, c * 4) h);
+    --accent-deep: var(--accent);
+    --led: oklch(from var(--tint) 0.82 min(0.13, c * 5) h);
+    --lcd-ink: oklch(from var(--tint) 0.88 min(0.085, c * 4) h);
+    --lcd-dim: oklch(from var(--tint) 0.62 min(0.06, c * 2) h);
+    --lcd-glass: oklch(from var(--tint) 0.15 min(c, 0.03) h);
+}
+
+/* ---- both: a backlit readout glows a little */
+
+html.study.aluminum.tinted .lcd .big { text-shadow: 0 0 7px color-mix(in oklch, var(--lcd-ink) 45%, transparent); }

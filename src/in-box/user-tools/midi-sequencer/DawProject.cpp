@@ -47,6 +47,9 @@ namespace midisequencer
         // How far content is followed inside content: clips in clips, lanes in lanes.
         constexpr int MaximumNesting = 24;
 
+        // Pieces of content gathered in one import, counting each time content is referred to.
+        constexpr size_t MaximumGathered = 20000000;
+
         constexpr double FullScale = 4294967295.0;
         constexpr uint16_t DefaultVelocity = 51603;         // 100 of 127
         constexpr uint16_t DefaultReleaseVelocity = 0x8000;
@@ -726,7 +729,8 @@ namespace midisequencer
 
             std::optional<Track> ReadTrack(_In_ XmlNode const& node, _In_ size_t depth)
             {
-                if (depth > Limits.MaximumFolderDepth || ++m_trackCount > Limits.MaximumTracks)
+                // Depths 0 to 15, as a sequence file keeps them.
+                if (depth >= Limits.MaximumFolderDepth || ++m_trackCount > Limits.MaximumTracks)
                 {
                     return std::nullopt;
                 }
@@ -1183,8 +1187,16 @@ namespace midisequencer
             // timeline the content sits, for content timed in seconds.
             void Gather(_In_ XmlNode const& content, _In_ TimeUnit unit, _In_ int64_t offset, _In_ int64_t base, _Inout_ Gathered& out, _In_ int depth)
             {
-                if (depth > MaximumNesting)
+                if (depth > MaximumNesting || m_tooLarge)
                 {
+                    return;
+                }
+
+                // Content can be referred to again and again, and is gathered each time: a file that
+                // asks for far more than any project needs is too large, rather than a long wait.
+                if (++m_gathered > MaximumGathered)
+                {
+                    m_tooLarge = true;
                     return;
                 }
 
@@ -1518,6 +1530,7 @@ namespace midisequencer
             size_t m_trackCount{ 0 };
             size_t m_notes{ 0 };
             size_t m_points{ 0 };
+            size_t m_gathered{ 0 };
             bool m_tooLarge{ false };
         };
 

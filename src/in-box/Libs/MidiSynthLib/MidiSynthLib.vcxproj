@@ -78,8 +78,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiSynth\Articulation.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\AudioEffect.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\AudioSampleFormat.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\AudioSink.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\ChorusEffect.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\DispatchWithoutAudio.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\DlsCollection.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\ReverbEffect.h" />
     <ClInclude Include="..\..\Inc\MidiSynth\DlsTypes.h" />
@@ -96,7 +98,9 @@
 
   <ItemGroup>
     <ClCompile Include="Articulation.cpp" />
+    <ClCompile Include="AudioSampleFormat.cpp" />
     <ClCompile Include="ChorusEffect.cpp" />
+    <ClCompile Include="DispatchWithoutAudio.cpp" />
     <ClCompile Include="DlsCollection.cpp" />
     <ClCompile Include="ProgramList.cpp" />
     <ClCompile Include="PropertyExchangeSource.cpp" />

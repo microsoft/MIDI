@@ -34,6 +34,7 @@
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="ServiceFirewall.h" />
+    <ClInclude Include="Midi1PortLayout.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
@@ -43,6 +44,7 @@
     <ClInclude Include="..\midi-app-shared\MonitorLauncher.h" />
     <ClInclude Include="..\midi-app-shared\SettingsAppLauncher.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>

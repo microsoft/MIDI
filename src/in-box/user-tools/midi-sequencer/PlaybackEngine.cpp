@@ -27,6 +27,9 @@ namespace midisequencer
         // moment later, so they're sure to arrive first.
         constexpr uint64_t StartLeadMicroseconds = 20000;
 
+        // A note that ended is kept this long, so the mixer's meter sees even a short one.
+        constexpr uint64_t MeterHoldMicroseconds = 120000;
+
         // A metronome click is a sixteenth note long.
         constexpr int64_t ClickTicks = TicksPerQuarterNote / 4;
 
@@ -66,6 +69,17 @@ namespace midisequencer
         m_output(output),
         m_clock(std::move(clock))
     {
+        // A generator that listens to a track hears it as it plays now (design section 29). One on
+        // the timeline asks in ticks that wrap with the loop; a launched one, on its own clock.
+        m_hearTimeline = [this](Track const& track, int64_t fromTick, int64_t toTick, std::vector<Note>& heard)
+        {
+            HearLive(track, Unwrap(fromTick), Unwrap(toTick), heard);
+        };
+
+        m_hearLaunched = [this](Track const& track, int64_t fromUnwrapped, int64_t toUnwrapped, std::vector<Note>& heard)
+        {
+            HearLive(track, fromUnwrapped, toUnwrapped, heard);
+        };
     }
 
     PlaybackEngine::~PlaybackEngine()
@@ -90,6 +104,30 @@ namespace midisequencer
             auto const now = m_clock.Now();
             auto const tick = TickAtTimestamp(now);
             auto const unwrapped = Unwrap(tick);
+
+            // A note whose track is gone, or plays somewhere else now, ends now: nothing in the new
+            // sequence would end it, and the connection it went out on may close next.
+            if (m_sequence != nullptr)
+            {
+                for (auto& note : m_sounding)
+                {
+                    // The metronome's clicks belong to no track, and play out as they are.
+                    if (note.HandedOver || note.TrackId.empty())
+                    {
+                        continue;
+                    }
+
+                    auto const before = FindTrack(*m_sequence, note.TrackId);
+                    auto const after = FindTrack(*sequence, note.TrackId);
+
+                    if (after == nullptr || after->IsFolder || (before != nullptr && !(before->Destination == after->Destination)))
+                    {
+                        note.OffTimestamp = note.OnTimestamp >= now ? note.OnTimestamp + 1 : now;
+                        m_output.Send(note.Endpoint, note.OffTimestamp, note.OffWords, note.WordCount);
+                        note.HandedOver = true;
+                    }
+                }
+            }
 
             m_sequence = std::move(sequence);
             m_tempo = TempoMap{ m_sequence->Tempo };
@@ -327,7 +365,7 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    void PlaybackEngine::SendChase(Track const& track, int64_t fromTick, uint64_t timestamp)
+    void PlaybackEngine::SendChase(Track const& track, int64_t fromTick, uint64_t timestamp, size_t* passesLeft)
     {
         if (fromTick <= 0)
         {
@@ -337,6 +375,7 @@ namespace midisequencer
         // Lanes aren't chased: the first render after a start sends where each one is.
         RenderOptions options{};
         options.Lanes = false;
+        options.PassesLeft = passesLeft;
 
         std::vector<RenderedMessage> earlier{};
         RenderTrack(*m_sequence, track, 0, fromTick, earlier, options);
@@ -445,7 +484,10 @@ namespace midisequencer
 
         auto const startTick = m_segment.StartTick;
 
-        ForEachTrack(*m_sequence, [this, startTick](Track const& track, size_t)
+        // One budget of passes for catching every track up, however many there are.
+        auto passesLeft = MaximumRenderedPasses;
+
+        ForEachTrack(*m_sequence, [this, startTick, &passesLeft](Track const& track, size_t)
         {
             if (!track.IsFolder)
             {
@@ -455,7 +497,7 @@ namespace midisequencer
 
                 if (state == m_launch.end() || state->second.Mode == TrackPlayMode::Timeline)
                 {
-                    SendChase(track, startTick, 0);
+                    SendChase(track, startTick, 0, &passesLeft);
                 }
             }
 
@@ -793,6 +835,7 @@ namespace midisequencer
             {
                 messages.clear();
                 options.LaneStartValues = startValues;
+                options.HearEpoch = HearingEpoch();
                 RenderMode(track, state, cursor, stretchEnd, options, messages);
                 startValues = false;
 
@@ -869,8 +912,13 @@ namespace midisequencer
         switch (state.Mode)
         {
         case TrackPlayMode::Timeline:
-            RenderTrack(*m_sequence, track, Wrap(fromUnwrapped), Wrap(toUnwrapped), messages, options);
+        {
+            // Its listeners hear in the timeline's ticks.
+            auto timelineOptions = options;
+            timelineOptions.HearTrack = &m_hearTimeline;
+            RenderTrack(*m_sequence, track, Wrap(fromUnwrapped), Wrap(toUnwrapped), messages, timelineOptions);
             break;
+        }
 
         case TrackPlayMode::Clip:
         {
@@ -891,6 +939,9 @@ namespace midisequencer
             auto launchedOptions = options;
             launchedOptions.Lyrics = false;
 
+            // Its listeners hear on its own clock.
+            launchedOptions.HearTrack = &m_hearLaunched;
+
             RenderTrack(*m_sequence, launched, fromUnwrapped, toUnwrapped, messages, launchedOptions);
 
             for (auto& message : messages)
@@ -908,14 +959,93 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    void PlaybackEngine::HearLive(Track const& track, int64_t fromUnwrapped, int64_t toUnwrapped, std::vector<Note>& heard)
+    {
+        if (m_sequence == nullptr)
+        {
+            return;
+        }
+
+        auto const state = m_launch.find(track.Id);
+        auto const mode = state == m_launch.end() ? TrackPlayMode::Timeline : state->second.Mode;
+
+        ListenContext context{};
+        context.Document = m_sequence.get();
+        context.Epoch = HearingEpoch();
+
+        if (mode == TrackPlayMode::Timeline)
+        {
+            context.HearTrack = &m_hearTimeline;
+            heard = NotesPlayed(context, track, Wrap(fromUnwrapped), Wrap(toUnwrapped));
+        }
+        else if (mode == TrackPlayMode::Clip)
+        {
+            auto const clip = FindClip(*m_sequence, state->second.ClipId);
+
+            if (clip == nullptr)
+            {
+                return;
+            }
+
+            // The clip launched on it, from where it was launched, as RenderMode plays it.
+            Track launched{};
+            launched.Id = track.Id;
+            launched.Timeline.push_back(Placement{ state->second.ClipId, state->second.ClipStartUnwrapped, clip->Loop ? INT64_MAX / 4 : clip->Length });
+
+            context.HearTrack = &m_hearLaunched;
+            heard = NotesPlayed(context, launched, fromUnwrapped, toUnwrapped);
+        }
+    }
+
+    uint64_t PlaybackEngine::HearingEpoch() const noexcept
+    {
+        // FNV-1a over where the loop has got to, and over what each track plays now, added up so
+        // the map's order doesn't matter.
+        auto const fnv = [](uint64_t value, uint64_t field) noexcept
+        {
+            for (int32_t i = 0; i < 8; ++i)
+            {
+                value ^= (field >> (i * 8)) & 0xFF;
+                value *= 0x100000001B3ull;
+            }
+
+            return value;
+        };
+
+        auto epoch = fnv(fnv(0xCBF29CE484222325ull, static_cast<uint64_t>(m_segment.StartTick)), static_cast<uint64_t>(m_segment.UnwrappedStart));
+        uint64_t tracks{ 0 };
+
+        for (auto const& [id, state] : m_launch)
+        {
+            auto entry = fnv(0xCBF29CE484222325ull, static_cast<uint64_t>(state.Mode));
+            entry = fnv(entry, static_cast<uint64_t>(state.ClipStartUnwrapped));
+
+            for (auto const ch : id)
+            {
+                entry = fnv(entry, static_cast<uint64_t>(ch));
+            }
+
+            for (auto const ch : state.ClipId)
+            {
+                entry = fnv(entry, static_cast<uint64_t>(ch));
+            }
+
+            tracks += entry;
+        }
+
+        // Never 0, which means no playback.
+        return fnv(epoch, tracks) | 1;
+    }
+
+    _Use_decl_annotations_
     void PlaybackEngine::SendRendered(Track const& track, DestinationInfo const& info, int64_t clampOffsAt, uint64_t now, std::vector<RenderedMessage>& messages)
     {
         auto const limit = now + LookAheadTicks();
         auto const lead = static_cast<uint64_t>(info.OffsetMicroseconds) * m_clock.TicksPerSecond / 1000000;
 
-        // Where each note started, by group, channel and note number, so its end can't be sent
-        // ahead of its start.
-        std::map<uint32_t, uint64_t> starts{};
+        // Where each note started, and how hard, by group, channel and note number, so its end
+        // can't be sent ahead of its start.
+        std::map<uint32_t, std::pair<uint64_t, uint16_t>> starts{};
 
         for (auto& message : messages)
         {
@@ -933,14 +1063,19 @@ namespace midisequencer
             if (message.Kind == RenderedKind::NoteOff)
             {
                 auto const start = starts.find(key);
-                QueueNoteOff(track.Id, track.Destination.Endpoint, info.SpeaksMidi2, start != starts.end() ? start->second : 0,
-                    timestamp, lead, message.Words.data(), message.WordCount, limit);
+                QueueNoteOff(track.Id, track.Destination.Endpoint, info.SpeaksMidi2, start != starts.end() ? start->second.first : 0,
+                    timestamp, lead, message.Words.data(), message.WordCount, limit, start != starts.end() ? start->second.second : uint16_t{ 0 });
                 continue;
             }
 
             if (message.Kind == RenderedKind::NoteOn)
             {
-                starts[key] = timestamp;
+                // A MIDI 2.0 velocity is 16 bits; a MIDI 1.0 one is scaled up to match.
+                auto const type = message.Words[0] >> 28;
+                auto const velocity = type == 0x4 ? static_cast<uint16_t>(message.Words[1] >> 16)
+                    : static_cast<uint16_t>((message.Words[0] & 0x7F) << 9);
+
+                starts[key] = { timestamp, velocity };
             }
 
             SendTo(track.Destination.Endpoint, info.SpeaksMidi2, timestamp, message.Words.data(), message.WordCount);
@@ -957,7 +1092,8 @@ namespace midisequencer
         uint64_t lead,
         uint32_t const* words,
         uint8_t wordCount,
-        uint64_t limit)
+        uint64_t limit,
+        uint16_t velocity)
     {
         if (endpoint.IsEmpty() || wordCount == 0)
         {
@@ -980,6 +1116,7 @@ namespace midisequencer
         note.OnTimestamp = onTimestamp;
         note.OffTimestamp = std::max(offTimestamp, onTimestamp + 1);
         note.Lead = lead;
+        note.Velocity = velocity;
 
         if (note.OffTimestamp <= limit)
         {
@@ -1346,8 +1483,43 @@ namespace midisequencer
         SweepClockOutputs(now);
         SweepTimeCodeOutputs(now);
 
-        // Notes that have ended don't need ending again.
-        std::erase_if(m_sounding, [now](SoundingNote const& note) { return note.HandedOver && note.OffTimestamp <= now; });
+        // Notes that have ended don't need ending again. They stay a little longer, so a short one
+        // between two of the mixer's looks still shows on its meter.
+        auto const hold = MeterHoldMicroseconds * m_clock.TicksPerSecond / 1000000;
+        std::erase_if(m_sounding, [now, hold](SoundingNote const& note) { return note.HandedOver && note.OffTimestamp + note.Lead + hold <= now; });
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::pair<std::wstring, float>> PlaybackEngine::HeldNoteLevels(uint64_t from, uint64_t to) const
+    {
+        std::vector<std::pair<std::wstring, float>> levels{};
+        std::scoped_lock guard{ m_lock };
+
+        for (auto const& note : m_sounding)
+        {
+            // The device gets each message its offset early, so it sounds on time; this is when.
+            auto const on = note.OnTimestamp + note.Lead;
+            auto const off = note.OffTimestamp + note.Lead;
+
+            if (note.TrackId.empty() || note.Velocity == 0 || on >= to || off <= from)
+            {
+                continue;
+            }
+
+            auto const level = static_cast<float>(note.Velocity) / 65535.0f;
+            auto const found = std::find_if(levels.begin(), levels.end(), [&note](auto const& entry) { return entry.first == note.TrackId; });
+
+            if (found == levels.end())
+            {
+                levels.emplace_back(note.TrackId, level);
+            }
+            else
+            {
+                found->second = std::max(found->second, level);
+            }
+        }
+
+        return levels;
     }
 
     _Use_decl_annotations_
@@ -1531,6 +1703,45 @@ namespace midisequencer
             }
 
             QueueLaunch(trackId, TrackPlayMode::Clip, clipId, quantize, slot);
+        }
+
+        if (startFrom >= 0)
+        {
+            Play(startFrom);
+        }
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::LaunchScene(std::vector<SceneLaunch> const& launches, LaunchQuantize quantize, int32_t slot)
+    {
+        int64_t startFrom{ -1 };
+
+        {
+            std::scoped_lock guard{ m_lock };
+
+            if (m_sequence == nullptr)
+            {
+                return;
+            }
+
+            auto const launchesAClip = std::any_of(launches.begin(), launches.end(),
+                [](SceneLaunch const& launch) { return !launch.TrackId.empty() && !launch.ClipId.empty(); });
+
+            // Queued before playback starts, so they all start with it, not one now and the rest
+            // at the next launch point.
+            if (launchesAClip && !m_playing && !m_following)
+            {
+                startFrom = m_segment.StartTick;
+            }
+
+            for (auto const& launch : launches)
+            {
+                if (!launch.TrackId.empty())
+                {
+                    auto const stops = launch.ClipId.empty();
+                    QueueLaunch(launch.TrackId, stops ? TrackPlayMode::Stopped : TrackPlayMode::Clip, launch.ClipId, quantize, stops ? -1 : slot);
+                }
+            }
         }
 
         if (startFrom >= 0)

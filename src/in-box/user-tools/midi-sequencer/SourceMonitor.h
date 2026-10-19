@@ -11,7 +11,13 @@
 // every track that records from it. Messages arrive on the service's thread and go straight to
 // the handler, which must be quick and thread safe: echo is sent from there so it isn't held up.
 
-#include "PlaybackEngine.h"
+#include <sal.h>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
 
 namespace midisequencer
 {
@@ -24,6 +30,10 @@ namespace midisequencer
         ~SourceMonitor();
 
         void SetHandler(_In_ Handler handler);
+
+        // The groups of each source the sequencer doesn't record from, one bit each, keyed by the
+        // ids given to Prepare. What arrives on one of them never reaches the handler.
+        void SetGroupsOff(_In_ std::map<std::wstring, uint16_t> groupsOff);
 
         // Opens what's in the list and isn't open, and closes what's open and isn't in it. Blocks
         // on the service: never call it on the UI thread.
@@ -44,6 +54,7 @@ namespace midisequencer
 
         std::mutex m_handlerLock{};
         Handler m_handler{};
+        std::map<std::wstring, uint16_t> m_groupsOff{};
 
         std::mutex m_lock{};
         std::map<std::wstring, Source> m_sources{};

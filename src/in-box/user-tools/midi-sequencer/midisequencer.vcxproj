@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared;$(ProjectDir)..\theme-engine</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
@@ -130,8 +130,12 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="ArrangeLayout.h" />
     <ClInclude Include="ArrangeRenderer.h" />
+    <ClInclude Include="GeneratorView.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="DeviceChoice.h" />
+    <ClInclude Include="DeviceProperties.h" />
+    <ClInclude Include="DialogParts.h" />
     <ClInclude Include="EndpointDirectory.h" />
     <ClInclude Include="MessageTranslation.h" />
     <ClInclude Include="MidiClipFile.h" />
@@ -147,6 +151,10 @@
     <ClInclude Include="SequenceEdits.h" />
     <ClInclude Include="SequenceModel.h" />
     <ClInclude Include="SequenceGenerator.h" />
+    <ClInclude Include="GeneratorKinds.h" />
+    <ClInclude Include="GeneratorListen.h" />
+    <ClInclude Include="GeneratorNames.h" />
+    <ClInclude Include="GeneratorDrawings.h" />
     <ClInclude Include="SequenceArpeggiator.h" />
     <ClInclude Include="SequencePattern.h" />
     <ClInclude Include="SequenceRender.h" />
@@ -155,6 +163,12 @@
     <ClInclude Include="SessionEngineOutput.h" />
     <ClInclude Include="SourceMonitor.h" />
     <ClInclude Include="StandardMidiFileBridge.h" />
+    <ClInclude Include="StudioSetup.h" />
+    <ClInclude Include="RecentSequences.h" />
+    <ClInclude Include="TrackSound.h" />
+    <ClInclude Include="MixerSlots.h" />
+    <ClInclude Include="ClipIcons.h" />
+    <ClInclude Include="PatternTemplates.h" />
     <ClInclude Include="DawProject.h" />
     <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="DocumentFiles.h" />
@@ -164,6 +178,19 @@
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="ThemePalette.h" />
     <ClInclude Include="WrapPanel.h" />
+    <ClInclude Include="TimelineBar.h" />
+    <ClInclude Include="TimelineBarHost.h" />
+    <ClInclude Include="TimelineView.h" />
+    <!-- the theme engine, which other apps take too; see theme-engine\README.md -->
+    <ClInclude Include="..\theme-engine\ThemeColor.h" />
+    <ClInclude Include="..\theme-engine\ThemeSyntax.h" />
+    <ClInclude Include="..\theme-engine\ThemeStyle.h" />
+    <ClInclude Include="..\theme-engine\ThemeDefinition.h" />
+    <ClInclude Include="..\theme-engine\ThemeResolver.h" />
+    <ClInclude Include="..\theme-engine\ThemeLibrary.h" />
+    <ClInclude Include="..\theme-engine\ThemeXaml.h" />
+    <ClInclude Include="..\theme-engine\ThemePainter.h" />
+    <ClInclude Include="..\theme-engine\ThemePlates.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
@@ -190,6 +217,11 @@
     <ClInclude Include="..\midi-app-shared\MidiTimeCode.h" />
     <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\midi-app-shared\Deflate.h" />
+    <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
+    <ClInclude Include="..\midi-app-shared\MidiCiAppPresence.h" />
+    <ClInclude Include="..\midi-app-shared\MidiCiProgramListQuery.h" />
+    <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
+    <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -198,16 +230,51 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="ArrangeRenderer.cpp" />
+    <ClCompile Include="GeneratorView.cpp" />
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
+    <ClCompile Include="DeviceChoice.cpp" />
+    <ClCompile Include="DeviceProperties.cpp" />
     <ClCompile Include="EndpointDirectory.cpp" />
     <ClCompile Include="PianoRoll.cpp" />
     <ClCompile Include="ClipLaneStrip.cpp" />
     <ClCompile Include="PatternEditor.cpp" />
     <ClCompile Include="SourceMonitor.cpp" />
     <ClCompile Include="StringResources.cpp" />
-    <ClCompile Include="ThemePalette.cpp" />
+    <ClCompile Include="ThemePalette.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="WrapPanel.cpp" />
+    <ClCompile Include="TimelineBar.cpp" />
+    <ClCompile Include="TimelineBarHost.cpp" />
+    <ClCompile Include="MainWindowTimelineBar.cpp" />
+    <ClCompile Include="MainWindowPlates.cpp" />
+    <ClCompile Include="..\theme-engine\ThemePlates.cpp" />
+    <ClCompile Include="TimelineView.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MainWindowStyle.cpp" />
+    <ClCompile Include="ArrangeRendererParts.cpp" />
+    <ClCompile Include="..\theme-engine\ThemePainter.cpp" />
+    <ClCompile Include="..\theme-engine\ThemeColor.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\theme-engine\ThemeSyntax.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\theme-engine\ThemeStyle.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\theme-engine\ThemeDefinition.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\theme-engine\ThemeResolver.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\theme-engine\ThemeLibrary.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\theme-engine\ThemeXaml.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
@@ -231,7 +298,37 @@
     <ClCompile Include="MainWindowClipLanes.cpp" />
     <ClCompile Include="MainWindowKeyboard.cpp" />
     <ClCompile Include="MainWindowTrack.cpp" />
+    <ClCompile Include="MainWindowArrangeDrag.cpp" />
+    <ClCompile Include="MainWindowMixer.cpp" />
+    <ClCompile Include="MainWindowMixerStrip.cpp" />
+    <ClCompile Include="MainWindowDevices.cpp" />
+    <ClCompile Include="MainWindowStudio.cpp" />
+    <ClCompile Include="MainWindowPorts.cpp" />
+    <ClCompile Include="MainWindowRecent.cpp" />
+    <ClCompile Include="MainWindowSound.cpp" />
+    <ClCompile Include="MainWindowPatternTemplates.cpp" />
+    <ClCompile Include="ClipIcons.cpp" />
+    <ClCompile Include="GeneratorDrawings.cpp" />
+    <ClCompile Include="MainWindowGeneratorKit.cpp" />
+    <ClCompile Include="MainWindowLife.cpp" />
+    <ClCompile Include="MainWindowLearn.cpp" />
+    <ClCompile Include="MainWindowEvolve.cpp" />
+    <ClCompile Include="MainWindowStreams.cpp" />
+    <ClCompile Include="MainWindowVelocity.cpp" />
+    <ClCompile Include="MainWindowListen.cpp" />
     <!-- the model and the engine are free of the pch and XAML so the unit tests compile them unchanged -->
+    <ClCompile Include="PatternTemplates.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="RecentSequences.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TrackSound.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StudioSetup.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ArrangeLayout.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -267,6 +364,24 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceGenerator.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GeneratorKinds.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GeneratorLife.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GeneratorLearn.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GeneratorEvolve.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GeneratorStreams.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="GeneratorListen.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceArpeggiator.cpp">
@@ -338,6 +453,11 @@
     <ClCompile Include="..\midi-app-shared\Deflate.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\midi-app-shared\GeneralMidi.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\MidiCiAppPresence.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiCiProgramListQuery.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -360,6 +480,13 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- built into the executable by Resources.rc -->
+    <None Include="Themes\night-drive.json" />
+    <None Include="Themes\tactile.json" />
+    <None Include="Themes\aluminum.json" />
+    <None Include="Themes\vellum.json" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\AppIcon.ico" />

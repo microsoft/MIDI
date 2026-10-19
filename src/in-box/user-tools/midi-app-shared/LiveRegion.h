@@ -143,4 +143,51 @@ namespace midiapp
         {
         }
     }
+
+    // ========================================================================================
+    // Announcements
+    //
+    // A keyboard shortcut changes something without moving focus, so a screen reader has nothing
+    // to read and the customer cannot tell whether the key did anything. This speaks a short
+    // message instead, such as the new speed or position. It needs no visible element: the one
+    // passed in only has to be in the window, and it is not read.
+    //
+    // A newer message with the same activity id replaces one still waiting to be spoken, so
+    // holding a key down reads where it ended up rather than every step on the way.
+    // ========================================================================================
+
+    inline void AnnounceToScreenReader(
+        _In_ winrt::Microsoft::UI::Xaml::UIElement const& element,
+        _In_ winrt::hstring const& message,
+        _In_ winrt::hstring const& activityId) noexcept
+    {
+        if (element == nullptr || message.empty())
+        {
+            return;
+        }
+
+        try
+        {
+            namespace peers = winrt::Microsoft::UI::Xaml::Automation::Peers;
+
+            auto peer = peers::FrameworkElementAutomationPeer::FromElement(element);
+
+            if (peer == nullptr)
+            {
+                peer = peers::FrameworkElementAutomationPeer::CreatePeerForElement(element);
+            }
+
+            if (peer != nullptr)
+            {
+                peer.RaiseNotificationEvent(
+                    peers::AutomationNotificationKind::ActionCompleted,
+                    peers::AutomationNotificationProcessing::ImportantMostRecent,
+                    message,
+                    activityId);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
 }

@@ -154,6 +154,10 @@
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
+    <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
+    <ClInclude Include="..\midi-app-shared\MidiCiAppPresence.h" />
+    <ClInclude Include="..\midi-app-shared\MidiCiProgramListQuery.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -166,8 +170,6 @@
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="KeyboardLayout.cpp" />
     <ClCompile Include="KeyColors.cpp" />
-    <ClCompile Include="MidiCiPresence.cpp" />
-    <ClCompile Include="MidiCiProgramList.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
     <ClCompile Include="ProgramChoice.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -183,6 +185,8 @@
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiCiAppPresence.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiCiProgramListQuery.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

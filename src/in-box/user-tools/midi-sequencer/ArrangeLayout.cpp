@@ -74,7 +74,7 @@ namespace midisequencer
                     row.Kind = track.IsFolder ? ArrangeRowKind::Folder : ArrangeRowKind::Track;
                     row.TrackId = track.Id;
                     row.Depth = depth;
-                    row.Height = track.IsFolder ? FolderRowHeight : TrackRowHeight;
+                    row.Height = RowHeightOf(track);
                     row.InsideMutedFolder = muted;
                     row.InsideSoloedFolder = soloed;
 
@@ -102,6 +102,28 @@ namespace midisequencer
                 }
             }
         };
+    }
+
+    _Use_decl_annotations_
+    double RowHeightOf(Track const& track) noexcept
+    {
+        if (track.Height == 0)
+        {
+            return track.IsFolder ? FolderRowHeight : TrackRowHeight;
+        }
+
+        return std::clamp(static_cast<double>(track.Height), static_cast<double>(MinimumTrackRowHeight), static_cast<double>(MaximumTrackRowHeight));
+    }
+
+    _Use_decl_annotations_
+    double TempoRowHeightOf(Sequence const& sequence) noexcept
+    {
+        if (sequence.TempoRowHeight == 0)
+        {
+            return TempoRowHeight;
+        }
+
+        return std::clamp(static_cast<double>(sequence.TempoRowHeight), TempoRowHeight, static_cast<double>(MaximumTrackRowHeight));
     }
 
     _Use_decl_annotations_
@@ -140,10 +162,10 @@ namespace midisequencer
 
         ArrangeRow tempo{};
         tempo.Kind = ArrangeRowKind::Tempo;
-        tempo.Height = TempoRowHeight;
+        tempo.Height = TempoRowHeightOf(sequence);
         tempo.Pinned = true;
         tempo.Top = 0;
-        layout.PinnedHeight = TempoRowHeight;
+        layout.PinnedHeight = tempo.Height;
         layout.Pinned.push_back(tempo);
 
         if (sequence.Lyrics)

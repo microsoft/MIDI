@@ -133,4 +133,5 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "EndpointChoice.h"
 #include "NamedChoice.h"
 #include "QueueItem.h"
+#include "TimeSlider.h"
 #include "TrackItem.h"

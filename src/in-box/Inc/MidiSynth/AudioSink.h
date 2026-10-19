@@ -1,9 +1,11 @@
-// WASAPI shared mode render sink.
+// WASAPI render sink, shared or exclusive.
 //
-// The endpoint is opened with the mix format it already reports, so no device setting is ever
-// modified. Modern mode should render at SampleRate() so the audio engine does no conversion.
+// Shared mode opens the endpoint with the mix format it already reports, so no device setting is
+// ever modified. Modern mode should render at SampleRate() so the audio engine does no conversion.
 
 #pragma once
+
+#include <windows.h>
 
 #include <sal.h>
 
@@ -60,6 +62,11 @@ namespace MidiSynth
         // IAudioClient3 and falls back to the default period if that is unavailable.
         bool Open(_In_ bool lowLatency);
 
+        // Takes the default endpoint for this stream alone, at the rate it already runs at and in
+        // the first sample format it accepts, with the device's shortest period but never shorter
+        // than shortestPeriodMilliseconds. A sink that fails here is discarded, not reopened.
+        HRESULT OpenExclusive(_In_ uint32_t shortestPeriodMilliseconds);
+
         bool Start(_In_ IAudioRenderSource* source);
         void Stop();
 
@@ -69,6 +76,7 @@ namespace MidiSynth
         uint32_t PeriodFrames() const noexcept;
         double PeriodMilliseconds() const noexcept;
         bool UsingLowLatencyPath() const noexcept;
+        bool UsingExclusiveMode() const noexcept;
 
         // Range IAudioClient3 reports for shared mode, in frames. Zero when unavailable.
         // A device whose minimum equals its default offers no low latency headroom at all.

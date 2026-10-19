@@ -411,17 +411,25 @@ namespace midisequencer
 
         TempoMap const tempoMap{ sequence.Tempo };
 
+        // A very long ramp goes out coarser than every clock, and past this many steps in all the
+        // rest go out as their points, so a ramp across a whole song stays a reasonable file.
+        constexpr int64_t MaximumRampSteps = 4096;
+        constexpr size_t MaximumRampEvents = 1000000;
+        size_t rampEvents{ 0 };
+
         for (size_t i = 0; i < sequence.Tempo.size(); ++i)
         {
             auto const& point = sequence.Tempo[i];
             auto const start = SnapToClock(point.Tick);
 
-            if (point.RampToNext && i + 1 < sequence.Tempo.size())
+            if (point.RampToNext && i + 1 < sequence.Tempo.size() && rampEvents < MaximumRampEvents)
             {
                 // A ramp goes out as a step at every MIDI clock, which is as fine as a file allows.
                 auto const end = SnapToClock(sequence.Tempo[i + 1].Tick);
+                auto const span = std::max<int64_t>(0, end - start);
+                auto const step = std::max<int64_t>(TicksPerMidiClock, (span / MaximumRampSteps + TicksPerMidiClock - 1) / TicksPerMidiClock * TicksPerMidiClock);
 
-                for (auto at = start; at < end; at += TicksPerMidiClock)
+                for (auto at = start; at < end; at += step, ++rampEvents)
                 {
                     BuildSetTempo(tempoMap.BeatsPerMinuteAtTick(at), group, words);
                     file.Events.push_back(MakeEvent(at, words, 4));

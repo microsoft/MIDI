@@ -217,6 +217,17 @@ public:
     TEST_METHOD(TestHostFallsBackWhenItsNetworkAdapterIsMissing);
     TEST_METHOD(TestHostStartsOnItsNetworkAdapter);
 
+    // The MIDI 1.0 ports a connection gets when the device doesn't describe its own groups, and
+    // what they're called. https://github.com/microsoft/MIDI/issues/1284
+    TEST_METHOD(TestMidi1PortGroupCleansItsName);
+    TEST_METHOD(TestConnectConfigWritesItsPortGroupsCleaned);
+    TEST_METHOD(TestClientUpdateConfigSendsPortGroupsOnlyWhenChanged);
+    TEST_METHOD(TestHostUpdateConfigSendsPortGroupsOnlyWhenChanged);
+    TEST_METHOD(TestRemoteClientSettingsCarryPortGroupsAndHostSpeed);
+    TEST_METHOD(TestSavedClientFollowsSavedPortGroups);
+    TEST_METHOD(TestSavedHostFollowsSavedPortGroups);
+    TEST_METHOD(TestRunningHostReportsRemoteClientPortGroups);
+
 private:
 
     // Creates a host with a unique name and returns its id. Returns a zero guid on failure.

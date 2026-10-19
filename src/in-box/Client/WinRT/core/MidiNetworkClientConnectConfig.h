@@ -54,6 +54,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        collections::IVector<network::MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups() const noexcept { return m_fallbackMidi1PortGroups; }
+
     private:
         winrt::hstring m_umpEndpointName{};
         winrt::hstring m_customEndpointName{};
@@ -68,6 +70,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         network::MidiNetworkSendSpeedLimit m_sendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         bool m_reduceSendSpeedAutomatically{ false };
         bool m_skipInBetweenValuesToCatchUp{ true };
+
+        collections::IVector<network::MidiNetworkMidi1PortGroup> m_fallbackMidi1PortGroups{
+            winrt::single_threaded_vector<network::MidiNetworkMidi1PortGroup>() };
 
     };
 }

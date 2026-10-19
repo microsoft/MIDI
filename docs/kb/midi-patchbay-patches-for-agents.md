@@ -85,6 +85,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Windows MIDI 
 | Should a game controller play anything, such as an Xbox controller, an Xbox Adaptive Controller, or a joystick? Which buttons, sticks, or triggers, and what should each one send? Should holding a button do something else? | That's a `controllerButton` step for each button, and a `controllerAxis` step for each stick, trigger, or slider. Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so ask which one. For any other controller, ask for its name as **Game Controllers** in Control Panel shows it. Or suggest **Learn** in the step's settings. |
 | Would notes on the canvas help, such as which keyboard is which, or what a split is for? | That's an `annotation`: text on the canvas, one or more lines. It doesn't change what routes. |
 | Should an RPN or NRPN, such as pitch bend range, be kept out or sent as a different one? | That's an `rpnFilter` or an `rpnTransform` step. Ask for the bank and index, such as RPN 0/0. |
+| Should one kind of message become another, such as a pad's note becoming the control change a DAW listens for? Ask which message and channel, what it should send instead, and with what value. For a pad or a button, ask what letting go should do: send a value such as 0, send nothing, or switch on and off with each press. | That's a `messageConverter` step, with a row for each conversion. |
 | Should several one-note synths play together as one bigger synth? How should notes be shared out, and should knobs and pitch bend reach all of them? | That's a `noteDistributor` step, with one connection out to each synth, in the order they should be used. |
 | Should messages only get through at some times, such as while the sequencer plays, or while a pedal is down? | That's a `gate` step. Ask which message opens it and which closes it. |
 | Should messages go one way or another by what's in them, such as hard notes to one synth and soft notes to another, or each channel to its own synth? | That's a `branch` step for two ways, or a `switch` step for more. Ask what decides the way, and where each way goes. |
@@ -143,6 +144,9 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | A note on the canvas, such as "Bass below middle C" | An `annotation` with `"text": "Bass below middle C"`, placed near what it describes. Nothing connects to it. |
 | Keep pitch bend range changes away from a synth | An `rpnFilter` step with `"action": "keepOut", "parameters": [ { "type": "rpn", "bank": 0, "index": 0 } ]`. |
 | Send NRPN 1/8 as NRPN 3/16, at half its range | An `rpnTransform` step with `"rows": [ { "from": { "type": "nrpn", "bank": 1, "index": 8 }, "to": { "bank": 3, "index": 16 }, "shape": { "outputMaximumPercent": 50 } } ]`. |
+| Note 27 on channel 3 becomes control change 27 at 50 on channel 4, and letting go sends 0 | A `messageConverter` step with `"rows": [ { "from": { "message": "note", "channel": 2, "number": 27 }, "to": { "message": "controlChange", "channel": 3, "valuePercent": 39.37, "release": "send", "releasePercent": 0 } } ]`. `to` has no `number`, so the controller is 27 too. |
+| Each pad switches the DAW button with the same number on and off | A `messageConverter` step with `"rows": [ { "from": { "message": "note" }, "to": { "message": "controlChange", "valuePercent": 100, "release": "toggle", "releasePercent": 0 } } ]`. |
+| The sustain pedal plays note 36 | A `messageConverter` step with `"rows": [ { "from": { "message": "controlChange", "number": 64, "button": true }, "to": { "message": "note", "number": 36 } } ]`. |
 | Four one-note synths played as one four-note synth | A `noteDistributor` step fed by the keyboard, with one connection out to each synth. |
 | Notes only get through while the sequencer plays | A `gate` step with its defaults: it opens on Start and closes on Stop. Connect the sequencer's clock and the keyboard to its **In**. |
 | Notes only get through while a pedal is down | A `gate` step with `"open": { "message": "controlChange", "number": 64, "test": "atLeast", "value": 64 }, "close": { "message": "controlChange", "number": 64, "test": "below", "value": 64 }, "startsOpen": false`. |
@@ -464,6 +468,7 @@ $stepKeys = @{
     annotation          = @('text', 'fontFamily', 'fontSize', 'bold', 'italic', 'underline', 'color')
     rpnFilter           = @('action', 'parameters')
     rpnTransform        = @('rows')
+    messageConverter    = @('rows', 'valueScale')
     noteDistributor     = @('mode', 'controlChangesToAll', 'channelPressureToAll', 'pitchBendToAll')
     gate                = @('open', 'close', 'startsOpen', 'passTriggers')
     branch              = @('subject', 'unit', 'test', 'value', 'lowest', 'highest', 'values', 'unreadable', 'bypass', 'valueScale')
@@ -585,6 +590,75 @@ foreach ($b in (Get-List $patch.blocks)) {
                     Test-Choice $r.shape.curve @('linear', 'slowRise', 'fastRise') "$in's shape" 'curve'
                     foreach ($key in 'inputMinimumPercent', 'inputMaximumPercent', 'outputMinimumPercent', 'outputMaximumPercent') { if (-not (Test-Range $r.shape.$key 0 100)) { $problems.Add("$in's shape has $key outside 0 to 100.") } }
                 }
+            }
+        }
+        'messageConverter' {
+            Test-Choice $s.valueScale @('sevenBit', 'percent') $where 'valueScale'
+            $rows = Get-List $s.rows
+            if ($rows.Count -eq 0) { $problems.Add("$where has no rows, so it does nothing.") }
+            if ($rows.Count -gt 64) { $problems.Add("$where has more than 64 rows. Windows MIDI Patchbay keeps the first 64.") }
+            $fromKinds = @('note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'polyPressure')
+            $valueKinds = @('controlChange', 'pitchBend', 'channelPressure', 'polyPressure', 'rpn', 'nrpn')
+            $toKinds = @('note', 'programChange') + $valueKinds + @('start', 'continue', 'stop', 'words')
+            $rowNumber = 0
+            foreach ($r in $rows) {
+                $rowNumber++
+                $in = "Row $rowNumber in the step '$($b.name ?? $b.id)'"
+                $fromWhere = "The from of row $rowNumber in the step '$($b.name ?? $b.id)'"
+                $toWhere = "The to of row $rowNumber in the step '$($b.name ?? $b.id)'"
+                Test-Keys $r @('from', 'to') $in
+                $rowFrom = $r.from
+                $rowTo = $r.to
+                if ($null -eq $rowFrom) { $problems.Add("$in has no from, so it converts every note.") }
+                Test-Keys $rowFrom @('message', 'channel', 'number', 'lowest', 'highest', 'button', 'pressPercent') $fromWhere
+                Test-Choice $rowFrom.message $fromKinds $fromWhere 'message'
+                $fromKind = if ($rowFrom.message -cin $fromKinds) { $rowFrom.message } else { 'note' }
+                if (-not (Test-Range $rowFrom.channel 0 15)) { $problems.Add("$fromWhere has a channel outside 0 to 15, so it matches every channel. The file counts channels from 0.") }
+                foreach ($key in 'number', 'lowest', 'highest') {
+                    if (-not (Test-Range $rowFrom.$key 0 127)) { $problems.Add("$fromWhere has a $key outside 0 to 127, so it's ignored.") }
+                    elseif ($null -ne $rowFrom.$key -and $fromKind -cin 'pitchBend', 'channelPressure') { $problems.Add("$fromWhere has a $key, but $fromKind has no number, so it's ignored.") }
+                }
+                if ($null -ne $rowFrom.button -and $rowFrom.button -isnot [bool]) { $problems.Add("$fromWhere has a button that isn't true or false, so it's ignored.") }
+                $button = $rowFrom.button -is [bool] -and $rowFrom.button -and $fromKind -cin $valueKinds
+                if ($rowFrom.button -is [bool] -and $rowFrom.button -and -not $button) { $problems.Add("$fromWhere reads $fromKind as a button. Only a value can be one, so it's ignored.") }
+                if (-not (Test-Range $rowFrom.pressPercent 0 100)) { $problems.Add("$fromWhere has pressPercent outside 0 to 100.") }
+                elseif ($null -ne $rowFrom.pressPercent -and -not $button) { $problems.Add("$fromWhere has pressPercent but isn't read as a button, so it's ignored.") }
+
+                if ($null -eq $rowTo) { $problems.Add("$in has no to, so it sends a control change."); continue }
+                Test-Keys $rowTo @('message', 'channel', 'number', 'velocityPercent', 'valuePercent', 'midi1', 'release', 'releasePercent', 'step', 'lowest', 'highest', 'wraps', 'messageWords') $toWhere
+                if ($rowTo.message -ceq 'nothing') { $problems.Add("$toWhere has the message 'nothing', which a converter reads as controlChange. To keep messages out, use a filter.") }
+                else { Test-Choice $rowTo.message $toKinds $toWhere 'message' }
+                $toKind = if ($rowTo.message -cin $toKinds) { $rowTo.message } else { 'controlChange' }
+                $numbered = ($toKind -cin 'note', 'controlChange', 'polyPressure', 'rpn', 'nrpn') -or ($toKind -ceq 'programChange' -and ($rowTo.step ?? 'this') -ceq 'this')
+                if (-not (Test-Range $rowTo.channel 0 15)) { $problems.Add("$toWhere has a channel outside 0 to 15, so it keeps the channel it came in on. The file counts channels from 0.") }
+                elseif ($null -ne $rowTo.channel -and $toKind -cin 'start', 'continue', 'stop', 'words') { $problems.Add("$toWhere has a channel, but $toKind has none, so it's ignored.") }
+                $largest = if ($toKind -cin 'rpn', 'nrpn') { 16383 } else { 127 }
+                if (-not (Test-Range $rowTo.number 0 $largest)) { $problems.Add("$toWhere has a number outside 0 to $largest, so it keeps the number it came in with.") }
+                elseif ($null -ne $rowTo.number -and -not $numbered) { $problems.Add("$toWhere has a number, but $toKind doesn't use one, so it's ignored.") }
+                elseif ($null -eq $rowTo.number -and $numbered -and $fromKind -cin 'pitchBend', 'channelPressure') { $problems.Add("$in turns $fromKind into $toKind with no number, and $fromKind has no number to keep, so it sends $(if ($toKind -cin 'note', 'polyPressure') { 60 } elseif ($toKind -ceq 'controlChange') { 64 } else { 0 }).") }
+                foreach ($key in 'velocityPercent', 'valuePercent', 'releasePercent') { if (-not (Test-Range $rowTo.$key 0 100)) { $problems.Add("$toWhere has $key outside 0 to 100.") } }
+                if ($null -ne $rowTo.velocityPercent -and $toKind -cne 'note') { $problems.Add("$toWhere has velocityPercent, but only a note uses it, so it's ignored.") }
+                if ($null -ne $rowTo.valuePercent -and $toKind -cnotin $valueKinds) { $problems.Add("$toWhere has valuePercent, but $toKind doesn't use it, so it's ignored.$(if ($toKind -ceq 'note') { ' A note uses velocityPercent.' })") }
+                if ($null -ne $rowTo.midi1 -and $rowTo.midi1 -isnot [bool]) { $problems.Add("$toWhere has midi1 that isn't true or false, so it's ignored.") }
+                elseif ($null -ne $rowTo.midi1 -and $toKind -cin 'rpn', 'nrpn') { $problems.Add("$toWhere has midi1, but $toKind always goes as MIDI 2.0, so it's ignored.") }
+                elseif ($null -ne $rowTo.midi1 -and $toKind -cin 'start', 'continue', 'stop', 'words') { $problems.Add("$toWhere has midi1, but $toKind doesn't use it, so it's ignored.") }
+                Test-Choice $rowTo.release @('send', 'nothing', 'toggle') $toWhere 'release'
+                $canLetGo = $fromKind -ceq 'note' -or $button
+                if ($null -ne $rowTo.release -and -not ($canLetGo -and ($toKind -ceq 'note' -or $toKind -cin $valueKinds))) { $problems.Add("$toWhere has a release, but it only applies to a row that listens for a note or a button and sends a note or a value, so it's ignored.") }
+                if ($null -ne $rowTo.releasePercent -and ($toKind -cnotin $valueKinds -or -not $canLetGo -or $rowTo.release -ceq 'nothing')) { $problems.Add("$toWhere has releasePercent, but this row never sends it, so it's ignored.") }
+                if ($toKind -ceq 'programChange') {
+                    Test-Choice $rowTo.step @('this', 'next', 'previous') $toWhere 'step'
+                    if (-not (Test-Range $rowTo.lowest 0 127) -or -not (Test-Range $rowTo.highest 0 127)) { $problems.Add("$toWhere has a lowest or highest program outside 0 to 127. The file counts programs from 0.") }
+                }
+                elseif ($null -ne $rowTo.step -or $null -ne $rowTo.lowest -or $null -ne $rowTo.highest -or $null -ne $rowTo.wraps) { $problems.Add("$toWhere has step, lowest, highest, or wraps, which only a program change uses, so they're ignored.") }
+                if ($toKind -ceq 'words') {
+                    $words = Get-List $rowTo.messageWords
+                    $sizes = 1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4
+                    if ($words.Count -lt 1 -or $words.Count -gt 4 -or ($words | Where-Object { -not (Test-Number $_) -or -not (Test-Range $_ 0 4294967295) -or $_ -ne [Math]::Floor($_) })) { $problems.Add("$toWhere sends words, but messageWords isn't a list of 1 to 4 whole numbers from 0 to 4294967295. JSON has no hex, so write each word as an ordinary number.") }
+                    elseif ([int]([uint32]$words[0] -shr 28) -in 0, 15) { $problems.Add("$toWhere sends a message type that has no group, so it sends nothing.") }
+                    elseif ($words.Count -ne $sizes[[int]([uint32]$words[0] -shr 28)]) { $problems.Add("$toWhere has $($words.Count) messageWords, but its message type takes $($sizes[[int]([uint32]$words[0] -shr 28)]), so it sends nothing.") }
+                }
+                elseif ($null -ne $rowTo.messageWords) { $problems.Add("$toWhere has messageWords, which only words uses, so they're ignored.") }
             }
         }
         'noteDistributor' {
@@ -922,7 +996,7 @@ Tell the customer about these before they find out on their own.
 
 - **Routing only runs while Windows MIDI Patchbay is running.** Close it, and every route stops. The **Start with Windows** and **Run in notification area** settings keep it going in the background.
 - **Windows MIDI Patchbay can't reach inside another app.** To send to or receive from an app on the same PC, such as a DAW, the app and Windows MIDI Patchbay both use a loopback. A patch file can name a loopback that already exists, but it can't make one. Make it first, with **Create loopback** in Windows MIDI Patchbay or with MIDI Loopback Setup, then use its name in the patch.
-- **It can't turn one kind of message into another.** No notes into controllers, no controller into an NRPN, and no aftertouch into a controller. Steps move messages to another channel, group, note, controller, program, bank, or RPN or NRPN, and reshape velocity, controller values, aftertouch, and RPN and NRPN values. A `putValue` step can move a value from one part of a message to another, such as a program number into the channel, but the message stays the kind it is.
+- **A message converter takes notes, controllers, programs, pitch bend, and pressure.** A `messageConverter` step can't convert an RPN, an NRPN, system exclusive, or a system message such as clock, though it can send an RPN, an NRPN, Start, Continue, or Stop. It doesn't do math: it copies a number or a value, or sends one written in the file, but it can't add an offset or squeeze a range. Put a `controlChangeValue` step after it for that. A message keeps its group. A `putValue` step never changes what kind of message it is.
 - **Logic steps don't do math.** They compare a value with numbers written in the file, and copy values. They can't add or subtract, and they can't compare two tags or two memories with each other.
 - **A memory isn't saved.** It starts empty each time Windows MIDI Patchbay starts, and keeps its value until the app closes. A tag lasts only for one message's trip through the patch, and doesn't get past a message throttler.
 - **No delays, echoes, arpeggios, or chords.** Only the generators and the game controller steps make messages of their own.
@@ -1070,6 +1144,7 @@ The steps are in the `blocks` list.
 | `controlChangeValue` | Control change values | Turns a controller's values upside down, bends them, or squeezes them into a range. |
 | `programMap` | Program and bank mapper | Picks a different program or bank. |
 | `rpnTransform` | (N)RPN transform | Sends one RPN or NRPN as another, and reshapes its value. |
+| `messageConverter` | Message converter | Turns one kind of message into another, such as a note into a control change. |
 | `clockDivider` | Clock divider | Lets one MIDI clock pulse in every so many through, for a device that should run at half the tempo, a third, and so on. |
 | `throttle` | Message throttler | Slows messages down for a device that loses data when a lot arrives at once. |
 | `noteDistributor` | Note distributor | Plays several one-note synths as one bigger synth. Each new note goes out on one of its connections. |
@@ -1645,6 +1720,55 @@ For example, this sends a synth's NRPN 1/8 as NRPN 3/16, using only the lower ha
 { "id": "cutoff", "type": "rpnTransform", "name": "Cutoff for the new synth", "x": 400, "y": 90, "settings": { "rows": [ { "from": { "type": "nrpn", "bank": 1, "index": 8 }, "to": { "type": "nrpn", "bank": 3, "index": 16 }, "shape": { "outputMaximumPercent": 50 } } ] } }
 ```
 
+### Message converter
+
+`"type": "messageConverter"`. Turns one kind of message into another, such as a pad's note into the control change a DAW listens for. The first row that matches a message is used. A message that no row matches goes through unchanged, and so does everything while the step has no rows.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `rows` | a list, up to 64 | none | What to convert. |
+| `valueScale` | `sevenBit`, `percent` | `sevenBit` | How Windows MIDI Patchbay shows the values. The file always holds percentages. |
+
+Each row has a `from`, which is what it listens for:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `message` | `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `polyPressure` | `note` | The kind of message. |
+| `channel` | 0 to 15 | every channel | Counted from 0. |
+| `number` | 0 to 127 | every number | One note, controller, or program. Pitch bend and channel pressure have no number. |
+| `lowest`, `highest` | 0 to 127 | 0 and 127 | A range of numbers, instead of `number`. |
+| `button` | `true`, `false` | `false` | For `controlChange`, `pitchBend`, `channelPressure`, and `polyPressure`. Reads the value as a button that's pressed and let go. |
+| `pressPercent` | 0 to 100 | 50.39, which is 64 out of 127 | With `button`. This value and up is pressed, and anything below it is let go. Only a change from one to the other does anything. A value of 0 is always let go. |
+
+And a `to`, which is what it sends instead. It's the message of a [controller button](#controller-button), with these changes:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `message` | `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `polyPressure`, `rpn`, `nrpn`, `start`, `continue`, `stop`, `words` | `controlChange` | What it sends. There's no `nothing`. To keep a message out, use a filter. |
+| `channel` | 0 to 15 | the channel it came in on | Counted from 0. |
+| `number` | as for a controller button | the number it came in with | Leave it out to keep the number, so note 27 becomes controller 27. Pitch bend and channel pressure have no number to keep, so a row that listens for them needs one. |
+| `velocityPercent` | 0 to 100 | the velocity or value it came in with | `note` only. |
+| `valuePercent` | 0 to 100 | the velocity or value it came in with | Every kind but `note` that has a value. A velocity of 100% becomes a value of 100%. A program change has no value to keep, so a row that listens for one needs this. |
+| `midi1` | `true`, `false` | the format it came in with | `rpn` and `nrpn` always go as MIDI 2.0. |
+| `release` | `send`, `nothing`, `toggle` | `send` | What letting go does. `send` sends a note off, or the value in `releasePercent`. `nothing` sends nothing. `toggle` makes each press send on and off by turns, and letting go sends nothing. Only for a row that listens for a note or a `button`, and sends a note or a value. |
+| `releasePercent` | 0 to 100 | 0, and 50 for `pitchBend` | The value for letting go, and for the "off" press of `toggle`. Not for `note`. |
+
+`step`, `lowest`, `highest`, `wraps`, and `messageWords` are the same as for a controller button. A converter doesn't use `group`, `noteOff`, or `sendRelease`.
+
+- A note off, or a MIDI 1.0 note on at velocity 0, is letting go. A MIDI 2.0 note on at velocity 0 is a quiet press.
+- A program change, or a value without `button`, never lets go. A row that turns one into a `note` sends its note off right away.
+- A note always goes out at velocity 1 or more, so it's never read as a note off.
+- A row that sends a note with `"release": "nothing"` leaves the note playing. That suits a drum machine that ignores note offs, and nothing else.
+- A message that matches a row but has nothing to send, such as letting go with `"release": "nothing"`, is kept out.
+- `messageWords` must be one whole message that has a group, as many words as its message type takes. It gets the group of the message it replaces. Otherwise the row sends nothing.
+- `next` and `previous` keep one place in the range for each group and channel. Every row in the step shares it, so one row can go up and another down.
+
+For example, note 27 on channel 3 becomes control change 27 at 50 on channel 4, and letting go sends 0. The sustain pedal plays note 36, on the channel it came in on:
+
+```json
+{ "id": "pads-to-daw", "type": "messageConverter", "name": "Pads to DAW buttons", "x": 400, "y": 90, "settings": { "valueScale": "sevenBit", "rows": [ { "from": { "message": "note", "channel": 2, "number": 27 }, "to": { "message": "controlChange", "channel": 3, "valuePercent": 39.37, "release": "send", "releasePercent": 0 } }, { "from": { "message": "controlChange", "number": 64, "button": true }, "to": { "message": "note", "number": 36 } } ] } }
+```
+
 ### Note distributor
 
 `"type": "noteDistributor"`. Plays several one-note synths as one bigger synth. Each connection out of the step is one **voice**, in the order the connections are in the file. Connect one synth to each. Each new note goes to one voice, and its note off, poly pressure and MIDI 2.0 per-note messages follow it there.
@@ -1836,6 +1960,7 @@ Until the footswitch is pressed once, the memory is empty, so the switch sends n
 - A message without that part goes on unchanged, such as a control change when the part is `velocity`.
 - A value keeps its share of the range, so a velocity of 50% becomes a controller value of 50%. A whole number, such as a channel, a note, or a program, goes in as it is, and a number past the top of the part becomes the top. Channel 16 is the most a program number can pick.
 - A MIDI 1.0 note on never becomes a note off: putting 0 into its velocity puts 1.
+- `bits` never changes the message type, which is bits 31 to 28 of word 0, because the type says how many words the message has. When a write would change it, the message goes on unchanged. To turn one kind of message into another, use a [message converter](#message-converter).
 - A MIDI 1.0 bank is in control changes 0 and 32, so `bankMsb` and `bankLsb` change only those. A MIDI 2.0 program change carries its bank inside, when it has one.
 
 For example, every message moved to the channel a memory holds:
@@ -2084,4 +2209,7 @@ In a `ProgramList`, `bankPC` is the bank MSB, the bank LSB, and the program, eac
 > - A `controllerButton` that `toggles` has a `held` message. A toggle never sends it.
 > - A step with a `device` uses an Xbox control name, such as `a`, instead of `button1`, or has a `player` too, which is ignored.
 > - A `device`'s `vendorId` or `productId` is written in hex. VID_046D is `1133`.
+> - A message converter's `to` has `noteOff`, `sendRelease`, or `group`, copied from a controller button. A converter ignores them: `release` says what letting go does, and a message keeps its group.
+> - A message converter turns pitch bend or channel pressure into a control change with no `number`. Neither has a number to keep, so it sends controller 64, the sustain pedal.
+> - A message converter's `to` uses `velocityPercent` for a control change, or `valuePercent` for a note. Each kind reads only its own key.
 > - The patch depends on something in [What Windows MIDI Patchbay can't do](#what-patchbay-cant-do).

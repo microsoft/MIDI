@@ -60,9 +60,24 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnDisconnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnChangeRemoteHostSendSpeedClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
+        // The MIDI 1.0 ports a Network MIDI 2.0 connection gets when the device doesn't describe
+        // its own groups. See MainWindowPortGroups.cpp.
+        void OnStepAsideForMidi1PortsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnMidi1PortGroupsPrimaryButtonClick(_In_ controls::ContentDialog const& sender, _In_ controls::ContentDialogButtonClickEventArgs const& args);
+        void OnMidi1PortGroupsUseHostChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnManualConnectMidi1PortsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnChangeRemoteHostMidi1PortsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnChangeHostMidi1PortsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnChangeRemoteClientMidi1PortsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnChangeRemoteClientMidi1PortsEntryClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         void OnManualConnectFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
         void OnManualConnectPortChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         winrt::fire_and_forget OnManualConnectClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // both pages' Connect by address forms
+        void OnManualConnectExpanding(controls::Expander const& sender, controls::ExpanderExpandingEventArgs const& args);
+        void OnManualConnectFormSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
 
         winrt::fire_and_forget OnAllowInvitationOnceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnAllowInvitationAlwaysClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -153,6 +168,9 @@ namespace winrt::midinetworksetup::implementation
             // RTP-MIDI only
             bool SendRecoveryJournal{ true };
             int32_t OfflineRetentionSeconds{ 0 };
+
+            // Network MIDI 2.0 only
+            Midi1PortLayout Midi1Ports{};
         };
 
         // everything the service knows, gathered off the UI thread in one pass
@@ -168,6 +186,14 @@ namespace winrt::midinetworksetup::implementation
 
             // the clients saved in the configuration, keyed by the entry identifier
             std::unordered_map<std::wstring, midi2net::MidiNetworkSavedClient> SavedClients{};
+
+            // the same for hosts, for what each one gives a device by default
+            std::unordered_map<std::wstring, midi2net::MidiNetworkSavedHost> SavedHosts{};
+
+            // Lowercased ids of the Network MIDI 2.0 endpoints whose device describes its own
+            // groups, which then decide its MIDI 1.0 ports. Each one is a device property read, so
+            // it's done here, off the UI thread.
+            std::vector<std::wstring> EndpointsWithFunctionBlocks{};
 
             // saved allow and deny decisions, keyed by the host entry identifier
             std::unordered_map<std::wstring, std::vector<midi2net::MidiNetworkKnownRemoteClient>> KnownClients{};
@@ -210,6 +236,11 @@ namespace winrt::midinetworksetup::implementation
         // Whether anything is watching for connection requests while this window is closed. Only
         // reports: the notifications app is started by the customer, never by this app.
         void RefreshNotificationsBanner() noexcept;
+
+        // The layout for the window's size: below a width, the navigation pane folds into a menu
+        // button and the rows drop their graphs and addresses. Also keeps the tall dialogs short
+        // enough to stay clear of the title bar.
+        void ApplyWindowSize(_In_ foundation::Size const size) noexcept;
 
         void ShowPage(uint32_t const pageIndex) noexcept;
         winrt::Windows::Foundation::IInspectable NavigationItemForPage(uint32_t const pageIndex) noexcept;
@@ -334,8 +365,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget DisconnectRemoteClientAsync(
             midinetworksetup::HostConnectionItem const item);
 
-        // The speed is only used for a new entry. Trying a saved entry again keeps what it was
-        // saved with.
+        // The speed and the MIDI 1.0 ports are only used for a new entry. Trying a saved entry
+        // again keeps what it was saved with.
         winrt::fire_and_forget ConnectRemoteHostAsync(
             _In_ midinetworksetup::RemoteHostItem const item,
             _In_ bool const reuseExistingEntry,
@@ -343,6 +374,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
             _In_ bool const skipInBetweenValuesToCatchUp,
+            _In_ bool const createMidi1Ports,
+            _In_ Midi1PortLayout const midi1Ports,
             _In_ winrt::guid const explicitClientId = winrt::guid{});
 
         // Asks for an optional display name and the sending speed before connecting. RTP-MIDI
@@ -369,6 +402,74 @@ namespace winrt::midinetworksetup::implementation
             winrt::hstring const clientKey,
             bool const isRtpMidi,
             std::shared_ptr<winrt::hstring> errorMessage);
+
+        // ---- MIDI 1.0 ports for Network MIDI 2.0, in MainWindowPortGroups.cpp ----
+
+        // What the MIDI 1.0 ports dialog is changing, which decides what it offers
+        enum class Midi1PortsScope
+        {
+            // A connection from this PC, or one device on a host. Ports can be named.
+            Device,
+
+            // What a host gives every device which connects to it. No names, because every device
+            // would get the same ones.
+            Host,
+        };
+
+        // Shows the MIDI 1.0 ports dialog. True when the customer pressed the primary button, with
+        // their choice in layout. A non-empty hostPortsText offers one device on a host the host's
+        // ports instead, and useHostPorts says whether it starts on them and whether it ended on
+        // them. By value, because this is a coroutine.
+        foundation::IAsyncOperation<bool> ShowMidi1PortGroupsDialogAsync(
+            _In_ winrt::hstring const title,
+            _In_ Midi1PortsScope const scope,
+            _In_ winrt::hstring const primaryButtonText,
+            _In_ winrt::hstring const hostPortsText,
+            _In_ std::shared_ptr<Midi1PortLayout> layout,
+            _In_ std::shared_ptr<bool> useHostPorts);
+
+        void FillMidi1PortGroupRows(_In_ Midi1PortLayout const& layout, _In_ bool const offerNames) noexcept;
+        Midi1PortLayout ReadMidi1PortGroupRows() const noexcept;
+
+        // Why the groups on screen can't be used, or empty when they can
+        winrt::hstring Midi1PortGroupRowsProblem() noexcept;
+
+        // Shows a problem in place of the hint, or the hint again when the problem is empty
+        void ShowMidi1PortGroupsProblem(_In_ winrt::hstring const& problem) noexcept;
+
+        // Asks for one device's MIDI 1.0 ports on a host, then applies them. hasOwnPorts says
+        // whether it already has ports of its own, which ownPorts then describes.
+        winrt::fire_and_forget EditRemoteClientMidi1PortsAsync(
+            _In_ winrt::hstring const hostKey,
+            _In_ winrt::hstring const remoteName,
+            _In_ winrt::hstring const remoteProductInstanceId,
+            _In_ bool const hasOwnPorts,
+            _In_ Midi1PortLayout const ownPorts);
+
+        // Gives one device on a host MIDI 1.0 ports of its own, or puts it back on the host's. As
+        // with a speed change, the host's whole list is rebuilt from what the service holds now,
+        // with only this device changed, and its speed is kept.
+        winrt::fire_and_forget ChangeRemoteClientMidi1PortsAsync(
+            _In_ winrt::hstring const hostKey,
+            _In_ winrt::hstring const remoteName,
+            _In_ winrt::hstring const remoteProductInstanceId,
+            _In_ bool const useHostPorts,
+            _In_ Midi1PortLayout const ports);
+
+        // the dialog's rows
+        collections::IObservableVector<midinetworksetup::Midi1PortGroupItem> m_midi1PortGroupRows{
+            winrt::single_threaded_observable_vector<midinetworksetup::Midi1PortGroupItem>() };
+
+        // what the next connection made by address gets
+        Midi1PortLayout m_manualConnectMidi1Ports{};
+
+        // Set when an open dialog steps aside for the MIDI 1.0 ports dialog, so the code waiting on
+        // it shows the ports and then brings it back, rather than taking it as canceled
+        bool m_midi1PortGroupsRequested{ false };
+
+        // The installed transport can create and name MIDI 1.0 ports by group. Decided once at
+        // startup, with m_networkMidi2Usable. An older transport only takes a count.
+        bool m_midi1PortGroupsUsable{ false };
 
         winrt::fire_and_forget ConnectRtpRemoteHostAsync(
             _In_ midinetworksetup::RtpRemoteHostItem const item,
@@ -403,6 +504,9 @@ namespace winrt::midinetworksetup::implementation
         midiapp::WindowChrome m_chrome{};
 
         controls::ContentDialog m_openDialog{ nullptr };
+
+        // A Connect by address form that's opening, until it has its full height
+        controls::Expander m_openingConnectForm{ nullptr };
 
         midi2net::MidiNetworkAdvertisedHostWatcher m_watcher{ nullptr };
         winrt::event_token m_watcherAddedToken{};

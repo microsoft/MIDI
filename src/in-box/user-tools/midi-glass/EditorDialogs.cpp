@@ -12,6 +12,7 @@
 
 #include "StringResources.h"
 #include "PageTemplates.h"
+#include "SpinButtons.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -54,7 +55,7 @@ namespace winrt::midiglass::implementation
             box.Value(value);
             box.Minimum(minimum);
             box.Maximum(maximum);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
 
             return box;
         }

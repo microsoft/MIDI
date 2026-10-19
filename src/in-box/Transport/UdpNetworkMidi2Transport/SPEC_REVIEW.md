@@ -33,19 +33,15 @@ The capabilities byte is correctly a bitmap (spec Table 11: D0 = supports Invita
 
 ### 1.2 A device connected in both roles is declined rather than correlated
 
-> "Devices which act as both a Host and as a Client and which represent the same UMP Endpoint
-> shall use the same Endpoint Name and Product Instance Id in both roles... By using the same
-> Endpoint Name and Product Instance Id, other Hosts and Clients can better recognize Devices
-> which may already be connected."
+> "Devices which act as both a Host and as a Client and which represent the same UMP Endpoint shall use the same Endpoint Name and Product Instance Id in both roles... By using the same Endpoint Name and Product Instance Id, other Hosts and Clients can better recognize Devices which may already be connected."
 
-Endpoint identity is role-free, so such a device resolves to one endpoint and the second session
-is detected and declined with a Bye (`TooManyOpenSessions` from the host side,
-`InvitationCanceled` from the client side) plus a clear log. Related to
-[#750](https://github.com/microsoft/MIDI/issues/750).
+A remote that has an endpoint here in one role, with that session still up, is declined a second session in the other role with a Bye (`TooManyOpenSessions` from the host side, `InvitationCanceled` from the client side) plus a clear log. `IsRemoteConnectedInOtherRole` makes the check, and matches the remote's UMP Endpoint Name and Product Instance Id exactly. Related to [#750](https://github.com/microsoft/MIDI/issues/750).
 
-Whether we should instead *correlate* the two connections onto one endpoint is an open design
-question: it requires deciding which connection wins, or multiplexing one endpoint across two.
-Declining is safe and diagnosable, but it is not what the spec's wording is reaching for.
+A remote connected to more than one host on this PC is not that case. Each host is a UMP endpoint of its own, so each of those sessions gets an endpoint of its own, and the accepting host's entry identifier is part of the endpoint's instance id. Before that, the instance id was the same in every session with a given remote. That is what used to catch the both-roles case, and it also turned the remote away from every host after the first, with "This device is already connected to this PC".
+
+Still open: a remote that talks to two hosts here from the same address and port. Connections are found by the remote's address and port alone (`CreateNetworkConnectionMapKey`), so the second host's datagrams reach the first host's connection. A Windows client opens a socket for each connection, so it never does this, but a device which keeps one client port for every session would.
+
+Whether we should instead *correlate* the two connections onto one endpoint is an open design question: it requires deciding which connection wins, or multiplexing one endpoint across two. Declining is safe and diagnosable, but it is not what the spec's wording is reaching for.
 
 ### 1.3 Retransmit request timing is not yet spec-shaped
 

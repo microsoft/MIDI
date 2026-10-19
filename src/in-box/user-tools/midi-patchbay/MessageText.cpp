@@ -705,6 +705,7 @@ namespace midipatchbay
             { BlockKind::PutValue, L"BlockNamePutValue", L"BlockShortPutValue", L"BlockBadgePutValue", L"BlockHintPutValue" },
             { BlockKind::ControllerButton, L"BlockNameControllerButton", L"BlockShortControllerButton", L"BlockBadgeControllerButton", L"BlockHintControllerButton" },
             { BlockKind::ControllerAxis, L"BlockNameControllerAxis", L"BlockShortControllerAxis", L"BlockBadgeControllerAxis", L"BlockHintControllerAxis" },
+            { BlockKind::MessageConverter, L"BlockNameMessageConverter", L"BlockShortMessageConverter", L"BlockBadgeMessageConverter", L"BlockHintMessageConverter" },
         };
 
         KindText const* FindKindText(_In_ BlockKind kind) noexcept
@@ -1268,6 +1269,10 @@ namespace midipatchbay
             case BlockKind::ControllerButton:
             case BlockKind::ControllerAxis:
                 text = Text(DescribeControllerStep(kind, settings));
+                break;
+
+            case BlockKind::MessageConverter:
+                text = Text(DescribeConverterStep(settings.Converter));
                 break;
 
             case BlockKind::Annotation:

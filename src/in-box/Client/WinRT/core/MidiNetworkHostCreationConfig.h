@@ -86,6 +86,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        collections::IVector<network::MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups() const noexcept { return m_fallbackMidi1PortGroups; }
+
 
     private:
         winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };
@@ -94,6 +96,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_productInstanceId{};
         bool m_umpOnly{ false };
         uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+
+        collections::IVector<network::MidiNetworkMidi1PortGroup> m_fallbackMidi1PortGroups{
+            winrt::single_threaded_vector<network::MidiNetworkMidi1PortGroup>() };
+
         bool m_useAutomaticPortAllocation{ true };
         bool m_allowPortFallback{ true };
         winrt::hstring m_manuallyAssignedPort{};

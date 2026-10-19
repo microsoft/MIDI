@@ -40,11 +40,14 @@ namespace NetworkMidiTest
 
         // Device interface classes for the MIDI 1.0 ports the service publishes. Restated here
         // rather than included, so a test failure says the service changed rather than silently
-        // following it.
+        // following it. Enabled ones only: the service removes a port by disabling its interface,
+        // enumeration still returns a disabled one unless asked not to, and apps never see it.
         constexpr wchar_t Midi1SourceSelector[] =
-            L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\"";
+            L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\""
+            L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
         constexpr wchar_t Midi1DestinationSelector[] =
-            L"System.Devices.InterfaceClassGuid:=\"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}\"";
+            L"System.Devices.InterfaceClassGuid:=\"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}\""
+            L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
 
         // PKEY_MIDI_AssociatedUMP, property 52. Restated for the same reason.
         constexpr wchar_t AssociatedUmpProperty[] = L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD} 52";
@@ -310,6 +313,77 @@ namespace NetworkMidiTest
             return names;
         }
 
+        bool AnyNameContains(
+            _In_ std::vector<std::wstring> const& names,
+            _In_ std::wstring const& expected)
+        {
+            return std::any_of(names.begin(), names.end(),
+                [&expected](std::wstring const& name) { return name.find(expected) != std::wstring::npos; });
+        }
+
+        // Polls until each direction has exactly this many ports. At least as many is not enough
+        // here, because a test also has to see ports go away.
+        Midi1PortCounts WaitForExactMidi1Ports(
+            _In_ std::wstring const& endpointDeviceId,
+            _In_ uint32_t const sources,
+            _In_ uint32_t const destinations,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+            Midi1PortCounts counts{ };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                counts = CountMidi1Ports(endpointDeviceId);
+
+                if (counts.Sources == sources && counts.Destinations == destinations)
+                {
+                    return counts;
+                }
+
+                std::this_thread::sleep_for(PollInterval);
+            }
+
+            return counts;
+        }
+
+        // Polls until each expected text is in some port's name, in the direction the selector
+        // picks. Returns what it last saw, so a failure can print the names.
+        std::vector<std::wstring> WaitForPortNamesContaining(
+            _In_ std::wstring const& selector,
+            _In_ std::wstring const& endpointDeviceId,
+            _In_ std::vector<std::wstring> const& expected,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+            std::vector<std::wstring> names{ };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                names = CollectPortNamesWithSelector(selector, endpointDeviceId);
+
+                if (std::all_of(expected.begin(), expected.end(),
+                    [&names](std::wstring const& text) { return AnyNameContains(names, text); }))
+                {
+                    return names;
+                }
+
+                std::this_thread::sleep_for(PollInterval);
+            }
+
+            return names;
+        }
+
+        void LogPortNames(_In_ wchar_t const* label, _In_ std::vector<std::wstring> const& names)
+        {
+            for (auto const& name : names)
+            {
+                Log::Comment(String().Format(L"%s: %s", label, name.c_str()));
+            }
+        }
+
         size_t WaitForEndpointDiscoveryRequest(
             _In_ FakeNetworkHost& host,
             _In_ std::chrono::milliseconds const timeout)
@@ -536,7 +610,8 @@ namespace NetworkMidiTest
             bool Start(
                 _In_ uint8_t const groupCount,
                 _In_ bool const createMidi1Ports,
-                _In_ std::string const& endpointName = "Port Creation Test Host")
+                _In_ std::string const& endpointName = "Port Creation Test Host",
+                _In_ std::wstring const& fallbackMidi1PortGroupsJson = L"")
             {
                 m_endpointName = winrt::to_hstring(endpointName);
 
@@ -556,11 +631,18 @@ namespace NetworkMidiTest
 
                 m_entryIdentifier = MakeEntryIdentifier();
 
-                auto result = CreateDirectClient(
-                    m_entryIdentifier,
-                    FakeNetworkHost::Address(),
-                    m_host.Port(),
-                    createMidi1Ports);
+                auto result = fallbackMidi1PortGroupsJson.empty() ?
+                    CreateDirectClient(
+                        m_entryIdentifier,
+                        FakeNetworkHost::Address(),
+                        m_host.Port(),
+                        createMidi1Ports) :
+                    CreateDirectClientWithPortGroups(
+                        m_entryIdentifier,
+                        FakeNetworkHost::Address(),
+                        m_host.Port(),
+                        createMidi1Ports,
+                        fallbackMidi1PortGroupsJson);
 
                 if (!result.CallSucceeded)
                 {
@@ -1105,5 +1187,455 @@ namespace NetworkMidiTest
             L"One MIDI 1.0 source per group spanned by the function block.");
         VERIFY_ARE_EQUAL(static_cast<uint32_t>(GroupCount), counts.Destinations,
             L"One MIDI 1.0 destination per group spanned by the function block.");
+    }
+
+
+    // ------------------------------------------------------------------------------------
+    // Named groups for a remote which doesn't describe itself
+    // https://github.com/microsoft/MIDI/issues/1284
+    // ------------------------------------------------------------------------------------
+
+    namespace
+    {
+        // The source names below are what a MIDI 1.0 app shows. They're per endpoint and go away
+        // with it, so unlike a customization they can be the same on every run.
+        constexpr wchar_t ThreeNamedGroupsJson[] =
+            L"[{\"groupIndex\":0,\"name\":\"Groups Test Both\"},"
+            L"{\"groupIndex\":2,\"name\":\"Groups Test Out\",\"hasSourcePort\":false},"
+            L"{\"groupIndex\":5,\"name\":\"Groups Test In\",\"hasDestinationPort\":false}]";
+
+        bool CreatePortGroupsTestHost(_In_ std::wstring const& entryIdentifier)
+        {
+            auto const serviceInstanceName = L"MidiPortGroupsTest_" + entryIdentifier.substr(1, 8);
+
+            return CreateHost(
+                entryIdentifier,
+                L"Port Groups Test Host",
+                L"PortGroupsTestHost",
+                serviceInstanceName,
+                false,          // accept remote clients without asking
+                L"auto",
+                false,          // do not advertise
+                true,
+                true).IsSuccess();   // create MIDI 1.0 ports
+        }
+
+        uint16_t WaitForHostActualPort(_In_ std::wstring const& entryIdentifier)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + EndpointCreationTimeout;
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                if (auto const port = FindHostActualPort(entryIdentifier); port != 0)
+                {
+                    return port;
+                }
+
+                std::this_thread::sleep_for(PollInterval);
+            }
+
+            return 0;
+        }
+
+        // Opens a session with a host on this PC as a remote client with this identity. The client
+        // never answers discovery, so the groups decide its MIDI 1.0 ports.
+        bool ConnectAsRemoteClient(
+            _In_ UdpTestClient& client,
+            _In_ uint16_t const hostPort,
+            _In_ std::string const& name,
+            _In_ std::string const& productInstanceId)
+        {
+            if (!client.Open(HostEndpointAddress{ L"127.0.0.1", hostPort }))
+            {
+                return false;
+            }
+
+            PacketBuilder invitation;
+            invitation.StartPacket().AddInvitation(name, productInstanceId);
+
+            return client.Send(invitation) &&
+                client.WaitForCommand(CommandCode::InvitationReplyAccepted, SessionTimeout).has_value();
+        }
+
+        // What enumerateHosts says about whether the host's one connection uses settings of its
+        // own for its speed, or nullopt when there's no connection to ask about
+        std::optional<bool> HostConnectionUsesOwnSpeed(_In_ std::wstring const& entryIdentifier)
+        {
+            auto result = EnumerateHosts();
+
+            if (!result.IsSuccess()) return std::nullopt;
+
+            auto parsed = ParseResponse(result.ResponseJson);
+
+            if (parsed == nullptr) return std::nullopt;
+
+            try
+            {
+                auto const wantedEntry = NormalizeEndpointId(entryIdentifier);
+
+                for (auto const& entry : parsed.GetNamedArray(L"hosts"))
+                {
+                    auto host = entry.GetObject();
+
+                    if (NormalizeEndpointId(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }) != wantedEntry)
+                    {
+                        continue;
+                    }
+
+                    for (auto const& connectionEntry : host.GetNamedArray(L"connections"))
+                    {
+                        return connectionEntry.GetObject().GetNamedBoolean(L"usesRemoteClientSettings", false);
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return std::nullopt;
+        }
+    }
+
+
+    void PortCreationTests::NamedPortGroupsGiveExactlyThosePorts()
+    {
+        if (!RequireService()) return;
+
+        // No function blocks, so the groups decide the ports
+        RemoteHostUnderTest remote;
+
+        VERIFY_IS_TRUE(remote.Start(0, true, "Port Groups Test Host", ThreeNamedGroupsJson));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        // groups 1 and 6 have a source, and groups 1 and 3 a destination
+        auto const counts = WaitForExactMidi1Ports(endpointDeviceId, 2, 2, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"MIDI 1.0 ports: %u sources, %u destinations", counts.Sources, counts.Destinations));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Sources, L"A source for each group which asked for one.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Destinations, L"A destination for each group which asked for one.");
+
+        auto const sources = WaitForPortNamesContaining(
+            Midi1SourceSelector, endpointDeviceId, { L"Groups Test Both", L"Groups Test In" }, PortCreationTimeout);
+
+        auto const destinations = WaitForPortNamesContaining(
+            Midi1DestinationSelector, endpointDeviceId, { L"Groups Test Both", L"Groups Test Out" }, PortCreationTimeout);
+
+        LogPortNames(L"Source", sources);
+        LogPortNames(L"Destination", destinations);
+
+        VERIFY_IS_TRUE(AnyNameContains(sources, L"Groups Test Both") && AnyNameContains(sources, L"Groups Test In"),
+            L"The sources carry the names given to their groups.");
+        VERIFY_IS_TRUE(AnyNameContains(destinations, L"Groups Test Both") && AnyNameContains(destinations, L"Groups Test Out"),
+            L"The destinations carry the names given to their groups.");
+        VERIFY_IS_FALSE(AnyNameContains(sources, L"Groups Test Out"), L"A group with only a destination has no source.");
+        VERIFY_IS_FALSE(AnyNameContains(destinations, L"Groups Test In"), L"A group with only a source has no destination.");
+    }
+
+
+    void PortCreationTests::ChangingPortGroupsAppliesWithoutReconnecting()
+    {
+        if (!RequireService()) return;
+
+        RemoteHostUnderTest remote;
+
+        VERIFY_IS_TRUE(remote.Start(0, true));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        auto const before = WaitForExactMidi1Ports(endpointDeviceId, 1, 1, PortCreationTimeout);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), before.Sources, L"The count's one source to start with.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), before.Destinations, L"The count's one destination to start with.");
+
+        VERIFY_IS_TRUE(UpdateClientEntry(remote.EntryIdentifier(),
+            L"\"fallbackMidi1PortGroups\":["
+            L"{\"groupIndex\":0,\"name\":\"Live Group A\"},"
+            L"{\"groupIndex\":1,\"name\":\"Live Group B\"},"
+            L"{\"groupIndex\":2,\"name\":\"Live Group C\",\"hasDestinationPort\":false}]").IsSuccess(),
+            L"The groups were taken.");
+
+        auto const changed = WaitForExactMidi1Ports(endpointDeviceId, 3, 2, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"With groups: %u sources, %u destinations", changed.Sources, changed.Destinations));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(3), changed.Sources, L"The groups reached the running endpoint.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), changed.Destinations, L"Including a group with only a source.");
+
+        auto names = WaitForPortNamesContaining(
+            Midi1SourceSelector, endpointDeviceId, { L"Live Group A", L"Live Group B", L"Live Group C" }, PortCreationTimeout);
+
+        LogPortNames(L"With groups", names);
+
+        VERIFY_IS_TRUE(
+            AnyNameContains(names, L"Live Group A") && AnyNameContains(names, L"Live Group B") && AnyNameContains(names, L"Live Group C"),
+            L"The ports carry the names.");
+
+        // a name on its own, with the same groups
+        VERIFY_IS_TRUE(UpdateClientEntry(remote.EntryIdentifier(),
+            L"\"fallbackMidi1PortGroups\":["
+            L"{\"groupIndex\":0,\"name\":\"Live Group Renamed\"},"
+            L"{\"groupIndex\":1,\"name\":\"Live Group B\"},"
+            L"{\"groupIndex\":2,\"name\":\"Live Group C\",\"hasDestinationPort\":false}]").IsSuccess(),
+            L"The new name was taken.");
+
+        names = WaitForPortNamesContaining(Midi1SourceSelector, endpointDeviceId, { L"Live Group Renamed" }, PortCreationTimeout);
+
+        LogPortNames(L"Renamed", names);
+
+        VERIFY_IS_TRUE(AnyNameContains(names, L"Live Group Renamed"), L"A new name reached the running port.");
+
+        // an empty list goes back to the count
+        VERIFY_IS_TRUE(UpdateClientEntry(remote.EntryIdentifier(), L"\"fallbackMidi1PortGroups\":[]").IsSuccess(),
+            L"The empty list was taken.");
+
+        auto const after = WaitForExactMidi1Ports(endpointDeviceId, 1, 1, PortCreationTimeout);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), after.Sources, L"Back to the count's one source.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), after.Destinations, L"Back to the count's one destination.");
+
+        VERIFY_IS_TRUE(
+            remote.Host().CountReceived(CommandCode::Bye) == 0,
+            L"The connection must not be torn down to change the groups.");
+    }
+
+
+    void PortCreationTests::FunctionBlocksReplaceNamedPortGroups()
+    {
+        if (!RequireService()) return;
+
+        // The remote describes two groups. The list has three, so the change is visible in the
+        // count as well as in the names.
+        RemoteHostUnderTest remote;
+
+        VERIFY_IS_TRUE(remote.Start(2, true, "Port Groups Test Host",
+            L"[{\"groupIndex\":0,\"name\":\"Kept Group Name\"},"
+            L"{\"groupIndex\":5,\"name\":\"Unused Group A\"},"
+            L"{\"groupIndex\":7,\"name\":\"Unused Group B\"}]"));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        VERIFY_IS_GREATER_THAN(
+            WaitForEndpointDiscoveryRequest(remote.Host(), PortCreationTimeout), static_cast<size_t>(0),
+            L"The service never asked the remote host to describe itself.");
+
+        auto const counts = WaitForExactMidi1Ports(endpointDeviceId, 2, 2, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"MIDI 1.0 ports: %u sources, %u destinations", counts.Sources, counts.Destinations));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Sources, L"The remote's own groups replace the list.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Destinations, L"The remote's own groups replace the list.");
+
+        auto const names = WaitForPortNamesContaining(Midi1SourceSelector, endpointDeviceId, { L"Kept Group Name" }, PortCreationTimeout);
+
+        LogPortNames(L"Source", names);
+
+        VERIFY_IS_TRUE(AnyNameContains(names, L"Kept Group Name"), L"A group the remote also uses keeps the name it was given.");
+        VERIFY_IS_FALSE(AnyNameContains(names, L"Unused Group"), L"Groups the remote doesn't use are gone.");
+    }
+
+
+    void PortCreationTests::PortGroupsCreateNoPortsWhenUmpOnly()
+    {
+        if (!RequireService()) return;
+
+        RemoteHostUnderTest remote;
+
+        VERIFY_IS_TRUE(remote.Start(0, false, "Port Groups Test Host", ThreeNamedGroupsJson));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        // Give the service the same amount of time it would have taken to create them.
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+        auto const counts = CountMidi1Ports(endpointDeviceId);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(0), counts.Total(),
+            L"A UMP-only endpoint gets no MIDI 1.0 ports, whatever groups are listed.");
+    }
+
+
+    void PortCreationTests::UnusablePortGroupEntriesAreSkipped()
+    {
+        if (!RequireService()) return;
+
+        // Only group 2's entry is usable, and its name is too long for a MIDI 1.0 app
+        RemoteHostUnderTest remote;
+
+        VERIFY_IS_TRUE(remote.Start(0, true, "Port Groups Test Host",
+            L"[{\"groupIndex\":16,\"name\":\"Too High\"},"
+            L"{\"groupIndex\":-1,\"name\":\"Negative\"},"
+            L"{\"groupIndex\":1.5,\"name\":\"Fraction\"},"
+            L"{\"groupIndex\":\"3\",\"name\":\"Text Index\"},"
+            L"{\"name\":\"No Index\"},"
+            L"\"not an object\","
+            L"{\"groupIndex\":4,\"name\":\"No Ports\",\"hasSourcePort\":false,\"hasDestinationPort\":false},"
+            L"{\"groupIndex\":1,\"name\":\"  An Overly Long Name For A MIDI 1.0 Port  \"}]"));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        auto const counts = WaitForExactMidi1Ports(endpointDeviceId, 1, 1, PortCreationTimeout);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), counts.Sources, L"Only the usable entry gives a source.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), counts.Destinations, L"Only the usable entry gives a destination.");
+
+        auto const names = WaitForPortNamesContaining(
+            Midi1SourceSelector, endpointDeviceId, { L"An Overly Long Name For A MIDI" }, PortCreationTimeout);
+
+        LogPortNames(L"Source", names);
+
+        VERIFY_IS_TRUE(AnyNameContains(names, L"An Overly Long Name For A MIDI"), L"The name is trimmed and kept up to the limit.");
+        VERIFY_IS_FALSE(AnyNameContains(names, L"1.0 Port"), L"Past 31 characters, the name is cut.");
+    }
+
+
+    void PortCreationTests::HostGivesARemoteClientItsOwnPortGroups()
+    {
+        if (!RequireService()) return;
+
+        auto const entryIdentifier = MakeEntryIdentifier();
+
+        VERIFY_IS_TRUE(CreatePortGroupsTestHost(entryIdentifier), L"Could not create the host.");
+
+        auto removeHost = wil::scope_exit([&entryIdentifier]()
+        {
+            RemoveHost(entryIdentifier);
+        });
+
+        // Only there for the ports, so its own speed of 1 must not be used
+        VERIFY_IS_TRUE(UpdateHostEntry(entryIdentifier,
+            L"\"remoteClientSettings\":[{"
+            L"\"umpEndpointName\":\"Port Groups Test Client\","
+            L"\"productInstanceId\":\"PortGroupsTestClient\","
+            L"\"sendSpeedLimit\":1,"
+            L"\"useHostSendSpeed\":true,"
+            L"\"fallbackMidi1PortGroups\":["
+            L"{\"groupIndex\":0,\"name\":\"Per Device One\"},"
+            L"{\"groupIndex\":1,\"name\":\"Per Device Two\"}]}]").IsSuccess(),
+            L"The host took the remote client's settings.");
+
+        auto const hostPort = WaitForHostActualPort(entryIdentifier);
+
+        VERIFY_IS_GREATER_THAN(hostPort, static_cast<uint16_t>(0), L"The host never reported a port.");
+
+        if (hostPort == 0) return;
+
+        UdpTestClient client;
+
+        VERIFY_IS_TRUE(
+            ConnectAsRemoteClient(client, hostPort, "Port Groups Test Client", "PortGroupsTestClient"),
+            L"The host never accepted the session.");
+
+        auto endpointDeviceId = WaitForHostConnectionEndpointDeviceId(entryIdentifier);
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The host never reported an endpoint for the connected client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        auto const counts = WaitForExactMidi1Ports(endpointDeviceId, 2, 2, PortCreationTimeout);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Sources, L"The remote client gets its own groups.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Destinations, L"The remote client gets its own groups.");
+
+        auto const names = WaitForPortNamesContaining(
+            Midi1SourceSelector, endpointDeviceId, { L"Per Device One", L"Per Device Two" }, PortCreationTimeout);
+
+        LogPortNames(L"Source", names);
+
+        VERIFY_IS_TRUE(AnyNameContains(names, L"Per Device One") && AnyNameContains(names, L"Per Device Two"),
+            L"With the names given for it.");
+
+        auto const usesOwnSpeed = HostConnectionUsesOwnSpeed(entryIdentifier);
+
+        VERIFY_IS_TRUE(usesOwnSpeed.has_value(), L"The host reports the connection.");
+        VERIFY_IS_FALSE(usesOwnSpeed.value_or(true), L"An entry only there for its ports keeps the host's speed.");
+    }
+
+
+    void PortCreationTests::HostPortGroupsApplyToRemoteClients()
+    {
+        if (!RequireService()) return;
+
+        auto const entryIdentifier = MakeEntryIdentifier();
+
+        VERIFY_IS_TRUE(CreatePortGroupsTestHost(entryIdentifier), L"Could not create the host.");
+
+        auto removeHost = wil::scope_exit([&entryIdentifier]()
+        {
+            RemoveHost(entryIdentifier);
+        });
+
+        // group 1 both ways, and an output only on group 4
+        VERIFY_IS_TRUE(UpdateHostEntry(entryIdentifier,
+            L"\"fallbackMidi1PortGroups\":["
+            L"{\"groupIndex\":0},"
+            L"{\"groupIndex\":3,\"hasSourcePort\":false}]").IsSuccess(),
+            L"The host took its groups.");
+
+        auto const hostPort = WaitForHostActualPort(entryIdentifier);
+
+        VERIFY_IS_GREATER_THAN(hostPort, static_cast<uint16_t>(0), L"The host never reported a port.");
+
+        if (hostPort == 0) return;
+
+        UdpTestClient client;
+
+        VERIFY_IS_TRUE(
+            ConnectAsRemoteClient(client, hostPort, "Host Groups Test Client", "HostGroupsTestClient"),
+            L"The host never accepted the session.");
+
+        auto endpointDeviceId = WaitForHostConnectionEndpointDeviceId(entryIdentifier);
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The host never reported an endpoint for the connected client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        auto const counts = WaitForExactMidi1Ports(endpointDeviceId, 1, 2, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"MIDI 1.0 ports: %u sources, %u destinations", counts.Sources, counts.Destinations));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), counts.Sources, L"A remote client with none of its own gets the host's groups.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(2), counts.Destinations, L"Including a group with only a destination.");
     }
 }

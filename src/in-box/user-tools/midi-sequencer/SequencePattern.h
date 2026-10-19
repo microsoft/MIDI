@@ -53,6 +53,10 @@ namespace midisequencer
     // a melodic pattern's lane. A lane with a length of its own keeps it.
     void SetPatternStepCount(_Inout_ PatternSettings& pattern, _In_ uint16_t count) noexcept;
 
+    // Moves a lane to just before the lane now at `before`, or to the end when `before` is the
+    // number of lanes, the way dropping a dragged lane does. False when that's where it already is.
+    bool MovePatternLane(_Inout_ PatternSettings& pattern, _In_ size_t lane, _In_ size_t before) noexcept;
+
     PatternStep const* FindStep(_In_ PatternLane const& lane, _In_ uint16_t index) noexcept;
     PatternStep* FindStep(_Inout_ PatternLane& lane, _In_ uint16_t index) noexcept;
 

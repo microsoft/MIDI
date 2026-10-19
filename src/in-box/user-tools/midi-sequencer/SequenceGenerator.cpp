@@ -6,6 +6,8 @@
 // ============================================================================
 
 #include "SequenceGenerator.h"
+#include "GeneratorKinds.h"
+#include "GeneratorListen.h"
 
 #include <algorithm>
 #include <array>
@@ -64,6 +66,18 @@ namespace midisequencer
             uint16_t Velocity{ 0 };
         };
 
+        // Passes of a melody that changes each pass build on each other. Playback, chase and export
+        // go through them in order, so each thread keeps where its last few melodies got to, and
+        // carries on from there instead of starting again from the first pass.
+        struct MelodyRun
+        {
+            uint64_t Print{ 0 };
+            uint64_t Pass{ 0 };
+            std::vector<MelodyStep> State{};
+        };
+
+        constexpr size_t MelodyRunsKept = 8;
+
         // What each step of a chance melody plays on a pass.
         std::vector<MelodyStep> MelodyPass(_In_ GeneratorSettings const& generator, _In_ uint32_t seed, _In_ int64_t steps, _In_ uint64_t pass)
         {
@@ -95,7 +109,25 @@ namespace midisequencer
             // Each pass keeps some steps from the one before and picks the rest again.
             auto const last = std::min(pass, MaximumMelodyPasses);
 
-            for (uint64_t on = 1; on <= last; ++on)
+            thread_local std::array<MelodyRun, MelodyRunsKept> t_runs{};
+            thread_local size_t t_nextRun{ 0 };
+
+            auto const print = GeneratorFingerprint(generator, seed, steps);
+            auto run = std::find_if(t_runs.begin(), t_runs.end(), [print](MelodyRun const& candidate) { return !candidate.State.empty() && candidate.Print == print; });
+            uint64_t first{ 1 };
+
+            if (run == t_runs.end())
+            {
+                run = t_runs.begin() + static_cast<ptrdiff_t>(t_nextRun);
+                t_nextRun = (t_nextRun + 1) % MelodyRunsKept;
+            }
+            else if (run->Pass <= last && run->State.size() == current.size())
+            {
+                current = run->State;
+                first = run->Pass + 1;
+            }
+
+            for (uint64_t on = first; on <= last; ++on)
             {
                 for (int64_t step = 0; step < steps; ++step)
                 {
@@ -106,6 +138,11 @@ namespace midisequencer
                 }
             }
 
+            // Copied first, so a failed copy leaves the run as it was.
+            auto kept = current;
+            run->State.swap(kept);
+            run->Pass = last;
+            run->Print = print;
             return current;
         }
 
@@ -215,10 +252,12 @@ namespace midisequencer
     _Use_decl_annotations_
     void NormalizeGenerator(GeneratorSettings& generator)
     {
-        if (generator.Type > GeneratorType::Arpeggiator)
+        if (generator.Type > GeneratorType::ChangeRinging)
         {
             generator.Type = GeneratorType::Euclidean;
         }
+
+        NormalizeSectionTwentyEight(generator);
 
         if (generator.Scale > ScaleKind::Chromatic)
         {
@@ -296,7 +335,8 @@ namespace midisequencer
         int64_t fromTick,
         int64_t toTick,
         bool applyChance,
-        std::function<void(Note const&)> const& add)
+        std::function<void(Note const&)> const& add,
+        ListenContext const* listen)
     {
         if (!clip.Generator.has_value())
         {
@@ -319,11 +359,11 @@ namespace midisequencer
         auto const lastStep = std::min<int64_t>(steps - 1, (windowEnd - 1 - passStart) / stepTicks);
         auto const length = std::max<int64_t>(1, stepTicks * generator.NoteLength / 100);
 
-        auto const emit = [&](int64_t step, uint8_t number, uint16_t velocity, uint8_t chance)
+        auto const emit = [&](int64_t step, uint8_t number, uint16_t velocity, uint8_t chance, int64_t noteLength = 0)
         {
             Note note{};
             note.Tick = passStart + step * stepTicks;
-            note.Length = length;
+            note.Length = noteLength > 0 ? noteLength : length;
             note.Channel = static_cast<uint8_t>(generator.Channel & 0x0F);
             note.Number = static_cast<uint8_t>(number & 0x7F);
             note.Velocity = std::max<uint16_t>(1, velocity);
@@ -381,13 +421,26 @@ namespace midisequencer
         {
             auto const state = MelodyPass(generator, clip.Seed, steps, pass);
 
-            for (auto step = firstStep; step <= lastStep; ++step)
+            // The whole pass, so the key and range rules see the line from its start to its end.
+            std::vector<StepNote> line{};
+
+            for (int64_t step = 0; step < steps; ++step)
             {
                 auto const& chosen = state[static_cast<size_t>(step)];
 
                 if (chosen.Plays)
                 {
-                    emit(step, chosen.Note, chosen.Velocity, 100);
+                    line.push_back(StepNote{ step, 1, chosen.Note, chosen.Velocity });
+                }
+            }
+
+            ApplyKeyRules(generator, line);
+
+            for (auto const& note : line)
+            {
+                if (note.Step >= firstStep && note.Step <= lastStep)
+                {
+                    emit(note.Step, note.Number, note.Velocity, 100);
                 }
             }
 
@@ -395,7 +448,43 @@ namespace midisequencer
         }
 
         case GeneratorType::Arpeggiator:
+            break;
+
         default:
+            if (IsSectionTwentyEightGenerator(generator.Type))
+            {
+                // One that keeps listening plays this pass from what it heard during the pass
+                // before. Learn and change ringing learn it afresh each pass; Life and Evolve carry
+                // it from pass to pass, so they take what was heard before every pass. Before it
+                // has heard anything, it plays from what it learned last.
+                GeneratorSettings heard{};
+                auto const* settings = &generator;
+                PassHearing hearing{};
+
+                if (listen != nullptr && ListensEachPass(generator))
+                {
+                    if (CarriesHearing(generator.Type))
+                    {
+                        hearing = MakePassHearing(*listen, clip, passStart, pass);
+                    }
+                    else if (auto learned = HeardBefore(*listen, clip, passStart, pass).Learned; learned.size() >= 2)
+                    {
+                        heard = generator;
+                        heard.Learned = std::move(learned);
+                        settings = &heard;
+                    }
+                }
+
+                for (auto const& note : GeneratedPass(*settings, clip.Seed, steps, pass, hearing.Before ? &hearing : nullptr))
+                {
+                    if (note.Step >= firstStep && note.Step <= lastStep)
+                    {
+                        // A held note lasts its steps, less what the note length takes off the last.
+                        emit(note.Step, note.Number, note.Velocity, 100, (note.Steps - 1) * stepTicks + length);
+                    }
+                }
+            }
+
             break;
         }
     }
@@ -420,7 +509,7 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    Clip MakeNotesFromGenerator(Clip const& generator, uint32_t passes, int64_t maximumTicks)
+    Clip MakeNotesFromGenerator(Clip const& generator, uint32_t passes, int64_t maximumTicks, ListenContext const* listen)
     {
         Clip notes{};
         notes.Id = NewId(L"c");
@@ -445,7 +534,7 @@ namespace midisequencer
 
         uint64_t count{ std::max<uint32_t>(1, passes) };
 
-        auto const changes = settings.ChangesEachPass && (settings.Type == GeneratorType::ChanceMelody ||
+        auto const changes = settings.ChangesEachPass && (settings.Type == GeneratorType::ChanceMelody || IsSectionTwentyEightGenerator(settings.Type) ||
             std::any_of(settings.Rings.begin(), settings.Rings.end(), [](EuclidRing const& ring) { return ring.Chance < 100; }));
 
         if (!changes)
@@ -475,7 +564,7 @@ namespace midisequencer
         {
             auto const start = static_cast<int64_t>(pass) * passLength;
             ForEachGeneratorNote(generator, start, start + passLength, pass, start, start + passLength, true,
-                [&notes](Note const& note) { notes.Notes.push_back(note); });
+                [&notes](Note const& note) { notes.Notes.push_back(note); }, listen);
         }
 
         for (auto const& lane : generator.Lanes)

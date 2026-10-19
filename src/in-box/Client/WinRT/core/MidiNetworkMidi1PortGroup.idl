@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiGroup.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // A group on a Network MIDI 2.0 connection which gets MIDI 1.0 ports when the device at the
+    // other end doesn't describe its own groups with function blocks, and what those ports are
+    // called. A device which does describe itself gets ports for its own groups instead, and a name
+    // given here still applies to a port it has on the same group.
+    [contract(MidiTransportsNetworkApiContract, 2)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkMidi1PortGroup", UUID_IMidiNetworkMidi1PortGroup)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkMidi1PortGroupFactory", UUID_IMidiNetworkMidi1PortGroupFactory)]
+    runtimeclass MidiNetworkMidi1PortGroup
+    {
+        MidiNetworkMidi1PortGroup();
+        MidiNetworkMidi1PortGroup(Windows.Devices.Midi2.MidiGroup group, String name);
+        MidiNetworkMidi1PortGroup(Windows.Devices.Midi2.MidiGroup group, String name, Boolean hasSourcePort, Boolean hasDestinationPort);
+
+        // The first group by default. Only the group's index is kept, so changing the MidiGroup
+        // object afterwards changes nothing here.
+        [noexcept] Windows.Devices.Midi2.MidiGroup Group;
+
+        // What MIDI 1.0 apps call this group's ports. Empty means Windows names them after the
+        // endpoint, with the group number. Trimmed, and cut to 31 characters, which is the longest
+        // port name a MIDI 1.0 app can show.
+        [noexcept] String Name;
+
+        // A MIDI 1.0 source port, which apps open as a MIDI input to receive what the device sends.
+        // True by default.
+        [noexcept] Boolean HasSourcePort;
+
+        // A MIDI 1.0 destination port, which apps open as a MIDI output to send to the device. True
+        // by default.
+        [noexcept] Boolean HasDestinationPort;
+    }
+}

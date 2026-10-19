@@ -45,6 +45,10 @@ public:
     // configuration did not supply it. Never empty.
     std::wstring GetEffectiveProductInstanceId();
 
+    // The name this PC gives a remote host when a connection does not have one of its own. Never
+    // empty.
+    std::wstring GetEffectiveLocalEndpointName();
+
 
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> GetEndpointManager();
 

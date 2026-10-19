@@ -336,6 +336,10 @@ namespace winrt::midipatchbay::implementation
         void BuildControllerStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
         void FillControllerStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& host) noexcept;
 
+        // ---- the message converter, in MainWindowConverterSteps.cpp ----
+        void BuildConverterStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& body) noexcept;
+        void FillConverterStepSettings(_In_ ::midipatchbay::PatchBlock const& block, _In_ controls::StackPanel const& host) noexcept;
+
         // Learn: the next control pressed or moved on any controller becomes the step's.
         void StartControllerLearn(_In_ std::wstring const& blockId, _In_ bool forButton) noexcept;
         void StopControllerLearn() noexcept;

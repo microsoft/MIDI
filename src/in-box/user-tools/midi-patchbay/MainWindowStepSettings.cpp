@@ -154,6 +154,7 @@ namespace winrt::midipatchbay::implementation
         case patchbay::BlockKind::PutValue:
         case patchbay::BlockKind::ControllerButton:
         case patchbay::BlockKind::ControllerAxis:
+        case patchbay::BlockKind::MessageConverter:
             return true;
 
         default:
@@ -992,6 +993,10 @@ namespace winrt::midipatchbay::implementation
             case patchbay::BlockKind::ControllerButton:
             case patchbay::BlockKind::ControllerAxis:
                 BuildControllerStepSettings(block, body);
+                break;
+
+            case patchbay::BlockKind::MessageConverter:
+                BuildConverterStepSettings(block, body);
                 break;
 
             default:

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "CordPath.h"
 #include "EndpointCatalog.h"
 #include "PatchGraph.h"
 #include "PatchModel.h"
@@ -302,7 +303,22 @@ namespace midipatchbay
 
         void MeasurePorts(_Inout_ NodeVisual& node) noexcept;
 
+        // Defined in PatchCanvasCords.cpp, with the rest of how the lines are planned and drawn.
         void RedrawConnections() noexcept;
+
+        // Where every endpoint and step sits, which the lines go around, and the id of each.
+        std::vector<CordRect> NodeBounds(_Out_ std::vector<std::wstring>& nodeIds) const;
+
+        // The group label a connection's line shows, empty for none.
+        winrt::hstring PillTextFor(_In_ PatchConnection const& connection) const;
+
+        // The line being drawn: the usual curve to the pointer, and around things once it lands
+        // on a connection point.
+        CordPath PlanDragLine(_In_ foundation::Point const& end, _In_ std::optional<PortKey> const& target) const;
+
+        static media::PathGeometry MakeCordGeometry(_In_ CordPath const& path);
+
+        static double HeightOf(_In_ NodeVisual const& node) noexcept;
 
         void UpdateExtent() noexcept;
 
@@ -431,8 +447,10 @@ namespace midipatchbay
         bool m_suppressNextPortClick{ false };
         PortKey m_dragSourcePort{};
 
-        // Where the line being dragged is pinned, and which side the drop has to land on.
+        // Where the line being dragged is pinned, which node that is, and which side the drop has
+        // to land on.
         foundation::Point m_dragAnchor{};
+        std::wstring m_dragAnchorNodeId{};
         bool m_dragWantsOutput{ false };
 
         bool m_retargeting{ false };

@@ -285,7 +285,7 @@
                                Maximum="400"
                                SmallChange="1"
                                LargeChange="10"
-                               SpinButtonPlacementMode="Compact"
+                               SpinButtonPlacementMode="Hidden"
                                ValueChanged="OnArpBpmChanged" />
                     <ComboBox x:Name="ArpRateComboBox"
                               x:Uid="ArpRateComboBox"
@@ -728,7 +728,7 @@
                                        Minimum="-2"
                                        Maximum="8"
                                        SmallChange="1"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        ValueChanged="OnBaseOctaveChanged" />
                             <NumberBox x:Name="OctaveCountBox"
                                        x:Uid="OctaveCountBox"
@@ -738,7 +738,7 @@
                                        Minimum="1"
                                        Maximum="10"
                                        SmallChange="1"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        ValueChanged="OnOctaveCountChanged" />
                             <NumberBox x:Name="TransposeBox"
                                        x:Uid="TransposeBox"
@@ -748,7 +748,7 @@
                                        Minimum="-24"
                                        Maximum="24"
                                        SmallChange="1"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        ValueChanged="OnTransposeChanged" />
                         </Grid>
 
@@ -761,7 +761,7 @@
                                        Maximum="400"
                                        SmallChange="5"
                                        LargeChange="10"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        ValueChanged="OnMinimumKeyWidthChanged" />
                             <TextBlock x:Uid="MinimumKeyWidthHint"
                                        Text="In pixels. When the window is too narrow to fit every key at this width, the keyboard scrolls instead of shrinking."
@@ -855,7 +855,7 @@
                                        Minimum="1"
                                        Maximum="127"
                                        SmallChange="1"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        ValueChanged="OnVelocityMinimumChanged" />
                             <NumberBox x:Name="VelocityMaximumBox"
                                        x:Uid="VelocityMaximumBox"
@@ -865,7 +865,7 @@
                                        Minimum="1"
                                        Maximum="127"
                                        SmallChange="1"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        ValueChanged="OnVelocityMaximumChanged" />
                         </Grid>
 
@@ -876,7 +876,7 @@
                                    Minimum="1"
                                    Maximum="127"
                                    SmallChange="1"
-                                   SpinButtonPlacementMode="Compact"
+                                   SpinButtonPlacementMode="Hidden"
                                    Visibility="Collapsed"
                                    ValueChanged="OnFixedVelocityChanged" />
 
@@ -899,7 +899,7 @@
                                    Minimum="0"
                                    Maximum="127"
                                    SmallChange="1"
-                                   SpinButtonPlacementMode="Compact"
+                                   SpinButtonPlacementMode="Hidden"
                                    Visibility="Collapsed"
                                    ValueChanged="OnPerNoteControllerChanged" />
 

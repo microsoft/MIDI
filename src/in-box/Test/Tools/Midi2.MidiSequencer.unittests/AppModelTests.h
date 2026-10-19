@@ -39,6 +39,13 @@ public:
     TEST_METHOD(PinnedRowsGoToTheTop);
     TEST_METHOD(AClosedFolderHidesItsTracks);
     TEST_METHOD(RowsAreFoundByPosition);
+    TEST_METHOD(RowsUseTheirOwnHeights);
+    TEST_METHOD(RowHeightsSurviveSaving);
+
+    TEST_METHOD(DraggedTracksGoIntoFolders);
+    TEST_METHOD(DraggedTracksKeepTheirOrder);
+    TEST_METHOD(ADraggedFolderCantGoInsideItself);
+    TEST_METHOD(DraggingTracksWhereTheyAreChangesNothing);
 
     TEST_METHOD(TheSampleIsWholeAndSurvivesSaving);
 };

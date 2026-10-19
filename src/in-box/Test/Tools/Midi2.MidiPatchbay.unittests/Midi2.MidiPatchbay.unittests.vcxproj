@@ -103,9 +103,11 @@
     <ClInclude Include="CapabilityInquiryTests.h" />
     <ClInclude Include="LogicStepTests.h" />
     <ClInclude Include="ControllerStepTests.h" />
+    <ClInclude Include="MessageConverterTests.h" />
     <ClInclude Include="HidControllerTests.h" />
     <ClInclude Include="PatchFolderMoveTests.h" />
     <ClInclude Include="SendQueueTests.h" />
+    <ClInclude Include="CordPathTests.h" />
     <!-- shared by source with midipatchbay, so the patch model is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageFilter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageTransform.h" />
@@ -116,6 +118,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\RouteGraph.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\LogicSteps.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageConverter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\HidControllers.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchTrace.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.h" />
@@ -123,6 +126,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\TextMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SendQueue.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\CordPath.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
@@ -143,9 +147,11 @@
     <ClCompile Include="CapabilityInquiryTests.cpp" />
     <ClCompile Include="LogicStepTests.cpp" />
     <ClCompile Include="ControllerStepTests.cpp" />
+    <ClCompile Include="MessageConverterTests.cpp" />
     <ClCompile Include="HidControllerTests.cpp" />
     <ClCompile Include="PatchFolderMoveTests.cpp" />
     <ClCompile Include="SendQueueTests.cpp" />
+    <ClCompile Include="CordPathTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageFilter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageTransform.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ProcessingBlock.cpp" />
@@ -156,11 +162,13 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\StatefulBlocks.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\LogicSteps.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageConverter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\HidControllers.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchTrace.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\SendQueue.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\CordPath.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />

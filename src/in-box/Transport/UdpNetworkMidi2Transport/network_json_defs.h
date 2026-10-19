@@ -59,6 +59,30 @@
 #define MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM                     1
 #define MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM                     16
 
+// The groups which get MIDI 1.0 ports when the device declares no function blocks, and what those
+// ports are called. Used instead of fallbackMidi1PortCount when the list is not empty. An array of
+// objects with the keys below, on client entries, host entries and remoteClientSettings items. An
+// update replaces the whole list, and an empty one goes back to the count.
+//
+// The transport publishes a group terminal block for each group, and writes each name as that
+// group's custom MIDI 1.0 port name, which the service prefers to either naming style. A device
+// which does describe itself still gets ports for its own groups instead, and a name here still
+// applies to a port it has on the same group.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY            L"fallbackMidi1PortGroups"  // array of objects with the keys below
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_INDEX_KEY                      L"groupIndex"               // number 0-15, required
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_NAME_KEY                       L"name"                     // string, empty for the automatic name
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_HAS_SOURCE_PORT_KEY            L"hasSourcePort"            // boolean, default true: a MIDI 1.0 input
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_HAS_DESTINATION_PORT_KEY       L"hasDestinationPort"       // boolean, default true: a MIDI 1.0 output
+
+// The longest name a MIDI 1.0 app can show for a port (MAXPNAMELEN, less the terminator). A longer
+// name is cut to this.
+#define MIDI_NETWORK_MIDI1_PORT_GROUP_NAME_MAX_LENGTH                           31
+#define MIDI_NETWORK_MIDI1_PORT_GROUP_COUNT                                     16
+
+// Declared in query-capabilities, so an app can tell a transport which reads the list above from
+// an older one which only reads fallbackMidi1PortCount.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_FALLBACK_MIDI1_PORT_GROUPS     L"fallbackMidi1PortGroups"
+
 // How fast this PC sends to the remote, as a multiple of MIDI 1.0 wire speed (31,250 bits a
 // second). 0 is no limit, and so is anything above 32. A device which passes network MIDI on to
 // a 5-pin DIN cable can only take it that fast, and the protocol gives it no way to say so.
@@ -100,10 +124,15 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY                  L"umpEndpointName"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY   L"productInstanceId"
 
-// Remote clients of a host with their own sendSpeedLimit, reduceSendSpeedAutomatically and
-// skipInBetweenValuesToCatchUp, used for them instead of the host's. An array of objects with the
-// identity keys above. Always the whole list: an update replaces it rather than adding to it.
+// Remote clients of a host with their own sendSpeedLimit, reduceSendSpeedAutomatically,
+// skipInBetweenValuesToCatchUp and fallbackMidi1PortGroups, used for them instead of the host's.
+// An array of objects with the identity keys above. Always the whole list: an update replaces it
+// rather than adding to it.
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY                L"remoteClientSettings"
+
+// On a remoteClientSettings item. The item's speed is ignored and the host's is used, because the
+// item is only there for the remote client's fallbackMidi1PortGroups.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY                   L"useHostSendSpeed"     // boolean, default false
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY                   L"authentication"        // password, user, none
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE            L"none"

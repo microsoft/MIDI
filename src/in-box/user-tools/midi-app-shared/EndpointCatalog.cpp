@@ -126,14 +126,18 @@ namespace midiapp
         }
 
         // Block directions are the device's point of view: a block output is a source for us.
+        // Function blocks replace group terminal blocks when a device declares any, so the two
+        // are never combined. Combining them would show groups the device no longer uses.
         void ReadGroupNames(
             _In_ mdm2enum::MidiEndpointDeviceInformation const& device,
             _Inout_ LiveEndpoint& endpoint) noexcept
         {
             try
             {
-                // Active function blocks, then inactive ones, then group terminal blocks for the rest.
-                if (auto const functionBlocks = device.GetDeclaredFunctionBlocks())
+                // Active function blocks, then inactive ones
+                auto const functionBlocks = device.GetDeclaredFunctionBlocks();
+
+                if (functionBlocks != nullptr && functionBlocks.Size() > 0)
                 {
                     for (auto const active : { true, false })
                     {
@@ -161,6 +165,8 @@ namespace midiapp
                             }
                         }
                     }
+
+                    return;
                 }
 
                 if (auto const terminalBlocks = device.GetGroupTerminalBlocks())

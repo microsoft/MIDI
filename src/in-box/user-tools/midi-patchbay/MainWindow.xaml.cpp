@@ -15,6 +15,7 @@
 #include "BackgroundWork.h"
 #include "PatchLayout.h"
 #include "PatchSerializer.h"
+#include "PopupBackdrop.h"
 #include "RoundedShape.h"
 #include "StringResources.h"
 #include "TextMatch.h"
@@ -451,6 +452,15 @@ namespace winrt::midipatchbay::implementation
 
             m_chrome.Initialize(elements, patchbay::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists, other pop-ups, and the zoom flyout take on the context menus' tinted look, so
+            // they match the window.
+            midiapp::UseMenuBackdropForLists();
+            midiapp::UseMenuBackdrop(ZoomFlyout());
+
+            // That makes the zoom flyout a window of its own, which isn't kept inside this one, so
+            // from its button in the canvas's bottom right corner it opens up and to the left.
+            ZoomFlyout().Placement(controls::Primitives::FlyoutPlacementMode::TopEdgeAlignedRight);
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
             if (auto const icon = midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32))

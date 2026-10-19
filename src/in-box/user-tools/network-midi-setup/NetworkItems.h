@@ -14,8 +14,11 @@
 #include "RemoteClientSpeedItem.g.h"
 #include "LocalHostItem.g.h"
 #include "RtpRemoteHostItem.g.h"
+#include "Midi1PortGroupItem.g.h"
+#include "PageLayout.g.h"
 
 #include "AppSettings.h"
+#include "Midi1PortLayout.h"
 
 #include <chrono>
 
@@ -255,6 +258,102 @@ namespace winrt::midinetworksetup::implementation
         std::deque<std::pair<Clock::time_point, double>> m_samples{};
     };
 
+    struct Midi1PortGroupItem : Midi1PortGroupItemT<Midi1PortGroupItem>
+    {
+        Midi1PortGroupItem() = default;
+
+        uint8_t GroupIndex() const noexcept { return m_groupIndex; }
+        winrt::hstring GroupText() const noexcept { return m_groupText; }
+
+        winrt::hstring Name() const noexcept { return m_name; }
+        void Name(winrt::hstring const& value) noexcept { UpdateField(m_name, value, L"Name"); }
+
+        bool HasInput() const noexcept { return m_hasInput; }
+        void HasInput(bool const value) noexcept { UpdateField(m_hasInput, value, L"HasInput"); }
+
+        bool HasOutput() const noexcept { return m_hasOutput; }
+        void HasOutput(bool const value) noexcept { UpdateField(m_hasOutput, value, L"HasOutput"); }
+
+        winrt::Microsoft::UI::Xaml::Visibility NameVisibility() const noexcept
+        {
+            return m_offerName ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        winrt::hstring NameAutomationName() const noexcept { return m_nameAutomationName; }
+        winrt::hstring InputAutomationName() const noexcept { return m_inputAutomationName; }
+        winrt::hstring OutputAutomationName() const noexcept { return m_outputAutomationName; }
+
+        void InternalInitialize(
+            _In_ Midi1PortGroupChoice const& choice,
+            _In_ bool const offerName,
+            _In_ winrt::hstring const& groupText,
+            _In_ winrt::hstring const& nameAutomationName,
+            _In_ winrt::hstring const& inputAutomationName,
+            _In_ winrt::hstring const& outputAutomationName) noexcept
+        {
+            m_groupIndex = choice.GroupIndex;
+            m_name = winrt::hstring{ choice.Name };
+            m_hasInput = choice.HasInput;
+            m_hasOutput = choice.HasOutput;
+            m_offerName = offerName;
+            m_groupText = groupText;
+            m_nameAutomationName = nameAutomationName;
+            m_inputAutomationName = inputAutomationName;
+            m_outputAutomationName = outputAutomationName;
+        }
+
+    private:
+        uint8_t m_groupIndex{ 0 };
+        winrt::hstring m_groupText{};
+        winrt::hstring m_name{};
+        bool m_hasInput{ false };
+        bool m_hasOutput{ false };
+        bool m_offerName{ true };
+        winrt::hstring m_nameAutomationName{};
+        winrt::hstring m_inputAutomationName{};
+        winrt::hstring m_outputAutomationName{};
+
+        MIDI_NETSETUP_OBSERVABLE_ITEM()
+    };
+
+    struct PageLayout : PageLayoutT<PageLayout>
+    {
+        PageLayout() = default;
+
+        static midinetworksetup::PageLayout Current();
+
+        bool IsNarrow() const noexcept { return m_isNarrow; }
+
+        winrt::Microsoft::UI::Xaml::Visibility WideVisibility() const noexcept
+        {
+            return m_isNarrow ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        // Not in the IDL: only the window sets it
+        void InternalSetNarrow(_In_ bool const isNarrow) noexcept
+        {
+            if (m_isNarrow == isNarrow)
+            {
+                return;
+            }
+
+            m_isNarrow = isNarrow;
+
+            RaisePropertyChanged(L"IsNarrow");
+            RaisePropertyChanged(L"WideVisibility");
+        }
+
+    private:
+        bool m_isNarrow{ false };
+
+        MIDI_NETSETUP_OBSERVABLE_ITEM()
+    };
+
+
     struct PendingInvitationItem : PendingInvitationItemT<PendingInvitationItem>
     {
         PendingInvitationItem() = default;
@@ -430,6 +529,25 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        // Only filled in for a saved entry which creates MIDI 1.0 ports, on a transport which can
+        // name them
+        winrt::hstring Midi1PortsText() const noexcept { return m_midi1PortsText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility Midi1PortsVisibility() const noexcept
+        {
+            return m_midi1PortsText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        void InternalUpdateMidi1Ports(_In_ winrt::hstring const& midi1PortsText) noexcept
+        {
+            if (UpdateField(m_midi1PortsText, midi1PortsText, L"Midi1PortsText"))
+            {
+                RaisePropertyChanged(L"Midi1PortsVisibility");
+            }
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
         {
             return m_latency.HasSamples() ?
@@ -600,6 +718,8 @@ namespace winrt::midinetworksetup::implementation
         bool m_reduceSendSpeedAutomatically{ false };
         bool m_skipInBetweenValuesToCatchUp{ true };
 
+        winrt::hstring m_midi1PortsText{};
+
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
 
@@ -633,6 +753,60 @@ namespace winrt::midinetworksetup::implementation
             return m_canChangeSendSpeed ?
                 winrt::Microsoft::UI::Xaml::Visibility::Visible :
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        // Whether this device has MIDI 1.0 ports of its own on the host, and what they are. Read
+        // to fill in the ports dialog.
+        bool HasOwnMidi1Ports() const noexcept { return m_hasOwnMidi1Ports; }
+        Midi1PortLayout OwnMidi1Ports() const noexcept { return m_ownMidi1Ports; }
+
+        winrt::hstring Midi1PortsText() const noexcept { return m_midi1PortsText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility Midi1PortsVisibility() const noexcept
+        {
+            return m_midi1PortsText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        // like the speed, keyed on the device's name and product instance id together
+        winrt::Microsoft::UI::Xaml::Visibility ChangeMidi1PortsVisibility() const noexcept
+        {
+            return (m_canChangeMidi1Ports && !m_midi1PortsText.empty()) ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        // An empty text hides the line, for a host which doesn't create MIDI 1.0 ports or a
+        // transport which can't name them
+        void InternalUpdateMidi1Ports(
+            _In_ bool const hasOwnMidi1Ports,
+            _In_ Midi1PortLayout const& ownMidi1Ports,
+            _In_ bool const canChangeMidi1Ports,
+            _In_ winrt::hstring const& midi1PortsText) noexcept
+        {
+            m_hasOwnMidi1Ports = hasOwnMidi1Ports;
+
+            try
+            {
+                m_ownMidi1Ports = ownMidi1Ports;
+            }
+            catch (...)
+            {
+            }
+
+            auto const textChanged = UpdateField(m_midi1PortsText, midi1PortsText, L"Midi1PortsText");
+            auto const canChangeChanged = UpdateField(m_canChangeMidi1Ports, canChangeMidi1Ports, L"CanChangeMidi1Ports");
+
+            if (textChanged)
+            {
+                RaisePropertyChanged(L"Midi1PortsVisibility");
+            }
+
+            if (textChanged || canChangeChanged)
+            {
+                RaisePropertyChanged(L"ChangeMidi1PortsVisibility");
+            }
         }
 
         winrt::hstring DisplayName() const noexcept { return m_displayName; }
@@ -784,6 +958,11 @@ namespace winrt::midinetworksetup::implementation
         bool m_usesOwnSendSpeed{ false };
         bool m_canChangeSendSpeed{ false };
 
+        bool m_hasOwnMidi1Ports{ false };
+        Midi1PortLayout m_ownMidi1Ports{};
+        bool m_canChangeMidi1Ports{ false };
+        winrt::hstring m_midi1PortsText{};
+
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
 
@@ -849,6 +1028,28 @@ namespace winrt::midinetworksetup::implementation
         // the name the setting is keyed on, which may be empty where DisplayName is not
         winrt::hstring RemoteName() const noexcept { return m_remoteName; }
 
+        // Network MIDI 2.0 only. An entry can be there only for its MIDI 1.0 ports, keeping the
+        // host's speed.
+        bool UsesHostSendSpeed() const noexcept { return m_usesHostSendSpeed; }
+        bool HasOwnMidi1Ports() const noexcept { return m_hasOwnMidi1Ports; }
+        Midi1PortLayout OwnMidi1Ports() const noexcept { return m_ownMidi1Ports; }
+
+        winrt::hstring Midi1PortsText() const noexcept { return m_midi1PortsText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility Midi1PortsVisibility() const noexcept
+        {
+            return m_midi1PortsText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility UseHostSpeedVisibility() const noexcept
+        {
+            return m_usesHostSendSpeed ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         void InternalInitialize(
             _In_ winrt::hstring const& matchKey,
             _In_ winrt::hstring const& hostId,
@@ -873,6 +1074,27 @@ namespace winrt::midinetworksetup::implementation
             m_isRtpMidi = isRtpMidi;
         }
 
+        // Called before the row is shown, so there is nothing bound to it yet to raise changes
+        // for. An empty text hides the ports line.
+        void InternalInitializeMidi1Ports(
+            _In_ bool const usesHostSendSpeed,
+            _In_ bool const hasOwnMidi1Ports,
+            _In_ Midi1PortLayout const& ownMidi1Ports,
+            _In_ winrt::hstring const& midi1PortsText) noexcept
+        {
+            m_usesHostSendSpeed = usesHostSendSpeed;
+            m_hasOwnMidi1Ports = hasOwnMidi1Ports;
+            m_midi1PortsText = midi1PortsText;
+
+            try
+            {
+                m_ownMidi1Ports = ownMidi1Ports;
+            }
+            catch (...)
+            {
+            }
+        }
+
     private:
         winrt::hstring m_matchKey{};
         winrt::hstring m_hostId{};
@@ -884,6 +1106,11 @@ namespace winrt::midinetworksetup::implementation
         bool m_reduceSendSpeedAutomatically{ false };
         bool m_skipInBetweenValuesToCatchUp{ true };
         bool m_isRtpMidi{ false };
+
+        bool m_usesHostSendSpeed{ false };
+        bool m_hasOwnMidi1Ports{ false };
+        Midi1PortLayout m_ownMidi1Ports{};
+        winrt::hstring m_midi1PortsText{};
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -1031,6 +1258,39 @@ namespace winrt::midinetworksetup::implementation
             UpdateField(m_sendSpeedText, sendSpeedText, L"SendSpeedText");
         }
 
+        // Network MIDI 2.0 only: what each device gets unless it has ports of its own. Read to
+        // fill in the ports dialog.
+        Midi1PortLayout Midi1Ports() const noexcept { return m_midi1Ports; }
+
+        winrt::hstring Midi1PortsText() const noexcept { return m_midi1PortsText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility Midi1PortsVisibility() const noexcept
+        {
+            return m_midi1PortsText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        // An empty text hides the line, for a host which doesn't create MIDI 1.0 ports or a
+        // transport which can't name them
+        void InternalUpdateMidi1Ports(
+            _In_ Midi1PortLayout const& midi1Ports,
+            _In_ winrt::hstring const& midi1PortsText) noexcept
+        {
+            try
+            {
+                m_midi1Ports = midi1Ports;
+            }
+            catch (...)
+            {
+            }
+
+            if (UpdateField(m_midi1PortsText, midi1PortsText, L"Midi1PortsText"))
+            {
+                RaisePropertyChanged(L"Midi1PortsVisibility");
+            }
+        }
+
         // the empty state placeholders are computed from the collections, so they only change
         // when something is added or removed
         void InternalRaiseEmptyStateChanged() noexcept
@@ -1066,6 +1326,9 @@ namespace winrt::midinetworksetup::implementation
         uint32_t m_sendSpeedLimit{ 0 };
         bool m_reduceSendSpeedAutomatically{ false };
         bool m_skipInBetweenValuesToCatchUp{ true };
+
+        Midi1PortLayout m_midi1Ports{};
+        winrt::hstring m_midi1PortsText{};
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> m_connections{
             winrt::single_threaded_observable_vector<midinetworksetup::HostConnectionItem>() };
@@ -1410,4 +1673,6 @@ namespace winrt::midinetworksetup::factory_implementation
     struct RemoteClientSpeedItem : RemoteClientSpeedItemT<RemoteClientSpeedItem, implementation::RemoteClientSpeedItem> {};
     struct LocalHostItem : LocalHostItemT<LocalHostItem, implementation::LocalHostItem> {};
     struct RtpRemoteHostItem : RtpRemoteHostItemT<RtpRemoteHostItem, implementation::RtpRemoteHostItem> {};
+    struct Midi1PortGroupItem : Midi1PortGroupItemT<Midi1PortGroupItem, implementation::Midi1PortGroupItem> {};
+    struct PageLayout : PageLayoutT<PageLayout, implementation::PageLayout> {};
 }

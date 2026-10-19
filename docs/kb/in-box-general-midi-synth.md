@@ -46,6 +46,7 @@ Two things follow from that, and both are deliberate:
 
 - **An app can connect to the synthesizer without taking over the audio device.** Discovery, identity, and MIDI Capability Inquiry are all answered with nothing open.
 - **The first note after a long rest opens the audio device**, which takes a few milliseconds. Your settings, programs, and channel state are kept across the rest, so nothing resets.
+- **If the audio device can't be opened**, for example because another app has it in exclusive mode, notes are dropped rather than saved up, so they don't all sound at once when the device comes back. Everything else, such as program changes, controllers, and MIDI Capability Inquiry, still gets through. The synthesizer tries the device again every second while notes keep arriving, and stops trying a few seconds after they stop.
 
 ## Settings
 
@@ -54,12 +55,22 @@ All of these are in the MIDI Settings app under global settings, and in MIDI Con
 | Setting | What it does |
 | --- | --- |
 | **Synthesizer mode** | **Modern** plays the sound set without the limits of the older Windows synthesizer. **Compatible** reproduces those limits on purpose: 32 voices, a 22050 Hz render rate, and no effects. Pick Compatible when you're comparing against how a file sounded on an older PC. This is the "retro" setting. |
-| **Audio output** | **Shared** is the normal setting and mixes with everything else. **Shared, low latency** asks the audio engine for smaller buffers, which tightens timing at the cost of some CPU. Not all audio devices support this low-latency Windows API. |
+| **Audio output** | **Shared** is the normal setting and mixes with everything else. **Shared, low latency** asks the audio engine for smaller buffers, which tightens timing at the cost of some CPU. Not all audio devices support this low-latency Windows API. **Exclusive** takes the audio device for the synthesizer alone, for the shortest delay. See [Exclusive mode](#exclusive-mode) below. |
 | **Bank select** | Which convention to read bank select messages in: follow the sender, Roland GS, Yamaha XG, or General MIDI 2. |
 | **Volume trim** | A volume control for the synthesizer alone, from -60 dB to +12 dB. The service runs in a place where Windows can't give it a slider in the Volume Mixer, so this is how you balance it against your other audio. |
 | **Reverb and chorus** | Turns the built-in effects on or off. They're always off in Compatible mode, because the synthesizer being reproduced didn't have them. |
 
-Changing the synthesizer mode, the bank select mode, or the effects setting rebuilds the sound engine, which clears every channel's program and controller state. Don't change them in the middle of a song. Volume trim is safe to change while music is playing.
+Changing the synthesizer mode, the audio output, or the reverb and chorus setting restarts the audio, which stops any notes that are sounding. Each channel keeps its program, controllers, and tuning. When **Bank select** is set to follow the sender, the synthesizer also keeps reading bank select the way the sender's last System On message chose. A new **Bank select** setting takes effect right away without a restart, but it can change the instrument each channel plays, so don't change it in the middle of a song. Volume trim is safe to change while music is playing.
+
+### Exclusive mode
+
+In shared mode, the synthesizer's sound goes through the Windows audio mixer along with every other app's sound. That mixing takes time, so there's a delay between a note arriving and you hearing it. Exclusive mode skips the mixer. The synthesizer talks to the audio device directly, with much smaller buffers, so you hear each note sooner. That matters most when you play the synthesizer live from a keyboard.
+
+The cost is that the audio device belongs to the synthesizer while it plays. Other apps can't play sound through that device until the synthesizer lets it go, a few seconds after the last note stops sounding. If you listen to music or join calls on the same device, use one of the shared settings.
+
+Sometimes the synthesizer can't take the device. Another app may already be using it on its own, or Windows may be set not to allow it. That's the **Allow applications to take exclusive control of this device** box in the device's advanced properties in Sound settings. When that happens, the synthesizer plays in shared mode so you still hear it, and it tries exclusive mode again the next time it opens the device. The setting still reads **Exclusive**.
+
+The synthesizer keeps the sample rate the device is already set to, so nothing that takes its clock from the device is disturbed.
 
 ## Getting the program list
 
@@ -129,7 +140,7 @@ Messages on any group other than the one this endpoint owns are discarded, as ar
 | --- | --- | --- | --- |
 | Note Off | Yes | Yes | |
 | Note On | Yes | Yes | In MIDI 1.0, velocity 0 is a Note Off. In MIDI 2.0 it is not, per the specification |
-| Note On attribute: Pitch 7.9 | — | Yes | The attribute sets the pitch; the note number still chooses the sample and articulation, so a microtonal scale keeps the right sound for the key |
+| Note On attribute: Pitch 7.9 | — | Yes | The attribute sets the exact pitch, from note 0 up to just under note 128. The note number then only names the note for Note Off and the per-note messages, so a sender can reuse note numbers freely, as the specification's note rotation does. On a melodic instrument the pitch picks the sample, so the note sounds the same whatever its number. On a drum kit the note number still picks the drum, and the pitch tunes it |
 | Note On attribute: manufacturer specific, profile specific | — | Ignored | The note still sounds at its nominal pitch |
 | Poly Pressure | No | No | There is no modulation matrix to route it to |
 | Control Change | Yes | Yes | 32-bit resolution in MIDI 2.0. See Control changes below |
@@ -140,7 +151,7 @@ Messages on any group other than the one this endpoint owns are discarded, as ar
 | Registered Per-Note Controller | — | Partial | Controllers 3 (pitch), 7 (volume), and 10 (pan). Others ignored |
 | Assignable Per-Note Controller | — | No | |
 | Per-Note Management | — | Yes | Both flags: detach and reset per-note controllers |
-| Registered Controller (RPN) | — | Partial | Bank 0, controller 0 only. See Registered parameters below |
+| Registered Controller (RPN) | — | Partial | Bank 0, controllers 0, 1, and 2. See Registered parameters below |
 | Assignable Controller (NRPN) | — | No | |
 | Relative Registered Controller | — | No | |
 | Relative Assignable Controller | — | No | |
@@ -156,6 +167,7 @@ Messages on any group other than the one this endpoint owns are discarded, as ar
 | 10 | Pan | Yes |
 | 11 | Expression | Yes |
 | 32 | Bank Select LSB | Yes |
+| 38 | Data Entry LSB | Yes, for the registered parameters below |
 | 64 | Damper (sustain) | Yes |
 | 91 | Reverb Send Level | Yes |
 | 93 | Chorus Send Level | Yes |
@@ -165,7 +177,7 @@ Messages on any group other than the one this endpoint owns are discarded, as ar
 | 121 | Reset All Controllers | Yes |
 | 123 | All Notes Off | Yes |
 
-Everything else is ignored, including CC 2, 4, 5, and 12-13, the LSB pairs at 33-63, the pedals at 65-67, the sound controllers at 70-79, the NRPN selects at 98-99, and the channel mode messages at 122 and 124-127.
+Everything else is ignored, including CC 2, 4, 5, and 12-13, the other LSB pairs at 33-63, the pedals at 65-67, the sound controllers at 70-79, the NRPN selects at 98-99, and the channel mode messages at 122 and 124-127.
 
 **Reset All Controllers follows General MIDI 2 section 3.5.2 and the MIDI-CI Default Control Change Mapping profile.** It resets modulation, expression, the pedals, the parameter number selects, and pitch bend. It deliberately does **not** reset channel volume, pan, bank select, program, or the effect send levels, because both specifications list those as not reset.
 
@@ -178,7 +190,13 @@ Everything else is ignored, including CC 2, 4, 5, and 12-13, the LSB pairs at 33
 | 0:2 | Coarse Tuning | Yes |
 | Anything else | | No |
 
-A MIDI 2.0 Registered Controller message for bank 0, controller 0 is treated as pitch bend sensitivity, taking whole semitones from the top seven bits of the value.
+A MIDI 2.0 Registered Controller message for bank 0, controller 0 is treated as pitch bend sensitivity. It takes semitones from the top seven bits of the value and cents from the next seven, as M2-104-UM describes, and ignores the rest. Over MIDI 1.0, the data entry MSB (CC 6) sets the semitones and the data entry LSB (CC 38) sets the cents.
+
+Controller 1 sets fine tuning from the whole 32-bit value. `0x80000000` is in tune, `0x00000000` is 100 cents flat, and `0xFFFFFFFF` is 100 cents sharp. Controller 2 sets coarse tuning from the top seven bits, in semitones, where 64 is in tune. The specification leaves the other bits undefined, so they're ignored. Over MIDI 1.0, fine tuning takes both data entry bytes as one 14-bit value, so it moves in steps of about 0.012 cents. As the MIDI 1.0 specification says, a data entry MSB on its own sets the LSB back to zero, and an LSB on its own adjusts the value that's already there.
+
+Fine and coarse tuning change notes that are already playing too. They add to a note's Pitch 7.9 attribute rather than replacing it, as the specification says.
+
+**Drum channels ignore modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine and coarse tuning, as General MIDI 2 recommends in sections 3.3, 3.4, and 3.6.** So none of them changes how a drum sounds or how long it rings. A drum channel is any channel that's playing a drum kit, such as channel 10, a channel given drums with the GS Use For Rhythm Part message, or a channel where bank select chose a kit under Yamaha XG or General MIDI 2 addressing. A drum channel doesn't store any of these values when it's sent them, with one exception: lifting the damper pedal always works, so a melodic note the pedal was holding when the channel switched to a kit can't get stuck. A channel that was set up before it switched to a kit keeps those values, because a program change doesn't reset them, but its drums don't use them. They work again if the channel switches back to a melodic program. A melodic note that's still playing when its channel switches to a kit keeps them.
 
 ### System messages
 
@@ -200,8 +218,8 @@ Sent as SysEx7 in UMP message type `0x3`. `dd` is the device ID byte, which is n
 | GM2 System On | `F0 7E dd 09 03 F7` | Yes, resets and selects General MIDI 2 bank addressing |
 | GM System Off | `F0 7E dd 09 02 F7` | Treated as a system reset |
 | Master Volume | `F0 7F dd 04 01 ll mm F7` | Yes |
-| Master Fine Tuning | `F0 7F dd 04 03 ll mm F7` | Yes |
-| Master Coarse Tuning | `F0 7F dd 04 04 ll mm F7` | Yes |
+| Master Fine Tuning | `F0 7F dd 04 03 ll mm F7` | Yes, except on drum channels, as General MIDI 2 recommends |
+| Master Coarse Tuning | `F0 7F dd 04 04 ll mm F7` | Yes, except on drum channels, as General MIDI 2 recommends |
 | Global Parameter Control | `F0 7F dd 04 05 ...` | Partial: reverb (slot 1) and chorus (slot 2), parameters 0 and 1, single-byte widths only |
 | GS Reset | `F0 41 dd 42 12 40 00 7F vv ss F7` | Yes, resets and selects Roland GS bank addressing |
 | GS Use For Rhythm Part | `F0 41 dd 42 12 40 1p 15 vv ss F7` | Yes. `p` is the GS part number, not the channel: part 0 is channel 10, parts 1-9 are channels 1-9 |
@@ -209,7 +227,9 @@ Sent as SysEx7 in UMP message type `0x3`. `dd` is the device ID byte, which is n
 | MIDI Capability Inquiry | `F0 7E dd 0D ...` | Yes, see the MIDI-CI chart below |
 | Anything else | | Ignored |
 
-GS Use For Rhythm Part is the only way a file can put a drum kit on a channel other than 10, and without it eight of the nine kits in the sound set can never be heard alongside the tenth.
+With Roland GS addressing, GS Use For Rhythm Part is the only way a file can put a drum kit on a channel other than 10, and without it eight of the nine kits in the sound set can never be heard alongside the tenth. With Yamaha XG or General MIDI 2 addressing, a bank select can choose a kit on any channel too.
+
+Under General MIDI 2 addressing, it works the other way as well. Bank select MSB 121 with a program change makes any channel melodic, channel 10 included, as General MIDI 2 sections 2.4 and 3.3.1 describe, and MSB 120 makes it a drum channel again. The channel's `ChannelList` entry and its links follow.
 
 ### UMP Stream
 
@@ -288,7 +308,7 @@ Text a person reads, such as the channel titles, the link titles, the controller
 | `DeviceInfo` | — | 3600 seconds | No | No |
 | `ChannelList` | — | No, it reflects what is set right now | Yes | No |
 | `ProgramList` | `melodic` or `drums`, and a resource ID is required | 3600 seconds | No | Yes |
-| `ChCtrlList` | `channel`, and a resource ID is required | 3600 seconds | No | No |
+| `ChCtrlList` | `channel` or `drums`, and a resource ID is required | 3600 seconds | No | No |
 
 `ResourceList` does not list itself, per Common Rules for Property Exchange section 14. Its entries also leave out any setting that's already the default for that resource. For example, `ProgramList` and `ChCtrlList` both need a resource ID, but their own specifications already say so, so the list doesn't repeat it.
 
@@ -298,9 +318,9 @@ Carries the same manufacturer, family, model, and version as the Identity Reply 
 
 #### ChannelList
 
-One entry per MIDI channel, 16 in all. Each entry carries its title, its channel number, the bank MSB, bank LSB, and program currently selected, and the name of the instrument those select. It also carries two links: one to the program list that applies to that channel, `melodic` for a normal channel or `drums` for the rhythm channel, and one to `ChCtrlList`.
+One entry per MIDI channel, 16 in all. Each entry carries its title, its channel number, the bank MSB, bank LSB, and program currently selected, and the name of the instrument that plays. That name follows the bank addressing setting, so it's right for Yamaha XG and General MIDI 2 bank numbers too, and it's the capital tone when the sound set doesn't have the variation a bank asks for, because that's what plays. It also carries two links: one to the program list that applies to that channel, `melodic` for a melodic channel or `drums` for a drum channel, and one to the controller list that applies, `channel` or `drums`.
 
-The title says what the channel plays: "Percussion" for the rhythm channel and "Melodic" for every other channel. The title and the program list link both follow the rhythm channel, so if a file moves drums off channel 10 with the GS message, they move with it.
+The title says what the channel plays: "Percussion" for a drum channel and "Melodic" for every other channel. A drum channel is any channel that's playing a drum kit, so the title and both links follow the drums when a file puts a kit on another channel, with the GS message or with bank select.
 
 This is the one resource that can be subscribed to. When a channel's program or bank changes, every subscriber is sent a `notify`, and answers it with an ordinary Get when it wants the new list.
 
@@ -317,7 +337,7 @@ Both lists support pagination through `offset` and `limit` in the request header
 
 #### ChCtrlList
 
-One list, with resource ID `channel`, shared by all 16 channels, because every channel responds to the same controllers. It lists 13 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, and per-note volume, pan, and pitch.
+Two lists, one for melodic channels and one for drum channels. The list with resource ID `channel` has 15 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, fine tuning, coarse tuning, and per-note volume, pan, and pitch. The list with resource ID `drums` leaves out what drum channels ignore: modulation, pitch bend, the sustain pedal, pitch bend sensitivity, and fine and coarse tuning. That leaves 9 controllers. Each channel's `ChannelList` entry links to the list that applies to it.
 
 Every entry says `"transmit":"none"`, because the synthesizer only receives controllers. Each default is the value a reset returns to, written as a 32-bit MIDI 2.0 value. For example, the default volume of 100 is `3374617161`.
 
@@ -334,7 +354,7 @@ The synthesizer supports MIDI Message Report. An app that connects after a song 
 | Channel controller messages | Pitch bend, control change, registered controllers, and program change |
 | Note data messages | None |
 
-The reply lists only the kinds of message the synthesizer can report, whatever the inquiry asked for. The report itself is sent as MIDI 2.0 channel voice messages, because this endpoint always uses the MIDI 2.0 protocol. Each channel is reported in full before the next one starts, in this order: pitch bend, controllers 1, 7, 10, 11, 64, 91, and 93, pitch bend sensitivity (registered controller 0, 0), and then the program with its bank. A value that was sent as a 32-bit MIDI 2.0 value comes back exactly. A value that was sent as a 7-bit MIDI 1.0 value comes back scaled up to 32 bits, the same way a MIDI 1.0 to MIDI 2.0 translator would do it. A full report on all 16 channels is 166 packets.
+The reply lists only the kinds of message the synthesizer can report, whatever the inquiry asked for. The report itself is sent as MIDI 2.0 channel voice messages, because this endpoint always uses the MIDI 2.0 protocol. Each channel is reported in full before the next one starts, in this order: pitch bend, controllers 1, 7, 10, 11, 64, 91, and 93, pitch bend sensitivity, fine tuning, and coarse tuning (registered controllers 0, 0 to 0, 2), and then the program with its bank. A value that was sent as a 32-bit MIDI 2.0 value comes back exactly. A value that was sent as a 7-bit MIDI 1.0 value comes back scaled up to 32 bits, the same way a MIDI 1.0 to MIDI 2.0 translator would do it. Pitch bend sensitivity comes back as semitones in the top seven bits and cents in the next seven. Coarse tuning comes back as whole semitones in the top seven bits, because that's all this synthesizer keeps of it. A full report on all 16 channels is 198 packets.
 
 An inquiry with a reserved message data control value, or one that's cut off before its bitmaps, gets a NAK with status `0x41`, "message was malformed". One addressed to a reserved device ID gets a NAK with status `0x03`, "channel, group, or function block not in use".
 

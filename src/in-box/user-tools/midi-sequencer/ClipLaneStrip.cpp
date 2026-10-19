@@ -61,7 +61,10 @@ namespace midisequencer
         m_color = color;
 
         auto const laneCount = clip != nullptr ? clip->Lanes.size() : 0;
-        m_laneCountChanged = !changed && laneCount != m_laneCount;
+
+        // Kept until a drawing takes it: the strip is pointed at the clip again from more places
+        // than the drawing, and a lane added in between still fits the roll again.
+        m_laneCountChanged = !changed && (m_laneCountChanged || laneCount != m_laneCount);
         m_laneCount = laneCount;
 
         if (changed)
@@ -78,12 +81,6 @@ namespace midisequencer
         {
             ClearSelection();
         }
-    }
-
-    float ClipLaneStrip::Height() const noexcept
-    {
-        auto const lanes = m_clip != nullptr ? m_clip->Lanes.size() : 0;
-        return AddRowHeight + RowHeight * static_cast<float>(lanes);
     }
 
     float ClipLaneStrip::AddRowTop() const noexcept
@@ -246,12 +243,14 @@ namespace midisequencer
             m_moved = true;
         }
 
+        m_startValue = m_point < lane.Points.size() ? lane.Points[m_point].Value : 0;
+
         Select(m_lane, m_point);
         return true;
     }
 
     _Use_decl_annotations_
-    bool ClipLaneStrip::PointerMoved(Point point, PianoRoll const& roll)
+    bool ClipLaneStrip::PointerMoved(Point point, PianoRoll const& roll, bool keepValue)
     {
         if (m_gesture == Gesture::None || m_lane >= m_working.size())
         {
@@ -282,7 +281,7 @@ namespace midisequencer
                 m_moved = true;
             }
 
-            MoveLanePoint(lane, m_point, SnapTick(roll.TickAtX(point.X), roll), value);
+            MoveLanePoint(lane, m_point, SnapTick(roll.TickAtX(point.X), roll), keepValue ? m_startValue : value);
             return true;
         }
 
@@ -324,14 +323,14 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    std::optional<ClipLaneEdit> ClipLaneStrip::PointerReleased(Point point, PianoRoll const& roll)
+    std::optional<ClipLaneEdit> ClipLaneStrip::PointerReleased(Point point, PianoRoll const& roll, bool keepValue)
     {
         if (m_gesture == Gesture::None)
         {
             return std::nullopt;
         }
 
-        PointerMoved(point, roll);
+        PointerMoved(point, roll, keepValue);
 
         auto const gesture = m_gesture;
         m_gesture = Gesture::None;

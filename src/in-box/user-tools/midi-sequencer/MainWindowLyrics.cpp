@@ -23,9 +23,6 @@ namespace winrt::midisequencer::implementation
 
     namespace
     {
-        // The same as the other row headers.
-        constexpr double LyricsHeaderWidth = 268.0;
-
         constexpr double LyricsEditorWidth = 560.0;
         constexpr double LyricsEditorTextHeight = 210.0;
         constexpr double LyricsBarMaximumWidth = 960.0;
@@ -61,7 +58,7 @@ namespace winrt::midisequencer::implementation
     xaml::UIElement MainWindow::MakeLyricsHeader(seq::ArrangeRow const& row)
     {
         controls::Grid grid{};
-        grid.Width(LyricsHeaderWidth);
+        grid.Width(m_headerWidth);
         grid.Height(row.Height);
         grid.BorderThickness(xaml::Thickness{ 0, 0, 1, 1 });
         grid.BorderBrush(BrushFor(m_palette.Divider));

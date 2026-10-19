@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "AppearanceFlyout.h"
+#include "PopupBackdrop.h"
 
 namespace wux = ::winrt::Microsoft::UI::Xaml;
 namespace wuxc = ::winrt::Microsoft::UI::Xaml::Controls;
@@ -335,6 +336,16 @@ namespace midiapp
 
             flyout.Content(scroller);
             flyout.Placement(wuxc::Primitives::FlyoutPlacementMode::TopEdgeAlignedLeft);
+
+            // In a tool whose pop-ups take the menus' backdrop, this one does too. That makes it a
+            // window of its own, which isn't kept inside the tool's window, so it opens toward the
+            // middle of the window rather than off its edge.
+            if (MenuBackdropsInUse())
+            {
+                UseMenuBackdrop(flyout);
+                OpenTowardWindowMiddle(flyout, anchor);
+            }
+
             flyout.ShowAt(anchor);
         }
         catch (...)

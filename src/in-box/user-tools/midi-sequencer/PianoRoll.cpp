@@ -448,7 +448,7 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    bool PianoRoll::PointerMoved(Point point)
+    bool PianoRoll::PointerMoved(Point point, bool keepPitch)
     {
         m_lastPoint = point;
 
@@ -459,7 +459,7 @@ namespace midisequencer
         {
         case Gesture::Move:
             m_deltaTicks = static_cast<int64_t>(std::llround(tickDelta / grid) * static_cast<int64_t>(grid));
-            m_deltaNotes = NoteAtY(point.Y) - NoteAtY(m_pressPoint.Y);
+            m_deltaNotes = keepPitch ? 0 : NoteAtY(point.Y) - NoteAtY(m_pressPoint.Y);
             return true;
 
         case Gesture::Resize:
@@ -487,9 +487,9 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    std::optional<RollEdit> PianoRoll::PointerReleased(Point point)
+    std::optional<RollEdit> PianoRoll::PointerReleased(Point point, bool keepPitch)
     {
-        PointerMoved(point);
+        PointerMoved(point, keepPitch);
 
         auto const gesture = m_gesture;
         std::optional<RollEdit> edit{};

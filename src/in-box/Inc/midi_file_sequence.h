@@ -34,6 +34,9 @@ namespace midifile
     inline constexpr uint32_t MinimumMicrosecondsPerQuarterNote = 1000;     // 60000 BPM, absurd but finite
     inline constexpr uint32_t MaximumMicrosecondsPerQuarterNote = 0xFFFFFF; // the three byte field's limit
 
+    // Channel 10, counted from 1, which General MIDI gives to drums.
+    inline constexpr uint8_t PercussionChannelIndex = 9;
+
     // Some files never mark a line break at all, so a line is cut once it stops being readable.
     inline constexpr size_t MaximumLyricLineLength = 96;
 
@@ -172,7 +175,14 @@ namespace midifile
         uint8_t Channel{ 0 };
         uint8_t NoteNumber{ 0 };
         uint8_t Velocity{ 0 };
+
+        // Played on a drum kit when it started, where the note number picks a drum rather than
+        // a pitch. Transposing leaves these alone. See PercussionTracker.
+        bool IsPercussion{ false };
     };
+
+    // The flag above went into what was padding. A display keeps every note of a file.
+    static_assert(sizeof(Note) == 16, "Note grew; check the cost for a file of a few hundred thousand notes first.");
 
     // Bank and program travel together, because a player has to show them together and because
     // sending one without the other selects the wrong sound.
@@ -202,6 +212,39 @@ namespace midifile
     // paid for two million times. Kind already had room for a new value, which is why carrying
     // Universal MIDI Packets needed no new field.
     static_assert(sizeof(SequenceEvent) == 16, "SequenceEvent grew; check the cost at two million events first.");
+
+    // Which channels are playing a drum kit, followed one event at a time in playing order.
+    //
+    // Channel 10 always is. Any other channel is from the moment a bank select picks a drum kit
+    // bank (120 in General MIDI 2, 127 in XG), or a GS or XG system exclusive message makes it a
+    // rhythm part, until a later bank select or message says otherwise, or a GM, GS or XG reset.
+    //
+    // Channel 10 is never treated as melodic. A melodic part put there is rare, and moving a drum
+    // kit's notes by mistake swaps one drum for another, which is far worse than leaving one part
+    // in the key it was written in.
+    //
+    // Kept here, with no WinRT, so the reader and the playback engine follow the same rules and
+    // the unit tests check exactly those.
+    class PercussionTracker
+    {
+    public:
+        bool IsPercussion(_In_ uint8_t channel) const noexcept;
+
+        // One bit per channel, channel 0 in the lowest bit.
+        uint16_t PercussionChannels() const noexcept;
+
+        // Bytes are what BytesOf returns for the event.
+        void Observe(_In_ SequenceEvent const& event, _In_ std::span<uint8_t const> bytes) noexcept;
+
+    private:
+        void Reset() noexcept;
+        void Set(_In_ uint8_t channel, _In_ bool percussion) noexcept;
+        void ObserveBankSelect(_In_ uint8_t channel, _In_ uint8_t bankMsb) noexcept;
+        void ObserveSystemExclusive(_In_ std::span<uint8_t const> bytes) noexcept;
+        void ObserveUniversalPacket(_In_ std::span<uint8_t const> bytes) noexcept;
+
+        uint16_t m_percussionMask{ static_cast<uint16_t>(1u << PercussionChannelIndex) };
+    };
 
     struct Track
     {

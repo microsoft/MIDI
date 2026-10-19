@@ -1,0 +1,28 @@
+/* PROTOTYPE. Vellum and the window's color (October 19): the color dyes the paper, the way vellum
+   takes a tint, and the ink and hairlines lean toward it. Each surface keeps the lightness it has
+   in Vellum, light or dark, so any color works in either. Vermilion stays, as the one accent, and
+   so do the track colors, the washes, and the colors that mean something. --dye scales the
+   paper's color, from 1 (as shown) to 0 (plain paper). The page sets --tint and the class
+   "tinted". */
+
+html.study.vellum.tinted:not(.vellum-dark) {
+    --dye: 1;
+    --paper: oklch(from var(--tint) 0.955 calc(min(c * 0.36, 0.013) * var(--dye)) h);
+    --sheet: oklch(from var(--tint) 0.982 calc(min(c * 0.22, 0.009) * var(--dye)) h);
+    --paper-deep: oklch(from var(--tint) 0.925 calc(min(c * 0.40, 0.015) * var(--dye)) h);
+    --wash: oklch(from var(--tint) 0.972 calc(min(c * 0.25, 0.01) * var(--dye)) h);
+    --desk: oklch(from var(--tint) 0.86 calc(min(c * 0.45, 0.025) * var(--dye)) h);
+    --ink: oklch(from var(--tint) 0.22 min(c * 0.5, 0.025) h);
+    --indigo: oklch(from var(--tint) 0.42 min(0.09, c * 4) h);
+}
+
+html.study.vellum.vellum-dark.tinted {
+    --dye: 1;
+    --paper: oklch(from var(--tint) 0.25 calc(min(c * 0.60, 0.024) * var(--dye)) h);
+    --sheet: oklch(from var(--tint) 0.285 calc(min(c * 0.55, 0.022) * var(--dye)) h);
+    --paper-deep: oklch(from var(--tint) 0.225 calc(min(c * 0.60, 0.024) * var(--dye)) h);
+    --wash: oklch(from var(--tint) 0.27 calc(min(c * 0.55, 0.022) * var(--dye)) h);
+    --desk: oklch(from var(--tint) 0.16 calc(min(c * 0.60, 0.024) * var(--dye)) h);
+    --ink: oklch(from var(--tint) 0.93 min(c * 0.3, 0.014) h);
+    --indigo: oklch(from var(--tint) 0.78 min(0.10, c * 4) h);
+}

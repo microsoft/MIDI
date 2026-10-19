@@ -237,6 +237,13 @@ namespace winrt::midisequencer::implementation
             text += res::FormatString(L"ChannelShortFormat", lane.Channel + 1);
         }
 
+        // How often a ramp goes to the device, when MIDI Settings says.
+        if (auto const interval = m_directory->Lookup(track.Destination.Endpoint, track.Destination.Group).AutomationIntervalMilliseconds; interval > 0)
+        {
+            text += L" \u00B7 ";
+            text += res::FormatString(L"LaneIntervalShortFormat", interval);
+        }
+
         return text;
     }
 
@@ -1205,6 +1212,7 @@ namespace winrt::midisequencer::implementation
         denominator.SelectionChanged([applyMeter](auto&&, auto&&) { applyMeter(); });
 
         flyout.Content(panel);
+        midiapp::UseMenuBackdrop(flyout);
         flyout.ShowAt(anchor);
     }
 
@@ -1395,6 +1403,12 @@ namespace winrt::midisequencer::implementation
             drag.What = PointDrag::Kind::LanePoint;
             drag.Point = seq::AddLanePoint(*lane, point);
             drag.Moved = true;
+            m_pointAddedAt = std::chrono::steady_clock::now();
+        }
+
+        if (drag.What == PointDrag::Kind::LanePoint && drag.Point < lane->Points.size())
+        {
+            drag.StartValue = lane->Points[drag.Point].Value;
         }
 
         m_pointDrag = std::move(drag);
@@ -1422,11 +1436,42 @@ namespace winrt::midisequencer::implementation
         auto const position = args.GetCurrentPoint(canvas).Position();
         auto const top = static_cast<float>(row.Top - (pinned ? 0.0 : m_scrollY));
         auto const height = static_cast<float>(row.Height);
-        auto const index = HitTestTempoPoint(top, height, position);
+        auto index = HitTestTempoPoint(top, height, position);
+
+        // The scale stays as it was when the press began, so the line doesn't slide away.
+        auto const range = seq::TempoRowRange(m_doc.Tempo);
+        auto before = m_doc.Tempo;
+        auto added{ false };
 
         if (index == SIZE_MAX)
         {
-            return false;
+            // Anywhere else on the line adds a tempo change there, already picked up, the same as
+            // a point on an automation lane. Tenths of a beat per minute, and sixteenth notes
+            // unless snap is finer.
+            auto const bpm = std::clamp(std::round(seq::TempoAtY(position.Y, range, top, height) * 10.0) / 10.0, seq::MinimumBeatsPerMinute, seq::MaximumBeatsPerMinute);
+            auto const grid = SnapGrid() > 0 ? SnapGrid() : seq::TicksPerQuarterNote / 4;
+            auto const tick = seq::SnapTick(TickAtLaneX(position.X), grid);
+
+            seq::SetTempoAt(m_doc.Tempo, tick, bpm);
+
+            for (size_t i = 0; i < m_doc.Tempo.size(); ++i)
+            {
+                if (m_doc.Tempo[i].Tick == tick)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == SIZE_MAX)
+            {
+                m_doc.Tempo = std::move(before);
+                return false;
+            }
+
+            added = true;
+            m_pointAddedAt = std::chrono::steady_clock::now();
+            UpdateDisplays(m_position);
         }
 
         ClearAutomationSelection();
@@ -1440,8 +1485,10 @@ namespace winrt::midisequencer::implementation
         drag.Start = position;
         drag.RowTop = top;
         drag.RowHeight = height;
-        drag.Range = seq::TempoRowRange(m_doc.Tempo);
-        drag.TempoBefore = m_doc.Tempo;
+        drag.Range = range;
+        drag.StartBeatsPerMinute = m_doc.Tempo[index].BeatsPerMinute;
+        drag.TempoBefore = std::move(before);
+        drag.Moved = added;
         m_pointDrag = std::move(drag);
 
         canvas.CapturePointer(args.Pointer());
@@ -1469,6 +1516,9 @@ namespace winrt::midisequencer::implementation
             m_pointDrag.Moved = true;
         }
 
+        // Shift keeps the value the point had when the drag began, so only its place changes.
+        auto const keepValue = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+
         if (m_pointDrag.What == PointDrag::Kind::TempoPoint)
         {
             auto const index = m_pointDrag.Point;
@@ -1479,7 +1529,8 @@ namespace winrt::midisequencer::implementation
             }
 
             // Tenths of a beat per minute, and sixteenth notes unless snap is finer.
-            auto const bpm = std::round(seq::TempoAtY(position.Y, m_pointDrag.Range, m_pointDrag.RowTop, m_pointDrag.RowHeight) * 10.0) / 10.0;
+            auto const bpm = keepValue ? m_pointDrag.StartBeatsPerMinute :
+                std::round(seq::TempoAtY(position.Y, m_pointDrag.Range, m_pointDrag.RowTop, m_pointDrag.RowHeight) * 10.0) / 10.0;
             auto const grid = SnapGrid() > 0 ? SnapGrid() : seq::TicksPerQuarterNote / 4;
             seq::MoveTempoPoint(m_doc.Tempo, index, seq::SnapTick(TickAtLaneX(position.X), grid), bpm);
 
@@ -1505,7 +1556,7 @@ namespace winrt::midisequencer::implementation
 
         if (m_pointDrag.What == PointDrag::Kind::LanePoint)
         {
-            seq::MoveLanePoint(*lane, m_pointDrag.Point, seq::SnapTick(TickAtLaneX(position.X), SnapGrid()), value);
+            seq::MoveLanePoint(*lane, m_pointDrag.Point, seq::SnapTick(TickAtLaneX(position.X), SnapGrid()), keepValue ? m_pointDrag.StartValue : value);
             InvalidateArrange();
             return;
         }

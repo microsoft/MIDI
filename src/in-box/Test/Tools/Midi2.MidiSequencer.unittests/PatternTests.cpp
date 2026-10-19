@@ -649,3 +649,51 @@ void PatternTests::PatternEditsUndo()
     VERIFY_ARE_EQUAL(size_t{ 2 }, sequence.Clips[0].Notes.size());
     VERIFY_ARE_EQUAL(8 * Step, sequence.Clips[0].Length);
 }
+
+void PatternTests::DraggedLanesMoveInPlace()
+{
+    auto const order = [](PatternSettings const& pattern)
+    {
+        std::wstring names{};
+
+        for (auto const& lane : pattern.Lanes)
+        {
+            names += lane.Name;
+        }
+
+        return names;
+    };
+
+    PatternSettings pattern{};
+
+    for (auto const name : { L"A", L"B", L"C", L"D" })
+    {
+        auto lane = MakePatternLane(36, 16);
+        lane.Name = name;
+        pattern.Lanes.push_back(lane);
+    }
+
+    // Down, to the end, and up to the top. A drop lands before the lane it's on.
+    VERIFY_IS_TRUE(MovePatternLane(pattern, 0, 2));
+    VERIFY_ARE_EQUAL(std::wstring{ L"BACD" }, order(pattern));
+
+    VERIFY_IS_TRUE(MovePatternLane(pattern, 1, 4));
+    VERIFY_ARE_EQUAL(std::wstring{ L"BCDA" }, order(pattern));
+
+    VERIFY_IS_TRUE(MovePatternLane(pattern, 3, 0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"ABCD" }, order(pattern));
+
+    // Dropped where it already is, or out of range, nothing moves.
+    VERIFY_IS_FALSE(MovePatternLane(pattern, 1, 1));
+    VERIFY_IS_FALSE(MovePatternLane(pattern, 1, 2));
+    VERIFY_IS_FALSE(MovePatternLane(pattern, 4, 0));
+    VERIFY_IS_FALSE(MovePatternLane(pattern, 0, 5));
+    VERIFY_ARE_EQUAL(std::wstring{ L"ABCD" }, order(pattern));
+
+    // A lane takes its steps with it.
+    pattern.Lanes[2].Steps = { On(3) };
+    VERIFY_IS_TRUE(MovePatternLane(pattern, 2, 0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"CABD" }, order(pattern));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, pattern.Lanes[0].Steps.size());
+    VERIFY_IS_TRUE(pattern.Lanes[2].Steps.empty());
+}

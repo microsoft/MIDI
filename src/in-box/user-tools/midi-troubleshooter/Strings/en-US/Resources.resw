@@ -483,6 +483,12 @@
   </data>
   <data name="ReportSummaryTitleFormat" xml:space="preserve">
     <value>mididiag report from {0}</value>
+  </data>
+  <data name="ReportSummaryLatencyTitle" xml:space="preserve">
+    <value>DPC latency check report</value>
+  </data>
+  <data name="ReportSummaryLatencyTitleFormat" xml:space="preserve">
+    <value>DPC latency check report from {0}</value>
     <comment>{0} is the date and time the report was made, exactly as the report wrote it</comment>
   </data>
   <data name="ReportSummaryWindowsLabel" xml:space="preserve">
@@ -496,6 +502,10 @@
   </data>
   <data name="ReportSummaryServiceLabel" xml:space="preserve">
     <value>MIDI service</value>
+  </data>
+  <data name="ReportSummaryServiceNotInstalled" xml:space="preserve">
+    <value>Not installed</value>
+    <comment>Shown next to "MIDI service" in a report's summary when the MIDI service isn't installed on the PC the report came from</comment>
   </data>
   <data name="ReportSummaryElevatedLabel" xml:space="preserve">
     <value>Ran as administrator</value>
@@ -540,6 +550,9 @@
   </data>
   <data name="ReportNoFindings" xml:space="preserve">
     <value>mididiag didn't find anything that's likely to cause a problem.</value>
+  </data>
+  <data name="ReportNoFindingsLatency" xml:space="preserve">
+    <value>The check didn't find anything that's likely to cause a problem.</value>
   </data>
   <data name="ReportErrorsTitleFormat" xml:space="preserve">
     <value>Errors ({0})</value>
@@ -607,8 +620,14 @@
   <data name="ReportSection_service_status" xml:space="preserve">
     <value>MIDI service</value>
   </data>
+  <data name="ReportSection_inbox_components" xml:space="preserve">
+    <value>Files that come with Windows</value>
+  </data>
   <data name="ReportSection_service_history" xml:space="preserve">
     <value>MIDI service history</value>
+  </data>
+  <data name="ReportSection_install_history" xml:space="preserve">
+    <value>Installs and updates</value>
   </data>
   <data name="ReportSection_feature_enablement" xml:space="preserve">
     <value>Features</value>
@@ -1555,5 +1574,451 @@ Every application using MIDI loses its connections when the service restarts, so
   </data>
   <data name="ReplugDeviceDialog.CloseButtonText" xml:space="preserve">
     <value>OK</value>
+  </data>
+
+  <!-- ============================ DPC latency check ============================ -->
+  <data name="LatencyCheckNavigationItem.Content" xml:space="preserve">
+    <value>DPC latency check</value>
+  </data>
+  <data name="LatencyPageTitle.Text" xml:space="preserve">
+    <value>DPC latency check</value>
+  </data>
+  <data name="LatencyPageDescription.Text" xml:space="preserve">
+    <value>Finds what on this PC holds up audio and MIDI. Some drivers keep a processor busy for too long, and audio that has to wait for that processor can click, pop or drop out. Start the check, then use your PC the way you do when you hear problems, such as playing your project in your audio app.</value>
+  </data>
+  <data name="LatencyNotBenchmarkBar.Title" xml:space="preserve">
+    <value>This isn&apos;t a benchmark</value>
+  </data>
+  <data name="LatencyNotBenchmarkBar.Message" xml:space="preserve">
+    <value>Use it when you already hear clicks, pops or dropouts at a buffer size that should be big enough for your project. Long DPCs are common, and they often run on a processor your audio isn&apos;t using, so a high number on its own says nothing about your PC. If your audio sounds fine, there&apos;s nothing to fix. Go make music.</value>
+  </data>
+  <data name="LatencyLearnMoreLink.Content" xml:space="preserve">
+    <value>Read about DPC latency and this check</value>
+  </data>
+  <data name="LatencyDurationBox.Header" xml:space="preserve">
+    <value>How long to check</value>
+  </data>
+  <data name="LatencyDurationOneMinute.Content" xml:space="preserve">
+    <value>1 minute</value>
+  </data>
+  <data name="LatencyDurationTwoMinutes.Content" xml:space="preserve">
+    <value>2 minutes</value>
+  </data>
+  <data name="LatencyDurationFiveMinutes.Content" xml:space="preserve">
+    <value>5 minutes</value>
+  </data>
+  <data name="LatencyDurationTenMinutes.Content" xml:space="preserve">
+    <value>10 minutes</value>
+  </data>
+  <data name="LatencyDurationUntilStopped.Content" xml:space="preserve">
+    <value>Until I stop it</value>
+  </data>
+  <data name="LatencyProbeCheck.Content" xml:space="preserve">
+    <value>Use a test thread</value>
+  </data>
+  <data name="LatencyProbeCaption.Text" xml:space="preserve">
+    <value>Recommended. It works like an audio app&apos;s audio thread, so the check can tell how late audio would be even when no audio app is open.</value>
+  </data>
+  <data name="LatencySaveTraceCheck.Content" xml:space="preserve">
+    <value>Save a trace file for Windows Performance Analyzer</value>
+  </data>
+  <data name="LatencySaveTraceCaption.Text" xml:space="preserve">
+    <value>For experts and driver makers. You choose where it goes before the check starts. It can be a gigabyte or more.</value>
+  </data>
+  <data name="LatencyStartButton.Content" xml:space="preserve">
+    <value>Start check</value>
+  </data>
+  <data name="LatencyStopButton.Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="LatencyOpenTraceButton.Content" xml:space="preserve">
+    <value>Open a trace file...</value>
+  </data>
+  <data name="LatencyCancelReadButton.Content" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="LatencyBusyRing.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Working</value>
+  </data>
+  <data name="LatencyLiveProgress.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Check progress</value>
+  </data>
+  <data name="LatencyLiveDpcLabel.Text" xml:space="preserve">
+    <value>Longest DPC</value>
+  </data>
+  <data name="LatencyLiveIsrLabel.Text" xml:space="preserve">
+    <value>Longest interrupt</value>
+  </data>
+  <data name="LatencyLiveHoldUpLabel.Text" xml:space="preserve">
+    <value>Audio held up</value>
+  </data>
+  <data name="LatencyLiveTip.Text" xml:space="preserve">
+    <value>Keep using your PC the way you do when audio drops out.</value>
+  </data>
+  <data name="LatencyCulpritsHeading.Text" xml:space="preserve">
+    <value>What held up audio or MIDI</value>
+  </data>
+  <data name="LatencyAdviceHeading.Text" xml:space="preserve">
+    <value>Also worth trying</value>
+  </data>
+  <data name="LatencyRanLongHeading.Text" xml:space="preserve">
+    <value>Also ran long</value>
+  </data>
+  <data name="LatencyRanLongCaption.Text" xml:space="preserve">
+    <value>These drivers kept a processor busy for a while, but they didn&apos;t hold up audio, MIDI or the test thread for a millisecond or more. That&apos;s common, because they often run on a processor that audio isn&apos;t using at that moment. They&apos;re only worth a look if you still hear glitches.</value>
+  </data>
+  <data name="LatencyViewReportButton.Content" xml:space="preserve">
+    <value>View technical report</value>
+  </data>
+  <data name="LatencySaveReportButton.Content" xml:space="preserve">
+    <value>Save report...</value>
+  </data>
+  <data name="LatencyCopyReportButton.Content" xml:space="preserve">
+    <value>Copy report</value>
+  </data>
+  <data name="LatencyShowTraceButton.Content" xml:space="preserve">
+    <value>Show trace file</value>
+  </data>
+  <data name="LatencyErrorAccessDenied" xml:space="preserve">
+    <value>Windows said no. Recording needs administrator rights.</value>
+  </data>
+  <data name="LatencyErrorTooManySessions" xml:space="preserve">
+    <value>Windows is already running as many trace sessions as it allows. Close other tracing tools, such as Windows Performance Recorder, and try again.</value>
+  </data>
+  <data name="LatencyErrorCodeFormat" xml:space="preserve">
+    <value>Error {0}.</value>
+  </data>
+  <data name="LatencyStatusReadingFormat" xml:space="preserve">
+    <value>Reading the trace: {0} events so far...</value>
+  </data>
+  <data name="LatencyStatusRunningFormat" xml:space="preserve">
+    <value>Checking: {0} of {1}.</value>
+  </data>
+  <data name="LatencyStatusRunningOpenFormat" xml:space="preserve">
+    <value>Checking: {0}. Select Stop when you&apos;re done.</value>
+  </data>
+  <data name="LatencyLiveNothingYet" xml:space="preserve">
+    <value>Nothing yet</value>
+  </data>
+  <data name="LatencyLiveValueFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="LatencyLiveNoHoldUpsFormat" xml:space="preserve">
+    <value>No long waits yet. Longest so far: {0}.</value>
+  </data>
+  <data name="LatencyLiveHoldUpsFormat" xml:space="preserve">
+    <value>Long waits: {0}. Longest so far: {1}.</value>
+  </data>
+  <data name="LatencyNeedsAdministrator" xml:space="preserve">
+    <value>Recording needs administrator rights. You can still open a trace file.</value>
+  </data>
+  <data name="LatencyTraceFileType" xml:space="preserve">
+    <value>Event trace files</value>
+  </data>
+  <data name="LatencyStatusStarting" xml:space="preserve">
+    <value>Starting the check...</value>
+  </data>
+  <data name="LatencyStatusStartFailedFormat" xml:space="preserve">
+    <value>The check couldn&apos;t start. {0}</value>
+  </data>
+  <data name="LatencyStatusFinishing" xml:space="preserve">
+    <value>Working out the results...</value>
+  </data>
+  <data name="LatencyStatusFinishFailedFormat" xml:space="preserve">
+    <value>The check couldn&apos;t finish. {0}</value>
+  </data>
+  <data name="LatencyStatusDoneShort" xml:space="preserve">
+    <value>Done. That was a short check, so it may have missed something. A few minutes gives a better picture.</value>
+  </data>
+  <data name="LatencyStatusDone" xml:space="preserve">
+    <value>Done.</value>
+  </data>
+  <data name="LatencyStatusCanceled" xml:space="preserve">
+    <value>Canceled.</value>
+  </data>
+  <data name="LatencyStatusOpenFailedFormat" xml:space="preserve">
+    <value>That file couldn&apos;t be read as a trace. {0}</value>
+  </data>
+  <data name="LatencyReportFileType" xml:space="preserve">
+    <value>Text files</value>
+  </data>
+  <data name="LatencyReportSavedFormat" xml:space="preserve">
+    <value>Saved the report to {0}.</value>
+  </data>
+  <data name="LatencyReportSaveFailedFormat" xml:space="preserve">
+    <value>Couldn&apos;t save the report to {0}.</value>
+  </data>
+  <data name="LatencyReportCopied" xml:space="preserve">
+    <value>Copied the report.</value>
+  </data>
+  <data name="LatencyOpenTraceDialogTitle" xml:space="preserve">
+    <value>Open a trace file</value>
+  </data>
+  <data name="LatencyMillisecondsFormat" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+  <data name="LatencyUnknownDriver" xml:space="preserve">
+    <value>A driver the check couldn&apos;t name</value>
+  </data>
+  <data name="LatencyDriverTitleFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="LatencyKind_windows_kernel" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="LatencyKind_virtualization" xml:space="preserve">
+    <value>Virtual machine driver</value>
+  </data>
+  <data name="LatencyKind_network_stack" xml:space="preserve">
+    <value>Windows networking</value>
+  </data>
+  <data name="LatencyKind_wifi" xml:space="preserve">
+    <value>Wi-Fi driver</value>
+  </data>
+  <data name="LatencyKind_ethernet" xml:space="preserve">
+    <value>Network adapter driver</value>
+  </data>
+  <data name="LatencyKind_bluetooth" xml:space="preserve">
+    <value>Bluetooth driver</value>
+  </data>
+  <data name="LatencyKind_graphics" xml:space="preserve">
+    <value>Graphics driver</value>
+  </data>
+  <data name="LatencyKind_storage" xml:space="preserve">
+    <value>Storage driver</value>
+  </data>
+  <data name="LatencyKind_usb_controller" xml:space="preserve">
+    <value>USB controller driver</value>
+  </data>
+  <data name="LatencyKind_audio" xml:space="preserve">
+    <value>Audio driver</value>
+  </data>
+  <data name="LatencyKind_power" xml:space="preserve">
+    <value>Power management driver</value>
+  </data>
+  <data name="LatencyKind_security" xml:space="preserve">
+    <value>Security software</value>
+  </data>
+  <data name="LatencyKind_input" xml:space="preserve">
+    <value>Input device driver</value>
+  </data>
+  <data name="LatencyKind_other" xml:space="preserve">
+    <value>Driver</value>
+  </data>
+  <data name="LatencyDriverMadeByVersionFormat" xml:space="preserve">
+    <value>Made by {0}. Version {1}.</value>
+  </data>
+  <data name="LatencyDriverMadeByFormat" xml:space="preserve">
+    <value>Made by {0}.</value>
+  </data>
+  <data name="LatencyDriverUsedByFormat" xml:space="preserve">
+    <value>Used by {0}.</value>
+  </data>
+  <data name="LatencyDriverUsedByMoreFormat" xml:space="preserve">
+    <value>Used by {0} and {1} more.</value>
+  </data>
+  <data name="LatencyImpactDpcFormat" xml:space="preserve">
+    <value>Kept a processor busy for up to {0} at a time.</value>
+  </data>
+  <data name="LatencyImpactIsrFormat" xml:space="preserve">
+    <value>Interrupted a processor for up to {0} at a time.</value>
+  </data>
+  <data name="LatencyImpactHeldFormat" xml:space="preserve">
+    <value>Held a processor for up to {0} at a time, so even its timers had to wait.</value>
+  </data>
+  <data name="LatencyImpactLateOnce" xml:space="preserve">
+    <value>Audio was waiting for it once.</value>
+  </data>
+  <data name="LatencyImpactLateManyFormat" xml:space="preserve">
+    <value>Audio was waiting for it {0} times.</value>
+  </data>
+  <data name="LatencyUpdateWindows" xml:space="preserve">
+    <value>Windows Update keeps this driver up to date.</value>
+  </data>
+  <data name="LatencyUpdateCompanyFormat" xml:space="preserve">
+    <value>Get the newest driver from {0}.</value>
+  </data>
+  <data name="LatencyUpdateUnknownCompany" xml:space="preserve">
+    <value>Get the newest driver from the company that made the device.</value>
+  </data>
+  <data name="LatencyTip_wifi" xml:space="preserve">
+    <value>Wi-Fi drivers often do this. Turn off Wi-Fi, or use a network cable, while you play or record.</value>
+  </data>
+  <data name="LatencyTip_ethernet" xml:space="preserve">
+    <value>Big downloads, cloud sync and streaming make this driver work harder. Pause them while you play or record.</value>
+  </data>
+  <data name="LatencyTip_network_stack" xml:space="preserve">
+    <value>This is Windows handling network traffic. Pause big downloads, cloud sync and streaming while you play or record.</value>
+  </data>
+  <data name="LatencyTip_bluetooth" xml:space="preserve">
+    <value>If you don&apos;t need Bluetooth while you play or record, turn it off.</value>
+  </data>
+  <data name="LatencyTip_graphics" xml:space="preserve">
+    <value>Games, videos and other apps that draw a lot make this driver work harder. Close them while you make music.</value>
+  </data>
+  <data name="LatencyTip_storage" xml:space="preserve">
+    <value>Copying big files, backups and virus scans make this driver work harder. Avoid them while you record.</value>
+  </data>
+  <data name="LatencyTip_usb_controller" xml:space="preserve">
+    <value>Plug your audio interface straight into the PC instead of into a hub, or try another USB port. The newest chipset drivers from your PC&apos;s maker can help too.</value>
+  </data>
+  <data name="LatencyTip_power" xml:space="preserve">
+    <value>Choose Best performance for the power mode in Settings, and plug in a laptop, while you make music.</value>
+  </data>
+  <data name="LatencyTip_virtualization" xml:space="preserve">
+    <value>This is part of virtual machine software, such as Hyper-V, Windows Subsystem for Linux (WSL), Docker or Windows Sandbox. Close virtual machines and those apps while you make music.</value>
+  </data>
+  <data name="LatencyTip_security" xml:space="preserve">
+    <value>This is your security software. Don&apos;t turn it off. Make sure it&apos;s up to date.</value>
+  </data>
+  <data name="LatencyTip_input" xml:space="preserve">
+    <value>Unplug keyboards, mice and game controllers you aren&apos;t using.</value>
+  </data>
+  <data name="LatencyTip_windows_kernel" xml:space="preserve">
+    <value>This is Windows itself, often doing work for other drivers. Make sure Windows Update is up to date.</value>
+  </data>
+  <data name="LatencyVerdictGoodTitle" xml:space="preserve">
+    <value>Nothing was held up long enough to matter</value>
+  </data>
+  <data name="LatencyVerdictCautionTitle" xml:space="preserve">
+    <value>Only short hold-ups</value>
+  </data>
+  <data name="LatencyVerdictProblemTitle" xml:space="preserve">
+    <value>Something held up audio or MIDI</value>
+  </data>
+  <data name="LatencyVerdictNotEnoughDataTitle" xml:space="preserve">
+    <value>The check didn&apos;t get what it needs</value>
+  </data>
+  <data name="LatencyVerdictGoodFormat" xml:space="preserve">
+    <value>While the check ran, nothing kept audio or MIDI waiting long enough to cause a glitch. The longest wait was {0}. If you still hear glitches, they&apos;re probably coming from something else, such as a project that needs a bigger buffer size.</value>
+  </data>
+  <data name="LatencyVerdictCautionFormat" xml:space="preserve">
+    <value>The longest hold-up was {0}. That only matters at the very smallest buffer sizes.</value>
+  </data>
+  <data name="LatencyVerdictProblemFormat" xml:space="preserve">
+    <value>Something kept audio or MIDI waiting for as long as {0}. That&apos;s long enough for clicks, pops or dropouts at small buffer sizes.</value>
+  </data>
+  <data name="LatencyVerdictIncomplete" xml:space="preserve">
+    <value>The check ran out of memory while working out the results, so they&apos;re incomplete. Close other programs and try again, or try a shorter check.</value>
+  </data>
+  <data name="LatencyVerdictNotEnoughData" xml:space="preserve">
+    <value>The trace has no DPC or interrupt events, so there&apos;s nothing to check. Record a new check, or open a trace that includes them.</value>
+  </data>
+  <data name="LatencyVerdictNoScheduling" xml:space="preserve">
+    <value>This trace doesn&apos;t say when each thread ran, so the check can&apos;t tell whether anything held up audio or MIDI. Record a new check, or open a trace that includes context switches.</value>
+  </data>
+  <data name="LatencyVerdictNothingToWatch" xml:space="preserve">
+    <value>No audio app was playing, the MIDI service wasn&apos;t busy and the test thread was off, so there was nothing to watch. Turn on Use a test thread, or play your project while the check runs.</value>
+  </data>
+  <data name="LatencyHeldUpNoneFormat" xml:space="preserve">
+    <value>Audio was never held up for {0} or more. The longest wait was {1}.</value>
+  </data>
+  <data name="LatencyHeldUpOnceFormat" xml:space="preserve">
+    <value>Audio was held up for {0} or more once. The longest wait was {1}.</value>
+  </data>
+  <data name="LatencyHeldUpManyFormat" xml:space="preserve">
+    <value>Audio was held up for {0} or more {1} times. The longest wait was {2}.</value>
+  </data>
+  <data name="LatencyTestHeldUpNoneFormat" xml:space="preserve">
+    <value>The test thread, which stands in for audio, was never held up for {0} or more. Its longest wait was {1}.</value>
+  </data>
+  <data name="LatencyTestHeldUpOnceFormat" xml:space="preserve">
+    <value>The test thread, which stands in for audio, was held up for {0} or more once. Its longest wait was {1}.</value>
+  </data>
+  <data name="LatencyTestHeldUpManyFormat" xml:space="preserve">
+    <value>The test thread, which stands in for audio, was held up for {0} or more {1} times. Its longest wait was {2}.</value>
+  </data>
+  <data name="LatencyMidiHeldUpNoneFormat" xml:space="preserve">
+    <value>The MIDI service was never held up for {0} or more. Its longest wait was {1}.</value>
+  </data>
+  <data name="LatencyMidiHeldUpOnceFormat" xml:space="preserve">
+    <value>The MIDI service was held up for {0} or more once, so a MIDI message may have been late. Its longest wait was {1}.</value>
+  </data>
+  <data name="LatencyMidiHeldUpManyFormat" xml:space="preserve">
+    <value>The MIDI service was held up for {0} or more {1} times, so some MIDI messages may have been late. Its longest wait was {2}.</value>
+  </data>
+  <data name="LatencyBufferFormat" xml:space="preserve">
+    <value>Audio was held up for as long as {0}, so buffers smaller than about {1} samples at 48 kHz can drop out when that happens. Until you fix the cause, a bigger buffer size in your audio app can hide it.</value>
+  </data>
+  <data name="LatencyRanLongLineFormat" xml:space="preserve">
+    <value>{0}: up to {1} at a time</value>
+  </data>
+  <data name="LatencyAdvicePowerMode" xml:space="preserve">
+    <value>Processors were saving power when audio needed them, and took a moment to wake up. Choose Best performance for the power mode in Settings, and plug in a laptop, while you make music.</value>
+  </data>
+  <data name="LatencyAdviceBusyPrograms" xml:space="preserve">
+    <value>Other programs kept audio waiting. Close programs you don&apos;t need while you make music.</value>
+  </data>
+  <data name="LatencyAdviceDiskWaits" xml:space="preserve">
+    <value>Audio had to wait for the disk, because part of the audio app had been moved out of memory. Close programs you don&apos;t need while you make music.</value>
+  </data>
+  <data name="LatencyFindingDriverFormat" xml:space="preserve">
+    <value>{0}: {1} {2}</value>
+  </data>
+  <data name="LatencyNoteFromFileFormat" xml:space="preserve">
+    <value>These results come from {0}.</value>
+  </data>
+  <data name="LatencyNoteOtherPc" xml:space="preserve">
+    <value>That trace came from another PC, or from before a driver was updated, so the companies and versions of its drivers aren&apos;t shown.</value>
+  </data>
+  <data name="LatencyNoteTraceSavedFormat" xml:space="preserve">
+    <value>The trace was saved to {0}. Windows Performance Analyzer shows every detail in it.</value>
+  </data>
+  <data name="LatencyNoteProbeFailed" xml:space="preserve">
+    <value>The test thread couldn&apos;t start, so how late audio would be comes only from the audio apps that were playing.</value>
+  </data>
+  <data name="LatencyNoteProbeWithoutMmcss" xml:space="preserve">
+    <value>Windows didn&apos;t give the test thread audio priority, so it waited longer than an audio app&apos;s thread would.</value>
+  </data>
+  <data name="LatencyNoteNoAudioApp" xml:space="preserve">
+    <value>No audio app was playing, so how late audio would be comes from the test thread. For the best results, check again while your audio app plays.</value>
+  </data>
+  <data name="LatencyNoteNoAudioThreads" xml:space="preserve">
+    <value>No audio app was playing and the test thread was off, so the check could only watch the MIDI service.</value>
+  </data>
+  <data name="LatencyNoteNoScheduling" xml:space="preserve">
+    <value>This trace doesn&apos;t say when each thread ran, so the check couldn&apos;t tell when audio was held up. It shows how long drivers kept processors busy.</value>
+  </data>
+  <data name="LatencyNoteNoSamples" xml:space="preserve">
+    <value>Windows didn&apos;t record what code was running, so time spent in Windows&apos; shared drivers is shown under their own names instead of the driver they ran for.</value>
+  </data>
+  <data name="LatencyNoteNoFrameworkEvents" xml:space="preserve">
+    <value>This version of Windows doesn&apos;t say which driver its driver framework was running for, so some time may be shown under Wdf01000.sys.</value>
+  </data>
+  <data name="LatencyNoteEventsLost" xml:space="preserve">
+    <value>Windows couldn&apos;t keep up with recording every event, so a few things may be missing.</value>
+  </data>
+  <data name="LatencyAdviceUnseenStallFormat" xml:space="preserve">
+    <value>A processor stopped answering for up to {0}, and nothing Windows records shows why. That can come from the PC&apos;s firmware, or from virtual machines such as Hyper-V, WSL, Docker or Windows Sandbox. If you hear dropouts, look for a firmware (BIOS or UEFI) update from your PC&apos;s maker, and close virtual machines while you make music.</value>
+  </data>
+  <data name="ReportSection_latency_check" xml:space="preserve">
+    <value>DPC latency check</value>
+  </data>
+  <data name="ReportSection_latency_summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="ReportSection_latency_drivers" xml:space="preserve">
+    <value>Drivers</value>
+  </data>
+  <data name="ReportSection_latency_driver_details" xml:space="preserve">
+    <value>Driver details</value>
+  </data>
+  <data name="ReportSection_latency_late_moments" xml:space="preserve">
+    <value>When audio was held up</value>
+  </data>
+  <data name="ReportSection_latency_audio_threads" xml:space="preserve">
+    <value>Audio threads</value>
+  </data>
+  <data name="ReportSection_latency_other_realtime_threads" xml:space="preserve">
+    <value>Other real-time threads</value>
+  </data>
+  <data name="ReportSection_latency_processors" xml:space="preserve">
+    <value>Processors</value>
+  </data>
+  <data name="ReportSection_latency_test_thread" xml:space="preserve">
+    <value>Test thread</value>
+  </data>
+  <data name="ReportSection_latency_trace" xml:space="preserve">
+    <value>Trace</value>
   </data>
 </root>

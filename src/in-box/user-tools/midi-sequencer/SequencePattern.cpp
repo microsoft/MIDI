@@ -242,6 +242,33 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    bool MovePatternLane(PatternSettings& pattern, size_t lane, size_t before) noexcept
+    {
+        auto const count = pattern.Lanes.size();
+
+        if (lane >= count || before > count || before == lane || before == lane + 1)
+        {
+            return false;
+        }
+
+        auto const lanes = pattern.Lanes.begin();
+        auto const from = static_cast<ptrdiff_t>(lane);
+        auto const to = static_cast<ptrdiff_t>(before);
+
+        // Turned in place, so nothing is copied or allocated.
+        if (to < from)
+        {
+            std::rotate(lanes + to, lanes + from, lanes + from + 1);
+        }
+        else
+        {
+            std::rotate(lanes + from, lanes + from + 1, lanes + to);
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     PatternStep const* FindStep(PatternLane const& lane, uint16_t index) noexcept
     {
         auto const found = std::lower_bound(lane.Steps.begin(), lane.Steps.end(), index,

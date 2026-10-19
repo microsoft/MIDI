@@ -102,11 +102,12 @@ namespace winrt::midisettings::implementation
             midi2synth::MidiSynthRenderMode::Modern,
         };
 
-        // Exclusive mode is in the API but not implemented, so it is not offered here.
+        // Index order must match the ComboBoxItem order in MainWindow.xaml.
         constexpr midi2synth::MidiSynthAudioOutputMode AudioModeByIndex[]
         {
             midi2synth::MidiSynthAudioOutputMode::WasapiShared,
             midi2synth::MidiSynthAudioOutputMode::WasapiSharedLowLatency,
+            midi2synth::MidiSynthAudioOutputMode::WasapiExclusive,
         };
 
         constexpr midi2synth::MidiSynthBankSelectMode BankSelectByIndex[]

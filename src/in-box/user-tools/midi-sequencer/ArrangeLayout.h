@@ -42,6 +42,14 @@ namespace midisequencer
     inline constexpr double AddTrackRowHeight = 40.0;
     inline constexpr double LaneRowHeight = 58.0;
 
+    // A compact track is one line of its name tall. Below this a header shows only that line.
+    inline constexpr double CompactRowHeight = MinimumTrackRowHeight;
+    inline constexpr double OneLineRowHeight = 36.0;
+
+    // The height a track or folder is drawn at, and the Tempo and meter row's.
+    double RowHeightOf(_In_ Track const& track) noexcept;
+    double TempoRowHeightOf(_In_ Sequence const& sequence) noexcept;
+
     struct ArrangeRow
     {
         ArrangeRowKind Kind{ ArrangeRowKind::Track };

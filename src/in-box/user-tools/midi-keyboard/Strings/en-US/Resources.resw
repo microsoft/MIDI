@@ -203,6 +203,10 @@
   <data name="ProgramListComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Programs on this device</value>
   </data>
+  <data name="ProgramListFromFormat" xml:space="preserve">
+    <value>Programs on {0}</value>
+    <comment>{0} is the device the notes end up playing on, when that isn't the device the keyboard sends to.</comment>
+  </data>
   <data name="ProgramListSearching" xml:space="preserve">
     <value>Asking the device for its programs...</value>
   </data>

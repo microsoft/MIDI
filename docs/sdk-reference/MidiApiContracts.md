@@ -35,10 +35,11 @@ Each Windows MIDI Services WinRT API namespace has its own API contract, and the
 
 ## Remarks
 
-All contracts above are at version `1`, except `MidiTransportsRtpApiContract` and `MidiTransportsNetworkApiContract`, which are at version `2`.
+All contracts above are at version `1`, except `MidiTransportsRtpApiContract`, `MidiTransportsNetworkApiContract` and `MidiSequencingUtilityApiContract`, which are at version `2`.
 
 - Version 2 of `MidiTransportsRtpApiContract` adds [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/), the `OfflineRetentionSeconds` properties that use it, `MidiRtpConfiguredClient.EndpointDeviceId`, and the `SkipInBetweenValuesToCatchUp` properties.
 - Version 2 of `MidiTransportsNetworkApiContract` adds the `SkipInBetweenValuesToCatchUp` properties.
+- Version 2 of `MidiSequencingUtilityApiContract` adds the `PlaybackRate`, `MinimumPlaybackRate` and `MaximumPlaybackRate` properties to [MidiSequencePlayer]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayer/), which play a sequence faster or slower without changing its pitch. It also adds the `ChaseOptions` property and [MidiSequenceChaseOptions]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceChaseOptionsEnum/), which say what the player restores when playback starts partway into a sequence. And it adds the `TransposeSemitones`, `MinimumTransposeSemitones` and `MaximumTransposeSemitones` properties, which play a sequence in another key without moving its drums.
 
 `SkipInBetweenValuesToCatchUp` turns off skipping in-between values to catch up when messages pile up behind a sending speed. It's on by default. See [Sending speed]({{ site.baseurl }}/kb/network-midi2-transport/#sending-speed).
 

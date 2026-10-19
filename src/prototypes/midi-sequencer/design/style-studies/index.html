@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer: style studies</title>
+<style>
+    body { margin: 0; padding: 28px 32px 48px; background: #EDEBE7; color: #2A2A2D; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 6px; }
+    p.lead { max-width: 1100px; font-size: 14px; line-height: 1.55; color: #4A4A50; margin: 0 0 22px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; }
+    figure { margin: 0; background: #FFFFFF; border-radius: 12px; padding: 14px; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .08); }
+    figure img { width: 100%; display: block; border-radius: 6px; }
+    figcaption { font-size: 13px; line-height: 1.5; color: #4A4A50; margin-top: 10px; }
+    figcaption b { color: #1E1E20; font-size: 15px; margin-right: 6px; }
+    figcaption .tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 9px; background: #EDEBE7; color: #5C5C61; margin-left: 6px; vertical-align: 1px; }
+    figcaption a { color: #2B6CB0; }
+    .today { grid-column: 1 / -1; max-width: 900px; }
+    .wide { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<h1>Style studies</h1>
+<p class="lead">The main window comp in six looks, three light and three dark. Each keeps the layout people know from other DAWs: transport on top, tracks down the left, the launcher, the timeline and the clip editor. What changes is the material, the light and the type. Each one is a stylesheet over the comps' own (<code>../seq.css</code>), so it's quick to try ideas. Open a study's page to see it at full size, or run <code>make.ps1</code> to capture them again. Porcelain and Clay share one recipe, light and dark: controls defined by their shadows alone, the way the hardware in the inspiration folder does it.</p>
+
+<div class="grid">
+
+<figure class="today">
+    <img src="shots/today.png" alt="The Sequencer as it looks today">
+    <figcaption><b>Today</b> Flat dark panels one step apart, thin lines, rounded rectangles, and a rainbow of saturated clips: close to what most new DAWs look like.</figcaption>
+</figure>
+
+<figure>
+    <a href="porcelain.html"><img src="shots/porcelain.png" alt="Porcelain"></a>
+    <figcaption><b>Porcelain</b><span class="tag">light</span> One warm gray material. Every control is a soft key pressed out of it, lit from the top left, so the shadows define the buttons. Each lane is a groove the clips sit in. Color only as small caps, the way a synth marks its encoders. <a href="porcelain-second-pass.html">See the second pass</a>, and the approved one <a href="porcelain-variations.html">dark, and in your window color</a>, with <a href="porcelain-shadows.html">softer shadows</a>.</figcaption>
+</figure>
+
+<figure>
+    <a href="clay.html"><img src="shots/clay.png" alt="Clay"></a>
+    <figcaption><b>Clay</b><span class="tag">dark</span> Porcelain's recipe in a violet charcoal. Panels are carved, keys and clips are pressed out, and track color shows only as thin glowing strips. Quiet lowercase labels for the window's own words.</figcaption>
+</figure>
+
+<figure>
+    <a href="aluminum.html"><img src="shots/aluminum.png" alt="Aluminum"></a>
+    <figcaption><b>Aluminum</b><span class="tag">light</span> Machined plates split by engraved grooves, under a dark header strip. What you touch is a small graphite object with a crisp shadow. Color lives in knob rings, LEDs and each clip's top edge; notes are printed in ink. <a href="aluminum-variations.html">See it dark, and in your window color.</a></figcaption>
+</figure>
+
+<figure>
+    <a href="lantern.html"><img src="shots/lantern.png" alt="Lantern"></a>
+    <figcaption><b>Lantern</b><span class="tag">dark</span> Paper lanterns in a dark room: one warm pool of light, clips as lit paper with their notes in ink, launcher clips that stay dark until they play, and keys that light up from inside.</figcaption>
+</figure>
+
+<figure>
+    <a href="vellum.html"><img src="shots/vellum.png" alt="Vellum"></a>
+    <figcaption><b>Vellum</b><span class="tag">light</span> Warm paper, ink hairlines, Sitka for names, and one vermilion accent. Clips are watercolor washes with ink notes. Only what floats, like the clip editor, casts a long soft shadow.</figcaption>
+</figure>
+
+<figure>
+    <a href="ink-gold.html"><img src="shots/ink-gold.png" alt="Ink and Gold"></a>
+    <figcaption><b>Ink and Gold</b><span class="tag">dark</span> Cinematic near-black with grain, drawn in hairlines and white pucks. One warm gold marks whatever is active; tracks differ by muted shade rather than by rainbow.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>

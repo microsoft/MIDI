@@ -172,18 +172,30 @@ namespace midisequencer
         {
             for (auto const& change : file.TempoMap)
             {
+                if (imported.Tempo.size() >= SequenceLimits{}.MaximumTempoPoints)
+                {
+                    break;
+                }
+
                 if (change.MicrosecondsPerQuarterNote > 0)
                 {
-                    imported.Tempo.push_back(TempoPoint{ toTick(change.Tick), 60000000.0 / change.MicrosecondsPerQuarterNote, false });
+                    auto const bpm = std::clamp(60000000.0 / change.MicrosecondsPerQuarterNote, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+                    imported.Tempo.push_back(TempoPoint{ toTick(change.Tick), bpm, false });
                 }
             }
         }
 
+        // As many as a sequence keeps: every bar count walks the meter changes, once a track.
         for (auto const& change : file.TimeSignatureMap)
         {
+            if (imported.Meter.size() >= SequenceLimits{}.MaximumTempoPoints)
+            {
+                break;
+            }
+
             MeterChange meter{};
             meter.Tick = toTick(change.Tick);
-            meter.Numerator = std::max<uint8_t>(1, change.Numerator);
+            meter.Numerator = std::clamp<uint8_t>(change.Numerator, 1, 64);
             meter.Denominator = static_cast<uint8_t>(1u << std::min<uint8_t>(change.DenominatorPowerOfTwo, 5));
             imported.Meter.push_back(meter);
         }
@@ -192,6 +204,11 @@ namespace midisequencer
         {
             for (auto const& text : file.TextEvents)
             {
+                if (imported.Tags.size() >= SequenceLimits{}.MaximumTags)
+                {
+                    break;
+                }
+
                 if ((text.Kind == midifile::TextKind::Marker || text.Kind == midifile::TextKind::CuePoint) && !text.Text.empty())
                 {
                     imported.Tags.push_back(Tag{ toTick(text.Tick), midiapp::SanitizeProvenanceText(FromUtf8(text.Text), 1024), std::nullopt });
@@ -467,13 +484,22 @@ namespace midisequencer
 
         constexpr int64_t ticksPerClock = TicksPerQuarterNote / 24;
 
+        // A ramp goes out as a step at every MIDI clock, or coarser for a very long one, and once
+        // a file holds this many steps the rest of the ramps go out as their points: a ramp across
+        // a whole song mustn't become millions of tempo changes.
+        constexpr int64_t MaximumRampSteps = 4096;
+        constexpr size_t MaximumRampEvents = 1000000;
+
         for (size_t i = 0; i < sequence.Tempo.size(); ++i)
         {
             auto const& point = sequence.Tempo[i];
 
-            if (point.RampToNext && i + 1 < sequence.Tempo.size())
+            if (point.RampToNext && i + 1 < sequence.Tempo.size() && file.TempoMap.size() < MaximumRampEvents)
             {
-                for (auto at = point.Tick; at < sequence.Tempo[i + 1].Tick; at += ticksPerClock)
+                auto const span = std::max<int64_t>(0, sequence.Tempo[i + 1].Tick - point.Tick);
+                auto const step = std::max<int64_t>(ticksPerClock, (span / MaximumRampSteps + ticksPerClock - 1) / ticksPerClock * ticksPerClock);
+
+                for (auto at = point.Tick; at < sequence.Tempo[i + 1].Tick; at += step)
                 {
                     addTempo(at, tempoMap.BeatsPerMinuteAtTick(at));
                 }
@@ -530,6 +556,10 @@ namespace midisequencer
         options.Midi2 = false;
         options.LaneStepTicks = LaneStepTicks(FastestTempo(sequence.Tempo), 0);
         options.LaneStartValues = true;
+
+        // One budget of passes for the whole file, however many tracks it has.
+        auto passesLeft = MaximumRenderedPasses;
+        options.PassesLeft = &passesLeft;
 
         for (size_t t = 0; t < tracks.size() && file.Tracks.size() < 0xFFFE; ++t)
         {

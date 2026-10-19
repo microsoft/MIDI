@@ -273,7 +273,7 @@ MidiNetworkHost::GetSendSpeedForRemoteClient(MidiNetworkRemoteClientIdentity con
     {
         auto lock = m_remoteClientListsLock.lock();
 
-        if (auto const settings = m_hostDefinition.FindRemoteClientSettings(identity); settings != nullptr)
+        if (auto const settings = m_hostDefinition.FindRemoteClientSettings(identity); settings != nullptr && !settings->UseHostSendSpeed)
         {
             speed = { settings->SendSpeedLimit, settings->ReduceSendSpeedAutomatically, true, settings->SkipInBetweenValuesToCatchUp };
         }

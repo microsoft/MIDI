@@ -9,6 +9,7 @@
 #include "..\..\..\Inc\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
+import "MidiNetworkMidi1PortGroup.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
@@ -41,6 +42,16 @@ namespace Windows.Devices.Midi2.Transports.Network
             // When messages back up behind SendSpeedLimit, skip some in-between values so this
             // remote client catches up. True by default.
             [noexcept] Boolean SkipInBetweenValuesToCatchUp { get; set; };
+
+            // The groups to create MIDI 1.0 ports for when this remote client doesn't describe
+            // itself, and what to call them. Used instead of the host's when it isn't empty. Empty
+            // by default.
+            [noexcept] Windows.Foundation.Collections.IVector<MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups { get; };
+
+            // Ignore SendSpeedLimit, ReduceSendSpeedAutomatically and SkipInBetweenValuesToCatchUp
+            // here and send to this remote client at the host's speed. For an entry which is only
+            // there for its MIDI 1.0 port groups. False by default.
+            [noexcept] Boolean UseHostSendSpeed { get; set; };
         }
     }
 }

@@ -4019,3 +4019,540 @@ void MidiNetworkApiTests::TestHostStartsOnItsNetworkAdapter()
     VERIFY_IS_TRUE(host.NetworkAdapterId() == winrt::guid{ adapter->Id });
     VERIFY_IS_TRUE(host.NetworkAdapterName() == winrt::hstring{ adapter->Name });
 }
+
+
+// ------------------------------------------------------------------------------------
+// The MIDI 1.0 ports a connection gets when the device doesn't describe its own groups
+// https://github.com/microsoft/MIDI/issues/1284
+// ------------------------------------------------------------------------------------
+
+namespace
+{
+    // The client entry a connect config creates, or nullptr
+    json::JsonObject CreatedClientEntry(_In_ MidiNetworkClientConnectConfig const& connect)
+    {
+        for (auto const& transport : connect.ConfigJson().GetNamedObject(L"endpointTransportPluginSettings"))
+        {
+            if (winrt::guid(transport.Key()) != MidiNetworkTransportManager::TransportId())
+            {
+                continue;
+            }
+
+            // "create", from json_defs.h, which this project doesn't include
+            auto const clients = transport.Value().GetObject()
+                .GetNamedObject(L"create")
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY);
+
+            for (auto const& client : clients)
+            {
+                if (winrt::guid(client.Key()) == connect.ClientId())
+                {
+                    return client.Value().GetObject();
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    // The remoteClientSettings array a host's settings config sends, or nullptr
+    json::JsonArray SentRemoteClientSettings(_In_ MidiNetworkHostRemoteClientSettingsConfig const& settings)
+    {
+        for (auto const& transport : settings.ConfigJson().GetNamedObject(L"endpointTransportPluginSettings"))
+        {
+            if (winrt::guid(transport.Key()) != MidiNetworkTransportManager::TransportId())
+            {
+                continue;
+            }
+
+            auto const hosts = transport.Value().GetObject()
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY)
+                .GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY);
+
+            for (auto const& host : hosts)
+            {
+                if (winrt::guid(host.Key()) == settings.HostId())
+                {
+                    return host.Value().GetObject().GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY, nullptr);
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    MidiNetworkMidi1PortGroup MakePortGroup(
+        _In_ uint8_t const groupIndex,
+        _In_ winrt::hstring const& name,
+        _In_ bool const hasSourcePort = true,
+        _In_ bool const hasDestinationPort = true)
+    {
+        return MidiNetworkMidi1PortGroup(MidiGroup(groupIndex), name, hasSourcePort, hasDestinationPort);
+    }
+
+    // "index|name|source|destination", so a group can be checked in one comparison
+    std::wstring DescribePortGroup(_In_ MidiNetworkMidi1PortGroup const& group)
+    {
+        return std::to_wstring(group.Group().Index()) + L"|" +
+            std::wstring{ group.Name() } + L"|" +
+            (group.HasSourcePort() ? L"1" : L"0") + L"|" +
+            (group.HasDestinationPort() ? L"1" : L"0");
+    }
+
+    // The same for a group as the SDK writes it
+    std::wstring DescribeJsonPortGroup(_In_ json::IJsonValue const& value)
+    {
+        auto const item = value.GetObject();
+
+        return std::to_wstring(static_cast<int>(item.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_INDEX_KEY, -1))) + L"|" +
+            std::wstring{ item.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_NAME_KEY, L"?") } + L"|" +
+            (item.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_HAS_SOURCE_PORT_KEY, false) ? L"1" : L"0") + L"|" +
+            (item.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_PORT_GROUP_HAS_DESTINATION_PORT_KEY, false) ? L"1" : L"0");
+    }
+}
+
+void MidiNetworkApiTests::TestMidi1PortGroupCleansItsName()
+{
+    MidiNetworkMidi1PortGroup group;
+
+    VERIFY_ARE_EQUAL(group.Group().Index(), (uint8_t)0, L"group 1 by default");
+    VERIFY_IS_TRUE(group.Name().empty(), L"named by Windows by default");
+    VERIFY_IS_TRUE(group.HasSourcePort(), L"with a source");
+    VERIFY_IS_TRUE(group.HasDestinationPort(), L"and a destination");
+
+    // the name ends up in every MIDI 1.0 app, so control characters go and the ends are trimmed
+    group.Name(L"  Juno\t\x0001 106\r\n  ");
+
+    VERIFY_IS_TRUE(group.Name() == L"Juno 106", L"the name is cleaned");
+
+    // 31 characters is the longest port name a MIDI 1.0 app can show
+    group.Name(L"An Overly Long Name For A MIDI 1.0 Port");
+
+    VERIFY_IS_TRUE(group.Name() == L"An Overly Long Name For A MIDI", L"the name is cut, and the space it was cut at trimmed");
+
+    // a character which takes two code units is never cut in half
+    std::wstring withPair(30, L'x');
+    withPair += L"\U0001F3B9";
+
+    group.Name(winrt::hstring{ withPair });
+
+    VERIFY_ARE_EQUAL(group.Name().size(), (uint32_t)30, L"the pair which would be split is left out whole");
+
+    // only the index is kept, so the caller's object can be reused
+    MidiGroup midiGroup(5);
+    group.Group(midiGroup);
+    midiGroup.Index(9);
+
+    VERIFY_ARE_EQUAL(group.Group().Index(), (uint8_t)5, L"changing the MidiGroup afterwards changes nothing");
+
+    MidiNetworkMidi1PortGroup outputOnly(MidiGroup(3), L"TR-8", false, true);
+
+    VERIFY_IS_TRUE(DescribePortGroup(outputOnly) == L"3|TR-8|0|1", L"the full constructor sets everything");
+}
+
+void MidiNetworkApiTests::TestConnectConfigWritesItsPortGroupsCleaned()
+{
+    MidiNetworkClientMatchCriteria criteria;
+    criteria.DirectHostNameOrIPAddress(L"192.0.2.10");
+    criteria.DirectPort(5004);
+
+    MidiNetworkClientConnectConfig config;
+    config.ClientId(foundation::GuidHelper::CreateNewGuid());
+    config.MatchCriteria(criteria);
+
+    auto entry = CreatedClientEntry(config);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"no list is written when there are no groups");
+
+    config.FallbackMidi1PortGroups().Append(MakePortGroup(5, L"Earlier"));
+    config.FallbackMidi1PortGroups().Append(MakePortGroup(1, L"First"));
+    config.FallbackMidi1PortGroups().Append(MakePortGroup(5, L"Later"));
+    config.FallbackMidi1PortGroups().Append(MakePortGroup(7, L"Nothing", false, false));
+
+    entry = CreatedClientEntry(config);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"the list is written");
+
+    auto const groups = entry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, nullptr);
+
+    VERIFY_IS_NOT_NULL(groups);
+
+    if (groups == nullptr) return;
+
+    Log::Comment(String().Format(L"Groups: %s", groups.Stringify().c_str()));
+
+    VERIFY_ARE_EQUAL(groups.Size(), (uint32_t)2, L"one entry per group, and none for a group with no ports");
+
+    if (groups.Size() == 2)
+    {
+        VERIFY_IS_TRUE(DescribeJsonPortGroup(groups.GetAt(0)) == L"1|First|1|1", L"sorted by group");
+        VERIFY_IS_TRUE(DescribeJsonPortGroup(groups.GetAt(1)) == L"5|Later|1|1", L"and a later entry for a group replaces an earlier one");
+    }
+}
+
+// An update is merged into what is saved, and the app copies the count into every update. The
+// groups are only sent once the caller changes them, so a caller which doesn't know about them
+// can't wipe names set somewhere else.
+void MidiNetworkApiTests::TestClientUpdateConfigSendsPortGroupsOnlyWhenChanged()
+{
+    MidiNetworkClientUpdateConfig update(foundation::GuidHelper::CreateNewGuid());
+
+    update.CreateMidi1Ports(true);
+    update.FallbackMidi1PortCount(2);
+
+    auto entry = UpdatedClientEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"groups the caller never touched are not sent");
+
+    update.FallbackMidi1PortGroups().Append(MakePortGroup(0, L"Juno"));
+
+    entry = UpdatedClientEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, json::JsonArray{}).Size(), (uint32_t)1, L"a changed list is sent");
+
+    update.FallbackMidi1PortGroups().Clear();
+
+    entry = UpdatedClientEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"a cleared list is still sent");
+    VERIFY_ARE_EQUAL(entry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, json::JsonArray{}).Size(), (uint32_t)0, L"empty, which goes back to the count");
+
+    // clearing a list which is already empty counts too, which is how a caller resets the groups
+    MidiNetworkClientUpdateConfig reset(foundation::GuidHelper::CreateNewGuid());
+    reset.FallbackMidi1PortGroups().Clear();
+
+    entry = UpdatedClientEntry(reset);
+
+    VERIFY_IS_TRUE(entry != nullptr && entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"clearing an empty list sends an empty list");
+}
+
+void MidiNetworkApiTests::TestHostUpdateConfigSendsPortGroupsOnlyWhenChanged()
+{
+    MidiNetworkHostUpdateConfig update(foundation::GuidHelper::CreateNewGuid());
+
+    update.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeed);
+
+    auto entry = UpdatedHostEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"groups the caller never touched are not sent");
+
+    update.FallbackMidi1PortGroups().Append(MakePortGroup(0, L""));
+    update.FallbackMidi1PortGroups().Append(MakePortGroup(3, L"", false, true));
+
+    entry = UpdatedHostEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, json::JsonArray{}).Size(), (uint32_t)2, L"a changed list is sent");
+
+    update.FallbackMidi1PortGroups().Clear();
+
+    entry = UpdatedHostEntry(update);
+
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_TRUE(entry.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY), L"a cleared list is still sent");
+    VERIFY_ARE_EQUAL(entry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, json::JsonArray{}).Size(), (uint32_t)0);
+}
+
+void MidiNetworkApiTests::TestRemoteClientSettingsCarryPortGroupsAndHostSpeed()
+{
+    MidiNetworkRemoteClientSettings portsOnly(L"MidiApiTest PortsOnly", L"PORTSONLY1");
+
+    VERIFY_IS_FALSE(portsOnly.UseHostSendSpeed(), L"an entry has a speed of its own by default");
+    VERIFY_ARE_EQUAL(portsOnly.FallbackMidi1PortGroups().Size(), (uint32_t)0, L"and no groups");
+
+    portsOnly.UseHostSendSpeed(true);
+    portsOnly.FallbackMidi1PortGroups().Append(MakePortGroup(0, L"Studio Juno"));
+    portsOnly.FallbackMidi1PortGroups().Append(MakePortGroup(1, L"Studio TR-8", false, true));
+
+    MidiNetworkRemoteClientSettings speedOnly(L"MidiApiTest SpeedOnly", L"SPEEDONLY1");
+    speedOnly.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeed);
+
+    MidiNetworkHostRemoteClientSettingsConfig settings(foundation::GuidHelper::CreateNewGuid());
+    settings.RemoteClientSettings().Append(portsOnly);
+    settings.RemoteClientSettings().Append(speedOnly);
+
+    auto const sent = SentRemoteClientSettings(settings);
+
+    VERIFY_IS_NOT_NULL(sent);
+
+    if (sent == nullptr) return;
+
+    Log::Comment(String().Format(L"Remote client settings: %s", sent.Stringify().c_str()));
+
+    VERIFY_ARE_EQUAL(sent.Size(), (uint32_t)2);
+
+    for (auto const& value : sent)
+    {
+        auto const item = value.GetObject();
+        auto const groups = item.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY, nullptr);
+
+        VERIFY_IS_NOT_NULL(groups, L"every entry carries its groups, so taking them out clears them");
+
+        if (groups == nullptr) continue;
+
+        if (item.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L"") == L"PORTSONLY1")
+        {
+            VERIFY_IS_TRUE(item.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY, false), L"an entry only there for its ports keeps the host's speed");
+            VERIFY_ARE_EQUAL(groups.Size(), (uint32_t)2);
+
+            if (groups.Size() == 2)
+            {
+                VERIFY_IS_TRUE(DescribeJsonPortGroup(groups.GetAt(0)) == L"0|Studio Juno|1|1");
+                VERIFY_IS_TRUE(DescribeJsonPortGroup(groups.GetAt(1)) == L"1|Studio TR-8|0|1");
+            }
+        }
+        else
+        {
+            VERIFY_IS_FALSE(item.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY, true), L"an entry with a speed of its own uses it");
+            VERIFY_ARE_EQUAL(groups.Size(), (uint32_t)0);
+        }
+    }
+}
+
+void MidiNetworkApiTests::TestSavedClientFollowsSavedPortGroups()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    auto const clientId = foundation::GuidHelper::CreateNewGuid();
+
+    MidiNetworkClientMatchCriteria match;
+    match.DirectHostNameOrIPAddress(L"192.0.2.11");
+    match.DirectPort(5505);
+
+    MidiNetworkClientConnectConfig connect;
+    connect.ClientId(clientId);
+    connect.Comment(L"MidiApiTest port groups");
+    connect.MatchCriteria(match);
+    connect.FallbackMidi1PortCount(2);
+    connect.FallbackMidi1PortGroups().Append(MakePortGroup(0, L"MidiApiTest Juno"));
+    connect.FallbackMidi1PortGroups().Append(MakePortGroup(1, L"MidiApiTest TR-8", false, true));
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedClient(clientId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(connect), L"saving the client works");
+
+    auto saved = FindSavedClient(clientId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+
+    if (saved == nullptr) return;
+
+    auto groups = saved.FallbackMidi1PortGroups();
+
+    VERIFY_ARE_EQUAL(groups.Size(), (uint32_t)2, L"its groups are saved");
+
+    if (groups.Size() == 2)
+    {
+        VERIFY_IS_TRUE(DescribePortGroup(groups.GetAt(0)) == L"0|MidiApiTest Juno|1|1");
+        VERIFY_IS_TRUE(DescribePortGroup(groups.GetAt(1)) == L"1|MidiApiTest TR-8|0|1");
+    }
+
+    VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)2, L"with the count an older transport uses");
+
+    // the app copies the count into every change, and that must not wipe the names
+    MidiNetworkClientUpdateConfig speedUpdate(clientId);
+    speedUpdate.CreateMidi1Ports(true);
+    speedUpdate.FallbackMidi1PortCount(2);
+    speedUpdate.SendSpeedLimit(MidiNetworkSendSpeedLimit::Midi1WireSpeed);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(speedUpdate), L"saving a speed change works");
+
+    saved = FindSavedClient(clientId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+    VERIFY_IS_TRUE(saved != nullptr && saved.FallbackMidi1PortGroups().Size() == 2, L"a change which did not touch the groups keeps them");
+
+    MidiNetworkClientUpdateConfig groupsUpdate(clientId);
+    groupsUpdate.CreateMidi1Ports(true);
+    groupsUpdate.FallbackMidi1PortCount(4);
+    groupsUpdate.FallbackMidi1PortGroups().Append(MakePortGroup(3, L"MidiApiTest Moog"));
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(groupsUpdate), L"saving new groups works");
+
+    saved = FindSavedClient(clientId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+
+    if (saved == nullptr) return;
+
+    groups = saved.FallbackMidi1PortGroups();
+
+    VERIFY_ARE_EQUAL(groups.Size(), (uint32_t)1, L"a later list replaces the earlier one whole");
+
+    if (groups.Size() == 1)
+    {
+        VERIFY_IS_TRUE(DescribePortGroup(groups.GetAt(0)) == L"3|MidiApiTest Moog|1|1");
+    }
+
+    VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiNetworkSendSpeedLimit::Midi1WireSpeed, L"and the speed set earlier is left alone");
+
+    MidiNetworkClientUpdateConfig cleared(clientId);
+    cleared.CreateMidi1Ports(true);
+    cleared.FallbackMidi1PortCount(1);
+    cleared.FallbackMidi1PortGroups().Clear();
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(cleared), L"saving a cleared list works");
+
+    saved = FindSavedClient(clientId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+
+    if (saved == nullptr) return;
+
+    VERIFY_ARE_EQUAL(saved.FallbackMidi1PortGroups().Size(), (uint32_t)0, L"a cleared list goes back to the count");
+    VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)1);
+}
+
+void MidiNetworkApiTests::TestSavedHostFollowsSavedPortGroups()
+{
+    if (!ConfigFileRegisteredOrSkip())
+    {
+        return;
+    }
+
+    auto const suffix = winrt::to_hstring(MidiClock::Now());
+
+    MidiNetworkHostCreationConfig config;
+    config.Name(winrt::hstring{ TestHostNamePrefix } + L"Groups" + suffix);
+    config.ServiceInstanceName(L"MidiApiTestGroups" + suffix);
+    config.ProductInstanceId(L"MidiApiTestGroups");
+    config.Advertise(false);
+    config.FallbackMidi1PortCount(4);
+    config.FallbackMidi1PortGroups().Append(MakePortGroup(0, L""));
+    config.FallbackMidi1PortGroups().Append(MakePortGroup(3, L"", false, true));
+
+    auto const hostId = config.HostId();
+
+    auto removeEntry = wil::scope_exit([&] { RemoveSavedHost(hostId); });
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config), L"saving the host works");
+
+    auto saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr, L"it is listed once saved");
+
+    if (saved == nullptr) return;
+
+    auto groups = saved.FallbackMidi1PortGroups();
+
+    VERIFY_ARE_EQUAL(groups.Size(), (uint32_t)2, L"the host's groups are saved");
+
+    if (groups.Size() == 2)
+    {
+        VERIFY_IS_TRUE(DescribePortGroup(groups.GetAt(0)) == L"0||1|1");
+        VERIFY_IS_TRUE(DescribePortGroup(groups.GetAt(1)) == L"3||0|1");
+    }
+
+    // one device with ports of its own, named, which keeps the host's speed
+    MidiNetworkRemoteClientSettings remote(L"MidiApiTest Studio PC", L"STUDIOPC1");
+    remote.UseHostSendSpeed(true);
+    remote.FallbackMidi1PortGroups().Append(MakePortGroup(0, L"MidiApiTest Studio Juno"));
+    remote.FallbackMidi1PortGroups().Append(MakePortGroup(1, L"MidiApiTest Studio TR-8"));
+
+    MidiNetworkHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(remote);
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(settings), L"saving the device's ports works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+
+    if (saved == nullptr) return;
+
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), (uint32_t)1);
+
+    if (saved.RemoteClientSettings().Size() == 1)
+    {
+        auto const entry = saved.RemoteClientSettings().GetAt(0);
+
+        VERIFY_IS_TRUE(entry.UseHostSendSpeed(), L"the device keeps the host's speed");
+        VERIFY_ARE_EQUAL(entry.FallbackMidi1PortGroups().Size(), (uint32_t)2, L"and has its own groups");
+
+        if (entry.FallbackMidi1PortGroups().Size() == 2)
+        {
+            VERIFY_IS_TRUE(DescribePortGroup(entry.FallbackMidi1PortGroups().GetAt(0)) == L"0|MidiApiTest Studio Juno|1|1");
+            VERIFY_IS_TRUE(DescribePortGroup(entry.FallbackMidi1PortGroups().GetAt(1)) == L"1|MidiApiTest Studio TR-8|1|1");
+        }
+    }
+
+    // clearing the host's groups goes back to its count, and leaves the device's alone
+    MidiNetworkHostUpdateConfig update(hostId);
+    update.FallbackMidi1PortCount(2);
+    update.FallbackMidi1PortGroups().Clear();
+
+    VerifySaved(svc::MidiServiceTransportPluginConfigManager::SaveUpdate(update), L"saving a cleared list works");
+
+    saved = FindSavedHost(hostId);
+
+    VERIFY_IS_TRUE(saved != nullptr);
+
+    if (saved == nullptr) return;
+
+    VERIFY_ARE_EQUAL(saved.FallbackMidi1PortGroups().Size(), (uint32_t)0, L"the host is back on its count");
+    VERIFY_ARE_EQUAL(saved.FallbackMidi1PortCount(), (uint8_t)2);
+    VERIFY_ARE_EQUAL(saved.RemoteClientSettings().Size(), (uint32_t)1, L"and the device keeps its own");
+}
+
+void MidiNetworkApiTests::TestRunningHostReportsRemoteClientPortGroups()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const hostId = CreateTestHost(MakeUniqueSuffix());
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{}, L"the host is created");
+
+    if (hostId == winrt::guid{}) return;
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    MidiNetworkRemoteClientSettings remote(L"MidiApiTest Ports", L"PORTS1");
+    remote.UseHostSendSpeed(true);
+    remote.FallbackMidi1PortGroups().Append(MakePortGroup(2, L"MidiApiTest Per Device", false, true));
+
+    MidiNetworkHostRemoteClientSettingsConfig settings(hostId);
+    settings.RemoteClientSettings().Append(remote);
+
+    auto const sent = svc::MidiServiceTransportPluginConfigManager::SendUpdate(settings);
+
+    VERIFY_IS_TRUE(sent != nullptr && sent.Status() == svc::MidiServiceConfigResponseStatus::Success, L"the service takes the device's ports");
+
+    MidiNetworkConfiguredHost host{ nullptr };
+
+    for (auto const& candidate : MidiNetworkTransportManager::GetConfiguredHosts())
+    {
+        if (candidate != nullptr && candidate.HostId() == hostId)
+        {
+            host = candidate;
+            break;
+        }
+    }
+
+    VERIFY_IS_TRUE(host != nullptr);
+
+    if (host == nullptr) return;
+
+    VERIFY_ARE_EQUAL(host.RemoteClientSettings().Size(), 1u, L"the running host lists the device");
+
+    if (host.RemoteClientSettings().Size() == 1)
+    {
+        auto const entry = host.RemoteClientSettings().GetAt(0);
+
+        VERIFY_IS_TRUE(entry.UseHostSendSpeed(), L"on the host's speed");
+        VERIFY_ARE_EQUAL(entry.FallbackMidi1PortGroups().Size(), (uint32_t)1, L"with its ports");
+
+        if (entry.FallbackMidi1PortGroups().Size() == 1)
+        {
+            VERIFY_IS_TRUE(DescribePortGroup(entry.FallbackMidi1PortGroups().GetAt(0)) == L"2|MidiApiTest Per Device|0|1");
+        }
+    }
+}

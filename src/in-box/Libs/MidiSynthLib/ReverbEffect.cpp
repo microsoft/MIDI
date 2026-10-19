@@ -21,7 +21,7 @@ namespace MidiSynth
         // came out 6.03 dB louder for the same input.
         constexpr float OutputGain = 0.5f;
 
-        size_t DelayLength(double milliseconds, uint32_t sampleRate) noexcept
+        size_t DelayLength(_In_ double milliseconds, _In_ uint32_t sampleRate) noexcept
         {
             const auto frames = static_cast<size_t>(milliseconds * 0.001 * sampleRate);
             return (std::max)(frames, static_cast<size_t>(1));
@@ -29,7 +29,7 @@ namespace MidiSynth
 
         // A tail left to decay into denormal floats costs many times the processor time for no
         // audible difference, so anything this far below hearing is treated as silence.
-        float FlushDenormal(float value) noexcept
+        float FlushDenormal(_In_ float value) noexcept
         {
             return (std::fabs(value) < 1.0e-20f) ? 0.0f : value;
         }

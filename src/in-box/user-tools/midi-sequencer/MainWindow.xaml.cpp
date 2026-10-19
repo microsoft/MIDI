@@ -78,6 +78,11 @@ namespace winrt::midisequencer::implementation
                 MIDI_SEQUENCER_LOG_INFO(std::wstring{ message }.c_str());
             });
 
+            midiapp::SetMidiCiErrorHandler([](std::wstring_view message, winrt::hresult)
+            {
+                MIDI_SEQUENCER_LOG_INFO(std::wstring{ message }.c_str());
+            });
+
             InitializeStaticText();
             InitializeWindowChrome();
             ApplyPalette();
@@ -134,7 +139,10 @@ namespace winrt::midisequencer::implementation
             }
 
             LauncherToggle().IsChecked(settings.ShowLauncher());
-            LauncherColumn().Width(xaml::GridLengthHelper::FromPixels(settings.ShowLauncher() ? 500 : 0));
+            m_headerWidth = settings.HeaderWidth();
+            m_launcherWidth = settings.LauncherWidth();
+            InitializeArrangeSplitters();
+            ApplyArrangeColumns();
             EditorPanel().Height(settings.EditorHeight());
 
             m_roll.SetPalette(&m_palette);
@@ -151,6 +159,11 @@ namespace winrt::midisequencer::implementation
 
             InitializePatternEditor();
             InitializeGeneratorEditor();
+
+            if (settings.ShowMixer())
+            {
+                ShowMixer(true);
+            }
 
             m_frameTimer = xaml::DispatcherTimer{};
             m_frameTimer.Interval(FrameInterval);
@@ -278,6 +291,17 @@ namespace winrt::midisequencer::implementation
             m_chrome.Initialize(elements, seq::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
+            // The style picked in Appearance: its brushes, the colors the drawn parts use, and
+            // the plates behind the controls.
+            SetUpPlates();
+            LoadStyles();
+            ApplyStyle();
+
+            // Flyouts take the context menus' tinted backdrop, and lists and spin pop-ups the color
+            // that backdrop shows over the window, so they match it. Tooltips take the window's color.
+            midiapp::UseMenuBackdropForLists();
+            midiapp::TintToolTips(seq::AppSettings::Current().UseCustomBackgroundColor(), seq::AppSettings::Current().BackgroundColorArgb());
+
             AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
             AlwaysOnTopToggle().IsChecked(seq::AppSettings::Current().AlwaysOnTop());
 
@@ -287,8 +311,12 @@ namespace winrt::midisequencer::implementation
                 {
                     strong->ApplyPalette();
                     strong->RebuildHeaders();
+                    strong->RebuildSceneHeaders();
                     strong->InvalidateArrange();
                     strong->InvalidateEditor();
+
+                    // The strips take their colors from the theme when they're built.
+                    strong->RebuildMixer();
                 }
             });
         }
@@ -299,8 +327,17 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
-            m_palette = seq::MakePalette(RootGrid().ActualTheme() == xaml::ElementTheme::Light);
+            auto const light = RootGrid().ActualTheme() == xaml::ElementTheme::Light;
+            auto const& style = light ? m_styleLight : m_styleDark;
+
+            m_palette = style != nullptr ? seq::MakePalette(style) : seq::MakePalette(light);
             m_renderer.InvalidateCaches();
+
+            // The scroll bar's look and height come from the theme too.
+            m_timelineBar.Palette(&m_palette);
+            PlaceTimelineBar();
+            ApplyStrips();
+            ApplyPlates();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to apply the theme colors.")
     }
@@ -485,9 +522,23 @@ namespace winrt::midisequencer::implementation
                 {
                     if (auto strong = weak.get())
                     {
+                        auto const& settings = seq::AppSettings::Current();
+
                         strong->m_chrome.ApplyTheme();
+                        midiapp::TintToolTips(settings.UseCustomBackgroundColor(), settings.BackgroundColorArgb());
+
+                        // A style made of a material takes the window color into its own colors.
+                        std::optional<uint32_t> const tint = settings.UseCustomBackgroundColor()
+                            ? std::optional<uint32_t>{ settings.BackgroundColorArgb() | 0xFF000000u } : std::nullopt;
+
+                        if (strong->m_style != nullptr && strong->m_style->WindowColor == themeengine::WindowColorUse::Material && tint != strong->m_styleTint)
+                        {
+                            strong->RefreshStyle();
+                        }
                     }
-                });
+                },
+                nullptr,
+                MakeStylePicker());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the appearance settings.")
     }
@@ -581,6 +632,9 @@ namespace winrt::midisequencer::implementation
             {
                 DevicesStatusText().Text(res::FormatString(used.size() == 1 ? L"DevicesInUseOneMissingFormat" : L"DevicesInUseMissingFormat", used.size(), missing));
             }
+
+            // It opens Studio setup, which lists those devices, so it's only there when there are some.
+            DevicesStatusButton().Visibility(used.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             ClockOutStatusText().Text(L"");
         }
@@ -734,54 +788,120 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
-            if (m_closeConfirmed || !m_dirty || m_readOnly)
-            {
-                return;
-            }
-
-            // A sequence with a file saves itself as it goes; this is the one still waiting.
-            if (!m_path.empty())
+            if (!ReadyToClose())
             {
                 args.Cancel(true);
-                m_closeConfirmed = true;
-                SaveAsync(false);
-                return;
             }
-
-            args.Cancel(true);
-
-            [](winrt::com_ptr<MainWindow> strong) -> winrt::fire_and_forget
-            {
-                try
-                {
-                    controls::ContentDialog dialog{};
-                    dialog.XamlRoot(strong->Content().XamlRoot());
-                    dialog.Title(winrt::box_value(res::GetString(L"SaveChangesTitle")));
-                    dialog.Content(winrt::box_value(res::GetString(L"SaveChangesBody")));
-                    dialog.PrimaryButtonText(res::GetString(L"SaveChangesSave"));
-                    dialog.SecondaryButtonText(res::GetString(L"SaveChangesDiscard"));
-                    dialog.CloseButtonText(res::GetString(L"SaveChangesCancel"));
-                    dialog.DefaultButton(controls::ContentDialogButton::Primary);
-
-                    auto const result = co_await dialog.ShowAsync();
-
-                    if (result == controls::ContentDialogResult::Primary)
-                    {
-                        strong->m_closeConfirmed = true;
-                        strong->SaveAsync(true);
-                    }
-                    else if (result == controls::ContentDialogResult::Secondary)
-                    {
-                        strong->m_closeConfirmed = true;
-                        strong->Close();
-                    }
-                }
-                MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to ask about unsaved changes.")
-            }(get_strong());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to handle closing the window.")
     }
 
+    bool MainWindow::ReadyToClose() noexcept
+    {
+        try
+        {
+            // A save still writing finishes first. One saving for the close closes the window then;
+            // any other closes it after, as asked.
+            if (m_saving)
+            {
+                if (!m_closeConfirmed)
+                {
+                    m_closeRequested = true;
+                }
+
+                return false;
+            }
+
+            if (m_closeConfirmed)
+            {
+                return true;
+            }
+
+            // What's being recorded goes into the sequence, so closing can ask about it.
+            if (m_recording)
+            {
+                StopRecording();
+            }
+
+            if (m_slotTake.has_value())
+            {
+                FinishSlotRecording(SlotTakeEnd::Stopped);
+            }
+
+            // A mixer change still waiting, or words still being typed, are changes to save like
+            // any other.
+            CommitMixerEdit();
+            FlushGeneratorText();
+
+            if (!m_dirty)
+            {
+                return true;
+            }
+
+            // A sequence with a file saves itself as it goes; this is the one still waiting. A file
+            // from a newer version, or one that wouldn't save, asks instead.
+            if (!m_path.empty() && !m_readOnly && !m_closeSaveFailed)
+            {
+                m_closeConfirmed = true;
+                SaveAsync(false);
+                return false;
+            }
+
+            AskAboutUnsavedChanges();
+            return false;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return true;
+        }
+    }
+
+    void MainWindow::CloseIfAsked() noexcept
+    {
+        try
+        {
+            // Another save started since keeps the request until it's done too.
+            if (!m_saving && std::exchange(m_closeRequested, false) && ReadyToClose())
+            {
+                Close();
+            }
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to close the window after saving.")
+    }
+
+    winrt::fire_and_forget MainWindow::AskAboutUnsavedChanges()
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            controls::ContentDialog dialog{};
+            dialog.XamlRoot(Content().XamlRoot());
+            dialog.Title(winrt::box_value(res::GetString(L"SaveChangesTitle")));
+            dialog.Content(winrt::box_value(res::GetString(L"SaveChangesBody")));
+            dialog.PrimaryButtonText(res::GetString(L"SaveChangesSave"));
+            dialog.SecondaryButtonText(res::GetString(L"SaveChangesDiscard"));
+            dialog.CloseButtonText(res::GetString(L"SaveChangesCancel"));
+            dialog.DefaultButton(controls::ContentDialogButton::Primary);
+
+            auto const result = co_await dialog.ShowAsync();
+
+            if (result == controls::ContentDialogResult::Primary)
+            {
+                // Under a name of its own: a new sequence, a file from a newer version, or one that
+                // wouldn't save where it was.
+                m_closeConfirmed = true;
+                SaveAsync(true);
+            }
+            else if (result == controls::ContentDialogResult::Secondary)
+            {
+                m_closeConfirmed = true;
+                Close();
+            }
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to ask about unsaved changes.")
+    }
     void MainWindow::Shutdown() noexcept
     {
         if (m_closing)
@@ -813,6 +933,7 @@ namespace winrt::midisequencer::implementation
             }
 
             StopRemoteControl();
+            CloseCiLinks();
 
             if (m_sources != nullptr)
             {
@@ -904,7 +1025,12 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
-            Close();
+            // Window.Close doesn't raise AppWindow.Closing, so this asks about unsaved changes itself.
+            if (ReadyToClose())
+            {
+                m_closeConfirmed = true;
+                Close();
+            }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to close the window.")
     }

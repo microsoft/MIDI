@@ -71,7 +71,7 @@ Turn it on or off, and change how it sounds, under **Global MIDI Settings** in [
 
 For a playing surface of your own, build a layout in [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/#adding-controls). Note pads and hex pads take a finger on each pad, so you can play chords, and they can stay in one key and scale. Put faders, knobs, and buttons on the same page, and run it full screen.
 
-To play an app on the same tablet, send to **Default App Loopback (A)** and set the app to listen to **Default App Loopback (B)**. To play another computer, connect the two first. See [Connect two Windows PCs](#connect-two-windows-pcs).
+To play an app on the same tablet, send to **Default App Loopback (A)** and set the app to listen to **Default App Loopback (B)**. To play another computer, connect the two first. See [Connect two Windows PCs](#connect-two-windows-pcs). To control gear that's plugged into the other computer, see [Control gear plugged into my main PC from Windows MIDI Glass on a tablet](#control-gear-from-a-tablet).
 
 </details>
 
@@ -233,12 +233,29 @@ For a quick test, `midi forward` in the [MIDI Console]({{ site.baseurl }}/tools/
 
 </details>
 
+<details id="control-gear-from-a-tablet" markdown="1">
+<summary>Control gear plugged into my main PC from Windows MIDI Glass on a tablet</summary>
+
+First, connect the two with Network MIDI 2.0. Create a host on the main PC, and connect to it from the tablet, as in [Connect two Windows PCs](#connect-two-windows-pcs). Each PC then has a MIDI device for the other. Next, give each piece of gear its own MIDI channel. In this example, a USB looper pedal on the main PC uses channel 1, and a synth uses channel 4.
+
+On the tablet, add the main PC's device to your layout in [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/#devices). Then, on each control's **Sends** tab, pick it under **To**, with channel 1 for the looper's controls and channel 4 for the synth's.
+
+On the main PC, split the channels up with [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/). Connect the tablet's **Out** to two **Channel filter** steps, as in [Send each MIDI channel to a different device or app](#route-each-channel). Let only channel 1 through the first one, and connect it to the looper. Let only channel 4 through the second, and connect it to the synth. To reach an app on the main PC, send its channels to a loopback, so the app doesn't lose them while the tablet is away. See [Keep a device in my DAW while it's switched off](#keep-ports-while-a-device-is-off).
+
+A USB controller plugged into the tablet can go the same way. On the tablet, send it to the main PC's device with Windows MIDI Patchbay, like [a keyboard](#play-a-synth-on-another-computer). Put it on a channel that nothing else uses, so the main PC can tell it apart. Change the channel in the controller's own settings, or with a **Channel mapper** step. Then, on the main PC, route that channel like the others.
+
+Windows MIDI Patchbay routes only while it's running, so turn on **Run in notification area** and **Start with Windows** on both PCs.
+
+You can also give each piece of gear a connection of its own, instead of a channel. Create a host on the main PC for each one, named after the gear, and connect the tablet to every host. On the tablet, each control then sends to the host for its gear, on whatever channel the gear listens on. On the main PC, each connection is a device of its own, so connect each one's **Out** straight to its gear, with no filters. The main PC names all of those devices after the tablet at first, so rename each one in [Windows MIDI Settings]({{ site.baseurl }}/tools/settings/#customizing-an-endpoint) to tell them apart.
+
+</details>
+
 <details id="keep-ports-while-a-device-is-off" markdown="1">
 <summary>Keep a device in my DAW while it's switched off</summary>
 
 Many DAWs drop a device from their setup if its ports are missing when the DAW starts. For Bluetooth and RTP-MIDI devices, set **Keep endpoint when offline** to **Always**, in [Windows MIDI Bluetooth Setup]({{ site.baseurl }}/tools/midibluetoothsetup/#keeping-an-endpoint-when-a-device-goes-offline) or [Windows MIDI Network Setup]({{ site.baseurl }}/tools/midinetworksetup/#keeping-the-endpoint-when-a-device-is-offline). The ports stay, and the device works again as soon as it comes back. Anything sent to it while it's off is lost.
 
-Network MIDI 2.0 devices don't have this setting.
+Network MIDI 2.0 devices don't have this setting, so put a loopback between the device and the DAW. Have the DAW listen to **Default App Loopback (B)**. Then, in [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#loopbacks), connect the device's **Out** to **Default App Loopback (A)**. The loopback is always there, even while the device is away, and Windows MIDI Patchbay starts passing messages to it again as soon as the device comes back.
 
 </details>
 
@@ -252,6 +269,15 @@ Most of these answers use [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midip
 In Windows MIDI Patchbay, connect the keyboard to two **Note filter** steps: one that lets through the notes below the split, and one for the notes above it. Connect each filter to a loopback of its own, and set each synth app to listen to its loopback. **Create loopback**, in the patch window, makes them for you.
 
 If both synth apps can listen to one loopback on different channels, put a **Channel mapper** after each filter, and connect both to that one loopback. See [Filter steps]({{ site.baseurl }}/tools/midipatchbay/#filter-steps).
+
+</details>
+
+<details id="route-each-channel" markdown="1">
+<summary>Send each MIDI channel to a different device or app</summary>
+
+In Windows MIDI Patchbay, connect the sending device's **Out** to one **Channel filter** step for each place the messages should go. Set each filter to let through only the channels that belong there, and connect it to that place. For example, send channel 16 to a looper pedal, and channels 1 to 15 to **Default App Loopback (A)**, for an app that listens to **Default App Loopback (B)**.
+
+Messages that don't have a channel, such as clock and SysEx, get through every channel filter. To keep them away from a device, put a **Message type filter** in front of it. If a device listens on a different channel than the one you send on, put a **Channel mapper** after its filter. See [Filter steps]({{ site.baseurl }}/tools/midipatchbay/#filter-steps).
 
 </details>
 
@@ -505,6 +531,15 @@ For a Bluetooth device, see [Common reasons a device may not connect]({{ site.ba
 The **Active sessions** page of [Windows MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/#active-sessions) lists every app connected to the MIDI service, and what each one has open. `midi enumerate active-sessions` in the [MIDI Console]({{ site.baseurl }}/tools/console/#enumerate-active-sessions), and `Get-MidiSession` in PowerShell, list the same thing.
 
 Apps can share a device, so one app using it doesn't stop another from using it too.
+
+</details>
+
+<details id="find-what-makes-audio-drop-out" markdown="1">
+<summary>Find out what makes my audio click, pop or drop out</summary>
+
+Run the **DPC latency check** in [Windows MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/#dpc-latency-check) while you play your project in your audio app. It names the drivers that actually held up audio and MIDI, such as a Wi-Fi, graphics or USB driver, and says what to try for each one. It isn't a benchmark: run it when you already hear glitches at a buffer size that should be big enough for your project.
+
+[Find what makes audio late on your PC (DPC latency)]({{ site.baseurl }}/kb/dpc-latency/) explains what it measures and how to read the results.
 
 </details>
 

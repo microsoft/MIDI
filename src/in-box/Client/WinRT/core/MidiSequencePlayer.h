@@ -52,6 +52,21 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Sequencing::implementation
 
         void SilenceAllNotes();
 
+        double PlaybackRate() const noexcept { return m_engine.PlaybackRate(); }
+        void PlaybackRate(_In_ double const value);
+
+        double MinimumPlaybackRate() const noexcept { return ::midiplayer::PlaybackEngine::MinimumPlaybackRate; }
+        double MaximumPlaybackRate() const noexcept { return ::midiplayer::PlaybackEngine::MaximumPlaybackRate; }
+
+        Sequencing::MidiSequenceChaseOptions ChaseOptions() const noexcept;
+        void ChaseOptions(_In_ Sequencing::MidiSequenceChaseOptions const value) noexcept;
+
+        int32_t TransposeSemitones() const noexcept { return m_engine.TransposeSemitones(); }
+        void TransposeSemitones(_In_ int32_t const value) noexcept { m_engine.SetTransposeSemitones(value); }
+
+        int32_t MinimumTransposeSemitones() const noexcept { return ::midiplayer::PlaybackEngine::MinimumTransposeSemitones; }
+        int32_t MaximumTransposeSemitones() const noexcept { return ::midiplayer::PlaybackEngine::MaximumTransposeSemitones; }
+
         void Close();
 
         winrt::event_token PlaybackEnded(_In_ foundation::TypedEventHandler<Sequencing::MidiSequencePlayer, foundation::IInspectable> const& handler);

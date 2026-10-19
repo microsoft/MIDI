@@ -75,10 +75,11 @@ namespace midisequencer
         void FitToClip(_In_ float width, _In_ float height);
 
         // Pointer input, in pixels from the canvas's top left. Each returns true when the editor
-        // needs drawing again.
+        // needs drawing again. With keepPitch (Shift held while dragging), moved notes keep their
+        // notes and only change position.
         bool PointerPressed(_In_ foundation::Point point, _In_ bool shift, _In_ bool control, _In_ bool rightButton, _In_ bool doubleClick);
-        bool PointerMoved(_In_ foundation::Point point);
-        std::optional<RollEdit> PointerReleased(_In_ foundation::Point point);
+        bool PointerMoved(_In_ foundation::Point point, _In_ bool keepPitch = false);
+        std::optional<RollEdit> PointerReleased(_In_ foundation::Point point, _In_ bool keepPitch = false);
         bool Wheel(_In_ foundation::Point point, _In_ int32_t delta, _In_ bool shift, _In_ bool control, _In_ float width, _In_ float height);
 
         // The key under the pointer, for hearing a note by clicking the keyboard.
@@ -97,6 +98,9 @@ namespace midisequencer
 
         // The pointer shape the window should show at a point: true for the resize arrows.
         bool IsOverNoteEdge(_In_ foundation::Point point) const noexcept;
+
+        // A drag under way, whose change is kept when it's let go.
+        bool InGesture() const noexcept { return m_gesture != Gesture::None; }
 
     private:
         enum class Gesture : uint8_t

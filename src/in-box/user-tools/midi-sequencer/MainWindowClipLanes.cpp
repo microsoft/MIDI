@@ -36,6 +36,20 @@ namespace winrt::midisequencer::implementation
             return clip != nullptr && clip->Kind == seq::ClipKind::Notes;
         }
 
+        // Shift held while a point is dragged keeps its value.
+        bool ShiftIsDown() noexcept
+        {
+            try
+            {
+                auto const state = winrt::Microsoft::UI::Input::InputKeyboardSource::GetKeyStateForCurrentThread(VirtualKey::Shift);
+                return (state & winrt::Windows::UI::Core::CoreVirtualKeyStates::Down) == winrt::Windows::UI::Core::CoreVirtualKeyStates::Down;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
         // What the roll leaves for the lanes and the add button, given the editor's height.
         float RollHeightFor(seq::Clip const* clip, float height) noexcept
         {
@@ -155,7 +169,7 @@ namespace winrt::midisequencer::implementation
         auto const rollHeight = RollHeightFor(clip, height);
 
         // A lane added or taken away changes the roll's height, so it shows all the notes again.
-        if (m_clipLanes.LaneCountChanged())
+        if (m_clipLanes.TakeLaneCountChanged())
         {
             m_roll.FitToClip(width, rollHeight);
         }
@@ -259,7 +273,7 @@ namespace winrt::midisequencer::implementation
             return false;
         }
 
-        if (m_clipLanes.PointerMoved(position, m_roll))
+        if (m_clipLanes.PointerMoved(position, m_roll, ShiftIsDown()))
         {
             InvalidateEditor();
         }
@@ -280,7 +294,7 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            auto edit = m_clipLanes.PointerReleased(position, m_roll);
+            auto edit = m_clipLanes.PointerReleased(position, m_roll, ShiftIsDown());
             auto const clip = seq::FindClip(m_doc, m_editorClipId);
 
             if (!edit.has_value() || clip == nullptr)

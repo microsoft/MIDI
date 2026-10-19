@@ -289,6 +289,26 @@ namespace winrt::midinetworksetup::implementation
             LocalHostsListView().ItemsSource(m_localHosts);
             RtpRemoteHostsListView().ItemsSource(m_rtpRemoteHosts);
             RtpLocalHostsListView().ItemsSource(m_rtpLocalHosts);
+            Midi1PortGroupsList().ItemsSource(m_midi1PortGroupRows);
+
+            // Every number box shows its spin pop-up for a finger or a pen only, not for the mouse
+            // (SpinButtons.h). The markup starts them with none.
+            for (auto const& box : {
+                     ManualPortNumberBox(),
+                     RtpManualPortNumberBox(),
+                     HostPortNumberBox(),
+                     RtpHostPortNumberBox(),
+                     HostFallbackMidi1PortCountBox(),
+                     CustomizeFallbackMidi1PortCountBox(),
+                     MaxHostConnectionsBox(),
+                     InvitationPendingTimeoutBox(),
+                     DirectConnectionScanIntervalBox(),
+                     OutboundPingIntervalBox(),
+                     MaxFecPacketsBox(),
+                     MaxRetransmitBufferBox() })
+            {
+                midiapp::UseTouchSpinButtons(box);
+            }
 
             InitializeSendSpeedPickers();
 
@@ -446,6 +466,23 @@ namespace winrt::midinetworksetup::implementation
         m_networkMidi2Usable = IsNetworkMidi2TransportUsable();
         m_rtpUsable = IsRtpTransportUsable();
 
+        // Not required for the pages: a transport from before ports could be named still works,
+        // and gets the count instead of the MIDI 1.0 ports dialog
+        try
+        {
+            m_midi1PortGroupsUsable = m_networkMidi2Usable &&
+                midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                    midi2net::MidiNetworkTransportManager::TransportId(),
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_FALLBACK_MIDI1_PORT_GROUPS);
+
+            ManualConnectMidi1PortsPanel().Visibility(m_midi1PortGroupsUsable ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ManualConnectMidi1PortsText().Text(Midi1PortsLineText(m_manualConnectMidi1Ports));
+        }
+        catch (...)
+        {
+            m_midi1PortGroupsUsable = false;
+        }
+
         try
         {
             auto const noTransport = !m_networkMidi2Usable && !m_rtpUsable;
@@ -592,8 +629,113 @@ namespace winrt::midinetworksetup::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnRootSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const&)    {
+    void MainWindow::OnRootSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const& args)    {
         m_chrome.UpdateTitleBarInsets();
+        ApplyWindowSize(args.NewSize());
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ApplyWindowSize(foundation::Size const size) noexcept
+    {
+        try
+        {
+            // The app opens 1180 wide. Below this, the open pane and a row's graph leave the
+            // details too little room, and buttons were pushed out of the window.
+            constexpr double narrowBelowWidth{ 1100 };
+
+            auto const isNarrow = size.Width < narrowBelowWidth;
+
+            // the rows bound to it update themselves
+            winrt::get_self<implementation::PageLayout>(midinetworksetup::PageLayout::Current())->InternalSetNarrow(isNarrow);
+
+            // Folded into a menu button rather than a strip of icons: both transports have
+            // "Network devices" and "This PC" with the same icons, and only the full pane shows
+            // which is which.
+            auto navigation = MainNavigation();
+            auto const mode = isNarrow ?
+                controls::NavigationViewPaneDisplayMode::LeftMinimal :
+                controls::NavigationViewPaneDisplayMode::Left;
+
+            if (navigation.PaneDisplayMode() != mode)
+            {
+                navigation.PaneDisplayMode(mode);
+
+                // the menu button is the only way to the pane while it's folded away
+                navigation.IsPaneToggleButtonVisible(isNarrow);
+
+                // A header gives the menu button a row of its own; without one the button sits
+                // on top of the page. This one is just the button's height (see the resources
+                // on MainNavigation).
+                if (isNarrow)
+                {
+                    controls::Border buttonRow{};
+                    buttonRow.Height(40);
+                    navigation.Header(buttonRow);
+                }
+                else
+                {
+                    navigation.Header(nullptr);
+                }
+
+                if (!isNarrow)
+                {
+                    navigation.IsPaneOpen(true);
+                }
+            }
+
+            // A dialog is centered on the whole window, title bar included, and the tall ones
+            // filled it and covered the title bar's text and PREVIEW badge. Their content scrolls
+            // instead. A dialog may cover the empty bottom 10 of the title bar, below the text;
+            // 168 is a dialog's own title, padding and buttons, measured.
+            auto const keepClear = (std::max)(AppTitleBar().ActualHeight(), 40.0) - 10.0;
+            auto const contentHeight = (std::max)(160.0, size.Height - (2 * keepClear) - 168.0);
+
+            for (auto const& scroller : {
+                     CreateHostScroller(),
+                     CreateRtpHostScroller(),
+                     ConnectNameScroller(),
+                     CustomizeScroller(),
+                     Midi1PortGroupsScroller() })
+            {
+                scroller.MaxHeight(contentHeight);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    // The form opens under the last device, which can be at the bottom of the window or below it.
+    // Once it has its height, the page scrolls just enough to show all of it, or to its top when
+    // it's taller than the window. Only when it opens: a form that grows later, such as when the
+    // window narrows, leaves the page where it is.
+    _Use_decl_annotations_
+    void MainWindow::OnManualConnectExpanding(controls::Expander const& sender, controls::ExpanderExpandingEventArgs const&)
+    {
+        m_openingConnectForm = sender;
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnManualConnectFormSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args)
+    {
+        try
+        {
+            if (m_openingConnectForm == nullptr ||
+                sender != m_openingConnectForm ||
+                args.NewSize().Height <= args.PreviousSize().Height)
+            {
+                return;
+            }
+
+            auto const form = std::exchange(m_openingConnectForm, nullptr);
+
+            xaml::BringIntoViewOptions options;
+            options.AnimationDesired(true);
+            form.StartBringIntoView(options);
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
@@ -710,7 +852,7 @@ namespace winrt::midinetworksetup::implementation
             box.Minimum(static_cast<double>(native::AppSettings::MinimumRefreshIntervalSeconds));
             box.Maximum(static_cast<double>(native::AppSettings::MaximumRefreshIntervalSeconds));
             box.Value(static_cast<double>(native::AppSettings::Current().RefreshIntervalSeconds()));
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
             box.HorizontalAlignment(xaml::HorizontalAlignment::Left);
             box.Width(160);
             xaml::Automation::AutomationProperties::SetName(box, res::GetString(L"SettingsRefreshIntervalLabel"));
@@ -1140,6 +1282,73 @@ namespace winrt::midinetworksetup::implementation
                     snapshot.ConfiguredClients = midi2net::MidiNetworkTransportManager::GetConfiguredClients();
                     snapshot.PendingRemoteClients = midi2net::MidiNetworkTransportManager::GetPendingRemoteClients();
 
+                    // A device which describes its own groups decides its MIDI 1.0 ports, and the
+                    // rows say so rather than showing ports it won't get
+                    auto const noteFunctionBlocks = [&snapshot](_In_ winrt::hstring const& endpointDeviceId)
+                        {
+                            if (endpointDeviceId.empty())
+                            {
+                                return;
+                            }
+
+                            try
+                            {
+                                auto const info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceId);
+
+                                if (info == nullptr)
+                                {
+                                    return;
+                                }
+
+                                auto const blocks = info.GetDeclaredFunctionBlocks();
+
+                                if (blocks != nullptr && blocks.Size() > 0)
+                                {
+                                    snapshot.EndpointsWithFunctionBlocks.push_back(std::wstring{ Lowered(endpointDeviceId) });
+                                }
+                            }
+                            catch (...)
+                            {
+                            }
+                        };
+
+                    if (snapshot.ConfiguredClients != nullptr)
+                    {
+                        for (auto const& client : snapshot.ConfiguredClients)
+                        {
+                            if (client != nullptr)
+                            {
+                                noteFunctionBlocks(client.EndpointDeviceId());
+                            }
+                        }
+                    }
+
+                    if (snapshot.ConfiguredHosts != nullptr)
+                    {
+                        for (auto const& host : snapshot.ConfiguredHosts)
+                        {
+                            if (host == nullptr)
+                            {
+                                continue;
+                            }
+
+                            auto const connections = host.Connections();
+
+                            if (connections == nullptr)
+                            {
+                                continue;
+                            }
+
+                            for (auto const& connection : connections)
+                            {
+                                if (connection != nullptr)
+                                {
+                                    noteFunctionBlocks(connection.EndpointDeviceId());
+                                }
+                            }
+                        }
+                    }
+
                     // What is saved, which is not always what the service is running now
                     for (auto const& saved : midi2net::MidiNetworkTransportManager::GetSavedClients())
                     {
@@ -1155,6 +1364,8 @@ namespace winrt::midinetworksetup::implementation
                         {
                             continue;
                         }
+
+                        snapshot.SavedHosts.insert_or_assign(std::wstring{ EntryKey(saved.HostId()) }, saved);
 
                         std::vector<midi2net::MidiNetworkKnownRemoteClient> known{};
 
@@ -1661,6 +1872,9 @@ namespace winrt::midinetworksetup::implementation
                 bool ReduceSendSpeedAutomatically{ false };
                 bool SkipInBetweenValuesToCatchUp{ true };
                 winrt::hstring SendSpeedText{};
+
+                // only for a saved entry which creates MIDI 1.0 ports
+                winrt::hstring Midi1PortsText{};
             };
 
             std::vector<RowData> rows{};
@@ -1898,6 +2112,24 @@ namespace winrt::midinetworksetup::implementation
                             row->ReduceSendSpeedAutomatically,
                             row->SkipInBetweenValuesToCatchUp));
 
+                    // Only a saved entry records its ports, and only one which creates MIDI 1.0
+                    // ports has any. A device which describes its own groups gets those instead.
+                    if (m_midi1PortGroupsUsable && isSaved && !saved->second.CreateOnlyUmpEndpoints())
+                    {
+                        std::wstring const endpointKey{ Lowered(client.EndpointDeviceId()) };
+
+                        auto const describesItself = !endpointKey.empty() && std::find(
+                            snapshot.EndpointsWithFunctionBlocks.begin(),
+                            snapshot.EndpointsWithFunctionBlocks.end(),
+                            endpointKey) != snapshot.EndpointsWithFunctionBlocks.end();
+
+                        row->Midi1PortsText = describesItself ?
+                            res::GetString(L"Midi1PortsFromDevice") :
+                            Midi1PortsLineText(Midi1PortLayoutFromApi(
+                                saved->second.FallbackMidi1PortCount(),
+                                saved->second.FallbackMidi1PortGroups()));
+                    }
+
                     // A device which is not advertising reports nothing, so the row would show an
                     // empty identity and no reason for the entry never matching. The saved entry
                     // still holds what it is looking for, and when a firmware update changes a
@@ -2062,6 +2294,8 @@ namespace winrt::midinetworksetup::implementation
                     row.ReduceSendSpeedAutomatically,
                     row.SkipInBetweenValuesToCatchUp,
                     row.SendSpeedText);
+
+                winrt::get_self<RemoteHostItem>(item)->InternalUpdateMidi1Ports(row.Midi1PortsText);
             }
 
             for (int32_t i = static_cast<int32_t>(m_remoteHosts.Size()) - 1; i >= 0; i--)
@@ -2114,7 +2348,8 @@ namespace winrt::midinetworksetup::implementation
 
     namespace
     {
-        // one device a host sends to at a speed of its own, for either transport
+        // one device a host sends to at a speed of its own, or which has MIDI 1.0 ports of its
+        // own, for either transport
         struct RemoteClientSpeedEntry
         {
             winrt::hstring Name{};
@@ -2122,6 +2357,12 @@ namespace winrt::midinetworksetup::implementation
             uint32_t SendSpeedLimit{ 0 };
             bool ReduceSendSpeedAutomatically{ false };
             bool SkipInBetweenValuesToCatchUp{ true };
+
+            // Network MIDI 2.0 only. An empty text hides the ports line.
+            bool UsesHostSendSpeed{ false };
+            bool HasOwnMidi1Ports{ false };
+            Midi1PortLayout OwnMidi1Ports{};
+            winrt::hstring Midi1PortsText{};
         };
 
         // These change rarely, so the list is only rebuilt when its contents actually differ.
@@ -2155,7 +2396,11 @@ namespace winrt::midinetworksetup::implementation
                         self->ProductInstanceId() != entries[i].ProductInstanceId ||
                         self->SendSpeedLimit() != entries[i].SendSpeedLimit ||
                         self->ReduceSendSpeedAutomatically() != entries[i].ReduceSendSpeedAutomatically ||
-                        self->SkipInBetweenValuesToCatchUp() != entries[i].SkipInBetweenValuesToCatchUp;
+                        self->SkipInBetweenValuesToCatchUp() != entries[i].SkipInBetweenValuesToCatchUp ||
+                        self->UsesHostSendSpeed() != entries[i].UsesHostSendSpeed ||
+                        self->HasOwnMidi1Ports() != entries[i].HasOwnMidi1Ports ||
+                        !(self->OwnMidi1Ports() == entries[i].OwnMidi1Ports) ||
+                        self->Midi1PortsText() != entries[i].Midi1PortsText;
                 }
 
                 if (!changed)
@@ -2169,6 +2414,11 @@ namespace winrt::midinetworksetup::implementation
                 {
                     auto created = winrt::make_self<RemoteClientSpeedItem>();
 
+                    auto const speedValue = MainWindow::SendSpeedValueText(
+                        entry.SendSpeedLimit,
+                        entry.ReduceSendSpeedAutomatically,
+                        entry.SkipInBetweenValuesToCatchUp);
+
                     created->InternalInitialize(
                         Lowered(winrt::hstring{ std::wstring{ entry.ProductInstanceId } + L"|" + std::wstring{ entry.Name } }),
                         hostKey,
@@ -2178,11 +2428,18 @@ namespace winrt::midinetworksetup::implementation
                         entry.SendSpeedLimit,
                         entry.ReduceSendSpeedAutomatically,
                         entry.SkipInBetweenValuesToCatchUp,
-                        MainWindow::SendSpeedValueText(
-                            entry.SendSpeedLimit,
-                            entry.ReduceSendSpeedAutomatically,
-                            entry.SkipInBetweenValuesToCatchUp),
+                        // Network MIDI 2.0 shows the ports under the speed, so each line says
+                        // what it is about
+                        isRtpMidi ? speedValue :
+                            entry.UsesHostSendSpeed ? res::GetString(L"RemoteClientUsesHostSendSpeed") :
+                            res::FormatString(L"SendSpeedLineFormat", speedValue),
                         isRtpMidi);
+
+                    created->InternalInitializeMidi1Ports(
+                        entry.UsesHostSendSpeed,
+                        entry.HasOwnMidi1Ports,
+                        entry.OwnMidi1Ports,
+                        entry.Midi1PortsText);
 
                     list.Append(*created);
                 }
@@ -2288,6 +2545,25 @@ namespace winrt::midinetworksetup::implementation
                                 host.ReduceSendSpeedAutomatically(),
                                 host.SkipInBetweenValuesToCatchUp())));
 
+                    // What each device gets unless it has ports of its own. Only the saved host
+                    // records it.
+                    Midi1PortLayout hostMidi1Ports{};
+
+                    if (auto const savedHost = snapshot.SavedHosts.find(std::wstring{ hostKey }); savedHost != snapshot.SavedHosts.end())
+                    {
+                        hostMidi1Ports = Midi1PortLayoutFromApi(
+                            savedHost->second.FallbackMidi1PortCount(),
+                            savedHost->second.FallbackMidi1PortGroups());
+                    }
+
+                    auto const showsMidi1Ports = m_midi1PortGroupsUsable && host.CreateMidi1Ports();
+
+                    self->InternalUpdateMidi1Ports(
+                        hostMidi1Ports,
+                        showsMidi1Ports ?
+                            res::FormatString(L"HostMidi1PortsLineFormat", Midi1PortLayoutSummary(hostMidi1Ports)) :
+                            winrt::hstring{});
+
                     // connected remote clients
                     std::vector<winrt::hstring> connectionKeys{};
 
@@ -2381,6 +2657,44 @@ namespace winrt::midinetworksetup::implementation
                                 connection.UsesRemoteClientSettings() ?
                                     res::FormatString(L"ConnectionSendSpeedOwnFormat", connectionSpeedValue) :
                                     res::FormatString(L"ConnectionSendSpeedHostFormat", connectionSpeedValue));
+
+                            // The ports this device gets: the device's own groups when it describes
+                            // them, else the ports set for it on this host, else the host's
+                            Midi1PortLayout ownMidi1Ports{};
+                            bool hasOwnMidi1Ports{ false };
+                            winrt::hstring midi1PortsText{};
+
+                            if (showsMidi1Ports)
+                            {
+                                if (auto const own = FindRemoteClientSettings(host.RemoteClientSettings(), connection.UmpEndpointName(), connection.ProductInstanceId()))
+                                {
+                                    if (auto const groups = own.FallbackMidi1PortGroups(); groups != nullptr && groups.Size() > 0)
+                                    {
+                                        ownMidi1Ports = Midi1PortLayoutFromApi(MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, groups);
+                                        hasOwnMidi1Ports = true;
+                                    }
+                                }
+
+                                std::wstring const endpointKey{ Lowered(connection.EndpointDeviceId()) };
+
+                                auto const describesItself = !endpointKey.empty() && std::find(
+                                    snapshot.EndpointsWithFunctionBlocks.begin(),
+                                    snapshot.EndpointsWithFunctionBlocks.end(),
+                                    endpointKey) != snapshot.EndpointsWithFunctionBlocks.end();
+
+                                midi1PortsText =
+                                    describesItself ? res::GetString(L"Midi1PortsFromDevice") :
+                                    hasOwnMidi1Ports ? res::FormatString(L"ConnectionMidi1PortsOwnFormat", Midi1PortLayoutSummary(ownMidi1Ports)) :
+                                    res::FormatString(L"ConnectionMidi1PortsHostFormat", Midi1PortLayoutSummary(hostMidi1Ports));
+                            }
+
+                            winrt::get_self<HostConnectionItem>(connectionItem)->InternalUpdateMidi1Ports(
+                                hasOwnMidi1Ports,
+                                ownMidi1Ports,
+                                // kept by the same name and id as the speed
+                                !TrimmedText(connection.UmpEndpointName()).empty() &&
+                                    !TrimmedText(connection.ProductInstanceId()).empty(),
+                                midi1PortsText);
                         }
                     }
 
@@ -2455,15 +2769,35 @@ namespace winrt::midinetworksetup::implementation
                     {
                         for (auto const& entry : settings)
                         {
-                            if (entry != nullptr)
+                            if (entry == nullptr)
                             {
-                                speedEntries.push_back({
-                                    entry.RemoteClientName(),
-                                    entry.RemoteClientProductInstanceId(),
-                                    static_cast<uint32_t>(entry.SendSpeedLimit()),
-                                    entry.ReduceSendSpeedAutomatically(),
-                                    entry.SkipInBetweenValuesToCatchUp() });
+                                continue;
                             }
+
+                            RemoteClientSpeedEntry speedEntry{
+                                entry.RemoteClientName(),
+                                entry.RemoteClientProductInstanceId(),
+                                static_cast<uint32_t>(entry.SendSpeedLimit()),
+                                entry.ReduceSendSpeedAutomatically(),
+                                entry.SkipInBetweenValuesToCatchUp() };
+
+                            // an entry can be there only for its MIDI 1.0 ports
+                            speedEntry.UsesHostSendSpeed = entry.UseHostSendSpeed();
+
+                            if (auto const groups = entry.FallbackMidi1PortGroups(); groups != nullptr && groups.Size() > 0)
+                            {
+                                speedEntry.HasOwnMidi1Ports = true;
+                                speedEntry.OwnMidi1Ports = Midi1PortLayoutFromApi(MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, groups);
+                            }
+
+                            if (m_midi1PortGroupsUsable)
+                            {
+                                speedEntry.Midi1PortsText = speedEntry.HasOwnMidi1Ports ?
+                                    Midi1PortsLineText(speedEntry.OwnMidi1Ports) :
+                                    res::GetString(L"RemoteClientUsesHostMidi1Ports");
+                            }
+
+                            speedEntries.push_back(std::move(speedEntry));
                         }
                     }
 

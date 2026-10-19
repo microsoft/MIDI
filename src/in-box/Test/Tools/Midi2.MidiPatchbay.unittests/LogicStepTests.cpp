@@ -826,6 +826,32 @@ void LogicStepTests::PutValueNeverTurnsANoteOnIntoANoteOff()
     VERIFY_ARE_EQUAL(0x2000u, ReadPart(bend, message.Words.data(), message.Count).Raw);
 }
 
+void LogicStepTests::PutValueNeverChangesTheMessageType()
+{
+    auto const noteOn = Midi1(0, NoteOn, 2, 60, 100);
+
+    // A MIDI 2.0 type on a one-word message would take the next message as its second word.
+    auto typed = noteOn;
+    VERIFY_IS_FALSE(WritePart(PartPlace{ MessagePart::Bits, 0, 31, 28 }, PlainValue(0x4), typed.Words.data(), typed.Count));
+    VERIFY_IS_TRUE(typed == noteOn);
+
+    // The same through a field that only reaches into the type.
+    VERIFY_IS_FALSE(WritePart(PartPlace{ MessagePart::Bits, 0, 31, 0 }, PlainValue(0xF0000101u), typed.Words.data(), typed.Count));
+    VERIFY_IS_TRUE(typed == noteOn);
+
+    // A whole first word that keeps the type, the status bits, and a later word are all fine.
+    VERIFY_IS_TRUE(WritePart(PartPlace{ MessagePart::Bits, 0, 31, 0 }, PlainValue(0x20B21B32u), typed.Words.data(), typed.Count));
+    VERIFY_IS_TRUE(typed == Midi1(0, ControlChange, 2, 27, 50));
+
+    auto status = noteOn;
+    VERIFY_IS_TRUE(WritePart(PartPlace{ MessagePart::Bits, 0, 23, 20 }, PlainValue(ControlChange), status.Words.data(), status.Count));
+    VERIFY_IS_TRUE(status == Midi1(0, ControlChange, 2, 60, 100));
+
+    auto midi2 = Midi2(0, NoteOn, 0, 60, 0, 0x80000000u);
+    VERIFY_IS_TRUE(WritePart(PartPlace{ MessagePart::Bits, 1, 31, 28 }, PlainValue(0xF), midi2.Words.data(), midi2.Count));
+    VERIFY_ARE_EQUAL(0xF0000000u, midi2.Words[1]);
+}
+
 void LogicStepTests::ValuesCompareTheSameInBothProtocols()
 {
     auto const patch = VelocitySplit();

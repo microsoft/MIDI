@@ -64,7 +64,8 @@ namespace midipatchbay
         _In_ uint8_t wordCount) noexcept;
 
     // False when the message has no such part, and then it is left as it was. A MIDI 1.0 note on
-    // is never turned into a note off, nor a note off into a note on.
+    // is never turned into a note off, nor a note off into a note on, and bits never change the
+    // message type.
     bool WritePart(
         _In_ PartPlace const& place,
         _In_ LogicValue const& value,

@@ -105,9 +105,10 @@ namespace winrt::midisequencer::implementation
         form.Spacing(12);
         form.Width(400);
 
+        // Wide enough for the rate, the octaves and the note length side by side.
         controls::StackPanel play{};
         play.Spacing(12);
-        play.MaxWidth(480);
+        play.MaxWidth(560);
 
         form.Children().Append(Text(res::GetString(L"ArpNotesFrom"), secondary));
 
@@ -216,10 +217,41 @@ namespace winrt::midisequencer::implementation
 
         play.Children().Append(orders);
 
-        // Octaves and how long each note lasts.
+        // How fast it plays, then octaves and how long each note lasts, together as in comp 4.
         controls::StackPanel numbers{};
         numbers.Orientation(controls::Orientation::Horizontal);
         numbers.Spacing(18);
+
+        controls::ComboBox rate{};
+        rate.Header(winrt::box_value(res::GetString(L"ArpRate")));
+        rate.Width(170);
+        automation::AutomationProperties::SetName(rate, res::GetString(L"ArpRate"));
+
+        int32_t rateIndex{ -1 };
+
+        for (size_t i = 0; i < std::size(seq::PatternStepSizes); ++i)
+        {
+            rate.Items().Append(winrt::box_value(res::GetString(L"PatternStepSize" + std::to_wstring(seq::PatternStepSizes[i]))));
+
+            if (seq::PatternStepSizes[i] == generator.StepTicks)
+            {
+                rateIndex = static_cast<int32_t>(i);
+            }
+        }
+
+        rate.SelectedIndex(rateIndex);
+        rate.SelectionChanged([edit](foundation::IInspectable const& sender, auto&&)
+        {
+            auto const index = sender.as<controls::ComboBox>().SelectedIndex();
+
+            if (index >= 0 && static_cast<size_t>(index) < std::size(seq::PatternStepSizes))
+            {
+                auto const ticks = seq::PatternStepSizes[static_cast<size_t>(index)];
+                edit([ticks](seq::GeneratorSettings& edited) { edited.StepTicks = ticks; });
+            }
+        });
+
+        numbers.Children().Append(rate);
 
         auto const numberBox = [&](wchar_t const* headerKey, double minimum, double maximum, double value, std::function<void(seq::GeneratorSettings&, double)> apply)
         {
@@ -232,7 +264,7 @@ namespace winrt::midisequencer::implementation
             box.LargeChange(10);
             box.Value(value);
             box.Width(170);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
             box.ValueChanged([edit, apply](controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const& args)
             {
                 auto const newValue = args.NewValue();

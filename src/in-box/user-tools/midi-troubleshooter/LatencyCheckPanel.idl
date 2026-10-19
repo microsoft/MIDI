@@ -1,0 +1,16 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace miditroubleshooter
+{
+    // The DPC latency check page. A control of its own, so the main window only hosts it.
+    [default_interface]
+    runtimeclass LatencyCheckPanel : Microsoft.UI.Xaml.Controls.UserControl
+    {
+        LatencyCheckPanel();
+    }
+}

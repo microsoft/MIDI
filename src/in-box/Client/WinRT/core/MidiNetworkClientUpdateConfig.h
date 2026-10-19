@@ -12,6 +12,8 @@
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
+#include "MidiNetworkMidi1PortGroup.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkClientUpdateConfig : MidiNetworkClientUpdateConfigT<MidiNetworkClientUpdateConfig>
@@ -40,6 +42,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp.value_or(true); }
         void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        collections::IVector<network::MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups() const noexcept { return m_fallbackMidi1PortGroups; }
+
         json::JsonObject ConfigJson() const noexcept;
 
     private:
@@ -52,6 +56,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         std::optional<network::MidiNetworkSendSpeedLimit> m_sendSpeedLimit{};
         std::optional<bool> m_reduceSendSpeedAutomatically{};
         std::optional<bool> m_skipInBetweenValuesToCatchUp{};
+
+        // Sent only once the caller changes the list, for the same reason. Declared in this order
+        // because the list is built from the flag.
+        std::shared_ptr<std::atomic<bool>> m_fallbackMidi1PortGroupsChanged{ std::make_shared<std::atomic<bool>>(false) };
+        collections::IObservableVector<network::MidiNetworkMidi1PortGroup> m_fallbackMidi1PortGroups{
+            MidiNetworkMidi1PortGroup::CreateChangeTrackedList(m_fallbackMidi1PortGroupsChanged) };
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Network::factory_implementation

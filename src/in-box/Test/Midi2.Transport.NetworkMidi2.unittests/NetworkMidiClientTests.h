@@ -112,6 +112,15 @@ namespace NetworkMidiTest
         TEST_METHOD(CustomEndpointNameCanComeFromTheConfigFileEntry);
         TEST_METHOD(ConnectMdnsAcceptsACustomEndpointName);
 
+        // The name this PC gives a remote host. The host knows this PC by that name and its
+        // product instance id, so a name which changes between the first connection and a
+        // restart makes this PC look like a new device. A connection made by command used to
+        // give "<computer>-midisrv", and the same connection read back from the configuration
+        // gave the computer name, dropping any name the connection was saved with.
+        TEST_METHOD(ClientGivesTheSameNameWhetherConnectedNowOrReadFromConfiguration);
+        TEST_METHOD(ClientKeepsTheLocalNameItWasSavedWith);
+        TEST_METHOD(ClientIgnoresALocalNameWhichIsTheRemoteAddress);
+
         // An app uses the declared capabilities to tell a compatible transport from an older
         // one, and refuses to run against a build missing any verb it needs. Dropping one from
         // this list is therefore an app-breaking change, not a cosmetic one.

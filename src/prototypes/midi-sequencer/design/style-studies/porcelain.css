@@ -1,0 +1,427 @@
+/* PROTOTYPE. Style study: Porcelain (light). One warm gray material; every control is a soft key
+   pressed out of it, lit from the top left, so the shadows define the buttons. Color only as small
+   caps. Inspired by the soft-shadow hardware in G:\design-inspiration. */
+
+html.study.porcelain {
+    --surface: #E4E3DF;
+    --well: #DCDBD6;
+    --face: linear-gradient(145deg, #ECEBE7, #DDDCD8);
+    --face-pressed: #DEDDD8;
+    --raised: -4px -4px 10px rgba(255, 255, 255, .9), 5px 6px 14px rgba(80, 76, 68, .22);
+    --raised-small: -2px -2px 5px rgba(255, 255, 255, .9), 3px 3px 7px rgba(80, 76, 68, .24);
+    --raised-tiny: -1px -1px 3px rgba(255, 255, 255, .9), 2px 2px 4px rgba(80, 76, 68, .22);
+    --pressed: inset 3px 3px 7px rgba(80, 76, 68, .26), inset -3px -3px 6px rgba(255, 255, 255, .85);
+    --groove: inset 3px 3px 7px rgba(80, 76, 68, .17), inset -3px -3px 6px rgba(255, 255, 255, .75);
+
+    --text: #2A2A2D;
+    --text2: #5C5C61;
+    --text3: #85858A;
+    --divider: transparent;
+    --stroke: transparent;
+    --stroke-strong: transparent;
+    --accent: #2B9BDB;
+    --accent-deep: #2B9BDB;
+    --play: #2FBF6B;
+    --success: #2FBF6B;
+    --rec: #FF5B1F;
+    --mute: #F0A202;
+    --solo: #2B9BDB;
+    --lane-bg: var(--well);
+}
+
+/* track colors: the four caps, graphite and two softer ones */
+html.study.porcelain [style*="#FF8A65"] { --tc: #FF5B1F !important; }
+html.study.porcelain [style*="#5BC0EB"] { --tc: #2B9BDB !important; }
+html.study.porcelain [style*="#B4A7FF"] { --tc: #8A86C9 !important; }
+html.study.porcelain [style*="#6CCB5F"] { --tc: #2FBF6B !important; }
+html.study.porcelain [style*="#4DD0C4"] { --tc: #3FA6A0 !important; }
+html.study.porcelain [style*="#9C8CFF"] { --tc: #4A4A50 !important; }
+html.study.porcelain [style*="#F7C948"] { --tc: #F0A202 !important; }
+html.study.porcelain [style*="#FF6F91"] { --tc: #E8475F !important; }
+html.study.porcelain [style*="#FFB547"] { --tc: #F0A202 !important; }
+html.study.porcelain [style*="#BDBDBD"] { --tc: #9A9894 !important; }
+
+html.study.porcelain, html.study.porcelain body { background: #CFCDC8; }
+html.study.porcelain body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+html.study.porcelain .caption-above { color: var(--text2); }
+html.study.porcelain .caption-above b { color: var(--text); }
+
+html.study.porcelain .lcd .big,
+html.study.porcelain .lcd .small,
+html.study.porcelain .bar-num,
+html.study.porcelain .tlabel,
+html.study.porcelain .scene,
+html.study.porcelain .chip,
+html.study.porcelain .tb,
+html.study.porcelain .statusbar,
+html.study.porcelain .cell .nm,
+html.study.porcelain .tclip .cap { font-family: Bahnschrift, "Segoe UI Variable Text", sans-serif; }
+
+/* ---- the window: one material, floating on the desk */
+
+html.study.porcelain .window {
+    background: var(--surface);
+    border: 0;
+    border-radius: 22px;
+    box-shadow: 0 34px 70px rgba(60, 55, 45, .28), 0 4px 10px rgba(60, 55, 45, .12);
+}
+
+html.study.porcelain .titlebar .title { color: var(--text2); }
+html.study.porcelain .caption-btn, html.study.porcelain .sys-btns div { color: var(--text2); }
+
+html.study.porcelain .preview-chiclet {
+    border: 0;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--rec);
+    font-family: Bahnschrift, sans-serif;
+}
+
+/* ---- keys */
+
+html.study.porcelain .btn {
+    border: 0;
+    border-radius: 14px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+    color: var(--text);
+}
+
+html.study.porcelain .btn .gl { color: var(--text2); }
+html.study.porcelain .btn.subtle { background: transparent; box-shadow: none; }
+html.study.porcelain .btn.toggled { background: var(--face-pressed); box-shadow: var(--pressed); color: var(--accent); }
+html.study.porcelain .btn.toggled .gl { color: var(--accent); }
+
+html.study.porcelain .field {
+    border: 0;
+    border-radius: 13px;
+    background: var(--well);
+    box-shadow: var(--groove);
+    color: var(--text);
+}
+
+html.study.porcelain .chip {
+    border: 0;
+    border-radius: 12px;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--text2);
+}
+
+html.study.porcelain .chip.on { background: var(--face-pressed); box-shadow: var(--pressed); color: #1F8F4E; }
+html.study.porcelain .chip.info { background: var(--face-pressed); box-shadow: var(--pressed); color: #1D79AE; }
+
+/* ---- the transport */
+
+html.study.porcelain .transport { height: 60px; flex-basis: 60px; border: 0; gap: 9px; padding: 0 16px; }
+
+html.study.porcelain .transport .sep {
+    width: 2px;
+    flex-basis: 2px;
+    height: 28px;
+    margin: 0 6px;
+    background: linear-gradient(to right, rgba(60, 55, 45, .14) 0 1px, rgba(255, 255, 255, .8) 1px 2px);
+}
+
+html.study.porcelain .tbtn {
+    position: relative;
+    width: 40px;
+    flex-basis: 40px;
+    height: 36px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+    color: #4A4A50;
+}
+
+html.study.porcelain .tbtn.on { background: var(--face-pressed); box-shadow: var(--pressed); color: var(--text); }
+
+/* the cap that lights on a key that's on */
+html.study.porcelain .tbtn.on::after {
+    content: "";
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin-left: -2.5px;
+    border-radius: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 4px var(--accent);
+}
+
+html.study.porcelain .tbtn.play.on { background: var(--face-pressed); color: var(--text); }
+html.study.porcelain .tbtn.play.on::after { background: var(--play); box-shadow: 0 0 5px var(--play); }
+html.study.porcelain .tbtn.rec { color: var(--rec); }
+html.study.porcelain .tbtn.split { width: 22px; flex-basis: 22px; margin-left: -4px; border-radius: 11px; }
+html.study.porcelain .tbtn.split.on::after { display: none; }
+
+html.study.porcelain .lcd {
+    height: 44px;
+    border: 0;
+    border-radius: 15px;
+    background: var(--well);
+    box-shadow: inset 3px 4px 8px rgba(80, 76, 68, .26), inset -3px -3px 7px rgba(255, 255, 255, .8);
+}
+
+html.study.porcelain .lcd .big { font-size: 20px; color: var(--text); letter-spacing: .03em; }
+html.study.porcelain .lcd .small { color: var(--text3); }
+
+/* ---- the arrange: each lane is a groove, each header a key */
+
+html.study.porcelain .arow > .hdr,
+html.study.porcelain .arow > .launch,
+html.study.porcelain .arow > .lane { border: 0; }
+
+html.study.porcelain .arow > .launch { background: transparent; }
+html.study.porcelain .pinned { background: transparent; }
+
+html.study.porcelain .pin-edge {
+    height: 2px;
+    flex-basis: 2px;
+    margin: 4px 14px;
+    background: linear-gradient(to bottom, rgba(60, 55, 45, .14), rgba(255, 255, 255, .85));
+    box-shadow: none;
+}
+
+html.study.porcelain .arow.track > .hdr,
+html.study.porcelain .arow.tempo > .hdr,
+html.study.porcelain .arow.folder > .hdr {
+    margin: 4px 10px 4px 10px;
+    width: calc(var(--hdr-w) - 20px);
+    flex-basis: calc(var(--hdr-w) - 20px);
+    border-radius: 14px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+}
+
+html.study.porcelain .arow.track > .hdr[style] { background: var(--face-pressed); box-shadow: var(--pressed); }
+html.study.porcelain .arow.folder > .hdr { border-radius: 11px; box-shadow: var(--raised-tiny); }
+html.study.porcelain .arow.auto > .hdr { background: transparent; }
+
+/* the track's color as a cap, in place of the strip */
+html.study.porcelain .strip {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+    align-self: center;
+    margin: 0 2px 0 12px;
+    border-radius: 5px;
+    background: var(--tc);
+    box-shadow: inset -1px -1px 2px rgba(0, 0, 0, .25), 0 0 0 3px #E8E7E3, 1px 1px 3px 3px rgba(80, 76, 68, .18);
+}
+
+html.study.porcelain .indent::after { background: rgba(60, 55, 45, .12); }
+html.study.porcelain .tname { font-weight: 600; }
+html.study.porcelain .ticon { color: var(--text2); }
+
+html.study.porcelain .tb {
+    width: 24px;
+    height: 22px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--text3);
+}
+
+html.study.porcelain .tb.r { color: var(--rec); }
+html.study.porcelain .tb.m.on,
+html.study.porcelain .tb.s.on,
+html.study.porcelain .tb.r.on { background: var(--face-pressed); box-shadow: inset 2px 2px 4px rgba(80, 76, 68, .3), inset -2px -2px 4px rgba(255, 255, 255, .85); }
+html.study.porcelain .tb.m.on { color: #B57900; }
+html.study.porcelain .tb.s.on { color: var(--solo); }
+html.study.porcelain .tb.r.on { color: var(--rec); }
+
+html.study.porcelain .led { background: var(--well); box-shadow: inset 1px 1px 2px rgba(80, 76, 68, .35); }
+html.study.porcelain .led.out { background: var(--play); box-shadow: 0 0 5px var(--play); }
+html.study.porcelain .led.in { background: var(--mute); box-shadow: 0 0 5px var(--mute); }
+
+/* the ruler and the scenes */
+
+html.study.porcelain .arow.ruler { background: transparent; height: 38px; }
+
+html.study.porcelain .scene {
+    margin: 5px 4px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--text);
+}
+
+html.study.porcelain .scene .n { color: var(--rec); }
+html.study.porcelain .scene .gl { color: var(--text2); }
+html.study.porcelain .bar-num { border-left-color: rgba(60, 55, 45, .14); color: var(--text3); }
+
+html.study.porcelain .loop-range {
+    height: 8px;
+    border: 0;
+    border-radius: 4px 4px 0 0;
+    background: rgba(43, 155, 219, .35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+
+/* the launcher: raised tiles in dimples */
+
+html.study.porcelain .slot { border: 0; padding: 4px 5px; }
+
+html.study.porcelain .cell {
+    border: 0;
+    border-radius: 10px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+}
+
+html.study.porcelain .cell .nm { color: var(--text); font-size: 10.5px; }
+html.study.porcelain .cell .tri, html.study.porcelain .cell .kind { color: var(--text3); }
+html.study.porcelain .cell .mini svg rect, html.study.porcelain .cell .mini svg circle { filter: saturate(1.15) brightness(.9); }
+
+html.study.porcelain .cell.playing { background: var(--face-pressed); box-shadow: var(--pressed); }
+html.study.porcelain .cell.playing .tri { color: var(--play); }
+html.study.porcelain .cell .prog { height: 3px; left: 6px; bottom: 3px; border-radius: 2px; background: var(--play); box-shadow: 0 0 4px var(--play); }
+html.study.porcelain .cell.queued { border: 0; outline: 1.5px dashed rgba(60, 55, 45, .45); outline-offset: -4px; }
+html.study.porcelain .cell.queued .tri { color: var(--text); }
+html.study.porcelain .cell.rec { background: var(--face-pressed); box-shadow: var(--pressed); }
+html.study.porcelain .cell.rec .tri { color: var(--rec); }
+html.study.porcelain .cell.rec .prog { background: var(--rec); box-shadow: 0 0 4px var(--rec); }
+html.study.porcelain .cell.muted { filter: saturate(.2); opacity: .7; }
+html.study.porcelain .cell .when { background: #3A3A3E; color: #F2F1ED; border-radius: 6px; }
+
+html.study.porcelain .empty {
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: inset 2px 2px 4px rgba(80, 76, 68, .13), inset -2px -2px 4px rgba(255, 255, 255, .7);
+    color: rgba(60, 55, 45, .2);
+}
+
+html.study.porcelain .empty.armed { color: rgba(255, 91, 31, .65); }
+
+/* the timeline: a groove for each track, with the grid engraved in it */
+
+html.study.porcelain .arow > .lane {
+    margin: 4px 12px 4px 4px;
+    border-radius: 12px;
+    background-color: var(--well);
+    background-image:
+        repeating-linear-gradient(to right, rgba(60, 55, 45, .12) 0 1px, rgba(255, 255, 255, .55) 1px 2px, transparent 2px var(--bar)),
+        repeating-linear-gradient(to right, rgba(60, 55, 45, .05) 0 1px, transparent 1px calc(var(--bar) / 4));
+    box-shadow: var(--groove);
+}
+
+html.study.porcelain .arow.ruler > .lane { margin: 0 12px 0 4px; background: transparent; box-shadow: none; }
+html.study.porcelain .arow.folder > .lane { box-shadow: inset 2px 2px 4px rgba(80, 76, 68, .12), inset -2px -2px 4px rgba(255, 255, 255, .7); }
+html.study.porcelain .arow.addrow > .lane, html.study.porcelain .arow.filler > .lane { background: transparent; box-shadow: none; }
+
+html.study.porcelain .tclip {
+    top: 4px;
+    bottom: 4px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #F0EFEB, #E2E1DD);
+    box-shadow: -2px -2px 5px rgba(255, 255, 255, .8), 3px 3px 7px rgba(80, 76, 68, .26);
+}
+
+html.study.porcelain .tclip .cap { background: transparent; color: var(--text); font-weight: 600; height: 15px; line-height: 15px; padding-left: 7px; }
+
+html.study.porcelain .tclip .cap::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+    border-radius: 3px;
+    background: var(--tc);
+}
+
+html.study.porcelain .tclip .cap .lnk { color: var(--text3); }
+html.study.porcelain .tclip .body { top: 15px; }
+html.study.porcelain .tclip.sel { border: 0; box-shadow: -3px -3px 7px rgba(255, 255, 255, .9), 5px 6px 12px rgba(80, 76, 68, .3), 0 0 0 2px var(--accent); }
+html.study.porcelain .tclip.gen { border: 0; outline: 1px dashed rgba(60, 55, 45, .35); outline-offset: -3px; }
+html.study.porcelain .tclip.muted { filter: saturate(.15); opacity: .6; }
+html.study.porcelain .tclip.summary { background: transparent; box-shadow: inset 2px 2px 4px rgba(80, 76, 68, .16), inset -2px -2px 4px rgba(255, 255, 255, .6); }
+
+html.study.porcelain .loopmark { border-left-color: rgba(60, 55, 45, .3); }
+
+html.study.porcelain .lane-overlay {
+    border-radius: 12px;
+    background: repeating-linear-gradient(135deg, rgba(228, 227, 223, .9) 0 6px, rgba(218, 217, 212, .8) 6px 12px);
+    color: var(--text2);
+}
+
+html.study.porcelain .lane-overlay .btn { background: var(--face); }
+
+html.study.porcelain .playhead { width: 2px; background: var(--rec); box-shadow: 0 0 6px rgba(255, 91, 31, .45); }
+html.study.porcelain .ruler .playhead::before { border-top-color: var(--rec); }
+
+html.study.porcelain .tag > span { background: color-mix(in srgb, var(--tagc, #D7D7D7) 55%, #F4F3EF); color: var(--text); }
+
+/* ---- the clip editor: one big key, with the roll set into it */
+
+html.study.porcelain .editor {
+    margin: 6px 12px 4px 12px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--face);
+    box-shadow: var(--raised);
+}
+
+html.study.porcelain .ed-head { border: 0; }
+html.study.porcelain .ed-head .cname { font-family: Bahnschrift, sans-serif; font-weight: 600; }
+
+html.study.porcelain .ed-head .sep {
+    width: 2px;
+    background: linear-gradient(to right, rgba(60, 55, 45, .14) 0 1px, rgba(255, 255, 255, .8) 1px 2px);
+}
+
+html.study.porcelain .rruler, html.study.porcelain .rruler .corner, html.study.porcelain .keys,
+html.study.porcelain .lanehead, html.study.porcelain .lanerow, html.study.porcelain .inspector,
+html.study.porcelain .insp-head { border: 0; }
+
+html.study.porcelain .rruler .marks span { border-left-color: rgba(60, 55, 45, .14); }
+html.study.porcelain .rruler .loopbar { background: rgba(43, 155, 219, .3); border-radius: 3px; }
+
+html.study.porcelain .roll, html.study.porcelain .vlane {
+    margin: 0 6px 6px 0;
+    border-radius: 12px;
+    background: var(--well);
+    box-shadow: var(--groove);
+}
+
+html.study.porcelain .inspector { background: transparent; }
+html.study.porcelain .kv .k { color: var(--text3); }
+
+/* ---- the status bar */
+
+html.study.porcelain .statusbar { border: 0; color: var(--text3); }
+html.study.porcelain .statusbar .ok { color: #1F8F4E; }
+html.study.porcelain .statusbar .recx { color: #D64512; }
+html.study.porcelain .vbar { background: rgba(60, 55, 45, .25); }
+
+/* ---- review fixes (October 19): contrast, room for names, keys, and a raised transport deck */
+
+html.study.porcelain {
+    --text2: #45454A;
+    --text3: #626267;
+    --hdr-w: 300px;
+    --launch-w: 470px;
+}
+
+html.study.porcelain .keys svg rect[fill="#D9D9D9"] { fill: #EEEDE9; stroke: rgba(60, 55, 45, .2); }
+html.study.porcelain .keys svg rect[fill="#1B1B1B"] { fill: #55555B; stroke: rgba(60, 55, 45, .2); }
+
+/* a generated clip wears a ring cap, not a dashed outline */
+html.study.porcelain .tclip.gen { outline: 0; }
+html.study.porcelain .tclip.gen .cap::before { background: none; box-shadow: inset 0 0 0 2px var(--tc); }
+
+html.study.porcelain .cell .when { background: var(--well); color: var(--text); box-shadow: inset 1px 1px 2px rgba(80, 76, 68, .3); }
+
+/* round keys on a raised deck */
+html.study.porcelain .transport { margin: 6px 12px 0; border-radius: 22px; background: var(--face); box-shadow: var(--raised); }
+html.study.porcelain .tbtn:not(.split) { width: 42px; flex-basis: 42px; height: 42px; border-radius: 50%; }
+
+/* ---- review fixes, round 2 (October 19): the last clipped name, and room for Add a track */
+
+html.study.porcelain { --hdr-w: 310px; }
+html.study.porcelain .arow.addrow { height: 32px; }

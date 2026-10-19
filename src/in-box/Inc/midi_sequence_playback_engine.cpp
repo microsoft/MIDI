@@ -22,6 +22,7 @@ namespace midiplayer
         constexpr uint32_t Midi1ChannelVoiceMessageType = 0x2;
 
         constexpr uint8_t StatusNoteOff = 0x80;
+        constexpr uint8_t StatusNoteOn = 0x90;
         constexpr uint8_t StatusControlChange = 0xB0;
         constexpr uint8_t StatusPitchBend = 0xE0;
 
@@ -31,14 +32,24 @@ namespace midiplayer
         constexpr uint8_t ControllerAllSoundOff = 0x78;
         constexpr uint8_t ControllerAllNotesOff = 0x7B;
 
+        // All sound off, all notes off and the four mode messages after it each end every note
+        // on the channel. Reset all controllers and local control, between them, do not.
+        constexpr bool EndsEveryNote(uint8_t controller) noexcept
+        {
+            return controller == ControllerAllSoundOff || controller >= ControllerAllNotesOff;
+        }
+
+        bool HasOption(ChaseOptions options, ChaseOptions option) noexcept
+        {
+            return (options & option) == option;
+        }
+
         // A little runway so the first messages of a sequence are scheduled rather than late.
         constexpr uint32_t StartLeadMilliseconds = 60;
 
         // How long after a stop the safety sweep lands. It has to outlast anything already handed
         // to the service, which is at most one look ahead window.
         constexpr uint32_t PanicSweepMarginMilliseconds = 60;
-
-        constexpr uint64_t MicrosecondsPerSecond = 1000000;
 
         uint32_t BuildMidi1Word(uint8_t group, uint8_t status, uint8_t data1, uint8_t data2) noexcept
         {
@@ -250,9 +261,15 @@ namespace midiplayer
 
             auto scratch = winrt::single_threaded_vector<uint8_t>();
 
+            // Followed in playing order, so each event knows which channels are drum kits when
+            // it plays, wherever playback starts.
+            midifile::PercussionTracker percussion{};
+
             for (auto const& event : sequence->Events)
             {
                 auto const bytes = sequence->BytesOf(event);
+
+                percussion.Observe(event, bytes);
 
                 if (bytes.empty())
                 {
@@ -265,6 +282,7 @@ namespace midiplayer
                 entry.Tick = event.Tick;
                 entry.WordOffset = static_cast<uint32_t>(words.size());
                 entry.TrackIndex = event.TrackIndex;
+                entry.PercussionChannels = percussion.PercussionChannels();
 
                 if (event.Kind == midifile::EventKind::UniversalPacket)
                 {
@@ -330,15 +348,15 @@ namespace midiplayer
 
                 if (event.Kind == midifile::EventKind::NoteOn || event.Kind == midifile::EventKind::NoteOff)
                 {
-                    entry.NoteNumber = bytes.size() > 1 ? static_cast<uint8_t>(bytes[1] & 0x7F) : uint8_t{ 0 };
-                    entry.Channel = event.Channel;
-
                     auto const velocity = bytes.size() > 2 ? static_cast<uint8_t>(bytes[2] & 0x7F) : uint8_t{ 0 };
 
                     entry.Action = (event.Kind == midifile::EventKind::NoteOn && velocity > 0)
                         ? NoteAction::Start
                         : NoteAction::End;
                 }
+
+                entry.NamesNotes = NoteTransposer::NamesAnyNote(
+                    std::span<uint32_t const>{ words.data() + entry.WordOffset, entry.WordCount });
 
                 if (entry.WordCount > widestEvent)
                 {
@@ -375,14 +393,16 @@ namespace midiplayer
                 m_trackRoutes.resize(sequence->Tracks.size());
                 RebuildDestinationsUnderLock();
 
-                // Sized once so a rewritten send never allocates on the sweep.
+                // Sized once so a rewritten send never allocates on the sweep. Twice the widest
+                // event, because transposing can end a note before starting one.
                 m_sendScratch.clear();
-                m_sendScratch.reserve(widestEvent);
+                m_sendScratch.reserve(static_cast<size_t>(widestEvent) * 2);
 
                 m_state = PlaybackState::Stopped;
                 m_pausedMicroseconds = 0;
                 m_nextEventIndex = 0;
                 m_soundingNotes.fill(0);
+                m_transposer.Clear();
             }
 
             return true;
@@ -411,6 +431,7 @@ namespace midiplayer
             m_pausedMicroseconds = 0;
             m_nextEventIndex = 0;
             m_soundingNotes.fill(0);
+            m_transposer.Clear();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to unload the sequence.")
     }
@@ -439,8 +460,9 @@ namespace midiplayer
             RebaseClockUnderLock();
 
             // Bank, program, controllers and pitch bend as they stood at this point in the file,
-            // or a note starting part way in plays with whatever sound was last selected.
-            SendChaseStateUnderLock(m_nextEventIndex);
+            // or a note starting part way in plays with whatever sound was last selected. And,
+            // when the application asked for them, the notes that should already be sounding.
+            SendChaseStateUnderLock(m_pausedMicroseconds, m_chaseOptions, -1);
 
             m_state = PlaybackState::Playing;
         }
@@ -519,12 +541,73 @@ namespace midiplayer
 
             if (wasPlaying)
             {
-                SendChaseStateUnderLock(m_nextEventIndex);
+                SendChaseStateUnderLock(m_pausedMicroseconds, m_chaseOptions, -1);
             }
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to seek.")
 
         m_wakeUp.SetEvent();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetPlaybackRate(double rate) noexcept
+    {
+        auto playing = false;
+
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            if (!m_clock.RequestRate(rate))
+            {
+                return;
+            }
+
+            playing = m_state == PlaybackState::Playing;
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the playback rate.")
+
+        // While playing, the worker moves the clock over on its next pass. Waking it makes that
+        // this pass rather than one interval from now. Otherwise the next Play picks it up.
+        if (playing)
+        {
+            m_wakeUp.SetEvent();
+        }
+    }
+
+    double PlaybackEngine::PlaybackRate() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        return m_clock.RequestedRate();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetTransposeSemitones(int32_t semitones) noexcept
+    {
+        // Nothing to wake: what is already with the service keeps its pitch, and the worker's
+        // next pass, at most one sweep interval away, hands over everything after it transposed.
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        m_transposer.SetSemitones(semitones);
+    }
+
+    int32_t PlaybackEngine::TransposeSemitones() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        return m_transposer.Semitones();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetChaseOptions(ChaseOptions options) noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+        m_chaseOptions = options & ChaseOptions::All;
+    }
+
+    ChaseOptions PlaybackEngine::GetChaseOptions() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        return m_chaseOptions;
     }
 
     PlaybackState PlaybackEngine::State() const noexcept
@@ -601,6 +684,23 @@ namespace midiplayer
         {
             SendPanicUnderLock(false);
         }
+
+        if (m_state == PlaybackState::Playing && HasOption(m_chaseOptions, ChaseOptions::HeldNotes))
+        {
+            auto const position = CurrentMicrosecondsUnderLock(midi2::MidiClock::Now());
+
+            if (muted)
+            {
+                // That silence turned off every held note on every channel, not only this
+                // track's, and reset sustain and pitch bend. Put back what the others still hold.
+                SendChaseStateUnderLock(position, m_chaseOptions, -1);
+            }
+            else
+            {
+                // Nothing was silenced, so only this track's own held notes need to come back.
+                SendChaseStateUnderLock(position, ChaseOptions::HeldNotes, static_cast<int32_t>(trackIndex));
+            }
+        }
     }
 
     void PlaybackEngine::SetSoloTrack(int32_t trackIndex) noexcept
@@ -621,6 +721,13 @@ namespace midiplayer
         if (m_state == PlaybackState::Playing)
         {
             SendPanicUnderLock(false);
+
+            // That silence turned off every held note. Put back what the tracks that can still
+            // be heard are holding.
+            if (HasOption(m_chaseOptions, ChaseOptions::HeldNotes))
+            {
+                SendChaseStateUnderLock(CurrentMicrosecondsUnderLock(midi2::MidiClock::Now()), m_chaseOptions, -1);
+            }
         }
     }
 
@@ -721,6 +828,10 @@ namespace midiplayer
 
                 auto const now = midi2::MidiClock::Now();
 
+                // Before anything new is handed over, so a new rate starts where the last pass
+                // left off.
+                m_clock.ApplyRequestedRate(now);
+
                 ScheduleDueEventsUnderLock(now);
 
                 if (m_nextEventIndex >= m_prepared.size() &&
@@ -772,31 +883,31 @@ namespace midiplayer
             // still go, so nothing hangs and the sound stays correct when it is unmuted.
             if (entry.Action != NoteAction::Start || IsTrackAudibleUnderLock(entry.TrackIndex))
             {
-                SendWordsUnderLock(
+                SendEventUnderLock(
                     timestamp <= nowTimestamp ? midi2::MidiClock::TimestampConstantSendImmediately() : timestamp,
-                    entry.WordOffset,
-                    entry.WordCount,
-                    DestinationForTrackUnderLock(entry.TrackIndex));
-
-                if (entry.Action == NoteAction::Start)
-                {
-                    m_soundingNotes[entry.NoteNumber] |= static_cast<uint16_t>(1u << (entry.Channel & 0x0F));
-                }
-            }
-
-            if (entry.Action == NoteAction::End)
-            {
-                m_soundingNotes[entry.NoteNumber] &= static_cast<uint16_t>(~(1u << (entry.Channel & 0x0F)));
+                    entry);
             }
 
             ++m_nextEventIndex;
         }
+
+        // Everything due by the horizon is now with the service, whether or not anything was due.
+        m_clock.MarkScheduledThrough(horizon);
     }
 
     void PlaybackEngine::RebaseClockUnderLock() noexcept
     {
-        m_originMicroseconds = m_pausedMicroseconds;
-        m_originTimestamp = midi2::MidiClock::Now() + TicksFromMilliseconds(StartLeadMilliseconds);
+        auto const now = midi2::MidiClock::Now();
+
+        // The second pass of a silence still on its way would land on top of the music, cut off
+        // its first notes and undo the chase. So the music waits for it, then starts after the
+        // same short lead as always.
+        auto const earliest = m_sweepTimestamp > now ? m_sweepTimestamp : now;
+
+        m_clock.Start(
+            midi2::MidiClock::TimestampFrequency(),
+            earliest + TicksFromMilliseconds(StartLeadMilliseconds),
+            m_pausedMicroseconds);
 
         auto const found = std::lower_bound(
             m_prepared.begin(),
@@ -809,47 +920,107 @@ namespace midiplayer
 
     uint64_t PlaybackEngine::TimestampForMicrosecondsUnderLock(uint64_t microseconds) const noexcept
     {
-        if (microseconds <= m_originMicroseconds)
-        {
-            return m_originTimestamp;
-        }
-
-        auto const elapsed = (microseconds - m_originMicroseconds)
-            * midi2::MidiClock::TimestampFrequency() / MicrosecondsPerSecond;
-
-        return m_originTimestamp + elapsed;
+        return m_clock.TimestampForMicroseconds(microseconds);
     }
 
     uint64_t PlaybackEngine::CurrentMicrosecondsUnderLock(uint64_t nowTimestamp) const noexcept
     {
-        if (nowTimestamp <= m_originTimestamp)
-        {
-            return m_originMicroseconds;
-        }
-
-        auto const frequency = midi2::MidiClock::TimestampFrequency();
-
-        if (frequency == 0)
-        {
-            return m_originMicroseconds;
-        }
-
-        return m_originMicroseconds + ((nowTimestamp - m_originTimestamp) * MicrosecondsPerSecond / frequency);
+        return m_clock.MicrosecondsAtTimestamp(nowTimestamp);
     }
 
-    void PlaybackEngine::SendWordsUnderLock(
-        uint64_t timestamp,
-        uint32_t wordOffset,
-        uint32_t wordCount,
-        size_t destinationIndex) noexcept
+    _Use_decl_annotations_
+    void PlaybackEngine::SendEventUnderLock(uint64_t timestamp, PreparedEvent const& entry) noexcept
     {
-        if (wordCount == 0 || static_cast<size_t>(wordOffset) + wordCount > m_words.size() ||
+        auto const destinationIndex = DestinationForTrackUnderLock(entry.TrackIndex);
+
+        if (entry.WordCount == 0 || static_cast<size_t>(entry.WordOffset) + entry.WordCount > m_words.size() ||
             destinationIndex >= m_destinations.size())
         {
             return;
         }
 
         auto const& destination = m_destinations[destinationIndex];
+
+        if (!entry.NamesNotes && !destination.RewritesMessages)
+        {
+            auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
+
+            if (connection == nullptr)
+            {
+                return;
+            }
+
+            connection.SendMultipleMessagesWordArray(
+                timestamp,
+                entry.WordOffset,
+                entry.WordCount,
+                winrt::array_view<uint32_t const>{ m_words.data(), m_words.data() + m_words.size() });
+
+            return;
+        }
+
+        std::span<uint32_t const> const original{ m_words.data() + entry.WordOffset, entry.WordCount };
+
+        // The scratch buffer was sized at load to twice the widest event; none of this allocates.
+        if (entry.NamesNotes)
+        {
+            // Every note goes through the transposer, moved or not, so an end always finds the
+            // pitch its start went out at.
+            m_sendScratch.resize(original.size() * 2);
+
+            auto const written = m_transposer.Rewrite(original, m_sendScratch, entry.PercussionChannels);
+
+            m_sendScratch.resize(written);
+
+            // Before the route changes the channel: what is sounding is kept by the sequence's
+            // own channel, and the silence works out each route's channel from it.
+            if (entry.Action != NoteAction::None)
+            {
+                TrackSoundingNotesUnderLock(m_sendScratch);
+            }
+
+            if (m_sendScratch.empty())
+            {
+                return;
+            }
+        }
+        else
+        {
+            m_sendScratch.assign(original.begin(), original.end());
+        }
+
+        // The group is baked into the words at load time, so a track sent to a different group or
+        // channel gets a rewritten copy.
+        if (destination.RewritesMessages)
+        {
+            size_t index = 0;
+
+            while (index < m_sendScratch.size())
+            {
+                auto const messageType = MessageTypeOf(m_sendScratch[index]);
+                auto const packetWords = PacketWordCounts[messageType];
+
+                if (index + packetWords > m_sendScratch.size())
+                {
+                    break;
+                }
+
+                if (MessageTypeCarriesGroup(messageType))
+                {
+                    m_sendScratch[index] = (m_sendScratch[index] & 0xF0FFFFFFu)
+                        | (static_cast<uint32_t>(destination.GroupIndex & 0x0F) << 24);
+                }
+
+                if (destination.ChannelOverride >= 0 && MessageTypeCarriesChannel(messageType))
+                {
+                    m_sendScratch[index] = (m_sendScratch[index] & 0xFFF0FFFFu)
+                        | (static_cast<uint32_t>(destination.ChannelOverride & 0x0F) << 16);
+                }
+
+                index += packetWords;
+            }
+        }
+
         auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
 
         if (connection == nullptr)
@@ -857,56 +1028,38 @@ namespace midiplayer
             return;
         }
 
-        if (!destination.RewritesMessages)
-        {
-            connection.SendMultipleMessagesWordArray(
-                timestamp,
-                wordOffset,
-                wordCount,
-                winrt::array_view<uint32_t const>{ m_words.data(), m_words.data() + m_words.size() });
-
-            return;
-        }
-
-        // The group is baked into the words at load time, so a track sent to a different group or
-        // channel gets a rewritten copy. The scratch buffer was sized at load; this does not
-        // allocate.
-        m_sendScratch.assign(
-            m_words.begin() + wordOffset,
-            m_words.begin() + wordOffset + wordCount);
-
-        size_t index = 0;
-
-        while (index < m_sendScratch.size())
-        {
-            auto const messageType = MessageTypeOf(m_sendScratch[index]);
-            auto const packetWords = PacketWordCounts[messageType];
-
-            if (index + packetWords > m_sendScratch.size())
-            {
-                break;
-            }
-
-            if (MessageTypeCarriesGroup(messageType))
-            {
-                m_sendScratch[index] = (m_sendScratch[index] & 0xF0FFFFFFu)
-                    | (static_cast<uint32_t>(destination.GroupIndex & 0x0F) << 24);
-            }
-
-            if (destination.ChannelOverride >= 0 && MessageTypeCarriesChannel(messageType))
-            {
-                m_sendScratch[index] = (m_sendScratch[index] & 0xFFF0FFFFu)
-                    | (static_cast<uint32_t>(destination.ChannelOverride & 0x0F) << 16);
-            }
-
-            index += packetWords;
-        }
-
         connection.SendMultipleMessagesWordArray(
             timestamp,
             0,
-            wordCount,
+            static_cast<uint32_t>(m_sendScratch.size()),
             winrt::array_view<uint32_t const>{ m_sendScratch.data(), m_sendScratch.data() + m_sendScratch.size() });
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::TrackSoundingNotesUnderLock(std::span<uint32_t const> words) noexcept
+    {
+        for (size_t index = 0; index < words.size(); index += PacketWordCounts[MessageTypeOf(words[index])])
+        {
+            auto const word = words[index];
+
+            if (MessageTypeOf(word) != Midi1ChannelVoiceMessageType)
+            {
+                continue;
+            }
+
+            auto const status = static_cast<uint8_t>((word >> 16) & 0xF0);
+            auto const channelBit = static_cast<uint16_t>(1u << ((word >> 16) & 0x0F));
+            auto const note = static_cast<size_t>((word >> 8) & 0x7F);
+
+            if (status == StatusNoteOn && (word & 0x7F) != 0)
+            {
+                m_soundingNotes[note] |= channelBit;
+            }
+            else if (status == StatusNoteOn || status == StatusNoteOff)
+            {
+                m_soundingNotes[note] &= static_cast<uint16_t>(~channelBit);
+            }
+        }
     }
 
     winrt::Windows::Devices::Midi2::MidiEndpointConnection PlaybackEngine::ConnectionForDestinationUnderLock(
@@ -1047,18 +1200,38 @@ namespace midiplayer
             RebuildDestinationsUnderLock();
         }
 
+        // The second pass lands after anything the service has already been handed, because there
+        // is no way to recall a scheduled message. One time for every destination, so the next
+        // start has a single moment to wait for.
+        uint64_t sweepTimestamp{ 0 };
+
+        if (includeScheduledSweep)
+        {
+            sweepTimestamp = midi2::MidiClock::Now()
+                + TicksFromMilliseconds(LookAheadMilliseconds + PanicSweepMarginMilliseconds);
+
+            if (sweepTimestamp > m_sweepTimestamp)
+            {
+                m_sweepTimestamp = sweepTimestamp;
+            }
+        }
+
         // Every destination, not just the default one. A note left sounding on an endpoint the
         // panic skipped is exactly the failure a panic exists to prevent, and sending a note off
         // to a device that was not playing it costs nothing.
         for (size_t destination = 0; destination < m_destinations.size(); ++destination)
         {
-            SendPanicToDestinationUnderLock(destination, includeScheduledSweep);
+            SendPanicToDestinationUnderLock(destination, sweepTimestamp);
         }
 
         m_soundingNotes.fill(0);
+
+        // Every note is off, so none has a pitch left to remember.
+        m_transposer.Clear();
     }
 
-    void PlaybackEngine::SendPanicToDestinationUnderLock(size_t destinationIndex, bool includeScheduledSweep) noexcept
+    _Use_decl_annotations_
+    void PlaybackEngine::SendPanicToDestinationUnderLock(size_t destinationIndex, uint64_t sweepTimestamp) noexcept
     {
         auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
 
@@ -1077,19 +1250,11 @@ namespace midiplayer
                     : channel;
             };
 
-        // Two passes. The first silences the instrument now; the second lands after anything the
-        // service has already been handed, because there is no way to recall a scheduled message.
-        std::array<uint64_t, 2> timestamps{ midi2::MidiClock::TimestampConstantSendImmediately(), 0 };
+        // Two passes when there is a sweep. The first silences the instrument now; the second
+        // lands after anything the service has already been handed.
+        std::array<uint64_t, 2> const timestamps{ midi2::MidiClock::TimestampConstantSendImmediately(), sweepTimestamp };
 
-        size_t passes = 1;
-
-        if (includeScheduledSweep)
-        {
-            timestamps[1] = midi2::MidiClock::Now()
-                + TicksFromMilliseconds(LookAheadMilliseconds + PanicSweepMarginMilliseconds);
-
-            passes = 2;
-        }
+        size_t const passes = sweepTimestamp != 0 ? 2 : 1;
 
         for (size_t pass = 0; pass < passes; ++pass)
         {
@@ -1146,18 +1311,85 @@ namespace midiplayer
         }
     }
 
-    void PlaybackEngine::SendChaseStateUnderLock(size_t eventIndex) noexcept
+    _Use_decl_annotations_
+    uint64_t PlaybackEngine::ChaseTimestampUnderLock(uint64_t nowTimestamp) const noexcept
     {
+        // Just after the second pass of a silence still on its way, which would otherwise turn
+        // restored notes straight back off and release the restored sustain and pitch bend. The
+        // music waits for the same moment; see RebaseClockUnderLock.
+        if (m_sweepTimestamp > nowTimestamp)
+        {
+            return m_sweepTimestamp + 1;
+        }
+
+        return midi2::MidiClock::TimestampConstantSendImmediately();
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SendChaseStateUnderLock(uint64_t positionMicroseconds, ChaseOptions options, int32_t onlyTrack) noexcept
+    {
+        auto const wanted = options & ChaseOptions::All;
+
+        if (m_sequence == nullptr || positionMicroseconds == 0 || wanted == ChaseOptions::None)
+        {
+            return;
+        }
+
+        auto const* const sequence = m_sequence.get();
+        auto const& events = sequence->Events;
+
+        // Found by time, the same way the playback sweep finds where to start, rather than by a
+        // count of prepared events. The two counts only agree when preparing the sequence dropped
+        // nothing, and a note off missed here would leave a note sounding.
+        auto const firstAtPosition = std::partition_point(
+            events.begin(),
+            events.end(),
+            [sequence, positionMicroseconds](midifile::SequenceEvent const& event) noexcept
+            {
+                return sequence->MicrosecondsAtTick(event.Tick) < positionMicroseconds;
+            });
+
+        // What is exactly at the position plays as soon as the music starts.
+        auto const firstAfterPosition = std::partition_point(
+            firstAtPosition,
+            events.end(),
+            [sequence, positionMicroseconds](midifile::SequenceEvent const& event) noexcept
+            {
+                return sequence->MicrosecondsAtTick(event.Tick) <= positionMicroseconds;
+            });
+
+        auto const eventsBefore = static_cast<size_t>(std::distance(events.begin(), firstAtPosition));
+        auto const eventsThrough = static_cast<size_t>(std::distance(events.begin(), firstAfterPosition));
+
+        if (eventsBefore == 0)
+        {
+            return;
+        }
+
+        auto const timestamp = ChaseTimestampUnderLock(midi2::MidiClock::Now());
+
         // Once per destination. Each pass keeps only the tracks that go there, so a rack of
         // instruments is each left in the state its own tracks put it in rather than in whatever
         // state the last track to be walked happened to leave.
         for (size_t destination = 0; destination < m_destinations.size(); ++destination)
         {
-            SendChaseStateToDestinationUnderLock(eventIndex, destination);
+            if (onlyTrack >= 0 && DestinationForTrackUnderLock(static_cast<uint16_t>(onlyTrack)) != destination)
+            {
+                continue;
+            }
+
+            SendChaseStateToDestinationUnderLock(eventsBefore, eventsThrough, destination, timestamp, wanted, onlyTrack);
         }
     }
 
-    void PlaybackEngine::SendChaseStateToDestinationUnderLock(size_t eventIndex, size_t destinationIndex) noexcept
+    _Use_decl_annotations_
+    void PlaybackEngine::SendChaseStateToDestinationUnderLock(
+        size_t eventsBefore,
+        size_t eventsThrough,
+        size_t destinationIndex,
+        uint64_t timestamp,
+        ChaseOptions options,
+        int32_t onlyTrack) noexcept
     {
         auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
 
@@ -1166,10 +1398,18 @@ namespace midiplayer
             return;
         }
 
-        if (eventIndex == 0)
+        auto const& events = m_sequence->Events;
+
+        auto const limit = eventsBefore > events.size() ? events.size() : eventsBefore;
+        auto const through = eventsThrough > events.size() ? events.size() : eventsThrough;
+
+        if (limit == 0)
         {
             return;
         }
+
+        auto const chaseSettings = HasOption(options, ChaseOptions::ChannelSettings);
+        auto const chaseNotes = HasOption(options, ChaseOptions::HeldNotes);
 
         auto const& destination = m_destinations[destinationIndex];
         auto const groupIndex = destination.GroupIndex;
@@ -1191,13 +1431,25 @@ namespace midiplayer
         std::array<uint8_t, 16> bankMsb{};
         std::array<uint8_t, 16> bankLsb{};
 
-        program.fill(-1);
+        // The velocity of each note the receiver was left holding, or zero for one it was not.
+        std::array<std::array<uint8_t, 128>, 16> heldVelocity{};
 
-        auto const limit = eventIndex > m_sequence->Events.size() ? m_sequence->Events.size() : eventIndex;
+        // Which channels are drum kits at the starting point, so the notes restarted there are
+        // transposed the same way the rest of the sequence is. Every track counts, the same as
+        // when the sequence was prepared.
+        midifile::PercussionTracker percussion{};
+
+        program.fill(-1);
 
         for (size_t index = 0; index < limit; ++index)
         {
-            auto const& event = m_sequence->Events[index];
+            auto const& event = events[index];
+            auto const bytes = m_sequence->BytesOf(event);
+
+            if (chaseNotes)
+            {
+                percussion.Observe(event, bytes);
+            }
 
             if (event.Channel == midifile::ChannelNone || event.Channel > 15)
             {
@@ -1208,8 +1460,6 @@ namespace midiplayer
             {
                 continue;
             }
-
-            auto const bytes = m_sequence->BytesOf(event);
 
             if (bytes.size() < 2)
             {
@@ -1231,6 +1481,11 @@ namespace midiplayer
                         controllers[channel][controller] = static_cast<uint8_t>(bytes[2] & 0x7F);
                         controllerSet[channel][controller] = true;
                     }
+                    else if (EndsEveryNote(controller))
+                    {
+                        // But they did end whatever the channel was holding at the time.
+                        heldVelocity[channel].fill(0);
+                    }
 
                     if (controller == ControllerBankSelectMsb) { bankMsb[channel] = static_cast<uint8_t>(bytes[2] & 0x7F); }
                     else if (controller == ControllerBankSelectLsb) { bankLsb[channel] = static_cast<uint8_t>(bytes[2] & 0x7F); }
@@ -1251,14 +1506,72 @@ namespace midiplayer
                 }
                 break;
 
+            case midifile::EventKind::NoteOn:
+            case midifile::EventKind::NoteOff:
+                if (chaseNotes && bytes.size() >= 3)
+                {
+                    auto const note = static_cast<uint8_t>(bytes[1] & 0x7F);
+                    auto const velocity = static_cast<uint8_t>(bytes[2] & 0x7F);
+
+                    if (event.Kind == midifile::EventKind::NoteOff || velocity == 0)
+                    {
+                        // Note ends go out from every track, muted or not, so any of them ends it.
+                        heldVelocity[channel][note] = 0;
+                    }
+                    else if (IsTrackAudibleUnderLock(event.TrackIndex))
+                    {
+                        // A muted track's start never reached the receiver, so it changes nothing.
+                        // When only one track's notes are wanted, a later start from another
+                        // track is still sounding, and is left to that track.
+                        heldVelocity[channel][note] =
+                            (onlyTrack < 0 || event.TrackIndex == static_cast<uint16_t>(onlyTrack)) ? velocity : uint8_t{ 0 };
+                    }
+                }
+                break;
+
             default:
                 break;
             }
         }
 
-        auto const immediately = midi2::MidiClock::TimestampConstantSendImmediately();
+        // Events exactly at the starting point play as soon as the music starts. They only matter
+        // here for the notes: one that ends there is already over, and one that starts again
+        // there is about to sound anyway, so restarting either would only add a blip.
+        for (size_t index = limit; chaseNotes && index < through; ++index)
+        {
+            auto const& event = events[index];
 
-        for (uint8_t channel = 0; channel < 16; ++channel)
+            if (event.Channel == midifile::ChannelNone || event.Channel > 15 ||
+                DestinationForTrackUnderLock(event.TrackIndex) != destinationIndex)
+            {
+                continue;
+            }
+
+            auto const bytes = m_sequence->BytesOf(event);
+
+            if (bytes.size() < 3)
+            {
+                continue;
+            }
+
+            auto const channel = event.Channel;
+
+            if (event.Kind == midifile::EventKind::ControlChange)
+            {
+                if (EndsEveryNote(static_cast<uint8_t>(bytes[1] & 0x7F)))
+                {
+                    heldVelocity[channel].fill(0);
+                }
+            }
+            else if (event.Kind == midifile::EventKind::NoteOff ||
+                (event.Kind == midifile::EventKind::NoteOn &&
+                    ((bytes[2] & 0x7F) == 0 || IsTrackAudibleUnderLock(event.TrackIndex))))
+            {
+                heldVelocity[channel][bytes[1] & 0x7F] = 0;
+            }
+        }
+
+        for (uint8_t channel = 0; chaseSettings && channel < 16; ++channel)
         {
             auto const outgoing = effectiveChannel(channel);
             auto const controlStatus = static_cast<uint8_t>(StatusControlChange | outgoing);
@@ -1271,7 +1584,7 @@ namespace midiplayer
                 }
 
                 connection.SendSingleMessageWords(
-                    immediately,
+                    timestamp,
                     BuildMidi1Word(
                         groupIndex,
                         controlStatus,
@@ -1283,13 +1596,13 @@ namespace midiplayer
             {
                 // Bank first, then program, or the program lands in the previous bank.
                 connection.SendSingleMessageWords(
-                    immediately, BuildMidi1Word(groupIndex, controlStatus, ControllerBankSelectMsb, bankMsb[channel]));
+                    timestamp, BuildMidi1Word(groupIndex, controlStatus, ControllerBankSelectMsb, bankMsb[channel]));
 
                 connection.SendSingleMessageWords(
-                    immediately, BuildMidi1Word(groupIndex, controlStatus, ControllerBankSelectLsb, bankLsb[channel]));
+                    timestamp, BuildMidi1Word(groupIndex, controlStatus, ControllerBankSelectLsb, bankLsb[channel]));
 
                 connection.SendSingleMessageWords(
-                    immediately,
+                    timestamp,
                     BuildMidi1Word(
                         groupIndex,
                         static_cast<uint8_t>(0xC0 | outgoing),
@@ -1300,12 +1613,74 @@ namespace midiplayer
             if (pitchBendSet[channel])
             {
                 connection.SendSingleMessageWords(
-                    immediately,
+                    timestamp,
                     BuildMidi1Word(
                         groupIndex,
                         static_cast<uint8_t>(StatusPitchBend | outgoing),
                         static_cast<uint8_t>(pitchBend[channel] & 0x7F),
                         static_cast<uint8_t>((pitchBend[channel] >> 7) & 0x7F)));
+            }
+        }
+
+        if (!chaseNotes)
+        {
+            return;
+        }
+
+        // Last, once every channel has its sound, so each note starts on the right one. A route
+        // that sends several channels to one would otherwise start the same note twice.
+        std::array<uint16_t, 128> started{};
+
+        for (uint8_t channel = 0; channel < 16; ++channel)
+        {
+            auto const outgoing = effectiveChannel(channel);
+            auto const outgoingBit = static_cast<uint16_t>(1u << outgoing);
+            auto const channelBit = static_cast<uint16_t>(1u << channel);
+            auto const noteOnStatus = static_cast<uint8_t>(StatusNoteOn | outgoing);
+            auto const isPercussion = percussion.IsPercussion(channel);
+
+            for (uint8_t note = 0; note < 128; ++note)
+            {
+                auto const velocity = heldVelocity[channel][note];
+
+                if (velocity == 0)
+                {
+                    continue;
+                }
+
+                // Transposed like every other note, and remembered, so its end reaches it.
+                auto const start = m_transposer.StartNote(channel, note, isPercussion);
+
+                if (start.EndFirst >= 0)
+                {
+                    auto const previous = static_cast<uint8_t>(start.EndFirst);
+
+                    connection.SendSingleMessageWords(
+                        timestamp,
+                        BuildMidi1Word(groupIndex, static_cast<uint8_t>(StatusNoteOff | outgoing), previous, 0));
+
+                    m_soundingNotes[previous] &= static_cast<uint16_t>(~channelBit);
+                }
+
+                if (start.Note < 0)
+                {
+                    continue;
+                }
+
+                auto const pitch = static_cast<uint8_t>(start.Note);
+
+                if ((started[pitch] & outgoingBit) != 0)
+                {
+                    continue;
+                }
+
+                started[pitch] |= outgoingBit;
+
+                connection.SendSingleMessageWords(
+                    timestamp, BuildMidi1Word(groupIndex, noteOnStatus, pitch, velocity));
+
+                // Tracked like any other note, so a pause, stop, mute or the end turns it off.
+                m_soundingNotes[pitch] |= channelBit;
             }
         }
     }

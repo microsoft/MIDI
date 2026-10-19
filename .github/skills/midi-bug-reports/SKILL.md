@@ -42,7 +42,7 @@ The paths differ, so which one fails localizes the fault:
 | Path | Route | Test with |
 |---|---|---|
 | Native UMP (Windows MIDI Services) | app -> SDK -> midisrv -> transport -> driver | `midi endpoint monitor`, MIDI Monitor (`midi2monitor`) |
-| WinRT MIDI 1.0 | app -> WinRT MIDI 1.0 -> midisrv -> transport -> driver | a WinRT MIDI 1.0 app |
+| WinRT MIDI 1.0 | app -> WinRT MIDI 1.0 -> midisrv -> transport -> driver | `midi1rtmonitor.exe` for input, a WinRT MIDI 1.0 app for output |
 | WinMM (classic) | app -> `wdmaud2.drv` -> midisrv -> transport -> driver | `midi1monitor.exe`, `midi1enum.exe` |
 
 - **Native UMP also fails** -> the defect is in the service, transport or driver. File it there and note WinMM as an affected consumer. Do not title it as a WinMM bug.

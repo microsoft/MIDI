@@ -36,6 +36,7 @@
 #include "SequenceModel.h"
 #include "SequenceArpeggiator.h"
 #include "SequenceRender.h"
+#include "GeneratorListen.h"
 
 #include "ClockFollower.h"
 #include "MidiTimeCode.h"
@@ -236,6 +237,16 @@ namespace midisequencer
         void LaunchClip(_In_ std::wstring const& trackId, _In_ std::wstring const& clipId, _In_ LaunchQuantize quantize, _In_ int32_t slot = -1);
         void StopTrack(_In_ std::wstring const& trackId, _In_ LaunchQuantize quantize);
 
+        // A scene: a clip for each track, or none to stop it, all at once. Launched while
+        // stopped, the scene starts playback and every clip in it starts together.
+        struct SceneLaunch
+        {
+            std::wstring TrackId{};
+            std::wstring ClipId{};
+        };
+
+        void LaunchScene(_In_ std::vector<SceneLaunch> const& launches, _In_ LaunchQuantize quantize, _In_ int32_t slot);
+
         // Back to the timeline at the next quantize point. An empty id means every track.
         void ReturnToTimeline(_In_ std::wstring const& trackId, _In_ LaunchQuantize quantize);
 
@@ -281,6 +292,12 @@ namespace midisequencer
         // What arpeggiators played since the last call, oldest first. Any thread.
         std::vector<ArpeggiatedNote> TakeArpeggiated();
 
+        // How hard each track's notes play between two times: the highest velocity, from 0 to 1,
+        // of the notes it holds then, timed as the device gets them. A note counts from its note
+        // on to its note off and no longer: how long the sound rings on is up to the device, and
+        // nothing here knows it. Tracks holding nothing aren't listed. Any thread.
+        std::vector<std::pair<std::wstring, float>> HeldNoteLevels(_In_ uint64_t from, _In_ uint64_t to) const;
+
         // Hands over everything due before now plus the look-ahead.
         void Sweep();
 
@@ -305,6 +322,9 @@ namespace midisequencer
 
             // The device's offset, in clock ticks, already taken off both timestamps.
             uint64_t Lead{ 0 };
+
+            // How hard it was played, 0 to 65535, for the mixer's meter.
+            uint16_t Velocity{ 0 };
 
             bool HandedOver{ false };
         };
@@ -365,10 +385,15 @@ namespace midisequencer
         void SendTo(_In_ EndpointRef const& endpoint, _In_ bool midi2, _In_ uint64_t timestamp, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount);
         void RememberChannel(_In_ EndpointRef const& endpoint, _In_ bool midi2, _In_ uint32_t word0);
         void SendStartup(_In_ Track const& track, _In_ uint64_t timestamp);
-        void SendChase(_In_ Track const& track, _In_ int64_t fromTick, _In_ uint64_t timestamp);
+        void SendChase(_In_ Track const& track, _In_ int64_t fromTick, _In_ uint64_t timestamp, _Inout_opt_ size_t* passesLeft = nullptr);
         void SweepTracks(_In_ std::vector<Track> const& tracks, _In_ uint64_t now, _In_ bool anySolo, _In_ bool insideSoloedFolder, _In_ bool insideMutedFolder);
         void SweepTrack(_In_ Track const& track, _In_ uint64_t now, _In_ bool audible);
         void RenderMode(_In_ Track const& track, _In_ TrackLaunch const& state, _In_ int64_t fromUnwrapped, _In_ int64_t toUnwrapped, _In_ RenderOptions const& options, _Inout_ std::vector<RenderedMessage>& messages);
+
+        // What a track plays now during [fromUnwrapped, toUnwrapped): its timeline or the clip
+        // launched on it. And a number for what's launched and where the loop has got to.
+        void HearLive(_In_ Track const& track, _In_ int64_t fromUnwrapped, _In_ int64_t toUnwrapped, _Inout_ std::vector<Note>& heard);
+        uint64_t HearingEpoch() const noexcept;
         void SendRendered(_In_ Track const& track, _In_ DestinationInfo const& info, _In_ int64_t clampOffsAt, _In_ uint64_t now, _Inout_ std::vector<RenderedMessage>& messages);
         void QueueNoteOff(
             _In_ std::wstring const& trackId,
@@ -379,7 +404,8 @@ namespace midisequencer
             _In_ uint64_t lead,
             _In_reads_(wordCount) uint32_t const* words,
             _In_ uint8_t wordCount,
-            _In_ uint64_t limit);
+            _In_ uint64_t limit,
+            _In_ uint16_t velocity = 0);
         void SendDueNoteOffs(_In_ uint64_t limit);
         uint64_t LookAheadTicks() const noexcept;
         void SweepMetronome(_In_ uint64_t now);
@@ -430,6 +456,11 @@ namespace midisequencer
         std::vector<uint64_t> m_timeCodeNext{};
 
         std::unordered_map<std::wstring, TrackLaunch> m_launch{};
+
+        // How a generator that listens to a track hears it while playing (HearLive), asked in
+        // the timeline's ticks or a launched clip's own.
+        TrackHearing m_hearTimeline{};
+        TrackHearing m_hearLaunched{};
 
         // Lanes send where they are again after an edit made while playing, and when a muted
         // track is heard again: each counts edits, and a track remembers the last one it saw.

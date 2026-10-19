@@ -25,10 +25,14 @@ public:
     MidiSynthDevice(const MidiSynthDevice&) = delete;
     MidiSynthDevice& operator=(const MidiSynthDevice&) = delete;
 
-    // The service opens exactly one bidirectional connection per endpoint and fans clients out
-    // above it, so this pair is also the "something is listening" signal.
-    HRESULT ConnectClient(_In_ IMidiCallback* callback, _In_ LONGLONG context);
-    HRESULT DisconnectClient() noexcept;
+    // The service opens one bidirectional connection per endpoint and fans clients out above it,
+    // so this pair is also the "something is listening" signal. It can open a second one before
+    // the first has closed, though: a client that holds the endpoint open while the synthesizer is
+    // turned off keeps the old connection alive, and turning it back on opens a new one. So a
+    // connection replaces whatever was connected before and gets an identifier, and a disconnect
+    // does nothing unless its identifier is still the current connection.
+    HRESULT ConnectClient(_In_ IMidiCallback* callback, _In_ LONGLONG context, _Out_ uint64_t& connectionId);
+    HRESULT DisconnectClient(_In_ uint64_t connectionId) noexcept;
 
     HRESULT SendMessage(
         _In_ MessageOptionFlags optionFlags,
@@ -40,6 +44,12 @@ public:
     HRESULT ApplySettings(_In_ MidiSynthSettings const& settings) noexcept;
 
     MidiSynthSettings Settings() const noexcept;
+
+    // Held across reading the settings, changing them and applying the result. The service doesn't
+    // serialize configuration requests, so two arriving together would otherwise both start from
+    // the same settings, and the second would undo the first. ApplySettings takes it too, and the
+    // thread holding it can take it again.
+    [[nodiscard]] wil::cs_leave_scope_exit LockSettingsChanges() noexcept;
 
     // Reports what the active sound set holds. The full melodic list is deliberately left out:
     // MIDI-CI Property Exchange already carries it as ProgramList, and duplicating 235 entries
@@ -100,6 +110,9 @@ private:
     // first connection and kept. A machine that never plays a note never reads it at all.
     HRESULT EnsureSoundSetLoaded();
 
+    // Ends the current connection, whichever it is. Caller must hold m_connectionLock.
+    HRESULT DisconnectCurrentClient() noexcept;
+
     // Everything the synthesizer can do without making a sound: discovery, MIDI-CI, identity and
     // property exchange. Separate from AcquireAudio because the protocol manager is connected for
     // the life of the endpoint, so "a client is connected" cannot mean "hold the audio device".
@@ -109,8 +122,10 @@ private:
     void ReleaseAudio() noexcept;
 
     // Drains messages through the dispatcher when no audio is running, so the endpoint still
-    // answers. Caller must hold m_audioLock exclusively and must have checked there is no sink.
-    void PumpWithoutAudio() noexcept;
+    // answers. A channel voice message is left queued, and audio asked for, unless notes are being
+    // discarded because no audio device can be had. Caller must hold m_audioLock exclusively and
+    // must have checked there is no sink.
+    void PumpWithoutAudio(_In_ bool discardNotes) noexcept;
 
     void WorkerThread() noexcept;
     void ServiceOutbound() noexcept;
@@ -150,6 +165,10 @@ private:
     HRESULT DeliverToCallback(_In_ MidiSynth::QueuedUmp const& message) noexcept;
 
     MidiSynth::DlsCollection m_collection;
+
+    // A client connecting and a configuration request for the sound set can both be first, on
+    // different threads. Guards m_soundSetLoaded, and the collection until it is loaded.
+    wil::critical_section m_soundSetLock;
     bool m_soundSetLoaded{ false };
 
     MidiSynth::SynthEngine m_engine;
@@ -196,11 +215,24 @@ private:
     // so the producer side is serialized here; the render thread still pops without a lock.
     wil::critical_section m_producerLock;
 
+    // Taken before every other lock here, and held for a whole settings change, including creating
+    // or removing the endpoint. Nothing the service calls back into while that happens takes it,
+    // which is what makes holding it across those calls safe.
+    wil::critical_section m_settingsChangeLock;
+
     mutable wil::srwlock m_settingsLock;
     MidiSynthSettings m_settings{};
 
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{ 0 };
+
+    // Connecting and disconnecting arrive on service threads, and can overlap when the service
+    // replaces a connection. Taken before m_producerLock and m_audioLock, and never by the worker,
+    // which is joined while it is held.
+    wil::critical_section m_connectionLock;
+
+    // Guarded by m_connectionLock. Counts connections, so zero is never a live one.
+    uint64_t m_connectionId{ 0 };
 
     std::thread m_worker;
     wil::unique_event_nothrow m_workerStop;

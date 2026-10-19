@@ -49,13 +49,15 @@ namespace NetworkMidiTest
 
     // Creates a client which connects directly to the given address and port. The entry
     // identifier is the GUID string the service uses to track the connection, and is what
-    // RemoveClient needs later.
+    // RemoveClient needs later. localEndpointName is the name this PC gives the remote, saved in
+    // the entry the way the SDK saves it. Empty leaves it out.
     ServiceConfigResult CreateDirectClient(
         _In_ std::wstring const& entryIdentifier,
         _In_ std::wstring const& hostNameOrAddress,
         _In_ uint16_t const port,
         _In_ bool const createMidi1Ports = false,
-        _In_ std::wstring const& customEndpointName = L"");
+        _In_ std::wstring const& customEndpointName = L"",
+        _In_ std::wstring const& localEndpointName = L"");
 
     // Disconnects and removes a client created above. Safe to call for an identifier which is
     // no longer present.
@@ -67,6 +69,25 @@ namespace NetworkMidiTest
         _In_ std::wstring const& entryIdentifier,
         _In_ bool const createMidi1Ports,
         _In_ uint8_t const fallbackMidi1PortCount);
+
+    // Like CreateDirectClient, with a fallbackMidi1PortGroups value written verbatim, so a test
+    // can also hand the transport one which is malformed.
+    ServiceConfigResult CreateDirectClientWithPortGroups(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& hostNameOrAddress,
+        _In_ uint16_t const port,
+        _In_ bool const createMidi1Ports,
+        _In_ std::wstring const& fallbackMidi1PortGroupsJson);
+
+    // An "updateEntries" section for one client or host, with the body of its entry written
+    // verbatim. Only the keys in the body change, as with the SDK's update configs.
+    ServiceConfigResult UpdateClientEntry(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& entryBodyJson);
+
+    ServiceConfigResult UpdateHostEntry(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::wstring const& entryBodyJson);
 
     // The common "update" array, which renames an endpoint by matching it. Matched on the device
     // id rather than the name, which is the strongest criterion and the one Matches tries first.

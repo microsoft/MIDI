@@ -100,7 +100,7 @@
                            Maximum="500000"
                            SmallChange="1000"
                            LargeChange="10000"
-                           SpinButtonPlacementMode="Compact"
+                           SpinButtonPlacementMode="Hidden"
                            ValueChanged="OnRetentionChanged" />
             </StackPanel>
 

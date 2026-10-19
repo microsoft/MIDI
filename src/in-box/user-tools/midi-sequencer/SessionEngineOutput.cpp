@@ -6,11 +6,33 @@
 // ============================================================================
 
 #include "SessionEngineOutput.h"
+#include "StudioSetup.h"
 
 namespace midi2 = winrt::Windows::Devices::Midi2;
 
 namespace midisequencer
 {
+    namespace
+    {
+        // What ends a sound: a note off, a MIDI 1.0 note on at velocity 0, or all sound off, reset
+        // all controllers or all notes off.
+        bool EndsSound(_In_ uint32_t word0) noexcept
+        {
+            auto const type = (word0 >> 28) & 0xF;
+
+            if (type != 0x2 && type != 0x4)
+            {
+                return false;
+            }
+
+            auto const status = (word0 >> 20) & 0xF;
+            auto const index = (word0 >> 8) & 0x7F;
+
+            return status == 0x8 || (type == 0x2 && status == 0x9 && (word0 & 0x7F) == 0) ||
+                (status == 0xB && (index == 120 || index == 121 || index == 123));
+        }
+    }
+
     _Use_decl_annotations_
     SessionEngineOutput::SessionEngineOutput(midi2::MidiSession const& session) :
         m_session(session)
@@ -133,19 +155,50 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    void SessionEngineOutput::SetGroupsOff(std::map<std::pair<std::wstring, std::wstring>, uint16_t> groupsOff)
+    {
+        std::scoped_lock guard{ m_lock };
+        m_groupsOff = std::move(groupsOff);
+    }
+
+    _Use_decl_annotations_
     void SessionEngineOutput::Send(EndpointRef const& endpoint, uint64_t timestamp, uint32_t const* words, uint8_t wordCount) noexcept
     {
         try
         {
             midi2::MidiEndpointConnection connection{ nullptr };
+            uint16_t groupsOff{ 0 };
 
             {
                 std::scoped_lock guard{ m_lock };
-                auto found = m_connections.find(std::make_pair(endpoint.Name, endpoint.Id));
+                auto const key = std::make_pair(endpoint.Name, endpoint.Id);
+                auto found = m_connections.find(key);
 
                 if (found != m_connections.end())
                 {
                     connection = found->second;
+                }
+
+                if (!m_groupsOff.empty())
+                {
+                    auto off = m_groupsOff.find(key);
+
+                    if (off != m_groupsOff.end())
+                    {
+                        groupsOff = off->second;
+                    }
+                }
+            }
+
+            if (groupsOff != 0 && wordCount > 0)
+            {
+                auto const group = MessageGroup(words[0]);
+
+                // What ends a sound still gets through, so a note playing as its group is turned off
+                // doesn't hang.
+                if (group >= 0 && (groupsOff & (1u << group)) != 0 && !EndsSound(words[0]))
+                {
+                    return;
                 }
             }
 

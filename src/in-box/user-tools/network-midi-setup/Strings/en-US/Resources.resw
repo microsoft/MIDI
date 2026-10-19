@@ -283,7 +283,7 @@
     <comment>MIDI 1.0 ports are what older applications use. They are built along with the endpoint.</comment>
   </data>
   <data name="CustomizeCreateMidi1PortsHint.Text" xml:space="preserve">
-    <value>Turning this on or off takes effect the next time this device connects. The number of ports below applies right away.</value>
+    <value>Turning this on or off takes effect the next time this device connects. Changes to the ports below apply right away.</value>
     <comment>Explains which of the two MIDI 1.0 settings is immediate and which needs a reconnect.</comment>
   </data>
   <data name="CustomizeFallbackMidi1PortCountBox.Header" xml:space="preserve">
@@ -1071,7 +1071,7 @@
     <value>Network adapter</value>
   </data>
   <data name="ChangeHostAdapterLink.Content" xml:space="preserve">
-    <value>Change</value>
+    <value>Adapter...</value>
   </data>
   <data name="ChangeHostAdapterLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Change network adapter</value>
@@ -1143,7 +1143,7 @@
     <comment>{0} is the connection status, such as Connected. {1} is a sending speed, such as 2× MIDI 1.0 wire speed.</comment>
   </data>
   <data name="ChangeHostSendSpeedLink.Content" xml:space="preserve">
-    <value>Change</value>
+    <value>Speed...</value>
   </data>
   <data name="ChangeHostSendSpeedLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Change sending speed</value>
@@ -1175,7 +1175,7 @@
     <comment>Shown for a device connected to a host on this PC. {0} is a sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
   </data>
   <data name="ChangeSendSpeedLink.Content" xml:space="preserve">
-    <value>Change</value>
+    <value>Speed...</value>
   </data>
   <data name="ChangeSendSpeedLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Change sending speed</value>
@@ -1460,5 +1460,176 @@
   <data name="FirewallRuleDescription" xml:space="preserve">
     <value>Lets other devices on your network connect to the network MIDI hosts on this PC. Added by Windows MIDI Network Setup.</value>
     <comment>The description of the rule this app adds, as Windows Firewall shows it.</comment>
+  </data>
+  <data name="CustomizeMidi1PortsButton.Content" xml:space="preserve">
+    <value>Customize groups and MIDI 1.0 ports</value>
+  </data>
+  <data name="ConnectMidi1PortsHelp.Text" xml:space="preserve">
+    <value>Only used when the device doesn't describe its own groups, such as another Windows PC.</value>
+  </data>
+  <data name="ChangeMidi1PortsLink.Content" xml:space="preserve">
+    <value>Ports...</value>
+  </data>
+  <data name="ChangeMidi1PortsLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change MIDI 1.0 ports</value>
+  </data>
+  <data name="RemoteClientSettingsExpander.Header" xml:space="preserve">
+    <value>Devices with their own settings</value>
+  </data>
+  <data name="Midi1PortGroupsDialog.PrimaryButtonText" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Midi1PortGroupsDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Midi1PortGroupsGroupHeader.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Midi1PortGroupsNameHeader.Text" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Midi1PortGroupsInputHeader.Text" xml:space="preserve">
+    <value>Source (In)</value>
+  </data>
+  <data name="Midi1PortGroupsOutputHeader.Text" xml:space="preserve">
+    <value>Destination (Out)</value>
+  </data>
+  <data name="Midi1PortGroupsList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="Midi1PortGroupsTitle" xml:space="preserve">
+    <value>MIDI 1.0 ports</value>
+  </data>
+  <data name="Midi1PortGroupsTitleFormat" xml:space="preserve">
+    <value>MIDI 1.0 ports for {0}</value>
+    <comment>{0} is the name of a device or a host.</comment>
+  </data>
+  <data name="Midi1PortGroupsOkButton" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Midi1PortGroupsSaveButton" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Midi1PortGroupsDeviceIntro" xml:space="preserve">
+    <value>Each group works like a separate MIDI cable. Choose the groups you use and name them, so MIDI 1.0 apps show which port is which. Windows uses these only when the device doesn't describe its own groups, such as another Windows PC.</value>
+  </data>
+  <data name="Midi1PortGroupsDeviceOnHostIntro" xml:space="preserve">
+    <value>This changes only the ports for this device. Windows remembers them, and uses them again the next time the device connects. They're used only when the device doesn't describe its own groups, such as another Windows PC.</value>
+  </data>
+  <data name="Midi1PortGroupsHostIntro" xml:space="preserve">
+    <value>Each device that connects to this host gets these ports, unless you choose ports for that device. To name the ports, use the Ports button next to a connected device. Windows uses these only when a device doesn't describe its own groups, such as another Windows PC.</value>
+  </data>
+  <data name="Midi1PortGroupsUseHostFormat" xml:space="preserve">
+    <value>Use the host's ports: {0}</value>
+    <comment>{0} describes the host's ports, for example "1 source (In) and 1 destination (Out), named by Windows".</comment>
+  </data>
+  <data name="Midi1PortGroupsNamesHint" xml:space="preserve">
+    <value>A source (In) brings MIDI from the device into apps. A destination (Out) sends MIDI from apps to the device. Names can be up to 31 characters. Leave a name empty and Windows names the port.</value>
+  </data>
+  <data name="Midi1PortGroupsNoNamesHint" xml:space="preserve">
+    <value>A source (In) brings MIDI from the device into apps. A destination (Out) sends MIDI from apps to the device.</value>
+  </data>
+  <data name="Midi1PortGroupFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} is a group number from 1 to 16.</comment>
+  </data>
+  <data name="Midi1PortGroupNameBox.PlaceholderText" xml:space="preserve">
+    <value>Automatic</value>
+    <comment>Shown in an empty name box. An empty name means Windows names the port.</comment>
+  </data>
+  <data name="Midi1PortGroupNameAutomationFormat" xml:space="preserve">
+    <value>Group {0} name</value>
+    <comment>Read by screen readers. {0} is a group number from 1 to 16.</comment>
+  </data>
+  <data name="Midi1PortGroupInputAutomationFormat" xml:space="preserve">
+    <value>Group {0} source (In)</value>
+    <comment>Read by screen readers. {0} is a group number from 1 to 16.</comment>
+  </data>
+  <data name="Midi1PortGroupOutputAutomationFormat" xml:space="preserve">
+    <value>Group {0} destination (Out)</value>
+    <comment>Read by screen readers. {0} is a group number from 1 to 16.</comment>
+  </data>
+  <data name="Midi1PortsNeedOnePort" xml:space="preserve">
+    <value>Choose at least one source (In) or destination (Out).</value>
+  </data>
+  <data name="Midi1PortsNameWithoutPortFormat" xml:space="preserve">
+    <value>Group {0} has a name but no source (In) or destination (Out). Choose one or both, or clear the name.</value>
+    <comment>{0} is a group number from 1 to 16.</comment>
+  </data>
+  <data name="Midi1PortsDuplicateInputNameFormat" xml:space="preserve">
+    <value>More than one source (In) is named "{0}". Give each source its own name.</value>
+  </data>
+  <data name="Midi1PortsDuplicateOutputNameFormat" xml:space="preserve">
+    <value>More than one destination (Out) is named "{0}". Give each destination its own name.</value>
+  </data>
+  <data name="Midi1PortsNoInputs" xml:space="preserve">
+    <value>no sources (In)</value>
+    <comment>Used inside a sentence, after "MIDI 1.0 ports:".</comment>
+  </data>
+  <data name="Midi1PortsOneInput" xml:space="preserve">
+    <value>1 source (In)</value>
+  </data>
+  <data name="Midi1PortsInputsFormat" xml:space="preserve">
+    <value>{0} sources (In)</value>
+  </data>
+  <data name="Midi1PortsNoOutputs" xml:space="preserve">
+    <value>no destinations (Out)</value>
+  </data>
+  <data name="Midi1PortsOneOutput" xml:space="preserve">
+    <value>1 destination (Out)</value>
+  </data>
+  <data name="Midi1PortsOutputsFormat" xml:space="preserve">
+    <value>{0} destinations (Out)</value>
+  </data>
+  <data name="Midi1PortsSummaryWindowsNamesFormat" xml:space="preserve">
+    <value>{0} and {1}, named by Windows</value>
+    <comment>{0} is the sources, such as "4 sources (In)". {1} is the destinations, such as "1 destination (Out)".</comment>
+  </data>
+  <data name="Midi1PortsSummaryYourNamesFormat" xml:space="preserve">
+    <value>{0} and {1}, named by you</value>
+    <comment>{0} is the sources, such as "4 sources (In)". {1} is the destinations, such as "1 destination (Out)".</comment>
+  </data>
+  <data name="Midi1PortsSummarySomeNamesFormat" xml:space="preserve">
+    <value>{0} and {1}, some named by you</value>
+    <comment>{0} is the sources, such as "4 sources (In)". {1} is the destinations, such as "1 destination (Out)".</comment>
+  </data>
+  <data name="Midi1PortsLineFormat" xml:space="preserve">
+    <value>MIDI 1.0 ports: {0}</value>
+  </data>
+  <data name="Midi1PortsFromDevice" xml:space="preserve">
+    <value>MIDI 1.0 ports: from the device's own groups</value>
+  </data>
+  <data name="HostMidi1PortsLineFormat" xml:space="preserve">
+    <value>MIDI 1.0 ports for each device: {0}</value>
+  </data>
+  <data name="ConnectionMidi1PortsHostFormat" xml:space="preserve">
+    <value>MIDI 1.0 ports: {0} (the host's ports)</value>
+  </data>
+  <data name="ConnectionMidi1PortsOwnFormat" xml:space="preserve">
+    <value>MIDI 1.0 ports: {0} (set for this device)</value>
+  </data>
+  <data name="RemoteClientUsesHostMidi1Ports" xml:space="preserve">
+    <value>MIDI 1.0 ports: the host's ports</value>
+  </data>
+  <data name="RemoteClientUsesHostSendSpeed" xml:space="preserve">
+    <value>Sending speed: the host's speed</value>
+  </data>
+  <data name="Midi1PortsChangedFormat" xml:space="preserve">
+    <value>The MIDI 1.0 ports for {0} were saved.</value>
+  </data>
+  <data name="Midi1PortsChangeFailedGeneral" xml:space="preserve">
+    <value>Windows could not change the MIDI 1.0 ports.</value>
+  </data>
+  <data name="Midi1PortsChangeFailedFormat" xml:space="preserve">
+    <value>Windows could not change the MIDI 1.0 ports: {0}</value>
+  </data>
+  <data name="Midi1PortsNeedsSavedEntryFormat" xml:space="preserve">
+    <value>Windows could not change the MIDI 1.0 ports for {0}, because this PC's connection to it is not saved. Forget it, then connect again.</value>
+  </data>
+  <data name="RemoteClientMidi1PortsChangedFormat" xml:space="preserve">
+    <value>{0} now has its own MIDI 1.0 ports.</value>
+  </data>
+  <data name="RemoteClientMidi1PortsResetFormat" xml:space="preserve">
+    <value>{0} now uses the host's MIDI 1.0 ports.</value>
   </data>
 </root>

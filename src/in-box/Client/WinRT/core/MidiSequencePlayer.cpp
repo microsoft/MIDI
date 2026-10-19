@@ -259,6 +259,41 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Sequencing::implementation
         m_engine.Stop();
     }
 
+    _Use_decl_annotations_
+    void MidiSequencePlayer::PlaybackRate(double const value)
+    {
+        // Clamping a number to the supported range is a convenience. Quietly accepting something
+        // that is not a number would hide a defect in the caller.
+        if (!std::isfinite(value))
+        {
+            throw winrt::hresult_invalid_argument();
+        }
+
+        m_engine.SetPlaybackRate(value);
+    }
+
+    // The engine and the API spell the same flags, so a value crosses with a cast. These keep
+    // the two from drifting apart.
+    static_assert(static_cast<uint32_t>(Sequencing::MidiSequenceChaseOptions::None) ==
+        static_cast<uint32_t>(::midiplayer::ChaseOptions::None));
+    static_assert(static_cast<uint32_t>(Sequencing::MidiSequenceChaseOptions::ChannelSettings) ==
+        static_cast<uint32_t>(::midiplayer::ChaseOptions::ChannelSettings));
+    static_assert(static_cast<uint32_t>(Sequencing::MidiSequenceChaseOptions::HeldNotes) ==
+        static_cast<uint32_t>(::midiplayer::ChaseOptions::HeldNotes));
+
+    Sequencing::MidiSequenceChaseOptions MidiSequencePlayer::ChaseOptions() const noexcept
+    {
+        return static_cast<Sequencing::MidiSequenceChaseOptions>(static_cast<uint32_t>(m_engine.GetChaseOptions()));
+    }
+
+    _Use_decl_annotations_
+    void MidiSequencePlayer::ChaseOptions(Sequencing::MidiSequenceChaseOptions const value) noexcept
+    {
+        // The engine drops bits it does not know, so a value written for a later version of the
+        // API cannot turn on something this one cannot do. Reading it back shows what was kept.
+        m_engine.SetChaseOptions(static_cast<::midiplayer::ChaseOptions>(static_cast<uint32_t>(value)));
+    }
+
     void MidiSequencePlayer::Close()
     {
         if (m_closed)

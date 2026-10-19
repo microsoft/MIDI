@@ -225,6 +225,8 @@
     <ClInclude Include="editor\RepeatPlan.h" />
     <ClInclude Include="editor\UndoStack.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
+    <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
     <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
   </ItemGroup>

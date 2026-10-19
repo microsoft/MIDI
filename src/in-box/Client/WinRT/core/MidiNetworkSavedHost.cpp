@@ -15,6 +15,7 @@
 
 #include "MidiNetworkKnownRemoteClient.h"
 #include "MidiNetworkRemoteClientSettings.h"
+#include "MidiNetworkMidi1PortGroup.h"
 #include "midi_saved_config_json.h"
 #include "midi_network_adapters.h"
 
@@ -99,6 +100,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             // The list is replaced whole each time it is saved, so the last one present wins
             auto remoteClientSettings = MidiSavedConfigJson::Array(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_SETTINGS_KEY);
+            auto fallbackMidi1PortGroups = MidiSavedConfigJson::Array(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY);
 
             // a value missing from a change leaves what came before it
             for (auto const& update : updates)
@@ -111,6 +113,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     fallbackMidi1PortCount,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
                     MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+                if (auto const changed = MidiSavedConfigJson::Array(update, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY); changed != nullptr)
+                {
+                    fallbackMidi1PortGroups = changed;
+                }
 
                 sendSpeedLimit = MidiSavedConfigJson::SendSpeedLimit(update, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, sendSpeedLimit);
                 reduceSendSpeedAutomatically = MidiSavedConfigJson::Boolean(update, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, reduceSendSpeedAutomatically);
@@ -126,6 +133,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
             m_createOnlyUmpEndpoints = !createMidi1Ports;
             m_fallbackMidi1PortCount = fallbackMidi1PortCount;
+            m_fallbackMidi1PortGroups = internal::ReadMidiNetworkMidi1PortGroups(fallbackMidi1PortGroups);
             m_sendSpeedLimit = static_cast<network::MidiNetworkSendSpeedLimit>(sendSpeedLimit);
             m_reduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
             m_skipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
@@ -172,12 +180,33 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 settings->SkipInBetweenValuesToCatchUp(
                     MidiSavedConfigJson::Boolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
 
+                settings->UseHostSendSpeed(
+                    MidiSavedConfigJson::Boolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY, false));
+
+                for (auto const& group : MidiNetworkMidi1PortGroup::FromDefinitions(
+                    internal::ReadMidiNetworkMidi1PortGroups(MidiSavedConfigJson::Array(item, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY))))
+                {
+                    settings->FallbackMidi1PortGroups().Append(group);
+                }
+
                 m_remoteClientSettings.Append(*settings);
             }
         }
         catch (...)
         {
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading a saved network host.");
+        }
+    }
+
+    collections::IVectorView<network::MidiNetworkMidi1PortGroup> MidiNetworkSavedHost::FallbackMidi1PortGroups() const noexcept
+    {
+        try
+        {
+            return MidiNetworkMidi1PortGroup::FromDefinitions(m_fallbackMidi1PortGroups).GetView();
+        }
+        catch (...)
+        {
+            return winrt::single_threaded_vector<network::MidiNetworkMidi1PortGroup>().GetView();
         }
     }
 }

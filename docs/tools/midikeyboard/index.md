@@ -133,9 +133,19 @@ midikeyboard.exe [endpoint device id] [options]
 
   --channel, -c number   Optional. The channel number, 1 through 16, to transmit
                          on. Only valid when an endpoint device id is supplied.
+
+  --programs-from id     Optional. The full endpoint device id to ask for the
+                         program list, when it isn't the endpoint being played.
+                         Only valid when an endpoint device id is supplied.
+
+  --programs-group number
+                         Optional. The group number, 1 through 16, to ask for
+                         the program list on. Only valid with --programs-from.
 ```
 
 You can find the endpoint device id for a device using the [MIDI Console]({{ site.baseurl }}/tools/console/) or the [MIDI Settings app]({{ site.baseurl }}/tools/settings/).
+
+`--programs-from` is for when the keys and the sounds are on different endpoints. For example, when you record into a track in [Windows MIDI Sequencer]({{ site.baseurl }}/tools/midisequencer/), the keyboard plays into the sequencer through a loopback, but the sounds are on the device the track plays to. The sequencer starts the keyboard with `--programs-from`, so the **Prog** list shows that device's sounds. Picking one sends the program change through the loopback, the same way the notes go, so the sequencer hears it and can record it.
 
 ## Learn more
 

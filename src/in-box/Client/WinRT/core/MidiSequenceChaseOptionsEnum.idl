@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // What a player sends when playback starts part way into a sequence, so the instrument is
+    // left the way it would have been had the sequence played from the start. Sequencers call
+    // this chase.
+    [contract(MidiSequencingUtilityApiContract, 2)]
+    [flags]
+    enum MidiSequenceChaseOptions
+    {
+        // Nothing. Playback starts with the instrument in whatever state it was left in.
+        None =              0x00000000,
+
+        // Bank, program, controllers and pitch bend: the last value the sequence gave each one
+        // before the starting point. Nothing the sequence did not set is sent.
+        ChannelSettings =   0x00000001,
+
+        // Notes that started before the starting point and end after it, started again with
+        // their own velocity. Right for organ stops held on a control channel, drones and pads.
+        // Wrong for piano and drums, where a note started part way through gets a fresh attack.
+        HeldNotes =         0x00000002,
+    };
+}

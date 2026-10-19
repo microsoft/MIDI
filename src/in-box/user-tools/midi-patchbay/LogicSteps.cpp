@@ -554,7 +554,15 @@ namespace midipatchbay
             auto const field = value.Range == PlainRange ? (value.Raw & mask) : FieldValueOf(value, bits);
 
             auto& target = words[place.Word];
-            target = (target & ~(mask << place.LowBit)) | (field << place.LowBit);
+            auto const written = (target & ~(mask << place.LowBit)) | (field << place.LowBit);
+
+            // The message type says how many words follow, so a new one would split or join messages on the way out.
+            if (place.Word == 0 && MessageType(written) != MessageType(target))
+            {
+                return false;
+            }
+
+            target = written;
             return true;
         }
 

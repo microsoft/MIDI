@@ -128,12 +128,17 @@ namespace MidiSynth
         UmpDispatcherStats Stats() const noexcept { return m_stats; }
         void ResetStats() noexcept { m_stats = {}; }
 
-        // The 28 bit identifier this device uses in MIDI-CI exchanges.
-        uint32_t Muid() const noexcept { return m_responder.Muid(); }
+        // The 28 bit identifier this device uses in MIDI-CI exchanges. Safe on any thread.
+        uint32_t Muid() const noexcept;
 
-        // Set when another device told us our identifier collided. MIDI-CI stays silent until the
-        // host supplies a replacement, because answering with a known duplicate is worse.
-        bool MuidNeedsReplacement() const noexcept { return m_responder.MuidNeedsReplacement(); }
+        // Set when another device withdrew our identifier, or claimed it too. MIDI-CI stays silent
+        // until the host supplies a replacement, because answering with a known duplicate is worse.
+        // Safe on any thread, and false again as soon as a replacement has been handed over.
+        bool MuidNeedsReplacement() const noexcept;
+
+        // Safe on any thread. The responder belongs to the thread that dispatches messages, which is
+        // the audio thread while there is audio, so the identifier is handed over and that thread
+        // takes it up before it next handles MIDI-CI. Muid() reports it from now on.
         void SetMuid(_In_ uint32_t muid) noexcept;
 
         // Largest property exchange header we will accept. Headers are short JSON objects such as
@@ -155,7 +160,7 @@ namespace MidiSynth
         // Answering a property request means parsing JSON and building many kilobytes of reply,
         // neither of which belongs on the thread that renders audio. The request is parked here and
         // a worker thread collects it. Returns false when nothing is waiting.
-        bool TakePendingPropertyRequest(_Out_ PendingPropertyRequest& request) noexcept;
+        _Success_(return) bool TakePendingPropertyRequest(_Out_ PendingPropertyRequest& request) noexcept;
 
         // An identifier another device withdrew, so a worker holding state for it can let it go.
         // Returns false when none is waiting.
@@ -173,13 +178,14 @@ namespace MidiSynth
             std::array<SynthChannelState, MidiChannelCount> Channels{};
         };
 
-        // A full report is 166 messages. Sent from the thread that renders audio, it would take
+        // A full report is 198 messages. Sent from the thread that renders audio, it would take
         // most of the queue that thread shares with every other reply, so it is parked here for a
         // worker exactly like a property request. Returns false when none waits.
-        bool TakePendingMessageReport(_Out_ PendingMessageReport& report) noexcept;
+        _Success_(return) bool TakePendingMessageReport(_Out_ PendingMessageReport& report) noexcept;
 
-        // Pitch bend, seven controllers, pitch bend sensitivity and the program, for each channel.
-        static constexpr size_t MidiMessageReportMessagesPerChannel = 10;
+        // Pitch bend, seven controllers, pitch bend sensitivity, fine and coarse tuning, and the
+        // program, for each channel.
+        static constexpr size_t MidiMessageReportMessagesPerChannel = 12;
 
         // The largest report there is: everything on all sixteen channels, between a reply and an
         // end of three system exclusive packets each. A transport that queues a report whole can
@@ -238,6 +244,12 @@ namespace MidiSynth
         // Rebuilds the responder configuration from the identity and group we were given.
         void ConfigureResponder(_In_ uint32_t muid) noexcept;
 
+        // On the dispatching thread: makes a handed over identifier the responder's.
+        void TakeUpReplacementMuid() noexcept;
+
+        // On the dispatching thread: tells other threads what the responder now holds.
+        void PublishMuid() noexcept;
+
         void ParkPropertyRequest(
             _In_ const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed,
             _In_ const uint8_t* message,
@@ -256,6 +268,13 @@ namespace MidiSynth
         // All MIDI-CI behavior lives in the shared responder, which produces replies into a buffer
         // and never sends. Only this class knows how to put them on the wire.
         WindowsMidiServicesCapabilityInquiry::Responder m_responder{};
+
+        // What other threads know of the responder's identifier, and a replacement handed over to
+        // it. Zero is not a legal identifier, so it means none. Only the dispatching thread writes
+        // the first two, and only it clears the replacement, which SetMuid sets.
+        std::atomic<uint32_t> m_publishedMuid{ 0 };
+        std::atomic<bool> m_muidNeedsReplacement{ false };
+        std::atomic<uint32_t> m_replacementMuid{ 0 };
 
         // Written only by the dispatch thread and only while the flag is clear, read and cleared
         // only by the worker, so neither can see a half written request.

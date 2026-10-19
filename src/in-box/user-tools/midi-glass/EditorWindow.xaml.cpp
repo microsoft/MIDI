@@ -19,6 +19,8 @@
 #include "LayoutStore.h"
 #include "ThemeStore.h"
 #include "PageTemplates.h"
+#include "PopupBackdrop.h"
+#include "SpinButtons.h"
 #include "resource.h"
 
 namespace resources = ::midiglass::resources;
@@ -98,6 +100,19 @@ namespace winrt::midiglass::implementation
 
             m_chrome.Initialize(elements, ::midiglass::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
+
+            // The number boxes' spin buttons pop up for a finger or a pen, not for the mouse.
+            midiapp::UseTouchSpinButtons({
+                LabelWidthBox(), TickCountBox(), PictureVideoStartBox(), PictureVideoEndBox(), LineThicknessBox(),
+                KeyCountBox(), LowestNoteBox(), PadCountBox(), PadSizeBox(), PadStartNoteBox(),
+                PadRightIntervalBox(), PadUpIntervalBox(), PadRightStepsBox(), PadUpStepsBox(), PadNameSizeBox(),
+                PadBendRangeBox(), MessageNumberBox(), ParameterBankBox(), ParameterIndexBox(), PerNoteControllerBox(),
+                MessageValueBox(), MessageSecondValueBox(), DetentStepBox(), FeedbackNumberBox(), FeedbackHoldBox(),
+                ClockBpmBox(), ClockLowestBpmBox(), ClockHighestBpmBox(), LfoUpdateBox(), StepCountBox(),
+                TurntableDegreesBox(), SendIntervalBox(), KeyboardOrderBox() });
 
             auto const title = resources::FormatString(
                 L"EditorWindowTitleFormat", m_editor.Document().Name);

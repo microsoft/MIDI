@@ -806,6 +806,9 @@
     <ClInclude Include="MidiNetworkRemoteClientSettings.h">
       <DependentUpon>MidiNetworkRemoteClientSettings.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkMidi1PortGroup.h">
+      <DependentUpon>MidiNetworkMidi1PortGroup.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiNetworkHostRemoteClientSettingsConfig.h">
       <DependentUpon>MidiNetworkHostRemoteClientSettingsConfig.idl</DependentUpon>
     </ClInclude>
@@ -1412,6 +1415,9 @@
     <ClCompile Include="MidiNetworkRemoteClientSettings.cpp">
       <DependentUpon>MidiNetworkRemoteClientSettings.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkMidi1PortGroup.cpp">
+      <DependentUpon>MidiNetworkMidi1PortGroup.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkHostRemoteClientSettingsConfig.cpp">
       <DependentUpon>MidiNetworkHostRemoteClientSettingsConfig.idl</DependentUpon>
     </ClCompile>
@@ -1575,6 +1581,7 @@
     <Midl Include="MidiSequenceTextKindEnum.idl" />
     <Midl Include="MidiSequenceTimingModeEnum.idl" />
     <Midl Include="MidiSequencePlayerStateEnum.idl" />
+    <Midl Include="MidiSequenceChaseOptionsEnum.idl" />
     <Midl Include="MidiSequenceNote.idl" />
     <Midl Include="MidiSequenceBarPosition.idl" />
     <Midl Include="MidiSequenceTempoChange.idl" />
@@ -1787,6 +1794,7 @@
     <Midl Include="MidiNetworkHostKnownClientsConfig.idl" />
     <Midl Include="MidiNetworkKnownRemoteClient.idl" />
     <Midl Include="MidiNetworkRemoteClientSettings.idl" />
+    <Midl Include="MidiNetworkMidi1PortGroup.idl" />
     <Midl Include="MidiNetworkHostRemoteClientSettingsConfig.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />
     <Midl Include="MidiNetworkHostUpdateConfig.idl" />

@@ -30,6 +30,9 @@
       <Component Id="c3E059AE6FCC37EE5" Guid="95042d1c-4e7e-5c37-9668-7a312328a944" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midi1monitor.exe -->
         <File Id="midi1monitorExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" />
       </Component>
+      <Component Id="cAC6CE83C1EB6D859" Guid="35ed430f-e402-5625-854f-f09b289c8cd3" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midi1rtmonitor.exe -->
+        <File Id="midi1rtmonitorExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1rtmonitor.exe" Vital="true" />
+      </Component>
       <Component Id="c609FDECC865D1702" Guid="af1f0b5a-b2f3-55ba-a57b-2a8d78acd389" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midi2monitor.exe -->
         <File Id="midi2monitorExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi2monitor.exe" Vital="true" />
       </Component>

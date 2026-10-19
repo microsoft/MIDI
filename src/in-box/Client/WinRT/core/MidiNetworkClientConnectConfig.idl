@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 
 import "MidiNetworkClientMatchCriteria.idl";
+import "MidiNetworkMidi1PortGroup.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiGroup.idl";
@@ -72,6 +73,13 @@ namespace Windows.Devices.Midi2.Transports.Network
             // control change, pressure and pitch bend moves so the remote catches up. True by
             // default.
             [noexcept] Boolean SkipInBetweenValuesToCatchUp;
+
+            // The groups to create MIDI 1.0 ports for when the remote doesn't describe itself with
+            // function blocks, and what to call them. Used instead of FallbackMidi1PortCount when
+            // it isn't empty. A remote which does describe itself gets ports for its own groups,
+            // and a name here still applies to a port it has on the same group. Empty by default.
+            // An older transport ignores this and uses FallbackMidi1PortCount.
+            [noexcept] Windows.Foundation.Collections.IVector<MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups{ get; };
         }
     }
 }

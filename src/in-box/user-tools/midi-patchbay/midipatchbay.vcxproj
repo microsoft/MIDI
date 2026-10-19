@@ -130,6 +130,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="CordPath.h" />
     <ClInclude Include="DialogParts.h" />
     <ClInclude Include="MessageFilter.h" />
     <ClInclude Include="MessageText.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="StatefulBlocks.h" />
     <ClInclude Include="LogicSteps.h" />
     <ClInclude Include="ControllerSteps.h" />
+    <ClInclude Include="MessageConverter.h" />
     <ClInclude Include="ControllerHub.h" />
     <ClInclude Include="ControllerStepRunner.h" />
     <ClInclude Include="HidControllers.h" />
@@ -199,6 +201,7 @@
     <ClInclude Include="..\midi-app-shared\ChannelVoiceWords.h" />
     <ClInclude Include="..\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\AssistantPrompt.h" />
     <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
     <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
@@ -244,6 +247,9 @@
     <ClCompile Include="ControllerSteps.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="MessageConverter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="HidControllers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -256,8 +262,12 @@
     <ClCompile Include="PatchFolderMove.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="CordPath.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MessageText.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
+    <ClCompile Include="PatchCanvasCords.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
     <ClCompile Include="PatchLibrary.cpp" />
     <ClCompile Include="PatchModel.cpp" />
@@ -268,6 +278,7 @@
     <ClCompile Include="HidHub.cpp" />
     <ClCompile Include="ControllerStepRunner.cpp" />
     <ClCompile Include="ControllerText.cpp" />
+    <ClCompile Include="ConverterText.cpp" />
     <ClCompile Include="SendQueue.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -287,6 +298,7 @@
     <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
     <ClCompile Include="MainWindowLogicSteps.cpp" />
     <ClCompile Include="MainWindowControllerSteps.cpp" />
+    <ClCompile Include="MainWindowConverterSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />

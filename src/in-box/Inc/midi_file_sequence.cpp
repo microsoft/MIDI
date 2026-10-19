@@ -11,6 +11,7 @@
 #include "midi_file_sequence.h"
 
 #include <algorithm>
+#include <cstring>
 #include <map>
 #include <utility>
 
@@ -19,6 +20,16 @@ namespace midifile
     namespace
     {
         constexpr uint64_t MicrosecondsPerSecond = 1000000;
+
+        // Drum kit banks, as the bank select MSB.
+        constexpr uint8_t BankSelectMsbController = 0x00;
+        constexpr uint8_t GeneralMidi2RhythmBank = 120;
+        constexpr uint8_t XgDrumKitBank = 127;
+
+        constexpr uint8_t SystemExclusiveStart = 0xF0;
+
+        // Word count for each Universal MIDI Packet message type, from the specification.
+        constexpr uint8_t PacketWordCounts[16]{ 1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4 };
 
         uint32_t NominalTicksPerQuarterNote(TimeDivision const& division) noexcept
         {
@@ -743,10 +754,15 @@ namespace midifile
                         | noteNumber;
                 };
 
+            // Followed in playing order, so each note knows whether its channel was on a drum kit
+            // when it started.
+            PercussionTracker percussion{};
+
             for (auto const& event : Events)
             {
                 if (event.Kind != EventKind::NoteOn && event.Kind != EventKind::NoteOff)
                 {
+                    percussion.Observe(event, BytesOf(event));
                     continue;
                 }
 
@@ -775,6 +791,7 @@ namespace midifile
                     note.Channel = event.Channel;
                     note.NoteNumber = noteNumber;
                     note.Velocity = velocity;
+                    note.IsPercussion = percussion.IsPercussion(event.Channel);
 
                     pending[key].push_back(Notes.size());
                     Notes.push_back(note);
@@ -934,5 +951,198 @@ namespace midifile
         Copyright.clear();
 
         IsKaraoke = false;
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // PercussionTracker
+    // ------------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    bool PercussionTracker::IsPercussion(uint8_t channel) const noexcept
+    {
+        return channel < 16 && (m_percussionMask & (1u << channel)) != 0;
+    }
+
+    uint16_t PercussionTracker::PercussionChannels() const noexcept
+    {
+        return m_percussionMask;
+    }
+
+    void PercussionTracker::Reset() noexcept
+    {
+        m_percussionMask = static_cast<uint16_t>(1u << PercussionChannelIndex);
+    }
+
+    _Use_decl_annotations_
+    void PercussionTracker::Set(uint8_t channel, bool percussion) noexcept
+    {
+        if (channel >= 16 || channel == PercussionChannelIndex)
+        {
+            return;
+        }
+
+        if (percussion)
+        {
+            m_percussionMask |= static_cast<uint16_t>(1u << channel);
+        }
+        else
+        {
+            m_percussionMask &= static_cast<uint16_t>(~(1u << channel));
+        }
+    }
+
+    _Use_decl_annotations_
+    void PercussionTracker::ObserveBankSelect(uint8_t channel, uint8_t bankMsb) noexcept
+    {
+        Set(channel, bankMsb == GeneralMidi2RhythmBank || bankMsb == XgDrumKitBank);
+    }
+
+    _Use_decl_annotations_
+    void PercussionTracker::Observe(SequenceEvent const& event, std::span<uint8_t const> bytes) noexcept
+    {
+        switch (event.Kind)
+        {
+        case EventKind::ControlChange:
+            if (bytes.size() >= 3 && (bytes[1] & 0x7F) == BankSelectMsbController)
+            {
+                ObserveBankSelect(static_cast<uint8_t>(bytes[0] & 0x0F), static_cast<uint8_t>(bytes[2] & 0x7F));
+            }
+            break;
+
+        case EventKind::SystemExclusive:
+            ObserveSystemExclusive(bytes);
+            break;
+
+        case EventKind::UniversalPacket:
+            ObserveUniversalPacket(bytes);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    _Use_decl_annotations_
+    void PercussionTracker::ObserveSystemExclusive(std::span<uint8_t const> bytes) noexcept
+    {
+        // Stored whole, F0 to F7. Everything below reads from just after the F0.
+        if (bytes.size() < 2 || bytes[0] != SystemExclusiveStart)
+        {
+            return;
+        }
+
+        auto const body = bytes.subspan(1);
+
+        // GM System On and GM2 System On: 7E <device> 09 01 or 03.
+        if (body.size() >= 4 && body[0] == 0x7E && body[2] == 0x09 && (body[3] == 0x01 || body[3] == 0x03))
+        {
+            Reset();
+            return;
+        }
+
+        // Roland GS data set: 41 <device> 42 12 <address high, middle, low> <value> <checksum>.
+        if (body.size() >= 9 && body[0] == 0x41 && body[2] == 0x42 && body[3] == 0x12)
+        {
+            auto const high = body[4];
+            auto const middle = body[5];
+            auto const low = body[6];
+            auto const value = body[7];
+
+            if (high == 0x40 && middle == 0x00 && low == 0x7F)
+            {
+                // GS reset
+                Reset();
+            }
+            else if (high == 0x40 && (middle & 0xF0) == 0x10 && low == 0x15)
+            {
+                // Use for rhythm part. GS numbers the parts by block: block 0 is part 10, blocks
+                // 1 to 9 are parts 1 to 9, and blocks A to F are parts 11 to 16. Each part
+                // listens on its own channel unless something has moved it.
+                auto const block = static_cast<uint8_t>(middle & 0x0F);
+                auto const channel = block == 0 ? PercussionChannelIndex : (block <= 9 ? static_cast<uint8_t>(block - 1) : block);
+
+                Set(channel, value != 0);
+            }
+
+            return;
+        }
+
+        // Yamaha XG parameter change: 43 1n 4C <address high, middle, low> <value>.
+        if (body.size() >= 7 && body[0] == 0x43 && (body[1] & 0xF0) == 0x10 && body[2] == 0x4C)
+        {
+            auto const high = body[3];
+            auto const middle = body[4];
+            auto const low = body[5];
+            auto const value = body[6];
+
+            if (high == 0x00 && middle == 0x00 && low == 0x7E)
+            {
+                // XG System On
+                Reset();
+            }
+            else if (high == 0x08 && middle < 16 && low == 0x07)
+            {
+                // Part mode of part <middle>: 0 is a normal voice, anything else a drum setup.
+                Set(middle, value != 0);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void PercussionTracker::ObserveUniversalPacket(std::span<uint8_t const> bytes) noexcept
+    {
+        // Native byte order words. An application can store several packets as one event, so each
+        // is read in turn.
+        auto const wordCount = bytes.size() / sizeof(uint32_t);
+
+        auto const wordAt = [&bytes](size_t index) noexcept
+            {
+                uint32_t word{};
+                std::memcpy(&word, bytes.data() + index * sizeof(uint32_t), sizeof(word));
+                return word;
+            };
+
+        for (size_t index = 0; index < wordCount; )
+        {
+            auto const word0 = wordAt(index);
+
+            auto const messageType = (word0 >> 28) & 0x0F;
+            auto const packetWords = static_cast<size_t>(PacketWordCounts[messageType]);
+
+            if (index + packetWords > wordCount)
+            {
+                return;
+            }
+
+            auto const status = (word0 >> 20) & 0x0F;
+            auto const channel = static_cast<uint8_t>((word0 >> 16) & 0x0F);
+
+            if (messageType == 0x2)
+            {
+                // A MIDI 1.0 control change carried in a packet.
+                if (status == 0xB && ((word0 >> 8) & 0x7F) == BankSelectMsbController)
+                {
+                    ObserveBankSelect(channel, static_cast<uint8_t>(word0 & 0x7F));
+                }
+            }
+            else if (messageType == 0x4)
+            {
+                auto const word1 = wordAt(index + 1);
+
+                if (status == 0xC && (word0 & 0x01) != 0)
+                {
+                    // MIDI 2.0 program change with its bank valid flag set. The bank MSB is in
+                    // the second word.
+                    ObserveBankSelect(channel, static_cast<uint8_t>((word1 >> 8) & 0x7F));
+                }
+                else if (status == 0xB && ((word0 >> 8) & 0x7F) == BankSelectMsbController)
+                {
+                    // A 32 bit controller value. Its top seven bits are the MIDI 1.0 value.
+                    ObserveBankSelect(channel, static_cast<uint8_t>(word1 >> 25));
+                }
+            }
+
+            index += packetWords;
+        }
     }
 }

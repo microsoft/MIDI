@@ -16,7 +16,7 @@ It's also where you start when you change a setting. [MidiSynthConfig]({{ site.b
 | -------- | ----------- |
 | `IsEnabled` | Whether the synthesizer is turned on. When false, it has no MIDI endpoint at all and doesn't hold the audio device |
 | `RenderMode` | The [MidiSynthRenderMode]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthRenderModeEnum/) in use |
-| `AudioOutputMode` | The [MidiSynthAudioOutputMode]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthAudioOutputModeEnum/) in use |
+| `AudioOutputMode` | The [MidiSynthAudioOutputMode]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthAudioOutputModeEnum/) setting. See the remarks |
 | `BankSelectMode` | The [MidiSynthBankSelectMode]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthBankSelectModeEnum/) in use |
 | `VolumeDecibels` | The volume adjustment set by the person using the PC, in decibels. Zero is the standard level |
 | `AreEffectsEnabled` | Whether reverb and chorus are turned on |
@@ -31,6 +31,8 @@ This is separate from the Master Volume that a MIDI file sets with a Universal S
 **An empty `EndpointDeviceId` is normal when `IsEnabled` is false.** The endpoint is removed, not muted, so there's no id to give.
 
 **What you read is what's really running.** If a value in the configuration was out of range or the wrong type, it's corrected when it's read. So this reports what the synthesizer is really doing, not what the configuration asked for.
+
+The one exception is `AudioOutputMode` set to `WasapiExclusive`. When the audio device can't be taken for the synthesizer alone, it plays in shared mode until it next opens the device, and this still reads `WasapiExclusive`.
 
 ## See also
 

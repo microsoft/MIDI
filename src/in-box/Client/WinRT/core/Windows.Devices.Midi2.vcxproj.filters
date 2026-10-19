@@ -782,6 +782,9 @@
     <Midl Include="MidiNetworkRemoteClientSettings.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
+    <Midl Include="MidiNetworkMidi1PortGroup.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
     <Midl Include="MidiNetworkHostRemoteClientSettingsConfig.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
@@ -879,6 +882,9 @@
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>
     <Midl Include="MidiSequencePlayerStateEnum.idl">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </Midl>
+    <Midl Include="MidiSequenceChaseOptionsEnum.idl">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>
     <Midl Include="MidiSequenceTempoChange.idl">

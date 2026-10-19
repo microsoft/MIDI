@@ -29,7 +29,7 @@ namespace MidiSynth
     class ByteReader
     {
     public:
-        explicit ByteReader(std::span<const std::byte> data) noexcept
+        explicit ByteReader(_In_ std::span<const std::byte> data) noexcept
             : m_data(data)
         {
         }
@@ -44,7 +44,7 @@ namespace MidiSynth
         bool TryReadUInt32(_Out_ uint32_t& value) noexcept { return TryReadPod(value); }
         bool TryReadInt32(_Out_ int32_t& value) noexcept { return TryReadPod(value); }
 
-        bool TryReadBytes(_In_ size_t count, _Out_ std::span<const std::byte>& value) noexcept
+        _Success_(return) bool TryReadBytes(_In_ size_t count, _Out_ std::span<const std::byte>& value) noexcept
         {
             if (count > Remaining())
             {
@@ -109,7 +109,7 @@ namespace MidiSynth
     class RiffChunkReader
     {
     public:
-        explicit RiffChunkReader(std::span<const std::byte> data) noexcept
+        explicit RiffChunkReader(_In_ std::span<const std::byte> data) noexcept
             : m_reader(data)
         {
         }

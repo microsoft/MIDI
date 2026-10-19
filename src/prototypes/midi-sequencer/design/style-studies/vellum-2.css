@@ -1,0 +1,65 @@
+/* PROTOTYPE. Vellum, second pass (October 19): over vellum.css, which it leaves as it is.
+
+   - Candara, a humanist sans that ships with Windows, where vellum.css set Sitka: serif type is
+     hard to read on many displays. Figures are lining and evenly spaced.
+   - The colors vellum.css names outright become variables, so vellum-dark.css and vellum-tint.css
+     can change the paper, the ink, and the washes without restating the rules. */
+
+html.study.vellum {
+    --face: Candara, "Segoe UI Variable Text", sans-serif;
+    --wash: #F8F5EE;           /* what a clip's watercolor is mixed into */
+    --paper-deep: #EBE7DD;     /* the second stripe of a covered lane */
+    --desk: #DDD7CA;           /* under the window */
+    --lift: rgba(60, 45, 20, .14);
+    --lift-near: rgba(60, 45, 20, .08);
+    --grid-bar: color-mix(in srgb, var(--ink) 16%, transparent);
+    --grid-beat: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+html.study.vellum .caption-above, html.study.vellum .tname, html.study.vellum .ed-head .cname, html.study.vellum .titlebar .title,
+html.study.vellum .lcd .big, html.study.vellum .scene .nm, html.study.vellum .insp-head .t, html.study.vellum .scene .n,
+html.study.vellum .bar-num, html.study.vellum .tclip .cap, html.study.vellum .tag > span { font-family: var(--face); }
+
+html.study.vellum .lcd .big, html.study.vellum .lcd .small, html.study.vellum .bar-num, html.study.vellum .scene .n { font-variant-numeric: lining-nums tabular-nums; }
+
+/* Candara's italic is a true italic; the bar numbers and section marks read better upright */
+html.study.vellum .bar-num, html.study.vellum .scene .n { font-style: normal; }
+html.study.vellum .tclip .cap { font-size: 12px; }
+html.study.vellum .lcd .big { font-size: 23px; }
+
+/* ---- the named colors, as variables */
+
+html.study.vellum, html.study.vellum body { background: var(--desk); }
+html.study.vellum .caption-above b { color: var(--ink); }
+
+html.study.vellum .window {
+    border-color: var(--hair-faint);
+    background: var(--grain), var(--paper);
+    box-shadow: 0 1px 2px var(--lift-near), 0 24px 60px var(--lift);
+}
+
+html.study.vellum .tbtn.play.on { color: var(--sheet); }
+html.study.vellum .chip.on { border-color: color-mix(in srgb, var(--play) 50%, transparent); }
+html.study.vellum .chip.info { border-color: color-mix(in srgb, var(--indigo) 45%, transparent); color: var(--indigo); }
+
+html.study.vellum .arow.track > .hdr[style] { background: color-mix(in srgb, var(--vermilion) 5%, transparent) !important; }
+html.study.vellum .pinned { background: color-mix(in srgb, var(--ink) 1.5%, transparent); }
+html.study.vellum .loop-range { background: color-mix(in srgb, var(--vermilion) 10%, transparent); }
+html.study.vellum .rruler .loopbar { background: color-mix(in srgb, var(--vermilion) 22%, transparent); }
+
+html.study.vellum .cell { background: radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, var(--tc) 28%, var(--wash)), color-mix(in srgb, var(--tc) 10%, var(--wash)) 75%); }
+html.study.vellum .cell.rec { background: color-mix(in srgb, var(--vermilion) 12%, transparent); }
+html.study.vellum .empty { color: color-mix(in srgb, var(--ink) 25%, transparent); }
+html.study.vellum .empty.armed { border-color: color-mix(in srgb, var(--vermilion) 35%, transparent); }
+
+html.study.vellum .arow > .lane { background-image: repeating-linear-gradient(to right, var(--grid-bar) 0 1px, transparent 1px var(--bar)), repeating-linear-gradient(to right, var(--grid-beat) 0 1px, transparent 1px calc(var(--bar) / 4)); }
+html.study.vellum .arow.ruler > .lane { background-image: none; }
+
+html.study.vellum .tclip { background: radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, var(--tc) 28%, var(--wash)), color-mix(in srgb, var(--tc) 10%, var(--wash)) 75%); }
+html.study.vellum .tclip.summary { background: color-mix(in srgb, var(--tc) 10%, transparent); }
+html.study.vellum .lane-overlay { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--paper) 90%, transparent) 0 5px, color-mix(in srgb, var(--paper-deep) 82%, transparent) 5px 10px); }
+
+html.study.vellum .editor { box-shadow: 0 -1px 2px var(--lift-near), 0 -16px 40px var(--lift); }
+html.study.vellum .keys svg rect[fill="#D9D9D9"] { fill: var(--sheet); stroke: var(--hair); }
+html.study.vellum .keys svg rect[fill="#1B1B1B"] { fill: var(--ink); }
+html.study.vellum .vbar { background: color-mix(in srgb, var(--ink) 25%, transparent); }

@@ -1,0 +1,79 @@
+/* PROTOTYPE. Softer shadows for dark Porcelain: candidates, tried first on dark aqua. A layer over
+   porcelain-dark.css, whose shadows are all variables; one class on the page picks a candidate.
+
+   Today a key's shadow is about 21 levels darker than the surface just below it, and it reaches
+   down and to the right like a deep drop.
+
+   soft-a   Lighter: the same shadows at about half the strength.
+   soft-b   Lighter and more diffuse: about half the strength, about half again the blur, a little
+            closer to the surface, with a faint 1 px contact shadow so the edges stay crisp.
+   soft-c   As soft-b, but the shadows are a deep shade of the window's color (or of the warm gray
+            without one) instead of black, and the light from the top left a pale tint of it. A deep
+            shade darkens less than black, so it's a third stronger, to be as deep as soft-b.
+
+   C was picked on October 19, and it's now the default in porcelain-dark.css, kept inside sRGB (see
+   there). These stay as they were drawn, for the comparison in porcelain-shadows.html. */
+
+/* ---- A: lighter */
+
+html.study.porcelain.porcelain-dark.soft-a {
+    --raised: -4px -4px 10px rgba(255, 255, 255, .05), 5px 6px 14px rgba(0, 0, 0, .28);
+    --raised-small: -3px -3px 7px rgba(255, 255, 255, .07), 4px 5px 10px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .07);
+    --raised-tiny: -2px -2px 4px rgba(255, 255, 255, .05), 2px 3px 6px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .05);
+    --pressed: inset 4px 5px 10px rgba(0, 0, 0, .3), inset -3px -3px 8px rgba(255, 255, 255, .04);
+    --groove: inset 5px 6px 12px rgba(0, 0, 0, .28), inset -4px -4px 10px rgba(255, 255, 255, .035);
+    --clip-shadow: -2px -2px 5px rgba(255, 255, 255, .05), 3px 4px 8px rgba(0, 0, 0, .3);
+    --clip-lift: -3px -3px 7px rgba(255, 255, 255, .06), 5px 6px 12px rgba(0, 0, 0, .33);
+    --dimple: inset 2px 3px 5px rgba(0, 0, 0, .25), inset -2px -2px 4px rgba(255, 255, 255, .03);
+    --readout-well: inset 4px 5px 10px rgba(0, 0, 0, .3), inset -3px -3px 8px rgba(255, 255, 255, .035);
+    --key-down: inset 2px 3px 5px rgba(0, 0, 0, .33), inset -2px -2px 4px rgba(255, 255, 255, .04);
+    --led-dimple: inset 1px 1px 2px rgba(0, 0, 0, .35);
+    --pin: inset 1px 1px 2px rgba(0, 0, 0, .28);
+    --cap-shade: rgba(0, 0, 0, .25);
+}
+
+/* ---- B: lighter and more diffuse */
+
+html.study.porcelain.porcelain-dark.soft-b {
+    --raised: 0 1px 2px rgba(0, 0, 0, .16), 4px 6px 22px rgba(0, 0, 0, .26), -4px -4px 16px rgba(255, 255, 255, .04);
+    --raised-small: 0 1px 1px rgba(0, 0, 0, .16), 3px 4px 15px rgba(0, 0, 0, .26), -3px -3px 11px rgba(255, 255, 255, .05), inset 0 1px 0 rgba(255, 255, 255, .07);
+    --raised-tiny: 0 1px 1px rgba(0, 0, 0, .14), 2px 3px 10px rgba(0, 0, 0, .24), -2px -2px 7px rgba(255, 255, 255, .04), inset 0 1px 0 rgba(255, 255, 255, .05);
+    --pressed: inset 2px 3px 9px rgba(0, 0, 0, .3), inset -2px -2px 7px rgba(255, 255, 255, .035);
+    --groove: inset 3px 4px 14px rgba(0, 0, 0, .26), inset -3px -3px 11px rgba(255, 255, 255, .03);
+    --clip-shadow: 0 1px 1px rgba(0, 0, 0, .16), 2px 3px 12px rgba(0, 0, 0, .26), -2px -2px 8px rgba(255, 255, 255, .04);
+    --clip-lift: 0 1px 1px rgba(0, 0, 0, .16), 3px 5px 17px rgba(0, 0, 0, .3), -3px -3px 10px rgba(255, 255, 255, .05);
+    --dimple: inset 1px 2px 7px rgba(0, 0, 0, .26), inset -1px -1px 5px rgba(255, 255, 255, .03);
+    --readout-well: inset 2px 3px 10px rgba(0, 0, 0, .3), inset -2px -2px 8px rgba(255, 255, 255, .03);
+    --key-down: inset 1px 2px 7px rgba(0, 0, 0, .32), inset -1px -1px 5px rgba(255, 255, 255, .035);
+    --led-dimple: inset 1px 1px 3px rgba(0, 0, 0, .35);
+    --pin: inset 1px 1px 3px rgba(0, 0, 0, .28);
+    --cap-shade: rgba(0, 0, 0, .2);
+}
+
+/* ---- C: as B, in the glaze's color */
+
+html.study.porcelain.porcelain-dark.soft-c {
+    --shade: oklch(0.13 0.01 85);
+    --glint: oklch(0.97 0.006 85);
+}
+
+html.study.porcelain.porcelain-dark.tinted.soft-c {
+    --shade: oklch(from var(--tint) 0.13 min(c, 0.035) h);
+    --glint: oklch(from var(--tint) 0.97 min(c, 0.015) h);
+}
+
+html.study.porcelain.porcelain-dark.soft-c {
+    --raised: 0 1px 2px oklch(from var(--shade) l c h / .22), 4px 6px 22px oklch(from var(--shade) l c h / .35), -4px -4px 16px oklch(from var(--glint) l c h / .04);
+    --raised-small: 0 1px 1px oklch(from var(--shade) l c h / .22), 3px 4px 15px oklch(from var(--shade) l c h / .35), -3px -3px 11px oklch(from var(--glint) l c h / .05), inset 0 1px 0 oklch(from var(--glint) l c h / .07);
+    --raised-tiny: 0 1px 1px oklch(from var(--shade) l c h / .19), 2px 3px 10px oklch(from var(--shade) l c h / .32), -2px -2px 7px oklch(from var(--glint) l c h / .04), inset 0 1px 0 oklch(from var(--glint) l c h / .05);
+    --pressed: inset 2px 3px 9px oklch(from var(--shade) l c h / .4), inset -2px -2px 7px oklch(from var(--glint) l c h / .035);
+    --groove: inset 3px 4px 14px oklch(from var(--shade) l c h / .35), inset -3px -3px 11px oklch(from var(--glint) l c h / .03);
+    --clip-shadow: 0 1px 1px oklch(from var(--shade) l c h / .22), 2px 3px 12px oklch(from var(--shade) l c h / .35), -2px -2px 8px oklch(from var(--glint) l c h / .04);
+    --clip-lift: 0 1px 1px oklch(from var(--shade) l c h / .19), 3px 5px 17px oklch(from var(--shade) l c h / .31), -3px -3px 10px oklch(from var(--glint) l c h / .05);
+    --dimple: inset 1px 2px 7px oklch(from var(--shade) l c h / .35), inset -1px -1px 5px oklch(from var(--glint) l c h / .03);
+    --readout-well: inset 2px 3px 10px oklch(from var(--shade) l c h / .4), inset -2px -2px 8px oklch(from var(--glint) l c h / .03);
+    --key-down: inset 1px 2px 7px oklch(from var(--shade) l c h / .43), inset -1px -1px 5px oklch(from var(--glint) l c h / .035);
+    --led-dimple: inset 1px 1px 3px oklch(from var(--shade) l c h / .47);
+    --pin: inset 1px 1px 3px oklch(from var(--shade) l c h / .38);
+    --cap-shade: oklch(from var(--shade) l c h / .27);
+}

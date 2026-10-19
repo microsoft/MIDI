@@ -29,6 +29,7 @@ public:
     TEST_METHOD(TestWrongTypesDoNotCrashTheTransport);
     TEST_METHOD(TestWrongTypeDoesNotDiscardLaterKeys);
     TEST_METHOD(TestUnknownModeStringsAreRejected);
+    TEST_METHOD(TestExclusiveAudioModeIsAccepted);
     TEST_METHOD(TestVolumeIsClampedAndNonFiniteRejected);
     TEST_METHOD(TestUnknownKeysAreIgnored);
     TEST_METHOD(TestServiceSurvivesConfigFuzzing);

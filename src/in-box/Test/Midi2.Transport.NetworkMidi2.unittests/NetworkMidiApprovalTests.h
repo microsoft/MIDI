@@ -144,6 +144,17 @@ public:
     // tests in this file create and remove without waiting, so this leaked silently.
     TEST_METHOD(CreateThenImmediatelyRemoveLeavesNoHostBehind);
 
+    // A remote can connect to more than one host on this PC. Each host is a UMP endpoint of its
+    // own, so each session gets an endpoint of its own. Every host after the first used to turn
+    // the remote away with "This device is already connected to this PC".
+    TEST_METHOD(RemoteCanConnectToMoreThanOneHostOnThisPc);
+
+    // Spec section 12. A device which is a host and a client of this PC at the same time, under
+    // one identity, would be two endpoints for one device, so the second session is refused. Both
+    // pass before and after the change above, which stopped them sharing an instance id.
+    TEST_METHOD(RemoteAlreadyHostingThisPcIsRefusedAsAClient);
+    TEST_METHOD(RemoteAlreadyAClientOfThisPcIsRefusedAsAHost);
+
 private:
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};

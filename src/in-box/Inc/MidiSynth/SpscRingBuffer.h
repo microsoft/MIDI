@@ -54,7 +54,7 @@ namespace MidiSynth
         }
 
         // Called only by the consumer thread.
-        bool TryPop(_Out_ T& item) noexcept
+        _Success_(return) bool TryPop(_Out_ T& item) noexcept
         {
             const size_t read = m_read.load(std::memory_order_relaxed);
 
@@ -65,6 +65,20 @@ namespace MidiSynth
 
             item = m_items[read];
             m_read.store((read + 1) % Capacity, std::memory_order_release);
+            return true;
+        }
+
+        // Called only by the consumer thread. Copies the oldest item and leaves it queued.
+        _Success_(return) bool TryPeek(_Out_ T& item) const noexcept
+        {
+            const size_t read = m_read.load(std::memory_order_relaxed);
+
+            if (read == m_write.load(std::memory_order_acquire))
+            {
+                return false;
+            }
+
+            item = m_items[read];
             return true;
         }
 

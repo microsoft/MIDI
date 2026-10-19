@@ -9,6 +9,8 @@
 #pragma once
 #include "Transports.Network.MidiNetworkSavedClient.g.h"
 
+#include "MidiNetworkMidi1PortGroup.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkSavedClient : MidiNetworkSavedClientT<MidiNetworkSavedClient>
@@ -33,6 +35,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool ReduceSendSpeedAutomatically() const noexcept { return m_reduceSendSpeedAutomatically; }
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
 
+        // A new copy each time, so a caller changing what it gets back changes nothing here
+        collections::IVectorView<network::MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups() const noexcept;
+
         // The saved entry, then each saved change to it in the order the service applies them
         void InternalInitialize(
             _In_ winrt::guid const& clientId,
@@ -48,6 +53,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         bool m_createOnlyUmpEndpoints{ false };
         uint8_t m_fallbackMidi1PortCount{ 1 };
+
+        // kept as read, and only turned into API objects when asked for
+        internal::MidiNetworkMidi1PortGroupList m_fallbackMidi1PortGroups{};
 
         winrt::hstring m_umpEndpointName{};
         winrt::hstring m_customEndpointName{};

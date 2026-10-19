@@ -63,6 +63,10 @@ A host sends to every connected device at the host's speed. When one device need
 
 The device is recognized by its name and product instance id, so it gets the same speed every time it connects. A device that's already connected changes speed right away.
 
+**Choosing and naming the MIDI 1.0 ports a connection gets**
+
+A device that describes itself with function blocks gets MIDI 1.0 ports for its own groups. For one that doesn't, such as another Windows PC, fill `FallbackMidi1PortGroups` with [MidiNetworkMidi1PortGroup]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkMidi1PortGroup/) objects, one for each group that should have ports, with the name MIDI 1.0 apps should show. A client entry, a host, and one device on a host each have the list. Check for the `fallbackMidi1PortGroups` capability first, because an older transport only reads `FallbackMidi1PortCount`.
+
 ## Reconnection behavior
 
 Once a client is set up, the service manages the connection for you. What it does when a remote host goes away depends on how the client was set up, because each way gives the service different information to work with.

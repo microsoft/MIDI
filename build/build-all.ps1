@@ -207,6 +207,7 @@ $ConsoleTools = @(
     'mididiag'
     'midiksinfo'
     'midi1monitor'
+    'midi1rtmonitor'
     'midi1enum'
 )
 
@@ -233,6 +234,8 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midipatchbay';       Display = 'MIDI Patchbay' }
     [pscustomobject]@{ Name = 'midiglass';          Display = 'MIDI Glass' }
     [pscustomobject]@{ Name = 'midisequencer';      Display = 'MIDI Sequencer' }
+    # midisoundmodule (Sound Module) builds with the SDK solution but is left out on purpose
+    # until the Virtual Device transport it depends on works in the released service.
     [pscustomobject]@{ Name = 'miditroubleshooter'; Display = 'MIDI Troubleshooting and Repair' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer

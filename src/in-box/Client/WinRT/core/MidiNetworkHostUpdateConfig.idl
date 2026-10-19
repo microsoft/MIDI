@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 
 
 import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkMidi1PortGroup.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
@@ -66,6 +67,12 @@ namespace Windows.Devices.Midi2.Transports.Network
             // Skip some in-between values to catch up when messages back up behind the speed.
             // Applied straight away, without dropping a connection.
             [noexcept] Boolean SkipInBetweenValuesToCatchUp;
+
+            // The groups to create MIDI 1.0 ports for, for a remote client which doesn't describe
+            // itself. Applied to endpoints which are already up. Only sent once you change the
+            // list: an untouched list keeps the saved groups, and a list you clear goes back to
+            // FallbackMidi1PortCount. Build the whole list, because it replaces the saved one.
+            [noexcept] Windows.Foundation.Collections.IVector<MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups{ get; };
         }
     }
 }

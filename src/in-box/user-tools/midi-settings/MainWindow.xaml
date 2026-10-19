@@ -1417,7 +1417,14 @@
                                               SelectionChanged="OnSynthOptionChanged">
                                         <ComboBoxItem x:Uid="SynthAudioModeShared" Content="Shared" />
                                         <ComboBoxItem x:Uid="SynthAudioModeSharedLowLatency" Content="Shared, low latency" />
+                                        <ComboBoxItem x:Uid="SynthAudioModeExclusive" Content="Exclusive" />
                                     </ComboBox>
+
+                                    <TextBlock x:Uid="SynthAudioModeHelp"
+                                               Text="Exclusive gives the shortest delay. While the synthesizer is playing, and for a few seconds after, no other app can play sound through that audio device."
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                                     <ComboBox x:Name="SynthBankSelectCombo"
                                               x:Uid="SynthBankSelectCombo"

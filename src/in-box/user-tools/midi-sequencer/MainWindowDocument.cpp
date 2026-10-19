@@ -18,6 +18,8 @@
 
 #include "midi_file_smf_reader.h"
 
+#include <future>
+
 namespace res = ::midisequencer::resources;
 
 namespace winrt::midisequencer::implementation
@@ -164,9 +166,86 @@ namespace winrt::midisequencer::implementation
             return sequence.Tempo.size() == 1 && std::abs(sequence.Tempo[0].BeatsPerMinute - 120.0) < 0.0001 &&
                 sequence.Meter.size() == 1 && sequence.Meter[0].Numerator == 4 && sequence.Meter[0].Denominator == 4;
         }
+
+        // Tempo and meter from an imported file, as a sequence keeps them: no more than it keeps,
+        // each in range, in order, from the start. A tempo far out of range would play every note
+        // at once, and opening the saved sequence again would change it.
+        void BoundImportedTiming(_Inout_ std::vector<seq::TempoPoint>& tempo, _Inout_ std::vector<seq::MeterChange>& meter)
+        {
+            seq::SequenceLimits const limits{};
+            auto const hadTempo = !tempo.empty();
+            auto const hadMeter = !meter.empty();
+
+            if (tempo.size() > limits.MaximumTempoPoints)
+            {
+                tempo.resize(limits.MaximumTempoPoints);
+            }
+
+            if (meter.size() > limits.MaximumTempoPoints)
+            {
+                meter.resize(limits.MaximumTempoPoints);
+            }
+
+            seq::Sequence bounds{};
+            bounds.Tempo = std::move(tempo);
+            bounds.Meter = std::move(meter);
+            seq::NormalizeSequence(bounds);
+
+            // A file that said nothing about one still says nothing: the sequence keeps its own.
+            tempo = hadTempo ? std::move(bounds.Tempo) : std::vector<seq::TempoPoint>{};
+            meter = hadMeter ? std::move(bounds.Meter) : std::vector<seq::MeterChange>{};
+        }
     }
 
     using namespace documentfiles;
+
+    namespace
+    {
+        // Whether a folder is there, without waiting long on a share that's gone, which can take
+        // a minute to say so. A share that doesn't answer in time counts as gone. Never throws:
+        // std::filesystem::exists does for a share that's been removed, which took the file
+        // dialogs with it.
+        bool FolderIsThere(_In_ std::wstring const& folder) noexcept
+        {
+            try
+            {
+                if (folder.empty())
+                {
+                    return false;
+                }
+
+                auto const drive = folder.size() >= 2 && folder[1] == L':' ? folder.substr(0, 2) + L"\\" : std::wstring{};
+                auto const network = folder.starts_with(L"\\\\") || (!drive.empty() && ::GetDriveTypeW(drive.c_str()) == DRIVE_REMOTE);
+
+                if (!network)
+                {
+                    std::error_code error{};
+                    return std::filesystem::is_directory(folder, error);
+                }
+
+                auto const answer = std::make_shared<std::promise<bool>>();
+                auto there = answer->get_future();
+
+                std::thread([answer, folder]()
+                {
+                    try
+                    {
+                        std::error_code error{};
+                        answer->set_value(std::filesystem::is_directory(folder, error));
+                    }
+                    catch (...)
+                    {
+                    }
+                }).detach();
+
+                return there.wait_for(std::chrono::milliseconds{ 1500 }) == std::future_status::ready && there.get();
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+    }
 
     // ---------------------------------------------------------------- new and open
 
@@ -267,8 +346,13 @@ namespace winrt::midisequencer::implementation
             m_autosaved = false;
             m_undo.Clear();
             m_selectedTrackId.clear();
+            m_selectedTrackIds.clear();
+            m_selectionAnchorId.clear();
             m_selectedPlacement = SIZE_MAX;
             m_wantsDefaultDestination = true;
+            m_mixerEdit = MixerEdit{};
+            m_automationArmed.clear();
+            m_mixerTrackIds.clear();
             ++m_version;
 
             if (m_engine != nullptr)
@@ -284,6 +368,7 @@ namespace winrt::midisequencer::implementation
             Publish();
             OpenFirstClipInEditor();
             RebuildHeaders();
+            RefreshMixer();
 
             // Put the synth on the new tracks straight away when it's already been found.
             RefreshEndpoints();
@@ -299,7 +384,8 @@ namespace winrt::midisequencer::implementation
 
     bool MainWindow::CanReplaceDocument() const noexcept
     {
-        return m_path.empty() && !m_dirty;
+        // A mixer change that hasn't been kept yet is still a change.
+        return m_path.empty() && !m_dirty && m_mixerEdit.What == MixerEdit::Kind::None;
     }
 
     void MainWindow::OpenFirstClipInEditor() noexcept
@@ -502,7 +588,12 @@ namespace winrt::midisequencer::implementation
             m_undo.Clear();
             m_wantsDefaultDestination = false;
             m_selectedTrackId.clear();
+            m_selectedTrackIds.clear();
+            m_selectionAnchorId.clear();
             m_selectedPlacement = SIZE_MAX;
+            m_mixerEdit = MixerEdit{};
+            m_automationArmed.clear();
+            m_mixerTrackIds.clear();
             m_position = 0;
             m_scrollX = 0;
             m_scrollY = 0;
@@ -513,6 +604,7 @@ namespace winrt::midisequencer::implementation
             Publish();
             OpenFirstClipInEditor();
             RebuildHeaders();
+            RefreshMixer();
             PrepareConnectionsAsync();
 
             UpdateTitle();
@@ -536,6 +628,8 @@ namespace winrt::midisequencer::implementation
             catch (...)
             {
             }
+
+            RememberRecentSequence(path);
 
             return true;
         }
@@ -561,6 +655,7 @@ namespace winrt::midisequencer::implementation
             }
 
             auto imported = seq::ImportStandardMidiFile(file, std::filesystem::path{ path }.filename().wstring());
+            BoundImportedTiming(imported.Tempo, imported.Meter);
 
             if (imported.Tracks.empty())
             {
@@ -688,6 +783,7 @@ namespace winrt::midisequencer::implementation
             }
 
             auto imported = seq::ImportClipFile(file);
+            BoundImportedTiming(imported.Tempo, imported.Meter);
 
             seq::ChangeList changes{};
             auto const tracksBefore = m_doc.Tracks;
@@ -902,6 +998,18 @@ namespace winrt::midisequencer::implementation
 
         try
         {
+            // One save at a time: this one runs when the one writing now is done.
+            if (m_saving)
+            {
+                m_savePending = std::max<uint8_t>(m_savePending, chooseName ? uint8_t{ 2 } : uint8_t{ 1 });
+                co_return;
+            }
+
+            // A mixer change still waiting, and words still being typed, go on the history before
+            // they go in the file.
+            CommitMixerEdit();
+            FlushGeneratorText();
+
             auto path = m_path;
 
             // A file from a newer version is never saved over: its settings this version doesn't
@@ -933,21 +1041,32 @@ namespace winrt::midisequencer::implementation
             // Saved for the first time, it says who made it and how (design section 13).
             StampProvenance();
 
+            // What's written is this version: edits made while it writes still need saving.
+            auto const version = m_version;
             auto const text = seq::ToUtf8(seq::WriteSequenceJson(m_doc));
             bool saved{ false };
 
+            m_saving = true;
+            auto writing = wil::scope_exit([this]() noexcept { m_saving = false; });
             co_await ::midisequencer::RunOnBackgroundAsync([&]() { saved = WriteAllBytes(path, text.data(), text.size()); });
+            writing.reset();
 
             if (!saved)
             {
+                // Closing asks next time, rather than trying the same file again. An ordinary save
+                // that fails leaves an earlier close's failure as it was.
+                m_closeSaveFailed = m_closeSaveFailed || m_closeConfirmed;
                 m_closeConfirmed = false;
                 ShowMessage(res::FormatString(L"SaveFailedFormat", FileStem(path)));
+                RunPendingSave();
+                CloseIfAsked();
                 co_return;
             }
 
             m_path = path;
-            m_dirty = false;
+            m_dirty = version != m_version;
             m_readOnly = false;
+            m_closeSaveFailed = false;
             m_savedAt = std::chrono::system_clock::now();
             m_autosaved = false;
 
@@ -962,12 +1081,47 @@ namespace winrt::midisequencer::implementation
             {
             }
 
+            RememberRecentSequence(path);
+
             if (m_closeConfirmed)
             {
-                Close();
+                // Whatever changed while it wrote is saved too, before the window closes.
+                if (m_dirty)
+                {
+                    SaveAsync(false);
+                }
+                else
+                {
+                    Close();
+                }
+
+                co_return;
             }
+
+            if (m_dirty && m_autosaveTimer != nullptr)
+            {
+                m_autosaveTimer.Stop();
+                m_autosaveTimer.Start();
+            }
+
+            RunPendingSave();
+            CloseIfAsked();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to save the sequence.")
+    }
+
+    void MainWindow::RunPendingSave() noexcept
+    {
+        try
+        {
+            if (m_savePending != 0 && !m_closing)
+            {
+                auto const chooseName = m_savePending == 2;
+                m_savePending = 0;
+                SaveAsync(chooseName);
+            }
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start a save that was waiting.")
     }
 
     winrt::fire_and_forget MainWindow::AutosaveAsync()
@@ -982,12 +1136,24 @@ namespace winrt::midisequencer::implementation
                 co_return;
             }
 
+            // A save writing now starts the timer again when it's done, if there's more to save.
+            if (m_saving)
+            {
+                co_return;
+            }
+
+            // Words still being typed go in the file too.
+            FlushGeneratorText();
+
             auto const path = m_path;
             auto const version = m_version;
             auto const text = seq::ToUtf8(seq::WriteSequenceJson(m_doc));
             bool saved{ false };
 
+            m_saving = true;
+            auto writing = wil::scope_exit([this]() noexcept { m_saving = false; });
             co_await ::midisequencer::RunOnBackgroundAsync([&]() { saved = WriteAllBytes(path, text.data(), text.size()); });
+            writing.reset();
 
             if (saved && path == m_path)
             {
@@ -995,6 +1161,9 @@ namespace winrt::midisequencer::implementation
                 m_dirty = version != m_version;
                 m_savedAt = std::chrono::system_clock::now();
                 m_autosaved = true;
+
+                // The file saves again, so closing can save to it rather than ask.
+                m_closeSaveFailed = false;
                 UpdateTitle();
                 UpdateSavedState();
 
@@ -1003,6 +1172,9 @@ namespace winrt::midisequencer::implementation
                     m_autosaveTimer.Start();
                 }
             }
+
+            RunPendingSave();
+            CloseIfAsked();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to save the sequence automatically.")
     }
@@ -1042,6 +1214,7 @@ namespace winrt::midisequencer::implementation
             }
 
             SavedChipIcon().Glyph(saved ? L"\uE73E" : m_readOnly ? L"\uE72E" : L"\uE7C3");
+            m_transportPlates.Refresh();
 
             if (m_savedAt.has_value())
             {
@@ -1127,7 +1300,7 @@ namespace winrt::midisequencer::implementation
 
             auto folder = startFolder.empty() ? seq::AppSettings::Current().LastFolder() : startFolder;
 
-            if (folder.empty() || !std::filesystem::exists(folder))
+            if (!FolderIsThere(folder))
             {
                 folder = DocumentsFolder(L"MIDI Sequences");
             }
@@ -1197,6 +1370,8 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::Commit(std::wstring const& name, seq::ChangeList changes)
     {
+        // A mixer change still waiting was made first, so it goes on the history first.
+        RecordMixerEdit();
         m_undo.Commit(name, std::move(changes));
         DocumentChanged();
     }
@@ -1228,6 +1403,7 @@ namespace winrt::midisequencer::implementation
             RebuildLayout();
             Publish();
             RefreshEditor();
+            RefreshMixer();
 
             // Later, not now: an edit made from one of the inspector's own lists would otherwise
             // replace that list's items while it's still raising its selection event.
@@ -1272,15 +1448,38 @@ namespace winrt::midisequencer::implementation
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to hand the sequence to the engine.")
     }
 
+    bool MainWindow::GestureActive() const noexcept
+    {
+        return m_laneDrag != LaneDrag::None || m_rulerDragging || m_loopGrab != LoopGrab::None || m_trackDrag.Active ||
+            m_clipDrag.Pressed || m_tagDrag.Active || m_rowResize.Active || m_pointDrag.What != PointDrag::Kind::None ||
+            m_ringDrag.Active || m_rangeDrag.Active || m_velocityDrag.Active || m_lifePaint.Active ||
+            m_roll.InGesture() || m_pattern.InGesture() || m_clipLanes.InGesture();
+    }
+
     void MainWindow::Undo() noexcept
     {
         try
         {
+            if (GestureActive())
+            {
+                return;
+            }
+
+            // Words still being typed, then a mixer change still waiting: the last things done, so
+            // the first undone.
+            FlushGeneratorText();
+            auto const recorded = RecordMixerEdit();
+
             if (m_undo.Undo(m_doc))
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
                 ClearAutomationSelection();
+                ReleaseMixerControls();
+                DocumentChanged();
+            }
+            else if (recorded)
+            {
                 DocumentChanged();
             }
         }
@@ -1291,11 +1490,26 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (GestureActive())
+            {
+                return;
+            }
+
+            // Words still being typed, or a mixer change still waiting, are new edits, which leave
+            // nothing to redo.
+            FlushGeneratorText();
+            auto const recorded = RecordMixerEdit();
+
             if (m_undo.Redo(m_doc))
             {
                 m_roll.ClearSelection();
                 m_selectedPlacement = SIZE_MAX;
                 ClearAutomationSelection();
+                ReleaseMixerControls();
+                DocumentChanged();
+            }
+            else if (recorded)
+            {
                 DocumentChanged();
             }
         }

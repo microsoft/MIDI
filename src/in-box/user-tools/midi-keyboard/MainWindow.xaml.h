@@ -163,6 +163,17 @@ namespace winrt::midikeyboard::implementation
             _In_ ::midikeyboard::ProgramListResult result,
             _In_ std::vector<::midikeyboard::ProgramListEntry> entries) noexcept;
 
+        // Whether program names come from the device given with --programs-from rather than from
+        // the one the notes go to. Only while the notes still go where they did at startup.
+        bool ProgramsComeFromAnotherDevice() const noexcept;
+
+        // The group MIDI-CI goes out on: the transmit group, or the one given with
+        // --programs-group.
+        uint8_t ProgramsGroupIndex() const noexcept;
+
+        // Says which device the program names come from, beside the list.
+        void UpdateProgramListHeader() noexcept;
+
         // moves the combo to whichever program matches the current bank and program numbers
         void SyncProgramListSelection() noexcept;
 
@@ -258,6 +269,15 @@ namespace winrt::midikeyboard::implementation
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcherQueue{ nullptr };
 
         ::midikeyboard::MidiOutput m_output{};
+
+        // A second connection, only for MIDI-CI, to the device given with --programs-from. Its
+        // id, the group to ask on, and the device the notes went to when it was given.
+        ::midikeyboard::MidiOutput m_programsConnection{};
+        std::wstring m_programsEndpointId{};
+        uint8_t m_programsGroupIndex{ 0 };
+        std::wstring m_programsForEndpointId{};
+        winrt::hstring m_programListHeader{};
+
         ::midikeyboard::Arpeggiator m_arpeggiator{};
 
         midi2enum::MidiEndpointDeviceWatcher m_watcher{ nullptr };

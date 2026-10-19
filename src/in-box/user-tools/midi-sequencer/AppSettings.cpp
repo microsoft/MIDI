@@ -28,19 +28,31 @@ namespace midisequencer
         constexpr wchar_t ValueMetronomeChannel[] = L"MetronomeChannel";
         constexpr wchar_t ValueMetronomeNote[] = L"MetronomeNote";
         constexpr wchar_t ValueShowLauncher[] = L"ShowLauncher";
+        constexpr wchar_t ValueShowMixer[] = L"ShowMixer";
+        constexpr wchar_t ValueTimelineScrollBar[] = L"TimelineScrollBar";
+        constexpr wchar_t ValueTimelineScrollBarPlace[] = L"TimelineScrollBarPlace";
         constexpr wchar_t ValueBarWidth[] = L"BarWidthTenths";
         constexpr wchar_t ValueSnapTicks[] = L"SnapTicks";
         constexpr wchar_t ValueLaunchQuantizeTicks[] = L"LaunchQuantizeTicks";
         constexpr wchar_t ValueSlotRecordBars[] = L"SlotRecordBars";
         constexpr wchar_t ValueEditorHeight[] = L"EditorHeight";
+        constexpr wchar_t ValueHeaderWidth[] = L"HeaderWidth";
+        constexpr wchar_t ValueLauncherWidth[] = L"LauncherWidth";
         constexpr wchar_t ValueValuesAs[] = L"ValuesAs";
         constexpr wchar_t ValueLastFolder[] = L"LastFolder";
         constexpr wchar_t ValueApplyDeviceOffsets[] = L"ApplyDeviceOffsets";
+        constexpr wchar_t ValueHearPatternSteps[] = L"HearPatternSteps";
         constexpr wchar_t ValueClockOutputs[] = L"ClockOutputs";
         constexpr wchar_t ValueTimeCode[] = L"TimeCode";
         constexpr wchar_t ValueFollowClock[] = L"FollowClock";
         constexpr wchar_t ValueClockSendsTempo[] = L"ClockSendsTempo";
         constexpr wchar_t ValueRemoteControlEnabled[] = L"RemoteControlEnabled";
+        constexpr wchar_t ValuePortsOff[] = L"PortsOff";
+        constexpr wchar_t ValueRecentSequences[] = L"RecentSequences";
+        constexpr wchar_t ValueStyle[] = L"Style";
+
+        // A theme id is short lowercase letters, digits and '-'; anything else in the registry is ignored.
+        constexpr size_t MaximumStyleIdLength = 64;
 
         // Text read back from the registry is capped like anything else read from outside.
         constexpr size_t MaximumSettingText = 1024;
@@ -73,7 +85,7 @@ namespace midisequencer
             return o.HasKey(key) && o.Lookup(key).ValueType() == json::JsonValueType::Boolean ? o.Lookup(key).GetBoolean() : fallback;
         }
 
-        std::vector<ClockOutputSetting> ParseClockOutputs(_In_ std::wstring const& text) noexcept
+        std::vector<ClockOutputSetting> ParseClockOutputs(_In_ std::wstring const& text, _In_ bool tempoByDefault) noexcept
         {
             std::vector<ClockOutputSetting> outputs{};
 
@@ -103,6 +115,9 @@ namespace midisequencer
                     output.Clock = BoolOr(o, L"clock", true);
                     output.StartStop = BoolOr(o, L"startStop", true);
                     output.SongPosition = BoolOr(o, L"songPosition", true);
+
+                    // Saved before tempo was a choice for each device, the one choice for all.
+                    output.Tempo = BoolOr(o, L"tempo", tempoByDefault);
                     output.OffsetMilliseconds = static_cast<int32_t>(std::clamp(NumberOr(o, L"offset", 0),
                         -static_cast<double>(AppSettings::MaximumClockOffsetMilliseconds), static_cast<double>(AppSettings::MaximumClockOffsetMilliseconds)));
 
@@ -138,7 +153,76 @@ namespace midisequencer
                 o.SetNamedValue(L"clock", json::JsonValue::CreateBooleanValue(output.Clock));
                 o.SetNamedValue(L"startStop", json::JsonValue::CreateBooleanValue(output.StartStop));
                 o.SetNamedValue(L"songPosition", json::JsonValue::CreateBooleanValue(output.SongPosition));
+                o.SetNamedValue(L"tempo", json::JsonValue::CreateBooleanValue(output.Tempo));
                 o.SetNamedValue(L"offset", json::JsonValue::CreateNumberValue(output.OffsetMilliseconds));
+                array.Append(o);
+            }
+
+            return std::wstring{ array.Stringify() };
+        }
+
+        std::vector<PortSetting> ParsePortsOff(_In_ std::wstring const& text) noexcept
+        {
+            std::vector<PortSetting> ports{};
+
+            try
+            {
+                json::JsonArray array{ nullptr };
+
+                if (text.empty() || !json::JsonArray::TryParse(text, array))
+                {
+                    return ports;
+                }
+
+                for (auto const& value : array)
+                {
+                    // An array holds values: check the type, then ask for the object.
+                    if (value.ValueType() != json::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const o = value.GetObject();
+
+                    PortSetting port{};
+                    port.EndpointId = CappedString(o, L"id");
+                    port.EndpointName = CappedString(o, L"name");
+                    port.Group = static_cast<uint8_t>(std::clamp(NumberOr(o, L"group", 0), 0.0, 15.0));
+                    port.PlayTo = BoolOr(o, L"playTo", true);
+                    port.RecordFrom = BoolOr(o, L"recordFrom", true);
+
+                    // One with nothing turned off says nothing.
+                    if ((!port.EndpointId.empty() || !port.EndpointName.empty()) && (!port.PlayTo || !port.RecordFrom))
+                    {
+                        ports.push_back(std::move(port));
+                    }
+
+                    if (ports.size() >= AppSettings::MaximumPortsOff)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (...)
+            {
+                ports.clear();
+            }
+
+            return ports;
+        }
+
+        std::wstring WritePortsOff(_In_ std::vector<PortSetting> const& ports)
+        {
+            json::JsonArray array{};
+
+            for (auto const& port : ports)
+            {
+                json::JsonObject o{};
+                o.SetNamedValue(L"id", json::JsonValue::CreateStringValue(port.EndpointId));
+                o.SetNamedValue(L"name", json::JsonValue::CreateStringValue(port.EndpointName));
+                o.SetNamedValue(L"group", json::JsonValue::CreateNumberValue(port.Group));
+                o.SetNamedValue(L"playTo", json::JsonValue::CreateBooleanValue(port.PlayTo));
+                o.SetNamedValue(L"recordFrom", json::JsonValue::CreateBooleanValue(port.RecordFrom));
                 array.Append(o);
             }
 
@@ -272,6 +356,11 @@ namespace midisequencer
         m_metronomeChannel = static_cast<uint8_t>(std::min<uint32_t>(ReadDword(ValueMetronomeChannel, 9), 15));
         m_metronomeNote = static_cast<uint8_t>(std::min<uint32_t>(ReadDword(ValueMetronomeNote, 37), 127));
         m_showLauncher = ReadDword(ValueShowLauncher, 1) != 0;
+        m_showMixer = ReadDword(ValueShowMixer, 0) != 0;
+
+        // 0 is the overview and 1 the plain bar; 0 is under the timeline and 1 above the ruler.
+        m_timelineOverview = ReadDword(ValueTimelineScrollBar, 0) == 0;
+        m_timelineBarAtTop = ReadDword(ValueTimelineScrollBarPlace, 0) == 1;
 
         auto const tenths = ReadDword(ValueBarWidth, static_cast<uint32_t>(DefaultBarWidth * 10));
         m_barWidth = std::clamp(tenths / 10.0, MinimumBarWidth, MaximumBarWidth);
@@ -286,17 +375,28 @@ namespace midisequencer
         m_slotRecordBars = IsKnownBarCount(bars) ? bars : 4;
 
         m_editorHeight = std::clamp(static_cast<double>(ReadDword(ValueEditorHeight, 300)), 120.0, 2000.0);
+        m_headerWidth = std::clamp(static_cast<double>(ReadDword(ValueHeaderWidth, static_cast<uint32_t>(DefaultHeaderWidth))), MinimumHeaderWidth, MaximumHeaderWidth);
+        m_launcherWidth = std::clamp(static_cast<double>(ReadDword(ValueLauncherWidth, static_cast<uint32_t>(DefaultLauncherWidth))), MinimumLauncherWidth, MaximumLauncherWidth);
 
         auto const valuesAs = ReadDword(ValueValuesAs, 0);
         m_valuesAs = valuesAs <= 2 ? static_cast<ValueDisplay>(valuesAs) : ValueDisplay::Midi2;
 
         m_lastFolder = ReadString(ValueLastFolder, L"");
         m_applyDeviceOffsets = ReadDword(ValueApplyDeviceOffsets, 1) != 0;
-        m_clockOutputs = ParseClockOutputs(ReadString(ValueClockOutputs, L""));
+        m_hearPatternSteps = ReadDword(ValueHearPatternSteps, 1) != 0;
+
+        // Devices saved before tempo became a choice for each one keep the setting they all had.
+        auto const clockSendsTempo = ReadDword(ValueClockSendsTempo, 1) != 0;
+        m_clockOutputs = ParseClockOutputs(ReadString(ValueClockOutputs, L""), clockSendsTempo);
+        m_portsOff = ParsePortsOff(ReadString(ValuePortsOff, L""));
         m_timeCode = ParseTimeCode(ReadString(ValueTimeCode, L""));
         m_followClock = ParseFollowClock(ReadString(ValueFollowClock, L""));
-        m_clockSendsTempo = ReadDword(ValueClockSendsTempo, 1) != 0;
         m_remoteControlEnabled = ReadDword(ValueRemoteControlEnabled, 0) != 0;
+
+        auto style = ReadString(ValueStyle, DefaultStyleId);
+        auto const validStyle = !style.empty() && style.size() <= MaximumStyleIdLength &&
+            std::all_of(style.begin(), style.end(), [](wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'0' && c <= L'9') || c == L'-'; });
+        m_styleId = validStyle ? style : std::wstring{ DefaultStyleId };
     }
 
     void AppSettings::MetronomeEnabled(bool value) noexcept
@@ -344,6 +444,24 @@ namespace midisequencer
         WriteDword(ValueShowLauncher, value ? 1 : 0);
     }
 
+    void AppSettings::ShowMixer(bool value) noexcept
+    {
+        m_showMixer = value;
+        WriteDword(ValueShowMixer, value ? 1 : 0);
+    }
+
+    void AppSettings::TimelineOverview(bool value) noexcept
+    {
+        m_timelineOverview = value;
+        WriteDword(ValueTimelineScrollBar, value ? 0 : 1);
+    }
+
+    void AppSettings::TimelineBarAtTop(bool value) noexcept
+    {
+        m_timelineBarAtTop = value;
+        WriteDword(ValueTimelineScrollBarPlace, value ? 1 : 0);
+    }
+
     void AppSettings::BarWidth(double value) noexcept
     {
         m_barWidth = std::clamp(value, MinimumBarWidth, MaximumBarWidth);
@@ -383,6 +501,18 @@ namespace midisequencer
         WriteDword(ValueEditorHeight, static_cast<uint32_t>(std::lround(m_editorHeight)));
     }
 
+    void AppSettings::HeaderWidth(double value) noexcept
+    {
+        m_headerWidth = std::clamp(value, MinimumHeaderWidth, MaximumHeaderWidth);
+        WriteDword(ValueHeaderWidth, static_cast<uint32_t>(std::lround(m_headerWidth)));
+    }
+
+    void AppSettings::LauncherWidth(double value) noexcept
+    {
+        m_launcherWidth = std::clamp(value, MinimumLauncherWidth, MaximumLauncherWidth);
+        WriteDword(ValueLauncherWidth, static_cast<uint32_t>(std::lround(m_launcherWidth)));
+    }
+
     void AppSettings::ValuesAs(ValueDisplay value) noexcept
     {
         m_valuesAs = value;
@@ -402,6 +532,12 @@ namespace midisequencer
         WriteDword(ValueApplyDeviceOffsets, value ? 1 : 0);
     }
 
+    void AppSettings::HearPatternSteps(bool value) noexcept
+    {
+        m_hearPatternSteps = value;
+        WriteDword(ValueHearPatternSteps, value ? 1 : 0);
+    }
+
     _Use_decl_annotations_
     void AppSettings::ClockOutputs(std::vector<ClockOutputSetting> const& value) noexcept
     {
@@ -414,6 +550,44 @@ namespace midisequencer
         catch (...)
         {
         }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::PortsOff(std::vector<PortSetting> const& value) noexcept
+    {
+        try
+        {
+            m_portsOff.clear();
+
+            for (auto const& port : value)
+            {
+                if (m_portsOff.size() >= MaximumPortsOff)
+                {
+                    break;
+                }
+
+                if ((!port.EndpointId.empty() || !port.EndpointName.empty()) && (!port.PlayTo || !port.RecordFrom))
+                {
+                    m_portsOff.push_back(port);
+                }
+            }
+
+            WriteString(ValuePortsOff, WritePortsOff(m_portsOff));
+        }
+        catch (...)
+        {
+        }
+    }
+
+    std::wstring AppSettings::RecentSequencesText() const noexcept
+    {
+        return ReadString(ValueRecentSequences, L"");
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::RecentSequencesText(std::wstring const& value) const noexcept
+    {
+        WriteString(ValueRecentSequences, value);
     }
 
     _Use_decl_annotations_
@@ -442,15 +616,22 @@ namespace midisequencer
         }
     }
 
-    void AppSettings::ClockSendsTempo(bool value) noexcept
-    {
-        m_clockSendsTempo = value;
-        WriteDword(ValueClockSendsTempo, value ? 1 : 0);
-    }
-
     void AppSettings::RemoteControlEnabled(bool value) noexcept
     {
         m_remoteControlEnabled = value;
         WriteDword(ValueRemoteControlEnabled, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::StyleId(std::wstring const& value) noexcept
+    {
+        try
+        {
+            m_styleId = value.empty() ? std::wstring{ DefaultStyleId } : value;
+            WriteString(ValueStyle, m_styleId);
+        }
+        catch (...)
+        {
+        }
     }
 }

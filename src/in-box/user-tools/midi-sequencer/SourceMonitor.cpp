@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "SourceMonitor.h"
+#include "StudioSetup.h"
 
 namespace midisequencer
 {
@@ -29,6 +30,13 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    void SourceMonitor::SetGroupsOff(std::map<std::wstring, uint16_t> groupsOff)
+    {
+        std::scoped_lock guard{ m_handlerLock };
+        m_groupsOff = std::move(groupsOff);
+    }
+
+    _Use_decl_annotations_
     void SourceMonitor::Deliver(std::wstring const& endpointId, midi2::MidiMessageReceivedEventArgs const& args) noexcept
     {
         try
@@ -42,10 +50,29 @@ namespace midisequencer
             }
 
             Handler handler{};
+            uint16_t groupsOff{ 0 };
 
             {
                 std::scoped_lock guard{ m_handlerLock };
                 handler = m_handler;
+
+                if (!m_groupsOff.empty())
+                {
+                    if (auto const found = m_groupsOff.find(endpointId); found != m_groupsOff.end())
+                    {
+                        groupsOff = found->second;
+                    }
+                }
+            }
+
+            if (groupsOff != 0)
+            {
+                auto const group = MessageGroup(words[0]);
+
+                if (group >= 0 && (groupsOff & (1u << group)) != 0)
+                {
+                    return;
+                }
             }
 
             if (handler)

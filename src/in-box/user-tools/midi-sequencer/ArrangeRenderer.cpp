@@ -87,9 +87,9 @@ namespace midisequencer
             return light / 0.05 >= 1.05 / light ? 0x000000 : 0xFFFFFF;
         }
 
-        Color ClipColor(Clip const& clip, Track const& track) noexcept
+        Color ClipColor(Palette const& colors, Clip const& clip, Track const& track) noexcept
         {
-            return TrackColor(clip.Color.value_or(track.Color));
+            return ThemedTrackColor(colors, TrackColor(clip.Color.value_or(track.Color)));
         }
 
         // CSS filter: saturate(.1) brightness(.75) in the dark theme, brightness(1.05) in the light.
@@ -103,6 +103,12 @@ namespace midisequencer
             float X{ 0 };
             bool Bar{ false };
             int64_t BarNumber{ 0 };
+
+            // Far out, only every fourth bar is drawn strong; close in, beats are numbered and
+            // sixteenths drawn (design section 31).
+            bool Faint{ false };
+            bool Step{ false };
+            int64_t Beat{ 0 };
         };
 
         // Bar and beat lines across the visible width. Beats are left out when they'd be closer
@@ -141,17 +147,31 @@ namespace midisequencer
                     break;
                 }
 
-                lines.push_back(GridLine{ x, true, bar });
-
                 auto const& current = MeterAtTick(meter, tick);
                 auto const beatTicks = TicksPerBeat(current);
                 auto const beats = current.Numerator;
+                auto const beatPixels = static_cast<double>(beatTicks) * view.PixelsPerTick;
+                auto const showBeats = barEvery == 1 && beatPixels >= 6.0;
 
-                if (barEvery == 1 && static_cast<double>(beatTicks) * view.PixelsPerTick >= 6.0)
+                lines.push_back(GridLine{ x, true, bar, !showBeats && (bar - 1) % (4 * barEvery) != 0 });
+
+                if (showBeats)
                 {
-                    for (int64_t beat = 1; beat < beats; ++beat)
+                    auto const steps = beatPixels / 4.0 >= 8.0 ? 4 : 1;
+
+                    for (int64_t beat = 0; beat < beats; ++beat)
                     {
-                        lines.push_back(GridLine{ static_cast<float>(view.XAtTick(tick + beat * beatTicks)), false, 0 });
+                        auto const beatTick = tick + beat * beatTicks;
+
+                        if (beat > 0)
+                        {
+                            lines.push_back(GridLine{ static_cast<float>(view.XAtTick(beatTick)), false, 0, false, false, beat + 1 });
+                        }
+
+                        for (int64_t step = 1; step < steps; ++step)
+                        {
+                            lines.push_back(GridLine{ static_cast<float>(view.XAtTick(beatTick + step * beatTicks / 4)), false, 0, false, true, 0 });
+                        }
                     }
                 }
 
@@ -245,7 +265,7 @@ namespace midisequencer
         constexpr double LaneTop = 4294967295.0;
 
         // The tempo row's line sits under its labels: 23 pixels from the top, 6 from the bottom.
-        constexpr float TempoTopPadding = 23.0f;
+        constexpr float TempoTopPadding = TempoTagBandHeight;
         constexpr float TempoBottomPadding = 6.0f;
     }
 
@@ -299,6 +319,13 @@ namespace midisequencer
         return range.Low + (1.0 - static_cast<double>(y - top - TempoTopPadding) / span) * (range.High - range.Low);
     }
 
+    _Use_decl_annotations_
+    size_t ArrangeRenderer::UseCount(std::wstring const& clipId) noexcept
+    {
+        auto const found = t_useCounts.find(clipId);
+        return found != t_useCounts.end() ? found->second : 0;
+    }
+
     void ArrangeRenderer::EnsureFormats()
     {
         if (m_caption != nullptr)
@@ -314,6 +341,7 @@ namespace midisequencer
         m_cellName = MakeFormat(TextFont, 10.5f, 400);
         m_cellGlyph = MakeFormat(GlyphFont, 8.0f, 400);
         m_slotGlyph = MakeFormat(GlyphFont, 8.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
+        m_kindGlyph = MakeFormat(GlyphFont, 10.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
         m_badge = MakeFormat(TextFont, 9.5f, 400);
         m_tempoLabel = MakeFormat(TextFont, 10.0f, 400);
         m_meterLabel = MakeFormat(TextFont, 9.5f, 600);
@@ -381,6 +409,42 @@ namespace midisequencer
         auto const& colors = *context.Colors;
         auto const lines = VisibleGridLines(context, width);
 
+        // A theme can set the bar numbers' color and font.
+        auto numberColor = colors.Text3;
+        auto numberFormat = m_rulerNumber;
+        auto lining = false;
+
+        // A font with old-style figures (Vellum's Candara) is asked for lining ones.
+        auto const drawNumber = [&](std::wstring const& text, float x, Color color)
+        {
+            if (!lining)
+            {
+                ds.DrawText(winrt::hstring{ text }, x, 3.0f, 60.0f, 14.0f, color, numberFormat);
+                return;
+            }
+
+            canvasText::CanvasTextLayout layout{ ds, winrt::hstring{ text }, numberFormat, 60.0f, 14.0f };
+            canvasText::CanvasTypography typography{};
+            typography.AddFeature(canvasText::CanvasTypographyFeatureName::LiningFigures, 1);
+            typography.AddFeature(canvasText::CanvasTypographyFeatureName::TabularFigures, 1);
+            layout.SetTypography(0, static_cast<int32_t>(text.size()), typography);
+            ds.DrawTextLayout(layout, x, 3.0f, color);
+        };
+
+        if (colors.Theme != nullptr && colors.Theme->HasPart(L"ruler"))
+        {
+            auto const ruler = colors.Theme->Part(L"ruler");
+            numberColor = ToUiColor(ruler->ColorOr(L"number-color", ToThemeColor(numberColor)));
+
+            if (auto const font = ruler->Word(L"number-font", {}); !font.empty())
+            {
+                numberFormat = ThemedFormat(colors.Theme->Font(font, TextFont), 10.0f, 400);
+                numberFormat.VerticalAlignment(canvasText::CanvasVerticalAlignment::Top);
+            }
+
+            lining = ruler->Word(L"numerals", {}) == L"lining";
+        }
+
         ds.Antialiasing(canvas::CanvasAntialiasing::Aliased);
         ds.FillRectangle(0, 0, width, height, colors.RulerBackground);
 
@@ -393,22 +457,35 @@ namespace midisequencer
             labelEvery *= 2;
         }
 
+        int64_t currentBar{ 1 };
+
         for (auto const& line : lines)
         {
             auto const x = std::floor(line.X);
 
             if (line.Bar)
             {
+                currentBar = line.BarNumber;
                 ds.FillRectangle(x, 0, 1, height, colors.RulerBarLine);
 
                 if ((line.BarNumber - 1) % labelEvery == 0)
                 {
-                    ds.DrawText(winrt::hstring{ std::to_wstring(line.BarNumber) }, x + 3.0f, 3.0f, 60.0f, 14.0f, colors.Text3, m_rulerNumber);
+                    drawNumber(std::to_wstring(line.BarNumber), x + 3.0f, numberColor);
                 }
+            }
+            else if (line.Step)
+            {
+                ds.FillRectangle(x, height - 5.0f, 1, 5.0f, colors.RulerBeatLine);
             }
             else
             {
                 ds.FillRectangle(x, 20.0f, 1, height - 20.0f, colors.RulerBeatLine);
+
+                // Close in, the beats are numbered too.
+                if (line.Beat > 0 && barPixels / 4.0 >= 40.0)
+                {
+                    drawNumber(std::format(L"{}.{}", currentBar, line.Beat), x + 3.0f, WithAlpha(numberColor, numberColor.A / 255.0 * 0.6));
+                }
             }
         }
 
@@ -417,7 +494,7 @@ namespace midisequencer
             auto const x0 = static_cast<float>(context.View.XAtTick(context.LoopStart));
             auto const x1 = static_cast<float>(context.View.XAtTick(context.LoopEnd));
 
-            if (x1 > 0 && x0 < width)
+            if (x1 > 0 && x0 < width && !DrawThemedLoop(ds, x0, x1, height, context))
             {
                 ds.Antialiasing(canvas::CanvasAntialiasing::Antialiased);
 
@@ -439,15 +516,25 @@ namespace midisequencer
         float top,
         float height,
         float width,
-        ArrangeDrawContext const&,
+        ArrangeDrawContext const& context,
         Color barColor,
         Color beatColor)
     {
         UNREFERENCED_PARAMETER(width);
 
+        // An engraved grid has a light line beside each bar line.
+        auto const light = context.Colors != nullptr ? context.Colors->BarLineLight : Color{};
+
+        auto const stepColor = WithAlpha(beatColor, beatColor.A / 255.0 * 0.5);
+
         for (auto const& line : t_gridLines)
         {
-            ds.FillRectangle(std::floor(line.X), top, 1.0f, height, line.Bar ? barColor : beatColor);
+            ds.FillRectangle(std::floor(line.X), top, 1.0f, height, line.Bar && !line.Faint ? barColor : line.Step ? stepColor : beatColor);
+
+            if (line.Bar && !line.Faint && light.A > 0)
+            {
+                ds.FillRectangle(std::floor(line.X) + 1.0f, top, 1.0f, height, light);
+            }
         }
     }
 
@@ -474,6 +561,9 @@ namespace midisequencer
         t_gridLines = VisibleGridLines(context, width);
         t_useCounts = CountUses(doc);
 
+        // A theme's field under every lane, which the lanes are drawn inside.
+        auto field = DrawField(ds, width, height, !fillBelow, context);
+
         float bottom{ 0 };
 
         for (auto const& row : rows)
@@ -497,7 +587,7 @@ namespace midisequencer
             auto const background = row.Kind == ArrangeRowKind::Folder ? colors.FolderLaneBackground : colors.LaneBackground;
             ds.FillRectangle(0, top, width, rowHeight, background);
             DrawGrid(ds, top, rowHeight, width, context, colors.BarLine, colors.BeatLine);
-            ds.FillRectangle(0, bottom - 1.0f, width, 1.0f, colors.Divider);
+            DrawRowSeam(ds, bottom, width, colors);
 
             ds.Antialiasing(canvas::CanvasAntialiasing::Antialiased);
 
@@ -537,13 +627,19 @@ namespace midisequencer
             }
         }
 
-        if (fillBelow && bottom < height)
+        // Below the last lane, the grid goes on; on a theme's field the space stays plain.
+        if (fillBelow && bottom < height && field == nullptr)
         {
             auto const top = std::max(0.0f, bottom);
 
             ds.Antialiasing(canvas::CanvasAntialiasing::Aliased);
             ds.FillRectangle(0, top, width, height - top, colors.LaneBackground);
             DrawGrid(ds, top, height - top, width, context, colors.BarLine, colors.BeatLine);
+        }
+
+        if (field != nullptr)
+        {
+            field.Close();
         }
 
         ds.Antialiasing(canvas::CanvasAntialiasing::Antialiased);
@@ -665,11 +761,34 @@ namespace midisequencer
         auto const& colors = *context.Colors;
         auto const height = static_cast<float>(row.Height);
         auto const muted = track.Muted || row.InsideMutedFolder;
+        auto const drag = context.ClipDrag.has_value() ? &*context.ClipDrag : nullptr;
 
         for (size_t i = 0; i < track.Timeline.size(); ++i)
         {
             auto const selected = context.SelectedTrackId == track.Id && context.SelectedPlacement == i;
+
+            // A clip being moved stays faded where it was until it lands.
+            if (drag != nullptr && !drag->Copy && drag->FromTrackId == track.Id && drag->FromPlacement == i)
+            {
+                auto faded = ds.CreateLayer(0.35f);
+                DrawClipBlock(ds, track, track.Timeline[i], false, muted, top, height, width, context);
+                faded.Close();
+                continue;
+            }
+
             DrawClipBlock(ds, track, track.Timeline[i], selected, muted, top, height, width, context);
+        }
+
+        if (drag != nullptr && drag->ToTrackId == track.Id && drag->ToTick >= 0)
+        {
+            Placement ghost{};
+            ghost.ClipId = drag->ClipId;
+            ghost.Tick = drag->ToTick;
+            ghost.Length = drag->Length;
+
+            auto layer = ds.CreateLayer(0.8f);
+            DrawClipBlock(ds, track, ghost, true, false, top, height, width, context);
+            layer.Close();
         }
 
         // A take being recorded grows from where it started to the playhead.
@@ -680,8 +799,9 @@ namespace midisequencer
 
             if (x1 > x0 && x1 > 0 && x0 < width)
             {
-                auto const y0 = top + ClipInset;
-                auto const h = height - ClipInset * 2;
+                auto const inset = height < static_cast<float>(OneLineRowHeight) ? 2.0f : ClipInset;
+                auto const y0 = top + inset;
+                auto const h = height - inset * 2;
                 auto const fill = WithAlpha(colors.Record, 0.30);
                 auto const geometry = canvasGeometry::CanvasGeometry::CreateRoundedRectangle(ds, x0, y0, x1 - x0, h, 4.0f, 4.0f);
 
@@ -756,7 +876,27 @@ namespace midisequencer
     Rect ArrangeRenderer::BackToTimelineButtonBounds(float rowTop, float rowHeight) const noexcept
     {
         auto const x = 12.0f + m_overlayTextWidth + 8.0f;
-        return Rect{ x, rowTop + (rowHeight - 1.0f - 26.0f) / 2.0f, std::max(60.0f, m_overlayButtonWidth), 26.0f };
+        auto const buttonHeight = std::clamp(rowHeight - 5.0f, 16.0f, 26.0f);
+        return Rect{ x, rowTop + (rowHeight - 1.0f - buttonHeight) / 2.0f, std::max(60.0f, m_overlayButtonWidth), buttonHeight };
+    }
+
+    _Use_decl_annotations_
+    Rect ArrangeRenderer::TagLabelBounds(Tag const& tag, float x, float top, float height, bool atTop)
+    {
+        if (tag.Text.empty())
+        {
+            return Rect{ x, top, 0, 0 };
+        }
+
+        EnsureFormats();
+
+        canvasText::CanvasTextLayout layout{ canvas::CanvasDevice::GetSharedDevice(), winrt::hstring{ tag.Text }, m_tagText, 10000.0f, 100.0f };
+        auto const textWidth = std::min(220.0f, static_cast<float>(layout.LayoutBounds().Width));
+        auto const labelWidth = 12.0f + textWidth + 6.0f;
+        auto const labelHeight = 16.0f;
+        auto const y = atTop ? top + 3.0f : top + height - 5.0f - labelHeight;
+
+        return Rect{ x, y, labelWidth, labelHeight };
     }
 
     _Use_decl_annotations_
@@ -789,9 +929,24 @@ namespace midisequencer
             }
         }
 
-        auto const tc = TrackColor(folder.Color);
+        auto const tc = ThemedTrackColor(colors, TrackColor(folder.Color));
         auto const fill = Muted(colors, SummaryFill(colors, tc), folder.Muted);
         auto const stroke = Muted(colors, SummaryStroke(colors, tc), folder.Muted);
+
+        // A theme can draw the outline as one of its clips in their "summary" state.
+        std::shared_ptr<themeengine::ResolvedStyle const> summary{};
+
+        if (colors.Theme != nullptr && colors.Theme->HasPart(L"timeline.clip") && context.Creator != nullptr)
+        {
+            std::vector<std::wstring_view> states{ L"summary" };
+
+            if (folder.Muted)
+            {
+                states.push_back(L"muted");
+            }
+
+            summary = colors.Theme->Part(L"timeline.clip", std::span<std::wstring_view const>{ states }, ToThemeColor(tc));
+        }
 
         for (auto const& [start, end] : merged)
         {
@@ -800,6 +955,15 @@ namespace midisequencer
 
             if (x1 < 0 || x0 > width || x1 - x0 < 1.0f)
             {
+                continue;
+            }
+
+            if (summary != nullptr)
+            {
+                auto const inset = static_cast<float>(summary->Number(L"inset", 6.0));
+                auto const drawX0 = std::max(x0, -16.0f);
+                auto const drawX1 = std::min(x1, width + 16.0f);
+                m_painter.Paint(ds, context.Creator, *summary, { drawX0, top + inset, drawX1 - drawX0, height - inset * 2.0f });
                 continue;
             }
 
@@ -1031,6 +1195,11 @@ namespace midisequencer
             return;
         }
 
+        if (DrawThemedClip(ds, track, *clip, placement, selected, muted, top, height, width, context))
+        {
+            return;
+        }
+
         auto const& colors = *context.Colors;
         auto const length = placement.Length > 0 ? placement.Length : clip->Length;
 
@@ -1042,11 +1211,12 @@ namespace midisequencer
             return;
         }
 
-        auto const y0 = top + ClipInset;
-        auto const h = height - ClipInset * 2;
+        auto const inset = height < static_cast<float>(OneLineRowHeight) ? 2.0f : ClipInset;
+        auto const y0 = top + inset;
+        auto const h = height - inset * 2;
         auto const w = x1 - x0;
 
-        auto const tc = ClipColor(*clip, track);
+        auto const tc = ClipColor(colors, *clip, track);
         auto const fill = Muted(colors, ClipFill(colors, tc), muted);
         auto const stroke = Muted(colors, ClipStroke(colors, tc), muted);
         auto const caption = Muted(colors, ClipCaption(colors, tc), muted);
@@ -1180,11 +1350,14 @@ namespace midisequencer
         auto const visibleTo = tickAt(static_cast<double>(area.X) + area.Width) + 1;
 
         size_t drawn{ 0 };
+        size_t passesDrawn{ 0 };
 
         auto const passes = clip.Loop ? std::max<int64_t>(1, (endTick - firstPassTick + clip.Length - 1) / clip.Length) : 1;
         auto const firstPass = clip.Loop ? std::max<int64_t>(0, (visibleFrom - firstPassTick) / clip.Length - 1) : 0;
 
-        for (auto pass = firstPass; pass < passes; ++pass)
+        // A very short loop over a long stretch has more passes than pixels: at most as many as
+        // the outlines draw, so a frame never runs away.
+        for (auto pass = firstPass; pass < passes && passesDrawn < MaximumDrawnPasses; ++pass, ++passesDrawn)
         {
             auto const passStart = firstPassTick + pass * clip.Length;
             auto const passEnd = std::min(endTick, passStart + clip.Length);
@@ -1246,15 +1419,30 @@ namespace midisequencer
         float top,
         float height,
         bool atTop,
-        ArrangeDrawContext const&)
+        ArrangeDrawContext const& context)
     {
         if (x < -200.0f || tag.Text.empty())
         {
             return;
         }
 
-        auto const rgb = tag.Color.value_or(0xD7D7D7);
-        auto const color = FromRgb(rgb);
+        auto rgb = tag.Color.value_or(0xD7D7D7);
+        auto color = FromRgb(rgb);
+        auto textColor = FromRgb(TagTextColor(rgb));
+
+        // A theme can make the label a mix of the tag's color with its own paper.
+        if (context.Colors != nullptr && context.Colors->Theme != nullptr && context.Colors->Theme->HasPart(L"timeline.tag"))
+        {
+            auto const label = context.Colors->Theme->Part(L"timeline.tag", {}, ToThemeColor(color));
+
+            if (!label->Background.empty())
+            {
+                color = ToUiColor(label->Background.front().Solid);
+                rgb = (static_cast<uint32_t>(color.R) << 16) | (static_cast<uint32_t>(color.G) << 8) | color.B;
+            }
+
+            textColor = label->Foreground.has_value() ? ToUiColor(*label->Foreground) : FromRgb(TagTextColor(rgb));
+        }
 
         ds.DrawLine(x + 0.5f, top, x + 0.5f, top + height - 1.0f, WithAlpha(color, 0.85), 1.0f, DashedStroke(3.0f, 3.0f));
 
@@ -1277,7 +1465,7 @@ namespace midisequencer
 
         ds.FillGeometry(canvasGeometry::CanvasGeometry::CreatePath(path), color);
         ds.FillCircle(x + 7.5f, y + 8.0f, 1.5f, Rgba(0, 0, 0, 0.45));
-        ds.DrawText(text, x + 12.0f, y, textWidth + 2.0f, labelHeight, FromRgb(TagTextColor(rgb)), m_tagText);
+        ds.DrawText(text, x + 12.0f, y, textWidth + 2.0f, labelHeight, textColor, m_tagText);
     }
 
     _Use_decl_annotations_
@@ -1356,7 +1544,35 @@ namespace midisequencer
                 }
 
                 ds.Antialiasing(canvas::CanvasAntialiasing::Antialiased);
-                DrawCell(ds, *track, scene, Rect{ slotX, top, slotWidth, rowHeight }, muted, context);
+
+                Rect const slot{ slotX, top, slotWidth, rowHeight };
+                auto const drag = context.ClipDrag.has_value() ? &*context.ClipDrag : nullptr;
+
+                if (drag != nullptr && !drag->Copy && drag->FromSlot == scene && drag->FromTrackId == track->Id)
+                {
+                    auto faded = ds.CreateLayer(0.35f);
+                    DrawCell(ds, *track, scene, slot, muted, context);
+                    faded.Close();
+                }
+                else
+                {
+                    DrawCell(ds, *track, scene, slot, muted, context);
+                }
+
+                // Where a dragged clip would land.
+                if (drag != nullptr && drag->ToSlot == scene && drag->ToTrackId == track->Id)
+                {
+                    auto const inset = rowHeight < static_cast<float>(OneLineRowHeight) ? 2.0f : 4.0f;
+                    Rect const cell{ slot.X + inset, slot.Y + inset, slot.Width - inset * 2.0f - 1.0f, slot.Height - inset * 2.0f - 1.0f };
+
+                    ds.FillRoundedRectangle(cell, 4.0f, 4.0f, WithAlpha(colors.SelectionStroke, colors.Light ? 0.14 : 0.22));
+                    ds.DrawRoundedRectangle(cell.X - 0.5f, cell.Y - 0.5f, cell.Width + 1.0f, cell.Height + 1.0f, 4.5f, 4.5f, colors.SelectionStroke, 2.0f, DashedStroke(4.0f, 2.0f));
+
+                    if (auto const clip = FindClip(doc, drag->ClipId); clip != nullptr)
+                    {
+                        ds.DrawText(winrt::hstring{ clip->Name }, cell.X + 6.0f, cell.Y, std::max(1.0f, cell.Width - 10.0f), std::min(cell.Height, 20.0f), colors.Text, m_cellName);
+                    }
+                }
             }
         }
 
@@ -1380,10 +1596,19 @@ namespace midisequencer
         bool muted,
         ArrangeDrawContext const& context)
     {
+        if (DrawThemedCell(ds, track, scene, slot, muted, context))
+        {
+            return;
+        }
+
         auto const& colors = *context.Colors;
 
-        // seq.css .slot: 4 pixels of padding inside a slot whose right pixel is the divider.
-        Rect const cell{ slot.X + 4.0f, slot.Y + 4.0f, slot.Width - 9.0f, slot.Height - 9.0f };
+        // seq.css .slot: 4 pixels of padding inside a slot whose right pixel is the divider. A
+        // compact track's slots have room for the name and nothing else.
+        auto const compact = slot.Height < static_cast<float>(OneLineRowHeight);
+        auto const inset = compact ? 2.0f : 4.0f;
+        Rect const cell{ slot.X + inset, slot.Y + inset, slot.Width - inset * 2.0f - 1.0f, slot.Height - inset * 2.0f - 1.0f };
+        auto const textTop = compact ? cell.Y + (cell.Height - 13.0f) / 2.0f : cell.Y + 3.0f;
 
         auto const clipId = scene < track.Slots.size() ? track.Slots[scene] : std::wstring{};
         auto const armed = context.Armed != nullptr && context.Armed->contains(track.Id);
@@ -1439,7 +1664,7 @@ namespace midisequencer
         auto const playing = launch != nullptr && launch->Plays(clipId, scene);
         auto const queued = launch != nullptr && launch->Queues(clipId, scene);
 
-        auto const tc = ClipColor(*clip, track);
+        auto const tc = ClipColor(colors, *clip, track);
         auto const fill = Muted(colors, CellFill(colors, tc, playing), muted);
         auto const stroke = Muted(colors, CellStroke(colors, tc), muted);
 
@@ -1469,13 +1694,14 @@ namespace midisequencer
             ds.DrawRoundedRectangle(cell.X - 1.5f, cell.Y - 1.5f, cell.Width + 3.0f, cell.Height + 3.0f, 5.0f, 5.0f, colors.SelectionStroke, 1.5f);
         }
 
-        ds.DrawText(L"\uE768", cell.X + 4.0f, cell.Y + 3.0f, 10.0f, 13.0f, glyphColor, m_cellGlyph);
-        ds.DrawText(winrt::hstring{ clip->Name }, cell.X + 16.0f, cell.Y + 3.0f, std::max(1.0f, cell.Width - 20.0f), 13.0f, colors.Text, m_cellName);
+        ds.DrawText(L"\uE768", cell.X + 4.0f, textTop, 10.0f, 13.0f, glyphColor, m_cellGlyph);
+        ds.DrawText(winrt::hstring{ clip->Name }, cell.X + 16.0f, textTop, std::max(1.0f, cell.Width - 20.0f), 13.0f, colors.Text, m_cellName);
 
-        auto const kindColor = colors.Light ? Rgba(0, 0, 0, 0.6) : Rgba(255, 255, 255, 0.8);
-        DrawKindMark(ds, clip->Kind, cell.X + cell.Width - 13.0f, cell.Y + cell.Height - 13.0f, 10.0f, kindColor);
-
+        if (!compact)
         {
+            auto const kindColor = colors.Light ? Rgba(0, 0, 0, 0.6) : Rgba(255, 255, 255, 0.8);
+            DrawKindMark(ds, IconFor(*clip), cell.X + cell.Width - 13.0f, cell.Y + cell.Height - 13.0f, 10.0f, kindColor);
+
             Rect const mini{ cell.X + 4.0f, cell.Y + 17.0f, std::max(1.0f, cell.Width - 18.0f), std::max(1.0f, cell.Height - 21.0f) };
             auto layer = ds.CreateLayer(1.0f, mini);
             auto const pixelsPerTick = static_cast<double>(mini.Width) / static_cast<double>(clip->Length);
@@ -1504,45 +1730,34 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    void ArrangeRenderer::DrawKindMark(canvas::CanvasDrawingSession const& ds, ClipKind kind, float x, float y, float size, Color color)
+    void ArrangeRenderer::DrawKindMark(canvas::CanvasDrawingSession const& ds, ClipIcon icon, float x, float y, float size, Color color)
     {
-        // The comps' symbols are drawn on a 16 unit square.
-        auto const s = size / 16.0f;
-
-        switch (kind)
+        // A character from the icon font, when there's one for this kind.
+        if (auto const glyph = ClipIconGlyph(icon); glyph != nullptr)
         {
-        case ClipKind::Pattern:
-        {
-            for (int row = 0; row < 3; ++row)
-            {
-                for (int column = 0; column < 3; ++column)
-                {
-                    auto const cx = x + (1.0f + column * 5.2f) * s;
-                    auto const cy = y + (2.0f + row * 5.2f) * s;
-                    auto const filled = (row + column) % 2 == 0;
-
-                    if (filled)
-                    {
-                        ds.FillRoundedRectangle(cx, cy, 3.6f * s, 3.6f * s, 0.8f * s, 0.8f * s, color);
-                    }
-                    else
-                    {
-                        ds.DrawRoundedRectangle(cx, cy, 3.6f * s, 3.6f * s, 0.8f * s, 0.8f * s, color, std::max(0.6f, s));
-                    }
-                }
-            }
-
-            break;
+            ds.DrawText(glyph, Rect{ x - 1.0f, y - 1.0f, size + 2.0f, size + 2.0f }, color, m_kindGlyph);
+            return;
         }
 
-        case ClipKind::Generator:
+        // The comps' symbols are drawn on a 16 unit square, the same as ClipIconPath.
+        auto const s = size / 16.0f;
+
+        // Section 28's are drawn from the same parts as their PathIcons.
+        if (DrawClipIcon(ds, icon, x, y, size, color))
+        {
+            return;
+        }
+
+        switch (icon)
+        {
+        case ClipIcon::Euclidean:
             ds.DrawCircle(x + 8.0f * s, y + 8.0f * s, 5.6f * s, color, 1.2f * s);
             ds.FillCircle(x + 8.0f * s, y + 2.4f * s, 2.0f * s, color);
             ds.FillCircle(x + 13.3f * s, y + 9.7f * s, 2.0f * s, color);
             ds.FillCircle(x + 4.0f * s, y + 12.0f * s, 2.0f * s, color);
             break;
 
-        case ClipKind::Notes:
+        case ClipIcon::Notes:
         default:
             ds.FillRoundedRectangle(x + 1.0f * s, y + 3.0f * s, 6.0f * s, 2.4f * s, s, s, color);
             ds.FillRoundedRectangle(x + 6.0f * s, y + 7.0f * s, 8.0f * s, 2.4f * s, s, s, color);

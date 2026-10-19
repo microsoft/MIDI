@@ -413,7 +413,7 @@ Get-MidiNetworkConfiguredClient | Format-Table -AutoSize
 
 ### Set-MidiNetworkRemoteClientSendSpeed and Remove-MidiNetworkRemoteClientSendSpeed
 
-A host on this PC sends to every device that connects to it at the host's sending speed. `Set-MidiNetworkRemoteClientSendSpeed` gives one device its own speed instead, so one slow device doesn't hold back the others. The host knows the device by the name and product instance id it announces, so the speed is used again the next time it connects. A device that's already connected changes speed right away. Add `-ReduceSendSpeedAutomatically` to send more slowly to that device while it keeps asking for data again. `Remove-MidiNetworkRemoteClientSendSpeed` puts the device back on the host's speed.
+A host on this PC sends to every device that connects to it at the host's sending speed. `Set-MidiNetworkRemoteClientSendSpeed` gives one device its own speed instead, so one slow device doesn't hold back the others. The host knows the device by the name and product instance id it announces, so the speed is used again the next time it connects. A device that's already connected changes speed right away. Add `-ReduceSendSpeedAutomatically` to send more slowly to that device while it keeps asking for data again. `Remove-MidiNetworkRemoteClientSendSpeed` puts the device back on the host's speed. Neither one changes MIDI 1.0 ports set for the device in Network MIDI Setup.
 
 Add `-NoSkippingInBetweenValues` to send every message to that device, however late, instead of skipping in-between values to catch up.
 

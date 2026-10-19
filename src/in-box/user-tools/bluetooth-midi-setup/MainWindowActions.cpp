@@ -10,6 +10,7 @@
 
 #include "StringResources.h"
 #include "AppearanceFlyout.h"
+#include "SpinButtons.h"
 
 namespace native = ::midibluetoothsetup;
 namespace res = ::midibluetoothsetup::resources;
@@ -207,7 +208,7 @@ namespace winrt::midibluetoothsetup::implementation
             box.Minimum(static_cast<double>(native::AppSettings::MinimumRefreshIntervalSeconds));
             box.Maximum(static_cast<double>(native::AppSettings::MaximumRefreshIntervalSeconds));
             box.Value(static_cast<double>(native::AppSettings::Current().RefreshIntervalSeconds()));
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
             box.HorizontalAlignment(xaml::HorizontalAlignment::Left);
             box.Width(160);
             xaml::Automation::AutomationProperties::SetName(box, res::GetString(L"SettingsRefreshIntervalLabel"));

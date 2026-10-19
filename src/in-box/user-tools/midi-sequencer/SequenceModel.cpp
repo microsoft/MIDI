@@ -231,9 +231,10 @@ namespace midisequencer
     _Use_decl_annotations_
     std::wstring NewId(std::wstring_view prefix)
     {
-        static thread_local std::mt19937 generator{ std::random_device{}() };
+        // 64 random bits: a sequence with hundreds of thousands of clips still never repeats one.
+        static thread_local std::mt19937_64 generator{ (static_cast<uint64_t>(std::random_device{}()) << 32) ^ std::random_device{}() };
 
-        return std::format(L"{}-{:08x}", prefix, static_cast<uint32_t>(generator()));
+        return std::format(L"{}-{:016x}", prefix, static_cast<uint64_t>(generator()));
     }
 
     _Use_decl_annotations_

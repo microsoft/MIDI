@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midiplayer
+{
+    // A slider that counts seconds and reads as a time.
+    //
+    // A screen reader reads a plain slider as a bare number. This one also offers the Value
+    // pattern, with text such as "1:25 of 3:40", and NVDA reads that instead of the number. It
+    // keeps the RangeValue pattern, so it still moves like any other slider.
+    [default_interface]
+    runtimeclass TimeSlider : Microsoft.UI.Xaml.Controls.Slider
+    {
+        TimeSlider();
+
+        // What a screen reader reads as the value. The window keeps it in step with the slider.
+        String ValueText;
+    }
+
+    // The slider's own peer with the Value pattern added. Everything else, RangeValue included,
+    // is what any slider offers.
+    [default_interface]
+    runtimeclass TimeSliderAutomationPeer :
+        Microsoft.UI.Xaml.Automation.Peers.SliderAutomationPeer,
+        Microsoft.UI.Xaml.Automation.Provider.IValueProvider
+    {
+        TimeSliderAutomationPeer(TimeSlider owner);
+    }
+}

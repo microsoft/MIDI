@@ -304,6 +304,9 @@
 #define UUID_IMidiSequencePlayerStatics                                     8087b303-0519-c0de-31d1-ee00E0406000
 #define UUID_IMidiSequencePlayerFactory                                     8087b303-0519-c0de-31d1-ff00E0406000
 
+// MidiSequencingUtilityApiContract 2
+#define UUID_IMidiSequencePlayer2                                           8087b303-0519-c0de-31d1-dd00E0406002
+
 #define UUID_IMidiSequenceBuilder                                           8087b303-0519-c0de-31d1-dd00E0407000
 
 // ============================================================================
@@ -464,6 +467,10 @@
 #define UUID_IMidiNetworkRemoteClientSettingsFactory            8087b303-0519-c0de-31d1-ff00F0323000
 #define UUID_IMidiNetworkHostRemoteClientSettingsConfig         8087b303-0519-c0de-31d1-dd00F0324000
 #define UUID_IMidiNetworkHostRemoteClientSettingsConfigFactory  8087b303-0519-c0de-31d1-ff00F0324000
+
+// MidiTransportsNetworkApiContract 2, added after Preview 11
+#define UUID_IMidiNetworkMidi1PortGroup                         8087b303-0519-c0de-31d1-dd00F0325000
+#define UUID_IMidiNetworkMidi1PortGroupFactory                  8087b303-0519-c0de-31d1-ff00F0325000
 
 // MidiTransportsNetworkApiContract 2, added after Preview 11
 #define UUID_IMidiNetworkHostCreationConfig2                    8087b303-0519-c0de-31d1-dd00F0302002

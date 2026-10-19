@@ -382,7 +382,7 @@
                                        Value="32768"
                                        Minimum="0"
                                        Maximum="65535"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        HorizontalAlignment="Stretch" />
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button x:Name="AddMidi2NoteOnButton" x:Uid="AddMidi2NoteOnButton" Content="Note On" Click="OnAddMidi2NoteOn" />
@@ -403,7 +403,7 @@
                                        Value="0"
                                        Minimum="0"
                                        Maximum="4294967295"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        HorizontalAlignment="Stretch" />
                             <Button x:Name="AddMidi2ControlChangeButton" x:Uid="AddMidi2ControlChangeButton" Content="Add control change" HorizontalAlignment="Stretch" Click="OnAddMidi2ControlChange" />
                         </StackPanel>
@@ -421,7 +421,7 @@
                                        Value="96"
                                        Minimum="0"
                                        Maximum="127"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        HorizontalAlignment="Stretch" />
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button x:Name="AddMidi1NoteOnButton" x:Uid="AddMidi1NoteOnButton" Content="Note On" Click="OnAddMidi1UmpNoteOn" />
@@ -442,7 +442,7 @@
                                        Value="64"
                                        Minimum="0"
                                        Maximum="127"
-                                       SpinButtonPlacementMode="Compact"
+                                       SpinButtonPlacementMode="Hidden"
                                        HorizontalAlignment="Stretch" />
                             <Button x:Name="AddMidi1ControlChangeButton" x:Uid="AddMidi1ControlChangeButton" Content="Add control change" HorizontalAlignment="Stretch" Click="OnAddMidi1UmpControlChange" />
                         </StackPanel>

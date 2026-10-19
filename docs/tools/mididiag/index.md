@@ -18,10 +18,12 @@ The report tells you:
 - When Windows last started, and whether it came back from Fast Startup instead of a full restart
 - Which API mode the PC uses: full, legacy or hybrid
 - Whether the MIDI service is installed, how it starts, and whether it was already running before the report
+- Whether each Windows MIDI Services file that comes with Windows is in System32, and whether Windows is set up to use it
 - Times in the last 30 days when the MIDI service stopped unexpectedly, and app crashes that involved a MIDI component
+- When Windows was installed or upgraded, recent Windows updates, the MIDI software that's installed, and when MIDI software was installed or removed
 - The MIDI driver entries in the Drivers32 part of the registry, a common source of past problems
-- The Windows MIDI Services registry entries, including any transport the service doesn't have permission to read
-- USB and MIDI devices with a problem, the ones Device Manager marks with a warning, and how many old MIDI device entries Windows is still keeping
+- The Windows MIDI Services registry entries, including any transport the service doesn't have permission to read, and any transport whose file is missing
+- USB and MIDI devices with a problem, the ones Device Manager marks with a warning, how many old MIDI device entries Windows is still keeping, and when those were last seen
 - Your network type, your network adapters, and the firewall rules for the MIDI service, which matter for network MIDI
 - Whether multicast DNS (mDNS) can work on this PC. Network MIDI uses it so computers can find each other by name. The report shows the Windows service that answers it, the setting that turns it off, the firewall rules for it, and which programs listen for it.
 - When networks connected and disconnected, and when the PC slept, woke and restarted, over the last 3 days
@@ -66,6 +68,41 @@ The report reads everything it can from Windows before it asks the MIDI service 
 
 When that happens, the MIDI Troubleshooting and Repair app offers to save a memory dump of the MIDI service. The dump shows the developers where the service is stuck. Save it before you restart, because restarting the PC clears the problem and the evidence along with it. The dump can hold private information, such as device names and network MIDI passwords, so share it only with the developers who asked for it.
 
+## When the MIDI service is missing
+
+Windows MIDI Services comes with Windows. Its files are in the System32 folder, and Windows has to register each one before anything can use it. To an app, a missing file and a file that isn't registered look the same: MIDI just doesn't work. The `inbox_components` section tells them apart.
+
+It has an `inbox_component` line for each file that comes with Windows:
+
+- `file` says whether the file is in System32: `present` or `missing`.
+- `service`, for `midisrv.exe`, and `com`, for the others, say where Windows loads the file from: `system32`, `elsewhere` with the path it uses instead, `missing_file` when there's no file at that path, or `not_registered`.
+- `com_owner` says who owns that COM registration in the registry. Windows keeps the ones it writes owned by `trustedinstaller`, so nothing else can change them. Any other owner, usually `administrators`, means an installer took the registration over or wrote it again.
+- `plugin`, for the four transports the MIDI service loads through its Transport Plugins registry entries, says whether there's an entry for that transport: `enabled`, `disabled`, `missing`, or `no_clsid` when the entry is there but empty.
+
+The `inbox_state` line sums it all up:
+
+| Value | What it means |
+| --- | --- |
+| `ok` | Every file is in System32, and Windows is set up to use it. |
+| `not_registered` | The files are in System32, but none of them are registered. |
+| `partly_registered` | The files are in System32, but some of them aren't registered. |
+| `registered_elsewhere` | Some files are registered to load from outside System32, usually from a developer or preview copy. |
+| `files_missing` | Some of the files are missing from System32. |
+| `not_in_windows` | None of the files are in System32, so this copy of Windows doesn't include Windows MIDI Services. |
+
+Uninstalling the old Windows MIDI Services preview service can leave a PC `not_registered` or `partly_registered`. That preview replaced the MIDI service that comes with Windows, so removing it left Windows without one. If the Windows Installer log still has the removal, the findings say when it happened.
+
+To find out when MIDI last worked, look at the `endpoint_nodes` lines in the `device_nodes` section. Windows keeps an entry for every endpoint the MIDI service ever made. `last_seen` says when the newest of the ones that are gone was last there. The `DIAG` endpoints come and go with the MIDI service itself, so theirs is about when the service last ran. `first_installed` is the oldest date Windows has for them. An upgrade to a new version of Windows can reset it.
+
+Then look at the `install_history` section to see what changed around that time:
+
+- `os_installed` is when this version of Windows was installed, either fresh or as an upgrade.
+- Each `os_upgrade` line is an earlier version of Windows, and when it was replaced.
+- Each `windows_update` line is an update to Windows itself from the last 90 days, such as a monthly update. Updates to apps, drivers and Microsoft Defender are left out.
+- Each `installed_package` line is a program with MIDI in its name that's installed now. Windows MIDI Services comes first.
+- Each `package_event` line is a MIDI program that Windows Installer installed, removed or changed.
+- `system_log_from` and `application_log_from` say how far back the Windows logs go. A history with nothing in it only means nothing happened if the log goes back far enough.
+
 ## When other computers can't see your PC
 
 Other computers find Network MIDI 2.0 and RTP-MIDI hosts by name, using multicast DNS (mDNS). For each host that's running, the report looks it up by the same name other computers look for, and writes an `advertising_check` line with what came back. If nothing answers, the findings say other computers may not see the host. If a different computer or port answers, the findings say that too.
@@ -83,7 +120,7 @@ The report leaves out the things that identify you:
 - Network names, such as the name of your Wi-Fi network, are left out. The network history gives each network a number instead.
 - The hardware (MAC) addresses of your network adapters are left out.
 
-Device serial numbers and Bluetooth addresses stay in, because they're how the developers tell two of the same device apart. The names you've given your devices stay in too. If any of that matters to you, read the report before you post it somewhere public.
+Device serial numbers and Bluetooth addresses stay in, because they're how the developers tell two of the same device apart. The names you've given your devices stay in too. So do the names and versions of installed programs that have MIDI in their names, because they often explain a problem. If any of that matters to you, read the report before you post it somewhere public.
 
 ## Reading the report with a script
 

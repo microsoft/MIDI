@@ -16,6 +16,7 @@
 #include "mididiag_sections.h"
 
 #include <aclapi.h>
+#include <sddl.h>
 #include <mmddk.h>
 
 // Every line of the report goes through mididiag_output.cpp, which lays it out, cleans what
@@ -250,23 +251,91 @@ namespace
         }
     }
 
-    // adds version= and dll= for a class id, or dll="" when nothing is registered for it
-    bool AddComponentFile(_Inout_ mididiag::KeyValueText& values, _In_ std::wstring const& classId)
+    // Windows looks in System32 for a module registered by file name alone
+    std::wstring ResolvedModulePath(_In_ std::wstring const& path)
+    {
+        if (path.find_first_of(L"\\/") != std::wstring::npos)
+        {
+            return path;
+        }
+
+        wchar_t systemFolder[MAX_PATH]{};
+        ::GetSystemDirectoryW(systemFolder, ARRAYSIZE(systemFolder));
+
+        return std::wstring{ systemFolder } + L"\\" + path;
+    }
+
+    enum class FileState
+    {
+        Present,
+        Missing,
+
+        // Windows wouldn't say, for example because access was denied
+        Unknown
+    };
+
+    FileState GetFileState(_In_ std::wstring const& path)
+    {
+        if (::GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES)
+        {
+            return FileState::Present;
+        }
+
+        auto const error = ::GetLastError();
+
+        return (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) ? FileState::Missing : FileState::Unknown;
+    }
+
+    PCWSTR FileStateName(_In_ FileState const state)
+    {
+        switch (state)
+        {
+        case FileState::Present:    return L"present";
+        case FileState::Missing:    return L"missing";
+        default:                    return L"unknown";
+        }
+    }
+
+    bool EqualsNoCase(_In_ std::wstring_view const first, _In_ std::wstring_view const second)
+    {
+        return ::CompareStringOrdinal(first.data(), static_cast<int>(first.size()),
+            second.data(), static_cast<int>(second.size()), TRUE) == CSTR_EQUAL;
+    }
+
+    std::wstring JoinNames(_In_ std::vector<std::wstring> const& names)
+    {
+        std::wstring joined{};
+
+        for (auto const& name : names)
+        {
+            joined += joined.empty() ? L"" : L", ";
+            joined += name;
+        }
+
+        return joined;
+    }
+
+    // Adds version=, file= and dll= for a class id, or dll="" when nothing is registered for it.
+    // Returns the state of the registered file, or nothing when the class id isn't registered.
+    std::optional<FileState> AddComponentFile(_Inout_ mididiag::KeyValueText& values, _In_ std::wstring const& classId)
     {
         auto const path = GetInprocServerPath(classId);
 
         if (path.empty())
         {
             values.Add(L"dll", L"");
-            return false;
+            return std::nullopt;
         }
 
-        auto const version = FileVersionString(path);
+        auto const resolvedPath = ResolvedModulePath(path);
+        auto const fileState = GetFileState(resolvedPath);
+        auto const version = fileState == FileState::Present ? FileVersionString(resolvedPath) : std::wstring{};
 
         values.Add(L"version", version.empty() ? std::wstring{ L"unknown" } : version)
+            .Add(L"file", FileStateName(fileState))
             .Add(L"dll", path);
 
-        return true;
+        return fileState;
     }
 
     // The service runs as Local Service. A transport key that account cannot read keeps the
@@ -695,6 +764,8 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
 
         // Transports. The Midisrv transport loads in the app, not the service, so it is not
         // under Transport Plugins, and the diagnostics transport is built in.
+        std::vector<std::wstring> entriesWithMissingFile{};
+
         for (auto const& [name, classId] : std::initializer_list<std::pair<PCWSTR, PCWSTR>>{
             { L"(Midisrv Transport)", L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" },
             { L"(Diagnostics Transport)", L"{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" } })
@@ -702,18 +773,24 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
             mididiag::KeyValueText values{};
             values.Add(L"key", name).Add(L"clsid", classId);
 
-            bool const registered = AddComponentFile(values, classId);
+            auto const file = AddComponentFile(values, classId);
 
             mididiag::WriteField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT, values);
 
-            if (!registered)
+            if (!file.has_value())
             {
                 OutputError(internal::ResourceGetWString(IDS_ERROR_NO_INPROC_SERVER));
+            }
+            else if (file.value() == FileState::Missing)
+            {
+                entriesWithMissingFile.push_back(name);
             }
         }
 
         wil::unique_hkey transportPluginsKey{ };
-        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, transportPluginsKey)))
+        auto const openPluginsResult = wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, transportPluginsKey);
+
+        if (SUCCEEDED(openPluginsResult))
         {
             for (const auto& keyData : wil::make_range(wil::reg::key_iterator{ transportPluginsKey.get() }, wil::reg::key_iterator{}))
             {
@@ -761,9 +838,9 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
 
                 values.AddBool(L"enabled", enabled).Add(L"clsid", classId);
 
-                if (!classId.empty())
+                if (!classId.empty() && AddComponentFile(values, classId) == FileState::Missing)
                 {
-                    AddComponentFile(values, classId);
+                    entriesWithMissingFile.push_back(keyData.name);
                 }
 
                 bool const serviceCanRead = LocalServiceCanRead(key.get());
@@ -787,9 +864,23 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
                 g_registeredTransports.push_back({ keyData.name, classId, enabled && serviceCanRead });
             }
         }
-        else
+        else if (openPluginsResult == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) || openPluginsResult == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND))
+        {
+            OutputError(internal::ResourceGetWString(IDS_ERROR_NO_TRANSPORT_PLUGINS_KEY));
+        }
+        else if (openPluginsResult == E_ACCESSDENIED && !mididiag::Context().Elevated)
         {
             OutputError(internal::ResourceGetWString(IDS_ERROR_CANNOT_ENUMERATE_TRANSPORTS));
+        }
+        else
+        {
+            OutputError(mididiag::FormatResourceString(IDS_ERROR_CANNOT_OPEN_TRANSPORT_PLUGINS_KEY, mididiag::FormatHResult(openPluginsResult)));
+        }
+
+        if (!entriesWithMissingFile.empty())
+        {
+            mididiag::AddFinding(L"registered_file_missing", mididiag::FormatResourceString(IDS_FINDING_REGISTERED_FILE_MISSING,
+                JoinNames(entriesWithMissingFile)));
         }
 
     }
@@ -797,6 +888,481 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
     {
         OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_ENUMERATING_REGISTRY));
 
+        return false;
+    }
+
+    return true;
+}
+
+
+namespace
+{
+    // What Windows puts in System32 for Windows MIDI Services. Keep this list in step with
+    // Windows: when a transport or transform starts coming with Windows, add it here.
+    struct InboxComponent
+    {
+        PCWSTR FileName{ nullptr };
+
+        // nullptr for midisrv.exe, which Windows registers as a service, not as a COM class
+        PCWSTR ClassId{ nullptr };
+
+        // The service loads these transports only through a Transport Plugins entry with their
+        // class id. It always loads the diagnostics transport, and apps load the Midisrv one.
+        PCWSTR PluginKeyName{ nullptr };
+    };
+
+    constexpr InboxComponent InboxComponents[]
+    {
+        { L"midisrv.exe",                               nullptr,                                    nullptr },
+        { L"Midi2.MidiSrvTransport.dll",                L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}",  nullptr },
+        { L"Midi2.DiagnosticsTransport.dll",            L"{ac9b5417-3fe0-4e62-960f-034ee4235a1a}",  nullptr },
+        { L"Midi2.KSTransport.dll",                     L"{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}",  L"Midi2KSTransport" },
+        { L"Midi2.KSAggregateTransport.dll",            L"{0f273b18-e372-4d95-87ac-c31c3d22e937}",  L"Midi2KSAggregateTransport" },
+        { L"Midi2.LoopbackMidiTransport.dll",           L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}",  L"Midi2LoopbackMidiTransport" },
+        { L"Midi2.VirtualMidiTransport.dll",            L"{8FEAAD91-70E1-4A19-997A-377720A719C1}",  L"Midi2VirtualMidiTransport" },
+        { L"Midi2.BS2UMPTransform.dll",                 L"{A8798C54-6066-45F0-9ADB-648BC0641ABF}",  nullptr },
+        { L"Midi2.UMP2BSTransform.dll",                 L"{96121591-8D68-479F-9B48-2BF0B90113F7}",  nullptr },
+        { L"Midi2.SchedulerTransform.dll",              L"{a42cde44-7fa9-4597-a8ee-b40b96bcddb1}",  nullptr },
+        { L"Midi2.UmpProtocolDownscalerTransform.dll",  L"{dc638b31-cf31-48ed-9e79-02740bf5d013}",  nullptr },
+    };
+
+    // Where the service or a COM class is registered to load from
+    enum class Registration
+    {
+        System32,
+        Elsewhere,
+        MissingFile,
+        NotRegistered,
+
+        // the service is installed, but Windows didn't say which file it runs
+        LocationUnknown
+    };
+
+    PCWSTR RegistrationName(_In_ Registration const registration)
+    {
+        switch (registration)
+        {
+        case Registration::System32:        return L"system32";
+        case Registration::Elsewhere:       return L"elsewhere";
+        case Registration::MissingFile:     return L"missing_file";
+        case Registration::NotRegistered:   return L"not_registered";
+        default:                            return L"registered";
+        }
+    }
+
+    Registration RegistrationOf(_In_ std::wstring const& registeredPath, _In_ std::wstring const& system32Path)
+    {
+        if (registeredPath.empty())
+        {
+            return Registration::NotRegistered;
+        }
+
+        auto const resolvedPath = ResolvedModulePath(registeredPath);
+
+        if (GetFileState(resolvedPath) == FileState::Missing)
+        {
+            return Registration::MissingFile;
+        }
+
+        return EqualsNoCase(resolvedPath, system32Path) ? Registration::System32 : Registration::Elsewhere;
+    }
+
+    enum class PluginEntryState
+    {
+        Enabled,
+        Disabled,
+        Missing,
+
+        // the usual key is there, with no class id or with a different one
+        NoClassId,
+        OtherClassId,
+
+        // the Transport Plugins key couldn't be read
+        Unknown
+    };
+
+    PCWSTR PluginEntryStateName(_In_ PluginEntryState const state)
+    {
+        switch (state)
+        {
+        case PluginEntryState::Enabled:         return L"enabled";
+        case PluginEntryState::Disabled:        return L"disabled";
+        case PluginEntryState::Missing:         return L"missing";
+        case PluginEntryState::NoClassId:       return L"no_clsid";
+        case PluginEntryState::OtherClassId:    return L"other_clsid";
+        default:                                return L"unknown";
+        }
+    }
+
+    struct PluginEntry
+    {
+        std::wstring KeyName{};
+        std::wstring ClassId{};
+        bool Enabled{ true };
+    };
+
+    // The Transport Plugins entries, read the way the service reads them. Known is false when
+    // the key is there but couldn't be opened, so nothing can be said about what's in it.
+    struct PluginEntries
+    {
+        bool Known{ false };
+        std::vector<PluginEntry> Entries{};
+    };
+
+    PluginEntries ReadPluginEntries()
+    {
+        PluginEntries plugins{};
+        wil::unique_hkey pluginsKey{};
+
+        auto const openResult = wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, pluginsKey);
+
+        if (FAILED(openResult))
+        {
+            // a key that isn't there has no entries
+            plugins.Known = openResult == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) || openResult == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+            return plugins;
+        }
+
+        plugins.Known = true;
+
+        for (auto const& keyData : wil::make_range(wil::reg::key_iterator{ pluginsKey.get() }, wil::reg::key_iterator{}))
+        {
+            wil::unique_hkey key{};
+
+            if (FAILED(wil::reg::open_unique_key_nothrow(pluginsKey.get(), keyData.name.c_str(), key, wil::reg::key_access::read)))
+            {
+                continue;
+            }
+
+            PluginEntry entry{};
+            entry.KeyName = keyData.name;
+
+            // missing or of the wrong type reads as enabled, the way the service reads it
+            try
+            {
+                if (auto const value = wil::reg::try_get_value_dword(key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE); value.has_value())
+                {
+                    entry.Enabled = value.value() != 0;
+                }
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                entry.ClassId = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE).value_or(std::wstring{});
+            }
+            catch (...)
+            {
+            }
+
+            plugins.Entries.push_back(std::move(entry));
+        }
+
+        return plugins;
+    }
+
+    // The service goes by class id, not by key name. The usual key name only helps say what's
+    // wrong when no entry has the class id.
+    PluginEntryState PluginEntryStateOf(_In_ PluginEntries const& plugins, _In_ PCWSTR const classId, _In_ PCWSTR const usualKeyName)
+    {
+        if (!plugins.Known)
+        {
+            return PluginEntryState::Unknown;
+        }
+
+        bool found{ false };
+        bool enabled{ false };
+
+        for (auto const& entry : plugins.Entries)
+        {
+            if (!entry.ClassId.empty() && NormalizedGuidText(entry.ClassId) == NormalizedGuidText(classId))
+            {
+                found = true;
+                enabled = enabled || entry.Enabled;
+            }
+        }
+
+        if (found)
+        {
+            return enabled ? PluginEntryState::Enabled : PluginEntryState::Disabled;
+        }
+
+        for (auto const& entry : plugins.Entries)
+        {
+            if (EqualsNoCase(entry.KeyName, usualKeyName))
+            {
+                return entry.ClassId.empty() ? PluginEntryState::NoClassId : PluginEntryState::OtherClassId;
+            }
+        }
+
+        return PluginEntryState::Missing;
+    }
+
+    // Who owns a registry key, written the same way in every language: trustedinstaller,
+    // administrators, system, account for a person's own account, or the SID of anyone else.
+    // Empty when Windows won't say. Windows keeps the COM registrations it writes owned by
+    // TrustedInstaller, so any other owner means something took one over or wrote it again.
+    std::wstring RegistryKeyOwner(_In_ HKEY const root, _In_ std::wstring const& subKey)
+    {
+        constexpr std::wstring_view TrustedInstallerSid{ L"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464" };
+        constexpr std::wstring_view AccountSidPrefix{ L"S-1-5-21-" };
+
+        wil::unique_hkey key{};
+
+        if (FAILED(wil::reg::open_unique_key_nothrow(root, subKey.c_str(), key, wil::reg::key_access::read)))
+        {
+            return {};
+        }
+
+        PSID owner{ nullptr };
+        PSECURITY_DESCRIPTOR descriptor{ nullptr };
+
+        if (::GetSecurityInfo(key.get(), SE_REGISTRY_KEY, OWNER_SECURITY_INFORMATION, &owner, nullptr, nullptr, nullptr, &descriptor) != ERROR_SUCCESS)
+        {
+            return {};
+        }
+
+        wil::unique_hlocal_security_descriptor const freeDescriptor{ descriptor };
+
+        if (owner == nullptr || !::IsValidSid(owner))
+        {
+            return {};
+        }
+
+        if (::IsWellKnownSid(owner, WinBuiltinAdministratorsSid))
+        {
+            return L"administrators";
+        }
+
+        if (::IsWellKnownSid(owner, WinLocalSystemSid))
+        {
+            return L"system";
+        }
+
+        LPWSTR sidText{ nullptr };
+
+        if (!::ConvertSidToStringSidW(owner, &sidText))
+        {
+            return {};
+        }
+
+        wil::unique_hlocal_string const freeSidText{ sidText };
+        std::wstring_view const sid{ sidText };
+
+        if (sid == TrustedInstallerSid)
+        {
+            return L"trustedinstaller";
+        }
+
+        // a person's own account is left out, the way user names are
+        return sid.starts_with(AccountSidPrefix) ? std::wstring{ L"account" } : std::wstring{ sid };
+    }
+}
+
+// Each file that comes with Windows for Windows MIDI Services, whether it's in System32, and
+// whether Windows is set up to use that copy. A missing file and a file that isn't registered
+// look the same to an app, which only sees that MIDI doesn't work.
+bool DoSectionInboxComponents()
+{
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_INBOX_COMPONENTS);
+
+    try
+    {
+        wchar_t systemFolder[MAX_PATH]{};
+        ::GetSystemDirectoryW(systemFolder, ARRAYSIZE(systemFolder));
+
+        auto const plugins = ReadPluginEntries();
+        auto const servicePath = MidiServiceExecutablePath();
+        bool const serviceInstalled = mididiag::Context().ServiceInstalled;
+
+        uint32_t filesPresent{ 0 };
+        uint32_t filesMissing{ 0 };
+        Registration service{ Registration::NotRegistered };
+        uint32_t comSystem32{ 0 };
+        uint32_t comElsewhere{ 0 };
+        uint32_t comMissingFile{ 0 };
+        uint32_t comNotRegistered{ 0 };
+        uint32_t pluginsEnabled{ 0 };
+        uint32_t pluginsDisabled{ 0 };
+        uint32_t pluginsMissing{ 0 };
+        uint32_t pluginsUnknown{ 0 };
+
+        std::vector<std::wstring> missingFiles{};
+        std::vector<std::wstring> notFullyRegistered{};
+        std::vector<std::wstring> elsewherePaths{};
+
+        for (auto const& component : InboxComponents)
+        {
+            auto const system32Path = std::wstring{ systemFolder } + L"\\" + component.FileName;
+            auto const fileState = GetFileState(system32Path);
+
+            mididiag::KeyValueText values{};
+            values.Add(L"name", component.FileName).Add(L"file", FileStateName(fileState));
+
+            if (fileState == FileState::Missing)
+            {
+                filesMissing++;
+                missingFiles.push_back(component.FileName);
+            }
+            else
+            {
+                filesPresent++;
+
+                auto const version = FileVersionString(system32Path);
+                values.Add(L"version", version.empty() ? std::wstring{ L"unknown" } : version);
+            }
+
+            bool registered{ true };
+
+            if (component.ClassId == nullptr)
+            {
+                if (serviceInstalled)
+                {
+                    service = servicePath.empty() ? Registration::LocationUnknown : RegistrationOf(servicePath, system32Path);
+                }
+
+                values.Add(L"service", RegistrationName(service));
+
+                if (service == Registration::Elsewhere || service == Registration::MissingFile)
+                {
+                    values.Add(L"service_path", servicePath);
+                }
+
+                if (service == Registration::Elsewhere)
+                {
+                    elsewherePaths.push_back(servicePath);
+                }
+
+                registered = service != Registration::NotRegistered && service != Registration::MissingFile;
+            }
+            else
+            {
+                auto const comPath = GetInprocServerPath(component.ClassId);
+                auto const com = RegistrationOf(comPath, system32Path);
+
+                values.Add(L"com", RegistrationName(com));
+
+                switch (com)
+                {
+                case Registration::System32:
+                    comSystem32++;
+                    break;
+                case Registration::Elsewhere:
+                    comElsewhere++;
+                    elsewherePaths.push_back(comPath);
+                    values.Add(L"com_path", comPath);
+                    break;
+                case Registration::MissingFile:
+                    comMissingFile++;
+                    values.Add(L"com_path", comPath);
+                    break;
+                default:
+                    comNotRegistered++;
+                    break;
+                }
+
+                values.AddIfNotEmpty(L"com_owner", RegistryKeyOwner(HKEY_CLASSES_ROOT, std::wstring{ L"CLSID\\" } + component.ClassId));
+
+                registered = com == Registration::System32 || com == Registration::Elsewhere;
+
+                if (component.PluginKeyName != nullptr)
+                {
+                    auto const plugin = PluginEntryStateOf(plugins, component.ClassId, component.PluginKeyName);
+
+                    values.Add(L"plugin", PluginEntryStateName(plugin));
+
+                    switch (plugin)
+                    {
+                    case PluginEntryState::Enabled:     pluginsEnabled++;   break;
+                    case PluginEntryState::Disabled:    pluginsDisabled++;  break;
+                    case PluginEntryState::Unknown:     pluginsUnknown++;   break;
+                    default:
+                        pluginsMissing++;
+                        registered = false;
+                        break;
+                    }
+                }
+
+                values.Add(L"clsid", component.ClassId);
+            }
+
+            if (!registered)
+            {
+                notFullyRegistered.push_back(component.FileName);
+            }
+
+            mididiag::WriteField(MIDIDIAG_FIELD_LABEL_INBOX_COMPONENT, values);
+        }
+
+        mididiag::KeyValueText summary{};
+        summary.AddNumber(L"files_present", filesPresent)
+            .AddNumber(L"files_missing", filesMissing)
+            .Add(L"service", RegistrationName(service))
+            .AddNumber(L"com_system32", comSystem32)
+            .AddNumber(L"com_elsewhere", comElsewhere)
+            .AddNumber(L"com_missing_file", comMissingFile)
+            .AddNumber(L"com_not_registered", comNotRegistered)
+            .AddNumber(L"plugins_enabled", pluginsEnabled)
+            .AddNumber(L"plugins_disabled", pluginsDisabled)
+            .AddNumber(L"plugins_missing", pluginsMissing);
+
+        if (pluginsUnknown > 0)
+        {
+            summary.AddNumber(L"plugins_unknown", pluginsUnknown);
+        }
+
+        mididiag::WriteField(MIDIDIAG_FIELD_LABEL_INBOX_SUMMARY, summary);
+
+        // A registration that points at a missing file still counts as something registered,
+        // so a PC where only that is left reads as partly registered, not as not registered.
+        bool const anythingRegistered = service != Registration::NotRegistered ||
+            comSystem32 + comElsewhere + comMissingFile + pluginsEnabled + pluginsDisabled > 0;
+
+        auto const componentCount = static_cast<uint32_t>(ARRAYSIZE(InboxComponents));
+        std::wstring_view state{};
+
+        if (filesPresent == 0)
+        {
+            state = L"not_in_windows";
+            mididiag::AddFinding(L"inbox_not_in_windows", internal::ResourceGetWString(IDS_FINDING_INBOX_NOT_IN_WINDOWS));
+        }
+        else if (filesMissing > 0)
+        {
+            state = L"files_missing";
+            mididiag::AddFinding(L"inbox_files_missing", mididiag::FormatResourceString(IDS_FINDING_INBOX_FILES_MISSING,
+                filesMissing, componentCount, JoinNames(missingFiles)));
+        }
+        else if (!anythingRegistered)
+        {
+            state = L"not_registered";
+            mididiag::AddFinding(L"inbox_not_registered", internal::ResourceGetWString(IDS_FINDING_INBOX_NOT_REGISTERED));
+        }
+        else
+        {
+            state = !elsewherePaths.empty() ? L"registered_elsewhere" : !notFullyRegistered.empty() ? L"partly_registered" : L"ok";
+
+            if (!notFullyRegistered.empty())
+            {
+                mididiag::AddFinding(L"inbox_partly_registered", mididiag::FormatResourceString(IDS_FINDING_INBOX_PARTLY_REGISTERED,
+                    notFullyRegistered.size(), componentCount, JoinNames(notFullyRegistered)));
+            }
+        }
+
+        if (!elsewherePaths.empty())
+        {
+            mididiag::AddFinding(L"inbox_registered_elsewhere", mididiag::FormatResourceString(IDS_FINDING_INBOX_REGISTERED_ELSEWHERE,
+                elsewherePaths.size(), elsewherePaths.front()));
+        }
+
+        mididiag::WriteField(MIDIDIAG_FIELD_LABEL_INBOX_STATE, state);
+
+        mididiag::Context().InboxRegistrationIncomplete = filesPresent > 0 && filesMissing == 0 && !notFullyRegistered.empty();
+    }
+    catch (...)
+    {
+        OutputError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
         return false;
     }
 
@@ -2276,7 +2842,9 @@ int __cdecl wmain(_In_ int argc, _In_reads_(argc) wchar_t* argv[])
         DoSectionApiMode();
         DoSectionComponentVersions();
         DoSectionServiceStatus();
+        DoSectionInboxComponents();
         DoSectionServiceHistory();
+        DoSectionInstallHistory();
         DoSectionFeatureEnablement(verbose);
         DoSectionDrivers32RegistryEntries(verbose);
         DoSectionDrivers32WOWRegistryEntries(verbose);

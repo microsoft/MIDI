@@ -6,9 +6,12 @@
 // ============================================================================
 
 #include "SequenceSerializer.h"
+#include "GeneratorKinds.h"
+#include "GeneratorListen.h"
 #include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
+#include "TrackSound.h"
 
 #include <algorithm>
 #include <charconv>
@@ -30,6 +33,7 @@ namespace midisequencer
         constexpr wchar_t KeyCopyright[] = L"copyright";
         constexpr wchar_t KeyTicksPerQuarterNote[] = L"ticksPerQuarterNote";
         constexpr wchar_t KeyTempo[] = L"tempo";
+        constexpr wchar_t KeyTempoHeight[] = L"tempoHeight";
         constexpr wchar_t KeyMeter[] = L"meter";
         constexpr wchar_t KeyTags[] = L"tags";
         constexpr wchar_t KeyScenes[] = L"scenes";
@@ -50,9 +54,11 @@ namespace midisequencer
         constexpr wchar_t KeyMute[] = L"mute";
         constexpr wchar_t KeySolo[] = L"solo";
         constexpr wchar_t KeyOpen[] = L"open";
+        constexpr wchar_t KeyHeight[] = L"height";
         constexpr wchar_t KeySource[] = L"source";
         constexpr wchar_t KeyDestination[] = L"destination";
         constexpr wchar_t KeyStartup[] = L"startup";
+        constexpr wchar_t KeySoundName[] = L"soundName";
         constexpr wchar_t KeyTimeline[] = L"timeline";
         constexpr wchar_t KeySlots[] = L"slots";
         constexpr wchar_t KeyEndpoint[] = L"endpoint";
@@ -126,9 +132,6 @@ namespace midisequencer
         // Arpeggiator orders, as written in the file, in ArpeggiatorOrder order.
         constexpr std::array<wchar_t const*, 5> ArpOrderNames{ L"up", L"down", L"upAndDown", L"asHeld", L"random" };
 
-        constexpr wchar_t ValueEuclidean[] = L"euclidean";
-        constexpr wchar_t ValueChanceMelody[] = L"chanceMelody";
-        constexpr wchar_t ValueArpeggiator[] = L"arpeggiator";
         constexpr wchar_t ValueSame[] = L"same";
         constexpr wchar_t ValueChanges[] = L"changes";
 
@@ -136,6 +139,82 @@ namespace midisequencer
         constexpr std::array<wchar_t const*, 11> ScaleNames{
             L"major", L"minor", L"dorian", L"phrygian", L"lydian", L"mixolydian", L"harmonicMinor",
             L"majorPentatonic", L"minorPentatonic", L"blues", L"chromatic" };
+
+        // The generators of design section 28, and their settings, as written in the file.
+        constexpr std::array<wchar_t const*, 11> GeneratorTypeNames{
+            L"euclidean", L"chanceMelody", L"arpeggiator", L"life", L"lifeDrums", L"learn", L"words",
+            L"evolve", L"infinity", L"lSystem", L"changeRinging" };
+
+        constexpr std::array<wchar_t const*, 3> LifeRuleNames{ L"life", L"highLife", L"seeds" };
+        constexpr std::array<wchar_t const*, 3> LifeVoiceNames{ L"lowest", L"highest", L"all" };
+        constexpr std::array<wchar_t const*, 3> LifeBirthNames{ L"plain", L"accent", L"only" };
+        constexpr std::array<wchar_t const*, 3> LifeSettledNames{ L"startAgain", L"addCells", L"hold" };
+        constexpr std::array<wchar_t const*, 3> LearnSourceNames{ L"tune", L"clip", L"words" };
+        constexpr std::array<wchar_t const*, 3> RingingMethodNames{ L"plainHunt", L"plainBob", L"grandsire" };
+
+        // VelocityShape, in its order.
+        constexpr std::array<wchar_t const*, 17> VelocityShapeNames{
+            L"steady", L"beat", L"swell", L"random", L"age", L"crowding", L"surprise", L"learned", L"speech",
+            L"evolved", L"fourths", L"distance", L"climb", L"depth", L"lead", L"strokes", L"treble" };
+
+        constexpr wchar_t KeyVelocityBy[] = L"velocityBy";
+
+        // ListenKind, in its order (design section 29).
+        constexpr std::array<wchar_t const*, 3> ListenKindNames{ L"none", L"clip", L"track" };
+
+        constexpr wchar_t KeyListen[] = L"listen";
+        constexpr wchar_t KeyListenId[] = L"listenId";
+        constexpr wchar_t KeyKeepListening[] = L"keepListening";
+
+        constexpr wchar_t KeyJump[] = L"jump";
+        constexpr wchar_t KeyRootEnds[] = L"rootEnds";
+        constexpr wchar_t KeyRule[] = L"rule";
+        constexpr wchar_t KeyStart[] = L"start";
+        constexpr wchar_t KeyDensity[] = L"density";
+        constexpr wchar_t KeyCells[] = L"cells";
+        constexpr wchar_t KeyVoice[] = L"voice";
+        constexpr wchar_t KeyBirths[] = L"births";
+        constexpr wchar_t KeyJoin[] = L"join";
+        constexpr wchar_t KeySettled[] = L"settled";
+        constexpr wchar_t KeyRestartEvery[] = L"restartEvery";
+        constexpr wchar_t KeyDrums[] = L"drums";
+        constexpr wchar_t KeyFrom[] = L"from";
+        constexpr wchar_t KeyTune[] = L"tune";
+        constexpr wchar_t KeyMemory[] = L"memory";
+        constexpr wchar_t KeyLearned[] = L"learned";
+        constexpr wchar_t KeyLearnedFrom[] = L"learnedFrom";
+        constexpr wchar_t KeyWeights[] = L"weights";
+        constexpr wchar_t KeyMutations[] = L"mutations";
+        constexpr wchar_t KeySoundsLike[] = L"soundsLike";
+        constexpr wchar_t KeyInterval[] = L"interval";
+        constexpr wchar_t KeyVoices[] = L"voices";
+        constexpr wchar_t KeyAxiom[] = L"axiom";
+        constexpr wchar_t KeyGrammar[] = L"grammar";
+        constexpr wchar_t KeyAngle[] = L"angle";
+        constexpr wchar_t KeyBells[] = L"bells";
+        constexpr wchar_t KeyMethod[] = L"method";
+        constexpr wchar_t KeyHandstrokeGap[] = L"handstrokeGap";
+        constexpr wchar_t KeySeedWords[] = L"seedWords";
+        constexpr wchar_t ValueScatter[] = L"scatter";
+        constexpr wchar_t ValueCells[] = L"cells";
+
+        // A name from one of the lists above, as its place in the list, or the fallback.
+        template <size_t N>
+        size_t NameIndex(_In_ std::array<wchar_t const*, N> const& names, _In_ std::optional<std::wstring> const& text, _In_ size_t fallback) noexcept
+        {
+            if (text.has_value())
+            {
+                for (size_t i = 0; i < N; ++i)
+                {
+                    if (*text == names[i])
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            return fallback;
+        }
 
         constexpr wchar_t ValueAny[] = L"any";
         constexpr wchar_t ValueAsRecorded[] = L"asRecorded";
@@ -571,11 +650,18 @@ namespace midisequencer
             track.Muted = ReadBool(object, KeyMute, false);
             track.Soloed = ReadBool(object, KeySolo, false);
             track.Open = ReadBool(object, KeyOpen, true);
+            track.Height = static_cast<uint16_t>(ReadInteger(object, KeyHeight, 0, 0, MaximumTrackRowHeight));
+
+            if (track.Height > 0 && track.Height < MinimumTrackRowHeight)
+            {
+                track.Height = MinimumTrackRowHeight;
+            }
+
             track.Tags = ReadTags(context, ReadArray(object, KeyTags), tagCount);
 
             track.Unknown = UnknownKeys(object, {
-                KeyId, KeyKind, KeyName, KeyColor, KeyPinned, KeyMute, KeySolo, KeyOpen, KeyTags,
-                KeySource, KeyDestination, KeyStartup, KeyTimeline, KeySlots, KeyTracks, KeyLanes, KeyLanesOpen });
+                KeyId, KeyKind, KeyName, KeyColor, KeyPinned, KeyMute, KeySolo, KeyOpen, KeyHeight, KeyTags,
+                KeySource, KeyDestination, KeyStartup, KeySoundName, KeyTimeline, KeySlots, KeyTracks, KeyLanes, KeyLanesOpen });
 
             if (track.IsFolder)
             {
@@ -675,6 +761,7 @@ namespace midisequencer
             }
 
             track.Startup = ReadUmpTextArray(context, ReadArray(object, KeyStartup), 1024);
+            track.SoundName = ReadText(object, KeySoundName, MaximumSoundNameLength);
 
             if (auto const timeline = ReadArray(object, KeyTimeline); timeline != nullptr)
             {
@@ -898,6 +985,163 @@ namespace midisequencer
             return pattern;
         }
 
+        // The settings of design section 28's generators. Each is read whatever the type, so
+        // switching a clip's type back keeps them.
+        void ReadSectionTwentyEight(_Inout_ ReadContext& context, _In_ mjson::JsonObject const& object, _Inout_ GeneratorSettings& generator)
+        {
+            auto const integers = [&context](mjson::JsonArray const& array, size_t count, std::vector<int64_t>& values)
+            {
+                values.clear();
+
+                if (array == nullptr || array.Size() != count)
+                {
+                    ++context.Skipped;
+                    return false;
+                }
+
+                for (auto const& value : array)
+                {
+                    if (!IsType(value, mjson::JsonValueType::Number) || !std::isfinite(value.GetNumber()))
+                    {
+                        ++context.Skipped;
+                        return false;
+                    }
+
+                    values.push_back(static_cast<int64_t>(std::llround(std::clamp(value.GetNumber(), -1.0e6, 1.0e6))));
+                }
+
+                return true;
+            };
+
+            generator.LargestJump = static_cast<uint8_t>(ReadInteger(object, KeyJump, 0, 0, 24));
+            generator.RootEnds = ReadBool(object, KeyRootEnds, false);
+
+            generator.Rule = static_cast<LifeRule>(NameIndex(LifeRuleNames, ReadRawString(object, KeyRule), 0));
+            generator.Scatter = ReadRawString(object, KeyStart).value_or(ValueScatter) != ValueCells;
+            generator.Density = static_cast<uint8_t>(ReadInteger(object, KeyDensity, generator.Density, 1, 90));
+            generator.Voice = static_cast<LifeVoice>(NameIndex(LifeVoiceNames, ReadRawString(object, KeyVoice), static_cast<size_t>(generator.Voice)));
+            generator.Births = static_cast<LifeBirths>(NameIndex(LifeBirthNames, ReadRawString(object, KeyBirths), static_cast<size_t>(generator.Births)));
+            generator.Join = ReadBool(object, KeyJoin, generator.Join);
+            generator.Settled = static_cast<LifeSettled>(NameIndex(LifeSettledNames, ReadRawString(object, KeySettled), static_cast<size_t>(generator.Settled)));
+            generator.RestartEvery = static_cast<uint16_t>(ReadInteger(object, KeyRestartEvery, 0, 0, 999));
+
+            std::vector<int64_t> values{};
+
+            if (auto const cells = ReadArray(object, KeyCells); cells != nullptr)
+            {
+                for (auto const& value : cells)
+                {
+                    if (generator.LifeCells.size() >= static_cast<size_t>(MaximumGeneratorSteps) * MaximumLifeRows)
+                    {
+                        ++context.Skipped;
+                        break;
+                    }
+
+                    if (IsType(value, mjson::JsonValueType::Array) && integers(value.GetArray(), 2, values) &&
+                        values[0] >= 0 && values[0] < MaximumGeneratorSteps && values[1] >= 0 && values[1] < static_cast<int64_t>(MaximumLifeRows))
+                    {
+                        generator.LifeCells.push_back(LifeCell{ static_cast<uint16_t>(values[0]), static_cast<uint16_t>(values[1]) });
+                    }
+                    else
+                    {
+                        ++context.Skipped;
+                    }
+                }
+            }
+
+            if (auto const drums = ReadArray(object, KeyDrums); drums != nullptr)
+            {
+                for (auto const& value : drums)
+                {
+                    if (generator.DrumRows.size() < MaximumDrumRows && IsType(value, mjson::JsonValueType::Number) && std::isfinite(value.GetNumber()))
+                    {
+                        generator.DrumRows.push_back(static_cast<uint8_t>(std::clamp(std::llround(value.GetNumber()), 0LL, 127LL)));
+                    }
+                    else
+                    {
+                        ++context.Skipped;
+                    }
+                }
+            }
+
+            generator.LearnFrom = static_cast<LearnSource>(NameIndex(LearnSourceNames, ReadRawString(object, KeyFrom), 0));
+            generator.Tune = static_cast<uint8_t>(ReadInteger(object, KeyTune, 0, 0, TuneCount - 1));
+            generator.Order = static_cast<uint8_t>(ReadInteger(object, KeyMemory, generator.Order, 1, 3));
+            generator.LearnedFrom = ReadText(object, KeyLearnedFrom, 128);
+
+            if (auto const learned = ReadArray(object, KeyLearned); learned != nullptr)
+            {
+                for (auto const& value : learned)
+                {
+                    if (generator.Learned.size() >= MaximumLearnedNotes)
+                    {
+                        ++context.Skipped;
+                        break;
+                    }
+
+                    // [position, gap, hold], and how loud when the clip said.
+                    if (IsType(value, mjson::JsonValueType::Array) && integers(value.GetArray(), value.GetArray().Size() == 4 ? 4 : 3, values))
+                    {
+                        LearnedNote note{};
+                        note.Position = static_cast<int8_t>(std::clamp<int64_t>(values[0], -64, 63));
+                        note.Gap = static_cast<uint8_t>(std::clamp<int64_t>(values[1], 1, 16));
+                        note.Hold = static_cast<uint8_t>(std::clamp<int64_t>(values[2], 1, note.Gap));
+                        note.Level = values.size() >= 4 ? static_cast<uint8_t>(std::clamp<int64_t>(values[3], 0, 5)) : uint8_t{ 0 };
+                        generator.Learned.push_back(note);
+                    }
+                }
+            }
+
+            generator.Text = ReadText(object, KeyText, MaximumGeneratorText);
+
+            if (auto const weights = ReadArray(object, KeyWeights); weights != nullptr && integers(weights, generator.Weights.size(), values))
+            {
+                for (size_t i = 0; i < generator.Weights.size(); ++i)
+                {
+                    generator.Weights[i] = static_cast<uint8_t>(std::clamp<int64_t>(values[i], 0, 100));
+                }
+            }
+
+            generator.Mutations = static_cast<uint8_t>(ReadInteger(object, KeyMutations, generator.Mutations, 1, 4));
+            generator.SoundsLike = static_cast<uint8_t>(ReadInteger(object, KeySoundsLike, generator.SoundsLike, 0, 100));
+            generator.Interval = static_cast<uint8_t>(ReadInteger(object, KeyInterval, generator.Interval, 1, 3));
+            generator.Voices = static_cast<uint8_t>(ReadInteger(object, KeyVoices, generator.Voices, 1, 3));
+
+            generator.Axiom = ReadText(object, KeyAxiom, MaximumGrammarLength);
+
+            if (auto const grammar = ReadObject(object, KeyGrammar); grammar != nullptr)
+            {
+                for (auto const& pair : grammar)
+                {
+                    auto const symbol = std::wstring{ pair.Key() };
+
+                    if (symbol.size() == 1 && IsType(pair.Value(), mjson::JsonValueType::String) && generator.Grammar.size() < MaximumGrammarRules)
+                    {
+                        auto replacement = std::wstring{ pair.Value().GetString() };
+                        replacement.resize(std::min(replacement.size(), MaximumGrammarLength));
+                        generator.Grammar.push_back(GrammarRule{ symbol.front(), replacement });
+                    }
+                    else
+                    {
+                        ++context.Skipped;
+                    }
+                }
+            }
+
+            generator.Angle = static_cast<uint8_t>(ReadInteger(object, KeyAngle, generator.Angle, 0, 180));
+            generator.Bells = static_cast<uint8_t>(ReadInteger(object, KeyBells, generator.Bells, MinimumBells, MaximumBells));
+            generator.Method = static_cast<RingingMethod>(NameIndex(RingingMethodNames, ReadRawString(object, KeyMethod), static_cast<size_t>(generator.Method)));
+            generator.HandstrokeGap = ReadBool(object, KeyHandstrokeGap, generator.HandstrokeGap);
+
+            // A file from before velocity shapes plays each type's own.
+            generator.VelocityBy = static_cast<VelocityShape>(NameIndex(VelocityShapeNames, ReadRawString(object, KeyVelocityBy), static_cast<size_t>(DefaultVelocityShape(generator.Type))));
+
+            // What it listens to, if anything (design section 29).
+            generator.ListenTo = static_cast<ListenKind>(NameIndex(ListenKindNames, ReadRawString(object, KeyListen), 0));
+            generator.ListenId = ReadText(object, KeyListenId, 128);
+            generator.KeepListening = ReadBool(object, KeyKeepListening, false);
+        }
+
         GeneratorSettings ReadGenerator(_Inout_ ReadContext& context, _In_ mjson::JsonObject const& object)
         {
             GeneratorSettings generator{};
@@ -907,8 +1151,7 @@ namespace midisequencer
                 return generator;
             }
 
-            auto const type = ReadRawString(object, KeyType).value_or(ValueEuclidean);
-            generator.Type = type == ValueChanceMelody ? GeneratorType::ChanceMelody : type == ValueArpeggiator ? GeneratorType::Arpeggiator : GeneratorType::Euclidean;
+            generator.Type = static_cast<GeneratorType>(NameIndex(GeneratorTypeNames, ReadRawString(object, KeyType), 0));
 
             if (auto const ticks = ReadNumber(object, KeyStepTicks); ticks.has_value())
             {
@@ -978,9 +1221,14 @@ namespace midisequencer
             generator.ArpOctaves = static_cast<uint8_t>(ReadInteger(object, KeyOctaves, 1, 1, 4));
             generator.ArpLatch = ReadBool(object, KeyLatch, false);
 
+            ReadSectionTwentyEight(context, object, generator);
+
             generator.Unknown = UnknownKeys(object, {
                 KeyType, KeyStepTicks, KeyEachPass, KeyChannel, KeyNoteLength, KeyRings, KeyScale, KeyRoot, KeyLow, KeyHigh, KeyBusy, KeyKeep, KeyVelocity,
-                KeySource, KeyArpTrack, KeyOrder, KeyOctaves, KeyLatch });
+                KeySource, KeyArpTrack, KeyOrder, KeyOctaves, KeyLatch,
+                KeyJump, KeyRootEnds, KeyRule, KeyStart, KeyDensity, KeyCells, KeyVoice, KeyBirths, KeyJoin, KeySettled, KeyRestartEvery, KeyDrums,
+                KeyFrom, KeyTune, KeyMemory, KeyLearned, KeyLearnedFrom, KeyText, KeyWeights, KeyMutations, KeySoundsLike, KeyInterval, KeyVoices,
+                KeyAxiom, KeyGrammar, KeyAngle, KeyBells, KeyMethod, KeyHandstrokeGap, KeyVelocityBy, KeyListen, KeyListenId, KeyKeepListening });
 
             return generator;
         }
@@ -1135,6 +1383,7 @@ namespace midisequencer
             clip.Length = std::max<int64_t>(1, ReadTick(context, object, KeyLength));
             clip.Loop = ReadBool(object, KeyLoop, true);
             clip.Seed = static_cast<uint32_t>(ReadInteger(object, KeySeed, 0, 0, 0xFFFFFFFF));
+            clip.SeedWords = ReadText(object, KeySeedWords, 64);
 
             if (auto const origin = ReadObject(object, KeyOrigin); origin != nullptr)
             {
@@ -1162,7 +1411,7 @@ namespace midisequencer
             clip.Lanes = ReadLanes(context, ReadArray(object, KeyLanes));
 
             clip.Unknown = UnknownKeys(object, {
-                KeyId, KeyKind, KeyName, KeyColor, KeyLength, KeyLoop, KeySeed, KeyOrigin, KeySettings, KeyNotes, KeyEvents, KeyLanes });
+                KeyId, KeyKind, KeyName, KeyColor, KeyLength, KeyLoop, KeySeed, KeySeedWords, KeyOrigin, KeySettings, KeyNotes, KeyEvents, KeyLanes });
 
             return true;
         }
@@ -1474,6 +1723,7 @@ namespace midisequencer
             if (track.Pinned) members.Bool(KeyPinned, true);
             if (track.Muted) members.Bool(KeyMute, true);
             if (track.Soloed) members.Bool(KeySolo, true);
+            if (track.Height > 0) members.Integer(KeyHeight, track.Height);
 
             if (track.IsFolder)
             {
@@ -1573,6 +1823,11 @@ namespace midisequencer
                 if (!track.Startup.empty())
                 {
                     members.Raw(KeyStartup, UmpTextArray(track.Startup));
+                }
+
+                if (!track.SoundName.empty())
+                {
+                    members.Text(KeySoundName, track.SoundName);
                 }
 
                 if (!track.Timeline.empty())
@@ -1823,19 +2078,203 @@ namespace midisequencer
             members.Close();
         }
 
+        // The settings of design section 28's generators: the ones each type uses.
+        template <typename KeyAndRange>
+        void WriteSectionTwentyEight(_Inout_ Members& members, _In_ GeneratorSettings const& generator, _In_ KeyAndRange const& keyAndRange)
+        {
+            auto const list = [](auto const& values, auto const& write)
+            {
+                std::wstring json{ L"[" };
+
+                for (size_t i = 0; i < values.size(); ++i)
+                {
+                    json += i == 0 ? L"" : L", ";
+                    write(json, values[i]);
+                }
+
+                return json + L"]";
+            };
+
+            auto const name = [](auto const& names, auto value) { return names[std::min<size_t>(static_cast<size_t>(value), names.size() - 1)]; };
+
+            // What Learn learned, and what any listener learned once from its source.
+            auto const learned = [&members, &generator, &list]()
+            {
+                if (!generator.Learned.empty())
+                {
+                    members.Raw(KeyLearned, list(generator.Learned, [](std::wstring& json, LearnedNote const& note)
+                    {
+                        if (note.Level > 0)
+                        {
+                            json += std::format(L"[{}, {}, {}, {}]", static_cast<int32_t>(note.Position), note.Gap, note.Hold, note.Level);
+                        }
+                        else
+                        {
+                            json += std::format(L"[{}, {}, {}]", static_cast<int32_t>(note.Position), note.Gap, note.Hold);
+                        }
+                    }));
+                }
+
+                if (!generator.LearnedFrom.empty())
+                {
+                    members.Text(KeyLearnedFrom, generator.LearnedFrom);
+                }
+            };
+
+            switch (generator.Type)
+            {
+            case GeneratorType::Life:
+            case GeneratorType::LifeDrums:
+                if (generator.Type == GeneratorType::Life)
+                {
+                    keyAndRange();
+                }
+
+                members.Text(KeyRule, name(LifeRuleNames, generator.Rule));
+                members.Text(KeyStart, generator.Scatter ? ValueScatter : ValueCells);
+                members.Integer(KeyDensity, generator.Density);
+
+                if (!generator.Scatter)
+                {
+                    members.Raw(KeyCells, list(generator.LifeCells, [](std::wstring& json, LifeCell const& cell) { json += std::format(L"[{}, {}]", cell.Column, cell.Row); }));
+                }
+
+                members.Text(KeyVoice, name(LifeVoiceNames, generator.Voice));
+                members.Text(KeyBirths, name(LifeBirthNames, generator.Births));
+                members.Bool(KeyJoin, generator.Join);
+                members.Text(KeySettled, name(LifeSettledNames, generator.Settled));
+
+                if (generator.RestartEvery > 0)
+                {
+                    members.Integer(KeyRestartEvery, generator.RestartEvery);
+                }
+
+                if (generator.Type == GeneratorType::LifeDrums)
+                {
+                    members.Raw(KeyDrums, list(generator.DrumRows, [](std::wstring& json, uint8_t drum) { json += std::to_wstring(drum); }));
+                }
+                break;
+
+            case GeneratorType::Learn:
+                keyAndRange();
+                members.Text(KeyFrom, name(LearnSourceNames, generator.LearnFrom));
+                members.Integer(KeyTune, generator.Tune);
+                members.Integer(KeyMemory, generator.Order);
+                members.Integer(KeyKeep, generator.Keep);
+                learned();
+
+                if (!generator.Text.empty())
+                {
+                    members.Text(KeyText, generator.Text);
+                }
+                break;
+
+            case GeneratorType::Words:
+                keyAndRange();
+                members.Text(KeyText, generator.Text);
+                break;
+
+            case GeneratorType::Evolve:
+                keyAndRange();
+                members.Integer(KeyBusy, generator.Busy);
+                members.Raw(KeyWeights, list(generator.Weights, [](std::wstring& json, uint8_t weight) { json += std::to_wstring(weight); }));
+                members.Integer(KeyMutations, generator.Mutations);
+                members.Integer(KeySoundsLike, generator.SoundsLike);
+                break;
+
+            case GeneratorType::Infinity:
+                keyAndRange();
+                members.Integer(KeyBusy, generator.Busy);
+                members.Integer(KeyInterval, generator.Interval);
+                members.Integer(KeyVoices, generator.Voices);
+                break;
+
+            case GeneratorType::LSystem:
+            {
+                keyAndRange();
+                members.Text(KeyAxiom, generator.Axiom);
+
+                std::wstring grammar{ L"{" };
+
+                for (size_t i = 0; i < generator.Grammar.size(); ++i)
+                {
+                    grammar += i == 0 ? L" " : L", ";
+                    AppendQuoted(grammar, std::wstring(1, generator.Grammar[i].Symbol));
+                    grammar += L": ";
+                    AppendQuoted(grammar, generator.Grammar[i].Replacement);
+                }
+
+                members.Raw(KeyGrammar, grammar + (generator.Grammar.empty() ? L"}" : L" }"));
+                members.Integer(KeyAngle, generator.Angle);
+                break;
+            }
+
+            case GeneratorType::ChangeRinging:
+                keyAndRange();
+                members.Integer(KeyBells, generator.Bells);
+                members.Text(KeyMethod, name(RingingMethodNames, generator.Method));
+                members.Bool(KeyHandstrokeGap, generator.HandstrokeGap);
+                break;
+
+            default:
+                break;
+            }
+
+            if (IsSectionTwentyEightGenerator(generator.Type))
+            {
+                members.Raw(KeyVelocity, std::format(L"[{}, {}]", generator.VelocityLow, generator.VelocityHigh));
+                members.Text(KeyVelocityBy, name(VelocityShapeNames, generator.VelocityBy));
+            }
+
+            // What it listens to, when it listens to anything.
+            if (CanListen(generator.Type) && generator.ListenTo != ListenKind::None && !generator.ListenId.empty())
+            {
+                members.Text(KeyListen, name(ListenKindNames, generator.ListenTo));
+                members.Text(KeyListenId, generator.ListenId);
+
+                // Learn wrote what it learned above; the others start from what they learned here.
+                if (generator.Type != GeneratorType::Learn)
+                {
+                    learned();
+                }
+
+                if (generator.KeepListening)
+                {
+                    members.Bool(KeyKeepListening, true);
+                }
+            }
+        }
+
         // depth is the indent of the line the "settings" key is on.
         void WriteGenerator(_Inout_ std::wstring& out, _In_ GeneratorSettings const& generator, _In_ int32_t depth)
         {
             out += L"{";
 
             Members members{ out, depth, false };
-            members.Text(KeyType,
-                generator.Type == GeneratorType::ChanceMelody ? ValueChanceMelody :
-                generator.Type == GeneratorType::Arpeggiator ? ValueArpeggiator : ValueEuclidean);
+            members.Text(KeyType, GeneratorTypeNames[std::min<size_t>(static_cast<size_t>(generator.Type), GeneratorTypeNames.size() - 1)]);
             members.Integer(KeyStepTicks, generator.StepTicks);
             members.Text(KeyEachPass, generator.ChangesEachPass ? ValueChanges : ValueSame);
             members.Integer(KeyChannel, generator.Channel);
             members.Integer(KeyNoteLength, generator.NoteLength);
+
+            // The key and range, and its rules, for every generator that plays a melody.
+            auto const keyAndRange = [&]()
+            {
+                members.Text(KeyScale, ScaleNames[std::min<size_t>(static_cast<size_t>(generator.Scale), ScaleNames.size() - 1)]);
+                members.Integer(KeyRoot, generator.ScaleRoot);
+                members.Integer(KeyLow, generator.LowNote);
+                members.Integer(KeyHigh, generator.HighNote);
+
+                if (generator.LargestJump != 0)
+                {
+                    members.Integer(KeyJump, generator.LargestJump);
+                }
+
+                if (generator.RootEnds)
+                {
+                    members.Bool(KeyRootEnds, true);
+                }
+            };
 
             if (generator.Type == GeneratorType::Euclidean)
             {
@@ -1870,10 +2309,7 @@ namespace midisequencer
             }
             else if (generator.Type == GeneratorType::ChanceMelody)
             {
-                members.Text(KeyScale, ScaleNames[std::min<size_t>(static_cast<size_t>(generator.Scale), ScaleNames.size() - 1)]);
-                members.Integer(KeyRoot, generator.ScaleRoot);
-                members.Integer(KeyLow, generator.LowNote);
-                members.Integer(KeyHigh, generator.HighNote);
+                keyAndRange();
                 members.Integer(KeyBusy, generator.Busy);
                 members.Integer(KeyKeep, generator.Keep);
                 members.Raw(KeyVelocity, std::format(L"[{}, {}]", generator.VelocityLow, generator.VelocityHigh));
@@ -1894,6 +2330,10 @@ namespace midisequencer
                 {
                     members.Bool(KeyLatch, true);
                 }
+            }
+            else
+            {
+                WriteSectionTwentyEight(members, generator, keyAndRange);
             }
 
             members.Unknown(generator.Unknown);
@@ -1921,6 +2361,11 @@ namespace midisequencer
             if (clip.Seed != 0)
             {
                 members.Integer(KeySeed, clip.Seed);
+            }
+
+            if (!clip.SeedWords.empty())
+            {
+                members.Text(KeySeedWords, clip.SeedWords);
             }
 
             if (clip.Origin != ClipOrigin::Unknown || !clip.OriginDetail.empty())
@@ -2230,9 +2675,20 @@ namespace midisequencer
 
         sequence.Lyrics = ReadLyricsJson(root, limits, context.Skipped);
 
+        // Lyrics are written in the file's ticks, like everything else, and kept in this version's.
+        if (sequence.Lyrics.has_value() && context.TickScale != 1.0)
+        {
+            for (auto& syllable : sequence.Lyrics->Syllables)
+            {
+                syllable.Tick = ScaleTick(context, static_cast<double>(syllable.Tick));
+            }
+        }
+
+        sequence.TempoRowHeight = static_cast<uint16_t>(ReadInteger(root, KeyTempoHeight, 0, 0, MaximumTrackRowHeight));
+
         sequence.Unknown = UnknownKeys(root, {
             KeyFileVersion, KeyName, midiapp::ProvenanceKey, KeyTicksPerQuarterNote, KeyTempo, KeyMeter,
-            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright });
+            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright, KeyTempoHeight });
 
         NormalizeSequence(sequence);
 
@@ -2274,6 +2730,11 @@ namespace midisequencer
         }
 
         root.Integer(KeyTicksPerQuarterNote, TicksPerQuarterNote);
+
+        if (sequence.TempoRowHeight > 0)
+        {
+            root.Integer(KeyTempoHeight, sequence.TempoRowHeight);
+        }
 
         root.Key(KeyTempo);
         out += L"[";

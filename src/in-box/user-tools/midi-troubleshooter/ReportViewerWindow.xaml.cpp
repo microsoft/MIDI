@@ -15,6 +15,8 @@
 
 #include "AppSettings.h"
 #include "BackgroundWork.h"
+#include "LatencyReportWriter.h"
+#include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -196,6 +198,9 @@ namespace miditroubleshooter
             _In_ std::wstring const& value) const;
 
         std::wstring FieldValue(_In_ std::wstring_view const section, _In_ std::wstring_view const label) const;
+
+        // a DPC latency check report, which the viewer names for what it is
+        bool IsLatencyReport() const;
 
         xaml::UIElement BuildSummaryCard();
         xaml::UIElement BuildFindingsCard();
@@ -401,6 +406,11 @@ namespace miditroubleshooter
         expander.StartBringIntoView();
     }
 
+    bool ReportPresenter::IsLatencyReport() const
+    {
+        return FieldValue(MIDIDIAG_SECTION_LABEL_HEADER, L"report_type") == ::miditroubleshooter::latency::ReportType;
+    }
+
     xaml::UIElement ReportPresenter::BuildSummaryCard()
     {
         auto const& report = *m_report;
@@ -417,9 +427,12 @@ namespace miditroubleshooter
         heading.Spacing(12);
 
         auto const created = FieldValue(MIDIDIAG_SECTION_LABEL_HEADER, MIDIDIAG_FIELD_LABEL_CURRENT_TIME);
+        auto const latencyReport = IsLatencyReport();
 
         auto title = MakeText(
-            created.empty() ? res::GetString(L"ReportSummaryTitle") : res::FormatString(L"ReportSummaryTitleFormat", created),
+            created.empty() ?
+                res::GetString(latencyReport ? L"ReportSummaryLatencyTitle" : L"ReportSummaryTitle") :
+                res::FormatString(latencyReport ? L"ReportSummaryLatencyTitleFormat" : L"ReportSummaryTitleFormat", created),
             L"ReportSectionTitleStyle");
         title.VerticalAlignment(xaml::VerticalAlignment::Center);
 
@@ -502,8 +515,16 @@ namespace miditroubleshooter
         addFact(L"ReportSummaryApiModeLabel",
             FieldValue(MIDIDIAG_SECTION_LABEL_API_MODE, MIDIDIAG_FIELD_LABEL_API_MODE));
 
-        addFact(L"ReportSummaryServiceLabel",
-            FieldValue(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS, MIDIDIAG_FIELD_LABEL_SERVICE_STATE_BEFORE_REPORT));
+        // a service that isn't installed has no state, so without this the line would be left out
+        std::wstring serviceState{ FieldValue(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS, MIDIDIAG_FIELD_LABEL_SERVICE_STATE_BEFORE_REPORT) };
+
+        if (serviceState.empty() &&
+            FieldValue(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS, MIDIDIAG_FIELD_LABEL_SERVICE_INSTALLED) == L"false")
+        {
+            serviceState = res::GetString(L"ReportSummaryServiceNotInstalled");
+        }
+
+        addFact(L"ReportSummaryServiceLabel", serviceState);
 
         addFact(L"ReportSummaryElevatedLabel",
             FieldValue(MIDIDIAG_SECTION_LABEL_HEADER, MIDIDIAG_FIELD_LABEL_RUNNING_ELEVATED));
@@ -609,7 +630,7 @@ namespace miditroubleshooter
 
         if (report.Findings.empty())
         {
-            addRow(L"ReportSuccessGlyphStyle", res::GetString(L"ReportNoFindings"), {});
+            addRow(L"ReportSuccessGlyphStyle", res::GetString(IsLatencyReport() ? L"ReportNoFindingsLatency" : L"ReportNoFindings"), {});
         }
 
         // The id is what a script checks, so it's shown under the sentence.
@@ -1237,6 +1258,9 @@ namespace winrt::miditroubleshooter::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
             AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));

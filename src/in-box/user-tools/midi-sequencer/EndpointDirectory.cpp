@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "EndpointDirectory.h"
 
+#include "DeviceProperties.h"
 #include "MidiDefs.h"
 
 namespace midisequencer
@@ -104,87 +105,6 @@ namespace midisequencer
 
             return midi2;
         }
-
-        // How early a device's messages should leave, by the same rule and limit as the service's
-        // scheduler: the offset from MIDI Settings when it's chosen, otherwise the transport's.
-        // The in-box service doesn't apply it, so the engine does (design section 8).
-        uint32_t DeviceOffsetMicroseconds(midi2enum::MidiEndpointDeviceInformation const& device)
-        {
-            constexpr uint64_t MaximumMicroseconds = 1000000;
-
-            try
-            {
-                auto const properties = device.Properties();
-
-                if (properties == nullptr)
-                {
-                    return 0;
-                }
-
-                auto const calculated = winrt::unbox_value_or<uint64_t>(properties.TryLookup(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks), 0);
-                auto const custom = winrt::unbox_value_or<uint64_t>(properties.TryLookup(STRING_PKEY_MIDI_MidiOutCustomLatencyTicks), 0);
-
-                // A service that doesn't record the choice treats a custom value as the choice.
-                auto const choice = properties.TryLookup(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
-                auto const useCustom = choice != nullptr ? winrt::unbox_value_or<bool>(choice, false) : custom != 0;
-
-                // Stored unsigned but meant signed. A negative offset isn't applied.
-                auto const ticks = static_cast<int64_t>(useCustom ? custom : calculated);
-                auto const frequency = midi2::MidiClock::TimestampFrequency();
-
-                if (ticks <= 0 || frequency == 0)
-                {
-                    return 0;
-                }
-
-                if (static_cast<uint64_t>(ticks) >= frequency)
-                {
-                    return static_cast<uint32_t>(MaximumMicroseconds);
-                }
-
-                return static_cast<uint32_t>(static_cast<uint64_t>(ticks) * MaximumMicroseconds / frequency);
-            }
-            catch (...)
-            {
-                return 0;
-            }
-        }
-
-        // How often a ramp may be sent to the device, from MIDI Settings. 0 when it has none.
-        uint32_t AutomationIntervalMilliseconds(midi2enum::MidiEndpointDeviceInformation const& device)
-        {
-            try
-            {
-                auto const properties = device.Properties();
-                auto const value = properties != nullptr ? properties.TryLookup(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS) : nullptr;
-
-                if (value == nullptr)
-                {
-                    return 0;
-                }
-
-                // Stored as a number of more than one width, depending on what wrote it.
-                if (auto const number = value.try_as<foundation::IReference<int32_t>>(); number != nullptr)
-                {
-                    return static_cast<uint32_t>(std::clamp(number.Value(), 0, 1000));
-                }
-
-                if (auto const number = value.try_as<foundation::IReference<uint32_t>>(); number != nullptr)
-                {
-                    return std::min<uint32_t>(number.Value(), 1000);
-                }
-
-                if (auto const number = value.try_as<foundation::IReference<uint16_t>>(); number != nullptr)
-                {
-                    return std::min<uint32_t>(number.Value(), 1000);
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return 0;
-        }
     }
 
     _Use_decl_annotations_
@@ -221,6 +141,15 @@ namespace midisequencer
             summary.Live = endpoint;
             summary.GroupSpeaksMidi2.fill(endpoint.SupportsMidi2Protocol);
 
+            try
+            {
+                summary.PicturePath = std::wstring{ midiapp::ResolveEndpointImageOrDefault(winrt::hstring{ endpoint.ImagePath }, endpoint.TransportCode) };
+            }
+            catch (...)
+            {
+                LOG_CAUGHT_EXCEPTION();
+            }
+
             auto const wanted = std::find_if(detail.begin(), detail.end(), [&](std::wstring const& id)
             {
                 return SameId(id, endpoint.EndpointDeviceId);
@@ -235,8 +164,8 @@ namespace midisequencer
                     if (device != nullptr)
                     {
                         summary.GroupSpeaksMidi2 = GroupProtocols(device);
-                        summary.OffsetMicroseconds = DeviceOffsetMicroseconds(device);
-                        summary.AutomationIntervalMilliseconds = AutomationIntervalMilliseconds(device);
+                        summary.OffsetMicroseconds = ReadDeviceOffset(device).Microseconds;
+                        summary.AutomationIntervalMilliseconds = ReadAutomationInterval(device);
                         summary.Detailed = true;
                     }
                 }

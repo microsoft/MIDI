@@ -696,6 +696,7 @@ namespace mididiag::report
         // Abbreviations a label uses, as a person would write them.
         constexpr WordReplacement WordReplacements[]
         {
+            { L"48k", L"at 48 kHz" },
             { L"api", L"API" },
             { L"ble", L"BLE" },
             { L"cc", L"CC" },
@@ -705,6 +706,8 @@ namespace mididiag::report
             { L"dhcp", L"DHCP" },
             { L"dll", L"DLL" },
             { L"dns", L"DNS" },
+            { L"dpc", L"DPC" },
+            { L"dpcs", L"DPCs" },
             { L"drivers32", L"Drivers32" },
             { L"drivers32wow", L"Drivers32 WOW" },
             { L"exe", L"EXE" },
@@ -718,6 +721,8 @@ namespace mididiag::report
             { L"ip", L"IP" },
             { L"ipv4", L"IPv4" },
             { L"ipv6", L"IPv6" },
+            { L"isr", L"ISR" },
+            { L"isrs", L"ISRs" },
             { L"jr", L"JR" },
             { L"ks", L"KS" },
             { L"ksa", L"KSA" },
@@ -738,8 +743,10 @@ namespace mididiag::report
             { L"sdk", L"SDK" },
             { L"swd", L"SWD" },
             { L"sysex", L"SysEx" },
+            { L"tid", L"TID" },
             { L"ui", L"UI" },
             { L"ump", L"UMP" },
+            { L"us", L"\u00B5s" },
             { L"usb", L"USB" },
             { L"utf8", L"UTF-8" },
             { L"ver", L"version" },

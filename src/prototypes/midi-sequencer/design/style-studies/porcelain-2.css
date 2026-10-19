@@ -1,0 +1,169 @@
+/* PROTOTYPE. Style study: Porcelain, second pass. A layer over porcelain.css, which it leaves as it
+   is; the page has the classes "study porcelain porcelain-2" and one of "one-well" or "no-well".
+
+   The chrome is one flat surface. The transport and the clip editor are part of the window rather
+   than raised decks, and the track headers sit flush on it. What's raised is what you touch and
+   what you made: keys, clips, and launcher pads. An engraved line sets the editor apart from the
+   busy arrange above it. The timeline is either one well for all the tracks, or flush with the
+   surface too (approved, October 19), on a field a step darker, like the piano roll's. */
+
+/* colors as variables, so porcelain-dark.css and porcelain-tint.css can change them */
+html.study.porcelain.porcelain-2 {
+    --clip-face: linear-gradient(145deg, #F0EFEB, #E2E1DD);
+    --cap-ring: #E8E7E3;
+    --cap-shade: oklch(from var(--shade) l c h / .14);
+    --overlay-a: rgba(228, 227, 223, .9);
+    --overlay-b: rgba(218, 217, 212, .8);
+    --digits: var(--text);
+    --led: var(--accent);
+    --lit-band: linear-gradient(to right, rgba(255, 255, 255, .75), rgba(255, 255, 255, .35));
+    --grid-line: rgba(60, 55, 45, .11);
+    --grid-light: rgba(255, 255, 255, .45);
+    --grid-beat: rgba(60, 55, 45, .045);
+    --seam-dark: rgba(60, 55, 45, .08);
+    --seam-light: rgba(255, 255, 255, .45);
+    --engrave-dark: rgba(60, 55, 45, .16);
+    --engrave-light: rgba(255, 255, 255, .9);
+
+    /* the timeline's field: the piano roll as it's drawn, whose rows are shaded a few percent darker
+       than its well */
+    --field: color-mix(in srgb, var(--well), #000 3%);
+
+    /* Soft shadows, as dark Porcelain's (October 19): more diffuse than porcelain.css's and not as
+       deep. They're drawn in the porcelain's warm shade, or in a deep shade of the window's color
+       (porcelain-tint.css), and the light from the top left stays bright. Dark's 1 px contact
+       shadow is left out: on a light surface it reads as a dark rim, and the edges are crisp
+       without it. porcelain-dark.css sets its own. */
+    --shade: #504C44;
+    --glint: #FFFFFF;
+    --raised: 4px 6px 20px oklch(from var(--shade) l c h / .17), -4px -4px 14px oklch(from var(--glint) l c h / .85);
+    --raised-small: 3px 4px 11px oklch(from var(--shade) l c h / .18), -3px -3px 8px oklch(from var(--glint) l c h / .85);
+    --raised-tiny: 2px 3px 7px oklch(from var(--shade) l c h / .17), -2px -2px 5px oklch(from var(--glint) l c h / .85);
+    --pressed: inset 2px 3px 9px oklch(from var(--shade) l c h / .2), inset -2px -2px 7px oklch(from var(--glint) l c h / .8);
+    --groove: inset 2px 3px 9px oklch(from var(--shade) l c h / .13), inset -2px -2px 7px oklch(from var(--glint) l c h / .7);
+    --clip-shadow: 2px 3px 10px oklch(from var(--shade) l c h / .2), -2px -2px 7px oklch(from var(--glint) l c h / .75);
+    --clip-lift: 4px 5px 16px oklch(from var(--shade) l c h / .25), -3px -3px 9px oklch(from var(--glint) l c h / .85);
+    --dimple: inset 1px 2px 6px oklch(from var(--shade) l c h / .11), inset -1px -1px 5px oklch(from var(--glint) l c h / .65);
+    --readout-well: inset 2px 3px 10px oklch(from var(--shade) l c h / .2), inset -2px -2px 8px oklch(from var(--glint) l c h / .75);
+    --key-down: inset 1px 2px 6px oklch(from var(--shade) l c h / .23), inset -1px -1px 5px oklch(from var(--glint) l c h / .8);
+    --led-dimple: inset 1px 1px 3px oklch(from var(--shade) l c h / .28);
+    --pin: inset 1px 1px 3px oklch(from var(--shade) l c h / .24);
+}
+
+/* the shadows porcelain.css draws itself, as the variables above */
+html.study.porcelain.porcelain-2 .lcd { box-shadow: var(--readout-well); }
+html.study.porcelain.porcelain-2 .tb.m.on,
+html.study.porcelain.porcelain-2 .tb.s.on,
+html.study.porcelain.porcelain-2 .tb.r.on { box-shadow: var(--key-down); }
+html.study.porcelain.porcelain-2 .led:not(.out):not(.in) { box-shadow: var(--led-dimple); }
+html.study.porcelain.porcelain-2 .cell .when { box-shadow: var(--pin); }
+html.study.porcelain.porcelain-2 .empty { box-shadow: var(--dimple); }
+html.study.porcelain.porcelain-2 .tclip:not(.summary) { background: var(--clip-face); box-shadow: var(--clip-shadow); }
+
+/* the ring first, so the light from the top left doesn't wash it out */
+html.study.porcelain.porcelain-2 .tclip.sel { box-shadow: 0 0 0 2px var(--accent), var(--clip-lift); }
+html.study.porcelain.porcelain-2 .tclip.summary { box-shadow: var(--dimple); }
+html.study.porcelain.porcelain-2 .strip { box-shadow: inset -1px -1px 2px rgba(0, 0, 0, .25), 0 0 0 3px var(--cap-ring), 1px 1px 3px 3px var(--cap-shade); }
+html.study.porcelain.porcelain-2 .lcd .big { color: var(--digits); }
+html.study.porcelain.porcelain-2 .tbtn.on:not(.play)::after { background: var(--led); box-shadow: 0 0 4px var(--led); }
+
+/* ---- the transport: part of the window, its keys raised straight from it */
+
+html.study.porcelain.porcelain-2 .transport { margin: 0; border-radius: 0; background: transparent; box-shadow: none; }
+
+/* ---- the track headers: flush with the surface; the selected one is lit, not pressed */
+
+html.study.porcelain.porcelain-2 .arow.track > .hdr,
+html.study.porcelain.porcelain-2 .arow.tempo > .hdr,
+html.study.porcelain.porcelain-2 .arow.folder > .hdr {
+    margin: 0;
+    width: var(--hdr-w);
+    flex-basis: var(--hdr-w);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* the header carries an inline style, so only !important reaches it */
+html.study.porcelain.porcelain-2 .arow.track > .hdr[style] {
+    background: var(--lit-band) !important;
+    box-shadow: none;
+}
+
+/* ---- the timeline, as one well under all the tracks */
+
+html.study.porcelain.porcelain-2.one-well .arrange::before {
+    content: "";
+    position: absolute;
+    top: 40px;
+    bottom: 8px;
+    left: calc(var(--hdr-w) + var(--launch-w) + 4px);
+    right: 12px;
+    border-radius: 14px;
+    background-color: var(--well);
+    box-shadow: inset 4px 4px 10px rgba(80, 76, 68, .2), inset -4px -4px 9px rgba(255, 255, 255, .75);
+    pointer-events: none;
+}
+
+html.study.porcelain.porcelain-2.one-well .arow > .lane {
+    margin: 0 12px 0 4px;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: inset 0 -1px 0 rgba(60, 55, 45, .07), inset 0 -2px 0 rgba(255, 255, 255, .3);
+}
+
+html.study.porcelain.porcelain-2.one-well .arow.ruler > .lane,
+html.study.porcelain.porcelain-2.one-well .arow.addrow > .lane,
+html.study.porcelain.porcelain-2.one-well .arow.filler > .lane { box-shadow: none; }
+
+/* ---- or no well: the timeline on the surface, on a field a step darker, the piano roll's color,
+   with its grid engraved in it. One field under all the tracks, flat, with no shadow. */
+
+html.study.porcelain.porcelain-2.no-well .arrange::before {
+    content: "";
+    position: absolute;
+    top: 40px;
+    bottom: 8px;
+    left: calc(var(--hdr-w) + var(--launch-w) + 4px);
+    right: 12px;
+    border-radius: 12px;
+    background-color: var(--field);
+    pointer-events: none;
+}
+
+html.study.porcelain.porcelain-2.no-well .arow > .lane {
+    margin: 0 12px 0 4px;
+    border-radius: 0;
+    background-color: transparent;
+    background-image:
+        repeating-linear-gradient(to right, var(--grid-line) 0 1px, var(--grid-light) 1px 2px, transparent 2px var(--bar)),
+        repeating-linear-gradient(to right, var(--grid-beat) 0 1px, transparent 1px calc(var(--bar) / 4));
+    box-shadow: inset 0 -1px 0 var(--seam-dark), inset 0 -2px 0 var(--seam-light);
+}
+
+html.study.porcelain.porcelain-2.no-well .arow.ruler > .lane,
+html.study.porcelain.porcelain-2.no-well .arow.addrow > .lane,
+html.study.porcelain.porcelain-2.no-well .arow.filler > .lane { background: transparent; box-shadow: none; }
+
+/* in either, a playing launched clip covers its lane without a frame of its own */
+html.study.porcelain.porcelain-2 .lane-overlay { border-radius: 0; background: repeating-linear-gradient(135deg, var(--overlay-a) 0 6px, var(--overlay-b) 6px 12px); }
+
+/* ---- the clip editor: part of the window, set apart by an engraved line */
+
+html.study.porcelain.porcelain-2 .editor {
+    margin: 0;
+    padding-top: 6px;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+html.study.porcelain.porcelain-2 .editor::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background: linear-gradient(to bottom, var(--engrave-dark), var(--engrave-light));
+}

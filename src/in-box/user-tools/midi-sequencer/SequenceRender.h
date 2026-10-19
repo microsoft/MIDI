@@ -14,6 +14,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 #include "SequenceModel.h"
@@ -52,6 +53,11 @@ namespace midisequencer
     // About 10 ms at 120 BPM.
     inline constexpr int64_t DefaultLaneStepTicks = 20;
 
+    // A file can loop a one-tick clip with nothing in it for billions of ticks, which renders
+    // nothing and would take minutes. A render stops after this many passes through looping
+    // clips; a real song loops a short clip a few thousand times.
+    inline constexpr size_t MaximumRenderedPasses = 4000000;
+
     struct RenderOptions
     {
         // A lane value that doesn't change at the destination's resolution isn't sent again.
@@ -75,7 +81,19 @@ namespace midisequencer
         // through. Only playback has them; it's left out everywhere else.
         ArpeggiatorInput* Arpeggiator{ nullptr };
 
+        // How a generator that listens to a track hears it (design section 29): playback hears
+        // what the track actually played. Left out, a track is heard from its timeline.
+        std::function<void(Track const&, int64_t, int64_t, std::vector<Note>&)> const* HearTrack{ nullptr };
+
+        // What playback has launched and where its loop has got to, as a number, for keeping
+        // what's heard live. 0 without playback.
+        uint64_t HearEpoch{ 0 };
+
         size_t MaximumMessages{ MaximumRenderedMessages };
+
+        // The passes through looping clips left for renders that share this count, so a file
+        // can't multiply the limit by its tracks. Left out, each render has MaximumRenderedPasses.
+        size_t* PassesLeft{ nullptr };
     };
 
     // Every message from the track's placements with a time in [fromTick, toTick), sorted. Notes

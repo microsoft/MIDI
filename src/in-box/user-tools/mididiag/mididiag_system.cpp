@@ -16,6 +16,7 @@
 
 #include <cfgmgr32.h>
 #include <devpkey.h>
+#include <setupapi.h>
 #include <wbemidl.h>
 #include <netfw.h>
 #include <netlistmgr.h>
@@ -25,6 +26,7 @@
 #pragma comment(lib, "cfgmgr32.lib")
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
+#pragma comment(lib, "setupapi.lib")
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "version.lib")
 
@@ -54,6 +56,12 @@ namespace
 
     // Activation slowed to several seconds per endpoint at about 1,800 of these on a test PC
     constexpr uint32_t LeftoverEndpointNodeFindingThreshold{ 1000 };
+
+    // A broken MIDI setup is often noticed weeks after the update or uninstall that broke it
+    constexpr uint32_t UpdateHistoryDays{ 90 };
+    constexpr size_t MaxUpdateEntries{ 10 };
+    constexpr size_t MaxUpgradeEntries{ 5 };
+    constexpr size_t MaxInstalledPackages{ 30 };
 
     // GUID_DEVCLASS_MEDIA
     constexpr GUID MediaDeviceClass{ 0x4d36e96c, 0xe325, 0x11ce, { 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18 } };
@@ -472,6 +480,27 @@ namespace
         return std::chrono::seconds{ static_cast<int64_t>((nowValue.QuadPart - thenValue.QuadPart) / 10'000'000) };
     }
 
+    // as one number, so the earliest and latest of several times are easy to keep
+    uint64_t FileTimeValue(_In_ FILETIME const& time) noexcept
+    {
+        return (static_cast<uint64_t>(time.dwHighDateTime) << 32) | time.dwLowDateTime;
+    }
+
+    FILETIME FileTimeFromValue(_In_ uint64_t const value) noexcept
+    {
+        FILETIME time{};
+        time.dwLowDateTime = static_cast<DWORD>(value & 0xFFFFFFFF);
+        time.dwHighDateTime = static_cast<DWORD>(value >> 32);
+
+        return time;
+    }
+
+    // Unix time counts seconds from 1970, and FILETIME counts 100 ns steps from 1601
+    FILETIME FileTimeFromUnixTime(_In_ uint64_t const seconds) noexcept
+    {
+        return FileTimeFromValue((seconds + 11'644'473'600ull) * 10'000'000ull);
+    }
+
     // ------------------------------------------------------------------------------------------
     // Event log
 
@@ -675,6 +704,79 @@ namespace
         return std::format(L"TimeCreated[timediff(@SystemTime) <= {}]", static_cast<uint64_t>(HistoryDays) * 86'400'000);
     }
 
+    // Like ForEachEvent, for providers such as Windows Installer whose event data has no names.
+    // The second event passed back holds the event data values, in order.
+    bool ForEachEventWithUnnamedData(
+        _In_ PCWSTR const channel,
+        _In_ std::wstring const& query,
+        _In_ std::vector<PCWSTR> const& valuePaths,
+        _In_ std::function<void(RenderedEvent const&, RenderedEvent const&)> const& callback)
+    {
+        wil::unique_evt_handle context{ ::EvtCreateRenderContext(static_cast<DWORD>(valuePaths.size()),
+            const_cast<PCWSTR*>(valuePaths.data()), EvtRenderContextValues) };
+
+        wil::unique_evt_handle dataContext{ ::EvtCreateRenderContext(0, nullptr, EvtRenderContextUser) };
+
+        wil::unique_evt_handle results{ ::EvtQuery(nullptr, channel, query.c_str(), EvtQueryChannelPath | EvtQueryReverseDirection) };
+
+        if (!context || !dataContext || !results)
+        {
+            return false;
+        }
+
+        for (;;)
+        {
+            EVT_HANDLE batch[16]{};
+            DWORD returned{ 0 };
+
+            if (!::EvtNext(results.get(), ARRAYSIZE(batch), batch, 5000, 0, &returned))
+            {
+                break;
+            }
+
+            std::vector<wil::unique_evt_handle> events{};
+
+            for (DWORD i = 0; i < returned; i++)
+            {
+                events.emplace_back(batch[i]);
+            }
+
+            for (auto const& event : events)
+            {
+                callback(RenderedEvent{ context.get(), event.get() }, RenderedEvent{ dataContext.get(), event.get() });
+            }
+        }
+
+        return true;
+    }
+
+    // The time of the oldest event a log still holds, or empty. A log only keeps so much, so
+    // this says whether a history with nothing in it is quiet or just short.
+    std::wstring OldestEventTime(_In_ PCWSTR const channel)
+    {
+        PCWSTR timePath[]{ L"Event/System/TimeCreated/@SystemTime" };
+
+        wil::unique_evt_handle context{ ::EvtCreateRenderContext(ARRAYSIZE(timePath), timePath, EvtRenderContextValues) };
+        wil::unique_evt_handle results{ ::EvtQuery(nullptr, channel, L"*", EvtQueryChannelPath | EvtQueryForwardDirection) };
+
+        if (!context || !results)
+        {
+            return {};
+        }
+
+        EVT_HANDLE event{ nullptr };
+        DWORD returned{ 0 };
+
+        if (!::EvtNext(results.get(), 1, &event, 5000, 0, &returned) || returned == 0)
+        {
+            return {};
+        }
+
+        wil::unique_evt_handle const oldest{ event };
+
+        return FormatLocalTime(RenderedEvent{ context.get(), oldest.get() }.Time(0));
+    }
+
     std::wstring BootTypeName(_In_ uint64_t const bootType)
     {
         switch (bootType)
@@ -798,6 +900,10 @@ namespace
     {
         uint32_t Present{ 0 };
         uint32_t NotPresent{ 0 };
+
+        // FILETIME values, zero when Windows didn't say. LastSeen covers only nodes that are gone.
+        uint64_t FirstInstalled{ 0 };
+        uint64_t LastSeen{ 0 };
     };
 
     bool IsPresent(_In_ std::wstring const& instanceId)
@@ -805,6 +911,23 @@ namespace
         DEVINST device{ 0 };
 
         return ::CM_Locate_DevNodeW(&device, const_cast<DEVINSTID_W>(instanceId.c_str()), CM_LOCATE_DEVNODE_NORMAL) == CR_SUCCESS;
+    }
+
+    // A driver package that comes with Windows waits in the driver store until a device needs
+    // it. This is where it keeps one of its files there, or empty when the package isn't there.
+    std::wstring DriverStoreFilePath(_In_ PCWSTR const infName, _In_ PCWSTR const fileName)
+    {
+        wchar_t infPath[MAX_PATH * 2]{};
+
+        if (!::SetupGetInfDriverStoreLocationW(infName, nullptr, nullptr, infPath, ARRAYSIZE(infPath), nullptr))
+        {
+            return {};
+        }
+
+        std::wstring path{ infPath };
+        auto const separator = path.rfind(L'\\');
+
+        return separator == std::wstring::npos ? std::wstring{} : path.substr(0, separator + 1) + fileName;
     }
 
     // ------------------------------------------------------------------------------------------
@@ -1200,6 +1323,22 @@ uint32_t MidiServiceProcessId()
     }
 }
 
+std::wstring MidiServiceExecutablePath()
+{
+    try
+    {
+        if (g_serviceBeforeReport.Installed && !g_serviceBeforeReport.ImagePath.empty())
+        {
+            return ExecutablePathFromImagePath(g_serviceBeforeReport.ImagePath);
+        }
+    }
+    catch (...)
+    {
+    }
+
+    return {};
+}
+
 ParentDeviceDetails GetParentDeviceDetails(std::wstring const& parentInstanceId, std::wstring const& driverInstanceId)
 {
     ParentDeviceDetails details{};
@@ -1402,10 +1541,11 @@ bool DoSectionComponentVersions()
 
     try
     {
-        auto const outputComponent = [](std::wstring const& name, std::wstring const& path)
+        auto const outputComponent = [](std::wstring const& name, std::wstring const& path, std::wstring_view const serviceState = {})
             {
                 KeyValueText values{};
                 values.Add(L"name", name);
+                values.AddIfNotEmpty(L"service", serviceState);
 
                 if (::GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES)
                 {
@@ -1444,16 +1584,26 @@ bool DoSectionComponentVersions()
         }
 
         // Class drivers load from wherever their service says, which is usually the driver store
-        for (auto const& [serviceName, fileName] : std::initializer_list<std::pair<PCWSTR, PCWSTR>>{
-            { L"USBMidi2", L"USBMidi2.sys" },
-            { L"usbaudio", L"usbaudio.sys" } })
+        for (auto const& [serviceName, fileName, infName] : std::initializer_list<std::tuple<PCWSTR, PCWSTR, PCWSTR>>{
+            { L"USBMidi2", L"USBMidi2.sys", L"usbmidi2.inf" },
+            { L"usbaudio", L"usbaudio.sys", L"wdma_usb.inf" } })
         {
             auto const serviceKey = std::wstring{ LR"(SYSTEM\CurrentControlSet\Services\)" } + serviceName;
             auto const imagePath = TryReadRegistryString(HKEY_LOCAL_MACHINE, serviceKey.c_str(), L"ImagePath");
 
-            outputComponent(fileName, imagePath.has_value() ?
-                DriverPathFromImagePath(imagePath.value()) :
-                std::wstring{ systemFolder } + LR"(\drivers\)" + fileName);
+            if (imagePath.has_value())
+            {
+                outputComponent(fileName, DriverPathFromImagePath(imagePath.value()));
+                continue;
+            }
+
+            // Windows adds a class driver's service only when a device first needs it, so a PC
+            // that has never had such a device has no service, and that isn't a missing file
+            auto const storePath = DriverStoreFilePath(infName, fileName);
+
+            outputComponent(fileName, storePath.empty() ?
+                std::wstring{ systemFolder } + LR"(\drivers\)" + fileName :
+                storePath, L"not_installed");
         }
 
         // the SDK this report loaded, which is not always the one apps load
@@ -1718,6 +1868,305 @@ bool DoSectionServiceHistory()
     return true;
 }
 
+bool DoSectionInstallHistory()
+{
+    WriteSection(MIDIDIAG_SECTION_LABEL_INSTALL_HISTORY);
+
+    bool succeeded{ true };
+
+    // When this version of Windows was installed, and the versions it replaced
+    try
+    {
+        // set by a clean install or an upgrade to a new version, not by monthly updates
+        auto const installDate = TryReadRegistryDword(HKEY_LOCAL_MACHINE, CurrentVersionKey, L"InstallDate");
+
+        if (installDate.has_value())
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_OS_INSTALLED, FormatLocalTime(FileTimeFromUnixTime(installDate.value())));
+        }
+
+        // Each upgrade leaves a "Source OS" key that describes the version it replaced. Every
+        // later upgrade rewrites those keys, so a version was replaced when the next one was
+        // installed, not when its key was written.
+        struct PreviousVersion
+        {
+            DWORD Installed{ 0 };
+            std::wstring Build{};
+            std::wstring Version{};
+        };
+
+        std::vector<PreviousVersion> previousVersions{};
+
+        constexpr wchar_t SetupKey[] = LR"(SYSTEM\Setup)";
+        wil::unique_hkey setup{};
+
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, SetupKey, setup)))
+        {
+            for (auto const& keyData : wil::make_range(wil::reg::key_iterator{ setup.get() }, wil::reg::key_iterator{}))
+            {
+                if (!StartsWithNoCase(keyData.name, L"Source OS"))
+                {
+                    continue;
+                }
+
+                auto const key = std::wstring{ SetupKey } + L"\\" + keyData.name;
+                auto const installed = TryReadRegistryDword(HKEY_LOCAL_MACHINE, key.c_str(), L"InstallDate");
+                auto const build = TryReadRegistryString(HKEY_LOCAL_MACHINE, key.c_str(), L"CurrentBuild");
+
+                if (!installed.has_value() || !build.has_value())
+                {
+                    continue;
+                }
+
+                auto const revision = TryReadRegistryDword(HKEY_LOCAL_MACHINE, key.c_str(), L"UBR");
+                auto version = TryReadRegistryString(HKEY_LOCAL_MACHINE, key.c_str(), L"DisplayVersion");
+
+                if (!version.has_value())
+                {
+                    version = TryReadRegistryString(HKEY_LOCAL_MACHINE, key.c_str(), L"ReleaseId");
+                }
+
+                previousVersions.push_back(PreviousVersion{
+                    installed.value(),
+                    revision.has_value() ? build.value() + L"." + std::to_wstring(revision.value()) : build.value(),
+                    version.value_or(std::wstring{}) });
+            }
+        }
+
+        std::sort(previousVersions.begin(), previousVersions.end(),
+            [](PreviousVersion const& first, PreviousVersion const& second) { return first.Installed < second.Installed; });
+
+        // newest first
+        for (size_t i = previousVersions.size(), written = 0; i > 0 && written < MaxUpgradeEntries; i--, written++)
+        {
+            auto const replacedAt = i < previousVersions.size() ?
+                std::optional<DWORD>{ previousVersions[i].Installed } :
+                installDate;
+
+            WriteField(MIDIDIAG_FIELD_LABEL_OS_UPGRADE, KeyValueText{}
+                .AddIfNotEmpty(L"time", replacedAt.has_value() ? FormatLocalTime(FileTimeFromUnixTime(replacedAt.value())) : std::wstring{})
+                .Add(L"from_build", previousVersions[i - 1].Build)
+                .AddIfNotEmpty(L"from_version", previousVersions[i - 1].Version));
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        succeeded = false;
+    }
+
+    // Monthly updates and enablement packages change Windows without an upgrade, so only the
+    // update history has them. Defender definitions arrive several times a day, and the malicious
+    // software removal tool every month, so those are left out.
+    try
+    {
+        std::vector<KeyValueText> updates{};
+
+        auto const updateQuery = std::format(
+            L"*[System[Provider[@Name='Microsoft-Windows-WindowsUpdateClient'] and EventID=19 and TimeCreated[timediff(@SystemTime) <= {}]]]",
+            static_cast<uint64_t>(UpdateHistoryDays) * 86'400'000);
+
+        bool const systemLogRead = ForEachEvent(L"System", updateQuery,
+            { L"Event/System/TimeCreated/@SystemTime", L"Event/EventData/Data[@Name='updateTitle']" },
+            [&updates](RenderedEvent const& event)
+            {
+                auto const title = event.String(1);
+
+                if (updates.size() >= MaxUpdateEntries ||
+                    !ContainsNoCase(title, L"Windows") ||
+                    !ContainsNoCase(title, L"KB") ||
+                    ContainsNoCase(title, L"KB2267602") ||
+                    ContainsNoCase(title, L"KB890830"))
+                {
+                    return;
+                }
+
+                updates.push_back(KeyValueText{}
+                    .Add(L"time", FormatLocalTime(event.Time(0)))
+                    .Add(L"title", title));
+            });
+
+        if (!systemLogRead)
+        {
+            WriteError(FormatResourceString(IDS_ERROR_CANNOT_READ_EVENT_LOG, std::wstring{ L"System" }));
+        }
+
+        for (auto const& values : updates)
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_WINDOWS_UPDATE, values);
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        succeeded = false;
+    }
+
+    // The preview service replaced the MIDI service that comes with Windows, and removing it left
+    // Windows without one. Its product names all have both of these in them.
+    auto const isPreviewService = [](std::wstring const& name)
+        {
+            return ContainsNoCase(name, L"MIDI Services") && ContainsNoCase(name, L"Preview Service") && !ContainsNoCase(name, L"Plugins");
+        };
+
+    bool previewServiceInstalled{ false };
+
+    // MIDI software installed now, as listed in Settings > Apps
+    try
+    {
+        std::vector<std::pair<std::wstring, KeyValueText>> packages{};
+
+        for (auto const uninstallKey : {
+            LR"(SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall)",
+            LR"(SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall)" })
+        {
+            wil::unique_hkey uninstall{};
+
+            if (FAILED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, uninstallKey, uninstall)))
+            {
+                continue;
+            }
+
+            for (auto const& keyData : wil::make_range(wil::reg::key_iterator{ uninstall.get() }, wil::reg::key_iterator{}))
+            {
+                auto const key = std::wstring{ uninstallKey } + L"\\" + keyData.name;
+                auto const name = TryReadRegistryString(HKEY_LOCAL_MACHINE, key.c_str(), L"DisplayName");
+
+                if (!name.has_value() || !ContainsNoCase(name.value(), L"MIDI"))
+                {
+                    continue;
+                }
+
+                previewServiceInstalled = previewServiceInstalled || isPreviewService(name.value());
+
+                KeyValueText values{};
+                values.AddIfNotEmpty(L"version", TryReadRegistryString(HKEY_LOCAL_MACHINE, key.c_str(), L"DisplayVersion").value_or(std::wstring{}));
+
+                // written as YYYYMMDD
+                if (auto const date = TryReadRegistryString(HKEY_LOCAL_MACHINE, key.c_str(), L"InstallDate");
+                    date.has_value() && date.value().size() == 8 &&
+                    std::all_of(date.value().begin(), date.value().end(), [](wchar_t const ch) { return ch >= L'0' && ch <= L'9'; }))
+                {
+                    values.Add(L"installed", date.value().substr(0, 4) + L"-" + date.value().substr(4, 2) + L"-" + date.value().substr(6, 2));
+                }
+
+                values.Add(L"name", name.value());
+
+                // Windows MIDI Services first, so the list's limit never leaves it out
+                packages.emplace_back(std::wstring{ ContainsNoCase(name.value(), L"MIDI Services") ? L"0" : L"1" } + LowerCopy(name.value()), values);
+            }
+        }
+
+        std::sort(packages.begin(), packages.end(),
+            [](auto const& first, auto const& second) { return first.first < second.first; });
+
+        for (size_t i = 0; i < packages.size() && i < MaxInstalledPackages; i++)
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_INSTALLED_PACKAGE, packages[i].second);
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        succeeded = false;
+    }
+
+    // Windows Installer logs every install and removal, and an upgrade removes the version it
+    // replaces. Only products with MIDI in the name are kept.
+    try
+    {
+        uint32_t packageEventCount{ 0 };
+        std::vector<KeyValueText> packageEvents{};
+
+        // the newest event for the preview service says whether it was removed
+        bool previewServiceSeen{ false };
+        std::optional<std::pair<std::wstring, FILETIME>> previewServiceRemoval{};
+
+        bool const applicationLogRead = ForEachEventWithUnnamedData(L"Application",
+            L"*[System[Provider[@Name='MsiInstaller'] and (EventID=1033 or EventID=1034 or EventID=1035)]]",
+            { L"Event/System/TimeCreated/@SystemTime", L"Event/System/EventID" },
+            [&](RenderedEvent const& event, RenderedEvent const& data)
+            {
+                // product name, version, language, then the result, 0 when it worked
+                auto const name = data.String(0);
+
+                if (!ContainsNoCase(name, L"MIDI"))
+                {
+                    return;
+                }
+
+                auto const eventId = event.Number(1);
+
+                if (!previewServiceSeen && isPreviewService(name))
+                {
+                    previewServiceSeen = true;
+
+                    if (eventId == 1034)
+                    {
+                        previewServiceRemoval = std::make_pair(name, event.Time(0));
+                    }
+                }
+
+                packageEventCount++;
+
+                if (packageEvents.size() < MaxHistoryEntries)
+                {
+                    packageEvents.push_back(KeyValueText{}
+                        .Add(L"time", FormatLocalTime(event.Time(0)))
+                        .Add(L"action", eventId == 1033 ? L"installed" : eventId == 1034 ? L"removed" : L"changed")
+                        .AddIfNotEmpty(L"version", data.String(1))
+                        .AddIfNotEmpty(L"status", data.String(3))
+                        .Add(L"name", name));
+                }
+            });
+
+        if (!applicationLogRead)
+        {
+            WriteError(FormatResourceString(IDS_ERROR_CANNOT_READ_EVENT_LOG, std::wstring{ L"Application" }));
+        }
+
+        WriteNumberField(MIDIDIAG_FIELD_LABEL_PACKAGE_EVENT_COUNT, packageEventCount);
+
+        for (auto const& values : packageEvents)
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_PACKAGE_EVENT, values);
+        }
+
+        // an upgrade logs the removal of the version it replaced, so one that's installed now wasn't removed
+        if (previewServiceRemoval.has_value() && !previewServiceInstalled && Context().InboxRegistrationIncomplete)
+        {
+            AddFinding(L"preview_service_removed", FormatResourceString(IDS_FINDING_PREVIEW_SERVICE_REMOVED,
+                previewServiceRemoval->first, FormatLocalTime(previewServiceRemoval->second)));
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        succeeded = false;
+    }
+
+    // how far back the two histories above go
+    try
+    {
+        for (auto const& [label, channel] : std::initializer_list<std::pair<PCWSTR, PCWSTR>>{
+            { MIDIDIAG_FIELD_LABEL_SYSTEM_LOG_FROM, L"System" },
+            { MIDIDIAG_FIELD_LABEL_APPLICATION_LOG_FROM, L"Application" } })
+        {
+            if (auto const oldest = OldestEventTime(channel); !oldest.empty())
+            {
+                WriteField(label, oldest);
+            }
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        succeeded = false;
+    }
+
+    return succeeded;
+}
+
 bool DoSectionDeviceNodes()
 {
     WriteSection(MIDIDIAG_SECTION_LABEL_DEVICE_NODES);
@@ -1792,17 +2241,41 @@ bool DoSectionDeviceNodes()
         WriteNumberField(MIDIDIAG_FIELD_LABEL_PROBLEM_DEVICE_COUNT, problemCount);
 
         // Endpoints the service created before and that are gone now. The service keeps them on
-        // purpose, but a large pile of them makes adding a device slow.
+        // purpose, but a large pile of them makes adding a device slow. Each one remembers when it
+        // was first installed and last seen, which dates when Windows MIDI Services last worked.
         std::map<std::wstring, NodeCounts> endpointsByTransport{};
         NodeCounts endpointTotal{};
 
         for (auto const& instanceId : DeviceIdList(L"SWD\\MIDISRV", CM_GETIDLIST_FILTER_ENUMERATOR))
         {
             auto& counts = endpointsByTransport[TransportCodeFromInstanceId(instanceId)];
-            bool const present = IsPresent(instanceId);
+
+            DEVINST device{ 0 };
+            bool const present = ::CM_Locate_DevNodeW(&device, const_cast<DEVINSTID_W>(instanceId.c_str()), CM_LOCATE_DEVNODE_NORMAL) == CR_SUCCESS;
 
             (present ? counts.Present : counts.NotPresent)++;
             (present ? endpointTotal.Present : endpointTotal.NotPresent)++;
+
+            if (!present && ::CM_Locate_DevNodeW(&device, const_cast<DEVINSTID_W>(instanceId.c_str()), CM_LOCATE_DEVNODE_PHANTOM) != CR_SUCCESS)
+            {
+                continue;
+            }
+
+            auto const firstInstalled = FileTimeValue(DeviceFileTimeProperty(device, DEVPKEY_Device_FirstInstallDate));
+
+            auto const lastSeen = present ? uint64_t{ 0 } : (std::max)(
+                FileTimeValue(DeviceFileTimeProperty(device, DEVPKEY_Device_LastArrivalDate)),
+                FileTimeValue(DeviceFileTimeProperty(device, DEVPKEY_Device_LastRemovalDate)));
+
+            for (auto const nodeCounts : { &counts, &endpointTotal })
+            {
+                if (firstInstalled != 0 && (nodeCounts->FirstInstalled == 0 || firstInstalled < nodeCounts->FirstInstalled))
+                {
+                    nodeCounts->FirstInstalled = firstInstalled;
+                }
+
+                nodeCounts->LastSeen = (std::max)(nodeCounts->LastSeen, lastSeen);
+            }
         }
 
         for (auto const& [transportCode, counts] : endpointsByTransport)
@@ -1810,12 +2283,28 @@ bool DoSectionDeviceNodes()
             WriteField(MIDIDIAG_FIELD_LABEL_ENDPOINT_NODES, KeyValueText{}
                 .Add(L"transport", transportCode)
                 .AddNumber(L"present", counts.Present)
-                .AddNumber(L"not_present", counts.NotPresent));
+                .AddNumber(L"not_present", counts.NotPresent)
+                .AddIfNotEmpty(L"first_installed", FormatLocalTime(FileTimeFromValue(counts.FirstInstalled)))
+                .AddIfNotEmpty(L"last_seen", FormatLocalTime(FileTimeFromValue(counts.LastSeen))));
         }
 
         WriteField(MIDIDIAG_FIELD_LABEL_ENDPOINT_NODES_TOTAL, KeyValueText{}
             .AddNumber(L"present", endpointTotal.Present)
-            .AddNumber(L"not_present", endpointTotal.NotPresent));
+            .AddNumber(L"not_present", endpointTotal.NotPresent)
+            .AddIfNotEmpty(L"first_installed", FormatLocalTime(FileTimeFromValue(endpointTotal.FirstInstalled)))
+            .AddIfNotEmpty(L"last_seen", FormatLocalTime(FileTimeFromValue(endpointTotal.LastSeen))));
+
+        // The diagnostics endpoints come and go with the service itself, so when the service is
+        // gone, theirs say when it last ran
+        if (!Context().ServiceInstalled)
+        {
+            if (auto const diagnostics = endpointsByTransport.find(L"DIAG");
+                diagnostics != endpointsByTransport.end() && diagnostics->second.LastSeen != 0)
+            {
+                AddFinding(L"service_ran_before", FormatResourceString(IDS_FINDING_SERVICE_RAN_BEFORE,
+                    FormatLocalTime(FileTimeFromValue(diagnostics->second.LastSeen))));
+            }
+        }
 
         NodeCounts portTotal{};
 

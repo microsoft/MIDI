@@ -45,6 +45,10 @@ struct MidiNetworkClientDefinition
     // Only used when the remote declares no function blocks. See the constant for why.
     uint8_t FallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
+    // The groups to create MIDI 1.0 ports for in that case, with their names. Used instead of the
+    // count when it is not empty.
+    WindowsMidiServicesInternal::MidiNetworkMidi1PortGroupList FallbackMidi1PortGroups{};
+
     // What this client sends to the remote host, as a multiple of MIDI 1.0 wire speed. 0 is no
     // limit. See MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY.
     uint32_t SendSpeedLimit{ 0 };

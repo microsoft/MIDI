@@ -694,7 +694,7 @@ namespace winrt::midisequencer::implementation
                     continue;
                 }
 
-                auto const choice = devices[index].SelectedItem().try_as<appshared::EndpointChoice>();
+                auto const choice = devices[index].SelectedItem().try_as<winrt::midisequencer::DeviceChoice>();
 
                 playing[index]->Destination.Endpoint = choice == nullptr || choice.EndpointDeviceId().empty() ?
                     seq::EndpointRef{} :

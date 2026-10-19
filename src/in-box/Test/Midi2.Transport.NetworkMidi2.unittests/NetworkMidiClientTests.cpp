@@ -164,6 +164,44 @@ namespace NetworkMidiTest
         }
 
 
+        // The UMP Endpoint Name the service put in its Invitation to this host (spec 6.4), as
+        // UTF-8 bytes from the wire. Nothing if no Invitation arrived.
+        std::optional<std::string> WaitForInvitationName(_In_ FakeNetworkHost& host)
+        {
+            auto packet = host.WaitForCommand(CommandCode::Invitation, InvitationTimeout);
+
+            if (!packet.has_value())
+            {
+                return std::nullopt;
+            }
+
+            auto const* invitation = packet->Find(CommandCode::Invitation);
+
+            if (invitation == nullptr)
+            {
+                return std::nullopt;
+            }
+
+            // Command Specific Data 1 is the name length in 32 bit words
+            return invitation->GetPayloadString(0, static_cast<size_t>(invitation->CommandSpecificData1) * 4);
+        }
+
+
+        // What Windows calls this PC, in UTF-8 so it compares with a name read off the wire
+        std::string ComputerNameUtf8()
+        {
+            wchar_t buffer[MAX_COMPUTERNAME_LENGTH + 1]{ };
+            DWORD length = ARRAYSIZE(buffer);
+
+            if (!GetComputerNameW(buffer, &length))
+            {
+                return std::string{ };
+            }
+
+            return winrt::to_string(std::wstring_view{ buffer, length });
+        }
+
+
         // ----------------------------------------------------------------------
         // enumerateClients helpers. That response is the only view an app has of what the
         // service believes is configured, so the entry lifetime tests read it directly.
@@ -1852,6 +1890,160 @@ namespace NetworkMidiTest
     }
 
 
+    void ClientTests::ClientGivesTheSameNameWhetherConnectedNowOrReadFromConfiguration()
+    {
+        if (!RequireService()) return;
+
+        // Network MIDI Setup makes a connection with a command. After a restart, the same
+        // connection is read back from the configuration. With no name of its own, both have to
+        // give the computer name, which is also what a new host on this PC is called.
+        FakeNetworkHost connectedNow;
+        FakeNetworkHost readFromConfiguration;
+
+        // The name is in the Invitation. Never accepting it means no session and no endpoint.
+        connectedNow.SetInvitationBehavior(FakeHostInvitationBehavior::PendingForever);
+        readFromConfiguration.SetInvitationBehavior(FakeHostInvitationBehavior::PendingForever);
+
+        VERIFY_IS_TRUE(connectedNow.Start());
+        VERIFY_IS_TRUE(readFromConfiguration.Start());
+
+        auto commandEntry = MakeEntryIdentifier();
+        auto configurationEntry = MakeEntryIdentifier();
+
+        auto cleanup = wil::scope_exit([&]()
+            {
+                DisconnectClient(commandEntry);
+                DisconnectClient(configurationEntry);
+                connectedNow.Stop();
+                readFromConfiguration.Stop();
+            });
+
+        // An empty name is what Network MIDI Setup sends for a host picked from the list
+        VERIFY_IS_TRUE(ConnectDirectClient(commandEntry, FakeNetworkHost::Address(), connectedNow.Port(), L"").IsSuccess());
+        VERIFY_IS_TRUE(CreateDirectClient(configurationEntry, FakeNetworkHost::Address(), readFromConfiguration.Port()).CallSucceeded);
+
+        auto nameFromCommand = WaitForInvitationName(connectedNow);
+        auto nameFromConfiguration = WaitForInvitationName(readFromConfiguration);
+
+        VERIFY_IS_TRUE(nameFromCommand.has_value(), L"The client made by command sent an Invitation.");
+        VERIFY_IS_TRUE(nameFromConfiguration.has_value(), L"The client read from the configuration sent an Invitation.");
+
+        if (!nameFromCommand.has_value() || !nameFromConfiguration.has_value()) return;
+
+        auto const computerName = ComputerNameUtf8();
+
+        Log::Comment(String().Format(
+            L"Made by command: '%S'. Read from configuration: '%S'. Computer name: '%S'.",
+            nameFromCommand->c_str(),
+            nameFromConfiguration->c_str(),
+            computerName.c_str()));
+
+        VERIFY_IS_TRUE(nameFromCommand.value() == nameFromConfiguration.value(),
+            L"A connection gives the remote the same name whether it was just made or read back after a restart.");
+
+        VERIFY_IS_TRUE(nameFromCommand.value() == computerName,
+            L"A connection with no name of its own gives the computer name.");
+    }
+
+
+    void ClientTests::ClientKeepsTheLocalNameItWasSavedWith()
+    {
+        if (!RequireService()) return;
+
+        // "Name that device will see" is saved with the connection, and reading it back after a
+        // restart used to replace it with the computer name.
+        FakeNetworkHost host;
+        host.SetInvitationBehavior(FakeHostInvitationBehavior::PendingForever);
+        VERIFY_IS_TRUE(host.Start());
+
+        auto entryIdentifier = MakeEntryIdentifier();
+
+        auto cleanup = wil::scope_exit([&]()
+            {
+                DisconnectClient(entryIdentifier);
+                host.Stop();
+            });
+
+        std::wstring const localName{ L"Saved Local Name " + entryIdentifier.substr(1, 8) };
+
+        VERIFY_IS_TRUE(
+            CreateDirectClient(
+                entryIdentifier,
+                FakeNetworkHost::Address(),
+                host.Port(),
+                false,
+                L"",
+                localName).CallSucceeded);
+
+        auto name = WaitForInvitationName(host);
+
+        VERIFY_IS_TRUE(name.has_value(), L"The client sent an Invitation.");
+
+        if (!name.has_value()) return;
+
+        Log::Comment(String().Format(L"Client gave the name '%S'", name->c_str()));
+
+        VERIFY_IS_TRUE(name.value() == winrt::to_string(localName),
+            L"The name saved with the connection is the one the remote is given.");
+    }
+
+
+    void ClientTests::ClientIgnoresALocalNameWhichIsTheRemoteAddress()
+    {
+        if (!RequireService()) return;
+
+        // Network MIDI Setup used to fill an empty "Name that device will see" with the address it
+        // was connecting to, so this PC told the remote it was called by the remote's own address.
+        // Nobody chose that name, and those connections have given the computer name ever since
+        // they were first read back after a restart.
+        FakeNetworkHost connectedNow;
+        FakeNetworkHost readFromConfiguration;
+
+        connectedNow.SetInvitationBehavior(FakeHostInvitationBehavior::PendingForever);
+        readFromConfiguration.SetInvitationBehavior(FakeHostInvitationBehavior::PendingForever);
+
+        VERIFY_IS_TRUE(connectedNow.Start());
+        VERIFY_IS_TRUE(readFromConfiguration.Start());
+
+        auto commandEntry = MakeEntryIdentifier();
+        auto configurationEntry = MakeEntryIdentifier();
+
+        auto cleanup = wil::scope_exit([&]()
+            {
+                DisconnectClient(commandEntry);
+                DisconnectClient(configurationEntry);
+                connectedNow.Stop();
+                readFromConfiguration.Stop();
+            });
+
+        auto const address = FakeNetworkHost::Address();
+
+        VERIFY_IS_TRUE(ConnectDirectClient(commandEntry, address, connectedNow.Port(), address).IsSuccess());
+        VERIFY_IS_TRUE(CreateDirectClient(configurationEntry, address, readFromConfiguration.Port(), false, L"", address).CallSucceeded);
+
+        auto nameFromCommand = WaitForInvitationName(connectedNow);
+        auto nameFromConfiguration = WaitForInvitationName(readFromConfiguration);
+
+        VERIFY_IS_TRUE(nameFromCommand.has_value(), L"The client made by command sent an Invitation.");
+        VERIFY_IS_TRUE(nameFromConfiguration.has_value(), L"The client read from the configuration sent an Invitation.");
+
+        if (!nameFromCommand.has_value() || !nameFromConfiguration.has_value()) return;
+
+        auto const computerName = ComputerNameUtf8();
+
+        Log::Comment(String().Format(
+            L"Made by command: '%S'. Read from configuration: '%S'.",
+            nameFromCommand->c_str(),
+            nameFromConfiguration->c_str()));
+
+        VERIFY_IS_TRUE(nameFromCommand.value() == computerName,
+            L"A command naming this PC after the remote's address gives the computer name instead.");
+
+        VERIFY_IS_TRUE(nameFromConfiguration.value() == computerName,
+            L"A saved name which is the remote's address gives the computer name instead.");
+    }
+
+
     void ClientTests::TransportDeclaresEveryCapabilityAnAppReliesOn()
     {
         if (!RequireService()) return;
@@ -1903,6 +2095,12 @@ namespace NetworkMidiTest
                     String().Format(L"Capability '%s' is reported unsupported", notSupported));
             }
         }
+
+        // Not required to run, but Network MIDI Setup only offers to choose and name the MIDI 1.0
+        // ports a connection gets when this is there. Ports are named through the connection's
+        // own settings, which is why customizePorts stays false.
+        VERIFY_IS_TRUE(capabilities.GetNamedBoolean(L"fallbackMidi1PortGroups", false),
+            L"Capability 'fallbackMidi1PortGroups' is declared and true");
     }
 
     void ClientTests::ConnectMdnsCreatesAnEntryMatchedByDeviceId()

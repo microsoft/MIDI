@@ -52,7 +52,7 @@ namespace MidiSynth
 
         // INFO text is single byte per the specification. Widening as Latin-1 cannot fail,
         // which keeps a malformed name from becoming a parse failure.
-        std::wstring ReadLatin1Name(std::span<const std::byte> payload)
+        std::wstring ReadLatin1Name(_In_ std::span<const std::byte> payload)
         {
             std::wstring value;
 
@@ -79,7 +79,7 @@ namespace MidiSynth
             return value;
         }
 
-        std::wstring ReadInfoListName(std::span<const std::byte> infoPayload)
+        std::wstring ReadInfoListName(_In_ std::span<const std::byte> infoPayload)
         {
             RiffChunkReader reader(infoPayload);
             RiffChunk chunk{};
@@ -96,8 +96,8 @@ namespace MidiSynth
         }
 
         bool TryReadWaveSample(
-            std::span<const std::byte> payload,
-            const DlsParseLimits& limits,
+            _In_ std::span<const std::byte> payload,
+            _In_ const DlsParseLimits& limits,
             _Out_ DlsWaveSample& waveSample)
         {
             waveSample = {};
@@ -161,8 +161,8 @@ namespace MidiSynth
         }
 
         bool TryReadConnectionList(
-            std::span<const std::byte> payload,
-            const DlsParseLimits& limits,
+            _In_ std::span<const std::byte> payload,
+            _In_ const DlsParseLimits& limits,
             _Inout_ std::vector<DlsConnection>& connections)
         {
             ByteReader reader(payload);
@@ -209,8 +209,8 @@ namespace MidiSynth
         }
 
         bool TryReadArticulationList(
-            std::span<const std::byte> payload,
-            const DlsParseLimits& limits,
+            _In_ std::span<const std::byte> payload,
+            _In_ const DlsParseLimits& limits,
             _Inout_ std::vector<DlsConnection>& connections)
         {
             RiffChunkReader reader(payload);
@@ -231,8 +231,8 @@ namespace MidiSynth
         }
 
         DlsParseStatus ReadRegion(
-            std::span<const std::byte> payload,
-            const DlsParseLimits& limits,
+            _In_ std::span<const std::byte> payload,
+            _In_ const DlsParseLimits& limits,
             _Out_ DlsRegion& region)
         {
             region = {};
@@ -304,8 +304,8 @@ namespace MidiSynth
         }
 
         DlsParseStatus ReadInstrument(
-            std::span<const std::byte> payload,
-            const DlsParseLimits& limits,
+            _In_ std::span<const std::byte> payload,
+            _In_ const DlsParseLimits& limits,
             _Out_ DlsInstrument& instrument)
         {
             instrument = {};
@@ -390,8 +390,8 @@ namespace MidiSynth
         }
 
         DlsParseStatus ReadWave(
-            std::span<const std::byte> payload,
-            const DlsParseLimits& limits,
+            _In_ std::span<const std::byte> payload,
+            _In_ const DlsParseLimits& limits,
             _Out_ DlsWave& wave)
         {
             wave = {};

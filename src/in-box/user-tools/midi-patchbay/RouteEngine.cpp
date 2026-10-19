@@ -1381,11 +1381,12 @@ namespace midipatchbay
 
                     std::shared_ptr<::midipatchbay::BlockState> state{};
 
-                    // A responder's state, and a Branch or Switch's way memory, are made before
-                    // anything can reach them, never after.
+                    // A responder's state, a Branch or Switch's way memory, and a converter's
+                    // memory are made before anything can reach them, never after.
                     if (kept != m_blockStates.end() &&
                         (planned.Kind != ::midipatchbay::BlockKind::CiResponder || kept->second->Ci != nullptr) &&
-                        (!::midipatchbay::HasWays(planned.Kind) || kept->second->Ways != nullptr))
+                        (!::midipatchbay::HasWays(planned.Kind) || kept->second->Ways != nullptr) &&
+                        (planned.Kind != ::midipatchbay::BlockKind::MessageConverter || kept->second->Converter != nullptr))
                     {
                         state = kept->second;
                     }

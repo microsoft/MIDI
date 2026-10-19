@@ -47,6 +47,11 @@ namespace midisequencer
 
         void CloseAll() noexcept;
 
+        // The groups of each endpoint the sequencer doesn't play to, one bit each, chosen in
+        // Studio setup. Keyed like the connections. A message for one of them is left out on
+        // purpose, so it isn't counted as dropped.
+        void SetGroupsOff(_In_ std::map<std::pair<std::wstring, std::wstring>, uint16_t> groupsOff);
+
         void Send(
             _In_ EndpointRef const& endpoint,
             _In_ uint64_t timestamp,
@@ -65,6 +70,7 @@ namespace midisequencer
 
         // Keyed by endpoint name and saved id together, which is what the engine passes.
         std::map<std::pair<std::wstring, std::wstring>, winrt::Windows::Devices::Midi2::MidiEndpointConnection> m_connections{};
+        std::map<std::pair<std::wstring, std::wstring>, uint16_t> m_groupsOff{};
 
         std::atomic<uint64_t> m_dropped{ 0 };
     };

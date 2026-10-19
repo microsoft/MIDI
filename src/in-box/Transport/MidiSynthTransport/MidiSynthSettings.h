@@ -17,13 +17,13 @@ enum class MidiSynthAudioMode
     // Same, but asks IAudioClient3 for the smallest period the engine will allow.
     WasapiSharedLowLatency,
 
-    // Not implemented yet. Both take the device away from everything else on the machine, which
-    // needs a user facing decision before it can be offered.
-    //
-    // Asio is deliberately absent from the public API: it also needs a device selection, since
-    // there is no default ASIO device, and the SDK and branding that come with it. The hook is
-    // kept here so the work can return without reshaping the settings.
+    // Takes the device for the synthesizer alone while it plays, skipping the Windows mixer and its
+    // buffering. When the device cannot be taken, the synthesizer plays in shared mode instead.
     WasapiExclusive,
+
+    // Not implemented, and deliberately absent from the public API: it needs a device selection,
+    // since there is no default ASIO device, and the SDK and branding that come with it. The hook is
+    // kept here so the work can return without reshaping the settings.
     Asio,
 };
 
@@ -48,12 +48,18 @@ struct MidiSynthSettings
     bool AudioModeIsImplemented() const noexcept
     {
         return AudioMode == MidiSynthAudioMode::WasapiShared
-            || AudioMode == MidiSynthAudioMode::WasapiSharedLowLatency;
+            || AudioMode == MidiSynthAudioMode::WasapiSharedLowLatency
+            || AudioMode == MidiSynthAudioMode::WasapiExclusive;
     }
 
     bool WantsLowLatency() const noexcept
     {
         return AudioMode == MidiSynthAudioMode::WasapiSharedLowLatency;
+    }
+
+    bool WantsExclusive() const noexcept
+    {
+        return AudioMode == MidiSynthAudioMode::WasapiExclusive;
     }
 
     static PCWSTR SynthModeToString(_In_ MidiSynth::SynthMode const mode) noexcept
@@ -74,7 +80,7 @@ struct MidiSynthSettings
         }
     }
 
-    static bool TryParseSynthMode(_In_ std::wstring const& text, _Out_ MidiSynth::SynthMode& mode) noexcept
+    static _Success_(return) bool TryParseSynthMode(_In_ std::wstring const& text, _Out_ MidiSynth::SynthMode& mode) noexcept
     {
         if (_wcsicmp(text.c_str(), MIDI_SYNTH_JSON_SYNTH_MODE_COMPATIBLE) == 0)
         {
@@ -91,7 +97,7 @@ struct MidiSynthSettings
         return false;
     }
 
-    static bool TryParseAudioMode(_In_ std::wstring const& text, _Out_ MidiSynthAudioMode& mode) noexcept
+    static _Success_(return) bool TryParseAudioMode(_In_ std::wstring const& text, _Out_ MidiSynthAudioMode& mode) noexcept
     {        if (_wcsicmp(text.c_str(), MIDI_SYNTH_JSON_AUDIO_MODE_SHARED) == 0)
         {
             mode = MidiSynthAudioMode::WasapiShared;
@@ -130,7 +136,7 @@ struct MidiSynthSettings
         }
     }
 
-    static bool TryParseBankSelectMode(
+    static _Success_(return) bool TryParseBankSelectMode(
         _In_ std::wstring const& text,
         _Out_ MidiSynth::BankSelectMode& mode) noexcept
     {

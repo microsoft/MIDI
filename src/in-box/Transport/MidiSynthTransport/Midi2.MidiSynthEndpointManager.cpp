@@ -58,6 +58,9 @@ CMidi2MidiSynthEndpointManager::Initialize(
 HRESULT
 CMidi2MidiSynthEndpointManager::SyncEndpointToSettings()
 {
+    // One at a time, and none once Shutdown has started.
+    auto syncLock = m_syncLock.lock();
+
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
 
     auto device = TransportState::Current().GetDevice();
@@ -105,8 +108,8 @@ CMidi2MidiSynthEndpointManager::RemoveEndpoint()
 
         instanceId = m_endpointShortInstanceId;
 
-        // Cleared before the removal rather than after, so a settings change arriving while the
-        // service tears the device pipe down cannot decide the endpoint still exists.
+        // Cleared before the removal rather than after, so a status request arriving while the
+        // service tears the device pipe down doesn't report an endpoint that is going away.
         m_endpointShortInstanceId.clear();
         m_endpointDeviceInterfaceId.clear();
     }
@@ -336,6 +339,7 @@ CMidi2MidiSynthEndpointManager::CreateEndpoint()
 // This runs on its own thread. DiscoverAndNegotiate is a COM call back into the service which
 // opens a client connection to this very endpoint, and the caller is still inside endpoint
 // creation, so doing it inline would have the transport waiting on itself.
+_Use_decl_annotations_
 HRESULT
 CMidi2MidiSynthEndpointManager::InitiateDiscoveryAndNegotiation(std::wstring const& endpointInterfaceId)
 {
@@ -389,6 +393,10 @@ CMidi2MidiSynthEndpointManager::Shutdown()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+    // Waits out a settings change that is creating or removing the endpoint, and keeps any later
+    // one away from the pointers released below. The service holds none of its own locks here.
+    auto syncLock = m_syncLock.lock();
 
     LOG_IF_FAILED(TransportState::Current().Shutdown());
 

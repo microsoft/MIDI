@@ -99,7 +99,7 @@ namespace
 
     // Renders a short burst and reports its RMS, which is how the resolution checks below tell
     // two nearly identical velocities apart.
-    double RenderBurstRms(_In_ SynthEngine& engine, _In_ uint32_t sampleRate, _In_ double seconds)
+    double RenderBurstRms(_Inout_ SynthEngine& engine, _In_ uint32_t sampleRate, _In_ double seconds)
     {
         const auto frames = static_cast<uint32_t>(seconds * sampleRate);
         std::vector<float> buffer(static_cast<size_t>(frames) * 2, 0.0f);
@@ -127,7 +127,7 @@ namespace
     // only ever compare one estimate against another, so this needs to be consistent rather than
     // absolutely accurate, which autocorrelation on a sustained tone comfortably is.
     double EstimateFundamentalHertz(
-        _In_ SynthEngine& engine,
+        _Inout_ SynthEngine& engine,
         _In_ uint32_t sampleRate,
         _In_ double seconds)
     {
@@ -195,8 +195,8 @@ namespace
 
     void FreshEngine(
         _In_ const DlsCollection& collection,
-        _In_ SynthEngine& engine,
-        _In_ UmpDispatcher& dispatcher,
+        _Inout_ SynthEngine& engine,
+        _Inout_ UmpDispatcher& dispatcher,
         _In_ uint8_t group)
     {
         engine.Initialize(&collection, TestConfig());
@@ -204,7 +204,7 @@ namespace
         dispatcher.Initialize(&engine, group, TestMuid);
     }
 
-    void SendSysExPayload(_In_ UmpDispatcher& dispatcher, _In_ const std::vector<uint8_t>& payload)
+    void SendSysExPayload(_Inout_ UmpDispatcher& dispatcher, _In_ const std::vector<uint8_t>& payload)
     {
         for (size_t offset = 0; offset < payload.size(); offset += 6)
         {
@@ -241,7 +241,7 @@ namespace
     {
         std::vector<uint32_t> Words;
 
-        void SendUmp(const uint32_t* words, uint32_t wordCount) noexcept override
+        void SendUmp(_In_reads_(wordCount) const uint32_t* words, _In_ uint32_t wordCount) noexcept override
         {
             for (uint32_t i = 0; i < wordCount; i++)
             {
@@ -250,7 +250,7 @@ namespace
         }
     };
 
-    void SendIdentityRequest(_In_ UmpDispatcher& dispatcher)
+    void SendIdentityRequest(_Inout_ UmpDispatcher& dispatcher)
     {
         // 7E 7F 06 01, as a complete sysex7 packet.
         uint32_t sysex[2];
@@ -295,7 +295,7 @@ namespace
     }
 
     // Interleaved stereo, rendered in the small blocks the transport uses.
-    std::vector<float> RenderSeconds(_In_ SynthEngine& engine, _In_ uint32_t sampleRate, _In_ double seconds)
+    std::vector<float> RenderSeconds(_Inout_ SynthEngine& engine, _In_ uint32_t sampleRate, _In_ double seconds)
     {
         const auto frames = static_cast<uint32_t>(seconds * sampleRate);
         std::vector<float> buffer(static_cast<size_t>(frames) * 2, 0.0f);
@@ -1313,16 +1313,21 @@ void MidiSynthUmpTests::TestPropertyExchangeControllerList()
         std::string("[{\"resource\":\"DeviceInfo\"},{\"resource\":\"ChannelList\",\"canSubscribe\":true},"
                     "{\"resource\":\"ProgramList\"},{\"resource\":\"ChCtrlList\"}]"));
 
-    // M2-117-UM: ChCtrlList cannot be used without a reference from ChannelList.
+    // M2-117-UM: ChCtrlList cannot be used without a reference from ChannelList. Channel 10 plays a
+    // drum kit, which ignores channel tuning, so it links to a list of its own.
     const auto channels = text(source.RebuildChannelListJson(engine, *collection));
 
     VERIFY_ARE_EQUAL(
         count(channels, "{\"resource\":\"ChCtrlList\",\"resId\":\"channel\",\"title\":\"Controllers\"}"),
-        MidiChannelCount, L"every channel links to the controller list");
+        MidiChannelCount - 1, L"every melodic channel links to the controller list");
+    VERIFY_ARE_EQUAL(
+        count(channels, "{\"resource\":\"ChCtrlList\",\"resId\":\"drums\",\"title\":\"Controllers\"}"),
+        (size_t)1, L"the drum channel links to the drum controller list");
 
     const auto controllers = text(source.ControllerListJson());
+    const auto drumControllers = text(source.DrumControllerListJson());
 
-    for (const auto& document : { text(source.ResourceListJson()), channels, controllers })
+    for (const auto& document : { text(source.ResourceListJson()), channels, controllers, drumControllers })
     {
         json::JsonArray parsed{ nullptr };
 
@@ -1343,12 +1348,16 @@ void MidiSynthUmpTests::TestPropertyExchangeControllerList()
         L"reverb send defaults to 40, as GM2 sets it");
     VERIFY_IS_TRUE(controllers.find("\"ctrlType\":\"rpn\",\"ctrlIndex\":[0,0],\"priority\":4,\"default\":67108864,") != std::string::npos,
         L"pitch bend sensitivity defaults to two semitones");
+    VERIFY_IS_TRUE(controllers.find("\"ctrlType\":\"rpn\",\"ctrlIndex\":[0,1],\"priority\":4,\"default\":2147483648,") != std::string::npos,
+        L"fine tuning defaults to in tune");
+    VERIFY_IS_TRUE(controllers.find("\"ctrlType\":\"rpn\",\"ctrlIndex\":[0,2],\"priority\":4,\"default\":2147483648,") != std::string::npos,
+        L"coarse tuning defaults to in tune");
 
     // A tone generator sends no controllers, and every entry has to say so because the default
     // is that it does.
     const auto entries = count(controllers, "{\"title\":");
 
-    VERIFY_ARE_EQUAL(entries, (size_t)13);
+    VERIFY_ARE_EQUAL(entries, (size_t)15);
     VERIFY_ARE_EQUAL(count(controllers, "\"transmit\":\"none\""), entries, L"no entry claims the synth sends it");
 
     // Listed most useful first, which is what lets a controller with eight knobs map the right ones.
@@ -1365,10 +1374,52 @@ void MidiSynthUmpTests::TestPropertyExchangeControllerList()
         previous = priority;
     }
 
-    // The resource id the links hand out is answered, and so is a request without one.
+    // A drum kit ignores modulation, pitch bend, the damper pedal, pitch bend sensitivity and fine
+    // and coarse tuning, as General MIDI 2 recommends, so the drum list is the same one without
+    // those six entries.
+    VERIFY_ARE_EQUAL(count(drumControllers, "{\"title\":"), entries - 6);
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlType\":\"rpn\"") == std::string::npos, L"no registered controllers for drums");
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlType\":\"pBend\"") == std::string::npos, L"no pitch bend for drums");
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlIndex\":[1],") == std::string::npos, L"no modulation for drums");
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlIndex\":[64],") == std::string::npos, L"no damper pedal for drums");
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlIndex\":[7],") != std::string::npos, L"drums keep volume");
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlIndex\":[10],") != std::string::npos, L"drums keep pan");
+    VERIFY_IS_TRUE(drumControllers.find("\"ctrlType\":\"pnp\"") != std::string::npos, L"drums keep per-note pitch bend");
+
+    // The resource ids the links hand out are answered, and so is a request without one, which
+    // gets the melodic list.
     VERIFY_IS_TRUE(PropertyExchangeSource::IsKnownControllerListResourceId(ControllerListResourceId));
+    VERIFY_IS_TRUE(PropertyExchangeSource::IsKnownControllerListResourceId(DrumControllerListResourceId));
     VERIFY_IS_TRUE(PropertyExchangeSource::IsKnownControllerListResourceId(""));
     VERIFY_IS_FALSE(PropertyExchangeSource::IsKnownControllerListResourceId("ch1"));
+
+    VERIFY_IS_TRUE(&source.ControllerListJson("") == &source.ControllerListJson());
+    VERIFY_IS_TRUE(&source.ControllerListJson(DrumControllerListResourceId) == &source.DrumControllerListJson());
+
+    // General MIDI 2 makes any channel a rhythm channel when bank select 120 chooses a kit, and
+    // the channel list says so.
+    engine.SetBankSelectMode(BankSelectMode::GeneralMidi2);
+    engine.ProgramChangeWithBank(10, 120, 0, 0);
+
+    const auto withSecondKit = text(source.RebuildChannelListJson(engine, *collection));
+
+    VERIFY_IS_TRUE(withSecondKit.find("{\"title\":\"Percussion\",\"channel\":11,") != std::string::npos,
+        L"channel 11 playing a kit is called Percussion");
+    VERIFY_ARE_EQUAL(count(withSecondKit, "\"resId\":\"drums\",\"title\":\"Controllers\"}"), (size_t)2,
+        L"and links to the drum controller list");
+
+    // The entry names the kit that plays. Kits are found at bank zero whatever bank select chose
+    // them, so channel 11 names the same standard kit as channel 10.
+    json::JsonArray secondKitEntries{ nullptr };
+    VERIFY_IS_TRUE(json::JsonArray::TryParse(winrt::to_hstring(withSecondKit), secondKitEntries));
+
+    const auto channel10Kit = secondKitEntries.GetObjectAt(9).GetNamedString(L"programTitle", L"");
+    const auto channel11Kit = secondKitEntries.GetObjectAt(10).GetNamedString(L"programTitle", L"");
+
+    Log::Comment(String().Format(L"Channel 10 plays '%s', channel 11 plays '%s'", channel10Kit.c_str(), channel11Kit.c_str()));
+
+    VERIFY_IS_FALSE(channel11Kit.empty(), L"the kit chosen by bank select is named");
+    VERIFY_IS_TRUE(channel11Kit == channel10Kit, L"and it is the kit that plays");
 }
 
 
@@ -1444,6 +1495,8 @@ void MidiSynthUmpTests::TestPropertyExchangeText()
         { &host.ChorusSend, "#ChorusSend" },
         { &host.NotePitchBend, "#NotePitchBend" },
         { &host.PitchBendSensitivity, "#PitchBendSensitivity" },
+        { &host.FineTuning, "#FineTuning" },
+        { &host.CoarseTuning, "#CoarseTuning" },
         { &host.NoteVolume, "#NoteVolume" },
         { &host.NotePan, "#NotePan" },
         { &host.NotePitch, "#NotePitch" },
@@ -1473,15 +1526,25 @@ void MidiSynthUmpTests::TestPropertyExchangeText()
     VERIFY_IS_TRUE(channels.find("{\"title\":\"#Percussion\",\"channel\":6,") != std::string::npos);
     VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"melodic\",\"title\":\"#MelodicPrograms\"}"), (size_t)14);
     VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"drums\",\"title\":\"#DrumKits\"}"), (size_t)2);
-    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"channel\",\"title\":\"#Controllers\"}"), MidiChannelCount,
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"channel\",\"title\":\"#Controllers\"}"), (size_t)14);
+    VERIFY_ARE_EQUAL(count(channels, "\"resId\":\"drums\",\"title\":\"#Controllers\"}"), (size_t)2,
         L"link titles come from the host");
 
     const auto controllers = text(translated.ControllerListJson());
+    const auto drumControllers = text(translated.DrumControllerListJson());
 
     for (const auto& [field, value] : controllerTitles)
     {
-        VERIFY_IS_TRUE(controllers.find(std::string("{\"title\":\"") + value + "\",") != std::string::npos,
-            L"every controller name comes from the host");
+        const auto entry = std::string("{\"title\":\"") + value + "\",";
+
+        VERIFY_IS_TRUE(controllers.find(entry) != std::string::npos, L"every controller name comes from the host");
+
+        // The drum channels' list has every name but the ones General MIDI 2 says drums ignore.
+        const bool ignoredByDrums =
+            field == &host.Modulation || field == &host.PitchBend || field == &host.SustainPedal ||
+            field == &host.PitchBendSensitivity || field == &host.FineTuning || field == &host.CoarseTuning;
+
+        VERIFY_ARE_EQUAL(!ignoredByDrums, drumControllers.find(entry) != std::string::npos);
     }
 
     VERIFY_IS_TRUE(
@@ -2140,7 +2203,7 @@ namespace
 
     // Sends the inquiry, then does what the transport's worker does with it.
     ReportParts RequestReport(
-        _In_ UmpDispatcher& dispatcher,
+        _Inout_ UmpDispatcher& dispatcher,
         _In_ uint8_t deviceId,
         _In_ uint8_t dataControl,
         _In_ uint8_t channelControllers)
@@ -2218,6 +2281,13 @@ void MidiSynthUmpTests::TestMidiMessageReport()
         dispatcher.ProcessWords(words, 2);
     };
 
+    const auto registered = [&](uint8_t channel, uint8_t index, uint32_t data)
+    {
+        uint32_t words[2]{};
+        MakeMidi2Cv(0, 0x2, channel, 0, index, data, words);
+        dispatcher.ProcessWords(words, 2);
+    };
+
     // Values arriving every way a value can: MIDI 1.0, MIDI 2.0, and one set to what it already was.
     midi1(0xB, 0, 0, 121);                  // channel 1: bank 121, 1, program 6
     midi1(0xB, 0, 32, 1);
@@ -2234,8 +2304,20 @@ void MidiSynthUmpTests::TestMidiMessageReport()
     midi1(0xB, 2, 101, 0);                  // pitch bend sensitivity, 12 semitones
     midi1(0xB, 2, 100, 0);
     midi1(0xB, 2, 6, 12);
+    registered(2, 1, 0xA0000000);           // fine tuning, 25 cents sharp
+    registered(2, 2, 0x84000000);           // coarse tuning, 2 semitones sharp
 
     midi1(0xE, 3, 0x7F, 0x7F);              // channel 4: the top of a 14 bit bend
+    midi1(0xB, 3, 101, 0);                  // pitch bend sensitivity, 4 semitones and 50 cents
+    midi1(0xB, 3, 100, 0);
+    midi1(0xB, 3, 6, 4);
+    midi1(0xB, 3, 38, 50);
+    midi1(0xB, 3, 100, 1);                  // fine tuning 80, 25 cents sharp
+    midi1(0xB, 3, 6, 80);
+    midi1(0xB, 3, 100, 2);                  // coarse tuning 61, 3 semitones flat
+    midi1(0xB, 3, 6, 61);
+
+    registered(4, 0, (5u << 25) | (25u << 18)); // channel 5: 5 semitones and 25 cents from MIDI 2.0
 
     output.Words.clear();
 
@@ -2268,23 +2350,25 @@ void MidiSynthUmpTests::TestMidiMessageReport()
     VERIFY_IS_TRUE(full.End == ExpectedReportEnd(0x7F), L"and the end closes it");
 
     // Each channel in turn, each in the same order: the bend, controllers by number, pitch bend
-    // sensitivity, then the program with its bank marked valid.
-    constexpr uint8_t slotStatus[10]{ 0xE, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0x2, 0xC };
-    constexpr uint8_t slotIndex[10]{ 0, 1, 7, 10, 11, 64, 91, 93, 0, 0 };
-    constexpr uint8_t slotFlags[10]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01 };
+    // sensitivity, fine tuning and coarse tuning, then the program with its bank marked valid.
+    constexpr size_t Slots = UmpDispatcher::MidiMessageReportMessagesPerChannel;
 
-    bool ordered = full.Messages.size() == MidiChannelCount * 10;
+    constexpr uint8_t slotStatus[Slots]{ 0xE, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0xB, 0x2, 0x2, 0x2, 0xC };
+    constexpr uint8_t slotIndex[Slots]{ 0, 1, 7, 10, 11, 64, 91, 93, 0, 0, 0, 0 };
+    constexpr uint8_t slotFlags[Slots]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0x01 };
+
+    bool ordered = full.Messages.size() == MidiChannelCount * Slots;
 
     for (size_t i = 0; ordered && i < full.Messages.size(); i++)
     {
         const auto word0 = full.Messages[i].first;
-        const auto slot = i % 10;
+        const auto slot = i % Slots;
 
         ordered =
             (word0 >> 28) == 0x4 &&
             ((word0 >> 24) & 0xF) == 0 &&
             ((word0 >> 20) & 0xF) == slotStatus[slot] &&
-            ((word0 >> 16) & 0xF) == i / 10 &&
+            ((word0 >> 16) & 0xF) == i / Slots &&
             ((word0 >> 8) & 0xFF) == slotIndex[slot] &&
             (word0 & 0xFF) == slotFlags[slot];
 
@@ -2296,27 +2380,36 @@ void MidiSynthUmpTests::TestMidiMessageReport()
 
     VERIFY_IS_TRUE(ordered, L"one whole channel after another, in a fixed order");
 
-    const auto value = [&](size_t channel, size_t slot) { return full.Messages[channel * 10 + slot].second; };
+    const auto value = [&](size_t channel, size_t slot) { return full.Messages[channel * Slots + slot].second; };
 
     // A channel nobody touched reports the General MIDI power-up state. A 7 bit value goes back
     // scaled up the way M2-115-UM scales it, so volume 100 is not simply 100 << 25.
-    const uint32_t powerUp[10]{ 0x80000000, 0, 3374617161, 0x80000000, 0xFFFFFFFF, 0, 1342177280, 0, 2u << 25, 0 };
+    const uint32_t powerUp[Slots]{ 0x80000000, 0, 3374617161, 0x80000000, 0xFFFFFFFF, 0, 1342177280, 0, 2u << 25, 0x80000000, 0x80000000, 0 };
 
-    for (size_t slot = 0; slot < 10; slot++)
+    for (size_t slot = 0; slot < Slots; slot++)
     {
         VERIFY_ARE_EQUAL(value(1, slot), powerUp[slot]);
     }
 
     // A 32 bit value goes back exactly as it arrived.
-    const uint32_t changed[10]{ 0x89ABCDEF, 0x80000000, 0xFFFFFFFF, 0x12345678, 0x9ABCDEF0, 0xFFFFFFFF, 1342177280, 0x80000000, 12u << 25, 0 };
+    const uint32_t changed[Slots]{ 0x89ABCDEF, 0x80000000, 0xFFFFFFFF, 0x12345678, 0x9ABCDEF0, 0xFFFFFFFF, 1342177280, 0x80000000, 12u << 25, 0xA0000000, 0x84000000, 0 };
 
-    for (size_t slot = 0; slot < 10; slot++)
+    for (size_t slot = 0; slot < Slots; slot++)
     {
         VERIFY_ARE_EQUAL(value(2, slot), changed[slot]);
     }
 
-    VERIFY_ARE_EQUAL(value(0, 9), (5u << 24) | (121u << 8) | 1u, L"program 6 on bank 121, 1");
+    VERIFY_ARE_EQUAL(value(0, 11), (5u << 24) | (121u << 8) | 1u, L"program 6 on bank 121, 1");
     VERIFY_ARE_EQUAL(value(3, 0), 0xFFFFFFFFu, L"the top of a 14 bit bend is the top of a 32 bit one");
+
+    // MIDI 1.0 tuning goes back the way a translator would carry it: fine tuning 80 scaled up from
+    // fourteen bits, and coarse tuning 61 in the top seven.
+    VERIFY_ARE_EQUAL(value(3, 9), 0xA0010008u, L"MIDI 1.0 fine tuning comes back scaled up");
+    VERIFY_ARE_EQUAL(value(3, 10), 61u << 25, L"MIDI 1.0 coarse tuning comes back in the top seven bits");
+
+    // Pitch bend sensitivity carries its cents in the seven bits under the semitones.
+    VERIFY_ARE_EQUAL(value(3, 8), (4u << 25) | (50u << 18), L"MIDI 1.0 bend range comes back with its cents");
+    VERIFY_ARE_EQUAL(value(4, 8), (5u << 25) | (25u << 18), L"and so does MIDI 2.0's");
 
     // Only what differs from power-up. Reverb on channel 3 was sent but not changed, so it stays out.
     const std::vector<std::pair<uint32_t, uint32_t>> expectedChanges
@@ -2330,7 +2423,13 @@ void MidiSynthUmpTests::TestMidiMessageReport()
         { 0x40B24000, 0xFFFFFFFF },                         // sustain
         { 0x40B25D00, 0x80000000 },                         // chorus
         { 0x40220000, 12u << 25 },                          // pitch bend sensitivity
+        { 0x40220001, 0xA0000000 },                         // fine tuning
+        { 0x40220002, 0x84000000 },                         // coarse tuning
         { 0x40E30000, 0xFFFFFFFF },                         // channel 4: bend
+        { 0x40230000, (4u << 25) | (50u << 18) },           // pitch bend sensitivity
+        { 0x40230001, 0xA0010008 },                         // fine tuning
+        { 0x40230002, 61u << 25 },                          // coarse tuning
+        { 0x40240000, (5u << 25) | (25u << 18) },           // channel 5: pitch bend sensitivity
     };
 
     const auto nonDefault = RequestReport(dispatcher, 0x7F, ci::MessageDataControlNonDefault, 0x3F);
@@ -2455,12 +2554,19 @@ void MidiSynthUmpTests::TestMasterTuning()
     const uint32_t rate = TestConfig().RenderSampleRate();
 
     // Coarse tuning must move a melodic channel, and must leave a drum kit alone or a
-    // different drum sound would be selected.
-    auto renderNote = [&](uint8_t channel, uint8_t coarseMsb, std::vector<float>& out)
+    // different drum sound would be selected. General MIDI 2 sections 4.2 and 4.3 say the same of
+    // a kit chosen by bank select, which makes any channel a rhythm channel.
+    auto renderNote = [&](uint8_t channel, bool kitByBankSelect, uint8_t coarseMsb, std::vector<float>& out)
     {
         SynthEngine engine;
         UmpDispatcher dispatcher;
         FreshEngine(*collection, engine, dispatcher, 0);
+
+        if (kitByBankSelect)
+        {
+            engine.SetBankSelectMode(BankSelectMode::GeneralMidi2);
+            engine.ProgramChangeWithBank(channel, 120, 0, 0);
+        }
 
         SendSysExPayload(dispatcher, DeviceControl(0x04, static_cast<uint16_t>(coarseMsb) << 7));
 
@@ -2472,18 +2578,27 @@ void MidiSynthUmpTests::TestMasterTuning()
     };
 
     std::vector<float> melodicCentered, melodicShifted;
-    renderNote(0, 64, melodicCentered);
-    renderNote(0, 76, melodicShifted);
+    renderNote(0, false, 64, melodicCentered);
+    renderNote(0, false, 76, melodicShifted);
 
     std::vector<float> drumCentered, drumShifted;
-    renderNote(9, 64, drumCentered);
-    renderNote(9, 76, drumShifted);
+    renderNote(9, false, 64, drumCentered);
+    renderNote(9, false, 76, drumShifted);
+
+    std::vector<float> secondKitCentered, secondKitShifted;
+    renderNote(10, true, 64, secondKitCentered);
+    renderNote(10, true, 76, secondKitShifted);
 
     const bool melodicMoved = melodicCentered != melodicShifted;
     const bool drumUntouched = drumCentered == drumShifted;
+    const bool secondKitHeard = std::any_of(secondKitCentered.begin(), secondKitCentered.end(),
+        [](float sample) { return std::fabs(sample) > 0.001f; });
+    const bool secondKitUntouched = secondKitCentered == secondKitShifted;
 
     VERIFY_IS_TRUE(melodicMoved, L"master coarse tuning shifts a melodic channel");
     VERIFY_IS_TRUE(drumUntouched, L"master tuning leaves a drum channel alone");
+    VERIFY_IS_TRUE(secondKitHeard, L"the kit chosen by bank select is heard");
+    VERIFY_IS_TRUE(secondKitUntouched, L"and master tuning leaves it alone too");
 }
 
 
@@ -3340,5 +3455,68 @@ void MidiSynthUmpTests::TestReverbFillsBothSidesOfAPannedSound()
 
     VERIFY_IS_TRUE(std::fabs(hardLeftTotal - centeredTotal) < 0.1,
         L"panning a sound does not change how much of it reaches the reverb");
+}
+
+
+// The transport answers System Exclusive before any audio device is open, so a GM2 or XG System On
+// usually reaches the engine before the note that opens the device and initializes it. Initializing
+// must keep the convention the sender chose, or a kit chosen by bank select plays as a melodic
+// program.
+void MidiSynthUmpTests::TestResetMessageSurvivesInitialize()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    struct Case
+    {
+        std::vector<uint8_t> SystemOn;
+        uint8_t KitBankMsb;
+        BankSelectMode Convention;
+        const wchar_t* Name;
+    };
+
+    const Case cases[]
+    {
+        { { 0x7E, 0x7F, 0x09, 0x03 }, 120, BankSelectMode::GeneralMidi2, L"GM2 System On" },
+        { { 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00 }, 127, BankSelectMode::YamahaXG, L"XG System On" },
+    };
+
+    for (const auto& test : cases)
+    {
+        // As the transport runs it: nothing initializes the engine until audio is wanted.
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        dispatcher.Initialize(&engine, 0, TestMuid);
+
+        SendSysExPayload(dispatcher, test.SystemOn);
+
+        // The first note opens the audio device, and a later change of sample rate or synthesizer
+        // mode initializes the engine again.
+        VERIFY_IS_TRUE(engine.Initialize(collection, TestConfig()));
+        VERIFY_IS_TRUE(engine.Initialize(collection, TestConfig()));
+
+        VERIFY_IS_TRUE(engine.EffectiveBankSelectMode() == test.Convention, test.Name);
+
+        engine.ProgramChangeWithBank(10, test.KitBankMsb, 0, 0);
+
+        VERIFY_IS_TRUE(engine.ChannelState(10).PlaysDrumKit, L"a kit chosen by bank select plays on channel 11");
+    }
+
+    // A convention chosen in the settings still wins over the one a sender used.
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    dispatcher.Initialize(&engine, 0, TestMuid);
+
+    SendSysExPayload(dispatcher, { 0x7E, 0x7F, 0x09, 0x03 });
+
+    auto config = TestConfig();
+    config.BankSelect = BankSelectMode::YamahaXG;
+
+    VERIFY_IS_TRUE(engine.Initialize(collection, config));
+    VERIFY_IS_TRUE(engine.EffectiveBankSelectMode() == BankSelectMode::YamahaXG, L"the setting wins");
 }
 

@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SequenceEdits.h"
+#include "GeneratorKinds.h"
 #include "SequenceArpeggiator.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
@@ -13,6 +14,7 @@
 #include <algorithm>
 #include <cmath>
 #include <format>
+#include <iterator>
 #include <random>
 #include <unordered_set>
 
@@ -68,6 +70,7 @@ namespace midisequencer
             int64_t Length{ 0 };
             bool Loop{ true };
             uint32_t Seed{ 0 };
+            std::wstring SeedWords{};
             ClipKind Kind{ ClipKind::Notes };
             winrt::Windows::Data::Json::JsonObject Settings{ nullptr };
 
@@ -79,6 +82,7 @@ namespace midisequencer
                 settings.Length = clip.Length;
                 settings.Loop = clip.Loop;
                 settings.Seed = clip.Seed;
+                settings.SeedWords = clip.SeedWords;
                 settings.Kind = clip.Kind;
 
                 if (clip.Settings != nullptr)
@@ -96,6 +100,7 @@ namespace midisequencer
                 clip.Length = Length;
                 clip.Loop = Loop;
                 clip.Seed = Seed;
+                clip.SeedWords = SeedWords;
                 clip.Kind = Kind;
                 clip.Settings = Settings == nullptr ? nullptr : winrt::Windows::Data::Json::JsonObject::Parse(Settings.Stringify());
 
@@ -128,35 +133,6 @@ namespace midisequencer
             std::wstring m_id{};
             ClipSettings m_before{};
             ClipSettings m_after{};
-        };
-
-        class ClipEventsChange final : public SequenceChange
-        {
-        public:
-            ClipEventsChange(_In_ std::wstring id, _In_ std::vector<ClipEvent> before, _In_ std::vector<ClipEvent> after) :
-                m_id(std::move(id)), m_before(std::move(before)), m_after(std::move(after))
-            {
-            }
-
-            void Apply(_Inout_ Sequence& sequence) override
-            {
-                if (auto clip = FindClip(sequence, m_id); clip != nullptr) { clip->Events = m_after; }
-            }
-
-            void Revert(_Inout_ Sequence& sequence) override
-            {
-                if (auto clip = FindClip(sequence, m_id); clip != nullptr) { clip->Events = m_before; }
-            }
-
-            size_t Cost() const noexcept override
-            {
-                return sizeof(*this) + (m_before.size() + m_after.size()) * sizeof(ClipEvent);
-            }
-
-        private:
-            std::wstring m_id{};
-            std::vector<ClipEvent> m_before{};
-            std::vector<ClipEvent> m_after{};
         };
 
         size_t LanesCost(_In_ std::vector<AutomationLane> const& lanes) noexcept
@@ -333,12 +309,6 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    std::unique_ptr<SequenceChange> MakeClipEventsChange(std::wstring clipId, std::vector<ClipEvent> before, std::vector<ClipEvent> after)
-    {
-        return std::make_unique<ClipEventsChange>(std::move(clipId), std::move(before), std::move(after));
-    }
-
-    _Use_decl_annotations_
     std::unique_ptr<SequenceChange> MakeTempoChange(std::vector<TempoPoint> before, std::vector<TempoPoint> after)
     {
         auto const cost = (before.size() + after.size()) * sizeof(TempoPoint);
@@ -368,13 +338,6 @@ namespace midisequencer
         auto const cost = (before.size() + after.size()) * sizeof(Scene);
         return std::make_unique<SnapshotChange<std::vector<Scene>>>(
             [](Sequence& sequence) { return &sequence.Scenes; }, std::move(before), std::move(after), cost);
-    }
-
-    _Use_decl_annotations_
-    std::unique_ptr<SequenceChange> MakeNameChange(std::wstring before, std::wstring after)
-    {
-        return std::make_unique<SnapshotChange<std::wstring>>(
-            [](Sequence& sequence) { return &sequence.Name; }, std::move(before), std::move(after), 128);
     }
 
     _Use_decl_annotations_
@@ -447,6 +410,47 @@ namespace midisequencer
         return track;
     }
 
+    namespace
+    {
+        // How deep a track sits: 0 at the top, SIZE_MAX when it isn't there.
+        size_t DepthOf(Sequence const& sequence, std::wstring_view id)
+        {
+            size_t found{ SIZE_MAX };
+
+            ForEachTrack(sequence, [&](Track const& track, size_t depth)
+            {
+                if (track.Id == id)
+                {
+                    found = depth;
+                    return false;
+                }
+
+                return true;
+            });
+
+            return found;
+        }
+
+        // How many levels a track has under it: 0 for a track, 1 for a folder of tracks.
+        size_t LevelsBelow(Track const& track)
+        {
+            size_t below{ 0 };
+
+            for (auto const& child : track.Children)
+            {
+                below = std::max(below, 1 + LevelsBelow(child));
+            }
+
+            return below;
+        }
+
+        // Whether a track and everything in it fits at a depth a sequence file keeps.
+        bool FitsAtDepth(Track const& track, size_t depth)
+        {
+            return depth != SIZE_MAX && depth + LevelsBelow(track) < SequenceLimits{}.MaximumFolderDepth;
+        }
+    }
+
     _Use_decl_annotations_
     void InsertTrackAfter(Sequence& sequence, std::wstring_view afterId, Track track)
     {
@@ -466,8 +470,8 @@ namespace midisequencer
         auto& anchor = (*location.Container)[location.Index];
 
         // After an open folder means inside it, at the end, which is where a person looking at the
-        // rows expects a new track to appear.
-        if (anchor.IsFolder && anchor.Open)
+        // rows expects a new track to appear. Deeper than a sequence file keeps, it goes after it.
+        if (auto const depth = DepthOf(sequence, anchor.Id); anchor.IsFolder && anchor.Open && depth != SIZE_MAX && FitsAtDepth(track, depth + 1))
         {
             anchor.Children.push_back(std::move(track));
             return;
@@ -489,6 +493,15 @@ namespace midisequencer
             auto const folder = FindTrack(sequence, folderId);
 
             if (folder == nullptr || !folder->IsFolder)
+            {
+                return false;
+            }
+
+            // No deeper than a sequence file keeps.
+            auto const moving = FindTrack(sequence, trackId);
+            auto const depth = DepthOf(sequence, folderId);
+
+            if (moving == nullptr || depth == SIZE_MAX || !FitsAtDepth(*moving, depth + 1))
             {
                 return false;
             }
@@ -538,6 +551,188 @@ namespace midisequencer
 
         std::swap((*location.Container)[location.Index], (*location.Container)[static_cast<size_t>(target)]);
         return true;
+    }
+
+    _Use_decl_annotations_
+    bool MoveTracks(Sequence& sequence, std::vector<std::wstring> const& trackIds, std::wstring_view folderId, std::wstring_view beforeId)
+    {
+        if (!folderId.empty())
+        {
+            auto const folder = FindTrack(sequence, folderId);
+
+            if (folder == nullptr || !folder->IsFolder)
+            {
+                return false;
+            }
+        }
+
+        // Each id once, and not when a folder moving too already carries it.
+        std::vector<std::wstring> moving{};
+
+        for (auto const& id : trackIds)
+        {
+            if (id.empty() || FindTrack(sequence, id) == nullptr || std::find(moving.begin(), moving.end(), id) != moving.end())
+            {
+                continue;
+            }
+
+            moving.push_back(id);
+        }
+
+        // Tracks inside a folder that's moving go with it, so only the outermost move themselves.
+        std::vector<std::wstring> outermost{};
+
+        for (auto const& id : moving)
+        {
+            auto const carried = std::any_of(moving.begin(), moving.end(), [&](std::wstring const& other)
+            {
+                return other != id && IsInside(sequence, id, other);
+            });
+
+            if (!carried)
+            {
+                outermost.push_back(id);
+            }
+        }
+
+        moving = std::move(outermost);
+
+        if (moving.empty())
+        {
+            return false;
+        }
+
+        // A folder can't go inside itself.
+        for (auto const& id : moving)
+        {
+            if (!folderId.empty() && IsInside(sequence, folderId, id))
+            {
+                return false;
+            }
+        }
+
+        // The place has to be in the destination list. A place that's moving itself means the
+        // first track after it that stays.
+        std::wstring anchor{ beforeId };
+
+        if (!anchor.empty())
+        {
+            auto const location = LocateTrack(sequence, anchor);
+            auto const parentId = location.Parent != nullptr ? std::wstring_view{ location.Parent->Id } : std::wstring_view{};
+
+            if (location.Container == nullptr || parentId != folderId)
+            {
+                return false;
+            }
+
+            anchor.clear();
+
+            for (auto i = location.Index; i < location.Container->size(); ++i)
+            {
+                auto const& candidate = (*location.Container)[i].Id;
+
+                if (std::find(moving.begin(), moving.end(), candidate) == moving.end())
+                {
+                    anchor = candidate;
+                    break;
+                }
+            }
+        }
+
+        // How deep everything ends up.
+        size_t destinationDepth{ 0 };
+
+        if (!folderId.empty())
+        {
+            ForEachTrack(sequence, [&](Track const& track, size_t depth)
+            {
+                if (track.Id == folderId)
+                {
+                    destinationDepth = depth + 1;
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        auto const deepest = [](auto const& self, Track const& track) -> size_t
+        {
+            size_t below{ 0 };
+
+            for (auto const& child : track.Children)
+            {
+                below = std::max(below, 1 + self(self, child));
+            }
+
+            return below;
+        };
+
+        SequenceLimits const limits{};
+
+        for (auto const& id : moving)
+        {
+            if (destinationDepth + deepest(deepest, *FindTrack(sequence, id)) >= limits.MaximumFolderDepth)
+            {
+                return false;
+            }
+        }
+
+        // Where every track sits now, to tell whether anything moved.
+        auto const shape = [&sequence]()
+        {
+            std::vector<std::pair<std::wstring, std::wstring>> rows{};
+
+            auto const walk = [&](auto const& self, std::vector<Track> const& tracks, std::wstring const& parent) -> void
+            {
+                for (auto const& track : tracks)
+                {
+                    rows.emplace_back(track.Id, parent);
+                    self(self, track.Children, track.Id);
+                }
+            };
+
+            walk(walk, sequence.Tracks, std::wstring{});
+            return rows;
+        };
+
+        auto const before = shape();
+
+        std::vector<Track> taken{};
+        taken.reserve(moving.size());
+
+        for (auto const& id : moving)
+        {
+            if (auto removed = RemoveTrack(sequence, id); removed.has_value())
+            {
+                taken.push_back(std::move(*removed));
+            }
+        }
+
+        auto container = &sequence.Tracks;
+
+        if (!folderId.empty())
+        {
+            container = &FindTrack(sequence, folderId)->Children;
+        }
+
+        auto at = container->size();
+
+        if (!anchor.empty())
+        {
+            for (size_t i = 0; i < container->size(); ++i)
+            {
+                if ((*container)[i].Id == anchor)
+                {
+                    at = i;
+                    break;
+                }
+            }
+        }
+
+        container->insert(container->begin() + static_cast<ptrdiff_t>(at), std::make_move_iterator(taken.begin()), std::make_move_iterator(taken.end()));
+
+        return shape() != before;
     }
 
     _Use_decl_annotations_
@@ -630,7 +825,8 @@ namespace midisequencer
         clip.Loop = true;
         clip.Seed = NewSeed();
         clip.Origin = ClipOrigin::Generated;
-        clip.Generator = type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() :
+        clip.Generator = IsSectionTwentyEightGenerator(type) ? MakeSectionTwentyEightGenerator(type) :
+            type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() :
             type == GeneratorType::Arpeggiator ? MakeArpeggiatorGenerator() : MakeEuclideanGenerator();
         clip.Generator->Type = type;
         RefreshGeneratorPreview(clip);
@@ -719,25 +915,6 @@ namespace midisequencer
 
         auto const below = (tick >= 0 ? tick / grid : (tick - grid + 1) / grid) * grid;
         return tick - below >= grid / 2 ? below + grid : below;
-    }
-
-    _Use_decl_annotations_
-    std::vector<size_t> NotesInBox(Clip const& clip, int64_t fromTick, int64_t toTick, uint8_t lowNote, uint8_t highNote)
-    {
-        std::vector<size_t> found{};
-
-        auto first = std::lower_bound(clip.Notes.begin(), clip.Notes.end(), fromTick,
-            [](Note const& note, int64_t tick) { return note.Tick < tick; });
-
-        for (auto it = first; it != clip.Notes.end() && it->Tick < toTick; ++it)
-        {
-            if (it->Number >= lowNote && it->Number <= highNote)
-            {
-                found.push_back(static_cast<size_t>(std::distance(clip.Notes.begin(), it)));
-            }
-        }
-
-        return found;
     }
 
     // ---- automation ----

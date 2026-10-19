@@ -28,6 +28,11 @@
 
 IDI_APPICON ICON "Assets\\AppIcon.ico"
 
+IDR_THEME_NIGHT_DRIVE RCDATA "Themes\\night-drive.json"
+IDR_THEME_TACTILE RCDATA "Themes\\tactile.json"
+IDR_THEME_ALUMINUM RCDATA "Themes\\aluminum.json"
+IDR_THEME_VELLUM RCDATA "Themes\\vellum.json"
+
 STRINGTABLE
 BEGIN
     IDS_SEQUENCE_FILE_TYPE  "Windows MIDI Sequencer sequence"

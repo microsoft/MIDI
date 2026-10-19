@@ -35,7 +35,9 @@ namespace winrt::midisequencer::implementation
                     continue;
                 }
 
-                if (x > 0 && x + size.Width > width)
+                // A little give: layout rounding can arrange the panel a fraction narrower than it
+                // measured, which would otherwise drop the last child onto a row no one made room for.
+                if (x > 0 && x + size.Width > width + 1.0f)
                 {
                     y += rowHeight + Gap;
                     x = 0;

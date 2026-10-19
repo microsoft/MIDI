@@ -245,6 +245,7 @@ $replacements = [ordered]@{
 # appear in too many forms to list.
 $foreignIdentifiers = @(
     'ERROR_CANCELLED'       # Win32, the last error a declined elevation prompt leaves behind
+    'FILE_VER_GET_LOCALISED' # Win32, asks GetFileVersionInfoEx for the version strings in the user's language
 )
 
 # Two passes, because identifiers do not use word boundaries the way prose does.

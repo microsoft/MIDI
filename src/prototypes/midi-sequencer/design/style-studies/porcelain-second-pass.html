@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer: Porcelain, second pass</title>
+<style>
+    body { margin: 0; padding: 28px 32px 48px; background: #EDEBE7; color: #2A2A2D; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+    a { color: #2B6CB0; }
+    .back { font-size: 13px; margin: 0 0 10px; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 6px; }
+    p.lead, ul.changes { max-width: 1100px; font-size: 14px; line-height: 1.55; color: #4A4A50; margin: 0 0 12px; }
+    ul.changes { padding-left: 20px; }
+    ul.changes li { margin-bottom: 4px; }
+    code { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: #E2DFD9; padding: 1px 5px; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; margin-top: 22px; }
+    .colhead { font-size: 14px; font-weight: 600; }
+    .colhead span { font-weight: 400; color: #6A6A70; }
+    figure { margin: 0; background: #FFFFFF; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .08); }
+    figure img.full { width: 100%; display: block; border-radius: 6px; }
+    .label { font-size: 11px; color: #8A8A90; margin: 10px 0 4px 2px; }
+    .crop { overflow: hidden; border-radius: 6px; position: relative; }
+    .crop img { position: absolute; width: 1668px; max-width: none; }
+    .crop.transport { height: 64px; }
+    .crop.transport img { left: -13px; top: -78px; }
+    .crop.headers { height: 150px; }
+    .crop.headers img { left: -13px; top: -272px; }
+    .crop.edge { height: 150px; }
+    .crop.edge img { left: -740px; top: -272px; }
+    .crop.editor { height: 84px; }
+    .crop.editor img { left: -13px; top: -676px; }
+    figcaption { font-size: 13px; line-height: 1.5; color: #4A4A50; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">All the style studies</a></p>
+<h1>Porcelain, second pass</h1>
+<p class="lead">Porcelain with the chrome made one flat surface, as you asked. The original Porcelain is unchanged; this is a layer over it (<code>porcelain-2.css</code>). What changed:</p>
+<ul class="changes">
+    <li><b>The transport is part of the window.</b> No raised deck: its round keys stand straight up from the window, like the title bar's buttons.</li>
+    <li><b>The track headers sit flush.</b> They're no longer raised blocks. The selected track is lit rather than pressed in. The keys on them (M, S, and R) and the clips in the launcher stay raised.</li>
+    <li><b>The timeline is one well for all the tracks</b>, or <b>no well at all</b>, side by side below, for you to pick. In the well, faint engraved lines separate the tracks; with no well, the grid is engraved in the surface itself.</li>
+    <li><b>The clip editor is part of the window too</b>, with no raised frame. An engraved line sets it apart from the busy arrange above. The piano roll keeps its own well, like a screen set into the case.</li>
+</ul>
+<p class="lead">You approved <b>no well</b>, with the timeline a step darker, like the piano roll; it's now on a field in the roll's color. See it <a href="porcelain-variations.html">dark, and in your window color</a>.</p>
+
+<div class="grid">
+    <div class="colhead">Porcelain <span>as it is</span></div>
+    <div class="colhead">Second pass <span>one well</span></div>
+    <div class="colhead">Second pass <span>no well</span></div>
+
+    <figure>
+        <a href="porcelain.html"><img class="full" src="shots/porcelain.png" alt="Porcelain as it is"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain.png" alt=""></div>
+        <div class="label">Where the launcher meets the timeline</div>
+        <div class="crop edge"><img src="shots/porcelain.png" alt=""></div>
+        <div class="label">Where the arrange meets the clip editor</div>
+        <div class="crop editor"><img src="shots/porcelain.png" alt=""></div>
+        <figcaption>A raised deck for the transport, raised track blocks, a groove for each track, and a raised editor.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="porcelain-2.html"><img class="full" src="shots/porcelain-2.png" alt="Porcelain, second pass, with one well"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2.png" alt=""></div>
+        <div class="label">Where the launcher meets the timeline</div>
+        <div class="crop edge"><img src="shots/porcelain-2.png" alt=""></div>
+        <div class="label">Where the arrange meets the clip editor</div>
+        <div class="crop editor"><img src="shots/porcelain-2.png" alt=""></div>
+        <figcaption>One flat surface, with the timeline as a single well: like a screen set into the case, holding every track.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="porcelain-2-no-well.html"><img class="full" src="shots/porcelain-2-no-well.png" alt="Porcelain, second pass, with no well"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <div class="label">Where the launcher meets the timeline</div>
+        <div class="crop edge"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <div class="label">Where the arrange meets the clip editor</div>
+        <div class="crop editor"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <figcaption>The same, with the timeline on the surface and its grid engraved in it, so only the clips stand out.</figcaption>
+    </figure>
+</div>
+
+</body>
+</html>

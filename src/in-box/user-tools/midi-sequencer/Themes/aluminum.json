@@ -1,0 +1,666 @@
+{
+    "themeEngine": 1,
+    "id": "aluminum",
+    "name": "Aluminum",
+    "description": "Matte machined plates split by engraved grooves, under a dark strip with backlit readouts. What you touch is a small graphite object with a short, crisp shadow; color lives in rings, lights and the top edge of each clip. Your window color anodizes it.",
+    "backdrops": [ "solid" ],
+    "windowColor": "material",
+    "light": {
+        "numbers": {
+            "$comment": "How much of the window color anodizes the plates: 1 as designed, 0 for plain metal. The strips, readouts and lights take it either way.",
+            "anodize": 1
+        },
+        "tokens": {
+            "$comment": "The approved Aluminum comp (design/style-studies: aluminum.css with its review fixes).",
+            "surface": "plate",
+            "plate": "#D3D3CF",
+            "plateLight": "#DCDCD8",
+            "base": "#C9C9C5",
+            "well": "#BDBDB8",
+            "strip": "#2B2B2D",
+            "stripField": "#1E1E20",
+            "groove": "#A3A39F",
+            "ruler": "#C4C4C0",
+            "folder": "#CBCBC7",
+            "hdrSel": "#DEDEDA",
+            "roll": "#E2E2DE",
+            "inspector": "#CDCDC9",
+            "emptyPad": "#CDCDC9",
+            "graphiteHi": "#5A5A60",
+            "graphiteLo": "#2A2A2D",
+            "graphitePressed": "#222225",
+            "clipTop": "#EFEFEC",
+            "clipBottom": "#DADAD6",
+            "ink": "rgba(43, 43, 45, .8)",
+            "padInk": "#EDEDEA",
+            "padGlyph": "#B9B9B5",
+            "engraved": "rgba(255, 255, 255, .5)",
+            "bracket": "#E6E6E2",
+            "capTop": "#F2F2EF",
+            "capBottom": "#C8C8C4",
+            "btnTop": "#E9E9E6",
+            "btnBottom": "#D7D7D3",
+            "toggledFace": "#C7C7C3",
+            "hoverWash": "rgba(0, 0, 0, .06)",
+            "keyGlyph": "#D8D8D4",
+            "lcdGlass": "#141416",
+            "lcdInk": "#F0EFEA",
+            "lcdDim": "#8C8C88",
+            "led": "#6FB3FF",
+            "ledOff": "#8F8F8B",
+
+            "text": "#1B1B1D",
+            "text2": "#47474B",
+            "text3": "#56565B",
+            "accent": "#3B6FD6",
+            "accentInk": "#2950A6",
+            "play": "#3C9A2F",
+            "record": "#D23A3A",
+            "recordText": "#B32E2E",
+            "mute": "#E0A100",
+            "solo": "accent",
+            "caution": "#8A5A00",
+
+            "divider": "groove",
+            "strokeStrong": "rgba(0, 0, 0, .2)",
+            "laneBackground": "plateLight",
+            "folderLaneBackground": "folder",
+            "launcherBackground": "plate",
+            "launcherEdge": "groove",
+            "barLine": "rgba(0, 0, 0, .26)",
+            "barLineLight": "transparent",
+            "beatLine": "rgba(0, 0, 0, .07)",
+            "laneSeam": "groove",
+            "laneSeamLight": "transparent",
+            "rulerBackground": "ruler",
+            "rulerBarLine": "#8F8F8B",
+            "rulerBeatLine": "rgba(0, 0, 0, .12)",
+            "loopFill": "rgb(from accent r g b / .45)",
+            "loopStroke": "transparent",
+            "playhead": "#1B1B1D",
+            "$comment-steps": "emptySlotFill and emptySlotStroke draw the drum and step editor's empty steps; the launcher's empty slots are launcher.empty.",
+            "emptySlotFill": "rgba(0, 0, 0, .06)",
+            "emptySlotStroke": "rgba(0, 0, 0, .22)",
+            "emptySlotGlyph": "rgba(0, 0, 0, .25)",
+            "armedSlotGlyph": "rgb(from record r g b / .7)",
+            "selectionStroke": "accent",
+            "overlayStripeA": "rgba(211, 211, 207, .9)",
+            "overlayStripeB": "rgba(201, 201, 197, .82)",
+            "rollBackground": "roll",
+            "rollBlackKeyRow": "rgba(0, 0, 0, .05)",
+            "rollWhiteKeyRow": "rgba(255, 255, 255, .3)",
+            "rollOctaveLine": "rgba(0, 0, 0, .16)",
+            "rollBarLine": "rgba(0, 0, 0, .26)",
+            "rollBeatLine": "rgba(0, 0, 0, .11)",
+            "rollStepLine": "rgba(0, 0, 0, .045)",
+            "keyWhite": "#ECECE9",
+            "keyBlack": "#2B2B2D",
+            "keyEdge": "rgba(0, 0, 0, .22)",
+            "keyLabel": "#444444",
+            "noteEdge": "rgba(0, 0, 0, .45)",
+            "laneEdge": "groove",
+            "tempoLine": "rgba(0, 0, 0, .7)",
+            "tempoLabelFill": "#FFFFFF",
+            "tempoLabelStroke": "rgba(0, 0, 0, .3)",
+            "tempoLabelText": "rgba(0, 0, 0, .85)",
+            "handleFill": "#FFFFFF",
+
+            "headerTrack": "plate",
+            "headerSelected": "hdrSel",
+            "headerFolder": "folder",
+            "headerLane": "base",
+
+            "previewChrome": "plate",
+            "previewStrip": "strip",
+            "previewField": "plateLight",
+            "previewClip": "clipTop",
+
+            "clipFill": "color-mix(in srgb, track 20%, #E6E6E2)",
+            "clipStroke": "track",
+            "clipCaption": "color-mix(in srgb, track 48%, white)",
+            "cellFill": "color-mix(in srgb, track 26%, #E6E6E2)",
+            "cellFillPlaying": "color-mix(in srgb, track 46%, #E6E6E2)",
+            "cellStroke": "track",
+            "summaryFill": "rgb(from track r g b / 0.12)",
+            "summaryStroke": "rgb(from track r g b / 0.75)"
+        },
+        "tinted": {
+            "$comment": "aluminum-tint.css: the window color anodizes the metal. The strips are deep in it, the plates take a whisper of it, the readouts are backlit in it, and the lights and selection light up in it.",
+            "strip": "oklch(from tint 0.27 min(c, 0.07) h)",
+            "stripField": "oklch(from tint 0.21 min(c, 0.05) h)",
+            "base": "oklch(from tint 0.83 calc(min(c * 0.40, 0.015) * anodize) h)",
+            "plate": "oklch(from tint 0.86 calc(min(c * 0.38, 0.014) * anodize) h)",
+            "plateLight": "oklch(from tint 0.885 calc(min(c * 0.32, 0.011) * anodize) h)",
+            "well": "oklch(from tint 0.79 calc(min(c * 0.40, 0.015) * anodize) h)",
+            "ruler": "oklch(from tint 0.82 calc(min(c * 0.40, 0.015) * anodize) h)",
+            "folder": "oklch(from tint 0.835 calc(min(c * 0.40, 0.015) * anodize) h)",
+            "hdrSel": "oklch(from tint 0.895 calc(min(c * 0.42, 0.016) * anodize) h)",
+            "roll": "oklch(from tint 0.905 calc(min(c * 0.20, 0.007) * anodize) h)",
+            "groove": "oklch(from tint 0.70 calc(min(c * 0.30, 0.012) * anodize) h)",
+            "inspector": "oklch(from tint 0.835 calc(min(c * 0.40, 0.015) * anodize) h)",
+            "emptyPad": "oklch(from tint 0.835 calc(min(c * 0.40, 0.015) * anodize) h)",
+            "accent": "oklch(from tint 0.53 min(0.09, c * 4) h)",
+            "accentInk": "oklch(from tint 0.43 min(0.09, c * 4) h)",
+            "led": "oklch(from tint 0.80 min(0.13, c * 5) h)",
+            "lcdInk": "oklch(from tint 0.88 min(0.085, c * 4) h)",
+            "lcdDim": "oklch(from tint 0.62 min(0.06, c * 2) h)",
+            "lcdGlass": "oklch(from tint 0.17 min(c, 0.03) h)",
+            "loopFill": "color-mix(in oklch, accent 45%, transparent)",
+            "overlayStripeA": "color-mix(in oklch, plate 90%, transparent)",
+            "overlayStripeB": "color-mix(in oklch, well 82%, transparent)"
+        },
+        "trackColors": {
+            "$comment": "The track colors, a little deeper on the light metal.",
+            "#FF8A65": "#E0672C",
+            "#5BC0EB": "#2F86C9",
+            "#B4A7FF": "#747CD6",
+            "#6CCB5F": "#4C993B",
+            "#4DD0C4": "#1F9C93",
+            "#9C8CFF": "#747CD6",
+            "#F7C948": "#D49A00",
+            "#FF6F91": "#C83F49",
+            "#FFB547": "#D49A00",
+            "#BDBDBD": "#6E6E72"
+        },
+        "shadows": {
+            "$comment": "Short, crisp shadows, as a machined object casts under a light above it.",
+            "crisp": "inset 0 1px 0 rgba(255, 255, 255, .35), 0 2px 3px rgba(0, 0, 0, .35), 0 6px 12px rgba(0, 0, 0, .16)",
+            "crisp-light": "inset 0 1px 0 rgba(255, 255, 255, .9), 0 1px 2px rgba(0, 0, 0, .28), 0 4px 8px rgba(0, 0, 0, .1)",
+            "pressed": "inset 0 2px 4px rgba(0, 0, 0, .55)",
+            "set-in": "inset 0 1px 2px rgba(0, 0, 0, .18), 0 1px 0 engraved",
+            "slot": "inset 0 1px 3px rgba(0, 0, 0, .4), 0 1px 0 engraved",
+            "readout": "inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .45)",
+            "clip": "inset 0 1px 0 rgba(255, 255, 255, .5), 0 1px 2px rgba(0, 0, 0, .3), 0 3px 6px rgba(0, 0, 0, .12)",
+            "clip-lift": "0 0 0 2px accent, 0 4px 10px rgba(0, 0, 0, .25)"
+        },
+        "fonts": {
+            "label": "Bahnschrift SemiCondensed",
+            "digits": "Bahnschrift SemiCondensed"
+        },
+        "metrics": {
+            "$comment": "darkStrips: the title bar, transport and status bar take the dark look, as the comp's strip does in light too. The rest: the timeline's scroll bar.",
+            "darkStrips": 1,
+            "timelineOverviewHeight": 48,
+            "timelinePlainHeight": 28,
+            "timelineOverviewTrack": 38,
+            "timelinePlainTrack": 10,
+            "timelineThumbHeight": 14,
+            "timelineBarLeft": 6,
+            "timelineBarRight": 10,
+            "transportHeight": 56,
+            "transportSpacing": 8
+        },
+        "parts": {
+            "timeline.clip": {
+                "$comment": "Brushed plates, with the track's color on the top edge only and the notes printed in ink.",
+                "background": "linear-gradient(clipTop, clipBottom)",
+                "border-top": "2px solid track",
+                "border-radius": "3px",
+                "box-shadow": "clip",
+                "inset": 3,
+                "caption-height": 15,
+                "caption-weight": 600,
+                "caption-color": "text",
+                "link-color": "text3",
+                "note-color": "ink",
+                "states": {
+                    "selected": { "border-top": "2px solid accent", "box-shadow": "clip-lift" },
+                    "generator": { "background": "linear-gradient(clipTop, clipTop 40%, clipBottom)", "dot-size": 6, "dot-style": "ring", "dot-color": "track" },
+                    "muted": { "filter": "saturate(.1)", "opacity": 0.55 },
+                    "summary": { "background": "rgb(from track r g b / .12)", "border-top": "1px solid track", "box-shadow": "none" }
+                }
+            },
+            "launcher.cell": {
+                "$comment": "The launcher as a graphite pad bank, each pad's top edge in its track's color.",
+                "background": "radial-gradient(circle at 35% 30%, graphiteHi, graphiteLo 72%)",
+                "border-top": "2px solid track",
+                "border-radius": "4px",
+                "box-shadow": "crisp",
+                "margin": "4px 5px",
+                "name-color": "padInk",
+                "glyph-color": "padGlyph",
+                "kind-color": "padGlyph",
+                "note-color": "padInk",
+                "states": {
+                    "playing": { "background": "graphitePressed", "box-shadow": "pressed, 0 0 10px track", "glyph-color": "play" },
+                    "queued": { "box-shadow": "crisp, inset 0 0 0 1px rgba(255, 255, 255, .55)", "glyph-color": "padInk" },
+                    "recording": { "background": "radial-gradient(circle at 35% 30%, #5E3C3A, #2A1E1E 72%)", "box-shadow": "pressed, 0 0 10px rgba(255, 59, 48, .45)", "glyph-color": "record", "name-color": "padInk" },
+                    "muted": { "opacity": 0.45 },
+                    "selected": { "outline": "1.5px solid accent", "outline-offset": "2px" }
+                }
+            },
+            "launcher.empty": {
+                "background": "emptyPad",
+                "border-radius": "4px",
+                "box-shadow": "set-in",
+                "margin": "4px 5px",
+                "glyph-color": "emptySlotGlyph",
+                "states": {
+                    "armed": { "glyph-color": "armedSlotGlyph" },
+                    "selected": { "outline": "1.5px solid accent", "outline-offset": "2px" }
+                }
+            },
+            "launcher.progress": {
+                "background": "play",
+                "height": 2,
+                "margin": "0 6px 3px 6px",
+                "states": {
+                    "recording": { "background": "record" }
+                }
+            },
+            "launcher.when": {
+                "background": "strip",
+                "color": "#EDEDEA",
+                "border-radius": "3px"
+            },
+            "ruler": {
+                "number-color": "text2",
+                "number-font": "label"
+            },
+            "ruler.loop": {
+                "background": "loopFill",
+                "border-radius": "2px 2px 0 0",
+                "height": 8
+            },
+            "timeline.tag": {
+                "background": "color-mix(in srgb, track 55%, #F4F4F0)",
+                "color": "#111111"
+            },
+            "transport.key": {
+                "$comment": "Graphite domes on the strip, with a light at the top right when on. The transport takes the dark look even in light, as the strip does.",
+                "background": "radial-gradient(circle at 35% 30%, graphiteHi, graphiteLo 72%)",
+                "border-radius": "7px",
+                "box-shadow": "crisp",
+                "color": "keyGlyph",
+                "width": 38,
+                "height": 34,
+                "states": {
+                    "hover": { "background": "radial-gradient(circle at 35% 30%, #66666C, graphiteLo 72%)" },
+                    "pressed": { "background": "graphitePressed", "box-shadow": "pressed" },
+                    "on": { "background": "radial-gradient(circle at 35% 30%, #4A4A50, graphitePressed 72%)", "box-shadow": "pressed", "color": "#FFFFFF", "led-color": "led" },
+                    "play-on": { "led-color": "#7BE36A" },
+                    "record": { "color": "#FF8A80" },
+                    "split": { "width": 20, "height": 34 }
+                }
+            },
+            "transport.led": {
+                "width": 5,
+                "height": 5,
+                "top": 3,
+                "right": 4
+            },
+            "transport.lcd": {
+                "background": "lcdGlass",
+                "border-radius": "5px",
+                "box-shadow": "readout"
+            },
+            "transport.digits": {
+                "color": "lcdInk",
+                "font-family": "digits",
+                "font-size": 21,
+                "letter-spacing": "1px"
+            },
+            "transport.small": {
+                "color": "lcdDim",
+                "font-family": "digits",
+                "font-size": 11
+            },
+            "transport.separator": {
+                "background": "linear-gradient(to right, groove 0%, groove 50%, engraved 50%, engraved 100%)",
+                "width": 2,
+                "height": 24
+            },
+            "button": {
+                "background": "linear-gradient(btnTop, btnBottom)",
+                "border-radius": "6px",
+                "box-shadow": "crisp-light",
+                "color": "text",
+                "states": {
+                    "hover": { "background": "linear-gradient(btnTop, btnTop)" },
+                    "pressed": { "background": "toggledFace", "box-shadow": "pressed" },
+                    "toggled": { "background": "toggledFace", "box-shadow": "pressed", "color": "accentInk" }
+                }
+            },
+            "button.subtle": {
+                "color": "text",
+                "states": {
+                    "hover": { "background": "hoverWash", "border-radius": "6px" },
+                    "pressed": { "background": "toggledFace", "box-shadow": "pressed", "border-radius": "6px" },
+                    "toggled": { "background": "toggledFace", "box-shadow": "pressed", "border-radius": "6px", "color": "accentInk" }
+                }
+            },
+            "field": {
+                "background": "well",
+                "border-radius": "5px",
+                "box-shadow": "slot",
+                "color": "text"
+            },
+            "chip": {
+                "background": "plateLight",
+                "border-radius": "5px",
+                "box-shadow": "inset 0 0 0 1px rgba(0, 0, 0, .14), 0 1px 0 engraved",
+                "color": "text2",
+                "states": {
+                    "on": { "color": "play" },
+                    "info": { "color": "accentInk" }
+                }
+            },
+            "timeline.bar.well": {
+                "$comment": "The timeline's overview as a dark display, like the readouts.",
+                "background": "lcdGlass",
+                "border-radius": "5px",
+                "box-shadow": "readout"
+            },
+            "timeline.bar.overview": {
+                "band-color": "rgba(255, 255, 255, .04)",
+                "section-color": "lcdDim",
+                "loop-color": "color-mix(in oklch, led 26%, transparent)",
+                "found-color": "led",
+                "playhead-color": "#FF5A4E",
+                "veil-color": "rgba(0, 0, 0, .36)",
+                "line-brightness": 1.2
+            },
+            "timeline.bar.view": {
+                "$comment": "A metal bracket on what's in view.",
+                "border-radius": "4px",
+                "box-shadow": "inset 0 0 0 2px bracket, inset 0 0 0 3px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .55), 0 2px 4px rgba(0, 0, 0, .35)"
+            },
+            "timeline.bar.grip": {
+                "background": "linear-gradient(to right, capTop, capBottom)",
+                "border-radius": "2px",
+                "box-shadow": "crisp-light",
+                "width": 8,
+                "height": 24,
+                "states": {
+                    "hover": { "box-shadow": "crisp-light, 0 0 0 2px led" }
+                }
+            },
+            "timeline.bar.slot": {
+                "background": "well",
+                "border-radius": "5px",
+                "box-shadow": "slot"
+            },
+            "timeline.bar.thumb": {
+                "$comment": "A brushed thumb with knurled ends.",
+                "background": "linear-gradient(capTop, capBottom)",
+                "border-radius": "4px",
+                "box-shadow": "crisp-light",
+                "grip-color": "rgba(0, 0, 0, .32)",
+                "grip-light-color": "rgba(255, 255, 255, .55)",
+                "states": {
+                    "pressed": { "box-shadow": "pressed" }
+                }
+            },
+            "timeline.bar.toggle": {
+                "background": "well",
+                "border-radius": "6px",
+                "box-shadow": "slot"
+            },
+            "timeline.bar.segment": {
+                "border-radius": "4px",
+                "color": "text3",
+                "states": {
+                    "hover": { "color": "text2" },
+                    "checked": { "background": "radial-gradient(circle at 35% 30%, graphiteHi, graphiteLo 72%)", "box-shadow": "crisp", "color": "padInk" }
+                }
+            },
+            "timeline.bar.key": {
+                "background": "radial-gradient(circle at 35% 30%, graphiteHi, graphiteLo 72%)",
+                "border-radius": "5px",
+                "box-shadow": "crisp",
+                "color": "#E2E2DE",
+                "states": {
+                    "hover": { "background": "radial-gradient(circle at 35% 30%, #66666C, graphiteLo 72%)" },
+                    "pressed": { "background": "graphitePressed", "box-shadow": "pressed" }
+                }
+            },
+            "timeline.bar.separator": {
+                "background": "linear-gradient(to right, groove 0%, groove 50%, engraved 50%, engraved 100%)"
+            },
+            "header.track": {
+                "$comment": "Each header a plate, engraved under the one above; the selected one lighter.",
+                "background": "headerTrack",
+                "box-shadow": "inset 0 1px 0 engraved",
+                "states": {
+                    "folder": { "background": "headerFolder" },
+                    "selected": { "background": "headerSelected" }
+                }
+            },
+            "header.cap": {
+                "$comment": "The track's color as a ring around a small graphite knob.",
+                "background": "radial-gradient(circle at 35% 30%, graphiteHi, graphiteLo 72%)",
+                "border-radius": "50%",
+                "box-shadow": "0 0 0 2px track, 0 2px 3px 2px rgba(0, 0, 0, .25)",
+                "width": 14,
+                "height": 14,
+                "margin": "0 0 0 10px"
+            },
+            "header.toggle": {
+                "$comment": "M, S and R as graphite keys, each with a light at the top right that's lit in its own color when on.",
+                "background": "radial-gradient(circle at 35% 30%, graphiteHi, graphiteLo 72%)",
+                "border-radius": "4px",
+                "box-shadow": "crisp",
+                "color": "#E8E8E4",
+                "font-family": "label",
+                "font-size": 10.5,
+                "width": 24,
+                "height": 21,
+                "led-color": "rgba(255, 255, 255, .16)",
+                "led-size": 4,
+                "led-top": 2,
+                "led-right": 2,
+                "led-glow": 0,
+                "states": {
+                    "hover": { "background": "radial-gradient(circle at 35% 30%, #66666C, graphiteLo 72%)" },
+                    "pressed": { "background": "graphitePressed", "box-shadow": "pressed" },
+                    "record": { "color": "#FF8A80" },
+                    "on": { "background": "graphitePressed", "box-shadow": "pressed", "color": "#F4F4F0", "led-glow": 1 },
+                    "mute-on": { "led-color": "#FFC21A" },
+                    "solo-on": { "led-color": "#4C8DFF" },
+                    "record-on": { "led-color": "#FF3B30", "color": "#F4F4F0" },
+                    "compact": { "width": 20, "height": 18 }
+                }
+            },
+            "header.led": {
+                "background": "ledOff",
+                "border-radius": "50%",
+                "box-shadow": "inset 0 1px 1px rgba(0, 0, 0, .4)",
+                "states": {
+                    "out": { "background": "#5BD34A", "box-shadow": "0 0 5px #5BD34A" }
+                }
+            },
+            "scene": {
+                "$comment": "Cells in the ruler's plate, split by grooves; the number in red.",
+                "border-right": "1px solid groove",
+                "box-shadow": "1px 0 0 engraved",
+                "color": "text",
+                "number-color": "record",
+                "number-font": "label",
+                "glyph-color": "text2"
+            }
+        },
+        "resources": {
+            "SeqWindowSurfaceBrush": "surface",
+            "SeqStripBrush": "strip",
+            "SeqDividerBrush": "groove",
+            "SeqStrokeStrongBrush": "transparent",
+            "SeqRulerRowBrush": "ruler",
+            "SeqPinnedTintBrush": "transparent",
+            "SeqLcdBrush": "transparent",
+            "SeqLcdStrokeBrush": "transparent",
+            "SeqEditorTopBrush": "groove",
+            "SeqEditorBackgroundBrush": "transparent",
+            "SeqInspectorBackgroundBrush": "inspector",
+            "SeqPlayBrush": "play",
+            "SeqRecordBrush": "record",
+            "SeqRecordTextBrush": "recordText",
+            "SeqAccentTextBrush": "accentInk",
+            "SeqChipBrush": "transparent",
+            "SeqChipInfoBrush": "transparent",
+            "SeqChipInfoStrokeBrush": "transparent",
+            "SeqChipOnBrush": "transparent",
+            "SeqChipOnStrokeBrush": "transparent",
+            "SeqChipSelectedBrush": "rgb(from accent r g b / .12)",
+            "SeqChipSelectedStrokeBrush": "rgb(from accent r g b / .45)",
+            "SeqWarnTextBrush": "caution",
+            "SeqPinEdgeTopColor": "#9E9E9A",
+            "SeqPinEdgeBottomColor": "#B9B9B5",
+            "SeqPinShadowColor": "transparent",
+            "SeqPlayheadBrush": "playhead",
+            "TextFillColorPrimaryBrush": "text",
+            "TextFillColorSecondaryBrush": "text2",
+            "TextFillColorTertiaryBrush": "text3"
+        }
+    },
+    "dark": {
+        "extends": "light",
+        "tokens": {
+            "$comment": "aluminum-dark.css: the same plates anodized a dark gray that sits with a dark mode desktop, on one ladder of lightness so the window color changes only hue and chroma. The strips use these in light too.",
+            "plate": "oklch(0.335 0.003 100)",
+            "plateLight": "oklch(0.30 0.003 100)",
+            "base": "oklch(0.20 0.003 100)",
+            "well": "oklch(0.255 0.003 100)",
+            "strip": "oklch(0.235 0.003 100)",
+            "stripField": "oklch(0.17 0.003 100)",
+            "groove": "oklch(0.155 0.003 100)",
+            "ruler": "oklch(0.285 0.003 100)",
+            "folder": "oklch(0.31 0.003 100)",
+            "hdrSel": "oklch(0.40 0.003 100)",
+            "roll": "oklch(0.255 0.003 100)",
+            "inspector": "oklch(0.31 0.003 100)",
+            "emptyPad": "oklch(0.27 0.003 100)",
+            "graphiteHi": "#57585D",
+            "graphiteLo": "#222326",
+            "graphitePressed": "#1C1C1F",
+            "clipTop": "oklch(0.41 0.003 100)",
+            "clipBottom": "oklch(0.37 0.003 100)",
+            "ink": "rgba(236, 236, 232, .82)",
+            "engraved": "rgba(255, 255, 255, .045)",
+            "bracket": "#B9B9B5",
+            "capTop": "#8E8E8A",
+            "capBottom": "#5E5E5B",
+            "btnTop": "oklch(0.40 0.003 100)",
+            "btnBottom": "oklch(0.35 0.003 100)",
+            "toggledFace": "well",
+            "hoverWash": "rgba(255, 255, 255, .06)",
+            "lcdGlass": "#0B0B0C",
+            "ledOff": "oklch(0.38 0.003 100)",
+
+            "text": "#EDEDEA",
+            "text2": "#C2C2BE",
+            "text3": "#A2A29E",
+            "accent": "#7AA7F5",
+            "accentInk": "accent",
+            "play": "#6CCB5F",
+            "record": "#FF6B5F",
+            "recordText": "#FF8A80",
+            "mute": "#F2B300",
+            "caution": "#FCE100",
+
+            "strokeStrong": "rgba(255, 255, 255, .14)",
+            "barLine": "rgba(0, 0, 0, .5)",
+            "barLineLight": "rgba(255, 255, 255, .05)",
+            "beatLine": "rgba(255, 255, 255, .035)",
+            "rulerBarLine": "oklch(0.45 0.003 100)",
+            "rulerBeatLine": "rgba(255, 255, 255, .08)",
+            "loopFill": "color-mix(in oklch, accent 45%, transparent)",
+            "playhead": "#F2F2EE",
+            "emptySlotGlyph": "rgba(255, 255, 255, .18)",
+            "armedSlotGlyph": "rgba(255, 107, 95, .8)",
+            "emptySlotFill": "rgba(0, 0, 0, .18)",
+            "emptySlotStroke": "rgba(255, 255, 255, .13)",
+            "overlayStripeA": "color-mix(in oklch, plateLight 92%, transparent)",
+            "overlayStripeB": "color-mix(in oklch, well 86%, transparent)",
+            "rollBlackKeyRow": "rgba(0, 0, 0, .2)",
+            "rollWhiteKeyRow": "rgba(255, 255, 255, .025)",
+            "rollOctaveLine": "rgba(255, 255, 255, .14)",
+            "rollBarLine": "rgba(255, 255, 255, .22)",
+            "rollBeatLine": "rgba(255, 255, 255, .1)",
+            "rollStepLine": "rgba(255, 255, 255, .04)",
+            "keyWhite": "#C2C2BE",
+            "keyBlack": "#141413",
+            "keyEdge": "rgba(0, 0, 0, .5)",
+            "keyLabel": "#333333",
+            "noteEdge": "rgba(0, 0, 0, .55)",
+            "tempoLine": "rgba(255, 255, 255, .75)",
+            "tempoLabelFill": "#262626",
+            "tempoLabelStroke": "rgba(255, 255, 255, .35)",
+            "tempoLabelText": "rgba(255, 255, 255, .9)",
+            "handleFill": "#1E1E1E",
+
+            "clipFill": "color-mix(in srgb, track 22%, #2A2A2A)",
+            "clipStroke": "rgb(from track r g b / 0.7)",
+            "clipCaption": "color-mix(in srgb, track 55%, #202020)",
+            "cellFill": "color-mix(in srgb, track 22%, #1E1E1E)",
+            "cellFillPlaying": "color-mix(in srgb, track 42%, #1E1E1E)",
+            "cellStroke": "rgb(from track r g b / 0.5)",
+            "summaryFill": "rgb(from track r g b / 0.14)",
+            "summaryStroke": "rgb(from track r g b / 0.6)"
+        },
+        "tinted": {
+            "$comment": "aluminum-tint.css, dark.",
+            "strip": "oklch(from tint 0.235 min(c, 0.07) h)",
+            "stripField": "oklch(from tint 0.17 min(c, 0.03) h)",
+            "base": "oklch(from tint 0.20 min(c, 0.03) h)",
+            "groove": "oklch(from tint 0.155 min(c, 0.03) h)",
+            "well": "oklch(from tint 0.255 calc(min(c * 0.50, 0.017) * anodize) h)",
+            "emptyPad": "oklch(from tint 0.27 calc(min(c * 0.45, 0.0155) * anodize) h)",
+            "ruler": "oklch(from tint 0.285 calc(min(c * 0.45, 0.0155) * anodize) h)",
+            "plateLight": "oklch(from tint 0.30 calc(min(c * 0.42, 0.014) * anodize) h)",
+            "folder": "oklch(from tint 0.31 calc(min(c * 0.45, 0.0155) * anodize) h)",
+            "inspector": "oklch(from tint 0.31 calc(min(c * 0.45, 0.0155) * anodize) h)",
+            "plate": "oklch(from tint 0.335 calc(min(c * 0.50, 0.017) * anodize) h)",
+            "hdrSel": "oklch(from tint 0.40 calc(min(c * 0.60, 0.020) * anodize) h)",
+            "roll": "oklch(from tint 0.255 calc(min(c * 0.30, 0.012) * anodize) h)",
+            "accent": "oklch(from tint 0.76 min(0.11, c * 4) h)",
+            "accentInk": "accent",
+            "led": "oklch(from tint 0.82 min(0.13, c * 5) h)",
+            "lcdInk": "oklch(from tint 0.88 min(0.085, c * 4) h)",
+            "lcdDim": "oklch(from tint 0.62 min(0.06, c * 2) h)",
+            "lcdGlass": "oklch(from tint 0.15 min(c, 0.03) h)",
+            "loopFill": "color-mix(in oklch, accent 45%, transparent)"
+        },
+        "trackColors": {
+            "$comment": "The comp's own dark track colors, a touch quieter on the metal.",
+            "#FF8A65": "#F2875F",
+            "#5BC0EB": "#56B6E3",
+            "#B4A7FF": "#A69DF2",
+            "#6CCB5F": "#6CC260",
+            "#4DD0C4": "#4DC4B8",
+            "#9C8CFF": "#A69DF2",
+            "#F7C948": "#E9BE45",
+            "#FF6F91": "#F07089",
+            "#FFB547": "#E9BE45",
+            "#BDBDBD": "#A8A8A4"
+        },
+        "shadows": {
+            "crisp": "inset 0 1px 0 rgba(255, 255, 255, .16), 0 2px 3px rgba(0, 0, 0, .55), 0 6px 12px rgba(0, 0, 0, .35)",
+            "crisp-light": "inset 0 1px 0 rgba(255, 255, 255, .13), 0 1px 2px rgba(0, 0, 0, .6), 0 4px 8px rgba(0, 0, 0, .3)",
+            "pressed": "inset 0 2px 4px rgba(0, 0, 0, .75)",
+            "set-in": "inset 0 1px 2px rgba(0, 0, 0, .5), 0 1px 0 engraved",
+            "slot": "inset 0 1px 3px rgba(0, 0, 0, .6), 0 1px 0 engraved",
+            "readout": "inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .07)",
+            "clip": "inset 0 1px 0 rgba(255, 255, 255, .12), 0 1px 2px rgba(0, 0, 0, .6), 0 3px 6px rgba(0, 0, 0, .3)",
+            "clip-lift": "0 0 0 2px accent, 0 4px 10px rgba(0, 0, 0, .5)"
+        },
+        "parts": {
+            "timeline.clip": {
+                "states": {
+                    "summary": { "background": "rgb(from track r g b / .14)" }
+                }
+            },
+            "timeline.tag": {
+                "background": "color-mix(in srgb, track 70%, #2A2A2A)",
+                "color": "#1A1918"
+            },
+            "chip": {
+                "background": "well",
+                "box-shadow": "inset 0 0 0 1px rgba(255, 255, 255, .07), 0 1px 0 engraved"
+            }
+        },
+        "resources": {
+            "SeqPinEdgeTopColor": "groove",
+            "SeqPinEdgeBottomColor": "well"
+        }
+    }
+}

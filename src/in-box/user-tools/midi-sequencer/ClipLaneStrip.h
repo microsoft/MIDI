@@ -14,6 +14,8 @@
 
 #include "PianoRoll.h"
 
+#include <utility>
+
 namespace midisequencer
 {
     struct ClipLaneEdit
@@ -64,19 +66,17 @@ namespace midisequencer
         void SetStrings(_In_ ClipLaneStrings strings) { m_strings = std::move(strings); }
         void SetLabels(_In_ std::vector<ClipLaneLabel> labels) { m_labels = std::move(labels); }
 
-        // A row for each lane and one for the button.
-        float Height() const noexcept;
-
         // Draws from top down, as wide as the canvas, on the roll's time scale.
         void Draw(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float width, _In_ PianoRoll const& roll);
 
         ClipLaneHit HitTest(_In_ foundation::Point point, _In_ PianoRoll const& roll) const noexcept;
 
         // A press on a lane starts a gesture: picking up a point, adding one, or drawing with
-        // pencil. Each returns true when the strip needs drawing again.
+        // pencil. Each returns true when the strip needs drawing again. With keepValue (Shift
+        // held while dragging), a point keeps the value it had and only changes position.
         bool PointerPressed(_In_ foundation::Point point, _In_ bool pencil, _In_ PianoRoll const& roll);
-        bool PointerMoved(_In_ foundation::Point point, _In_ PianoRoll const& roll);
-        std::optional<ClipLaneEdit> PointerReleased(_In_ foundation::Point point, _In_ PianoRoll const& roll);
+        bool PointerMoved(_In_ foundation::Point point, _In_ PianoRoll const& roll, _In_ bool keepValue = false);
+        std::optional<ClipLaneEdit> PointerReleased(_In_ foundation::Point point, _In_ PianoRoll const& roll, _In_ bool keepValue = false);
         bool InGesture() const noexcept { return m_gesture != Gesture::None; }
 
         // The selected point, which Delete removes.
@@ -95,8 +95,8 @@ namespace midisequencer
         foundation::Point LaneAnchor(_In_ size_t lane) const noexcept;
         foundation::Point PointPosition(_In_ size_t lane, _In_ size_t point, _In_ PianoRoll const& roll) const noexcept;
 
-        // True for the first SetClip after the clip gained or lost a lane.
-        bool LaneCountChanged() const noexcept { return m_laneCountChanged; }
+        // True once after the clip gained or lost a lane: the drawing takes it.
+        bool TakeLaneCountChanged() noexcept { return std::exchange(m_laneCountChanged, false); }
 
     private:
         enum class Gesture : uint8_t
@@ -133,6 +133,9 @@ namespace midisequencer
         bool m_moved{ false };
         size_t m_lane{ SIZE_MAX };
         size_t m_point{ SIZE_MAX };
+
+        // The picked-up point's value when the gesture began.
+        uint32_t m_startValue{ 0 };
 
         // The lanes as the gesture found them, and as it has changed them so far.
         std::vector<AutomationLane> m_before{};

@@ -4688,4 +4688,171 @@
   <data name="HidHatRight" xml:space="preserve">
     <value>Hat right</value>
   </data>
+  <data name="BlockNameMessageConverter" xml:space="preserve">
+    <value>Message converter</value>
+  </data>
+  <data name="BlockShortMessageConverter" xml:space="preserve">
+    <value>Converter</value>
+  </data>
+  <data name="BlockBadgeMessageConverter" xml:space="preserve">
+    <value>A→B</value>
+    <comment>A few characters that stand for the message converter on the canvas: one kind of message becoming another.</comment>
+  </data>
+  <data name="BlockHintMessageConverter" xml:space="preserve">
+    <value>Turns one kind of message into another, such as a note from a DAW controller's pad into the control change a DAW listens for.</value>
+  </data>
+  <data name="ConverterRowHeadingFormat" xml:space="preserve">
+    <value>Row {0}</value>
+  </data>
+  <data name="ConverterRemoveRowFormat" xml:space="preserve">
+    <value>Remove row {0}</value>
+  </data>
+  <data name="ConverterAddRow" xml:space="preserve">
+    <value>Add a row</value>
+  </data>
+  <data name="ConverterRowsHint" xml:space="preserve">
+    <value>The first row that matches a message is used. Messages no row matches go through unchanged, and a message always keeps its group.</value>
+  </data>
+  <data name="ConverterRowFormat" xml:space="preserve">
+    <value>{0} becomes {1}</value>
+    <comment>One row of a message converter. {0} is what it looks for, such as "Note C3 on channel 3". {1} is what it sends instead, such as "CC 27 on channel 4".</comment>
+  </data>
+  <data name="BlockDescConverterRowsFormat" xml:space="preserve">
+    <value>Converts messages with {0} rows</value>
+  </data>
+  <data name="ConverterFromAnyNote" xml:space="preserve">
+    <value>Any note</value>
+  </data>
+  <data name="ConverterFromNoteFormat" xml:space="preserve">
+    <value>Note {0}</value>
+  </data>
+  <data name="ConverterFromNotesFormat" xml:space="preserve">
+    <value>Notes {0} to {1}</value>
+  </data>
+  <data name="ConverterFromAnyController" xml:space="preserve">
+    <value>Any CC</value>
+  </data>
+  <data name="ConverterFromControllerFormat" xml:space="preserve">
+    <value>CC {0}</value>
+  </data>
+  <data name="ConverterFromControllersFormat" xml:space="preserve">
+    <value>CC {0} to {1}</value>
+  </data>
+  <data name="ConverterFromAnyProgram" xml:space="preserve">
+    <value>Any program change</value>
+  </data>
+  <data name="ConverterFromProgramFormat" xml:space="preserve">
+    <value>Program {0}</value>
+  </data>
+  <data name="ConverterFromProgramsFormat" xml:space="preserve">
+    <value>Programs {0} to {1}</value>
+  </data>
+  <data name="ConverterFromAnyPolyPressure" xml:space="preserve">
+    <value>Poly pressure</value>
+  </data>
+  <data name="ConverterFromPolyPressureFormat" xml:space="preserve">
+    <value>Pressure on {0}</value>
+  </data>
+  <data name="ConverterFromPolyPressuresFormat" xml:space="preserve">
+    <value>Pressure on {0} to {1}</value>
+  </data>
+  <data name="ConverterFromPitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="ConverterFromChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="ConverterOnChannelFormat" xml:space="preserve">
+    <value>{0} on channel {1}</value>
+  </data>
+  <data name="ConverterToSameNote" xml:space="preserve">
+    <value>the same note</value>
+  </data>
+  <data name="ConverterToSameController" xml:space="preserve">
+    <value>the CC with the same number</value>
+  </data>
+  <data name="ConverterToSamePolyPressure" xml:space="preserve">
+    <value>pressure on the same note</value>
+  </data>
+  <data name="ConverterToSameProgram" xml:space="preserve">
+    <value>the program with the same number</value>
+  </data>
+  <data name="ConverterToSameRpn" xml:space="preserve">
+    <value>the RPN with the same number</value>
+  </data>
+  <data name="ConverterToSameNrpn" xml:space="preserve">
+    <value>the NRPN with the same number</value>
+  </data>
+  <data name="ConverterFromHeader" xml:space="preserve">
+    <value>When it gets</value>
+  </data>
+  <data name="ConverterAnyChannel" xml:space="preserve">
+    <value>Any channel</value>
+  </data>
+  <data name="ConverterLowestNote" xml:space="preserve">
+    <value>Lowest note</value>
+  </data>
+  <data name="ConverterHighestNote" xml:space="preserve">
+    <value>Highest note</value>
+  </data>
+  <data name="ConverterLowestController" xml:space="preserve">
+    <value>Lowest controller</value>
+  </data>
+  <data name="ConverterHighestController" xml:space="preserve">
+    <value>Highest controller</value>
+  </data>
+  <data name="ConverterReadAs" xml:space="preserve">
+    <value>Read it as</value>
+  </data>
+  <data name="ConverterReadAsValue" xml:space="preserve">
+    <value>A value that moves</value>
+  </data>
+  <data name="ConverterReadAsButton" xml:space="preserve">
+    <value>A button</value>
+  </data>
+  <data name="ConverterPressedAt" xml:space="preserve">
+    <value>Pressed at</value>
+  </data>
+  <data name="ConverterPressedAtHint" xml:space="preserve">
+    <value>This value and up counts as pressed, and anything below it as let go. Only a change from one to the other sends anything.</value>
+  </data>
+  <data name="ConverterToHeader" xml:space="preserve">
+    <value>Turn it into</value>
+  </data>
+  <data name="ConverterSameChannel" xml:space="preserve">
+    <value>Same channel</value>
+  </data>
+  <data name="ConverterSameNumber" xml:space="preserve">
+    <value>Same number</value>
+  </data>
+  <data name="ConverterSameValue" xml:space="preserve">
+    <value>Same value</value>
+  </data>
+  <data name="ConverterSameProtocol" xml:space="preserve">
+    <value>Same format</value>
+  </data>
+  <data name="ConverterProgramPlaceHint" xml:space="preserve">
+    <value>Next and previous keep one place in the list for each group and channel. Every row in this step shares it, so one row can go up and another down.</value>
+  </data>
+  <data name="ConverterWordsHint" xml:space="preserve">
+    <value>One whole message, 1 to 4 words in hexadecimal. It keeps the group of the message it replaces.</value>
+  </data>
+  <data name="ConverterWordsNotUnderstood" xml:space="preserve">
+    <value>That isn't one whole message with a group. Type as many words as its message type uses, in hexadecimal.</value>
+  </data>
+  <data name="ConverterReleaseHeader" xml:space="preserve">
+    <value>When you let go</value>
+  </data>
+  <data name="ConverterReleaseNoteOff" xml:space="preserve">
+    <value>Send a note off</value>
+  </data>
+  <data name="ConverterReleaseValue" xml:space="preserve">
+    <value>Send a value</value>
+  </data>
+  <data name="ConverterReleaseNothing" xml:space="preserve">
+    <value>Send nothing</value>
+  </data>
+  <data name="ConverterNoteEndsHint" xml:space="preserve">
+    <value>A program change, or a value that moves, is never let go, so each note it plays ends right away.</value>
+  </data>
 </root>

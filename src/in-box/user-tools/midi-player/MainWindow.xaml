@@ -289,7 +289,7 @@
         </Grid>
 
         <!-- ================================= Now playing ================================= -->
-        <StackPanel Grid.Row="1" Margin="20,4,20,12" Spacing="10">
+        <StackPanel x:Name="NowPlayingPanel" Grid.Row="1" Margin="20,4,20,12" Spacing="10" SizeChanged="OnNowPlayingPanelSizeChanged">
 
             <Grid ColumnSpacing="16">
                 <Grid.ColumnDefinitions>
@@ -326,7 +326,8 @@
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
 
-                <!-- Tempo changes as a file plays, so this is the value at the playhead. -->
+                <!-- Tempo changes as a file plays, so this is the value at the playhead, as heard at
+                     the chosen speed. -->
                 <StackPanel x:Name="TempoPanel"
                             Grid.Column="1"
                             Spacing="0"
@@ -385,20 +386,31 @@
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Text="0:00" />
 
-                <Slider x:Name="PositionSlider"
+                <!-- Counts seconds, and reads to a screen reader as a time such as "1:25 of 3:40".
+                     The window sets the length, and the text, as each file loads and plays. -->
+                <local:TimeSlider x:Name="PositionSlider"
                         x:Uid="PositionSlider"
                         Grid.Column="1"
                         AutomationProperties.AutomationId="PositionSlider"
                         Minimum="0"
-                        Maximum="1000"
+                        Maximum="1"
                         StepFrequency="1"
+                        SmallChange="5"
+                        LargeChange="30"
                         IsThumbToolTipEnabled="False"
                         Margin="0,-6,0,0"
                         IsEnabled="False"
                         PointerPressed="OnPositionSliderPointerPressed"
                         PointerReleased="OnPositionSliderPointerReleased"
                         PointerCaptureLost="OnPositionSliderPointerReleased"
-                        ValueChanged="OnPositionSliderValueChanged" />
+                        PreviewKeyDown="OnSliderPreviewKeyDown"
+                        ValueChanged="OnPositionSliderValueChanged">
+                    <local:TimeSlider.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="B" Invoked="OnSeekBackShortcut" />
+                        <KeyboardAccelerator Modifiers="Control,Shift" Key="F" Invoked="OnSeekForwardShortcut" />
+                        <KeyboardAccelerator Modifiers="Control" Key="J" Invoked="OnGoToTimeShortcut" />
+                    </local:TimeSlider.KeyboardAccelerators>
+                </local:TimeSlider>
 
                 <TextBlock x:Name="DurationTextBlock"
                            Grid.Column="2"
@@ -424,6 +436,9 @@
                             AutomationProperties.AutomationId="OpenFilesButton"
                             Height="34"
                             Click="OnOpenFilesClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="O" />
+                        </Button.KeyboardAccelerators>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE8E5;" FontSize="14" />
                             <TextBlock x:Uid="OpenFilesButtonLabel" />
@@ -431,12 +446,17 @@
                     </Button>
                 </StackPanel>
 
+                <!-- The shortcuts are the ones Windows Media Player has always used, which many
+                     screen reader users already know. -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                     <Button x:Name="PreviousButton"
                             x:Uid="PreviousButton"
                             AutomationProperties.AutomationId="PreviousButton"
                             Width="40" Height="40" Padding="0"
                             Click="OnPreviousClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="B" Invoked="OnPreviousShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE892;" FontSize="14" />
                     </Button>
 
@@ -447,6 +467,9 @@
                             CornerRadius="26"
                             Style="{ThemeResource AccentButtonStyle}"
                             Click="OnPlayPauseClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="P" Invoked="OnPlayPauseShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE768;" FontSize="18" />
                     </Button>
 
@@ -455,6 +478,9 @@
                             AutomationProperties.AutomationId="StopButton"
                             Width="40" Height="40" Padding="0"
                             Click="OnStopClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="S" Invoked="OnStopShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE71A;" FontSize="14" />
                     </Button>
 
@@ -463,6 +489,9 @@
                             AutomationProperties.AutomationId="NextButton"
                             Width="40" Height="40" Padding="0"
                             Click="OnNextClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="OnNextShortcut" />
+                        </Button.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE893;" FontSize="14" />
                     </Button>
                 </StackPanel>
@@ -482,6 +511,9 @@
                                   AutomationProperties.AutomationId="RepeatToggle"
                                   Width="40" Height="34" Padding="0"
                                   Click="OnRepeatToggled">
+                        <ToggleButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="T" Invoked="OnRepeatShortcut" />
+                        </ToggleButton.KeyboardAccelerators>
                         <FontIcon Glyph="&#xE8EE;" FontSize="14" />
                     </ToggleButton>
 
@@ -494,6 +526,117 @@
                     </ToggleButton>
                 </StackPanel>
             </Grid>
+
+            <!-- Speed and transpose. Their own row, because the transport row has no room for a
+                 slider at the narrowest window. The window stacks the two groups when they do not
+                 fit side by side. Each caption and value is already in its slider's accessible
+                 name and value, so screen readers skip them. -->
+            <StackPanel x:Name="SpeedPanel"
+                        Orientation="Horizontal"
+                        Spacing="24"
+                        Margin="0,-4,0,0"
+                        HorizontalAlignment="Center">
+                <StackPanel x:Name="SpeedGroup"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            HorizontalAlignment="Center">
+                    <TextBlock x:Uid="SpeedCaption"
+                               VerticalAlignment="Center"
+                               AutomationProperties.AccessibilityView="Raw"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                    <Slider x:Name="SpeedSlider"
+                            x:Uid="SpeedSlider"
+                            AutomationProperties.AutomationId="SpeedSlider"
+                            Width="150"
+                            Minimum="25"
+                            Maximum="200"
+                            Value="100"
+                            StepFrequency="5"
+                            SmallChange="5"
+                            LargeChange="25"
+                            IsThumbToolTipEnabled="False"
+                            VerticalAlignment="Center"
+                            PreviewKeyDown="OnSliderPreviewKeyDown"
+                            ValueChanged="OnSpeedSliderValueChanged">
+                        <Slider.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="S" Invoked="OnSlowerShortcut" />
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="G" Invoked="OnFasterShortcut" />
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="N" Invoked="OnNormalSpeedShortcut" />
+                        </Slider.KeyboardAccelerators>
+                    </Slider>
+
+                    <TextBlock x:Name="SpeedText"
+                               MinWidth="36"
+                               VerticalAlignment="Center"
+                               AutomationProperties.AccessibilityView="Raw"
+                               FontFamily="Consolas"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                    <Button x:Name="ResetSpeedButton"
+                            x:Uid="ResetSpeedButton"
+                            AutomationProperties.AutomationId="ResetSpeedButton"
+                            Height="28"
+                            Padding="10,0,10,0"
+                            VerticalAlignment="Center"
+                            IsEnabled="False"
+                            Click="OnResetSpeedClick" />
+                </StackPanel>
+
+                <!-- Semitones, an octave each way. Drums are never moved. -->
+                <StackPanel x:Name="TransposeGroup"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            HorizontalAlignment="Center">
+                    <TextBlock x:Uid="TransposeCaption"
+                               VerticalAlignment="Center"
+                               AutomationProperties.AccessibilityView="Raw"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                    <Slider x:Name="TransposeSlider"
+                            x:Uid="TransposeSlider"
+                            AutomationProperties.AutomationId="TransposeSlider"
+                            Width="100"
+                            Minimum="-12"
+                            Maximum="12"
+                            Value="0"
+                            StepFrequency="1"
+                            SmallChange="1"
+                            LargeChange="12"
+                            TickFrequency="12"
+                            TickPlacement="Inline"
+                            IsThumbToolTipEnabled="False"
+                            VerticalAlignment="Center"
+                            PreviewKeyDown="OnSliderPreviewKeyDown"
+                            ValueChanged="OnTransposeSliderValueChanged">
+                        <Slider.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="U" Invoked="OnTransposeUpShortcut" />
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="D" Invoked="OnTransposeDownShortcut" />
+                            <KeyboardAccelerator Modifiers="Control,Shift" Key="K" Invoked="OnOriginalKeyShortcut" />
+                        </Slider.KeyboardAccelerators>
+                    </Slider>
+
+                    <TextBlock x:Name="TransposeText"
+                               MinWidth="24"
+                               VerticalAlignment="Center"
+                               AutomationProperties.AccessibilityView="Raw"
+                               FontFamily="Consolas"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                    <Button x:Name="ResetTransposeButton"
+                            x:Uid="ResetTransposeButton"
+                            AutomationProperties.AutomationId="ResetTransposeButton"
+                            Height="28"
+                            Padding="10,0,10,0"
+                            VerticalAlignment="Center"
+                            IsEnabled="False"
+                            Click="OnResetTransposeClick" />
+                </StackPanel>
+            </StackPanel>
         </StackPanel>
 
 <!-- ========================= Notes, tracks and the queue ========================= -->
@@ -633,5 +776,29 @@
                           SelectionChanged="OnGroupSelectionChanged" />
             </Grid>
         </StackPanel>
+
+        <!-- Go to a time, opened with Ctrl+J. One box, so a keyboard user types and presses Enter. -->
+        <ContentDialog x:Name="GoToTimeDialog"
+                       x:Uid="GoToTimeDialog"
+                       DefaultButton="Primary"
+                       Opened="OnGoToTimeDialogOpened"
+                       PrimaryButtonClick="OnGoToTimePrimaryClick">
+            <StackPanel Spacing="10" Width="320">
+                <TextBlock x:Name="GoToTimeHintText"
+                           AutomationProperties.AccessibilityView="Raw"
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <TextBox x:Name="GoToTimeBox"
+                         x:Uid="GoToTimeBox"
+                         AutomationProperties.AutomationId="GoToTimeBox"
+                         MaxLength="16" />
+
+                <TextBlock x:Name="GoToTimeProblemText"
+                           AutomationProperties.AutomationId="GoToTimeProblemText"
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+            </StackPanel>
+        </ContentDialog>
     </Grid>
 </Window>

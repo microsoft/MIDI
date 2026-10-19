@@ -53,8 +53,9 @@ namespace miditroubleshooter
         static constexpr uint32_t PageIndexService = 5;
         static constexpr uint32_t PageIndexRegistry = 6;
         static constexpr uint32_t PageIndexDrivers = 7;
+        static constexpr uint32_t PageIndexLatencyCheck = 8;
 
-        static constexpr uint32_t PageIndexMaximum = PageIndexDrivers;
+        static constexpr uint32_t PageIndexMaximum = PageIndexLatencyCheck;
 
     private:
         AppSettings() noexcept;

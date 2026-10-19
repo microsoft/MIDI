@@ -15,9 +15,25 @@
 #include "RemoteClientSpeedItem.g.cpp"
 #include "LocalHostItem.g.cpp"
 #include "RtpRemoteHostItem.g.cpp"
+#include "Midi1PortGroupItem.g.cpp"
+#include "PageLayout.g.cpp"
 
 namespace winrt::midinetworksetup::implementation
 {
+    // One for the process, made on first use by a row's binding or the window. Never destroyed:
+    // rows can still hold handlers on it while the process ends. A projected type can't be made
+    // with new, so a plain holder is.
+    midinetworksetup::PageLayout PageLayout::Current()
+    {
+        struct Holder
+        {
+            midinetworksetup::PageLayout Value{ winrt::make<PageLayout>() };
+        };
+
+        static Holder const* const holder = new Holder{};
+        return holder->Value;
+    }
+
     LocalHostItem::LocalHostItem()
     {
         // the "nothing here yet" placeholders are derived from the collections, and a

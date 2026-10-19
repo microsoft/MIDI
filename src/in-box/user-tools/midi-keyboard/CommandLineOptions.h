@@ -25,6 +25,11 @@ namespace midikeyboard
         std::optional<uint8_t> GroupNumber{};
         std::optional<uint8_t> ChannelNumber{};
 
+        // The device to ask for program names, when the notes go somewhere that passes them on to
+        // it, such as a loopback into a sequencer track that plays this device. Never saved.
+        std::wstring ProgramsEndpointDeviceId{};
+        std::optional<uint8_t> ProgramsGroupNumber{};
+
         static CommandLineOptions Parse(std::vector<std::wstring> const& arguments) noexcept;
         static CommandLineOptions ParseProcessCommandLine() noexcept;
     };

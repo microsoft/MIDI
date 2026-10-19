@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer - 9 - MIDI Mixer</title>
+<meta name="variants" content="light">
+<link rel="stylesheet" href="seq.css">
+<script src="seq.js" defer></script>
+<style>
+/* PROTOTYPE. The MIDI Mixer, restyled to read like a mixing desk. Everything mixer-specific is in
+   this page; seq.css supplies the window chrome and the tokens. */
+
+:root {
+    --mx-strip: linear-gradient(180deg, #303030, #272727);
+    --mx-strip-border: rgba(255, 255, 255, .09);
+    --mx-knob: #3B3B3B;
+    --mx-knob-rim: rgba(255, 255, 255, .16);
+    --mx-knob-shine: rgba(255, 255, 255, .10);
+    --mx-track: rgba(255, 255, 255, .13);
+    --mx-pointer: #FFFFFF;
+    --mx-groove: #141414;
+    --mx-groove-rim: rgba(255, 255, 255, .10);
+    --mx-cap-top: #6A6A6A;
+    --mx-cap-bottom: #3E3E3E;
+    --mx-cap-rim: rgba(0, 0, 0, .55);
+    --mx-cap-line: rgba(255, 255, 255, .85);
+    --mx-tick: rgba(255, 255, 255, .28);
+    --mx-tick-strong: rgba(255, 255, 255, .55);
+    --mx-lcd: #161616;
+    --mx-lcd-text: #E6E6E6;
+    --mx-btn: #3A3A3A;
+    --mx-btn-text: rgba(255, 255, 255, .78);
+    --mx-meter-off: rgba(255, 255, 255, .06);
+    --mx-panel: rgba(0, 0, 0, .14);
+}
+
+html.light {
+    --mx-strip: linear-gradient(180deg, #FFFFFF, #F4F4F4);
+    --mx-strip-border: rgba(0, 0, 0, .10);
+    --mx-knob: #F2F2F2;
+    --mx-knob-rim: rgba(0, 0, 0, .22);
+    --mx-knob-shine: rgba(255, 255, 255, .9);
+    --mx-track: rgba(0, 0, 0, .12);
+    --mx-pointer: #1A1A1A;
+    --mx-groove: #CFCFCF;
+    --mx-groove-rim: rgba(0, 0, 0, .10);
+    --mx-cap-top: #FFFFFF;
+    --mx-cap-bottom: #DADADA;
+    --mx-cap-rim: rgba(0, 0, 0, .35);
+    --mx-cap-line: #1A1A1A;
+    --mx-tick: rgba(0, 0, 0, .25);
+    --mx-tick-strong: rgba(0, 0, 0, .55);
+    --mx-lcd: #FFFFFF;
+    --mx-lcd-text: #1A1A1A;
+    --mx-btn: #E9E9E9;
+    --mx-btn-text: rgba(0, 0, 0, .72);
+    --mx-meter-off: rgba(0, 0, 0, .06);
+    --mx-panel: rgba(0, 0, 0, .025);
+}
+
+.window.mixwin { width: 1600px; height: 760px; }
+
+/* a quiet sketch of the timeline above the mixer, for context only */
+.sketch { flex: 0 0 196px; display: flex; flex-direction: column; border-top: 1px solid var(--divider); opacity: .55; }
+.sketch .skrow { flex: 0 0 39px; display: flex; border-bottom: 1px solid var(--divider); }
+.sketch .skhead { width: 268px; flex: 0 0 268px; display: flex; align-items: center; gap: 10px; padding-left: 0; border-right: 1px solid var(--divider); }
+.sketch .skhead i { width: 4px; align-self: stretch; }
+.sketch .skhead span { font-size: 13px; font-weight: 600; }
+.sketch .sklane { position: relative; flex: 1; }
+.sketch .sklane b { position: absolute; top: 6px; bottom: 6px; border-radius: 4px; opacity: .55; }
+
+.mixpanel { flex: 1; display: flex; flex-direction: column; border-top: 1px solid var(--stroke-strong); background: var(--mx-panel); min-height: 0; }
+.mixhead { flex: 0 0 42px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-bottom: 1px solid var(--divider); }
+.mixhead .t { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.mixhead .t .gl { font-size: 15px; color: var(--text2); }
+.mixhead .hint { flex: 1; font-size: 12px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mixhead .x { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 11px; color: var(--text2); width: 28px; text-align: center; }
+.strips { flex: 1; display: flex; gap: 6px; padding: 10px; align-items: stretch; }
+
+.mstrip {
+    position: relative;
+    width: 92px;
+    flex: 0 0 92px;
+    height: 382px;
+    border-radius: 7px;
+    border: 1px solid var(--mx-strip-border);
+    background: var(--mx-strip);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.mstrip.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.mknobs { display: flex; justify-content: space-between; padding: 9px 7px 0 7px; }
+.mknob { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.mknob svg { display: block; overflow: visible; }
+.mlbl { font-size: 10px; color: var(--text3); line-height: 12px; white-space: nowrap; }
+
+.mpan { display: flex; align-items: center; gap: 7px; padding: 9px 8px 0 9px; }
+.mpantext { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mval { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; font-weight: 600; color: var(--text); line-height: 15px; white-space: nowrap; }
+
+.mfader { flex: 1; position: relative; margin: 10px 4px 0 4px; min-height: 0; }
+.mfader svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.mreadout {
+    align-self: center;
+    margin-top: 7px;
+    min-width: 46px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--mx-lcd);
+    border: 1px solid var(--mx-groove-rim);
+    color: var(--mx-lcd-text);
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.lanedot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: 0 0 5px; }
+
+.mbtns { display: flex; justify-content: center; gap: 4px; margin: 8px 0 8px 0; }
+.mb {
+    width: 24px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--mx-btn);
+    color: var(--mx-btn-text);
+    border: 1px solid var(--mx-strip-border);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mb.m.on { background: var(--mute); color: #1A1A1A; border-color: transparent; }
+.mb.s.on { background: var(--solo); color: #1A1A1A; border-color: transparent; }
+.mb.w.on { background: var(--rec); color: #FFFFFF; border-color: transparent; }
+
+.mplate { margin: 0 4px 4px 4px; border-radius: 4px; padding: 4px 6px 5px 6px; color: #1A1A1A; }
+.mname { font-size: 12px; font-weight: 700; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mdev { font-size: 10px; line-height: 13px; opacity: .72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.unset { opacity: .5; }
+
+.tip {
+    position: absolute;
+    z-index: 5;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: #2C2C2C;
+    border: 1px solid var(--stroke-strong);
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+html.light .tip { background: #FFFFFF; }
+
+/* the close-up */
+.anatomy { display: flex; gap: 40px; align-items: flex-start; }
+.zoom { width: 236px; height: 832px; position: relative; flex: 0 0 236px; }
+.zoom .mstrip { position: absolute; left: 22px; top: 14px; transform: scale(2); transform-origin: 0 0; }
+.badge {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+}
+
+.anatomy .callouts { columns: 1; max-width: 760px; font-size: 13px; line-height: 1.6; margin-top: 4px; }
+.anatomy .callouts li { margin-bottom: 9px; }
+.question { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 1300px; margin: 0 0 0 2px; }
+.question b { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="page wide">
+
+<div class="caption-above"><b>9. The MIDI Mixer, restyled (proposal).</b> The same controls as today, drawn the way a mixing desk draws them: knobs for the sends and pan, a long fader with a scale, and the track's name on its color at the bottom. Pan lights up from the center and says L, C or R. The Arp track is writing automation, Chords is muted and Organ hasn't set anything yet.</div>
+
+<div class="window mixwin">
+
+  <div class="titlebar">
+    <svg class="appicon" viewBox="0 0 16 16"><rect x=".5" y=".5" width="15" height="15" rx="3.5" fill="#25303D" stroke="#60CDFF" stroke-width=".8"/><rect x="3" y="3.6" width="7" height="2.2" rx="1" fill="#FF8A65"/><rect x="6" y="6.9" width="7" height="2.2" rx="1" fill="#60CDFF"/><rect x="3" y="10.2" width="5" height="2.2" rx="1" fill="#6CCB5F"/></svg>
+    <div class="title">Night Drive Sketch &mdash; Windows MIDI Sequencer</div>
+    <div class="preview-chiclet">EARLY PREVIEW</div>
+    <div class="spacer"></div>
+    <div class="caption-btn">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="transport">
+    <div class="tbtn">&#xE892;</div>
+    <div class="tbtn play on">&#xE768;</div>
+    <div class="tbtn">&#xE71A;</div>
+    <div class="tbtn rec">&#xE7C8;</div>
+    <div class="tbtn on">&#xE8EE;</div>
+    <div class="sep"></div>
+    <div class="lcd"><div class="big">9.2.480</div><div class="small">0:16.452</div></div>
+    <div class="lcd" style="min-width:118px"><div class="big">124.00<span class="unit">BPM</span></div><div class="small">4/4</div></div>
+    <div class="btn small"><span class="gl">&#xE823;</span>Internal clock<span class="gl" style="font-size:9px">&#xE70D;</span></div>
+    <div class="sep"></div>
+    <span class="tlabel">Launch</span><div class="field small combo" style="width:84px">1 bar<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <span class="tlabel">Snap</span><div class="field small combo" style="width:72px">1/16<span class="spacer"></span><span class="gl">&#xE70D;</span></div>
+    <div class="spacer"></div>
+    <div class="btn small toggled"><span class="gl">&#xE9E9;</span>MIDI Mixer</div>
+    <div class="btn small"><span class="gl">&#xE74F;</span>Silence</div>
+    <div class="sep"></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A7;</span></div>
+    <div class="btn subtle icon"><span class="gl">&#xE7A6;</span></div>
+    <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+  </div>
+
+  <div class="sketch">
+    <div class="skrow"><div class="skhead"><i style="background:#FF8A65"></i><span>Drums</span></div><div class="sklane"><b style="left:2%;width:30%;background:#FF8A65"></b><b style="left:34%;width:30%;background:#FF8A65"></b><b style="left:66%;width:30%;background:#FF8A65"></b></div></div>
+    <div class="skrow"><div class="skhead"><i style="background:#5BC0EB"></i><span>Bass</span></div><div class="sklane"><b style="left:18%;width:46%;background:#5BC0EB"></b><b style="left:66%;width:30%;background:#5BC0EB"></b></div></div>
+    <div class="skrow"><div class="skhead"><i style="background:#B4A7FF"></i><span>Pad</span></div><div class="sklane"><b style="left:2%;width:62%;background:#B4A7FF"></b></div></div>
+    <div class="skrow"><div class="skhead"><i style="background:#6CCB5F"></i><span>Arp</span></div><div class="sklane"><b style="left:34%;width:62%;background:#6CCB5F"></b></div></div>
+    <div class="skrow"><div class="skhead"><i style="background:#4DD0C4"></i><span>Texture</span></div><div class="sklane"><b style="left:50%;width:46%;background:#4DD0C4"></b></div></div>
+  </div>
+
+  <div class="mixpanel">
+    <div class="mixhead">
+      <div class="t"><span class="gl">&#xE9E9;</span>MIDI Mixer</div>
+      <div class="hint">Volume, pan and sends for each track. A change is kept as the track's start-up value, or on its lane at the playhead. With W on, playing records your moves into a lane.</div>
+      <div class="x">&#xE711;</div>
+    </div>
+    <div class="strips" id="strips"></div>
+  </div>
+
+  <div class="statusbar">
+    <span class="ok"><span class="gl">&#xE73E;</span>MIDI service running</span>
+    <span>Internal clock, 124 BPM</span>
+    <span>1 device in use</span>
+  </div>
+
+  <div class="tip" style="left:308px;top:440px">Pan R18, controller 10 = 82</div>
+</div>
+
+<div class="caption-above"><b>Close up of one strip, twice the size.</b></div>
+
+<div class="anatomy">
+  <div class="zoom" id="zoom"></div>
+  <ol class="callouts">
+    <li><b>Expression, reverb and chorus</b> are small knobs. Drag up or down, turn the mouse wheel, or use the arrow keys. Double-click puts a knob back where General MIDI synths start. The value shows while you move it.</li>
+    <li><b>Pan</b> is a knob that lights up from the center, and says how far left or right: L24, C or R18. Double-click centers it. Screen readers hear "left 24", "center" and "right 18".</li>
+    <li><b>The volume fader</b> has a cap you drag, on a scale from 0 to 127. The longer mark is 100, where General MIDI synths start.</li>
+    <li><b>MIDI meter (proposed).</b> How hard the track's notes play, as they're sent. It isn't sound: the sequencer never hears the device. It gives the strip life while the music plays, the way the MIDI meters on a DAW's MIDI tracks do.</li>
+    <li><b>The volume as a number</b>, in a small display. A dot beside it means the control follows the track's automation lane.</li>
+    <li><b>M, S and W</b> mute and solo the track, and write your moves into automation while it plays. Lit in the same colors as the track list.</li>
+    <li><b>The track's name on its color</b>, with where it plays underneath, at the bottom of the strip like on a mixing desk.</li>
+    <li><b>The selected track</b> is outlined, the same track that's selected in the track list.</li>
+  </ol>
+</div>
+
+<div class="question"><b>Unchanged:</b> what each control sends (controllers 7, 10, 11, 91 and 93), what's kept when you move one, the W button, automation lanes, and the hint at the top. <b>Not shown:</b> what a strip looks like when the panel is short. The fader gets shorter first, then the reverb and chorus knobs fold into one row with expression hidden behind a "more" button.</div>
+
+</div>
+
+<script>
+// Each strip: name, color, device, expression, reverb, chorus, pan, volume, meter (0 to 1),
+// and which values the track hasn't set.
+const tracks = [
+    { n: "Drums", c: "#FF8A65", d: "General MIDI Synth \u00B7 Ch 10", e: 127, r: 40, ch: 0, p: 64, v: 100, m: 0.86 },
+    { n: "Bass", c: "#5BC0EB", d: "General MIDI Synth \u00B7 Ch 2", e: 110, r: 20, ch: 0, p: 64, v: 104, m: 0.71, sel: true, lane: "e" },
+    { n: "Pad", c: "#B4A7FF", d: "General MIDI Synth \u00B7 Ch 3", e: 127, r: 72, ch: 48, p: 40, v: 84, m: 0.44 },
+    { n: "Arp", c: "#6CCB5F", d: "General MIDI Synth \u00B7 Ch 4", e: 127, r: 56, ch: 24, p: 82, v: 92, m: 0.62, w: true, lane: "v" },
+    { n: "Texture", c: "#4DD0C4", d: "General MIDI Synth \u00B7 Ch 5", e: 96, r: 90, ch: 64, p: 24, v: 70, m: 0.28 },
+    { n: "Electric piano", c: "#F7C948", d: "General MIDI Synth \u00B7 Ch 6", e: 127, r: 40, ch: 0, p: 74, v: 96, m: 0.0 },
+    { n: "Organ", c: "#FFB547", d: "General MIDI Synth \u00B7 Ch 7", e: 127, r: 40, ch: 0, p: 64, v: 100, m: 0.0, unset: true },
+    { n: "Lead", c: "#FF6F91", d: "General MIDI Synth \u00B7 Ch 8", e: 127, r: 48, ch: 12, p: 70, v: 100, m: 0.92 },
+    { n: "Chords", c: "#F7C948", d: "General MIDI Synth \u00B7 Ch 9", e: 127, r: 36, ch: 0, p: 52, v: 88, m: 0.0, mute: true },
+];
+
+const NS = "http://www.w3.org/2000/svg";
+
+// 0 degrees is straight up; positive is clockwise.
+function polar(cx, cy, r, deg) {
+    const a = (deg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+
+function arc(cx, cy, r, from, to) {
+    if (Math.abs(to - from) < 0.5) {
+        return "";
+    }
+
+    const a = Math.min(from, to);
+    const b = Math.max(from, to);
+    const [x0, y0] = polar(cx, cy, r, a);
+    const [x1, y1] = polar(cx, cy, r, b);
+    return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${b - a > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+function el(name, attrs, parent) {
+    const node = document.createElementNS(NS, name);
+
+    for (const [k, v] of Object.entries(attrs)) {
+        node.setAttribute(k, v);
+    }
+
+    if (parent) {
+        parent.appendChild(node);
+    }
+
+    return node;
+}
+
+function panAngle(v) {
+    return v >= 64 ? (v - 64) / 63 * 135 : (v - 64) / 64 * 135;
+}
+
+function knob(size, value, pan) {
+    const svg = el("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}` });
+    const c = size / 2;
+    const r = c - 1.6;
+    const angle = pan ? panAngle(value) : -135 + 270 * value / 127;
+    const width = size > 26 ? 3 : 2.4;
+
+    el("path", { d: arc(c, c, r, -135, 135), fill: "none", style: `stroke:var(--mx-track);stroke-width:${width};stroke-linecap:round` }, svg);
+
+    const lit = pan ? arc(c, c, r, 0, angle) : arc(c, c, r, -135, angle);
+
+    if (lit) {
+        el("path", { d: lit, fill: "none", style: `stroke:var(--accent);stroke-width:${width};stroke-linecap:round` }, svg);
+    }
+
+    if (pan) {
+        const [tx, ty] = polar(c, c, r + 2.6, 0);
+        el("circle", { cx: tx, cy: ty, r: 1.1, style: "fill:var(--mx-tick-strong)" }, svg);
+    }
+
+    const body = r - width - 1.6;
+    el("circle", { cx: c, cy: c, r: body, style: "fill:var(--mx-knob);stroke:var(--mx-knob-rim);stroke-width:1" }, svg);
+    el("circle", { cx: c - body * .22, cy: c - body * .28, r: body * .55, style: "fill:var(--mx-knob-shine)" }, svg);
+
+    const [x0, y0] = polar(c, c, body * .25, angle);
+    const [x1, y1] = polar(c, c, body * .92, angle);
+    el("line", { x1: x0, y1: y0, x2: x1, y2: y1, style: "stroke:var(--mx-pointer);stroke-width:2;stroke-linecap:round" }, svg);
+    return svg;
+}
+
+function panText(v) {
+    return v === 64 ? "C" : v < 64 ? `L${64 - v}` : `R${v - 64}`;
+}
+
+function fader(host, value, meter, color) {
+    const w = host.clientWidth;
+    const h = host.clientHeight;
+    const svg = el("svg", { viewBox: `0 0 ${w} ${h}` }, host);
+    const cap = 15;
+    const top = cap / 2 + 1;
+    const bottom = h - cap / 2 - 1;
+    const yOf = v => bottom - (bottom - top) * v / 127;
+    const groove = w / 2 + 2;
+
+    for (const mark of [127, 100, 64, 32, 0]) {
+        const y = yOf(mark);
+        const strong = mark === 100;
+        el("line", { x1: groove - 18, y1: y, x2: groove - (strong ? 9 : 12), y2: y, style: `stroke:${strong ? "var(--mx-tick-strong)" : "var(--mx-tick)"};stroke-width:1` }, svg);
+        const label = el("text", { x: groove - 21, y: y + 3.2, "text-anchor": "end", style: `font:9px 'Segoe UI';fill:${strong ? "var(--mx-tick-strong)" : "var(--mx-tick)"}` }, svg);
+        label.textContent = mark;
+    }
+
+    for (let v = 8; v < 127; v += 8) {
+        if ([32, 64, 96, 100].includes(v)) {
+            continue;
+        }
+
+        el("line", { x1: groove - 15, y1: yOf(v), x2: groove - 12, y2: yOf(v), style: "stroke:var(--mx-tick);stroke-width:1;opacity:.6" }, svg);
+    }
+
+    el("rect", { x: groove - 2.5, y: top - 2, width: 5, height: bottom - top + 4, rx: 2.5, style: "fill:var(--mx-groove);stroke:var(--mx-groove-rim);stroke-width:1" }, svg);
+
+    // The MIDI meter: segments lit up to how hard the last notes played.
+    const mx = groove + 19;
+    const segments = 24;
+    const step = (bottom - top + 4) / segments;
+
+    for (let i = 0; i < segments; i++) {
+        const y = bottom + 2 - (i + 1) * step;
+        const on = (i + 0.5) / segments <= meter;
+        const level = i / (segments - 1);
+        const fill = on ? (level > 0.82 ? "#F7C948" : "#6CCB5F") : "var(--mx-meter-off)";
+        el("rect", { x: mx, y: y + 0.6, width: 4, height: step - 1.2, rx: 0.8, style: `fill:${fill}` }, svg);
+    }
+
+    const y = yOf(value);
+    const gid = "cap" + Math.random().toString(36).slice(2);
+    const defs = el("defs", {}, svg);
+    const grad = el("linearGradient", { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    el("stop", { offset: "0", style: "stop-color:var(--mx-cap-top)" }, grad);
+    el("stop", { offset: "1", style: "stop-color:var(--mx-cap-bottom)" }, grad);
+    el("rect", { x: groove - 14, y: y - cap / 2, width: 28, height: cap, rx: 3, style: `fill:url(#${gid});stroke:var(--mx-cap-rim);stroke-width:1` }, svg);
+    el("line", { x1: groove - 10, y1: y, x2: groove + 10, y2: y, style: "stroke:var(--mx-cap-line);stroke-width:1.4" }, svg);
+}
+
+function strip(t) {
+    const s = document.createElement("div");
+    s.className = "mstrip" + (t.sel ? " sel" : "");
+    const faded = t.unset ? " unset" : "";
+
+    const knobs = document.createElement("div");
+    knobs.className = "mknobs" + faded;
+
+    for (const [key, label] of [["e", "Expr"], ["r", "Rev"], ["ch", "Cho"]]) {
+        const k = document.createElement("div");
+        k.className = "mknob";
+        k.appendChild(knob(24, t[key], false));
+        const l = document.createElement("span");
+        l.className = "mlbl";
+        l.textContent = label;
+        k.appendChild(l);
+        knobs.appendChild(k);
+    }
+
+    s.appendChild(knobs);
+
+    const pan = document.createElement("div");
+    pan.className = "mpan" + faded;
+    pan.appendChild(knob(34, t.p, true));
+    const pt = document.createElement("div");
+    pt.className = "mpantext";
+    pt.innerHTML = `<span class="mlbl">Pan</span><span class="mval">${panText(t.p)}</span>`;
+    pan.appendChild(pt);
+    s.appendChild(pan);
+
+    const f = document.createElement("div");
+    f.className = "mfader" + faded;
+    s.appendChild(f);
+
+    const readout = document.createElement("div");
+    readout.className = "mreadout" + faded;
+    readout.innerHTML = (t.lane === "v" ? '<span class="lanedot"></span>' : "") + (t.unset ? "\u2013" : t.v);
+    s.appendChild(readout);
+
+    if (t.lane === "e") {
+        const dot = document.createElement("span");
+        dot.className = "lanedot";
+        dot.style.cssText = "position:absolute;left:16px;top:6px";
+        s.appendChild(dot);
+    }
+
+    const buttons = document.createElement("div");
+    buttons.className = "mbtns";
+    buttons.innerHTML = `<span class="mb m${t.mute ? " on" : ""}">M</span><span class="mb s${t.solo ? " on" : ""}">S</span><span class="mb w${t.w ? " on" : ""}">W</span>`;
+    s.appendChild(buttons);
+
+    const plate = document.createElement("div");
+    plate.className = "mplate";
+    plate.style.background = t.c;
+    plate.innerHTML = `<div class="mname">${t.n}</div><div class="mdev">${t.d}</div>`;
+    s.appendChild(plate);
+    return s;
+}
+
+const host = document.getElementById("strips");
+const made = tracks.map(t => {
+    const s = strip(t);
+    host.appendChild(s);
+    return [s, t];
+});
+
+const zoomTrack = tracks[3];
+const zoomStrip = strip(Object.assign({}, zoomTrack, { sel: true }));
+document.getElementById("zoom").appendChild(zoomStrip);
+made.push([zoomStrip, Object.assign({}, zoomTrack)]);
+
+for (const [s, t] of made) {
+    fader(s.querySelector(".mfader"), t.v, t.mute ? 0 : t.m, t.c);
+}
+
+// Numbered marks beside the close-up, in the order of the notes.
+const zoom = document.getElementById("zoom");
+const marks = [[1, 214, 30], [2, 214, 104], [3, 4, 330], [4, 214, 360], [5, 214, 580], [6, 214, 637], [7, 214, 711], [8, 4, 20]];
+
+for (const [n, x, y] of marks) {
+    const b = document.createElement("span");
+    b.className = "badge";
+    b.style.left = x + "px";
+    b.style.top = y + "px";
+    b.textContent = n;
+    zoom.appendChild(b);
+}
+</script>
+</body>
+</html>

@@ -17,6 +17,7 @@ import "MidiSequence.idl";
 import "MidiSequenceTrackRouting.idl";
 import "MidiSequencePlayerStateEnum.idl";
 import "MidiSequencePlayerPosition.idl";
+import "MidiSequenceChaseOptionsEnum.idl";
 
 
 namespace Windows.Devices.Midi2.Utilities.Sequencing
@@ -67,7 +68,7 @@ namespace Windows.Devices.Midi2.Utilities.Sequencing
 
         // Seeking re-sends the bank, program, controllers and pitch bend each channel was left
         // in, so starting in the middle of a file does not play the rest of it on the wrong
-        // sound.
+        // sound. ChaseOptions, below, says what is sent.
 
         MidiSequenceTrackRouting GetTrackRouting(UInt16 trackIndex);
         void SetTrackRouting(UInt16 trackIndex, MidiSequenceTrackRouting routing);
@@ -96,5 +97,55 @@ namespace Windows.Devices.Midi2.Utilities.Sequencing
 
         event Windows.Foundation.TypedEventHandler<MidiSequencePlayer, Object> PlaybackEnded;
         event Windows.Foundation.TypedEventHandler<MidiSequencePlayer, Object> StateChanged;
+
+        // Added after the first release of this contract, so a new interface rather than a change
+        // to the one above.
+        [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequencePlayer2", UUID_IMidiSequencePlayer2)]
+        [contract(MidiSequencingUtilityApiContract, 2)]
+        {
+            // How fast the sequence plays, as a multiple of the speed it was written at: 1.0 is
+            // as written, 0.5 is half speed and 2.0 is double. Every tempo in the sequence scales
+            // the same way and the notes themselves are not touched, so the pitch does not change.
+            //
+            // Safe to change while playing. The new rate is heard within about a quarter of a
+            // second, and nothing that is sounding is cut off. A value outside the minimum and
+            // maximum is clamped, and reading it back gives the clamped value. A value that is not
+            // a number is refused. The rate stays set when a new sequence is loaded.
+            //
+            // Position stays in the sequence's own time, so a display, a seek and BeatsPerMinute
+            // all mean what they mean at 1.0.
+            Double PlaybackRate;
+
+            Double MinimumPlaybackRate{ get; };
+            Double MaximumPlaybackRate{ get; };
+
+            // What Play and a seek send before the music when they start part way into the
+            // sequence. ChannelSettings by default, which is what a player has always done. Add
+            // HeldNotes for organ stops held on a control channel, drones and pads, and leave it
+            // out for piano and drums. Bits the player does not know are ignored, and reading the
+            // property back shows what it will actually do. It stays set when a new sequence is
+            // loaded, and applies from the next play, seek, mute or solo.
+            //
+            // With HeldNotes on, muting or soloing a track while playing also restarts the notes
+            // the tracks that can still be heard should be holding, because the silence a mute or
+            // solo sends turns off every held note, not only those of the track that changed.
+            // Unmuting a track restarts that track's held notes.
+            MidiSequenceChaseOptions ChaseOptions;
+
+            // Moves every note up or down by this many semitones as it plays. Drums are left
+            // alone: notes on channel 10, and on any channel the sequence switches to a drum kit
+            // with a bank select or a GS or XG message, keep their note numbers, because there the
+            // number picks the drum rather than the pitch.
+            //
+            // Safe to change while playing. The change is heard within about a quarter of a
+            // second. A note that is already sounding keeps its pitch, and its end still reaches
+            // it. A note moved outside 0 to 127 is not played. A value outside the minimum and
+            // maximum is clamped, and reading it back gives the clamped value. It stays set when a
+            // new sequence is loaded.
+            Int32 TransposeSemitones;
+
+            Int32 MinimumTransposeSemitones{ get; };
+            Int32 MaximumTransposeSemitones{ get; };
+        }
     };
 }

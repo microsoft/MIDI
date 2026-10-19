@@ -12,6 +12,8 @@
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
+#include "MidiNetworkMidi1PortGroup.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkHostUpdateConfig : MidiNetworkHostUpdateConfigT<MidiNetworkHostUpdateConfig>
@@ -30,6 +32,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         uint8_t FallbackMidi1PortCount() const noexcept { return m_fallbackMidi1PortCount.value_or(static_cast<uint8_t>(MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT)); }
         void FallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
+        collections::IVector<network::MidiNetworkMidi1PortGroup> FallbackMidi1PortGroups() const noexcept { return m_fallbackMidi1PortGroups; }
 
         winrt::guid NetworkAdapterId() const noexcept { return m_networkAdapterId.value_or(winrt::guid{}); }
         void NetworkAdapterId(_In_ winrt::guid const& value) noexcept;
@@ -64,6 +68,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         std::optional<network::MidiNetworkSendSpeedLimit> m_sendSpeedLimit{};
         std::optional<bool> m_reduceSendSpeedAutomatically{};
         std::optional<bool> m_skipInBetweenValuesToCatchUp{};
+
+        // Sent only once the caller changes the list, for the same reason. Declared in this order
+        // because the list is built from the flag.
+        std::shared_ptr<std::atomic<bool>> m_fallbackMidi1PortGroupsChanged{ std::make_shared<std::atomic<bool>>(false) };
+        collections::IObservableVector<network::MidiNetworkMidi1PortGroup> m_fallbackMidi1PortGroups{
+            MidiNetworkMidi1PortGroup::CreateChangeTrackedList(m_fallbackMidi1PortGroupsChanged) };
 
         // Set with the id, and how the service finds the adapter again under a new GUID
         winrt::hstring m_networkAdapterPhysicalAddress{};

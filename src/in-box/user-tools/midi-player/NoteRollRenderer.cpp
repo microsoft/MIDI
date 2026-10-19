@@ -98,6 +98,53 @@ namespace midiplayer
     }
 
     _Use_decl_annotations_
+    NoteSpan NoteSpan::Of(midifile::MidiSequence const& sequence) noexcept
+    {
+        NoteSpan span{};
+
+        for (auto const& note : sequence.Notes)
+        {
+            auto const number = static_cast<int32_t>(note.NoteNumber);
+
+            auto& lowest = note.IsPercussion ? span.PercussionLowest : span.MelodicLowest;
+            auto& highest = note.IsPercussion ? span.PercussionHighest : span.MelodicHighest;
+
+            lowest = (std::min)(lowest, number);
+            highest = (std::max)(highest, number);
+        }
+
+        return span;
+    }
+
+    _Use_decl_annotations_
+    bool NoteSpan::Range(int32_t transposeSemitones, int32_t& lowest, int32_t& highest) const noexcept
+    {
+        lowest = 128;
+        highest = -1;
+
+        if (MelodicHighest >= 0)
+        {
+            // Notes moved past either end are not played, so they take no room.
+            auto const low = (std::max)(0, MelodicLowest + transposeSemitones);
+            auto const high = (std::min)(127, MelodicHighest + transposeSemitones);
+
+            if (low <= high)
+            {
+                lowest = low;
+                highest = high;
+            }
+        }
+
+        if (PercussionHighest >= 0)
+        {
+            lowest = (std::min)(lowest, PercussionLowest);
+            highest = (std::max)(highest, PercussionHighest);
+        }
+
+        return lowest <= highest;
+    }
+
+    _Use_decl_annotations_
     winrt::Windows::UI::Color NoteRollRenderer::TrackColor(uint16_t trackIndex) noexcept
     {
         return ColorFromArgb(TrackPalette[trackIndex % ARRAYSIZE(TrackPalette)]);
@@ -165,35 +212,58 @@ namespace midiplayer
         m_sequence = sequence;
         m_audible.clear();
 
-        if (m_sequence == nullptr || m_sequence->Notes.empty())
-        {
-            m_lowestNote = 0;
-            m_highestNote = 127;
-        }
-        else
-        {
-            // A little air above and below, so the highest and lowest notes are not drawn hard
-            // against the edge.
-            auto const low = static_cast<int32_t>(m_sequence->LowestNote) - 2;
-            auto const high = static_cast<int32_t>(m_sequence->HighestNote) + 2;
+        m_span = m_sequence == nullptr ? NoteSpan{} : NoteSpan::Of(*m_sequence);
 
-            m_lowestNote = static_cast<uint8_t>(low < 0 ? 0 : low);
-            m_highestNote = static_cast<uint8_t>(high > 127 ? 127 : high);
-
-            // A file playing three notes would otherwise draw them as three enormous bars.
-            if (m_highestNote - m_lowestNote < 24)
-            {
-                auto const center = (m_highestNote + m_lowestNote) / 2;
-                auto const lowered = center - 12;
-                auto const raised = center + 12;
-
-                m_lowestNote = static_cast<uint8_t>(lowered < 0 ? 0 : lowered);
-                m_highestNote = static_cast<uint8_t>(raised > 127 ? 127 : raised);
-            }
-        }
+        RebuildRange();
 
         HideFrom(0);
         HideGridFrom(0);
+    }
+
+    _Use_decl_annotations_
+    void NoteRollRenderer::SetTransposeSemitones(int32_t semitones) noexcept
+    {
+        if (semitones == m_transposeSemitones)
+        {
+            return;
+        }
+
+        m_transposeSemitones = semitones;
+
+        RebuildRange();
+    }
+
+    void NoteRollRenderer::RebuildRange() noexcept
+    {
+        int32_t lowest{ 0 };
+        int32_t highest{ 127 };
+
+        if (m_sequence == nullptr || !m_span.Range(m_transposeSemitones, lowest, highest))
+        {
+            m_lowestNote = 0;
+            m_highestNote = 127;
+
+            return;
+        }
+
+        // A little air above and below, so the highest and lowest notes are not drawn hard
+        // against the edge.
+        auto const low = lowest - 2;
+        auto const high = highest + 2;
+
+        m_lowestNote = static_cast<uint8_t>(low < 0 ? 0 : low);
+        m_highestNote = static_cast<uint8_t>(high > 127 ? 127 : high);
+
+        // A file playing three notes would otherwise draw them as three enormous bars.
+        if (m_highestNote - m_lowestNote < 24)
+        {
+            auto const center = (m_highestNote + m_lowestNote) / 2;
+            auto const lowered = center - 12;
+            auto const raised = center + 12;
+
+            m_lowestNote = static_cast<uint8_t>(lowered < 0 ? 0 : lowered);
+            m_highestNote = static_cast<uint8_t>(raised > 127 ? 127 : raised);
+        }
     }
 
     _Use_decl_annotations_
@@ -264,9 +334,11 @@ namespace midiplayer
                     break;
                 }
 
+                auto const noteNumber = DisplayedNoteNumber(*entry, m_transposeSemitones);
+
                 if (entry->EndTick < startTick ||
-                    entry->NoteNumber < m_lowestNote ||
-                    entry->NoteNumber > m_highestNote)
+                    noteNumber < m_lowestNote ||
+                    noteNumber > m_highestNote)
                 {
                     continue;
                 }
@@ -302,7 +374,7 @@ namespace midiplayer
                     break;
                 }
 
-                auto const top = height - ((entry->NoteNumber - m_lowestNote + 1) * noteHeight);
+                auto const top = height - ((noteNumber - m_lowestNote + 1) * noteHeight);
 
                 SizeNoteVisuals(
                     note,

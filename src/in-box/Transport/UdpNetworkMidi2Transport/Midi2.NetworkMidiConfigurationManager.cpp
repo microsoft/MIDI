@@ -93,6 +93,34 @@ namespace
         }
     }
 
+    // The name a client entry has this PC give the remote, or empty for the default. The connect
+    // commands and a saved entry read back after a restart both come through here, so they
+    // cannot disagree. Network MIDI Setup used to fill an empty "Name that device will see" with
+    // the address it was connecting to, which nobody chose, so that is treated as no name.
+    winrt::hstring ConfiguredLocalEndpointName(
+        _In_ winrt::hstring const& configuredName,
+        _In_ winrt::hstring const& remoteAddress) noexcept
+    {
+        try
+        {
+            auto name = internal::TrimmedHStringCopy(configuredName);
+
+            if (!name.empty() &&
+                internal::ToLowerTrimmedHStringCopy(name) == internal::ToLowerTrimmedHStringCopy(remoteAddress))
+            {
+                return winrt::hstring{ };
+            }
+
+            return name;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+
+            return winrt::hstring{ };
+        }
+    }
+
     bool SafeGetNamedBoolean(
         _In_ json::JsonObject const& parent,
         _In_ winrt::hstring const& name,
@@ -738,6 +766,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
     uint8_t const fallbackMidi1PortCount,
+    internal::MidiNetworkMidi1PortGroupList const& fallbackMidi1PortGroups,
     uint32_t const sendSpeedLimit,
     bool const reduceSendSpeedAutomatically,
     bool const skipInBetweenValuesToCatchUp,
@@ -786,13 +815,14 @@ try
 
     clientDefinition.CreateMidi1Ports = createMidi1Ports;
     clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
+    clientDefinition.FallbackMidi1PortGroups = fallbackMidi1PortGroups;
     clientDefinition.SendSpeedLimit = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(sendSpeedLimit);
     clientDefinition.ReduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
     clientDefinition.SkipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition.MatchDirectPort = remotePort;
-    clientDefinition.LocalEndpointName = umpEndpointName;
+    clientDefinition.LocalEndpointName = ConfiguredLocalEndpointName(umpEndpointName, remoteAddress);
     clientDefinition.CustomEndpointName = customEndpointName;
 
     // Registered before it is started, or nothing can retry it, revive it, or report it in
@@ -833,6 +863,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
     uint8_t const fallbackMidi1PortCount,
+    internal::MidiNetworkMidi1PortGroupList const& fallbackMidi1PortGroups,
     uint32_t const sendSpeedLimit,
     bool const reduceSendSpeedAutomatically,
     bool const skipInBetweenValuesToCatchUp,
@@ -864,12 +895,13 @@ try
 
     clientDefinition.CreateMidi1Ports = createMidi1Ports;
     clientDefinition.FallbackMidi1PortCount = fallbackMidi1PortCount;
+    clientDefinition.FallbackMidi1PortGroups = fallbackMidi1PortGroups;
     clientDefinition.SendSpeedLimit = ::WindowsMidiServicesInternal::ClampMidiSendSpeedMultiple(sendSpeedLimit);
     clientDefinition.ReduceSendSpeedAutomatically = reduceSendSpeedAutomatically;
     clientDefinition.SkipInBetweenValuesToCatchUp = skipInBetweenValuesToCatchUp;
     clientDefinition.EntryIdentifier = configEntryId;
     clientDefinition.MatchId = matchId;
-    clientDefinition.LocalEndpointName = umpEndpointName;
+    clientDefinition.LocalEndpointName = ConfiguredLocalEndpointName(umpEndpointName, winrt::hstring{ });
     clientDefinition.CustomEndpointName = customEndpointName;
 
     LOG_IF_FAILED(TransportState::Current().AddClientDefinition(clientDefinition));
@@ -1487,6 +1519,10 @@ namespace
             json::JsonValue::CreateNumberValue(definition.FallbackMidi1PortCount));
 
         clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+            internal::WriteMidiNetworkMidi1PortGroups(definition.FallbackMidi1PortGroups));
+
+        clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SEND_SPEED_LIMIT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(definition.SendSpeedLimit)));
 
@@ -1862,6 +1898,10 @@ namespace
             json::JsonValue::CreateNumberValue(definition.FallbackMidi1PortCount));
 
         hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+            internal::WriteMidiNetworkMidi1PortGroups(definition.FallbackMidi1PortGroups));
+
+        hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SEND_SPEED_LIMIT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(definition.SendSpeedLimit)));
 
@@ -1898,6 +1938,15 @@ namespace
             settingsObject.SetNamedValue(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY,
                 json::JsonValue::CreateBooleanValue(settings.SkipInBetweenValuesToCatchUp));
+
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY,
+                json::JsonValue::CreateBooleanValue(settings.UseHostSendSpeed));
+
+            // Reported so a caller sending the whole list back keeps them
+            settingsObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY,
+                internal::WriteMidiNetworkMidi1PortGroups(settings.FallbackMidi1PortGroups));
 
             remoteClientSettingsArray.Append(settingsObject);
         }
@@ -2318,6 +2367,8 @@ namespace
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_CUSTOM_ENDPOINT_NAME_ON_CREATE, true);
 
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_CAPABILITY_FALLBACK_MIDI1_PORT_GROUPS, true);
+
         return capabilities;
     }
 }
@@ -2478,6 +2529,7 @@ try
                     OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
                     OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
+                    internal::ReadMidiNetworkMidi1PortGroups(std::wstring_view{ OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY) }),
                     OptionalCommandArgumentSendSpeedLimit(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true),
@@ -2507,6 +2559,7 @@ try
                     OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
                     OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
+                    internal::ReadMidiNetworkMidi1PortGroups(std::wstring_view{ OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY) }),
                     OptionalCommandArgumentSendSpeedLimit(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false),
                     OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true),
@@ -2719,6 +2772,24 @@ catch (...)
 
 namespace
 {
+    // The groups which get MIDI 1.0 ports when the remote declares no function blocks. An array
+    // present replaces the list whole, so an empty one clears it. One which is absent, or is not
+    // an array, leaves it alone.
+    void ReadFallbackMidi1PortGroups(
+        _In_ json::JsonObject const& entry,
+        _Inout_ internal::MidiNetworkMidi1PortGroupList& groups) noexcept
+    {
+        try
+        {
+            auto const items = SafeGetNamedArray(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_GROUPS_KEY);
+
+            if (items == nullptr) return;
+
+            groups = internal::ReadMidiNetworkMidi1PortGroups(items);
+        }
+        CATCH_LOG();
+    }
+
     // The remote clients of a host with their own settings. An array present replaces the list
     // whole, so an empty one clears it, and an absent one leaves it alone. An entry missing half
     // its identity could never match anything, so it is skipped, as is a second one for a client.
@@ -2760,6 +2831,9 @@ namespace
                 settings.SendSpeedLimit = SafeGetNamedSendSpeedLimit(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY, 0);
                 settings.ReduceSendSpeedAutomatically = SafeGetNamedBoolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY, false);
                 settings.SkipInBetweenValuesToCatchUp = SafeGetNamedBoolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
+                settings.UseHostSendSpeed = SafeGetNamedBoolean(item, MIDI_CONFIG_JSON_NETWORK_MIDI_USE_HOST_SEND_SPEED_KEY, false);
+
+                ReadFallbackMidi1PortGroups(item, settings.FallbackMidi1PortGroups);
 
                 keys.push_back(std::move(key));
                 result.push_back(std::move(settings));
@@ -2805,6 +2879,8 @@ namespace
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
 
+        ReadFallbackMidi1PortGroups(entry, definition.FallbackMidi1PortGroups);
+
         definition.SendSpeedLimit = SafeGetNamedSendSpeedLimit(
             entry,
             MIDI_CONFIG_JSON_NETWORK_MIDI_SEND_SPEED_LIMIT_KEY,
@@ -2842,6 +2918,8 @@ namespace
             definition.FallbackMidi1PortCount,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
             MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+        ReadFallbackMidi1PortGroups(entry, definition.FallbackMidi1PortGroups);
 
         definition.SendSpeedLimit = SafeGetNamedSendSpeedLimit(
             entry,
@@ -2906,24 +2984,30 @@ try
 
     auto endpointManager = TransportState::Current().GetEndpointManager();
 
-    // Applies one entry's worth of changes. The count is the only thing which can take effect
-    // without rebuilding the endpoint, so it is the only thing pushed to a live one. Whether an
+    // Applies one entry's worth of changes, and says whether anything the MIDI 1.0 ports are built
+    // from changed. The count and the groups are the only things which can take effect without
+    // rebuilding the endpoint, so they are the only things pushed to a live one. Whether an
     // endpoint has MIDI 1.0 ports at all is fixed when the endpoint is created, so the flag is
     // recorded for the next connection and nothing is torn down to act on it.
-    auto applyToDefinition = [&endpointManager](
+    auto applyToDefinition = [](
         json::JsonObject const& entry,
-        auto& definition,
-        std::vector<std::wstring> const& liveEndpointDeviceIds)
+        auto& definition) -> bool
     {
         auto const previousCount = definition.FallbackMidi1PortCount;
+        auto const previousGroups = definition.FallbackMidi1PortGroups;
 
         ApplyEntrySettings(entry, definition);
 
-        if (definition.FallbackMidi1PortCount == previousCount)
-        {
-            return;
-        }
+        return definition.FallbackMidi1PortCount != previousCount ||
+            definition.FallbackMidi1PortGroups != previousGroups;
+    };
 
+    // Only after the stored definition holds the change, because the refresh reads the groups from
+    // there. An endpoint whose ports would come out the same is left alone.
+    auto refreshLiveEndpoints = [&endpointManager](
+        std::vector<std::wstring> const& liveEndpointDeviceIds,
+        uint8_t const fallbackMidi1PortCount)
+    {
         if (endpointManager == nullptr)
         {
             return;
@@ -2933,8 +3017,21 @@ try
         {
             if (endpointDeviceId.empty()) continue;
 
-            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(endpointDeviceId, definition.FallbackMidi1PortCount));
+            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(endpointDeviceId, fallbackMidi1PortCount));
         }
+    };
+
+    // Each remote client's own groups, to tell whether an update changed any of them
+    auto remoteClientPortGroups = [](MidiNetworkHostDefinition const& definition)
+    {
+        std::vector<std::pair<std::wstring, internal::MidiNetworkMidi1PortGroupList>> groups{};
+
+        for (auto const& settings : definition.RemoteClientSettings)
+        {
+            groups.emplace_back(settings.Identity.Key(), settings.FallbackMidi1PortGroups);
+        }
+
+        return groups;
     };
 
     auto hostsObject = SafeGetNamedObject(updateSection, MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY);
@@ -2968,7 +3065,11 @@ try
             if (!definition.has_value()) continue;
 
             // Changed on a copy and written back, so no other thread reads a half-applied update
-            applyToDefinition(entry, *definition, endpointDeviceIds);
+            auto const previousRemoteClientPortGroups = remoteClientPortGroups(*definition);
+
+            auto portsChanged = applyToDefinition(entry, *definition);
+
+            portsChanged = portsChanged || remoteClientPortGroups(*definition) != previousRemoteClientPortGroups;
 
             LOG_IF_FAILED(TransportState::Current().UpdateHostDefinition(
                 entryIdentifier,
@@ -2977,6 +3078,7 @@ try
                     stored.CustomEndpointName = definition->CustomEndpointName;
                     stored.CreateMidi1Ports = definition->CreateMidi1Ports;
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                    stored.FallbackMidi1PortGroups = definition->FallbackMidi1PortGroups;
                     stored.SendSpeedLimit = definition->SendSpeedLimit;
                     stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
                     stored.SkipInBetweenValuesToCatchUp = definition->SkipInBetweenValuesToCatchUp;
@@ -2986,6 +3088,12 @@ try
                     stored.NetworkAdapterPhysicalAddress = definition->NetworkAdapterPhysicalAddress;
                     stored.AllowNetworkAdapterFallback = definition->AllowNetworkAdapterFallback;
                 }));
+
+            // Each endpoint picks up its own remote client's groups, or the host's
+            if (portsChanged)
+            {
+                refreshLiveEndpoints(endpointDeviceIds, definition->FallbackMidi1PortCount);
+            }
 
             // A running host has its own copy, taken when it started
             if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
@@ -3053,7 +3161,7 @@ try
 
             if (!definition.has_value()) continue;
 
-            applyToDefinition(entry, *definition, endpointDeviceIds);
+            auto const portsChanged = applyToDefinition(entry, *definition);
 
             LOG_IF_FAILED(TransportState::Current().UpdateClientDefinition(
                 entryIdentifier,
@@ -3062,10 +3170,16 @@ try
                     stored.CustomEndpointName = definition->CustomEndpointName;
                     stored.CreateMidi1Ports = definition->CreateMidi1Ports;
                     stored.FallbackMidi1PortCount = definition->FallbackMidi1PortCount;
+                    stored.FallbackMidi1PortGroups = definition->FallbackMidi1PortGroups;
                     stored.SendSpeedLimit = definition->SendSpeedLimit;
                     stored.ReduceSendSpeedAutomatically = definition->ReduceSendSpeedAutomatically;
                     stored.SkipInBetweenValuesToCatchUp = definition->SkipInBetweenValuesToCatchUp;
                 }));
+
+            if (portsChanged)
+            {
+                refreshLiveEndpoints(endpointDeviceIds, definition->FallbackMidi1PortCount);
+            }
 
             if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
             {
@@ -3358,10 +3472,7 @@ CMidi2NetworkMidiConfigurationManager::TryReadClientDefinition(
     // paths read them. The definition is new, so an absent key takes its default.
     ApplyEntrySettings(clientEntry, definition);
 
-    // TODO: Add ability for config file to specify the localEndpointName and localProductInstanceId
-    definition.LocalEndpointName = GetComputerNameOrEmpty();
-
-    // TODO: we may want to provide the local product instance id as a system-wide setting. Same with name
+    // TODO: we may want to provide the local product instance id as a system-wide setting
     definition.LocalProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
 
     auto matchSection = SafeGetNamedObject(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY);
@@ -3383,6 +3494,13 @@ CMidi2NetworkMidiConfigurationManager::TryReadClientDefinition(
 
     definition.MatchProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
     definition.MatchUmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
+
+    // The name this PC gives the remote, saved with the connection when it was made. Read the way
+    // the connect commands read it, so a restart doesn't change it. Empty takes the default when
+    // the client starts, which is the same default a new connection gets.
+    definition.LocalEndpointName = ConfiguredLocalEndpointName(
+        SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_UMP_ENDPOINT_NAME, L""),
+        definition.MatchDirectHostNameOrIPAddress);
 
     return true;
 }

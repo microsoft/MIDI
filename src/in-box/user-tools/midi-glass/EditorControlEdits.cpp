@@ -15,6 +15,7 @@
 #include "LayoutStore.h"
 #include "LayoutPackage.h"
 #include "PadGrid.h"
+#include "SpinButtons.h"
 
 #include <shobjidl.h>
 #include <filesystem>
@@ -1463,7 +1464,7 @@ namespace winrt::midiglass::implementation
                 controls::NumberBox box{};
 
                 box.Value(stops[index]);
-                box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                midiapp::UseTouchSpinButtons(box);
                 box.SmallChange(absolute ? 1.0 : 0.05);
 
                 // The ends are the range's ends, so they are not free numbers: an absolute

@@ -29,6 +29,7 @@ bool DoSectionApiMode();
 bool DoSectionComponentVersions();
 bool DoSectionServiceStatus();
 bool DoSectionServiceHistory();
+bool DoSectionInstallHistory();
 bool DoSectionDeviceNodes();
 bool DoSectionNetwork();
 bool DoSectionMdns();
@@ -38,6 +39,10 @@ bool IsMidiServiceRunning();
 // 0 when the service is not installed or cannot be queried
 DWORD MidiServiceState();
 uint32_t MidiServiceProcessId();
+
+// The file the service was registered to run before the report started, with quotes, arguments
+// and environment variables resolved. Empty when it is not installed or Windows did not say.
+std::wstring MidiServiceExecutablePath();
 
 ParentDeviceDetails GetParentDeviceDetails(_In_ std::wstring const& parentInstanceId, _In_ std::wstring const& driverInstanceId);
 

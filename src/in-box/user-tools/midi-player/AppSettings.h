@@ -42,6 +42,12 @@ namespace midiplayer
         bool KeyboardView() const noexcept { return m_keyboardView; }
         void KeyboardView(bool value) noexcept;
 
+        // Whether resuming or moving the position starts again the notes that should already be
+        // sounding. Off until the customer turns it on, because restarting a note part way
+        // through suits organ stops and pads but not piano or drums.
+        bool ChaseHeldNotes() const noexcept { return m_chaseHeldNotes; }
+        void ChaseHeldNotes(_In_ bool value) noexcept;
+
     private:
         AppSettings() noexcept;
 
@@ -50,5 +56,6 @@ namespace midiplayer
         bool m_repeatQueue{ false };
         bool m_showQueue{ true };
         bool m_keyboardView{ false };
+        bool m_chaseHeldNotes{ false };
     };
 }

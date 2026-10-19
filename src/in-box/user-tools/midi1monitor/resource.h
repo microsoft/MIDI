@@ -28,6 +28,7 @@
 #define IDS_MONITORING_MESSAGES										50207
 #define IDS_MONITORING_ACTIVE_SENSE									50208
 #define IDS_MONITORING_CLOCK										50209
+#define IDS_MONITORING_TIMESTAMPS									50210
 
 // Errors
 

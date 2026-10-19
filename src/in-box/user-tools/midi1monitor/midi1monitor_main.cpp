@@ -20,7 +20,7 @@ bool m_showClock{ false };
 struct ReceivedMidiMessage
 {
     uint64_t WindowsMidiServicesTimestamp;
-    //DWORD WinMMTimestamp;
+    DWORD WinMMTimestamp{ 0 };
 
     bool IsLongMessage{ false };
     bool IsError{ false };
@@ -104,54 +104,54 @@ void DisplayAllWinMMInputs()
 }
 
 
-void DisplayStatusByte(byte status, bool isError)
+// Each message starts its own line with the WinMM timestamp: milliseconds since midiInStart.
+void BeginMessageLine(_In_ DWORD const winmmTimestamp)
 {
-    if (status == MIDI_SYSEX)
-    {
-        fmt::print(L"\n{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
+    fmt::print(L"\n{} ", Styled(fmt::format(L"{:>10}", winmmTimestamp), fmt::fg(fmt::color::slate_gray)));
+}
 
-    }
-    else if (status == MIDI_EOX)
-    {
-        fmt::println(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
-    }
-    else
-    {
-        fmt::println(L"");
-    }
-
+// Every byte is written with a leading space, so the whole message stays on its timestamp's line.
+void DisplayStatusByte(_In_ byte const status, _In_ bool const isError)
+{
     if (isError)
     {
-        fmt::println(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::pink)));
+        fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::pink)));
         return;
     }
 
-
-    if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
+    if (status == MIDI_SYSEX || status == MIDI_EOX)
+    {
+        fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_green)));
+    }
+    else if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
     {
         switch (status & 0xF0)
         {
         case MIDI_NOTEOFF:
-            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::dark_cyan)));
+            fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::dark_cyan)));
             break;
         case MIDI_NOTEON:
-            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::cyan)));
+            fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::cyan)));
             break;
         case MIDI_MONOAFTERTOUCH:
-            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::golden_rod)));
+            fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::golden_rod)));
             break;
         case MIDI_CONTROLCHANGE:
-            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_blue)));
+            fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_blue)));
             break;
         default:
-            fmt::print(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::magenta)));
+            fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::magenta)));
         }
     }
     else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
     {
-        fmt::println(L"{}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::gray)));
+        fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::gray)));
     }
-
+    else
+    {
+        // system common: MTC quarter frame, song position, song select, tune request
+        fmt::print(L" {}", Styled(fmt::format(L"{:02X}", status), fmt::fg(fmt::color::light_salmon)));
+    }
 }
 
 void DisplayDataByte(byte data, bool isError)
@@ -201,7 +201,7 @@ void DisplayDecodedChannelVoiceMessage(
 
 
 //concurrency::task<void> 
-void DisplayMidiMessage(ReceivedMidiMessage& msg)
+void DisplayMidiMessage(_In_ ReceivedMidiMessage const& msg)
 {
     m_countStatusBytesReceived++;
     m_countAllBytesReceived++;
@@ -218,6 +218,7 @@ void DisplayMidiMessage(ReceivedMidiMessage& msg)
         return;
     }
 
+    BeginMessageLine(msg.WinMMTimestamp);
     DisplayStatusByte(status, msg.IsError);
 
 
@@ -291,30 +292,32 @@ void DisplayMidiMessage(ReceivedMidiMessage& msg)
             switch (status)
             {
             case MIDI_TIMINGCLOCK:
-                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CLOCK), fmt::fg(fmt::color::light_cyan)));
+                fmt::print(L" {}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CLOCK), fmt::fg(fmt::color::light_cyan)));
                 break;
             case MIDI_START:
-                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_START), fmt::fg(fmt::color::green)));
+                fmt::print(L" {}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_START), fmt::fg(fmt::color::green)));
                 break;
             case MIDI_CONTINUE:
-                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CONTINUE), fmt::fg(fmt::color::light_yellow)));
+                fmt::print(L" {}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_CONTINUE), fmt::fg(fmt::color::light_yellow)));
                 break;
             case MIDI_STOP:
-                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_STOP), fmt::fg(fmt::color::red)));
+                fmt::print(L" {}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_STOP), fmt::fg(fmt::color::red)));
                 break;
             case MIDI_ACTIVESENSE:
-                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_ACTIVE_SENSE), fmt::fg(fmt::color::gray)));
+                fmt::print(L" {}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_ACTIVE_SENSE), fmt::fg(fmt::color::gray)));
                 break;
             case MIDI_RESET:
-                fmt::print(L"{}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_RESET), fmt::fg(fmt::color::light_salmon)));
+                fmt::print(L" {}", Styled(internal::ResourceGetWString(IDS_MESSAGE_SYSTEM_REAL_TIME_RESET), fmt::fg(fmt::color::light_salmon)));
                 break;
             }
         }
     }
 }
 
-void DisplayMidiLongMessage(ReceivedMidiMessage& msg)
+void DisplayMidiLongMessage(_In_ ReceivedMidiMessage const& msg)
 {
+    BeginMessageLine(msg.WinMMTimestamp);
+
     for (auto const& b : msg.Data)
     {
         if (MIDI_BYTE_IS_STATUS_BYTE(b))
@@ -364,19 +367,18 @@ void MessageDisplayWorker(std::stop_token token)
 
 
 void EnqueueMidiDataMessage(
-    uint64_t windowsMidiServicesTimestamp,
-    DWORD dwParam1,
-    DWORD dwParam2,
-    bool isError)
+    _In_ uint64_t const windowsMidiServicesTimestamp,
+    _In_ DWORD const dwParam1,
+    _In_ DWORD const winmmTimestamp,
+    _In_ bool const isError)
 {
-    UNREFERENCED_PARAMETER(dwParam2);
-
     byte status = static_cast<byte>(dwParam1 & 0x000000FF);
     byte data1 = static_cast<byte>((dwParam1 & 0x0000FF00) >> 8);
     byte data2 = static_cast<byte>((dwParam1 & 0x00FF0000) >> 16);
 
     ReceivedMidiMessage msg{};
     msg.WindowsMidiServicesTimestamp = windowsMidiServicesTimestamp;
+    msg.WinMMTimestamp = winmmTimestamp;
     msg.Data[0] = status;
     msg.Data[1] = data1;
     msg.Data[2] = data2;
@@ -388,13 +390,11 @@ void EnqueueMidiDataMessage(
 }
 
 void EnqueueMidiLongDataMessage(
-    uint64_t windowsMidiServicesTimestamp,
-    LPMIDIHDR header,
-    DWORD dwParam2,
-    bool isError)
+    _In_ uint64_t const windowsMidiServicesTimestamp,
+    _In_ LPMIDIHDR const header,
+    _In_ DWORD const winmmTimestamp,
+    _In_ bool const isError)
 {
-    UNREFERENCED_PARAMETER(dwParam2);
-
     ReceivedMidiMessage msg{};
 
     auto count = header->dwBytesRecorded;
@@ -402,6 +402,7 @@ void EnqueueMidiLongDataMessage(
 
     std::vector<byte> data(start, start+count);
     msg.WindowsMidiServicesTimestamp = windowsMidiServicesTimestamp;
+    msg.WinMMTimestamp = winmmTimestamp;
     msg.Data = std::move(data);
     msg.IsError = isError;
     msg.IsLongMessage = true;
@@ -581,6 +582,8 @@ int __cdecl main(int argc, char* argv[])
                 Styled(internal::ResourceGetWString(IDS_MONITORING_MESSAGES), fmt::fg(fmt::color::light_gray))
             );
         }
+
+        WriteNormalLine(internal::ResourceGetWString(IDS_MONITORING_TIMESTAMPS));
 
         fmt::println(L"");
     }

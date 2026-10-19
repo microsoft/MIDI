@@ -1,4 +1,5 @@
 #include "MidiSynth/AudioSink.h"
+#include "MidiSynth/AudioSampleFormat.h"
 
 #include <windows.h>
 #include <audioclient.h>
@@ -67,6 +68,10 @@ namespace MidiSynth
         uint16_t ChannelCount{ 0 };
         bool IsFloat{ false };
         bool LowLatency{ false };
+        bool Exclusive{ false };
+
+        // Exclusive mode only. Shared mode writes the mix format, described by IsFloat above.
+        AudioSampleFormat ExclusiveFormat{};
 
         std::wstring FriendlyName;
 
@@ -97,6 +102,7 @@ namespace MidiSynth
         }
 
         void RenderLoop() noexcept;
+        HRESULT ActivateDefaultEndpoint();
     };
 
     void WasapiAudioSink::Impl::RenderLoop() noexcept
@@ -130,7 +136,10 @@ namespace MidiSynth
             }
 
             UINT32 padding = 0;
-            HRESULT hr = AudioClient->GetCurrentPadding(&padding);
+
+            // Event driven exclusive mode hands over the whole buffer every time, so there is no
+            // padding to read.
+            HRESULT hr = Exclusive ? S_OK : AudioClient->GetCurrentPadding(&padding);
 
             if (hr == AUDCLNT_E_DEVICE_INVALIDATED)
             {
@@ -156,17 +165,20 @@ namespace MidiSynth
             // is latency the player feels for no benefit.
             const UINT32 frames = (std::min)(available, PeriodFrameCount);
 
-            PaddingSum.fetch_add(padding, std::memory_order_relaxed);
-            PaddingSamples.fetch_add(1, std::memory_order_relaxed);
-
-            if (padding > MaxPadding.load(std::memory_order_relaxed))
+            if (!Exclusive)
             {
-                MaxPadding.store(padding, std::memory_order_relaxed);
-            }
+                PaddingSum.fetch_add(padding, std::memory_order_relaxed);
+                PaddingSamples.fetch_add(1, std::memory_order_relaxed);
 
-            if (padding < MinPadding.load(std::memory_order_relaxed))
-            {
-                MinPadding.store(padding, std::memory_order_relaxed);
+                if (padding > MaxPadding.load(std::memory_order_relaxed))
+                {
+                    MaxPadding.store(padding, std::memory_order_relaxed);
+                }
+
+                if (padding < MinPadding.load(std::memory_order_relaxed))
+                {
+                    MinPadding.store(padding, std::memory_order_relaxed);
+                }
             }
 
             BYTE* buffer = nullptr;
@@ -199,7 +211,11 @@ namespace MidiSynth
             LARGE_INTEGER end{};
             QueryPerformanceCounter(&end);
 
-            if (IsFloat)
+            if (Exclusive)
+            {
+                WriteAudioFrames(Staging.data(), frames, ExclusiveFormat, buffer);
+            }
+            else if (IsFloat)
             {
                 auto* output = reinterpret_cast<float*>(buffer);
 
@@ -280,51 +296,61 @@ namespace MidiSynth
         Stop();
     }
 
-    _Use_decl_annotations_
-    bool WasapiAudioSink::Open(bool lowLatency)
+    HRESULT WasapiAudioSink::Impl::ActivateDefaultEndpoint()
     {
-        auto& impl = *m_impl;
-        impl.LowLatency = lowLatency;
-
         HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
-            IID_PPV_ARGS(&impl.Enumerator));
+            IID_PPV_ARGS(&Enumerator));
 
         if (SUCCEEDED(hr))
         {
-            hr = impl.Enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &impl.Device);
+            hr = Enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &Device);
         }
 
         if (FAILED(hr))
         {
-            return false;
+            return hr;
         }
 
         {
             ComPtr<IPropertyStore> properties;
 
-            if (SUCCEEDED(impl.Device->OpenPropertyStore(STGM_READ, &properties)))
+            if (SUCCEEDED(Device->OpenPropertyStore(STGM_READ, &properties)))
             {
                 PROPVARIANT name{};
                 PropVariantInit(&name);
 
                 if (SUCCEEDED(properties->GetValue(PKEY_Device_FriendlyName, &name)) && name.vt == VT_LPWSTR)
                 {
-                    impl.FriendlyName = name.pwszVal;
+                    FriendlyName = name.pwszVal;
                 }
 
                 PropVariantClear(&name);
             }
         }
 
-        hr = impl.Device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
-            reinterpret_cast<void**>(&impl.AudioClient));
+        hr = Device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
+            reinterpret_cast<void**>(&AudioClient));
 
         if (SUCCEEDED(hr))
         {
-            hr = impl.AudioClient->GetMixFormat(&impl.MixFormat);
+            hr = AudioClient->GetMixFormat(&MixFormat);
         }
 
-        if (FAILED(hr) || impl.MixFormat == nullptr)
+        if (SUCCEEDED(hr) && MixFormat == nullptr)
+        {
+            hr = E_UNEXPECTED;
+        }
+
+        return hr;
+    }
+
+    _Use_decl_annotations_
+    bool WasapiAudioSink::Open(bool lowLatency)
+    {
+        auto& impl = *m_impl;
+        impl.LowLatency = lowLatency;
+
+        if (FAILED(impl.ActivateDefaultEndpoint()))
         {
             return false;
         }
@@ -378,7 +404,7 @@ namespace MidiSynth
         {
             impl.LowLatency = false;
 
-            hr = impl.AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
+            const HRESULT hr = impl.AudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
                 AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, impl.MixFormat, nullptr);
 
             if (FAILED(hr))
@@ -423,6 +449,179 @@ namespace MidiSynth
         impl.Staging.assign(static_cast<size_t>(bufferFrames) * 2, 0.0f);
 
         return true;
+    }
+
+    _Use_decl_annotations_
+    HRESULT WasapiAudioSink::OpenExclusive(uint32_t shortestPeriodMilliseconds)
+    {
+        auto& impl = *m_impl;
+
+        HRESULT hr = impl.ActivateDefaultEndpoint();
+
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        const uint32_t rate = impl.MixFormat->nSamplesPerSec;
+        const uint16_t mixChannels = impl.MixFormat->nChannels;
+
+        DWORD mixMask = 0;
+
+        if (impl.MixFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
+            impl.MixFormat->cbSize >= sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX))
+        {
+            mixMask = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(impl.MixFormat)->dwChannelMask;
+        }
+
+        struct Candidate
+        {
+            uint16_t ContainerBits;
+            uint16_t ValidBits;
+            bool IsFloat;
+        };
+
+        // Best first. Exclusive mode skips the Windows mixer, so the format has to be one the
+        // driver takes as is. The rate stays the one the device already runs at, so nothing that
+        // takes its clock from the device is disturbed.
+        constexpr Candidate Candidates[]
+        {
+            { 32, 32, true },
+            { 32, 32, false },
+            { 32, 24, false },
+            { 24, 24, false },
+            { 16, 16, false },
+        };
+
+        WAVEFORMATEXTENSIBLE chosen{};
+        bool found = false;
+        HRESULT refusal = AUDCLNT_E_UNSUPPORTED_FORMAT;
+
+        // Stereo first, then the device's own channel count, since some accept only that.
+        for (int pass = 0; pass < 2 && !found; pass++)
+        {
+            if (pass == 1 && (mixChannels == 2 || mixChannels == 0))
+            {
+                break;
+            }
+
+            const uint16_t channels = (pass == 0) ? 2 : mixChannels;
+            const DWORD mask = (pass == 0) ? (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT) : mixMask;
+
+            for (const auto& candidate : Candidates)
+            {
+                const auto format = MakeExtensibleFormat(rate, channels, mask,
+                    candidate.ContainerBits, candidate.ValidBits, candidate.IsFloat);
+
+                const HRESULT supported = impl.AudioClient->IsFormatSupported(
+                    AUDCLNT_SHAREMODE_EXCLUSIVE, &format.Format, nullptr);
+
+                if (supported == S_OK)
+                {
+                    chosen = format;
+                    found = true;
+                    break;
+                }
+
+                // These say nothing about the format, and no other format will fare better.
+                if (supported == AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED || supported == AUDCLNT_E_DEVICE_IN_USE)
+                {
+                    return supported;
+                }
+
+                refusal = (supported == S_FALSE) ? AUDCLNT_E_UNSUPPORTED_FORMAT : supported;
+            }
+        }
+
+        if (!found || !DescribeAudioSampleFormat(&chosen.Format, impl.ExclusiveFormat))
+        {
+            return refusal;
+        }
+
+        REFERENCE_TIME defaultPeriod = 0;
+        REFERENCE_TIME minimumPeriod = 0;
+
+        hr = impl.AudioClient->GetDevicePeriod(&defaultPeriod, &minimumPeriod);
+
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        REFERENCE_TIME period = (std::max)(minimumPeriod,
+            static_cast<REFERENCE_TIME>(shortestPeriodMilliseconds) * 10000);
+
+        hr = impl.AudioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+            period, period, &chosen.Format, nullptr);
+
+        if (hr == AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED)
+        {
+            // The driver wants a whole number of its own blocks. It says how many frames that is,
+            // and the stream has to be created again from scratch with the matching period.
+            UINT32 alignedFrames = 0;
+
+            hr = impl.AudioClient->GetBufferSize(&alignedFrames);
+
+            if (FAILED(hr) || alignedFrames == 0)
+            {
+                return FAILED(hr) ? hr : E_FAIL;
+            }
+
+            period = static_cast<REFERENCE_TIME>(10000000.0 * alignedFrames / rate + 0.5);
+
+            impl.AudioClient.Reset();
+
+            hr = impl.Device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
+                reinterpret_cast<void**>(&impl.AudioClient));
+
+            if (SUCCEEDED(hr))
+            {
+                hr = impl.AudioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+                    period, period, &chosen.Format, nullptr);
+            }
+        }
+
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        impl.BufferEvent.Value = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+
+        if (impl.BufferEvent.Value == nullptr)
+        {
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        UINT32 bufferFrames = 0;
+
+        hr = impl.AudioClient->SetEventHandle(impl.BufferEvent.Value);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = impl.AudioClient->GetBufferSize(&bufferFrames);
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            hr = impl.AudioClient->GetService(IID_PPV_ARGS(&impl.RenderClient));
+        }
+
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        // The device plays one buffer while the next is written, and every event asks for a whole one.
+        impl.BufferFrameCount = bufferFrames;
+        impl.PeriodFrameCount = bufferFrames;
+        impl.ChannelCount = impl.ExclusiveFormat.Channels;
+        impl.Exclusive = true;
+
+        // Sized for a whole buffer so the render thread never allocates.
+        impl.Staging.assign(static_cast<size_t>(bufferFrames) * 2, 0.0f);
+
+        return S_OK;
     }
 
     _Use_decl_annotations_
@@ -513,6 +712,11 @@ namespace MidiSynth
     bool WasapiAudioSink::UsingLowLatencyPath() const noexcept
     {
         return m_impl->LowLatency;
+    }
+
+    bool WasapiAudioSink::UsingExclusiveMode() const noexcept
+    {
+        return m_impl->Exclusive;
     }
 
     uint32_t WasapiAudioSink::DefaultPeriodFrames() const noexcept
