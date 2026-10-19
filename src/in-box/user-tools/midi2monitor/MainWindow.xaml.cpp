@@ -18,6 +18,7 @@
 #include "MonitorColumn.h"
 #include "MonitorPalette.h"
 #include "NamedChoice.h"
+#include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -197,6 +198,20 @@ namespace winrt::midi2monitor::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists, other pop-ups, and the columns and display flyouts take on the context menus'
+            // tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
+            midiapp::UseMenuBackdrop(controls::Primitives::FlyoutBase::GetAttachedFlyout(HeaderRowPanel()));
+
+            // That makes each flyout a window of its own, which isn't kept inside this one. The
+            // column list is too tall to fit above the header row inside the window, so it always
+            // opened below it, and now it has to be told to.
+            if (auto const columnsFlyout = controls::Primitives::FlyoutBase::GetAttachedFlyout(HeaderRowBorder()))
+            {
+                midiapp::UseMenuBackdrop(columnsFlyout);
+                columnsFlyout.Placement(controls::Primitives::FlyoutPlacementMode::Bottom);
+            }
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
             AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
@@ -1022,11 +1037,36 @@ namespace winrt::midi2monitor::implementation
                 flyout.FlyoutPresenterStyle(resources.Lookup(presenterStyleKey).as<xaml::Style>());
             }
 
+            // The context menus' tinted backdrop, so it matches the window, built on the presenter
+            // style above. That makes the flyout a window of its own, which isn't kept inside this
+            // one, so it opens toward the middle of the window rather than above the title bar.
+            midiapp::UseMenuBackdrop(flyout);
+
             flyout.Content(content.as<xaml::UIElement>());
-            flyout.Placement(controls::Primitives::FlyoutPlacementMode::TopEdgeAlignedLeft);
+            midiapp::OpenTowardWindowMiddle(flyout, SettingsButton());
             flyout.ShowAt(SettingsButton());
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to open the settings.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCommentButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // A row's comment flyout, just before its button opens it. Rows are reused, so a flyout
+            // that already has the backdrop comes through here again, which is fine. The button is
+            // at the left of the row, so the flyout opens from there rather than off the window.
+            if (auto const button = sender.try_as<controls::Button>())
+            {
+                if (auto const flyout = button.Flyout())
+                {
+                    midiapp::UseMenuBackdrop(flyout);
+                    flyout.Placement(controls::Primitives::FlyoutPlacementMode::TopEdgeAlignedLeft);
+                }
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to prepare the comment flyout.")
     }
 
     _Use_decl_annotations_

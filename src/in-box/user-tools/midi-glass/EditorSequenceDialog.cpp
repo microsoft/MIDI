@@ -17,6 +17,7 @@
 
 #include "StringResources.h"
 #include "HexText.h"
+#include "SpinButtons.h"
 
 #include <shobjidl.h>
 
@@ -325,25 +326,25 @@ namespace winrt::midiglass::implementation
             numberField.Header(box_value(resources::GetString(L"StepNumberHeader")));
             numberField.Minimum(0);
             numberField.Maximum(127);
-            numberField.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(numberField);
 
             controls::NumberBox waitField{};
             waitField.Header(box_value(resources::GetString(L"StepWaitHeader")));
             waitField.Minimum(0);
             waitField.Maximum(60000);
-            waitField.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(waitField);
 
             controls::NumberBox durationField{};
             durationField.Header(box_value(resources::GetString(L"StepDurationHeader")));
             durationField.Minimum(0);
             durationField.Maximum(60000);
-            durationField.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(durationField);
 
             controls::NumberBox repeatField{};
             repeatField.Header(box_value(resources::GetString(L"StepRepeatHeader")));
             repeatField.Minimum(1);
             repeatField.Maximum(256);
-            repeatField.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(repeatField);
 
             controls::ComboBox deviceField{};
             deviceField.Header(box_value(resources::GetString(L"StepDeviceHeader")));

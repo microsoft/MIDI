@@ -12,6 +12,7 @@
 #include "App.xaml.h"
 #include "BackgroundWork.h"
 #include "MidiPanic.h"
+#include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -117,6 +118,9 @@ namespace winrt::midisettings::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
 
             // Now that there is a window, a later launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());

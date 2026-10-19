@@ -8,6 +8,7 @@
 #pragma once
 
 // Not every tool's pch pulls in the input types, and this header uses them directly.
+#include <initializer_list>
 #include <winrt/Microsoft.UI.Input.h>
 #include <winrt/Microsoft.UI.Xaml.Controls.h>
 #include <winrt/Microsoft.UI.Xaml.Input.h>
@@ -82,5 +83,18 @@ namespace midiapp
 
         box.AddHandler(xaml::UIElement::PointerEnteredEvent(), winrt::box_value(handler), true);
         box.AddHandler(xaml::UIElement::PointerPressedEvent(), winrt::box_value(handler), true);
+    }
+
+    // The same for several boxes, such as the ones a window's XAML names. Their XAML should say
+    // Hidden rather than Compact, so none of them shows the pop-up before this is called.
+    inline void UseTouchSpinButtons(_In_ std::initializer_list<winrt::Microsoft::UI::Xaml::Controls::NumberBox> boxes)
+    {
+        for (auto const& box : boxes)
+        {
+            if (box != nullptr)
+            {
+                UseTouchSpinButtons(box);
+            }
+        }
     }
 }

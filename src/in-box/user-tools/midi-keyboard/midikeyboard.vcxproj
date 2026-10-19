@@ -154,6 +154,8 @@
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
+    <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\MidiCiAppPresence.h" />
     <ClInclude Include="..\midi-app-shared\MidiCiProgramListQuery.h" />
   </ItemGroup>

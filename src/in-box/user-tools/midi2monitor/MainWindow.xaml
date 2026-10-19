@@ -529,7 +529,8 @@
                                             Background="Transparent"
                                             BorderThickness="0"
                                             ToolTipService.ToolTip="{x:Bind CommentToolTip, Mode=OneWay}"
-                                            x:Uid="AddCommentButton">
+                                            x:Uid="AddCommentButton"
+                                            Click="OnCommentButtonClick">
                                         <Grid>
                                             <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                                       Glyph="&#xE90A;"

@@ -16,6 +16,7 @@
 #include "pch.h"
 #include "EditorWindow.xaml.h"
 
+#include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "ThemeStore.h"
 
@@ -260,6 +261,12 @@ namespace winrt::midiglass::implementation
             root.Children().Append(buttons);
 
             flyout.Content(root);
+
+            // The context menus' tinted backdrop, so it matches the window. That makes it a window
+            // of its own, which isn't kept inside this one, so it opens toward the middle of the
+            // window.
+            midiapp::UseMenuBackdrop(flyout);
+            midiapp::OpenTowardWindowMiddle(flyout, anchor);
             flyout.ShowAt(anchor);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the color picker.")

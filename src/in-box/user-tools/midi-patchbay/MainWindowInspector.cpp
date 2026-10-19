@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "FontCatalog.h"
+#include "PopupBackdrop.h"
 #include "RoundedShape.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
@@ -1554,6 +1555,12 @@ namespace winrt::midipatchbay::implementation
                 flyoutBody.Children().Append(picker);
                 flyoutBody.Children().Append(use);
                 flyout.Content(flyoutBody);
+
+                // The context menus' tinted backdrop, so it matches the window. That makes it a
+                // window of its own, which isn't kept inside this one, so it opens toward the
+                // middle of the window from wherever the button is then.
+                midiapp::UseMenuBackdrop(flyout);
+                midiapp::AlwaysOpenTowardWindowMiddle(flyout);
                 more.Flyout(flyout);
 
                 section.Children().Append(more);

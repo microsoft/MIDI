@@ -17,6 +17,7 @@
 #include "EndpointCatalog.h"
 #include "LayoutStore.h"
 #include "MidiServiceStatus.h"
+#include "PopupBackdrop.h"
 #include "SingleInstance.h"
 #include "PreviewBuild.h"
 #include "resource.h"
@@ -124,6 +125,9 @@ namespace winrt::midiglass::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, ::midiglass::AppSettings::Current());
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
 
             // Now that there is a window, a later launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());

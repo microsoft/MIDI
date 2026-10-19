@@ -187,11 +187,11 @@
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="0,0,0,12">
                     <NumberBox x:Name="MessageCountBox" x:Uid="MessageCountBox"
                                Header="Messages per transfer" Width="200"
-                               Minimum="1" Maximum="4096" SpinButtonPlacementMode="Compact"
+                               Minimum="1" Maximum="4096" SpinButtonPlacementMode="Hidden"
                                TabIndex="7" ValueChanged="OnTransferSettingChanged" />
                     <NumberBox x:Name="SpacingBox" x:Uid="SpacingBox"
                                Header="Delay between transfers (ms)" Width="220"
-                               Minimum="0" Maximum="5000" SpinButtonPlacementMode="Compact"
+                               Minimum="0" Maximum="5000" SpinButtonPlacementMode="Hidden"
                                TabIndex="8" ValueChanged="OnTransferSettingChanged" />
                 </StackPanel>
 

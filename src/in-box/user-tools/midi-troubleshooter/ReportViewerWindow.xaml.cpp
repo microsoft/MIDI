@@ -16,6 +16,7 @@
 #include "AppSettings.h"
 #include "BackgroundWork.h"
 #include "LatencyReportWriter.h"
+#include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -1257,6 +1258,9 @@ namespace winrt::miditroubleshooter::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
             AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));

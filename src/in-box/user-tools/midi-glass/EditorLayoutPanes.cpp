@@ -23,6 +23,7 @@
 #include "AppProvenance.h"
 #include "ProvenanceForm.h"
 #include "SharingDialogs.h"
+#include "SpinButtons.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -509,7 +510,7 @@ namespace winrt::midiglass::implementation
                 beats.Maximum(999.0);
                 beats.Value(document.Tempo.BeatsPerMinute);
                 beats.FontSize(12.0);
-                beats.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                midiapp::UseTouchSpinButtons(beats);
                 beats.Width(160.0);
                 beats.HorizontalAlignment(xaml::HorizontalAlignment::Left);
 

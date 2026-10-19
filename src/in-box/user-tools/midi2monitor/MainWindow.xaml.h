@@ -61,6 +61,7 @@ namespace winrt::midi2monitor::implementation
         void OnSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnExportClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCommentTextChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
+        void OnCommentButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // called by the settings dialog
         void ApplyTheme() noexcept;

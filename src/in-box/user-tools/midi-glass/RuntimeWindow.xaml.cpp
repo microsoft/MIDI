@@ -10,6 +10,7 @@
 #include "RuntimeWindow.g.cpp"
 
 #include "AppSettings.h"
+#include "PopupBackdrop.h"
 #include "SharingDialogs.h"
 #include "StringResources.h"
 #include "LayoutStore.h"
@@ -109,6 +110,9 @@ namespace winrt::midiglass::implementation
 
             m_chrome.Initialize(elements, ::midiglass::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
 
             // After the shared chrome, which would otherwise pin this window whenever the
             // library window is pinned.

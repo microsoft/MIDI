@@ -11,6 +11,7 @@
 
 #include "MainWindow.xaml.h"
 #include "MessageRowPanel.h"
+#include "SpinButtons.h"
 #include "StringResources.h"
 
 #include "WindowsMidiServicesVersion.h"
@@ -51,6 +52,9 @@ namespace winrt::midi2monitor::implementation
             BackgroundColorPicker().Color(color);
             UpdateBackgroundColorState();
             RetentionNumberBox().Value(static_cast<double>(settings.RetainedMessageCount()));
+
+            // Its spin buttons pop up for a finger or a pen, not for the mouse.
+            midiapp::UseTouchSpinButtons(RetentionNumberBox());
 
             VersionText().Text(res::FormatString(L"SettingsVersionFormat",
                 std::wstring{ WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL },

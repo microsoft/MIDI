@@ -11,6 +11,8 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "PopupBackdrop.h"
+#include "SpinButtons.h"
 #include "ProgramChoice.h"
 #include "StringResources.h"
 #include "resource.h"
@@ -432,6 +434,15 @@ namespace winrt::midikeyboard::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            // Lists, other pop-ups, and the patch flyout take on the context menus' tinted look, so
+            // they match the window.
+            midiapp::UseMenuBackdropForLists();
+            midiapp::UseMenuBackdrop(PatchButton().Flyout());
+
+            // The number boxes' spin buttons pop up for a finger or a pen, not for the mouse.
+            midiapp::UseTouchSpinButtons({ ArpBpmBox(), BaseOctaveBox(), OctaveCountBox(), TransposeBox(), MinimumKeyWidthBox(),
+                VelocityMinimumBox(), VelocityMaximumBox(), FixedVelocityBox(), PerNoteControllerBox() });
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
             AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));

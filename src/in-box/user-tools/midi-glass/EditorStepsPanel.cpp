@@ -13,6 +13,7 @@
 
 #include "StringResources.h"
 #include "PadGrid.h"
+#include "SpinButtons.h"
 #include "StepPattern.h"
 
 #include <format>
@@ -205,7 +206,7 @@ namespace winrt::midiglass::implementation
                 note.Maximum(127.0);
                 note.SmallChange(1.0);
                 note.LargeChange(12.0);
-                note.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                midiapp::UseTouchSpinButtons(note);
                 xaml::Automation::AutomationProperties::SetName(
                     note, winrt::hstring{ resources::FormatString(L"StepNoteNameFormat", number) });
 
@@ -219,7 +220,7 @@ namespace winrt::midiglass::implementation
                 velocity.Maximum(HighestVelocityPercent);
                 velocity.SmallChange(1.0);
                 velocity.LargeChange(10.0);
-                velocity.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                midiapp::UseTouchSpinButtons(velocity);
                 xaml::Automation::AutomationProperties::SetName(
                     velocity, winrt::hstring{ resources::FormatString(L"StepVelocityNameFormat", number) });
 

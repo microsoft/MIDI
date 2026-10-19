@@ -14,6 +14,8 @@
 #include "MainWindow.g.cpp"
 
 #include "App.xaml.h"
+#include "PopupBackdrop.h"
+#include "SpinButtons.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -259,6 +261,9 @@ namespace winrt::midiloopbacksetup::implementation
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
 
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
+
             // Now that there is a window, a later launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
@@ -390,7 +395,7 @@ namespace winrt::midiloopbacksetup::implementation
             box.Minimum(static_cast<double>(native::AppSettings::MinimumRefreshIntervalSeconds));
             box.Maximum(static_cast<double>(native::AppSettings::MaximumRefreshIntervalSeconds));
             box.Value(static_cast<double>(native::AppSettings::Current().RefreshIntervalSeconds()));
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
             box.HorizontalAlignment(xaml::HorizontalAlignment::Left);
             box.Width(160);
             xaml::Automation::AutomationProperties::SetName(box, res::GetString(L"SettingsRefreshIntervalLabel"));
