@@ -17,7 +17,7 @@ namespace
     constexpr uint32_t SampleRate = 48000;
     constexpr uint16_t Forte = 0xC000;
 
-    std::shared_ptr<SoundFont const> LoadFont(Sf2Test::Font const& source)
+    std::shared_ptr<SoundFont const> LoadFont(_In_ Sf2Test::Font const& source)
     {
         auto const bytes = Sf2Test::Build(source);
 
@@ -34,7 +34,7 @@ namespace
     }
 
     // Effects off: reverb returns on both sides, which would blur every level measured here.
-    std::unique_ptr<Synthesizer> MakeSynthesizer(std::shared_ptr<SoundFont const> const& font)
+    std::unique_ptr<Synthesizer> MakeSynthesizer(_In_ std::shared_ptr<SoundFont const> const& font)
     {
         auto synthesizer = std::make_unique<Synthesizer>();
 
@@ -50,7 +50,7 @@ namespace
         return synthesizer;
     }
 
-    std::vector<float> Render(Synthesizer& synthesizer, double seconds)
+    std::vector<float> Render(_Inout_ Synthesizer& synthesizer, _In_ double seconds)
     {
         auto const frames = static_cast<uint32_t>(seconds * SampleRate);
 
@@ -68,7 +68,7 @@ namespace
         return output;
     }
 
-    double Rms(std::vector<float> const& stereo, size_t channel)
+    double Rms(_In_ std::vector<float> const& stereo, _In_ size_t channel)
     {
         double sum{ 0.0 };
         size_t count{ 0 };
@@ -83,7 +83,7 @@ namespace
     }
 
     // Upward zero crossings per second on one channel.
-    double MeasureFrequency(std::vector<float> const& stereo, size_t channel)
+    double MeasureFrequency(_In_ std::vector<float> const& stereo, _In_ size_t channel)
     {
         uint32_t crossings{ 0 };
         size_t first{ SIZE_MAX };
@@ -114,7 +114,7 @@ namespace
         return static_cast<double>(crossings) * SampleRate / (static_cast<double>(last - first) / 2.0);
     }
 
-    bool AllFinite(std::vector<float> const& stereo)
+    bool AllFinite(_In_ std::vector<float> const& stereo)
     {
         return std::all_of(stereo.begin(), stereo.end(), [](float value) { return std::isfinite(value); });
     }

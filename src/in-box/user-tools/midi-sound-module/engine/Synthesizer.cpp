@@ -66,6 +66,23 @@ namespace SoundFontSynth
         constexpr uint8_t ControllerResetAllControllers = 121;
         constexpr uint8_t ControllerAllNotesOff = 123;
 
+        // General MIDI 2 recommends that a rhythm channel ignore modulation, the four pedals and the
+        // sound controllers (sections 3.3.2 and 3.3.7 to 3.3.18).
+        constexpr uint8_t RhythmChannelIgnoredControllers[]{ 1, 64, 65, 66, 67, 71, 72, 73, 74, 75, 76, 77, 78 };
+
+        constexpr bool RhythmChannelIgnores(_In_ uint8_t controller) noexcept
+        {
+            for (auto const ignored : RhythmChannelIgnoredControllers)
+            {
+                if (ignored == controller)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         constexpr double Pi = 3.14159265358979323846;
 
         double TimecentsToSeconds(_In_ double timecents) noexcept
@@ -494,6 +511,10 @@ namespace SoundFontSynth
         bool Detached{ false };
         int32_t ExclusiveClass{ 0 };
 
+        // Started from a drum kit, so channel and master tuning leave it alone, as General MIDI 2
+        // recommends. A note keeps this when its channel changes program while it sounds.
+        bool DrumKit{ false };
+
         double VelocityNormalized{ 0.0 };
         uint8_t ScalingKey{ 60 };
         double PitchNote{ 60.0 };
@@ -773,17 +794,17 @@ namespace SoundFontSynth
         {
             isDrum = state.IsDrumChannel;
 
-            if (isDrum)
-            {
-                return SoundFont::PercussionBank;
-            }
-
             switch (DetectedBankMode)
             {
             case BankSelectMode::YamahaXG:
                 if (state.BankMsb == 127 || state.BankMsb == 126)
                 {
                     isDrum = true;
+                    return SoundFont::PercussionBank;
+                }
+
+                if (isDrum)
+                {
                     return SoundFont::PercussionBank;
                 }
 
@@ -796,10 +817,18 @@ namespace SoundFontSynth
                     return SoundFont::PercussionBank;
                 }
 
-                return (state.BankMsb == 121) ? state.BankLsb : state.BankMsb;
+                // Bank 121 and a program change make a rhythm channel a melody channel again,
+                // channel 10 included (GM2 sections 2.4 and 3.3.1).
+                if (state.BankMsb == 121)
+                {
+                    isDrum = false;
+                    return state.BankLsb;
+                }
+
+                return isDrum ? SoundFont::PercussionBank : state.BankMsb;
 
             default:
-                return state.BankMsb;
+                return isDrum ? SoundFont::PercussionBank : state.BankMsb;
             }
         }
 
@@ -990,8 +1019,15 @@ namespace SoundFontSynth
             pitch += Effective(voice, Gen::FineTune);
             pitch += voice.PitchCorrectionCents;
             pitch += voice.Modulation[Gen::InitialPitch];
-            pitch += state.FineTuneCents + state.CoarseTuneSemitones * 100.0;
-            pitch += MasterFineCents + MasterCoarseCents;
+
+            // General MIDI 2 keeps channel and master tuning off drums (sections 3.4.2, 3.4.3, 4.2
+            // and 4.3).
+            if (!voice.DrumKit)
+            {
+                pitch += state.FineTuneCents + state.CoarseTuneSemitones * 100.0;
+                pitch += MasterFineCents + MasterCoarseCents;
+            }
+
             pitch += voice.PerNoteTuningCents + voice.PerNoteBendCents;
 
             voice.PitchCents = pitch;
@@ -1026,9 +1062,37 @@ namespace SoundFontSynth
             voice.VibLfo.FrequencyHz = AbsoluteCentsToHertz((std::clamp)(Effective(voice, Gen::FreqVibLfo), -16000.0, 4500.0));
         }
 
+        // What a channel's controllers are before anything is sent, for the ones a drum note ignores.
+        static double PowerUpController(_In_ uint8_t controller) noexcept
+        {
+            static ChannelState const powerUp = PowerUpState(0);
+
+            return powerUp.Controllers[controller & 0x7F];
+        }
+
         void RefreshModulation(_Inout_ Voice& voice) noexcept
         {
-            auto const inputs = InputsFor(voice);
+            auto inputs = InputsFor(voice);
+
+            // A drum note reads what General MIDI 2 says a rhythm channel ignores at power-up
+            // values, whatever the channel held when it chose the kit: modulation, the pedals, the
+            // sound controllers, pitch bend and channel pressure (sections 3.3.2, 3.3.7 to 3.3.18,
+            // 3.6 and 3.7).
+            std::array<double, 128> drumControllers;
+
+            if (voice.DrumKit)
+            {
+                drumControllers = Channels[voice.Channel].Controllers;
+
+                for (auto const controller : RhythmChannelIgnoredControllers)
+                {
+                    drumControllers[controller] = PowerUpController(controller);
+                }
+
+                inputs.Controllers = drumControllers.data();
+                inputs.PitchWheel = 0.5;
+                inputs.ChannelPressure = 0.0;
+            }
 
             voice.Modulation.fill(0.0);
 
@@ -1082,6 +1146,7 @@ namespace SoundFontSynth
         bool StartVoice(
             _In_ uint8_t channel,
             _In_ uint8_t note,
+            _In_ uint8_t zoneKey,
             _In_ uint16_t velocity,
             _In_ double pitchNote,
             _In_ Sf2Preset const& preset,
@@ -1225,8 +1290,10 @@ namespace SoundFontSynth
             voice.StartOrder = NextStartOrder++;
             voice.KeyHeld = true;
             voice.ExclusiveClass = g[Gen::ExclusiveClass];
+            voice.DrumKit = Channels[channel].EffectiveDrum;
 
-            voice.ScalingKey = static_cast<uint8_t>((keyOverride >= 0 && keyOverride <= 127) ? keyOverride : note);
+            // Key-scaled generators and key-number modulators follow the key the zones were chosen by.
+            voice.ScalingKey = static_cast<uint8_t>((keyOverride >= 0 && keyOverride <= 127) ? keyOverride : zoneKey);
             voice.PitchNote = (keyOverride >= 0 && keyOverride <= 127) ? static_cast<double>(keyOverride) : pitchNote;
             voice.VelocityNormalized = (velocityOverride >= 0 && velocityOverride <= 127)
                 ? static_cast<double>(velocityOverride) / 127.0
@@ -1306,12 +1373,18 @@ namespace SoundFontSynth
             auto const velocity7 = static_cast<uint8_t>(velocity >> 9);
             auto const noteOnId = NextNoteOnId++;
 
+            // With a pitch attribute the note number is only an index, and a sender may rotate it
+            // through all 128 values (M2-104-UM Appendix C.3). So the pitch chooses the zones, the
+            // same ones a plain note on that key gets. On a drum kit the note number picks the drum
+            // and the pitch only tunes it. For a plain note, both are the note.
+            auto const zoneKey = state.EffectiveDrum ? note : static_cast<uint8_t>(pitchNote);
+
             uint32_t started = 0;
             bool exclusiveHandled = false;
 
             for (auto const& presetZone : preset.Zones)
             {
-                if (!presetZone.Matches(note, velocity7))
+                if (!presetZone.Matches(zoneKey, velocity7))
                 {
                     continue;
                 }
@@ -1325,7 +1398,7 @@ namespace SoundFontSynth
                         break;
                     }
 
-                    if (!instrumentZone.Matches(note, velocity7))
+                    if (!instrumentZone.Matches(zoneKey, velocity7))
                     {
                         continue;
                     }
@@ -1358,7 +1431,7 @@ namespace SoundFontSynth
                         exclusiveHandled = true;
                     }
 
-                    if (StartVoice(channel, note, velocity, pitchNote, preset, presetZone, instrument, instrumentZone, noteOnId))
+                    if (StartVoice(channel, note, zoneKey, velocity, pitchNote, preset, presetZone, instrument, instrumentZone, noteOnId))
                     {
                         started++;
                     }
@@ -1385,7 +1458,9 @@ namespace SoundFontSynth
                     continue;
                 }
 
-                if (state.SustainPedal)
+                // General MIDI 2 recommends that drums ignore the damper and sostenuto pedals
+                // (sections 3.3.7 and 3.3.9), so a drum note never waits for them.
+                if (state.SustainPedal && !voice.DrumKit)
                 {
                     voice.KeyHeld = false;
                     voice.SustainHeld = true;
@@ -1416,6 +1491,13 @@ namespace SoundFontSynth
             auto const dataLsb = state.RawControllers[ControllerDataEntryLsb];
 
             if (msb != 0)
+            {
+                return;
+            }
+
+            // A channel playing a drum kit ignores pitch bend sensitivity and channel fine and coarse
+            // tuning, as General MIDI 2 recommends in sections 3.4.1 to 3.4.3.
+            if (lsb <= 2 && state.EffectiveDrum)
             {
                 return;
             }
@@ -1481,7 +1563,7 @@ namespace SoundFontSynth
 
                 if (down)
                 {
-                    voice.SostenutoHeld = voice.KeyHeld;
+                    voice.SostenutoHeld = voice.KeyHeld && !voice.DrumKit;
                 }
                 else if (voice.SostenutoHeld)
                 {
@@ -1532,6 +1614,14 @@ namespace SoundFontSynth
                 break;
             }
 
+            // A rhythm channel never presses the damper or sostenuto pedal, but it still lets them
+            // go, or melodic notes they held before the channel chose a kit would never end.
+            if (state.EffectiveDrum && RhythmChannelIgnores(controller) &&
+                !((controller == ControllerSustain || controller == ControllerSostenuto) && value7 < 64))
+            {
+                return;
+            }
+
             state.Controllers[controller] = normalized;
             state.RawControllers[controller] = value7;
 
@@ -1557,13 +1647,20 @@ namespace SoundFontSynth
                 return;
 
             case ControllerDataEntryMsb:
+                // The MIDI 1.0 specification asks a receiver to set its LSB to zero when an MSB
+                // arrives.
+                SetControllerRaw(state, ControllerDataEntryLsb, 0);
+                ApplyDataEntry(channel);
+                return;
+
             case ControllerDataEntryLsb:
                 ApplyDataEntry(channel);
                 return;
 
             case ControllerDataIncrement:
             case ControllerDataDecrement:
-                if (!state.NrpnSelected && state.RawControllers[ControllerRpnMsb] == 0 && state.RawControllers[ControllerRpnLsb] == 0)
+                if (!state.NrpnSelected && !state.EffectiveDrum &&
+                    state.RawControllers[ControllerRpnMsb] == 0 && state.RawControllers[ControllerRpnLsb] == 0)
                 {
                     auto const step = (controller == ControllerDataIncrement) ? 1.0 : -1.0;
 
@@ -1913,7 +2010,7 @@ namespace SoundFontSynth
         }
     };
 
-    Synthesizer::Synthesizer() noexcept :
+    Synthesizer::Synthesizer() :
         m_impl(std::make_unique<Impl>())
     {
     }
@@ -1935,9 +2032,14 @@ namespace SoundFontSynth
         impl.Config.Polyphony = (std::clamp)(config.Polyphony, 1u, 1024u);
         impl.SampleRate = static_cast<double>(config.SampleRate);
 
-        impl.DetectedBankMode = (config.BankSelect == BankSelectMode::Automatic)
-            ? BankSelectMode::RolandGS
-            : config.BankSelect;
+        // Automatic keeps whatever a reset message already chose, and otherwise starts at GS (the
+        // member's initial value). A GM2 or XG System On is answered before any audio device is
+        // open, and a device at another sample rate initializes the engine again when the first
+        // note opens it.
+        if (config.BankSelect != BankSelectMode::Automatic)
+        {
+            impl.DetectedBankMode = config.BankSelect;
+        }
 
         impl.Voices.assign(static_cast<size_t>(impl.Config.Polyphony) + ReserveVoices, Voice{});
 
@@ -1996,7 +2098,13 @@ namespace SoundFontSynth
     _Use_decl_annotations_
     void Synthesizer::NoteOnWithPitch(uint8_t channel, uint8_t note, uint16_t velocity, double pitchNoteNumber)
     {
-        m_impl->NoteOn(channel, note, velocity, (std::clamp)(pitchNoteNumber, 0.0, 127.998));
+        // The pitch also names the key that chooses the zones, so it has to be a real key.
+        if (!std::isfinite(pitchNoteNumber))
+        {
+            pitchNoteNumber = static_cast<double>(note & 0x7F);
+        }
+
+        m_impl->NoteOn(channel, note, velocity, (std::clamp)(pitchNoteNumber, 0.0, 127.0 + 511.0 / 512.0));
     }
 
     _Use_decl_annotations_
@@ -2048,6 +2156,12 @@ namespace SoundFontSynth
     {
         channel &= 0x0F;
 
+        // General MIDI 2 recommends that a rhythm channel ignore pitch bend (section 3.6).
+        if (m_impl->Channels[channel].EffectiveDrum)
+        {
+            return;
+        }
+
         m_impl->Channels[channel].PitchWheel = NormalizeCentered14(value);
         m_impl->RefreshChannel(channel);
     }
@@ -2056,6 +2170,11 @@ namespace SoundFontSynth
     void Synthesizer::PitchBend32(uint8_t channel, uint32_t value)
     {
         channel &= 0x0F;
+
+        if (m_impl->Channels[channel].EffectiveDrum)
+        {
+            return;
+        }
 
         m_impl->Channels[channel].PitchWheel = NormalizeCentered32(value);
         m_impl->RefreshChannel(channel);
@@ -2066,6 +2185,12 @@ namespace SoundFontSynth
     {
         channel &= 0x0F;
 
+        // General MIDI 2 recommends that a rhythm channel ignore channel pressure (section 3.7).
+        if (m_impl->Channels[channel].EffectiveDrum)
+        {
+            return;
+        }
+
         m_impl->Channels[channel].ChannelPressure = static_cast<double>(value & 0x7F) / 127.0;
         m_impl->RefreshChannel(channel);
     }
@@ -2074,6 +2199,11 @@ namespace SoundFontSynth
     void Synthesizer::ChannelPressure32(uint8_t channel, uint32_t value)
     {
         channel &= 0x0F;
+
+        if (m_impl->Channels[channel].EffectiveDrum)
+        {
+            return;
+        }
 
         m_impl->Channels[channel].ChannelPressure = static_cast<double>(value) / 4294967295.0;
         m_impl->RefreshChannel(channel);
@@ -2112,6 +2242,13 @@ namespace SoundFontSynth
         auto& state = m_impl->Channels[channel];
 
         if (bank != 0)
+        {
+            return;
+        }
+
+        // A channel playing a drum kit ignores pitch bend sensitivity and channel fine and coarse
+        // tuning, as General MIDI 2 recommends in sections 3.4.1 to 3.4.3.
+        if (index <= 2 && state.EffectiveDrum)
         {
             return;
         }
@@ -2371,11 +2508,13 @@ namespace SoundFontSynth
         m_impl->SecondsSinceActiveSensing = 0.0;
     }
 
+    _Use_decl_annotations_
     MidiSynth::IAudioEffect* Synthesizer::Reverb() noexcept
     {
         return m_impl->Config.EnableEffects ? &m_impl->Reverb : nullptr;
     }
 
+    _Use_decl_annotations_
     MidiSynth::IAudioEffect* Synthesizer::Chorus() noexcept
     {
         return m_impl->Config.EnableEffects ? &m_impl->Chorus : nullptr;

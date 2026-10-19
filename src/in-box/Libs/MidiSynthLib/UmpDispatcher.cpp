@@ -58,19 +58,19 @@ namespace MidiSynth
         // A malformed or hostile stream must not be able to grow this without bound.
         constexpr size_t MaxSysExBytes = 1024;
 
-        constexpr uint32_t MessageType(uint32_t word) noexcept { return (word >> 28) & 0xF; }
-        constexpr uint8_t Group(uint32_t word) noexcept { return static_cast<uint8_t>((word >> 24) & 0xF); }
-        constexpr uint8_t Status(uint32_t word) noexcept { return static_cast<uint8_t>((word >> 20) & 0xF); }
-        constexpr uint8_t Channel(uint32_t word) noexcept { return static_cast<uint8_t>((word >> 16) & 0xF); }
-        constexpr uint8_t Data1(uint32_t word) noexcept { return static_cast<uint8_t>((word >> 8) & 0x7F); }
-        constexpr uint8_t Data2(uint32_t word) noexcept { return static_cast<uint8_t>(word & 0x7F); }
+        constexpr uint32_t MessageType(_In_ uint32_t word) noexcept { return (word >> 28) & 0xF; }
+        constexpr uint8_t Group(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 24) & 0xF); }
+        constexpr uint8_t Status(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 20) & 0xF); }
+        constexpr uint8_t Channel(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 16) & 0xF); }
+        constexpr uint8_t Data1(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 8) & 0x7F); }
+        constexpr uint8_t Data2(_In_ uint32_t word) noexcept { return static_cast<uint8_t>(word & 0x7F); }
 
         // The reverse of what the engine does with a controller on the way in. It keeps a value
         // as a double so a 32 bit value is not cut down to 7 bits, and a 7 bit value divides back
         // out exactly. So a value goes back at the width it arrived in, and a 7 bit one is scaled
         // up the way M2-115-UM does it: a MIDI 1.0 sender's 100 reads back as the same 32 bit
         // value a protocol translator would have made of it.
-        uint32_t UnipolarTo32(double normalized) noexcept
+        uint32_t UnipolarTo32(_In_ double normalized) noexcept
         {
             const auto sevenBit = std::lround(normalized * 127.0);
 
@@ -83,7 +83,7 @@ namespace MidiSynth
         }
 
         // Pan is held from -0.5 to +0.5, and its 7 bit form is centered on 64.
-        uint32_t PanTo32(double offset) noexcept
+        uint32_t PanTo32(_In_ double offset) noexcept
         {
             const auto sevenBit = std::lround(offset * 127.0 + 64.0);
 
@@ -96,7 +96,7 @@ namespace MidiSynth
         }
 
         // Pitch bend is held from -1 to +1, and its MIDI 1.0 form is 14 bits centered on 8192.
-        uint32_t PitchBendTo32(double normalized) noexcept
+        uint32_t PitchBendTo32(_In_ double normalized) noexcept
         {
             const auto fourteenBit = std::lround(normalized * 8192.0 + 8192.0);
 
@@ -110,10 +110,39 @@ namespace MidiSynth
                 std::llround((std::clamp)((normalized + 1.0) / 2.0, 0.0, 1.0) * 4294967295.0));
         }
 
-        // Registered controller 0,0 carries whole semitones in its top seven bits.
-        uint32_t PitchBendSensitivityTo32(double semitones) noexcept
+        // Registered controller 0,0 carries whole semitones in its top seven bits and cents in the
+        // next seven (M2-104-UM 7.4.7.1).
+        uint32_t PitchBendSensitivityTo32(_In_ uint8_t semitones, _In_ uint8_t cents) noexcept
         {
-            return static_cast<uint32_t>((std::clamp)(std::lround(semitones), 0L, 127L)) << 25;
+            return (static_cast<uint32_t>(semitones & 0x7F) << 25) | (static_cast<uint32_t>(cents & 0x7F) << 18);
+        }
+
+        // Registered controller 0,1, fine tuning, is 100 cents either side of 0x80000000. A value
+        // that came from the MIDI 1.0 data entry goes back scaled up from fourteen bits, the way a
+        // translator would make it, and one that came as 32 bits goes back exactly.
+        uint32_t FineTuningTo32(_In_ double cents) noexcept
+        {
+            const auto fourteenBit = std::lround(cents / 100.0 * 8192.0 + 8192.0);
+
+            if (fourteenBit >= 0 && fourteenBit <= 16383 &&
+                (static_cast<double>(fourteenBit) - 8192.0) / 8192.0 * 100.0 == cents)
+            {
+                return M2Utils::scaleUp(static_cast<uint32_t>(fourteenBit), 14, 32);
+            }
+
+            // The reverse of SynthEngine::SetChannelFineTuning32, which scales each half on its own.
+            constexpr double center = 2147483648.0;
+            const double clamped = (std::clamp)(cents, -100.0, 100.0);
+            const double value = center + clamped / 100.0 * ((clamped <= 0.0) ? center : center - 1.0);
+
+            return static_cast<uint32_t>(std::llround(value));
+        }
+
+        // Registered controller 0,2, coarse tuning, carries semitones in its top seven bits, and
+        // 64 is in tune.
+        uint32_t CoarseTuningTo32(_In_ double semitones) noexcept
+        {
+            return static_cast<uint32_t>((std::clamp)(std::lround(semitones) + 64, 0L, 127L)) << 25;
         }
     }
 
@@ -135,13 +164,55 @@ namespace MidiSynth
         m_identity = identity;
 
         // The responder was configured before the identity arrived, so rebuild it.
-        ConfigureResponder(m_responder.Muid());
+        ConfigureResponder(Muid());
     }
 
     _Use_decl_annotations_
     void UmpDispatcher::SetMuid(uint32_t muid) noexcept
     {
-        m_responder.SetMuid(muid & 0x0FFFFFFF);
+        m_replacementMuid.store(muid & 0x0FFFFFFF, std::memory_order_release);
+    }
+
+    uint32_t UmpDispatcher::Muid() const noexcept
+    {
+        // A replacement counts from the moment it is handed over, so a reply a worker sends before
+        // the responder takes it up carries the identifier about to answer, rather than none.
+        auto const replacement = m_replacementMuid.load(std::memory_order_acquire);
+
+        return replacement != 0 ? replacement : m_publishedMuid.load(std::memory_order_acquire);
+    }
+
+    bool UmpDispatcher::MuidNeedsReplacement() const noexcept
+    {
+        // Read in the opposite order to the one TakeUpReplacementMuid writes them in. It clears the
+        // flag and then the replacement, so once the replacement reads as taken up, the flag can't
+        // read as it was before. Read the other way round, a worker could see the flag from before
+        // the take-up and the replacement from after it, and make a second identifier.
+        return m_replacementMuid.load(std::memory_order_acquire) == 0 &&
+            m_muidNeedsReplacement.load(std::memory_order_acquire);
+    }
+
+    void UmpDispatcher::TakeUpReplacementMuid() noexcept
+    {
+        auto replacement = m_replacementMuid.load(std::memory_order_acquire);
+
+        if (replacement == 0)
+        {
+            return;
+        }
+
+        m_responder.SetMuid(replacement);
+        PublishMuid();
+
+        // Cleared last, so Muid() never reports none in between and no thread asks for a second
+        // replacement. One handed over meanwhile stays, for the next message to take up.
+        (void)m_replacementMuid.compare_exchange_strong(replacement, 0, std::memory_order_acq_rel);
+    }
+
+    void UmpDispatcher::PublishMuid() noexcept
+    {
+        m_publishedMuid.store(m_responder.Muid(), std::memory_order_release);
+        m_muidNeedsReplacement.store(m_responder.MuidNeedsReplacement(), std::memory_order_release);
     }
 
     _Use_decl_annotations_
@@ -173,7 +244,7 @@ namespace MidiSynth
 
         // MIDI-CI Inquiry: Endpoint answers with the same product instance id, so rebuild the
         // responder that holds it.
-        ConfigureResponder(m_responder.Muid());
+        ConfigureResponder(Muid());
     }
 
     _Use_decl_annotations_
@@ -607,7 +678,14 @@ namespace MidiSynth
 
         size_t replyBytes{ 0 };
 
+        // A replacement handed over since the last message is this message's to answer with.
+        TakeUpReplacementMuid();
+
         const auto action = m_responder.ProcessMessage(parsed, reply, sizeof(reply), &replyBytes);
+
+        // The responder withdraws its own identifier on an invalidation or a collision, and other
+        // threads have to know: the host makes the replacement, and every reply carries it.
+        PublishMuid();
 
         switch (action)
         {
@@ -853,7 +931,8 @@ namespace MidiSynth
                         { 93, UnipolarTo32(state.ChorusSend), UnipolarTo32(powerUp.ChorusSend) },
                     };
 
-                    static_assert(sizeof(controllers) / sizeof(controllers[0]) + 3 == MidiMessageReportMessagesPerChannel);
+                    // The bend, these, three registered controllers and the program.
+                    static_assert(sizeof(controllers) / sizeof(controllers[0]) + 5 == MidiMessageReportMessagesPerChannel);
 
                     for (const auto& controller : controllers)
                     {
@@ -866,11 +945,27 @@ namespace MidiSynth
 
                 if ((reported.ChannelControllerMessages & ci::ChannelControllerRegistered) != 0)
                 {
-                    const auto value = PitchBendSensitivityTo32(state.PitchBendRangeSemitones);
-
-                    if (!onlyChanged || value != PitchBendSensitivityTo32(powerUp.PitchBendRangeSemitones))
+                    // Bank 0: pitch bend sensitivity, fine tuning and coarse tuning, in index order.
+                    const struct
                     {
-                        send(StatusRegisteredController, 0, 0, value);
+                        uint32_t Value;
+                        uint32_t PowerUp;
+                    } registered[] =
+                    {
+                        {
+                            PitchBendSensitivityTo32(state.PitchBendRangeMsb, state.PitchBendRangeLsb),
+                            PitchBendSensitivityTo32(powerUp.PitchBendRangeMsb, powerUp.PitchBendRangeLsb)
+                        },
+                        { FineTuningTo32(state.FineTuneCents), FineTuningTo32(powerUp.FineTuneCents) },
+                        { CoarseTuningTo32(state.CoarseTuneSemitones), CoarseTuningTo32(powerUp.CoarseTuneSemitones) },
+                    };
+
+                    for (uint8_t index = 0; index < static_cast<uint8_t>(sizeof(registered) / sizeof(registered[0])); index++)
+                    {
+                        if (!onlyChanged || registered[index].Value != registered[index].PowerUp)
+                        {
+                            send(StatusRegisteredController, 0, index, registered[index].Value);
+                        }
                     }
                 }
 
@@ -932,6 +1027,11 @@ namespace MidiSynth
         config.ProductInstanceIdByteCount = static_cast<uint8_t>(productInstanceIdBytes);
 
         m_responder.Initialize(config);
+
+        // Set up before anything is dispatched, so a replacement handed over before now is settled:
+        // the callers pass Muid(), which already reports it.
+        m_replacementMuid.store(0, std::memory_order_release);
+        PublishMuid();
     }
 
     _Use_decl_annotations_
@@ -1161,8 +1261,8 @@ namespace MidiSynth
             if (attributeType == NoteAttributePitch79)
             {
                 // Pitch 7.9: the top seven bits are a note number and the low nine bits are the
-                // fraction of a semitone above it. The note number in the message still chooses
-                // the region, so a microtonal scale keeps the articulation belonging to the key.
+                // fraction of a semitone above it. The note number in the message is then only an
+                // index; the engine decides what it still picks (see NoteOnWithPitch).
                 const double pitch =
                     static_cast<double>((attributeData >> 9) & 0x7F) +
                     static_cast<double>(attributeData & 0x01FF) / 512.0;
@@ -1208,13 +1308,25 @@ namespace MidiSynth
             const uint8_t bank = index1 & 0x7F;
             const uint8_t index = static_cast<uint8_t>(word0 & 0x7F);
 
-            // RPN 0,0 is pitch bend sensitivity. The top seven bits carry whole semitones, which
-            // is the same information the MIDI 1.0 data entry most significant byte carries.
+            // RPN 0,0 is pitch bend sensitivity: whole semitones in the top seven bits and cents in
+            // the next seven (M2-104-UM 7.4.7.1). It is one message in MIDI 2.0, so it leaves the
+            // registered parameter that MIDI 1.0 data entry would change alone.
             if (bank == 0 && index == 0)
             {
-                m_engine->ControlChange(channel, 101, 0);
-                m_engine->ControlChange(channel, 100, 0);
-                m_engine->ControlChange(channel, 6, static_cast<uint8_t>((word1 >> 25) & 0x7F));
+                m_engine->SetPitchBendRange(channel,
+                    static_cast<uint8_t>((word1 >> 25) & 0x7F),
+                    static_cast<uint8_t>((word1 >> 18) & 0x7F));
+            }
+            else if (bank == 0 && index == 1)
+            {
+                // Channel fine tuning, kept at full resolution.
+                m_engine->SetChannelFineTuning32(channel, word1);
+            }
+            else if (bank == 0 && index == 2)
+            {
+                // Channel coarse tuning. M2-104-UM 7.4.7.1 puts the semitones in the top seven
+                // bits and says the other twenty five are undefined and ignored.
+                m_engine->SetChannelCoarseTuning(channel, static_cast<uint8_t>((word1 >> 25) & 0x7F));
             }
             else
             {

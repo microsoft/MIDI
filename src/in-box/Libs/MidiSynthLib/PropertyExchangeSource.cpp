@@ -166,10 +166,22 @@ namespace MidiSynth
               .HasDefault = true, .Default = Center, .Transmit = "none",
               .ParameterPath = "/note/pitchBend", .TypeHint = "continuous" },
 
-            // Whole semitones in the top seven bits, which is all the engine reads.
+            // Whole semitones in the top seven bits and cents in the next seven, which is all the
+            // engine reads.
             { .Title = m_text.PitchBendSensitivity.c_str(), .ControllerType = "rpn", .Index = { 0, 0 }, .IndexCount = 2, .Priority = 4,
-              .HasDefault = true, .Default = static_cast<uint32_t>(std::lround(powerUp.PitchBendRangeSemitones)) << 25,
-              .Transmit = "none", .SignificantBits = 7, .ParameterPath = "/pitchBend/sensitivity", .TypeHint = "continuous" },
+              .HasDefault = true,
+              .Default = (static_cast<uint32_t>(powerUp.PitchBendRangeMsb) << 25) | (static_cast<uint32_t>(powerUp.PitchBendRangeLsb) << 18),
+              .Transmit = "none", .SignificantBits = 14, .ParameterPath = "/pitchBend/sensitivity", .TypeHint = "continuous" },
+
+            // 100 cents either side of the center, at full resolution. Power-up is in tune.
+            { .Title = m_text.FineTuning.c_str(), .ControllerType = "rpn", .Index = { 0, 1 }, .IndexCount = 2, .Priority = 4,
+              .HasDefault = true, .Default = Center, .Transmit = "none",
+              .ParameterPath = "/tuning/fine", .TypeHint = "continuous" },
+
+            // Whole semitones in the top seven bits, centered on 64, which is in tune.
+            { .Title = m_text.CoarseTuning.c_str(), .ControllerType = "rpn", .Index = { 0, 2 }, .IndexCount = 2, .Priority = 4,
+              .HasDefault = true, .Default = Center, .Transmit = "none",
+              .SignificantBits = 7, .ParameterPath = "/tuning/coarse", .TypeHint = "continuous" },
 
             { .Title = m_text.NoteVolume.c_str(), .ControllerType = "pnrc", .Index = { PerNoteControllerVolume }, .IndexCount = 1, .Priority = 4,
               .HasDefault = true, .Default = Full, .Transmit = "none",
@@ -186,6 +198,28 @@ namespace MidiSynth
 
         m_controllerListJson.resize(ci::BuildControllerListJson(entries, std::size(entries), nullptr, 0));
         (void)ci::BuildControllerListJson(entries, std::size(entries), m_controllerListJson.data(), m_controllerListJson.size());
+
+        // A channel playing a drum kit ignores modulation, the damper pedal, pitch bend, pitch bend
+        // sensitivity and fine and coarse tuning, as General MIDI 2 recommends (sections 3.3.2,
+        // 3.3.7, 3.4.1 to 3.4.3 and 3.6), so its list is the same one without them.
+        std::vector<ci::ControllerListEntry> drumEntries;
+
+        for (const auto& entry : entries)
+        {
+            const bool ignoredByDrums =
+                std::strcmp(entry.ControllerType, "pBend") == 0 ||
+                (std::strcmp(entry.ControllerType, "cc") == 0 && (entry.Index[0] == 1 || entry.Index[0] == 64)) ||
+                (std::strcmp(entry.ControllerType, "rpn") == 0 && entry.Index[0] == 0 && entry.Index[1] <= 2);
+
+            if (!ignoredByDrums)
+            {
+                drumEntries.push_back(entry);
+            }
+        }
+
+        m_drumControllerListJson.resize(ci::BuildControllerListJson(drumEntries.data(), drumEntries.size(), nullptr, 0));
+        (void)ci::BuildControllerListJson(
+            drumEntries.data(), drumEntries.size(), m_drumControllerListJson.data(), m_drumControllerListJson.size());
     }
 
     _Use_decl_annotations_
@@ -206,14 +240,17 @@ namespace MidiSynth
         const ci::ResourceLink DrumKitLinks[]
         {
             { "ProgramList", DrumKitProgramListResourceId, m_text.DrumKitProgramList.c_str() },
-            { "ChCtrlList", ControllerListResourceId, m_text.ControllerList.c_str() },
+            { "ChCtrlList", DrumControllerListResourceId, m_text.ControllerList.c_str() },
         };
 
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
         {
             const auto state = engine.ChannelState(channel);
 
-            entries[channel].Title = state.IsDrumChannel
+            // Channel 10 is the drum channel by convention, but content can move it with the GS
+            // rhythm part message or choose a kit by bank select under XG and GM2, so the engine
+            // decides rather than the channel number.
+            entries[channel].Title = state.PlaysDrumKit
                 ? m_text.PercussionChannel.c_str()
                 : m_text.MelodicChannel.c_str();
             entries[channel].Channel = static_cast<uint16_t>(channel + 1);
@@ -221,10 +258,10 @@ namespace MidiSynth
             entries[channel].BankLsb = state.BankLsb;
             entries[channel].Program = state.Program;
 
-            // Channel 10 is the drum channel by convention, but content can move it with the GS
-            // rhythm part message, so the engine's own flag decides rather than the channel number.
-            const auto* instrument = collection.FindInstrument(
-                state.BankMsb, state.BankLsb, state.Program, state.IsDrumChannel);
+            // Named the way the engine plays it: the bank after XG or GM2 addressing, a kit at bank
+            // zero, and the capital tone or the standard kit when the program has no variation.
+            const auto* instrument = SynthEngine::FindPlayableInstrument(
+                collection, state.VariationBank, state.Program, state.PlaysDrumKit);
 
             if (instrument != nullptr)
             {
@@ -232,7 +269,7 @@ namespace MidiSynth
                 entries[channel].ProgramTitle = programTitles[channel].c_str();
             }
 
-            entries[channel].Links = state.IsDrumChannel ? DrumKitLinks : MelodicLinks;
+            entries[channel].Links = state.PlaysDrumKit ? DrumKitLinks : MelodicLinks;
             entries[channel].LinkCount = std::size(MelodicLinks);
         }
 
@@ -287,7 +324,17 @@ namespace MidiSynth
 
         if (!wholeList)
         {
-            m_programPageJson = BuildProgramListPageJson(collection, kind, offset, limit);
+            // Nothing may leave this function, so running out of memory for the page ends in no
+            // reply, as a header that does not fit does below.
+            try
+            {
+                m_programPageJson = BuildProgramListPageJson(collection, kind, offset, limit);
+            }
+            catch (...)
+            {
+                m_nextChunk = 0;
+                return;
+            }
         }
 
         auto const& resource = wholeList ? ProgramListJson(resourceId) : m_programPageJson;
@@ -450,7 +497,8 @@ namespace MidiSynth
             current[channel].BankMsb = state.BankMsb;
             current[channel].BankLsb = state.BankLsb;
             current[channel].Program = state.Program;
-            current[channel].IsDrumChannel = state.IsDrumChannel;
+            current[channel].PlaysDrumKit = state.PlaysDrumKit;
+            current[channel].VariationBank = state.VariationBank;
         }
 
         const bool changed =
@@ -480,7 +528,6 @@ namespace MidiSynth
         return true;
     }
 
-    _Use_decl_annotations_
     bool PropertyExchangeSource::BeginNextSubscriptionNotification() noexcept
     {
         for (size_t i = 0; i < m_subscriptionCount; i++)

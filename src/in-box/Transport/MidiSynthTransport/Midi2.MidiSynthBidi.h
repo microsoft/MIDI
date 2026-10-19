@@ -22,5 +22,8 @@ private:
     wil::srwlock m_deviceLock;
     std::shared_ptr<MidiSynthDevice> m_device;
 
+    // Guarded by m_deviceLock. Which connection this is, so closing it cannot end a newer one.
+    uint64_t m_connectionId{ 0 };
+
     std::wstring m_endpointId{};
 };

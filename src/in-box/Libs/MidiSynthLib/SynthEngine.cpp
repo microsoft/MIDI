@@ -19,6 +19,7 @@ namespace MidiSynth
         constexpr uint8_t ControllerReverbSend = 91;
         constexpr uint8_t ControllerChorusSend = 93;
         constexpr uint8_t ControllerBankSelectLsb = 32;
+        constexpr uint8_t ControllerDataEntryLsb = 38;
         constexpr uint8_t ControllerSustainPedal = 64;
         constexpr uint8_t ControllerRpnLsb = 100;
         constexpr uint8_t ControllerRpnMsb = 101;
@@ -28,8 +29,34 @@ namespace MidiSynth
 
         constexpr uint8_t DrumChannelIndex = 9;
 
+        // The highest pitch a MIDI 2.0 Pitch 7.9 attribute can carry: note 127 and 511/512.
+        constexpr double HighestPitchNoteNumber = 127.0 + 511.0 / 512.0;
+
         // Below this the voice is inaudible and the engine reclaims it.
         constexpr double VoiceCutoffDb = -95.0;
+
+        // MIDI 1.0 fine tuning is fourteen bits: 8192 is in tune, and each step is 100/8192 cents.
+        double FineTuningCentsFrom14(_In_ uint32_t value) noexcept
+        {
+            return (static_cast<double>(value & 0x3FFF) - 8192.0) * 100.0 / 8192.0;
+        }
+
+        // The data entry MSB a fine tuning would have been sent with, so a data entry LSB on its own
+        // adjusts the tuning already there. Exact for anything MIDI 1.0 set.
+        uint8_t FineTuningMsbOf(_In_ double cents) noexcept
+        {
+            const double fourteenBit = (std::clamp)(cents * 8192.0 / 100.0 + 8192.0, 0.0, 16383.0);
+
+            return static_cast<uint8_t>(static_cast<uint32_t>(fourteenBit) >> 7);
+        }
+
+        void SetPitchBendRangeRaw(_Inout_ SynthChannelState& state, _In_ uint8_t semitones, _In_ uint8_t cents) noexcept
+        {
+            state.PitchBendRangeMsb = semitones & 0x7F;
+            state.PitchBendRangeLsb = cents & 0x7F;
+            state.PitchBendRangeSemitones =
+                static_cast<double>(state.PitchBendRangeMsb) + static_cast<double>(state.PitchBendRangeLsb) / 100.0;
+        }
 
         // Long enough to avoid a step in the waveform, short enough that a retriggered note still
         // sounds retriggered rather than overlapped.
@@ -104,11 +131,15 @@ namespace MidiSynth
         m_config = config;
         m_renderSampleRate = static_cast<double>(config.RenderSampleRate());
 
-        // Automatic starts from the addressing this sound set actually uses and moves only when a
-        // sender says otherwise.
-        m_detectedBankSelectMode = (config.BankSelect == BankSelectMode::Automatic)
-            ? BankSelectMode::RolandGS
-            : config.BankSelect;
+        // Automatic starts from the addressing this sound set actually uses (the member's initial
+        // value) and moves only when a sender says otherwise, so it keeps whatever a reset message
+        // already chose, as SetBankSelectMode does. The transport answers System Exclusive before
+        // any audio device is open, so a GM2 or XG System On usually arrives before the note that
+        // opens the device and initializes the engine.
+        if (config.BankSelect != BankSelectMode::Automatic)
+        {
+            m_detectedBankSelectMode = config.BankSelect;
+        }
 
         if (m_renderSampleRate <= 0.0)
         {
@@ -224,6 +255,9 @@ namespace MidiSynth
             }
             else if (state.BankMsb == 121)
             {
+                // Bank 121 and a program change make a rhythm channel a melody channel again,
+                // channel 10 included (GM2 sections 2.4 and 3.3.1).
+                isDrumKit = false;
                 variationBank = state.BankLsb;
             }
             else
@@ -310,6 +344,16 @@ namespace MidiSynth
     {
         auto& state = m_channels[channel];
 
+        uint32_t variationBank{ 0 };
+        bool isDrumKit{ false };
+
+        ResolveBankAddressing(state, variationBank, isDrumKit);
+
+        // Decided before the sound set is needed, so it is right while MIDI-CI is being answered
+        // with none loaded.
+        state.PlaysDrumKit = isDrumKit;
+        state.VariationBank = static_cast<uint8_t>(variationBank & 0x7F);
+
         // The transport points the dispatcher at the engine before a sound set is known, so that
         // MIDI-CI can be answered without opening the audio device. A program change or a reset
         // arriving then has nothing to resolve against.
@@ -319,23 +363,32 @@ namespace MidiSynth
             return;
         }
 
-        uint32_t variationBank{ 0 };
-        bool isDrumKit{ false };
+        // Stored once, so nothing reading the channel can see a passing null between the lookup
+        // and its fallbacks.
+        state.Instrument = FindPlayableInstrument(*m_collection, variationBank, state.Program, isDrumKit);
+    }
 
-        ResolveBankAddressing(state, variationBank, isDrumKit);
-
-        state.Instrument = m_collection->FindInstrument(variationBank, 0, state.Program, isDrumKit);
+    _Use_decl_annotations_
+    const DlsInstrument* SynthEngine::FindPlayableInstrument(
+        const DlsCollection& collection,
+        uint32_t variationBank,
+        uint8_t program,
+        bool isDrumKit) noexcept
+    {
+        const DlsInstrument* instrument = collection.FindInstrument(variationBank, 0, program, isDrumKit);
 
         // Fall back the way a GS device does: unknown variation drops to the capital tone.
-        if (state.Instrument == nullptr && variationBank != 0)
+        if (instrument == nullptr && variationBank != 0)
         {
-            state.Instrument = m_collection->FindInstrument(0, 0, state.Program, isDrumKit);
+            instrument = collection.FindInstrument(0, 0, program, isDrumKit);
         }
 
-        if (state.Instrument == nullptr && isDrumKit)
+        if (instrument == nullptr && isDrumKit)
         {
-            state.Instrument = m_collection->FindInstrument(0, 0, 0, true);
+            instrument = collection.FindInstrument(0, 0, 0, true);
         }
+
+        return instrument;
     }
 
     _Use_decl_annotations_
@@ -437,6 +490,7 @@ namespace MidiSynth
         const DlsInstrument& instrument,
         uint8_t channel,
         uint8_t note,
+        uint8_t regionKey,
         uint16_t velocity,
         double pitchNoteNumber) noexcept
     {
@@ -450,6 +504,7 @@ namespace MidiSynth
         voice.Velocity = velocity;
         voice.KeyGroup = region.KeyGroup;
         voice.SelfNonExclusive = (region.Options & F_RGN_OPTION_SELFNONEXCLUSIVE) != 0;
+        voice.DrumKit = instrument.IsDrumKit;
         voice.NoteHeld = true;
         voice.StartOrder = m_nextStartOrder++;
 
@@ -493,11 +548,11 @@ namespace MidiSynth
         const auto& articulation = voice.Articulation;
 
         // Velocity and key number scale the envelope times, additively in time cents, which is
-        // multiplicative in seconds.
+        // multiplicative in seconds. The key is the one the region was chosen by.
         const double velocityAttackScale =
             TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg1VelocityToAttackTimeCents * normalizedVelocity));
         const double keyDecayScale =
-            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg1KeyToDecayTimeCents * (note / 128.0)));
+            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg1KeyToDecayTimeCents * (regionKey / 128.0)));
 
         voice.AttackSeconds = articulation.Eg1AttackSeconds * ((velocityAttackScale > 0.0) ? velocityAttackScale : 1.0);
         voice.DecaySeconds = articulation.Eg1DecaySeconds * ((keyDecayScale > 0.0) ? keyDecayScale : 1.0);
@@ -548,20 +603,31 @@ namespace MidiSynth
             pitchNoteNumber = static_cast<double>(note);
         }
 
-        pitchNoteNumber = (std::clamp)(pitchNoteNumber, 0.0, 127.0);
+        pitchNoteNumber = (std::clamp)(pitchNoteNumber, 0.0, HighestPitchNoteNumber);
 
         // Velocity zero is NOT treated as a note off here. That is a MIDI 1.0 convention and
         // belongs to whatever decodes MIDI 1.0; in MIDI 2.0 zero is simply the lowest velocity.
         auto& state = m_channels[channel];
 
-        if (state.Instrument == nullptr)
+        // Read once, for the same reason ResolveInstrument stores it once.
+        const DlsInstrument* const instrument = state.Instrument;
+
+        if (instrument == nullptr)
         {
             m_droppedNoteCount++;
             return;
         }
 
+        // With a pitch attribute the note number is only an index, and a sender may rotate it
+        // through all 128 values (M2-104-UM Appendix C.3). So the pitch chooses the region, the
+        // same one a plain note on that key gets. On a drum kit the note number picks the drum and
+        // the pitch only tunes it. For a plain note, both are the note.
+        const uint8_t regionKey = instrument->IsDrumKit
+            ? note
+            : static_cast<uint8_t>(pitchNoteNumber);
+
         const auto velocity7 = static_cast<uint8_t>(velocity >> 9);
-        const DlsRegion* region = SelectRegion(*state.Instrument, note, velocity7);
+        const DlsRegion* region = SelectRegion(*instrument, regionKey, velocity7);
 
         if (region == nullptr)
         {
@@ -612,7 +678,7 @@ namespace MidiSynth
             return;
         }
 
-        StartVoice(*voice, *region, wave, *state.Instrument, channel, note, velocity, pitchNoteNumber);
+        StartVoice(*voice, *region, wave, *instrument, channel, note, regionKey, velocity, pitchNoteNumber);
     }
 
     _Use_decl_annotations_
@@ -784,7 +850,8 @@ namespace MidiSynth
 
             voice.NoteHeld = false;
 
-            if (pedalDown)
+            // General MIDI 2 recommends that drums ignore the damper pedal (section 3.3.7).
+            if (pedalDown && !voice.DrumKit)
             {
                 voice.SustainHeld = true;
             }
@@ -817,7 +884,11 @@ namespace MidiSynth
             break;
 
         case ControllerModulation:
-            state.Modulation = normalized;
+            // General MIDI 2 recommends that a rhythm channel ignore modulation (section 3.3.2).
+            if (!state.PlaysDrumKit)
+            {
+                state.Modulation = normalized;
+            }
             break;
 
         case ControllerVolume:
@@ -845,6 +916,14 @@ namespace MidiSynth
         {
             const bool down = value >= 64;
 
+            // A rhythm channel never presses the damper (General MIDI 2 section 3.3.7), but it
+            // still lets it go, or melodic notes it held before the channel chose a kit would
+            // never end.
+            if (down && state.PlaysDrumKit)
+            {
+                break;
+            }
+
             if (state.SustainPedal && !down)
             {
                 for (auto& voice : m_voices)
@@ -870,17 +949,44 @@ namespace MidiSynth
             break;
 
         case ControllerDataEntryMsb:
-            if (state.RpnMsb == 0 && state.RpnLsb == 0)
+            // A channel playing a drum kit ignores pitch bend sensitivity and channel fine and
+            // coarse tuning, as General MIDI 2 recommends in sections 3.4.1 to 3.4.3. An MSB sets
+            // the LSB back to zero, as the MIDI 1.0 specification asks of a receiver.
+            if (state.RpnMsb != 0 || state.PlaysDrumKit)
             {
-                state.PitchBendRangeSemitones = value & 0x7F;
+                break;
             }
-            else if (state.RpnMsb == 0 && state.RpnLsb == 1)
+
+            if (state.RpnLsb == 0)
             {
-                state.FineTuneCents = (static_cast<double>(value & 0x7F) - 64.0) * 100.0 / 64.0;
+                SetPitchBendRangeRaw(state, value, 0);
             }
-            else if (state.RpnMsb == 0 && state.RpnLsb == 2)
+            else if (state.RpnLsb == 1)
+            {
+                state.FineTuneCents = FineTuningCentsFrom14(static_cast<uint32_t>(value & 0x7F) << 7);
+            }
+            else if (state.RpnLsb == 2)
             {
                 state.CoarseTuneSemitones = static_cast<double>(value & 0x7F) - 64.0;
+            }
+            break;
+
+        case ControllerDataEntryLsb:
+            // Cents of pitch bend sensitivity, and the low seven bits of fine tuning. An LSB on its
+            // own adjusts what the last MSB set. Coarse tuning has no LSB.
+            if (state.RpnMsb != 0 || state.PlaysDrumKit)
+            {
+                break;
+            }
+
+            if (state.RpnLsb == 0)
+            {
+                SetPitchBendRangeRaw(state, state.PitchBendRangeMsb, value);
+            }
+            else if (state.RpnLsb == 1)
+            {
+                state.FineTuneCents = FineTuningCentsFrom14(
+                    (static_cast<uint32_t>(FineTuningMsbOf(state.FineTuneCents)) << 7) | (value & 0x7F));
             }
             break;
 
@@ -915,7 +1021,10 @@ namespace MidiSynth
         switch (controller)
         {
         case ControllerModulation:
-            state.Modulation = normalized;
+            if (!state.PlaysDrumKit)
+            {
+                state.Modulation = normalized;
+            }
             break;
 
         case ControllerVolume:
@@ -940,12 +1049,52 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::PitchBend32(uint8_t channel, uint32_t value)
     {
-        if (channel >= MidiChannelCount)
+        // General MIDI 2 recommends that a rhythm channel ignore pitch bend (section 3.6).
+        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
         {
             return;
         }
 
         m_channels[channel].PitchBendNormalized = (static_cast<double>(value) / 4294967295.0) * 2.0 - 1.0;
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetChannelFineTuning32(uint8_t channel, uint32_t value) noexcept
+    {
+        // A channel playing a drum kit ignores channel tuning, as General MIDI 2 recommends.
+        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        {
+            return;
+        }
+
+        // Each half of the range is scaled on its own, the way M2-115-UM scales a centered value,
+        // so the center is exactly in tune and each end is exactly 100 cents away.
+        constexpr double center = 2147483648.0;
+        const double offset = static_cast<double>(value) - center;
+
+        m_channels[channel].FineTuneCents = 100.0 * ((offset <= 0.0) ? offset / center : offset / (center - 1.0));
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetChannelCoarseTuning(uint8_t channel, uint8_t msb) noexcept
+    {
+        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        {
+            return;
+        }
+
+        m_channels[channel].CoarseTuneSemitones = static_cast<double>(msb & 0x7F) - 64.0;
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetPitchBendRange(uint8_t channel, uint8_t semitones, uint8_t cents) noexcept
+    {
+        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        {
+            return;
+        }
+
+        SetPitchBendRangeRaw(m_channels[channel], semitones, cents);
     }
 
     _Use_decl_annotations_
@@ -983,7 +1132,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::PitchBend(uint8_t channel, int32_t value)
     {
-        if (channel >= MidiChannelCount)
+        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
         {
             return;
         }
@@ -1018,7 +1167,7 @@ namespace MidiSynth
 
             voice.NoteHeld = false;
 
-            if (pedalDown)
+            if (pedalDown && !voice.DrumKit)
             {
                 voice.SustainHeld = true;
             }
@@ -1123,7 +1272,9 @@ namespace MidiSynth
             ? voice.AttackProgress
             : DecibelsToLinear(voice.EnvelopeLevelDb);
 
-        const double modulationDepth = state.Modulation;
+        // A drum note leaves modulation and pitch bend alone, whatever the channel held when it chose
+        // the kit (General MIDI 2 sections 3.3.2 and 3.6).
+        const double modulationDepth = voice.DrumKit ? 0.0 : state.Modulation;
 
         double lfoValue = 0.0;
 
@@ -1146,7 +1297,7 @@ namespace MidiSynth
             ConcaveTransformDb(state.Expression);
 
         const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb
-            + m_config.MasterGainDb + m_masterVolumeDb + m_userVolumeDb;
+            + m_config.MasterGainDb + m_masterVolumeDb + m_userVolumeDb.load(std::memory_order_relaxed);
 
         // Per-note volume multiplies the channel's rather than replacing it, so a channel fade
         // still takes every note with it.
@@ -1173,19 +1324,24 @@ namespace MidiSynth
         voice.TargetGainRight = targetRight;
 
         // Pitch for this block.
-        const double bendCents =
-            state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
+        const double bendCents = voice.DrumKit
+            ? 0.0
+            : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
 
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
 
+        // General MIDI 2 keeps channel and master tuning off drums (sections 3.4.2, 3.4.3, 4.2 and
+        // 4.3). The note decides rather than the channel, so a note keeps its tuning when the
+        // channel changes program while it sounds.
+        const double tuningCents = voice.DrumKit
+            ? 0.0
+            : state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+
         // Per-note pitch adds to the channel bend rather than replacing it, so a MIDI 2.0 note can
         // be bent on its own while the channel wheel still moves the whole part.
         const double totalCents =
-            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents +
-            state.FineTuneCents +
-            state.CoarseTuneSemitones * 100.0
-            + (state.IsDrumChannel ? 0.0 : m_masterTuningCents);
+            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents + tuningCents;
 
         voice.BlockPitchRatio = voice.BasePitchRatio * CentsToPitchRatio(totalCents);
     }

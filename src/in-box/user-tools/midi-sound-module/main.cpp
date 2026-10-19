@@ -9,11 +9,13 @@
 #include "App.xaml.h"
 #include "SingleInstance.h"
 #include "SynthHost.h"
+#include "SynthListProblemDialog.h"
+#include "SynthStore.h"
 
 // The XAML compiler emits its own wWinMain; this one keeps startup and shutdown under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail. Every call
 // into the MIDI service happens on the synth host's own threads, never this one.
-int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
+int __stdcall wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ PWSTR, _In_ int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
@@ -23,6 +25,22 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     {
         return 0;
     }
+
+    // Read before there is a window, because the window saves the list when it closes. A list that
+    // can't be used as it is stays exactly as it is: the app says why and doesn't start, rather
+    // than save an empty list over the customer's synths. This happens before XAML starts because
+    // a XAML app with no window doesn't end when it is told to.
+    auto synthList = ::midisoundmodule::SynthStore::Load();
+
+    if (synthList.Problem != ::midisoundmodule::SynthListProblem::None)
+    {
+        ::midisoundmodule::ShowSynthListProblem(synthList, ::midisoundmodule::SynthStore::FilePath());
+        ::midiapp::SingleInstance::Release();
+
+        return 0;
+    }
+
+    ::winrt::midisoundmodule::implementation::App::SetStartupSynths(std::move(synthList.Synths));
 
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)
         {

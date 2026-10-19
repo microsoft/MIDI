@@ -80,7 +80,7 @@ struct MidiSynthSettings
         }
     }
 
-    static bool TryParseSynthMode(_In_ std::wstring const& text, _Out_ MidiSynth::SynthMode& mode) noexcept
+    static _Success_(return) bool TryParseSynthMode(_In_ std::wstring const& text, _Out_ MidiSynth::SynthMode& mode) noexcept
     {
         if (_wcsicmp(text.c_str(), MIDI_SYNTH_JSON_SYNTH_MODE_COMPATIBLE) == 0)
         {
@@ -97,7 +97,7 @@ struct MidiSynthSettings
         return false;
     }
 
-    static bool TryParseAudioMode(_In_ std::wstring const& text, _Out_ MidiSynthAudioMode& mode) noexcept
+    static _Success_(return) bool TryParseAudioMode(_In_ std::wstring const& text, _Out_ MidiSynthAudioMode& mode) noexcept
     {        if (_wcsicmp(text.c_str(), MIDI_SYNTH_JSON_AUDIO_MODE_SHARED) == 0)
         {
             mode = MidiSynthAudioMode::WasapiShared;
@@ -136,7 +136,7 @@ struct MidiSynthSettings
         }
     }
 
-    static bool TryParseBankSelectMode(
+    static _Success_(return) bool TryParseBankSelectMode(
         _In_ std::wstring const& text,
         _Out_ MidiSynth::BankSelectMode& mode) noexcept
     {

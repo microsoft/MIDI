@@ -28,9 +28,12 @@ namespace SoundFontSynth
     constexpr char const* MelodicProgramListResourceId = "melodic";
     constexpr char const* DrumKitProgramListResourceId = "drums";
 
-    // Every channel answers the same controllers, drum channels included, so one ChCtrlList serves
-    // all sixteen.
+    // The controllers a channel responds to, linked from each ChannelList entry. A channel playing
+    // a drum kit ignores modulation, pitch bend, channel pressure, the pedals, pitch bend
+    // sensitivity and fine and coarse tuning, as General MIDI 2 recommends, so it links to a list
+    // without them. M2-117-UM's own example links channel 10 to a list of its own.
     constexpr char const* ControllerListResourceId = "channel";
+    constexpr char const* DrumControllerListResourceId = "drums";
 
     // Text a person reads in these resources, localized by the host. Preset names come out of the
     // bank and are never translated.
@@ -102,12 +105,20 @@ namespace SoundFontSynth
         }
 
         // M2-117-UM ChCtrlList. Its specification requires a resource id, but like ProgramList a
-        // request without one is still answered.
+        // request without one is still answered, with the melodic list.
         std::vector<char> const& ControllerListJson() const noexcept { return m_controllerListJson; }
+        std::vector<char> const& DrumControllerListJson() const noexcept { return m_drumControllerListJson; }
+
+        std::vector<char> const& ControllerListJson(_In_ std::string const& resourceId) const noexcept
+        {
+            return (resourceId == DrumControllerListResourceId) ? m_drumControllerListJson : m_controllerListJson;
+        }
 
         static bool IsKnownControllerListResourceId(_In_ std::string const& resourceId) noexcept
         {
-            return resourceId.empty() || resourceId == ControllerListResourceId;
+            return resourceId.empty() ||
+                resourceId == ControllerListResourceId ||
+                resourceId == DrumControllerListResourceId;
         }
 
         // Reflects what is selected right now, so it is rebuilt per request and never cached.
@@ -190,6 +201,7 @@ namespace SoundFontSynth
         std::vector<char> m_melodicProgramListJson{};
         std::vector<char> m_drumKitProgramListJson{};
         std::vector<char> m_controllerListJson{};
+        std::vector<char> m_drumControllerListJson{};
         std::vector<char> m_channelListJson{};
         std::vector<char> m_programPageJson{};
         PropertyExchangeText m_text{};

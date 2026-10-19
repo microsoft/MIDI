@@ -58,31 +58,42 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(SoundModuleEngineDir);$(MSBuildThisFileDirectory)..\..\..\Inc;$(WindowsSdkDir)Testing\Development\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(SoundModuleEngineDir);$(MSBuildThisFileDirectory)..\..\..\user-tools\midi-sound-module;$(MSBuildThisFileDirectory)..\..\..\Inc;$(WindowsSdkDir)Testing\Development\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Wex.Common.lib;Wex.Logger.lib;Te.Common.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Wex.Common.lib;Wex.Logger.lib;Te.Common.lib;windowsapp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Sf2Builder.h" />
+    <ClInclude Include="SoundModuleTestRig.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="AudioStartTests.cpp" />
+    <ClCompile Include="ChannelTuningTests.cpp" />
     <ClCompile Include="CiTests.cpp" />
+    <ClCompile Include="ExactPitchTests.cpp" />
     <ClCompile Include="ParserTests.cpp" />
+    <ClCompile Include="MuidTests.cpp" />
+    <ClCompile Include="ReinitializeTests.cpp" />
+    <ClCompile Include="RhythmChannelTests.cpp" />
     <ClCompile Include="RenderTests.cpp" />
+    <ClCompile Include="SynthListTests.cpp" />
 
-    <!-- Shared with the app. It parses JSON through WinRT, so it lives outside the engine library. -->
+    <!-- Shared with the app. These parse JSON through WinRT, so they live outside the engine library. -->
+    <ClCompile Include="..\..\..\user-tools\midi-sound-module\SynthList.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\..\..\user-tools\midi-sound-module\engine\SynthPropertyRequests.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

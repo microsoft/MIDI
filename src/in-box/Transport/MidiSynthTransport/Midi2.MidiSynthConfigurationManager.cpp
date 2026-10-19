@@ -288,6 +288,8 @@ CMidi2MidiSynthConfigurationManager::ProcessCommand(
     if (_wcsicmp(verb.c_str(), MIDI_SYNTH_COMMAND_ENABLE) == 0 ||
         _wcsicmp(verb.c_str(), MIDI_SYNTH_COMMAND_DISABLE) == 0)
     {
+        auto settingsChange = device->LockSettingsChanges();
+
         auto settings = device->Settings();
         settings.Enabled = (_wcsicmp(verb.c_str(), MIDI_SYNTH_COMMAND_ENABLE) == 0);
 
@@ -324,6 +326,10 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
 {
     auto device = TransportState::Current().GetDevice();
     RETURN_HR_IF_NULL(E_UNEXPECTED, device);
+
+    // Held to the end, so another request can't change the settings between reading them here and
+    // applying them below, and the response reports what this request applied.
+    auto settingsChange = device->LockSettingsChanges();
 
     // Start from what is in effect, so a section which sets only one value leaves the rest alone.
     auto settings = device->Settings();

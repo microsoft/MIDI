@@ -113,6 +113,8 @@
     <ClInclude Include="StudioSetupTests.h" />
     <ClInclude Include="RecentSequencesTests.h" />
     <ClInclude Include="TrackSoundTests.h" />
+    <ClInclude Include="PatternTemplatesTests.h" />
+    <ClInclude Include="GeneratorKindsTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -120,6 +122,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequencePattern.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceGenerator.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\GeneratorKinds.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\GeneratorListen.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceArpeggiator.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceRender.h" />
@@ -136,6 +140,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\StudioSetup.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\RecentSequences.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\TrackSound.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\PatternTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
@@ -167,12 +172,20 @@
     <ClCompile Include="StudioSetupTests.cpp" />
     <ClCompile Include="RecentSequencesTests.cpp" />
     <ClCompile Include="TrackSoundTests.cpp" />
+    <ClCompile Include="PatternTemplatesTests.cpp" />
+    <ClCompile Include="GeneratorKindsTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequencePattern.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceGenerator.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\GeneratorKinds.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\GeneratorLife.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\GeneratorLearn.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\GeneratorEvolve.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\GeneratorStreams.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\GeneratorListen.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceArpeggiator.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceRender.cpp" />
@@ -193,6 +206,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\StudioSetup.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecentSequences.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\TrackSound.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\PatternTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ClockFollower.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />

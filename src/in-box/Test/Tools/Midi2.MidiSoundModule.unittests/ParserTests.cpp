@@ -14,19 +14,19 @@ using namespace SoundFontSynth;
 
 namespace
 {
-    Sf2LoadStatus LoadBytes(std::vector<uint8_t> const& bytes, SoundFont& font, Sf2LoadStatistics* statistics = nullptr)
+    Sf2LoadStatus LoadBytes(_In_ std::vector<uint8_t> const& bytes, _Out_ SoundFont& font, _Out_opt_ Sf2LoadStatistics* statistics = nullptr)
     {
         MemoryByteSource source(bytes.data(), bytes.size());
         return SoundFont::Load(source, Sf2LoadLimits{}, font, statistics);
     }
 
-    int AsInt(Sf2LoadStatus status)
+    int AsInt(_In_ Sf2LoadStatus status)
     {
         return static_cast<int>(status);
     }
 
     // Offset of a chunk's four character code. Only for files these tests built themselves.
-    size_t FindChunk(std::vector<uint8_t> const& bytes, char const* id)
+    size_t FindChunk(_In_ std::vector<uint8_t> const& bytes, _In_z_ char const* id)
     {
         for (size_t i = 12; i + 8 <= bytes.size(); i++)
         {
@@ -39,19 +39,19 @@ namespace
         return SIZE_MAX;
     }
 
-    void PutU16(std::vector<uint8_t>& bytes, size_t at, uint16_t value)
+    void PutU16(_Inout_ std::vector<uint8_t>& bytes, _In_ size_t at, _In_ uint16_t value)
     {
         bytes[at] = static_cast<uint8_t>(value & 0xFF);
         bytes[at + 1] = static_cast<uint8_t>(value >> 8);
     }
 
-    void PutU32(std::vector<uint8_t>& bytes, size_t at, uint32_t value)
+    void PutU32(_Inout_ std::vector<uint8_t>& bytes, _In_ size_t at, _In_ uint32_t value)
     {
         PutU16(bytes, at, static_cast<uint16_t>(value & 0xFFFF));
         PutU16(bytes, at + 2, static_cast<uint16_t>(value >> 16));
     }
 
-    uint32_t GetU32(std::vector<uint8_t> const& bytes, size_t at)
+    uint32_t GetU32(_In_ std::vector<uint8_t> const& bytes, _In_ size_t at)
     {
         return static_cast<uint32_t>(bytes[at]) |
             (static_cast<uint32_t>(bytes[at + 1]) << 8) |
@@ -60,7 +60,7 @@ namespace
     }
 
     // Plays every preset a little, which is where damage the loader let through would show.
-    bool PlayEveryPreset(std::shared_ptr<SoundFont const> const& font)
+    bool PlayEveryPreset(_In_ std::shared_ptr<SoundFont const> const& font)
     {
         Synthesizer synthesizer;
 

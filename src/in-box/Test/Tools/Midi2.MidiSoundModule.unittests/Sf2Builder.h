@@ -24,12 +24,12 @@ namespace Sf2Test
         uint16_t Amount{ 0 };
     };
 
-    inline Generator Range(uint16_t op, uint8_t low, uint8_t high)
+    inline Generator Range(_In_ uint16_t op, _In_ uint8_t low, _In_ uint8_t high)
     {
         return { op, static_cast<uint16_t>(low | (high << 8)) };
     }
 
-    inline Generator Signed(uint16_t op, int16_t value)
+    inline Generator Signed(_In_ uint16_t op, _In_ int16_t value)
     {
         return { op, static_cast<uint16_t>(value) };
     }
@@ -114,11 +114,11 @@ namespace Sf2Test
     public:
         std::vector<uint8_t> Bytes;
 
-        void U8(uint8_t value) { Bytes.push_back(value); }
-        void U16(uint16_t value) { U8(static_cast<uint8_t>(value & 0xFF)); U8(static_cast<uint8_t>(value >> 8)); }
-        void U32(uint32_t value) { U16(static_cast<uint16_t>(value & 0xFFFF)); U16(static_cast<uint16_t>(value >> 16)); }
+        void U8(_In_ uint8_t value) { Bytes.push_back(value); }
+        void U16(_In_ uint16_t value) { U8(static_cast<uint8_t>(value & 0xFF)); U8(static_cast<uint8_t>(value >> 8)); }
+        void U32(_In_ uint32_t value) { U16(static_cast<uint16_t>(value & 0xFFFF)); U16(static_cast<uint16_t>(value >> 16)); }
 
-        void FourCc(char const* code)
+        void FourCc(_In_z_ char const* code)
         {
             for (int i = 0; i < 4; i++)
             {
@@ -126,7 +126,7 @@ namespace Sf2Test
             }
         }
 
-        void Name(std::string const& name, size_t length)
+        void Name(_In_ std::string const& name, _In_ size_t length)
         {
             for (size_t i = 0; i < length; i++)
             {
@@ -134,7 +134,7 @@ namespace Sf2Test
             }
         }
 
-        size_t BeginChunk(char const* id)
+        size_t BeginChunk(_In_z_ char const* id)
         {
             FourCc(id);
             auto const sizeOffset = Bytes.size();
@@ -142,7 +142,7 @@ namespace Sf2Test
             return sizeOffset;
         }
 
-        void EndChunk(size_t sizeOffset)
+        void EndChunk(_In_ size_t sizeOffset)
         {
             auto const size = static_cast<uint32_t>(Bytes.size() - sizeOffset - 4);
 
@@ -157,14 +157,14 @@ namespace Sf2Test
             }
         }
 
-        size_t BeginList(char const* id, char const* type)
+        size_t BeginList(_In_z_ char const* id, _In_z_ char const* type)
         {
             auto const sizeOffset = BeginChunk(id);
             FourCc(type);
             return sizeOffset;
         }
 
-        void ZoneBag(std::vector<Zone> const& zones, char const* bagId, uint16_t& generatorIndex, uint16_t& modulatorIndex)
+        void ZoneBag(_In_ std::vector<Zone> const& zones, _In_z_ char const* bagId, _Inout_ uint16_t& generatorIndex, _Inout_ uint16_t& modulatorIndex)
         {
             auto const chunk = BeginChunk(bagId);
 
@@ -183,7 +183,7 @@ namespace Sf2Test
     };
 
     template <typename Owner>
-    inline std::vector<Zone> AllZones(std::vector<Owner> const& owners)
+    inline std::vector<Zone> AllZones(_In_ std::vector<Owner> const& owners)
     {
         std::vector<Zone> zones;
 
@@ -195,7 +195,7 @@ namespace Sf2Test
         return zones;
     }
 
-    inline void WriteModulators(Writer& writer, char const* id, std::vector<Zone> const& zones)
+    inline void WriteModulators(_Inout_ Writer& writer, _In_z_ char const* id, _In_ std::vector<Zone> const& zones)
     {
         auto const chunk = writer.BeginChunk(id);
 
@@ -219,7 +219,7 @@ namespace Sf2Test
         writer.EndChunk(chunk);
     }
 
-    inline void WriteGenerators(Writer& writer, char const* id, std::vector<Zone> const& zones)
+    inline void WriteGenerators(_Inout_ Writer& writer, _In_z_ char const* id, _In_ std::vector<Zone> const& zones)
     {
         auto const chunk = writer.BeginChunk(id);
 
@@ -236,7 +236,7 @@ namespace Sf2Test
         writer.EndChunk(chunk);
     }
 
-    inline std::vector<uint8_t> Build(Font const& font)
+    inline std::vector<uint8_t> Build(_In_ Font const& font)
     {
         Writer writer;
 
@@ -394,7 +394,7 @@ namespace Sf2Test
 
     // One period per hundred points at 44 kHz is exactly 440 Hz, so with a root key of 69 the
     // sample plays at its own pitch on A4.
-    inline Sample MakeSine(std::string const& name, uint32_t periods = 200, int16_t peak = 16000)
+    inline Sample MakeSine(_In_ std::string const& name, _In_ uint32_t periods = 200, _In_ int16_t peak = 16000)
     {
         Sample sample{};
 

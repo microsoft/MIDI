@@ -36,17 +36,31 @@ namespace MidiSynth
     class UmpRenderSource final : public IAudioRenderSource
     {
     public:
+        // Allocates its working buffer, so it can throw std::bad_alloc.
         UmpRenderSource(
             _In_ SynthEngine& engine,
             _In_ UmpDispatcher& dispatcher,
             _In_ UmpInboundQueue& queue,
             _In_ uint32_t deviceSampleRate,
             _In_ uint32_t maxFrames,
-            _In_opt_ HANDLE drainedEvent) noexcept;
+            _In_opt_ HANDLE drainedEvent);
 
         // Signals the drained event once every voice has finished, so a caller can fade out and
         // stop the stream without clipping the tail.
         void RequestDrain() noexcept { m_draining.store(true, std::memory_order_release); }
+
+        // Any thread. Only the audio thread may change the engine while it runs, so it makes these
+        // changes itself, before its next block. Silence fades every voice out. A drum channel
+        // request changes that channel only, and the latest request for a channel wins. Bank select
+        // requests leave the engine as it would be had each been applied as it came.
+        void RequestSilence() noexcept { m_silenceRequested.store(true, std::memory_order_release); }
+        void RequestBankSelectMode(_In_ BankSelectMode mode) noexcept;
+        void RequestDrumChannel(_In_ uint8_t channel, _In_ bool isDrumChannel) noexcept;
+
+        // Makes the changes requested above. The audio thread calls this before every block. Any
+        // other thread may call it only once the stream has stopped, to finish what the audio
+        // thread was asked to do and didn't get to.
+        void ApplyRequests() noexcept;
 
         // Voices sounding as of the last rendered block. Published here because the engine's own
         // count walks the voice array, which only the render thread may touch.
@@ -73,6 +87,19 @@ namespace MidiSynth
 
         HANDLE m_drainedEvent{ nullptr };
         std::atomic<bool> m_draining{ false };
+
+        std::atomic<bool> m_silenceRequested{ false };
+
+        // Zero means none. Otherwise the mode, plus one.
+        std::atomic<uint32_t> m_requestedBankSelectMode{ 0 };
+
+        // The last mode other than Automatic asked for since the requests were last applied, the same
+        // way. Choosing a convention also sets the one Automatic follows, so a choice followed at once
+        // by Automatic still has to leave that convention behind.
+        std::atomic<uint32_t> m_requestedExplicitBankSelectMode{ 0 };
+
+        // The low sixteen bits say which channels change, the high sixteen what each becomes.
+        std::atomic<uint32_t> m_requestedDrumChannels{ 0 };
         std::atomic<uint32_t> m_lastActiveVoiceCount{ 0 };
 
         QueuedUmp m_pending[MaxPendingUmpPerBlock]{};

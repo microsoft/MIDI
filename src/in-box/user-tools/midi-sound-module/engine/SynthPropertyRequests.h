@@ -20,5 +20,5 @@ namespace SoundFontSynth
     // long reply is paced across calls so it never floods the endpoint.
     //
     // Parsing JSON through WinRT needs a COM apartment on the calling thread.
-    void ServicePropertyRequests(_In_ SynthCore& core, _In_ ISysExSink& wire) noexcept;
+    void ServicePropertyRequests(_Inout_ SynthCore& core, _In_ ISysExSink& wire) noexcept;
 }

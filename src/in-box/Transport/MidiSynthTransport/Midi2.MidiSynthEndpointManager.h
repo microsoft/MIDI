@@ -17,7 +17,7 @@ public:
     STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
 
-    bool IsInitialized() const noexcept { return m_initialized; }
+    bool IsInitialized() const noexcept { return m_initialized.load(); }
 
     // Creates the endpoint when the synthesizer is switched on and removes it when it is switched
     // off. Removing it is the point of the off switch: an application which opens every MIDI port
@@ -37,13 +37,20 @@ private:
     HRESULT RemoveEndpoint();
     HRESULT InitiateDiscoveryAndNegotiation(_In_ std::wstring const& endpointInterfaceId);
 
-    bool m_initialized{ false };
+    // Read without the sync lock by a settings change deciding whether to sync at all.
+    std::atomic<bool> m_initialized{ false };
+
+    // Held for a whole sync, and by Shutdown. Two settings changes arriving together could otherwise
+    // both create the endpoint, or both start a negotiation thread and assign one over the other,
+    // which ends the service. Taken after the device's settings change lock and before any of the
+    // device's other locks.
+    wil::critical_section m_syncLock;
 
     GUID m_transportId{};
 
     std::wstring m_parentDeviceId{};
 
-    // Guards endpoint creation and removal against two settings changes arriving at once.
+    // Guards the ids, so they can be read without waiting for a sync to finish.
     mutable wil::srwlock m_endpointLock;
     std::wstring m_endpointShortInstanceId{};
     std::wstring m_endpointDeviceInterfaceId{};
@@ -52,6 +59,6 @@ private:
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
     // Discovery opens a client connection back to this endpoint, so it cannot run on the thread
-    // that is still creating it.
+    // that is still creating it. Guarded by m_syncLock.
     std::thread m_negotiationThread;
 };

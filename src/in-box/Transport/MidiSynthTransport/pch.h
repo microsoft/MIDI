@@ -105,6 +105,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiSynth/SynthEngine.h"
 #include "MidiSynth/UmpDispatcher.h"
 #include "MidiSynth/UmpRenderSource.h"
+#include "MidiSynth/DispatchWithoutAudio.h"
 #include "MidiSynth/AudioSink.h"
 
 #include "midi_synth_transport_defs.h"

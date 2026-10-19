@@ -275,6 +275,30 @@ namespace SoundFontSynth
 
         m_controllerListJson.resize(ci::BuildControllerListJson(entries, std::size(entries), nullptr, 0));
         (void)ci::BuildControllerListJson(entries, std::size(entries), m_controllerListJson.data(), m_controllerListJson.size());
+
+        // A channel playing a drum kit ignores modulation, the damper and sostenuto pedals, pitch
+        // bend, channel pressure, pitch bend sensitivity and fine and coarse tuning, as General MIDI
+        // 2 recommends (sections 3.3.2, 3.3.7, 3.3.9, 3.4.1 to 3.4.3, 3.6 and 3.7), so its list is
+        // the same one without them.
+        std::vector<ci::ControllerListEntry> drumEntries{};
+
+        for (auto const& entry : entries)
+        {
+            auto const ignoredByDrums =
+                std::strcmp(entry.ControllerType, "pBend") == 0 ||
+                std::strcmp(entry.ControllerType, "chPress") == 0 ||
+                (std::strcmp(entry.ControllerType, "cc") == 0 &&
+                    (entry.Index[0] == 1 || entry.Index[0] == 64 || entry.Index[0] == 66)) ||
+                (std::strcmp(entry.ControllerType, "rpn") == 0 && entry.Index[0] == 0 && entry.Index[1] <= 2);
+
+            if (!ignoredByDrums)
+            {
+                drumEntries.push_back(entry);
+            }
+        }
+
+        m_drumControllerListJson.resize(ci::BuildControllerListJson(drumEntries.data(), drumEntries.size(), nullptr, 0));
+        (void)ci::BuildControllerListJson(drumEntries.data(), drumEntries.size(), m_drumControllerListJson.data(), m_drumControllerListJson.size());
     }
 
     _Use_decl_annotations_
@@ -380,7 +404,7 @@ namespace SoundFontSynth
         ci::ResourceLink const DrumKitLinks[]
         {
             { "ProgramList", DrumKitProgramListResourceId, m_text.DrumKitProgramList.c_str() },
-            { "ChCtrlList", ControllerListResourceId, m_text.ControllerList.c_str() },
+            { "ChCtrlList", DrumControllerListResourceId, m_text.ControllerList.c_str() },
         };
 
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)

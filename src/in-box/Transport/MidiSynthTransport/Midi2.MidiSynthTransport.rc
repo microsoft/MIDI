@@ -129,6 +129,8 @@ BEGIN
     IDS_CONTROLLER_NOTE_VOLUME          "Note Volume"
     IDS_CONTROLLER_NOTE_PAN             "Note Pan"
     IDS_CONTROLLER_NOTE_PITCH           "Note Pitch"
+    IDS_CONTROLLER_FINE_TUNING          "Fine Tuning"
+    IDS_CONTROLLER_COARSE_TUNING        "Coarse Tuning"
 
     IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"
     IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."

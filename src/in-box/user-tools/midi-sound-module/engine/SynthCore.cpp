@@ -75,8 +75,8 @@ namespace SoundFontSynth
             return true;
         }
 
-        auto const volume = m_synthesizer.UserVolumeDb();
-
+        // The volume is not saved and restored around this: Initialize leaves it alone, and a
+        // volume the window sets meanwhile would be put back to the old one.
         SynthesizerConfig config{};
         config.SampleRate = sampleRate;
 
@@ -84,8 +84,6 @@ namespace SoundFontSynth
         {
             return false;
         }
-
-        m_synthesizer.SetUserVolumeDb(volume);
 
         return true;
     }
@@ -238,13 +236,26 @@ namespace SoundFontSynth
     {
         QueuedUmp message{};
 
-        while ((discardNotes || !m_audioWanted.load(std::memory_order_acquire)) && m_inbound.TryPop(message))
+        // Looks before it takes, so a channel voice message is only ever taken to be dropped.
+        while (m_inbound.TryPeek(message))
         {
             auto const messageType = (message.Words[0] >> 28) & 0xF;
             auto const status = (message.Words[0] >> 20) & 0xF;
+            auto const channelVoice =
+                messageType == MessageTypeMidi1ChannelVoice || messageType == MessageTypeMidi2ChannelVoice;
 
-            if (discardNotes && status == 0x9 &&
-                (messageType == MessageTypeMidi1ChannelVoice || messageType == MessageTypeMidi2ChannelVoice))
+            if (channelVoice && !discardNotes)
+            {
+                // Normally set already, because QueueInbound flags a channel voice message before
+                // queuing it. Letting the device go clears the flag, though, and a note that arrives
+                // just as that is decided would otherwise wait here, unheard, until another came.
+                m_audioWanted.store(true, std::memory_order_release);
+                return;
+            }
+
+            (void)m_inbound.TryPop(message);
+
+            if (channelVoice && status == 0x9)
             {
                 continue;
             }

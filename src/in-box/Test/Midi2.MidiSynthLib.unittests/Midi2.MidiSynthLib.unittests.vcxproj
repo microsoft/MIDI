@@ -78,8 +78,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="MidiSynthAudioFormatTests.h" />
+    <ClInclude Include="MidiSynthChannelTuningTests.h" />
+    <ClInclude Include="MidiSynthDataEntryTests.h" />
+    <ClInclude Include="MidiSynthMuidTests.h" />
+    <ClInclude Include="MidiSynthWithoutAudioTests.h" />
     <ClInclude Include="MidiSynthDlsTests.h" />
+    <ClInclude Include="MidiSynthExactPitchTests.h" />
     <ClInclude Include="MidiSynthQueueTests.h" />
+    <ClInclude Include="MidiSynthRhythmChannelTests.h" />
+    <ClInclude Include="MidiSynthTestRig.h" />
     <ClInclude Include="MidiSynthUmpTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
@@ -87,8 +94,14 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MidiSynthAudioFormatTests.cpp" />
+    <ClCompile Include="MidiSynthChannelTuningTests.cpp" />
+    <ClCompile Include="MidiSynthDataEntryTests.cpp" />
+    <ClCompile Include="MidiSynthMuidTests.cpp" />
+    <ClCompile Include="MidiSynthWithoutAudioTests.cpp" />
     <ClCompile Include="MidiSynthDlsTests.cpp" />
+    <ClCompile Include="MidiSynthExactPitchTests.cpp" />
     <ClCompile Include="MidiSynthQueueTests.cpp" />
+    <ClCompile Include="MidiSynthRhythmChannelTests.cpp" />
     <ClCompile Include="MidiSynthUmpTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

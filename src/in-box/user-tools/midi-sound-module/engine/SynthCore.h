@@ -43,8 +43,11 @@ namespace SoundFontSynth
     // Threads:
     //   QueueInbound    any thread that receives MIDI. Serialized internally.
     //   RenderAudio     the audio thread, only while audio runs.
-    //   PumpWithoutAudio, ServiceOutbound, the property and MUID calls
+    //   PumpWithoutAudio
     //                   the worker, only while audio does not run.
+    //   ServiceOutbound, ServiceMessageReport, the property and MUID calls
+    //                   the worker, whether or not audio runs. A new MUID is handed to whichever
+    //                   thread dispatches, which takes it up before its next MIDI-CI message.
     // Whoever owns the audio stream guarantees RenderAudio and PumpWithoutAudio never overlap.
     class SynthCore final : private ISysExSink
     {
@@ -75,9 +78,9 @@ namespace SoundFontSynth
             _In_ int64_t qpcFrequency) noexcept;
 
         // Worker, while audio is stopped: answers everything that does not need sound. Stops at
-        // the first channel voice message so the note that wants audio is still queued for it.
-        // When no audio device can be had, discardNotes keeps everything else flowing and drops
-        // only note ons, which would otherwise start voices nothing ever renders.
+        // the first channel voice message, and says audio is wanted, so the note that wants audio is
+        // still queued for it. When no audio device can be had, discardNotes keeps everything else
+        // flowing and drops only note ons, which would otherwise start voices nothing ever renders.
         void PumpWithoutAudio(_In_ bool discardNotes) noexcept;
 
         // Worker. Sends every reply the dispatcher queued, whole, through the wire.

@@ -127,7 +127,7 @@ namespace SoundFontSynth
         }
 
         ResourceLookup ResourceForHeader(
-            _In_ SynthCore& core,
+            _Inout_ SynthCore& core,
             _In_ SynthDispatcher::PendingPropertyRequest const& request,
             _Out_ ResourceRequest& result)
         {
@@ -174,12 +174,14 @@ namespace SoundFontSynth
 
             if (resource == L"ChCtrlList")
             {
-                if (!SynthPropertySource::IsKnownControllerListResourceId(ToAscii(ReadString(parsed, L"resId"))))
+                auto const resourceId = ToAscii(ReadString(parsed, L"resId"));
+
+                if (!SynthPropertySource::IsKnownControllerListResourceId(resourceId))
                 {
                     return ResourceLookup::UnknownResource;
                 }
 
-                result.Blob = &properties.ControllerListJson();
+                result.Blob = &properties.ControllerListJson(resourceId);
                 return ResourceLookup::Found;
             }
 
@@ -196,7 +198,7 @@ namespace SoundFontSynth
         }
 
         void HandleSubscriptionRequest(
-            _In_ SynthCore& core,
+            _Inout_ SynthCore& core,
             _In_ ISysExSink& wire,
             _In_ SynthDispatcher::PendingPropertyRequest const& request)
         {
@@ -244,7 +246,7 @@ namespace SoundFontSynth
             properties.SendSubscriptionReply(wire, muid, request, 400, nullptr);
         }
 
-        void ServicePropertyRequestsInner(_In_ SynthCore& core, _In_ ISysExSink& wire)
+        void ServicePropertyRequestsInner(_Inout_ SynthCore& core, _In_ ISysExSink& wire)
         {
             auto& properties = core.Properties();
             auto& dispatcher = core.Dispatcher();

@@ -74,7 +74,7 @@ namespace SoundFontSynth
         m_output = output;
         m_identity = identity;
 
-        ConfigureResponder(m_responder.Muid());
+        ConfigureResponder(Muid());
     }
 
     _Use_decl_annotations_
@@ -93,13 +93,55 @@ namespace SoundFontSynth
 
         m_productInstanceId[length] = '\0';
 
-        ConfigureResponder(m_responder.Muid());
+        ConfigureResponder(Muid());
     }
 
     _Use_decl_annotations_
     void SynthDispatcher::SetMuid(uint32_t muid) noexcept
     {
-        m_responder.SetMuid(muid & 0x0FFFFFFF);
+        m_replacementMuid.store(muid & 0x0FFFFFFF, std::memory_order_release);
+    }
+
+    uint32_t SynthDispatcher::Muid() const noexcept
+    {
+        // A replacement counts from the moment it is handed over, so a reply a worker sends before
+        // the responder takes it up carries the identifier about to answer, rather than none.
+        auto const replacement = m_replacementMuid.load(std::memory_order_acquire);
+
+        return replacement != 0 ? replacement : m_publishedMuid.load(std::memory_order_acquire);
+    }
+
+    bool SynthDispatcher::MuidNeedsReplacement() const noexcept
+    {
+        // Read in the opposite order to the one TakeUpReplacementMuid writes them in. It clears the
+        // flag and then the replacement, so once the replacement reads as taken up, the flag can't
+        // read as it was before. Read the other way round, a worker could see the flag from before
+        // the take-up and the replacement from after it, and make a second identifier.
+        return m_replacementMuid.load(std::memory_order_acquire) == 0 &&
+            m_muidNeedsReplacement.load(std::memory_order_acquire);
+    }
+
+    void SynthDispatcher::TakeUpReplacementMuid() noexcept
+    {
+        auto replacement = m_replacementMuid.load(std::memory_order_acquire);
+
+        if (replacement == 0)
+        {
+            return;
+        }
+
+        m_responder.SetMuid(replacement);
+        PublishMuid();
+
+        // Cleared last, so Muid() never reports none in between and no thread asks for a second
+        // replacement. One handed over meanwhile stays, for the next message to take up.
+        (void)m_replacementMuid.compare_exchange_strong(replacement, 0, std::memory_order_acq_rel);
+    }
+
+    void SynthDispatcher::PublishMuid() noexcept
+    {
+        m_publishedMuid.store(m_responder.Muid(), std::memory_order_release);
+        m_muidNeedsReplacement.store(m_responder.MuidNeedsReplacement(), std::memory_order_release);
     }
 
     _Use_decl_annotations_
@@ -231,7 +273,14 @@ namespace SoundFontSynth
 
         size_t replyBytes{ 0 };
 
+        // A replacement handed over since the last message is this message's to answer with.
+        TakeUpReplacementMuid();
+
         auto const action = m_responder.ProcessMessage(parsed, reply, sizeof(reply), &replyBytes);
+
+        // The responder withdraws its own identifier on an invalidation or a collision, and other
+        // threads have to know: the host makes the replacement, and every reply carries it.
+        PublishMuid();
 
         switch (action)
         {
@@ -566,6 +615,11 @@ namespace SoundFontSynth
         config.ProductInstanceIdByteCount = static_cast<uint8_t>(productInstanceIdBytes);
 
         m_responder.Initialize(config);
+
+        // Set up before anything is dispatched, so a replacement handed over before now is settled:
+        // the callers pass Muid(), which already reports it.
+        m_replacementMuid.store(0, std::memory_order_release);
+        PublishMuid();
     }
 
     _Use_decl_annotations_

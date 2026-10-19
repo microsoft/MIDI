@@ -105,8 +105,17 @@ namespace SoundFontSynth
 
         DispatcherStatistics Statistics() const noexcept { return m_statistics; }
 
-        uint32_t Muid() const noexcept { return m_responder.Muid(); }
-        bool MuidNeedsReplacement() const noexcept { return m_responder.MuidNeedsReplacement(); }
+        // The 28 bit identifier this device uses in MIDI-CI exchanges. Safe on any thread.
+        uint32_t Muid() const noexcept;
+
+        // Set when another device withdrew our identifier, or claimed it too. MIDI-CI stays silent
+        // until the host supplies a replacement, because answering with a known duplicate is worse.
+        // Safe on any thread, and false again as soon as a replacement has been handed over.
+        bool MuidNeedsReplacement() const noexcept;
+
+        // Safe on any thread. The responder belongs to the thread that dispatches messages, which is
+        // the audio thread while there is audio, so the identifier is handed over and that thread
+        // takes it up before it next handles MIDI-CI. Muid() reports it from now on.
         void SetMuid(_In_ uint32_t muid) noexcept;
 
         static constexpr size_t MaximumPropertyHeaderBytes = 256;
@@ -138,7 +147,7 @@ namespace SoundFontSynth
             std::array<ChannelReport, MidiChannelCount> Channels{};
         };
 
-        bool TakePendingMessageReport(_Out_ PendingMessageReport& report) noexcept;
+        _Success_(return) bool TakePendingMessageReport(_Out_ PendingMessageReport& report) noexcept;
 
         // Pitch bend, the reported controllers, three registered controllers, the program and
         // channel pressure, for each channel.
@@ -177,6 +186,12 @@ namespace SoundFontSynth
         void SendSysEx(_In_reads_(count) uint8_t const* payload, _In_ size_t count) noexcept;
         void ConfigureResponder(_In_ uint32_t muid) noexcept;
 
+        // On the dispatching thread: makes a handed over identifier the responder's.
+        void TakeUpReplacementMuid() noexcept;
+
+        // On the dispatching thread: tells other threads what the responder now holds.
+        void PublishMuid() noexcept;
+
         void ParkPropertyRequest(
             _In_ WindowsMidiServicesCapabilityInquiry::ParsedMessage const& parsed,
             _In_ uint8_t const* message,
@@ -192,6 +207,13 @@ namespace SoundFontSynth
         char m_productInstanceId[SynthEndpointShape::MaximumProductInstanceIdBytes + 1]{};
 
         WindowsMidiServicesCapabilityInquiry::Responder m_responder{};
+
+        // What other threads know of the responder's identifier, and a replacement handed over to
+        // it. Zero is not a legal identifier, so it means none. Only the dispatching thread writes
+        // the first two, and only it clears the replacement, which SetMuid sets.
+        std::atomic<uint32_t> m_publishedMuid{ 0 };
+        std::atomic<bool> m_muidNeedsReplacement{ false };
+        std::atomic<uint32_t> m_replacementMuid{ 0 };
 
         // Written only by the dispatching thread while the flag is clear, read and cleared only by
         // the worker, so neither sees a half written request.

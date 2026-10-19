@@ -20,6 +20,7 @@ public:
     TEST_METHOD(TestGroupAndPacketFraming);
     TEST_METHOD(TestHighResolutionIsPreserved);
     TEST_METHOD(TestBankAddressing);
+    TEST_METHOD(TestResetMessageSurvivesInitialize);
     TEST_METHOD(TestDrumChannelAssignment);
     TEST_METHOD(TestUserVolume);
     TEST_METHOD(TestResets);

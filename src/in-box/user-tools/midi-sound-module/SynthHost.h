@@ -142,6 +142,11 @@ namespace midisoundmodule
         std::thread m_worker{};
         mutable std::mutex m_runningLock{};
         std::vector<std::shared_ptr<Instance>> m_running{};
+
+        // Guarded by m_runningLock. The last volume asked for each synth, so one that was still
+        // loading when the slider moved starts at that volume rather than the one it was turned
+        // on with.
+        std::map<std::wstring, double> m_requestedVolume{};
         std::atomic<bool> m_stopWorker{ false };
         std::atomic<uint64_t> m_workerPasses{ 0 };
         wil::unique_event m_workerWake{ wil::EventOptions::None };

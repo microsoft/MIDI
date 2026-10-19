@@ -18,6 +18,7 @@ CMidi2MidiSynthBidi::Initialize(
     LONGLONG context,
     GUID /* sessionId */
 )
+try
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -53,15 +54,18 @@ CMidi2MidiSynthBidi::Initialize(
     auto device = TransportState::Current().GetDevice();
     RETURN_HR_IF_NULL(E_UNEXPECTED, device);
 
-    RETURN_IF_FAILED(device->ConnectClient(callback, context));
+    uint64_t connectionId{ 0 };
+    RETURN_IF_FAILED(device->ConnectClient(callback, context, connectionId));
 
     {
         auto lock = m_deviceLock.lock_exclusive();
         m_device = std::move(device);
+        m_connectionId = connectionId;
     }
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
@@ -77,17 +81,22 @@ CMidi2MidiSynthBidi::Shutdown()
     );
 
     std::shared_ptr<MidiSynthDevice> device;
+    uint64_t connectionId{ 0 };
     {
         auto lock = m_deviceLock.lock_exclusive();
         device = std::move(m_device);
         m_device.reset();
+
+        connectionId = m_connectionId;
+        m_connectionId = 0;
     }
 
     if (device)
     {
         // The device itself is owned by the transport state and must survive so the endpoint can
-        // be opened again. Only this connection ends here, which releases the audio device.
-        LOG_IF_FAILED(device->DisconnectClient());
+        // be opened again. Only this connection ends here, which releases the audio device, and
+        // only if the service has not already replaced it with a newer one.
+        LOG_IF_FAILED(device->DisconnectClient(connectionId));
     }
 
     return S_OK;

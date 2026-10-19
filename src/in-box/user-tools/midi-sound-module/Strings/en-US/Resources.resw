@@ -490,4 +490,55 @@
   <data name="ControllerNotePitch" xml:space="preserve">
     <value>Note Pitch</value>
   </data>
+  <data name="SynthListProblemInstruction" xml:space="preserve">
+    <value>The Sound Module can't start because it can't read its list of synths</value>
+    <comment>Main instruction of the dialog shown instead of the window when synths.json can't be used.</comment>
+  </data>
+  <data name="SynthListProblemContentFormat" xml:space="preserve">
+    <value>{0}
+
+The list is in {1}. Fix the file, or move it somewhere else to start with no synths. The Sound Module hasn't changed it.</value>
+    <comment>{0} is one of the SynthList reasons below. {1} is the full path of synths.json.</comment>
+  </data>
+  <data name="SynthListProblemShowFile" xml:space="preserve">
+    <value>Show the file</value>
+  </data>
+  <data name="SynthListProblemClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="SynthListCannotOpenFormat" xml:space="preserve">
+    <value>Windows couldn't open it: {0}</value>
+    <comment>{0} is the error message from Windows, which ends with a period.</comment>
+  </data>
+  <data name="SynthListTooLarge" xml:space="preserve">
+    <value>The file is larger than 1 MB, which is far more than any list of synths.</value>
+  </data>
+  <data name="SynthListNotJson" xml:space="preserve">
+    <value>The file isn't valid JSON.</value>
+  </data>
+  <data name="SynthListNoList" xml:space="preserve">
+    <value>The file doesn't have a list of synths in it.</value>
+  </data>
+  <data name="SynthListNewerVersion" xml:space="preserve">
+    <value>A newer version of the Sound Module saved this file.</value>
+  </data>
+  <data name="SynthListTooManyFormat" xml:space="preserve">
+    <value>The file lists more than {0} synths, which is more than the Sound Module can run.</value>
+  </data>
+  <data name="SynthListEntryNotASynthFormat" xml:space="preserve">
+    <value>Synth {0} in the file isn't written as a synth.</value>
+    <comment>{0} counts the synths in the file from 1.</comment>
+  </data>
+  <data name="SynthListEntryIdFormat" xml:space="preserve">
+    <value>Synth {0} in the file has a missing or damaged id.</value>
+    <comment>{0} counts the synths in the file from 1.</comment>
+  </data>
+  <data name="SynthListEntrySoundBankFormat" xml:space="preserve">
+    <value>Synth {0} in the file doesn't have the full path of a sound bank.</value>
+    <comment>{0} counts the synths in the file from 1.</comment>
+  </data>
+  <data name="SynthListEntryDuplicateIdFormat" xml:space="preserve">
+    <value>Synth {0} in the file has the same id as another synth.</value>
+    <comment>{0} counts the synths in the file from 1.</comment>
+  </data>
 </root>

@@ -99,7 +99,8 @@ namespace SoundFontSynth
     class Synthesizer
     {
     public:
-        Synthesizer() noexcept;
+        // Allocates, so it can throw std::bad_alloc, which the host reports as out of memory.
+        Synthesizer();
         ~Synthesizer();
 
         Synthesizer(Synthesizer const&) = delete;
@@ -115,8 +116,10 @@ namespace SoundFontSynth
         // Velocity is 16 bit, as MIDI 2.0 carries it. Zero is a note on, not a note off.
         void NoteOn(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint16_t velocity);
 
-        // MIDI 2.0 Pitch 7.9 attribute: the note number still chooses the zones, the pitch is
-        // the fractional note the sample is tuned to.
+        // MIDI 2.0 Pitch 7.9 attribute. The note number is then only an index, which Note Off and the
+        // per-note messages address. On a melodic channel the pitch chooses the zones, the same ones
+        // a plain note on that key gets; on a drum kit the note number still picks the drum. Either
+        // way the sample is tuned to the fractional pitch.
         void NoteOnWithPitch(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint16_t velocity, _In_ double pitchNoteNumber);
 
         void NoteOff(_In_ uint8_t channel, _In_ uint8_t note);
@@ -136,7 +139,9 @@ namespace SoundFontSynth
         void PolyPressure(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint8_t value);
         void PolyPressure32(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint32_t value);
 
-        // MIDI 2.0 Registered Controller, which addresses an RPN directly with a 32 bit value.
+        // MIDI 2.0 Registered Controller, which addresses an RPN directly with a 32 bit value. Fine
+        // and coarse tuning, from either protocol, are ignored while the channel plays a drum kit
+        // and never move a note from one, as General MIDI 2 recommends.
         void RegisteredController(_In_ uint8_t channel, _In_ uint8_t bank, _In_ uint8_t index, _In_ uint32_t value);
 
         // Normalized -1 to +1 across the channel's bend range, for every sounding note with this number.
@@ -157,7 +162,8 @@ namespace SoundFontSynth
         // A System On or reset tells which convention the sender uses. Only Automatic follows it.
         void NotifyAddressingConvention(_In_ BankSelectMode convention);
 
-        // GM2 device controls. Fourteen bit values, 8192 centered for the fine tuning.
+        // GM2 device controls. Fourteen bit values, 8192 centered for the fine tuning. Neither master
+        // tuning moves a note from a drum kit, as General MIDI 2 recommends (sections 4.2 and 4.3).
         void SetMasterVolume(_In_ uint16_t value) noexcept;
         void SetMasterFineTuning(_In_ uint16_t value) noexcept;
         void SetMasterCoarseTuning(_In_ uint8_t msb) noexcept;

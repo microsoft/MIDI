@@ -16,7 +16,7 @@ namespace MidiSynth
         UmpInboundQueue& queue,
         uint32_t deviceSampleRate,
         uint32_t maxFrames,
-        HANDLE drainedEvent) noexcept
+        HANDLE drainedEvent)
         : m_engine(engine)
         , m_dispatcher(dispatcher)
         , m_queue(queue)
@@ -37,8 +37,81 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void UmpRenderSource::RequestBankSelectMode(BankSelectMode mode) noexcept
+    {
+        const uint32_t requested = static_cast<uint32_t>(mode) + 1;
+
+        // Stored before the mode itself, so the render thread, which takes the mode first, finds it.
+        if (mode != BankSelectMode::Automatic)
+        {
+            m_requestedExplicitBankSelectMode.store(requested, std::memory_order_release);
+        }
+
+        m_requestedBankSelectMode.store(requested, std::memory_order_release);
+    }
+
+    _Use_decl_annotations_
+    void UmpRenderSource::RequestDrumChannel(uint8_t channel, bool isDrumChannel) noexcept
+    {
+        if (channel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        const uint32_t changes = 1u << channel;
+        const uint32_t value = 1u << (channel + 16);
+
+        uint32_t current = m_requestedDrumChannels.load(std::memory_order_relaxed);
+        uint32_t wanted{ 0 };
+
+        do
+        {
+            wanted = isDrumChannel ? (current | changes | value) : ((current | changes) & ~value);
+        }
+        while (!m_requestedDrumChannels.compare_exchange_weak(current, wanted, std::memory_order_acq_rel, std::memory_order_relaxed));
+    }
+
+    void UmpRenderSource::ApplyRequests() noexcept
+    {
+        if (m_silenceRequested.exchange(false, std::memory_order_acq_rel))
+        {
+            for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+            {
+                m_engine.AllSoundOff(channel);
+            }
+        }
+
+        const uint32_t bankSelectMode = m_requestedBankSelectMode.exchange(0, std::memory_order_acq_rel);
+        const uint32_t explicitBankSelectMode = m_requestedExplicitBankSelectMode.exchange(0, std::memory_order_acq_rel);
+
+        // The explicit mode first, so the convention it sets is still there for Automatic to follow,
+        // as it would be had each request been applied as it came.
+        if (explicitBankSelectMode != 0 && explicitBankSelectMode != bankSelectMode)
+        {
+            m_engine.SetBankSelectMode(static_cast<BankSelectMode>(explicitBankSelectMode - 1));
+        }
+
+        if (bankSelectMode != 0)
+        {
+            m_engine.SetBankSelectMode(static_cast<BankSelectMode>(bankSelectMode - 1));
+        }
+
+        const uint32_t drumChannels = m_requestedDrumChannels.exchange(0, std::memory_order_acq_rel);
+
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            if ((drumChannels & (1u << channel)) != 0)
+            {
+                m_engine.SetDrumChannel(channel, (drumChannels & (1u << (channel + 16))) != 0);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
     void UmpRenderSource::RenderAudio(float* interleavedStereo, uint32_t frameCount) noexcept
     {
+        ApplyRequests();
+
         LARGE_INTEGER now{};
         QueryPerformanceCounter(&now);
 

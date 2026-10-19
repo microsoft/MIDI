@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <vector>
 
@@ -47,6 +48,11 @@ namespace MidiSynth
         uint16_t Velocity{ 0 };
         uint16_t KeyGroup{ 0 };
         bool SelfNonExclusive{ false };
+
+        // Started from a drum kit. General MIDI 2 recommends that drums ignore modulation, pitch bend,
+        // the damper pedal, and channel and master tuning, and the engine applies that per note: a
+        // note keeps this when its channel changes program while it sounds.
+        bool DrumKit{ false };
 
         // Note is still physically held. A voice released by the sustain pedal has this clear
         // but stays in Sustain until the pedal lifts.
@@ -118,6 +124,17 @@ namespace MidiSynth
         uint8_t Program{ 0 };
         bool IsDrumChannel{ false };
 
+        // The channel plays a drum kit: it is a drum channel, or a bank select chose a kit under XG
+        // or GM2. Under GM2 a melodic bank also turns a drum channel back into a melodic one.
+        // General MIDI 2 calls this a Rhythm Channel. Set when the program is resolved, so a bank
+        // select changes nothing until the program change that follows it.
+        bool PlaysDrumKit{ false };
+
+        // The bank the program was looked up in once the addressing convention was applied: the
+        // variation for a melodic program, zero for a kit. Set with PlaysDrumKit, so MIDI-CI can
+        // name what plays even before the engine has a sound set.
+        uint8_t VariationBank{ 0 };
+
         // GM2 effect sends, CC91 and CC93. Reverb defaults to 40 of 127 per GM2.
         double ReverbSend{ 40.0 / 127.0 };
         double ChorusSend{ 0.0 };
@@ -134,6 +151,11 @@ namespace MidiSynth
 
         // -1 to +1 across the bend range, so a 32 bit bend is not quantized to fourteen bits.
         double PitchBendNormalized{ 0.0 };
+
+        // Registered parameter 0,0 as it arrived: whole semitones and cents. The range the bend uses
+        // is the two together.
+        uint8_t PitchBendRangeMsb{ 2 };
+        uint8_t PitchBendRangeLsb{ 0 };
         double PitchBendRangeSemitones{ 2.0 };
         double FineTuneCents{ 0.0 };
         double CoarseTuneSemitones{ 0.0 };
@@ -157,10 +179,11 @@ namespace MidiSynth
         void NoteOn(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint16_t velocity);
         void NoteOff(_In_ uint8_t channel, _In_ uint8_t note);
 
-        // MIDI 2.0 Note On carrying the Pitch 7.9 attribute. The note number still selects the
-        // region and the drum kit entry, because that is what picks the sound; pitchNoteNumber is
-        // the fractional note the sample is played at. That separation is what lets a microtonal
-        // scale keep the right articulation for each key.
+        // MIDI 2.0 Note On carrying the Pitch 7.9 attribute. The note number is then only an index,
+        // which Note Off and the per-note messages address, and a sender may rotate it through all
+        // 128 values. So on a melodic instrument the pitch chooses the region, the same one a plain
+        // note on that key gets; on a drum kit the note number still picks the drum. Either way the
+        // sample plays at pitchNoteNumber, which can fall between keys.
         void NoteOnWithPitch(
             _In_ uint8_t channel,
             _In_ uint8_t note,
@@ -194,6 +217,30 @@ namespace MidiSynth
         // 7 bits, which is the whole reason for using them.
         void ControlChange32(_In_ uint8_t channel, _In_ uint8_t controller, _In_ uint32_t value);
         void PitchBend32(_In_ uint8_t channel, _In_ uint32_t value);
+
+        // MIDI 2.0 Registered Controller 0,1, channel fine tuning, at full resolution. The value is
+        // centered on 0x80000000, and the ends are 100 cents flat and 100 cents sharp.
+        //
+        // Like the MIDI 1.0 data entry for both, this and coarse tuning are ignored while the
+        // channel plays a drum kit, and never move a note from one, as General MIDI 2 recommends.
+        void SetChannelFineTuning32(_In_ uint8_t channel, _In_ uint32_t value) noexcept;
+
+        // Registered Controller 0,2, channel coarse tuning: semitones, 64 is no change. Applied as
+        // pitch rather than as a note offset, like the master tuning.
+        void SetChannelCoarseTuning(_In_ uint8_t channel, _In_ uint8_t msb) noexcept;
+
+        // Registered Controller 0,0, pitch bend sensitivity: whole semitones and cents, each seven
+        // bits. Ignored while the channel plays a drum kit, as General MIDI 2 recommends.
+        void SetPitchBendRange(_In_ uint8_t channel, _In_ uint8_t semitones, _In_ uint8_t cents) noexcept;
+
+        // The instrument a program plays in a bank the addressing convention already chose, falling
+        // back the General MIDI way: a missing variation plays the capital tone, and a missing kit
+        // the standard kit. MIDI-CI names programs with this, so it names what really plays.
+        static _Ret_maybenull_ const DlsInstrument* FindPlayableInstrument(
+            _In_ const DlsCollection& collection,
+            _In_ uint32_t variationBank,
+            _In_ uint8_t program,
+            _In_ bool isDrumKit) noexcept;
 
         // MIDI 2.0 program change carries the bank with it, so it cannot be split across messages.
         void ProgramChangeWithBank(
@@ -235,13 +282,15 @@ namespace MidiSynth
         //
         // This is the synthesizer's only volume control: midisrv runs in session 0, so it gets no
         // slider of its own in the Windows Volume Mixer, and exclusive and ASIO output have no
-        // Windows mixer in the path at all.
+        // Windows mixer in the path at all. The transport sets it from its configuration thread
+        // while the audio thread renders, which is why it is atomic.
         void SetUserVolumeDb(_In_ double decibels) noexcept
         {
-            m_userVolumeDb = (std::clamp)(decibels, MinimumUserVolumeDb, MaximumUserVolumeDb);
+            m_userVolumeDb.store(
+                (std::clamp)(decibels, MinimumUserVolumeDb, MaximumUserVolumeDb), std::memory_order_relaxed);
         }
 
-        double UserVolumeDb() const noexcept { return m_userVolumeDb; }
+        double UserVolumeDb() const noexcept { return m_userVolumeDb.load(std::memory_order_relaxed); }
 
         // Quiet enough to be inaudible at the bottom, and a little make-up gain at the top for a
         // customer whose other applications are much louder.
@@ -261,7 +310,8 @@ namespace MidiSynth
         // proportional to volume, which is the same concave curve CC7 uses.
         void SetMasterVolume(_In_ uint16_t value) noexcept;
 
-        // Fourteen bit, 8192 is centered, full range is plus or minus 100 cents.
+        // Fourteen bit, 8192 is centered, full range is plus or minus 100 cents. Neither master
+        // tuning moves a note from a drum kit, as General MIDI 2 recommends (sections 4.2 and 4.3).
         void SetMasterFineTuning(_In_ uint16_t value) noexcept;
 
         // Semitones, 0x40 is centered. Applied as pitch, never as a note offset: shifting notes
@@ -312,24 +362,25 @@ namespace MidiSynth
         void ResolveInstrument(_In_ uint8_t channel) noexcept;
         _Ret_maybenull_ SynthVoice* AllocateVoice(_In_ uint8_t channel) noexcept;
         void StartVoice(
-            _In_ SynthVoice& voice,
+            _Inout_ SynthVoice& voice,
             _In_ const DlsRegion& region,
             _In_ const DlsWave& wave,
             _In_ const DlsInstrument& instrument,
             _In_ uint8_t channel,
             _In_ uint8_t note,
+            _In_ uint8_t regionKey,
             _In_ uint16_t velocity,
             _In_ double pitchNoteNumber) noexcept;
 
-        void ReleaseVoice(_In_ SynthVoice& voice) noexcept;
+        void ReleaseVoice(_Inout_ SynthVoice& voice) noexcept;
 
         // Ends a voice with a short fade rather than an instant cut, which would leave a step in
         // the waveform and be heard as a click.
-        void KillVoice(_In_ SynthVoice& voice) noexcept;
+        void KillVoice(_Inout_ SynthVoice& voice) noexcept;
 
-        void UpdateVoiceControl(_In_ SynthVoice& voice, _In_ uint32_t frames) noexcept;
+        void UpdateVoiceControl(_Inout_ SynthVoice& voice, _In_ uint32_t frames) noexcept;
         void RenderVoiceBlock(
-            _In_ SynthVoice& voice,
+            _Inout_ SynthVoice& voice,
             _Inout_updates_(frames * 2) float* output,
             _In_ uint32_t frames) noexcept;
 
@@ -354,7 +405,7 @@ namespace MidiSynth
         double m_masterVolumeDb{ 0.0 };
 
         // Survives a System Reset on purpose: it is the customer's, not the content's.
-        double m_userVolumeDb{ 0.0 };
+        std::atomic<double> m_userVolumeDb{ 0.0 };
         double m_masterFineCents{ 0.0 };
         double m_masterCoarseCents{ 0.0 };
         double m_masterTuningCents{ 0.0 };

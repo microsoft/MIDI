@@ -8,8 +8,6 @@
 #include "pch.h"
 #include "SynthStore.h"
 
-#include "SynthCore.h"
-
 namespace midisoundmodule
 {
     namespace
@@ -18,23 +16,9 @@ namespace midisoundmodule
         constexpr wchar_t FolderName[] = L"Microsoft\\MIDI Sound Module";
         constexpr wchar_t FileName[] = L"synths.json";
 
-        constexpr wchar_t KeyComment[] = L"_comment";
-        constexpr wchar_t KeyVersion[] = L"version";
-        constexpr wchar_t KeySynths[] = L"synths";
-        constexpr wchar_t KeyId[] = L"id";
-        constexpr wchar_t KeyName[] = L"name";
-        constexpr wchar_t KeySoundFont[] = L"soundFont";
-        constexpr wchar_t KeyProductInstanceId[] = L"productInstanceId";
-        constexpr wchar_t KeyVolumeDb[] = L"volumeDb";
-        constexpr wchar_t KeyEnabled[] = L"enabled";
-
         constexpr wchar_t FileComment[] = L"Synths for the Windows MIDI Sound Module app.";
 
-        constexpr int32_t FileVersion = 1;
-
         constexpr size_t MaximumFileBytes = 1024 * 1024;
-        constexpr size_t MaximumPathLength = 32767;
-        constexpr size_t MaximumIdLength = 64;
 
         constexpr char ProductInstanceIdPrefix[] = "SF2SYNTH-";
 
@@ -50,27 +34,68 @@ namespace midisoundmodule
             return std::wstring{ localAppData.get() } + L"\\" + FolderName;
         }
 
-        bool ReadAllText(_In_ std::wstring const& path, _Out_ std::string& contents) noexcept
+        enum class ReadOutcome
+        {
+            Read,
+            Missing,
+            TooLarge,
+            Failed,
+        };
+
+        ReadOutcome ReadAllText(_In_ std::wstring const& path, _Out_ std::string& contents, _Out_ uint32_t& error) noexcept
         {
             contents.clear();
+            error = ERROR_SUCCESS;
 
             try
             {
-                wil::unique_hfile file{ ::CreateFileW(
-                    path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr) };
+                wil::unique_hfile file{};
 
-                if (!file || ::GetFileType(file.get()) != FILE_TYPE_DISK)
+                // Something else may hold the file for a moment, such as a virus scanner, and a few
+                // tries ride that out rather than refusing to start.
+                for (uint32_t attempt = 1; ; attempt++)
                 {
-                    return false;
+                    file.reset(::CreateFileW(
+                        path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+
+                    if (file)
+                    {
+                        break;
+                    }
+
+                    error = ::GetLastError();
+
+                    if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND)
+                    {
+                        return ReadOutcome::Missing;
+                    }
+
+                    if ((error != ERROR_SHARING_VIOLATION && error != ERROR_LOCK_VIOLATION) || attempt == 10)
+                    {
+                        return ReadOutcome::Failed;
+                    }
+
+                    ::Sleep(100);
+                }
+
+                if (::GetFileType(file.get()) != FILE_TYPE_DISK)
+                {
+                    error = ERROR_BAD_FILE_TYPE;
+                    return ReadOutcome::Failed;
                 }
 
                 LARGE_INTEGER size{};
 
-                if (!::GetFileSizeEx(file.get(), &size) || size.QuadPart < 0 ||
-                    static_cast<uint64_t>(size.QuadPart) > MaximumFileBytes)
+                if (!::GetFileSizeEx(file.get(), &size) || size.QuadPart < 0)
                 {
-                    return false;
+                    error = ::GetLastError();
+                    return ReadOutcome::Failed;
+                }
+
+                if (static_cast<uint64_t>(size.QuadPart) > MaximumFileBytes)
+                {
+                    return ReadOutcome::TooLarge;
                 }
 
                 contents.resize(static_cast<size_t>(size.QuadPart));
@@ -80,8 +105,9 @@ namespace midisoundmodule
                 if (!contents.empty() &&
                     !::ReadFile(file.get(), contents.data(), static_cast<DWORD>(contents.size()), &read, nullptr))
                 {
+                    error = ::GetLastError();
                     contents.clear();
-                    return false;
+                    return ReadOutcome::Failed;
                 }
 
                 contents.resize(read);
@@ -94,12 +120,13 @@ namespace midisoundmodule
                     contents.erase(0, 3);
                 }
 
-                return true;
+                return ReadOutcome::Read;
             }
             catch (...)
             {
                 contents.clear();
-                return false;
+                error = ERROR_OUTOFMEMORY;
+                return ReadOutcome::Failed;
             }
         }
 
@@ -141,133 +168,6 @@ namespace midisoundmodule
             }
         }
 
-        std::wstring Utf8ToWide(_In_ std::string const& text)
-        {
-            if (text.empty())
-            {
-                return {};
-            }
-
-            auto const required = ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
-
-            if (required <= 0)
-            {
-                return {};
-            }
-
-            std::wstring result(static_cast<size_t>(required), L'\0');
-
-            ::MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), required);
-
-            return result;
-        }
-
-        std::wstring ReadString(_In_ json::JsonObject const& parent, _In_ std::wstring_view key, _In_ size_t maximumLength)
-        {
-            if (!parent.HasKey(key))
-            {
-                return {};
-            }
-
-            auto const value = parent.GetNamedValue(key);
-
-            if (value == nullptr || value.ValueType() != json::JsonValueType::String)
-            {
-                return {};
-            }
-
-            std::wstring text{ value.GetString() };
-
-            if (text.size() > maximumLength)
-            {
-                return {};
-            }
-
-            return text;
-        }
-
-        double ReadNumber(_In_ json::JsonObject const& parent, _In_ std::wstring_view key, _In_ double fallback)
-        {
-            if (!parent.HasKey(key))
-            {
-                return fallback;
-            }
-
-            auto const value = parent.GetNamedValue(key);
-
-            if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
-            {
-                return fallback;
-            }
-
-            auto const number = value.GetNumber();
-
-            return std::isfinite(number) ? number : fallback;
-        }
-
-        bool ReadBoolean(_In_ json::JsonObject const& parent, _In_ std::wstring_view key, _In_ bool fallback)
-        {
-            if (!parent.HasKey(key))
-            {
-                return fallback;
-            }
-
-            auto const value = parent.GetNamedValue(key);
-
-            if (value == nullptr || value.ValueType() != json::JsonValueType::Boolean)
-            {
-                return fallback;
-            }
-
-            return value.GetBoolean();
-        }
-
-        bool IsValidId(_In_ std::wstring const& id) noexcept
-        {
-            if (id.empty() || id.size() > MaximumIdLength)
-            {
-                return false;
-            }
-
-            return std::all_of(id.begin(), id.end(), [](wchar_t ch)
-                {
-                    return (ch >= L'0' && ch <= L'9') || (ch >= L'a' && ch <= L'f') || (ch >= L'A' && ch <= L'F') ||
-                        ch == L'-' || ch == L'{' || ch == L'}';
-                });
-        }
-
-        // M2-104-UM: printable ASCII, and no longer than the stream notification can carry.
-        bool IsValidProductInstanceId(_In_ std::wstring const& id) noexcept
-        {
-            if (id.empty() || id.size() > SoundFontSynth::SynthEndpointShape::MaximumProductInstanceIdBytes)
-            {
-                return false;
-            }
-
-            return std::all_of(id.begin(), id.end(), [](wchar_t ch) { return ch >= 0x20 && ch <= 0x7E; });
-        }
-
-        std::wstring CleanName(_In_ std::wstring name)
-        {
-            std::erase_if(name, [](wchar_t ch) { return ch < L' ' || ch == 0x7F; });
-
-            auto const first = name.find_first_not_of(L' ');
-
-            if (first == std::wstring::npos)
-            {
-                return {};
-            }
-
-            name.erase(0, first);
-            name.erase(name.find_last_not_of(L' ') + 1);
-
-            if (name.size() > SynthStore::MaximumNameLength)
-            {
-                name.resize(SynthStore::MaximumNameLength);
-            }
-
-            return name;
-        }
     }
 
     std::wstring SynthStore::FilePath() noexcept
@@ -303,109 +203,71 @@ namespace midisoundmodule
         return std::string{ ProductInstanceIdPrefix } + suffix;
     }
 
-    std::vector<SynthDefinition> SynthStore::Load() noexcept
+    SynthList SynthStore::Load() noexcept
     {
-        std::vector<SynthDefinition> synths;
+        SynthList list{};
 
         try
         {
             auto const path = FilePath();
 
+            // With nowhere to keep a list there is none, and nothing to lose by starting empty.
+            if (path.empty())
+            {
+                return list;
+            }
+
             std::string text;
+            uint32_t error{ ERROR_SUCCESS };
 
-            if (path.empty() || !ReadAllText(path, text) || text.empty())
+            switch (ReadAllText(path, text, error))
             {
-                return synths;
+            case ReadOutcome::Missing:
+                return list;
+
+            case ReadOutcome::TooLarge:
+                list.Problem = SynthListProblem::TooLarge;
+                break;
+
+            case ReadOutcome::Failed:
+                list.Problem = SynthListProblem::CannotOpen;
+                list.SystemError = error;
+                break;
+
+            case ReadOutcome::Read:
+            default:
+                // An empty file holds no synths.
+                if (!text.empty())
+                {
+                    list = ParseSynthList(text);
+                }
+                break;
             }
 
-            json::JsonObject root{ nullptr };
-
-            if (!json::JsonObject::TryParse(Utf8ToWide(text), root) || root == nullptr || !root.HasKey(KeySynths))
+            if (list.Problem != SynthListProblem::None)
             {
-                MIDI_SF2SYNTH_LOG_WARNING(L"The synth list could not be read. Starting with none.");
-                return synths;
+                MIDI_SF2SYNTH_LOG_WARNING(L"The synth list could not be read. It is left as it is.");
+                return list;
             }
 
-            auto const list = root.GetNamedValue(KeySynths);
-
-            if (list == nullptr || list.ValueType() != json::JsonValueType::Array)
+            for (auto& synth : list.Synths)
             {
-                return synths;
-            }
-
-            for (auto const& entry : list.GetArray())
-            {
-                if (synths.size() >= MaximumSynths)
+                if (synth.ProductInstanceId.empty())
                 {
-                    break;
+                    synth.ProductInstanceId = NewProductInstanceId();
                 }
-
-                if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
-                {
-                    continue;
-                }
-
-                auto const item = entry.GetObject();
-
-                SynthDefinition definition{};
-
-                definition.Id = ReadString(item, KeyId, MaximumIdLength);
-                definition.SoundFontPath = ReadString(item, KeySoundFont, MaximumPathLength);
-
-                if (!IsValidId(definition.Id) || definition.SoundFontPath.empty() || ::PathIsRelativeW(definition.SoundFontPath.c_str()))
-                {
-                    continue;
-                }
-
-                auto const duplicateId = std::any_of(synths.begin(), synths.end(),
-                    [&definition](SynthDefinition const& other) { return other.Id == definition.Id; });
-
-                if (duplicateId)
-                {
-                    continue;
-                }
-
-                definition.Name = CleanName(ReadString(item, KeyName, 1024));
-
-                if (definition.Name.empty())
-                {
-                    definition.Name = CleanName(std::wstring{ ::PathFindFileNameW(definition.SoundFontPath.c_str()) });
-                }
-
-                auto const productInstanceId = ReadString(item, KeyProductInstanceId, 64);
-
-                if (IsValidProductInstanceId(productInstanceId))
-                {
-                    // Checked above to be printable ASCII, so each character fits a byte.
-                    for (auto const character : productInstanceId)
-                    {
-                        definition.ProductInstanceId.push_back(static_cast<char>(character));
-                    }
-                }
-
-                // Two synths with one identity would be one endpoint, so a copied entry gets its own.
-                auto const duplicateIdentity = definition.ProductInstanceId.empty() ||
-                    std::any_of(synths.begin(), synths.end(),
-                        [&definition](SynthDefinition const& other) { return other.ProductInstanceId == definition.ProductInstanceId; });
-
-                if (duplicateIdentity)
-                {
-                    definition.ProductInstanceId = NewProductInstanceId();
-                }
-
-                definition.VolumeDb = (std::clamp)(
-                    ReadNumber(item, KeyVolumeDb, 0.0),
-                    SoundFontSynth::Synthesizer::MinimumUserVolumeDb,
-                    SoundFontSynth::Synthesizer::MaximumUserVolumeDb);
-
-                definition.Enabled = ReadBoolean(item, KeyEnabled, true);
-
-                synths.push_back(std::move(definition));
             }
         }
-        MIDI_SF2SYNTH_CATCH_AND_LOG(L"Unable to load the synth list.")
+        catch (...)
+        {
+            MIDI_SF2SYNTH_LOG_GENERAL_EXCEPTION(L"Unable to load the synth list.");
 
-        return synths;
+            list = SynthList{};
+            list.Problem = SynthListProblem::CannotOpen;
+            list.SystemError = ERROR_OUTOFMEMORY;
+        }
+
+        return list;
     }
 
     _Use_decl_annotations_
@@ -428,8 +290,8 @@ namespace midisoundmodule
             }
 
             json::JsonObject root{};
-            root.SetNamedValue(KeyComment, json::JsonValue::CreateStringValue(FileComment));
-            root.SetNamedValue(KeyVersion, json::JsonValue::CreateNumberValue(FileVersion));
+            root.SetNamedValue(SynthListKeys::Comment, json::JsonValue::CreateStringValue(FileComment));
+            root.SetNamedValue(SynthListKeys::Version, json::JsonValue::CreateNumberValue(SynthListFileVersion));
 
             json::JsonArray list{};
 
@@ -437,17 +299,17 @@ namespace midisoundmodule
             {
                 json::JsonObject item{};
 
-                item.SetNamedValue(KeyId, json::JsonValue::CreateStringValue(synth.Id));
-                item.SetNamedValue(KeyName, json::JsonValue::CreateStringValue(synth.Name));
-                item.SetNamedValue(KeySoundFont, json::JsonValue::CreateStringValue(synth.SoundFontPath));
-                item.SetNamedValue(KeyProductInstanceId, json::JsonValue::CreateStringValue(winrt::to_hstring(synth.ProductInstanceId)));
-                item.SetNamedValue(KeyVolumeDb, json::JsonValue::CreateNumberValue(synth.VolumeDb));
-                item.SetNamedValue(KeyEnabled, json::JsonValue::CreateBooleanValue(synth.Enabled));
+                item.SetNamedValue(SynthListKeys::Id, json::JsonValue::CreateStringValue(synth.Id));
+                item.SetNamedValue(SynthListKeys::Name, json::JsonValue::CreateStringValue(synth.Name));
+                item.SetNamedValue(SynthListKeys::SoundFont, json::JsonValue::CreateStringValue(synth.SoundFontPath));
+                item.SetNamedValue(SynthListKeys::ProductInstanceId, json::JsonValue::CreateStringValue(winrt::to_hstring(synth.ProductInstanceId)));
+                item.SetNamedValue(SynthListKeys::VolumeDb, json::JsonValue::CreateNumberValue(synth.VolumeDb));
+                item.SetNamedValue(SynthListKeys::Enabled, json::JsonValue::CreateBooleanValue(synth.Enabled));
 
                 list.Append(item);
             }
 
-            root.SetNamedValue(KeySynths, list);
+            root.SetNamedValue(SynthListKeys::Synths, list);
 
             return WriteAllText(folder + L"\\" + FileName, winrt::to_string(root.Stringify()));
         }

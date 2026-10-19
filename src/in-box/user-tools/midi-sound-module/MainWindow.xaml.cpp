@@ -15,6 +15,7 @@
 #include "AppearanceFlyout.h"
 #include "FileDialogs.h"
 #include "LiveRegion.h"
+#include "PopupBackdrop.h"
 #include "PreviewBuild.h"
 #include "SingleInstance.h"
 #include "StartupRegistration.h"
@@ -179,7 +180,7 @@ namespace winrt::midisoundmodule::implementation
             m_items = winrt::single_threaded_observable_vector<winrt::midisoundmodule::SynthItem>();
             SynthRepeater().ItemsSource(m_items);
 
-            m_definitions = native::SynthStore::Load();
+            m_definitions = winrt::midisoundmodule::implementation::App::TakeStartupSynths();
 
             for (auto const& definition : m_definitions)
             {
@@ -261,6 +262,9 @@ namespace winrt::midisoundmodule::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
+
+            // Lists and other pop-ups take on the context menus' tinted look, so they match the window.
+            midiapp::UseMenuBackdropForLists();
 
             // Now there is a window, a second launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
@@ -918,9 +922,17 @@ namespace winrt::midisoundmodule::implementation
 
             auto& host = native::SynthHost::Current();
 
+            // Rebuilt from each snapshot rather than merged into, and only for synths still in the
+            // list. A synth just removed can still be in a snapshot taken before the host let it
+            // go, and a merged copy would linger and keep asking for confirmation on exit.
+            m_statuses.clear();
+
             for (auto& status : host.Snapshot())
             {
-                m_statuses[status.Id] = std::move(status);
+                if (FindDefinition(status.Id) != nullptr)
+                {
+                    m_statuses[status.Id] = std::move(status);
+                }
             }
 
             bool anyRunning{ false };

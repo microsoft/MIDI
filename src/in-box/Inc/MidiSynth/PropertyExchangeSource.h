@@ -30,9 +30,12 @@ namespace MidiSynth
     constexpr char const* MelodicProgramListResourceId = "melodic";
     constexpr char const* DrumKitProgramListResourceId = "drums";
 
-    // Every channel answers the same controllers, drum channels included, so one ChCtrlList serves
-    // all sixteen.
+    // The controllers a channel responds to, linked from each ChannelList entry. A channel playing
+    // a drum kit ignores modulation, pitch bend, the damper pedal, pitch bend sensitivity and fine
+    // and coarse tuning, as General MIDI 2 recommends, so it links to a list without them.
+    // M2-117-UM's own example links channel 10 to a list of its own.
     constexpr char const* ControllerListResourceId = "channel";
+    constexpr char const* DrumControllerListResourceId = "drums";
 
     // Text a customer reads in these resources, localized by the host. Patch names and other GM or GS names are never translated.
     struct PropertyExchangeText
@@ -60,6 +63,8 @@ namespace MidiSynth
         std::string ChorusSend{ "Chorus Send" };
         std::string NotePitchBend{ "Note Pitch Bend" };
         std::string PitchBendSensitivity{ "Pitch Bend Sensitivity" };
+        std::string FineTuning{ "Fine Tuning" };
+        std::string CoarseTuning{ "Coarse Tuning" };
         std::string NoteVolume{ "Note Volume" };
         std::string NotePan{ "Note Pan" };
         std::string NotePitch{ "Note Pitch" };
@@ -99,12 +104,23 @@ namespace MidiSynth
         }
 
         // The controllers a channel responds to, M2-117-UM ChCtrlList. Like ProgramList it needs a
-        // resource id by its specification, and like ProgramList a request without one is answered.
+        // resource id by its specification, and like ProgramList a request without one is
+        // answered, with the melodic list.
         const std::vector<char>& ControllerListJson() const noexcept { return m_controllerListJson; }
+        const std::vector<char>& DrumControllerListJson() const noexcept { return m_drumControllerListJson; }
+
+        const std::vector<char>& ControllerListJson(_In_ const std::string& resourceId) const noexcept
+        {
+            return (resourceId == DrumControllerListResourceId)
+                ? m_drumControllerListJson
+                : m_controllerListJson;
+        }
 
         static bool IsKnownControllerListResourceId(_In_ const std::string& resourceId) noexcept
         {
-            return resourceId.empty() || resourceId == ControllerListResourceId;
+            return resourceId.empty()
+                || resourceId == ControllerListResourceId
+                || resourceId == DrumControllerListResourceId;
         }
 
         // Reflects what is selected right now, which is why it is rebuilt per request and why it
@@ -188,7 +204,7 @@ namespace MidiSynth
             _In_ uint32_t sourceMuid,
             _In_ const UmpDispatcher::PendingPropertyRequest& request,
             _In_ uint16_t status,
-            _In_z_ const char* subscribeId) noexcept;
+            _In_opt_z_ const char* subscribeId) noexcept;
 
         // Asking for something we do not have is answered, not ignored. An initiator that gets
         // silence waits out a timeout and may give up on the device entirely.
@@ -215,7 +231,10 @@ namespace MidiSynth
             uint8_t BankMsb{ 0 };
             uint8_t BankLsb{ 0 };
             uint8_t Program{ 0 };
-            bool IsDrumChannel{ false };
+            bool PlaysDrumKit{ false };
+
+            // A System On can change what the same bank select plays, and so the name.
+            uint8_t VariationBank{ 0 };
         };
 
         std::vector<char> m_resourceListJson;
@@ -223,6 +242,7 @@ namespace MidiSynth
         std::vector<char> m_melodicProgramListJson;
         std::vector<char> m_drumKitProgramListJson;
         std::vector<char> m_controllerListJson;
+        std::vector<char> m_drumControllerListJson;
         std::vector<char> m_channelListJson;
         PropertyExchangeText m_text{};
 

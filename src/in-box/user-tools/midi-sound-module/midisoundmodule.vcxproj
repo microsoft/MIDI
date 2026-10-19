@@ -136,6 +136,8 @@
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="SynthHost.h" />
     <ClInclude Include="SynthItem.h" />
+    <ClInclude Include="SynthList.h" />
+    <ClInclude Include="SynthListProblemDialog.h" />
     <ClInclude Include="SynthStore.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="TrayIcon.h" />
@@ -147,6 +149,7 @@
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
@@ -167,6 +170,7 @@
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="SynthHost.cpp" />
     <ClCompile Include="SynthItem.cpp" />
+    <ClCompile Include="SynthListProblemDialog.cpp" />
     <ClCompile Include="SynthStore.cpp" />
     <ClCompile Include="TrayIcon.cpp" />
     <ClCompile Include="App.xaml.cpp">
@@ -184,6 +188,10 @@
     <!-- Parses Property Exchange headers with Windows.Data.Json, so it is kept out of the engine
          library and compiled here, the same file the tests compile. -->
     <ClCompile Include="engine\SynthPropertyRequests.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- Reads the synth list's JSON. The tests compile the same file. -->
+    <ClCompile Include="SynthList.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />

@@ -28,7 +28,7 @@ namespace
         std::vector<std::pair<uint32_t, uint32_t>> ChannelVoice;
         std::string Order;
 
-        void SendSysEx(uint8_t const* payload, size_t count) noexcept override
+        void SendSysEx(_In_reads_(count) uint8_t const* payload, _In_ size_t count) noexcept override
         {
             try
             {
@@ -40,7 +40,7 @@ namespace
             }
         }
 
-        void SendWords(uint32_t const* words, size_t count) noexcept override
+        void SendWords(_In_reads_(count) uint32_t const* words, _In_ size_t count) noexcept override
         {
             try
             {
@@ -147,7 +147,7 @@ namespace
         return std::make_unique<SynthCore>(font, SynthIdentity{}, ProductInstanceId, MakeText());
     }
 
-    void QueueSysEx(SynthCore& core, std::vector<uint8_t> const& payload)
+    void QueueSysEx(_Inout_ SynthCore& core, _In_ std::vector<uint8_t> const& payload)
     {
         std::vector<uint32_t> words(SysEx7WordCount(payload.size()));
 
@@ -159,7 +159,7 @@ namespace
     }
 
     // Runs the worker side as the app does, until nothing more comes out.
-    void Pump(SynthCore& core, CaptureSink& sink)
+    void Pump(_Inout_ SynthCore& core, _Inout_ CaptureSink& sink)
     {
         core.PumpWithoutAudio(false);
 
@@ -178,13 +178,13 @@ namespace
         }
     }
 
-    std::vector<uint8_t> Bytes(size_t count, uint8_t const* buffer)
+    std::vector<uint8_t> Bytes(_In_ size_t count, _In_reads_(count) uint8_t const* buffer)
     {
         return std::vector<uint8_t>(buffer, buffer + count);
     }
 
     // Finds the first message of a type and parses it.
-    bool FindMessage(CaptureSink const& sink, ci::MessageType type, ci::ParsedMessage& parsed, std::vector<uint8_t>* raw = nullptr)
+    _Success_(return) bool FindMessage(_In_ CaptureSink const& sink, _In_ ci::MessageType type, _Out_ ci::ParsedMessage& parsed, _Out_opt_ std::vector<uint8_t>* raw = nullptr)
     {
         for (auto const& message : sink.Messages)
         {
@@ -202,7 +202,7 @@ namespace
         return false;
     }
 
-    uint32_t Discover(SynthCore& core, CaptureSink& sink)
+    uint32_t Discover(_Inout_ SynthCore& core, _Inout_ CaptureSink& sink)
     {
         ci::DiscoveryReplyFields discovery{};
         discovery.SourceMuid = InitiatorMuid;
@@ -237,7 +237,7 @@ namespace
     };
 
     // Reassembles a chunked Property Exchange reply.
-    bool CollectReply(CaptureSink const& sink, ci::MessageType type, uint8_t requestId, PropertyReply& reply)
+    bool CollectReply(_In_ CaptureSink const& sink, _In_ ci::MessageType type, _In_ uint8_t requestId, _Out_ PropertyReply& reply)
     {
         reply = {};
 
@@ -272,7 +272,7 @@ namespace
         return false;
     }
 
-    PropertyReply Get(SynthCore& core, uint32_t synthMuid, uint8_t requestId, std::string const& header)
+    PropertyReply Get(_Inout_ SynthCore& core, _In_ uint32_t synthMuid, _In_ uint8_t requestId, _In_ std::string const& header)
     {
         CaptureSink sink;
 
@@ -300,13 +300,13 @@ namespace
         return reply;
     }
 
-    bool Contains(std::string const& text, std::string_view what)
+    bool Contains(_In_ std::string const& text, _In_ std::string_view what)
     {
         return text.find(what) != std::string::npos;
     }
 
     // Sends Inquiry: MIDI Message Report and collects everything that comes back.
-    void RequestMessageReport(SynthCore& core, uint32_t synthMuid, uint8_t deviceId, uint8_t dataControl, uint8_t channelControllers, CaptureSink& sink)
+    void RequestMessageReport(_Inout_ SynthCore& core, _In_ uint32_t synthMuid, _In_ uint8_t deviceId, _In_ uint8_t dataControl, _In_ uint8_t channelControllers, _Inout_ CaptureSink& sink)
     {
         ci::MidiMessageReportFields fields{};
         fields.MessageDataControl = dataControl;
@@ -322,7 +322,7 @@ namespace
     }
 
     // Data entry for a registered parameter, the way a MIDI 1.0 sender does it.
-    void SetRegisteredParameter(Synthesizer& engine, uint8_t channel, uint8_t index, uint8_t msb, uint8_t lsb)
+    void SetRegisteredParameter(_Inout_ Synthesizer& engine, _In_ uint8_t channel, _In_ uint8_t index, _In_ uint8_t msb, _In_ uint8_t lsb)
     {
         engine.ControlChange(channel, 101, 0);
         engine.ControlChange(channel, 100, index);
@@ -330,7 +330,7 @@ namespace
         engine.ControlChange(channel, 38, lsb);
     }
 
-    void VerifyChannelVoice(CaptureSink const& sink, std::pair<uint32_t, uint32_t> const* expected, size_t count)
+    void VerifyChannelVoice(_In_ CaptureSink const& sink, _In_reads_(count) std::pair<uint32_t, uint32_t> const* expected, _In_ size_t count)
     {
         for (auto const& message : sink.ChannelVoice)
         {
@@ -346,7 +346,7 @@ namespace
         }
     }
 
-    void VerifyReportFrame(CaptureSink const& sink, uint32_t synthMuid, uint8_t deviceId, uint8_t channelControllers)
+    void VerifyReportFrame(_In_ CaptureSink const& sink, _In_ uint32_t synthMuid, _In_ uint8_t deviceId, _In_ uint8_t channelControllers)
     {
         VERIFY_IS_TRUE(sink.Messages.size() >= 2);
 
@@ -594,8 +594,10 @@ public:
         VERIFY_IS_TRUE(Contains(reply.Data, "\"resId\":\"drums\""));
         VERIFY_IS_TRUE(Contains(reply.Data, "Test Drum Kits"));
 
-        // Every channel also links to the controllers it answers.
+        // Every channel also links to the controllers it answers. Channel 10 plays a kit, which
+        // ignores channel tuning, so its list is a different one.
         VERIFY_IS_TRUE(Contains(reply.Data, "\"resource\":\"ChCtrlList\",\"resId\":\"channel\",\"title\":\"Test Controllers\""));
+        VERIFY_IS_TRUE(Contains(reply.Data, "\"resource\":\"ChCtrlList\",\"resId\":\"drums\",\"title\":\"Test Controllers\""));
         VERIFY_IS_FALSE(Contains(reply.Header, "cacheTime"));
     }
 
@@ -695,12 +697,43 @@ public:
         VERIFY_IS_FALSE(Contains(reply.Data, "\"ctrlIndex\":[0]"));
         VERIFY_IS_FALSE(Contains(reply.Data, "\"ctrlIndex\":[101]"));
 
-        // Without a resId the list is the same. Any other resId names nothing.
+        // Without a resId the list is the same.
         auto const bare = Get(*core, synthMuid, 11, R"({"resource":"ChCtrlList"})");
         VERIFY_IS_TRUE(Contains(bare.Header, "\"status\":200"));
         VERIFY_ARE_EQUAL(reply.Data, bare.Data);
 
-        auto const unknown = Get(*core, synthMuid, 12, R"({"resource":"ChCtrlList","resId":"drums"})");
+        // A drum kit ignores modulation, the damper and sostenuto pedals, pitch bend, channel
+        // pressure, pitch bend sensitivity and fine and coarse tuning, as General MIDI 2 recommends,
+        // so the list drum channels link to is the same one without those eight.
+        auto const drums = Get(*core, synthMuid, 12, R"({"resource":"ChCtrlList","resId":"drums"})");
+        VERIFY_IS_TRUE(Contains(drums.Header, "\"status\":200"));
+        VERIFY_IS_TRUE(Contains(reply.Data, "\"ctrlIndex\":[0,1]"));
+        VERIFY_IS_TRUE(Contains(reply.Data, "\"ctrlIndex\":[0,2]"));
+        VERIFY_IS_FALSE(Contains(drums.Data, "\"ctrlType\":\"rpn\""));
+        VERIFY_IS_FALSE(Contains(drums.Data, "\"ctrlType\":\"pBend\""));
+        VERIFY_IS_FALSE(Contains(drums.Data, "\"ctrlType\":\"chPress\""));
+        VERIFY_IS_FALSE(Contains(drums.Data, "\"ctrlIndex\":[1],"));
+        VERIFY_IS_FALSE(Contains(drums.Data, "\"ctrlIndex\":[64],"));
+        VERIFY_IS_FALSE(Contains(drums.Data, "\"ctrlIndex\":[66],"));
+        VERIFY_IS_TRUE(Contains(drums.Data, "{\"title\":\"Test Volume\""));
+        VERIFY_IS_TRUE(Contains(drums.Data, "\"ctrlType\":\"pnp\""));
+
+        auto const entryCount = [](std::string const& data)
+        {
+            size_t found{ 0 };
+
+            for (auto at = data.find("{\"title\":"); at != std::string::npos; at = data.find("{\"title\":", at + 1))
+            {
+                found++;
+            }
+
+            return found;
+        };
+
+        VERIFY_ARE_EQUAL(entryCount(reply.Data) - 8, entryCount(drums.Data));
+
+        // Any other resId names nothing.
+        auto const unknown = Get(*core, synthMuid, 13, R"({"resource":"ChCtrlList","resId":"ch1"})");
         VERIFY_IS_TRUE(Contains(unknown.Header, "404"));
     }
 

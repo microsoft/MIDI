@@ -178,14 +178,15 @@ namespace SoundFontSynth
         // is replaced wholesale.
         m_heldCores.clear();
 
+        // Before Start: from then on the audio thread owns it.
+        m_limiterGain = 1.0f;
+
         if (!UpdateRenderList(cores) || !m_output.Start(this))
         {
             m_output.Close();
             m_lastOpenStatus = AudioOutputStatus::Failed;
             return false;
         }
-
-        m_limiterGain = 1.0f;
 
         return true;
     }

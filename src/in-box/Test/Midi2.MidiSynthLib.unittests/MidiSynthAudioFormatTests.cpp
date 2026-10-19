@@ -12,7 +12,7 @@ using namespace MidiSynth;
 
 namespace
 {
-    WAVEFORMATEX PlainFormat(WORD tag, uint16_t channels, uint16_t bits)
+    WAVEFORMATEX PlainFormat(_In_ WORD tag, _In_ uint16_t channels, _In_ uint16_t bits)
     {
         WAVEFORMATEX format{};
         format.wFormatTag = tag;

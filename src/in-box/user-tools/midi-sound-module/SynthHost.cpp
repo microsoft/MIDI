@@ -618,6 +618,12 @@ namespace midisoundmodule
                 {
                     StopInstance(id);
                     RemoveStatus(id);
+
+                    {
+                        std::lock_guard<std::mutex> guard(m_runningLock);
+                        m_requestedVolume.erase(id);
+                    }
+
                     RaiseChanged();
                 });
         }
@@ -630,6 +636,8 @@ namespace midisoundmodule
         try
         {
             std::lock_guard<std::mutex> guard(m_runningLock);
+
+            m_requestedVolume[id] = decibels;
 
             for (auto const& instance : m_running)
             {
@@ -978,6 +986,13 @@ namespace midisoundmodule
 
             {
                 std::lock_guard<std::mutex> guard(m_runningLock);
+
+                // The slider may have moved while the bank was loading.
+                if (auto const requested = m_requestedVolume.find(id); requested != m_requestedVolume.end())
+                {
+                    instance->Core->SetUserVolumeDb(requested->second);
+                }
+
                 m_running.push_back(instance);
             }
 
@@ -1078,7 +1093,9 @@ namespace midisoundmodule
             }
             MIDI_SF2SYNTH_CATCH_AND_LOG(L"Unable to disconnect the synth's endpoint.")
 
-            instance->Wire.reset();
+            // The wire is left to the instance. If the worker overran the wait above it still
+            // holds the instance and may be sending a reply through it, and the instance frees
+            // the wire only once the worker lets go.
             instance->Connection = nullptr;
             instance->Device = nullptr;
 

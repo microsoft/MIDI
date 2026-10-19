@@ -156,6 +156,10 @@ void MidiSynthDevice::WholeMessageUmpOutput::SendUmp(const uint32_t* words, uint
 HRESULT
 MidiSynthDevice::EnsureSoundSetLoaded()
 {
+    // Held for the whole load: a second caller must neither parse alongside the first nor load
+    // again into a collection the engine already plays from.
+    auto soundSetLock = m_soundSetLock.lock();
+
     if (m_soundSetLoaded)
     {
         return S_OK;
@@ -208,6 +212,8 @@ MidiSynthDevice::EnsureSoundSetLoaded()
         { &text.ChorusSend, IDS_CONTROLLER_CHORUS_SEND },
         { &text.NotePitchBend, IDS_CONTROLLER_NOTE_PITCH_BEND },
         { &text.PitchBendSensitivity, IDS_CONTROLLER_PITCH_BEND_SENSITIVITY },
+        { &text.FineTuning, IDS_CONTROLLER_FINE_TUNING },
+        { &text.CoarseTuning, IDS_CONTROLLER_COARSE_TUNING },
         { &text.NoteVolume, IDS_CONTROLLER_NOTE_VOLUME },
         { &text.NotePan, IDS_CONTROLLER_NOTE_PAN },
         { &text.NotePitch, IDS_CONTROLLER_NOTE_PITCH },
@@ -252,8 +258,14 @@ MidiSynthDevice::PrimeDispatcher() noexcept
 
     // What the endpoint answers UMP Stream discovery with. The name is the same resource string the
     // endpoint was created from, so the in-protocol name and the transport supplied name agree.
-    auto const discoveryName = internal::Utf8FromWString(
-        internal::ResourceGetWString(IDS_ENDPOINT_NAME));
+    // Loading it allocates, and nothing may leave this function.
+    std::string discoveryName{};
+
+    try
+    {
+        discoveryName = internal::Utf8FromWString(internal::ResourceGetWString(IDS_ENDPOINT_NAME));
+    }
+    CATCH_LOG();
 
     m_dispatcher.SetEndpointIdentity(discoveryName.c_str(), MIDI_SYNTH_ENDPOINT_UNIQUE_ID_UTF8);
 }
@@ -261,16 +273,21 @@ MidiSynthDevice::PrimeDispatcher() noexcept
 
 // Caller must hold m_audioLock exclusively, and must have checked that there is no sink, because
 // the render thread owns the inbound queue whenever there is one.
+_Use_decl_annotations_
 void
-MidiSynthDevice::PumpWithoutAudio() noexcept
+MidiSynthDevice::PumpWithoutAudio(bool discardNotes) noexcept
 {
-    QueuedUmp message{};
-
-    // Stops as soon as a channel voice message has been seen, so the note that starts the audio
-    // device is still in the queue for the render thread rather than being played to nothing.
-    while (!m_audioWanted.load(std::memory_order_acquire) && m_inbound.TryPop(message))
+    if (DispatchWithoutAudio(m_inbound, m_dispatcher, discardNotes) != WithoutAudioResult::NeedsAudio)
     {
-        m_dispatcher.ProcessWords(message.Words, message.WordCount);
+        return;
+    }
+
+    // Normally set already, because SendMessage flags a channel voice message before queuing it.
+    // Letting the device go clears the flag, though, and a note that arrives just as that is
+    // decided would otherwise wait in the queue, unheard, until another one came along.
+    if (!m_audioWanted.exchange(true, std::memory_order_acq_rel))
+    {
+        m_audioRequestedTimestamp.store(internal::GetCurrentMidiTimestamp(), std::memory_order_release);
     }
 }
 
@@ -346,10 +363,10 @@ MidiSynthDevice::AcquireAudio()
     config.BankSelect = settings.BankSelect;
     config.EnableEffects = settings.EffectsEnabled && config.EnableEffects;
 
-    // The audio device now comes and goes underneath a connection, and initializing the engine
-    // clears every channel: programs, bank, volume, pan and tuning. A song that sets its
-    // instruments up and then rests longer than the idle timeout would come back playing pianos.
-    // So the engine is only rebuilt when something it was built from actually changed.
+    // The audio device now comes and goes underneath a connection. Initializing the engine keeps
+    // every channel's program, controllers and tuning, and the bank addressing a System On chose,
+    // but it reallocates the voices and effects, so the engine is only rebuilt when something it
+    // was built from actually changed.
     bool const engineMatchesDevice =
         m_engineInitialized &&
         m_engineSynthMode == settings.SynthMode &&
@@ -389,6 +406,11 @@ MidiSynthDevice::AcquireAudio()
         return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE);
     }
 
+    // Kept before anything below can throw. Unwinding destroys the locals in reverse order, which
+    // would free the render source while the audio thread is still rendering from it.
+    m_source = std::move(source);
+    m_sink = std::move(sink);
+
     // Measured from the message that asked for the device, so a trace answers "how long before the
     // first note sounds" without having to correlate two events by hand.
     auto const requestedAt = m_audioRequestedTimestamp.load(std::memory_order_acquire);
@@ -410,17 +432,14 @@ MidiSynthDevice::AcquireAudio()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Audio acquired", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(sink->DeviceName().c_str(), "device"),
-        TraceLoggingUInt32(sink->SampleRate(), "sample rate"),
-        TraceLoggingFloat64(sink->PeriodMilliseconds(), "period ms"),
-        TraceLoggingBool(sink->UsingLowLatencyPath(), "low latency"),
-        TraceLoggingBool(sink->UsingExclusiveMode(), "exclusive"),
+        TraceLoggingWideString(m_sink->DeviceName().c_str(), "device"),
+        TraceLoggingUInt32(m_sink->SampleRate(), "sample rate"),
+        TraceLoggingFloat64(m_sink->PeriodMilliseconds(), "period ms"),
+        TraceLoggingBool(m_sink->UsingLowLatencyPath(), "low latency"),
+        TraceLoggingBool(m_sink->UsingExclusiveMode(), "exclusive"),
         TraceLoggingFloat64(acquireMilliseconds, "ms since requested"),
         TraceLoggingBool(!engineMatchesDevice, "engine rebuilt")
     );
-
-    m_source = std::move(source);
-    m_sink = std::move(sink);
 
     return S_OK;
 }
@@ -436,19 +455,33 @@ MidiSynthDevice::ReleaseAudio() noexcept
     }
 
     // Cutting a ringing voice mid waveform is heard as a click, so everything is faded and the
-    // render thread reports that it has gone quiet before the device is released.
-    for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+    // render thread reports that it has gone quiet before the device is released. The render
+    // thread does the fading itself, because only it may touch the voices while it runs.
+    if (m_source != nullptr)
     {
-        m_engine.AllSoundOff(channel);
+        m_source->RequestSilence();
     }
 
     if (m_source != nullptr && m_drainedEvent)
     {
+        // The render thread signals on every quiet block until it stops, so the event is usually
+        // left set by the previous release. Without this the wait would return at once and cut
+        // the fade short, which is heard as a click.
+        m_drainedEvent.ResetEvent();
+
         m_source->RequestDrain();
         (void)WaitForSingleObject(m_drainedEvent.get(), DrainTimeoutMilliseconds);
     }
 
     m_sink->Stop();
+
+    // The render thread has stopped. Whatever it was asked to do and didn't get to, because the
+    // stream stalled or stopped first, is done here, so the engine ends up as it was told to be.
+    if (m_source != nullptr)
+    {
+        m_source->ApplyRequests();
+    }
+
     m_sink.reset();
     m_source.reset();
 
@@ -465,8 +498,10 @@ MidiSynthDevice::ReleaseAudio() noexcept
 
 _Use_decl_annotations_
 HRESULT
-MidiSynthDevice::ConnectClient(IMidiCallback* callback, LONGLONG context)
+MidiSynthDevice::ConnectClient(IMidiCallback* callback, LONGLONG context, uint64_t& connectionId)
 {
+    connectionId = 0;
+
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
     TraceLoggingWrite(
@@ -477,14 +512,16 @@ MidiSynthDevice::ConnectClient(IMidiCallback* callback, LONGLONG context)
         TraceLoggingPointer(this, "this")
     );
 
+    auto connectionLock = m_connectionLock.lock();
+
     RETURN_IF_FAILED(EnsureSoundSetLoaded());
 
     // Assigning over a joinable std::thread terminates the process, which here would take MIDI
-    // down for the whole machine. The service opens one connection at a time, so this is defense
-    // against a surprise rather than an expected path.
+    // down for the whole machine. The service replaces a connection this way when it opens a new
+    // one while the old one is still held by a client.
     if (m_worker.joinable())
     {
-        RETURN_IF_FAILED(DisconnectClient());
+        RETURN_IF_FAILED(DisconnectCurrentClient());
     }
 
     // A previous connection may have left messages nobody consumed. Starting from empty keeps a
@@ -514,21 +551,64 @@ MidiSynthDevice::ConnectClient(IMidiCallback* callback, LONGLONG context)
     }
 
     m_workerStop.ResetEvent();
-    m_worker = std::thread(&MidiSynthDevice::WorkerThread, this);
+
+    try
+    {
+        m_worker = std::thread(&MidiSynthDevice::WorkerThread, this);
+    }
+    catch (...)
+    {
+        // With no worker, nothing may keep the service's callback.
+        m_callback.reset();
+        m_callbackContext = 0;
+
+        RETURN_CAUGHT_EXCEPTION();
+    }
+
+    connectionId = ++m_connectionId;
 
     return S_OK;
 }
 
 
+_Use_decl_annotations_
 HRESULT
-MidiSynthDevice::DisconnectClient() noexcept
+MidiSynthDevice::DisconnectClient(uint64_t connectionId) noexcept
+{
+    auto connectionLock = m_connectionLock.lock();
+
+    // The service already opened a newer connection, which replaced this one. Ending it here would
+    // leave the endpoint silent until the synthesizer is turned off and on again.
+    if (connectionId != m_connectionId)
+    {
+        TraceLoggingWrite(
+            MidiSynthTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Connection was already replaced. Nothing to end.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(connectionId, "connection"),
+            TraceLoggingUInt64(m_connectionId, "current connection")
+        );
+
+        return S_OK;
+    }
+
+    return DisconnectCurrentClient();
+}
+
+
+HRESULT
+MidiSynthDevice::DisconnectCurrentClient() noexcept
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt64(m_connectionId, "connection")
     );
 
     // The worker is the only thing that touches the callback, so joining it first is what makes
@@ -650,6 +730,10 @@ _Use_decl_annotations_
 HRESULT
 MidiSynthDevice::ApplySettings(MidiSynthSettings const& settings) noexcept
 {
+    // Otherwise a second change could record its settings between this one recording its own and
+    // applying them, and the engine and endpoint would end up following the older of the two.
+    auto settingsChange = m_settingsChangeLock.lock();
+
     bool enabledChanged{ false };
     bool audioShapeChanged{ false };
     bool liveChanged{ false };
@@ -683,22 +767,42 @@ MidiSynthDevice::ApplySettings(MidiSynthSettings const& settings) noexcept
         if (m_engineInitialized)
         {
             m_engine.SetUserVolumeDb(settings.VolumeDecibels);
-            m_engine.SetBankSelectMode(settings.BankSelect);
 
-            m_engineBankSelect = settings.BankSelect;
+            // Re-resolving every channel is done only when the convention really changed. A volume
+            // slider sends a stream of these. While audio runs, the render thread does it, because
+            // only it may change the engine then.
+            if (m_engineBankSelect != settings.BankSelect)
+            {
+                if (m_source != nullptr)
+                {
+                    m_source->RequestBankSelectMode(settings.BankSelect);
+                }
+                else
+                {
+                    m_engine.SetBankSelectMode(settings.BankSelect);
+                }
+
+                m_engineBankSelect = settings.BankSelect;
+            }
         }
     }
 
     if (enabledChanged)
     {
-        // Nothing may be held here. Removing the endpoint makes the service tear the device pipe
-        // down, which comes back in through Bidi::Shutdown to DisconnectClient, and that joins the
-        // worker and takes the audio lock. Holding either across this call would deadlock.
+        // Only the settings change lock may be held here. Removing the endpoint makes the service
+        // tear the device pipe down, which comes back in through Bidi::Shutdown to DisconnectClient,
+        // and that joins the worker and takes the audio lock. Holding the settings or audio lock
+        // across this call would deadlock.
         auto endpointManager = TransportState::Current().GetEndpointManager();
 
         if (endpointManager != nullptr && endpointManager->IsInitialized())
         {
-            LOG_IF_FAILED(endpointManager->SyncEndpointToSettings());
+            // Creating the endpoint allocates and starts a thread, and nothing may leave here.
+            try
+            {
+                LOG_IF_FAILED(endpointManager->SyncEndpointToSettings());
+            }
+            CATCH_LOG();
         }
 
         // Belt and braces. If the endpoint went away without a client attached, or the service did
@@ -727,7 +831,12 @@ MidiSynthDevice::ApplySettings(MidiSynthSettings const& settings) noexcept
         ReleaseAudio();
         m_nextAudioRetryTimestamp = 0;
 
-        LOG_IF_FAILED(AcquireAudio());
+        // Opening a device allocates, and nothing may leave here. The worker retries a failure.
+        try
+        {
+            LOG_IF_FAILED(AcquireAudio());
+        }
+        CATCH_LOG();
     }
 
     return S_OK;
@@ -739,6 +848,13 @@ MidiSynthDevice::Settings() const noexcept
 {
     auto lock = m_settingsLock.lock_shared();
     return m_settings;
+}
+
+
+wil::cs_leave_scope_exit
+MidiSynthDevice::LockSettingsChanges() noexcept
+{
+    return m_settingsChangeLock.lock();
 }
 
 
@@ -762,8 +878,16 @@ MidiSynthDevice::SetDrumChannel(uint8_t channel, bool isDrumChannel) noexcept
     }
 
     // Told to the engine even with no audio device, so a MIDI-CI ChannelList read before anything
-    // has played links the channel to the right program list.
-    m_engine.SetDrumChannel(channel, isDrumChannel);
+    // has played links the channel to the right program list. While audio runs, the render thread
+    // makes the change, because only it may change the engine then.
+    if (m_source != nullptr)
+    {
+        m_source->RequestDrumChannel(channel, isDrumChannel);
+    }
+    else
+    {
+        m_engine.SetDrumChannel(channel, isDrumChannel);
+    }
 
     return S_OK;
 }
@@ -872,7 +996,10 @@ MidiSynthDevice::AddInstrumentListToResponse(json::JsonObject& responseObject)
 HRESULT
 MidiSynthDevice::Shutdown() noexcept
 {
-    RETURN_IF_FAILED(DisconnectClient());
+    // Whatever is connected ends, current or not: the transport itself is going away.
+    auto connectionLock = m_connectionLock.lock();
+
+    RETURN_IF_FAILED(DisconnectCurrentClient());
 
     return S_OK;
 }
@@ -920,19 +1047,33 @@ MidiSynthDevice::WorkerThread() noexcept
             if (m_sink == nullptr)
             {
                 auto const now = internal::GetCurrentMidiTimestamp();
+                auto const frequency = internal::GetMidiTimestampFrequency();
+                bool const wanted = m_audioWanted.load(std::memory_order_acquire);
 
-                if (!m_audioWanted.load(std::memory_order_acquire))
-                {
-                    // Nothing to play. The endpoint still answers discovery, MIDI-CI, identity and
-                    // property exchange from here rather than from the render thread.
-                    PumpWithoutAudio();
-                }
-                else if (now >= m_nextAudioRetryTimestamp && AcquireAudio() != S_OK)
+                if (wanted && now >= m_nextAudioRetryTimestamp && AcquireAudio() != S_OK)
                 {
                     // S_FALSE means the synthesizer is switched off rather than broken. Both back
                     // off, because retrying either one every pass would spin.
-                    m_nextAudioRetryTimestamp = now +
-                        internal::GetMidiTimestampFrequency() * AudioRetryIntervalMilliseconds / 1000;
+                    m_nextAudioRetryTimestamp = now + frequency * AudioRetryIntervalMilliseconds / 1000;
+                }
+
+                if (m_sink == nullptr)
+                {
+                    // Nothing renders, so the endpoint answers discovery, MIDI-CI, identity and
+                    // property exchange from here. When audio is wanted and can't be had, notes are
+                    // dropped, so they neither hold up everything queued behind them nor all sound
+                    // at once when the device comes back.
+                    PumpWithoutAudio(wanted);
+
+                    // Nobody has played anything for a while, so stop asking for a device that can't
+                    // be had. The next note asks again. One arriving just as this is decided is still
+                    // in the queue, and asks again from there.
+                    auto const last = m_lastChannelVoiceTimestamp.load(std::memory_order_acquire);
+
+                    if (wanted && now > last && now - last >= frequency * AudioIdleReleaseMilliseconds / 1000)
+                    {
+                        m_audioWanted.store(false, std::memory_order_release);
+                    }
                 }
             }
             else if (m_audioWanted.load(std::memory_order_acquire))
@@ -1157,6 +1298,7 @@ MidiSynthDevice::ServicePropertyRequestsInner()
 }
 
 
+_Use_decl_annotations_
 void
 MidiSynthDevice::HandleSubscriptionRequest(
     MidiSynth::UmpDispatcher::PendingPropertyRequest const& request)
@@ -1358,7 +1500,7 @@ MidiSynthDevice::ResourceForHeader(
             return ResourceLookup::UnknownResource;
         }
 
-        result.Blob = &m_propertyExchange.ControllerListJson();
+        result.Blob = &m_propertyExchange.ControllerListJson(resourceId);
         return ResourceLookup::Found;
     }
 

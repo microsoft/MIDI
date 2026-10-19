@@ -14,6 +14,7 @@
 namespace winrt::midisoundmodule::implementation
 {
     ::midisoundmodule::CommandLineOptions App::s_startupOptions{};
+    std::vector<::midisoundmodule::SynthDefinition> App::s_startupSynths{};
 
     App::App()
     {
