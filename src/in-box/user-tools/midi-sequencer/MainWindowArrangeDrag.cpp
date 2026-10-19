@@ -756,6 +756,8 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            // A style that draws the rows reads which are selected when it draws them.
+            m_headerPlates.Invalidate();
             UpdateMixerSelection();
         }
         catch (...)
@@ -840,6 +842,7 @@ namespace winrt::midisequencer::implementation
                     }
                 }
 
+                m_headerPlates.Invalidate();
                 StartDragScroll();
             }
 
@@ -1082,6 +1085,8 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            m_headerPlates.Invalidate();
+
             if (!drop || !drag.Active || !drag.Valid || drag.TrackIds.empty())
             {
                 return;
@@ -1218,7 +1223,8 @@ namespace winrt::midisequencer::implementation
 
             m_dragPoint = point;
             m_dragCopy = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Control) == winrt::Windows::System::VirtualKeyModifiers::Control;
-            UpdateClipDrop(m_dragPoint, m_dragCopy);
+            m_dragKeepTrack = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+            UpdateClipDrop(m_dragPoint, m_dragCopy, m_dragKeepTrack);
             args.Handled(true);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to drag a clip.")
@@ -1234,7 +1240,7 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::UpdateClipDrop(foundation::Point inArrange, bool copy) noexcept
+    void MainWindow::UpdateClipDrop(foundation::Point inArrange, bool copy, bool keepTrack) noexcept
     {
         try
         {
@@ -1245,6 +1251,70 @@ namespace winrt::midisequencer::implementation
             view.FromPlacement = m_clipDrag.FromLauncher ? SIZE_MAX : m_clipDrag.FromPlacement;
             view.FromSlot = m_clipDrag.FromLauncher ? m_clipDrag.FromSlot : SIZE_MAX;
             view.Length = m_clipDrag.Length;
+
+            if (keepTrack)
+            {
+                // Where the pointer is across a canvas, from its left edge, when it's over its
+                // columns. Up and down don't matter here.
+                auto const across = [&](canvasXaml::CanvasControl const& canvas) -> std::optional<double>
+                {
+                    if (canvas == nullptr || canvas.ActualWidth() < 1)
+                    {
+                        return std::nullopt;
+                    }
+
+                    auto const origin = canvas.TransformToVisual(ArrangeGrid()).TransformPoint(foundation::Point{ 0, 0 });
+                    auto const x = static_cast<double>(inArrange.X) - static_cast<double>(origin.X);
+
+                    return x >= 0 && x < canvas.ActualWidth() ? std::optional<double>{ x } : std::nullopt;
+                };
+
+                // Shift keeps the clip on the track it came from, wherever the pointer goes up or
+                // down. Left and right still move it along the timeline, between slots, and from
+                // one to the other.
+                if (auto const track = seq::FindTrack(m_doc, m_clipDrag.FromTrackId); track != nullptr && !track->IsFolder)
+                {
+                    auto lane = across(m_scrollLaneCanvas);
+                    auto launcher = across(m_scrollLauncherCanvas);
+
+                    if (!lane.has_value())
+                    {
+                        lane = across(m_pinnedLaneCanvas);
+                    }
+
+                    if (!launcher.has_value())
+                    {
+                        launcher = across(m_pinnedLauncherCanvas);
+                    }
+
+                    if (lane.has_value())
+                    {
+                        auto const grid = std::max<int64_t>(SnapGrid(), seq::TicksPerQuarterNote);
+
+                        view.ToTrackId = track->Id;
+                        view.ToTick = std::max<int64_t>(0, seq::SnapTick(TickAtLaneX(*lane) - m_clipDrag.GrabOffset, grid));
+                        view.Copy = copy || m_clipDrag.FromLauncher;
+                    }
+                    else if (launcher.has_value())
+                    {
+                        if (auto const scene = SceneAtLauncherX(*launcher); scene.has_value())
+                        {
+                            view.ToTrackId = track->Id;
+                            view.ToSlot = *scene;
+                            view.Copy = copy || !m_clipDrag.FromLauncher;
+                        }
+                    }
+                }
+
+                if (view.ToTrackId.empty())
+                {
+                    view.Copy = true;
+                }
+
+                InvalidateArrange();
+                InvalidateLaunchers();
+                return;
+            }
 
             auto const spot = ArrangeSpotAt(inArrange);
 
@@ -1456,6 +1526,12 @@ namespace winrt::midisequencer::implementation
                 dy = ScrollStep * std::clamp((y - (height - ScrollMargin)) / ScrollMargin, 0.25, 2.0);
             }
 
+            // A clip Shift keeps on its own track has nowhere to go up or down.
+            if (m_clipDrag.Active && m_dragKeepTrack)
+            {
+                dy = 0;
+            }
+
             // Left or right near the timeline's ends, for a clip.
             double dx{ 0 };
 
@@ -1503,7 +1579,7 @@ namespace winrt::midisequencer::implementation
 
             if (m_clipDrag.Active)
             {
-                UpdateClipDrop(m_dragPoint, m_dragCopy);
+                UpdateClipDrop(m_dragPoint, m_dragCopy, m_dragKeepTrack);
             }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to scroll while dragging.")

@@ -41,8 +41,6 @@ namespace midisequencer
 
         void Close() noexcept;
 
-        bool IsOpen() const noexcept;
-
         // False when the SDK on this PC can't say when an app starts using the endpoint.
         bool KnowsWhenAppsConnect() const noexcept;
 

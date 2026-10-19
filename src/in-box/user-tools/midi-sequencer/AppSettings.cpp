@@ -29,6 +29,8 @@ namespace midisequencer
         constexpr wchar_t ValueMetronomeNote[] = L"MetronomeNote";
         constexpr wchar_t ValueShowLauncher[] = L"ShowLauncher";
         constexpr wchar_t ValueShowMixer[] = L"ShowMixer";
+        constexpr wchar_t ValueTimelineScrollBar[] = L"TimelineScrollBar";
+        constexpr wchar_t ValueTimelineScrollBarPlace[] = L"TimelineScrollBarPlace";
         constexpr wchar_t ValueBarWidth[] = L"BarWidthTenths";
         constexpr wchar_t ValueSnapTicks[] = L"SnapTicks";
         constexpr wchar_t ValueLaunchQuantizeTicks[] = L"LaunchQuantizeTicks";
@@ -39,6 +41,7 @@ namespace midisequencer
         constexpr wchar_t ValueValuesAs[] = L"ValuesAs";
         constexpr wchar_t ValueLastFolder[] = L"LastFolder";
         constexpr wchar_t ValueApplyDeviceOffsets[] = L"ApplyDeviceOffsets";
+        constexpr wchar_t ValueHearPatternSteps[] = L"HearPatternSteps";
         constexpr wchar_t ValueClockOutputs[] = L"ClockOutputs";
         constexpr wchar_t ValueTimeCode[] = L"TimeCode";
         constexpr wchar_t ValueFollowClock[] = L"FollowClock";
@@ -46,6 +49,10 @@ namespace midisequencer
         constexpr wchar_t ValueRemoteControlEnabled[] = L"RemoteControlEnabled";
         constexpr wchar_t ValuePortsOff[] = L"PortsOff";
         constexpr wchar_t ValueRecentSequences[] = L"RecentSequences";
+        constexpr wchar_t ValueStyle[] = L"Style";
+
+        // A theme id is short lowercase letters, digits and '-'; anything else in the registry is ignored.
+        constexpr size_t MaximumStyleIdLength = 64;
 
         // Text read back from the registry is capped like anything else read from outside.
         constexpr size_t MaximumSettingText = 1024;
@@ -351,6 +358,10 @@ namespace midisequencer
         m_showLauncher = ReadDword(ValueShowLauncher, 1) != 0;
         m_showMixer = ReadDword(ValueShowMixer, 0) != 0;
 
+        // 0 is the overview and 1 the plain bar; 0 is under the timeline and 1 above the ruler.
+        m_timelineOverview = ReadDword(ValueTimelineScrollBar, 0) == 0;
+        m_timelineBarAtTop = ReadDword(ValueTimelineScrollBarPlace, 0) == 1;
+
         auto const tenths = ReadDword(ValueBarWidth, static_cast<uint32_t>(DefaultBarWidth * 10));
         m_barWidth = std::clamp(tenths / 10.0, MinimumBarWidth, MaximumBarWidth);
 
@@ -372,14 +383,20 @@ namespace midisequencer
 
         m_lastFolder = ReadString(ValueLastFolder, L"");
         m_applyDeviceOffsets = ReadDword(ValueApplyDeviceOffsets, 1) != 0;
+        m_hearPatternSteps = ReadDword(ValueHearPatternSteps, 1) != 0;
 
-        // Read first: it's what devices saved before tempo was a choice for each one get.
-        m_clockSendsTempo = ReadDword(ValueClockSendsTempo, 1) != 0;
-        m_clockOutputs = ParseClockOutputs(ReadString(ValueClockOutputs, L""), m_clockSendsTempo);
+        // Devices saved before tempo became a choice for each one keep the setting they all had.
+        auto const clockSendsTempo = ReadDword(ValueClockSendsTempo, 1) != 0;
+        m_clockOutputs = ParseClockOutputs(ReadString(ValueClockOutputs, L""), clockSendsTempo);
         m_portsOff = ParsePortsOff(ReadString(ValuePortsOff, L""));
         m_timeCode = ParseTimeCode(ReadString(ValueTimeCode, L""));
         m_followClock = ParseFollowClock(ReadString(ValueFollowClock, L""));
         m_remoteControlEnabled = ReadDword(ValueRemoteControlEnabled, 0) != 0;
+
+        auto style = ReadString(ValueStyle, DefaultStyleId);
+        auto const validStyle = !style.empty() && style.size() <= MaximumStyleIdLength &&
+            std::all_of(style.begin(), style.end(), [](wchar_t c) { return (c >= L'a' && c <= L'z') || (c >= L'0' && c <= L'9') || c == L'-'; });
+        m_styleId = validStyle ? style : std::wstring{ DefaultStyleId };
     }
 
     void AppSettings::MetronomeEnabled(bool value) noexcept
@@ -431,6 +448,18 @@ namespace midisequencer
     {
         m_showMixer = value;
         WriteDword(ValueShowMixer, value ? 1 : 0);
+    }
+
+    void AppSettings::TimelineOverview(bool value) noexcept
+    {
+        m_timelineOverview = value;
+        WriteDword(ValueTimelineScrollBar, value ? 0 : 1);
+    }
+
+    void AppSettings::TimelineBarAtTop(bool value) noexcept
+    {
+        m_timelineBarAtTop = value;
+        WriteDword(ValueTimelineScrollBarPlace, value ? 1 : 0);
     }
 
     void AppSettings::BarWidth(double value) noexcept
@@ -501,6 +530,12 @@ namespace midisequencer
     {
         m_applyDeviceOffsets = value;
         WriteDword(ValueApplyDeviceOffsets, value ? 1 : 0);
+    }
+
+    void AppSettings::HearPatternSteps(bool value) noexcept
+    {
+        m_hearPatternSteps = value;
+        WriteDword(ValueHearPatternSteps, value ? 1 : 0);
     }
 
     _Use_decl_annotations_
@@ -581,15 +616,22 @@ namespace midisequencer
         }
     }
 
-    void AppSettings::ClockSendsTempo(bool value) noexcept
-    {
-        m_clockSendsTempo = value;
-        WriteDword(ValueClockSendsTempo, value ? 1 : 0);
-    }
-
     void AppSettings::RemoteControlEnabled(bool value) noexcept
     {
         m_remoteControlEnabled = value;
         WriteDword(ValueRemoteControlEnabled, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::StyleId(std::wstring const& value) noexcept
+    {
+        try
+        {
+            m_styleId = value.empty() ? std::wstring{ DefaultStyleId } : value;
+            WriteString(ValueStyle, m_styleId);
+        }
+        catch (...)
+        {
+        }
     }
 }

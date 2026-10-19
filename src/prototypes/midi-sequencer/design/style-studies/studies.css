@@ -1,0 +1,7 @@
+/* PROTOTYPE. Shared by every style study: the parts of the comp each study page drops or adds. */
+
+html.study .page { padding: 12px; gap: 14px; }
+html.study .caption-above { max-width: 1560px; font-size: 13px; }
+
+/* Each study sets its own track colors, so the comp's are only a starting point. A study names a
+   comp color in [style*="#RRGGBB"] and sets --tc with !important, which wins over the inline one. */

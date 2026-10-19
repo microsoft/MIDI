@@ -89,8 +89,6 @@ namespace midisequencer
         // Where the clip is playing, from its start, and which pass through it. -1 hides it.
         void SetPlayhead(_In_ int64_t tick, _In_ uint64_t pass) noexcept;
 
-        bool HasClip() const noexcept { return m_clip != nullptr; }
-
         void Draw(_In_ canvas::CanvasDrawingSession const& ds, _In_ float width, _In_ float height);
 
         PatternHit HitTest(_In_ foundation::Point point) const noexcept;
@@ -101,8 +99,10 @@ namespace midisequencer
         bool PointerPressed(_In_ foundation::Point point, _In_ bool rightButton);
         bool PointerMoved(_In_ foundation::Point point);
         std::optional<PatternEdit> PointerReleased(_In_ foundation::Point point);
-        void CancelGesture() noexcept;
         bool Wheel(_In_ int32_t delta);
+
+        // A drag under way, whose change is kept when it's let go.
+        bool InGesture() const noexcept { return m_gesture != Gesture::None; }
 
         // The lane whose name is pressed and hasn't moved yet. Let go like that, it's a click,
         // which opens the lane's menu.

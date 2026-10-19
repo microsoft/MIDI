@@ -24,4 +24,12 @@ public:
     TEST_METHOD(LoopsPlayTheSameColdOrInOrder);
     TEST_METHOD(LearnsOnceFromAGeneratorOrATrack);
     TEST_METHOD(ListeningRoundTripsThroughTheFile);
+    TEST_METHOD(RingingRingsWhatItHeard);
+    TEST_METHOD(LifeDropsWhatItHears);
+    TEST_METHOD(LifeKeepsListening);
+    TEST_METHOD(LifeLoopsPlayTheSameColdOrInOrder);
+    TEST_METHOD(EvolveSoundsLikeWhatItHears);
+    TEST_METHOD(EvolveAimsAtWhatItHeardEachPass);
+    TEST_METHOD(ATrackListenerKeepsOneRunEveryPass);
+    TEST_METHOD(ListenersKeepWhatTheyLearnedInTheFile);
 };

@@ -536,7 +536,7 @@ namespace winrt::midisequencer::implementation
                     box.Maximum(maximum);
                     box.SmallChange(1);
                     box.LargeChange(8);
-                    box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                    midiapp::UseTouchSpinButtons(box);
                     box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
                     automation::AutomationProperties::SetName(box, res::GetString(name));
                     return box;

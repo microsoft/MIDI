@@ -1,0 +1,228 @@
+/* PROTOTYPE. Style study: Ink and Gold (dark). Cinematic near-black with grain, drawn in hairlines
+   and white pucks. One warm gold marks whatever is active, so it always stands out; tracks differ
+   by muted shade rather than by rainbow. In the app: a Win2D TurbulenceEffect baked once for the
+   grain, and black Composition drop shadows for the pucks' halos. */
+
+html.study.ink-gold {
+    --gold: #E9C46A;
+    --gold-soft: rgba(233, 196, 106, .55);
+    --hair: rgba(255, 255, 255, .22);
+    --hair-faint: rgba(255, 255, 255, .08);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+
+    --text: #ECE9E2;
+    --text2: #A6A29A;
+    --text3: #6F6C66;
+    --divider: rgba(255, 255, 255, .07);
+    --stroke: rgba(255, 255, 255, .08);
+    --stroke-strong: rgba(255, 255, 255, .16);
+    --accent: var(--gold);
+    --accent-deep: var(--gold);
+    --play: var(--gold);
+    --success: #B8C49A;
+    --rec: #D2553F;
+    --mute: #CDBB8E;
+    --solo: var(--gold);
+    --lane-bg: #0D0E10;
+}
+
+html.study.ink-gold [style*="#FF8A65"] { --tc: #CDBB8E !important; }
+html.study.ink-gold [style*="#5BC0EB"] { --tc: #8FA3B8 !important; }
+html.study.ink-gold [style*="#B4A7FF"] { --tc: #B2A1B8 !important; }
+html.study.ink-gold [style*="#6CCB5F"] { --tc: #9DB09A !important; }
+html.study.ink-gold [style*="#4DD0C4"] { --tc: #8DAAA6 !important; }
+html.study.ink-gold [style*="#9C8CFF"] { --tc: #A49C8E !important; }
+html.study.ink-gold [style*="#F7C948"] { --tc: #C9B48A !important; }
+html.study.ink-gold [style*="#FF6F91"] { --tc: #C7A0A0 !important; }
+html.study.ink-gold [style*="#FFB547"] { --tc: #C9B48A !important; }
+html.study.ink-gold [style*="#BDBDBD"] { --tc: #8E8B85 !important; }
+
+html.study.ink-gold, html.study.ink-gold body { background: #08090A; }
+html.study.ink-gold body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+html.study.ink-gold .caption-above { color: var(--text2); }
+html.study.ink-gold .caption-above b { color: var(--gold); font-weight: 400; letter-spacing: .08em; }
+html.study.ink-gold .lcd .big, html.study.ink-gold .lcd .small, html.study.ink-gold .bar-num { font-family: Bahnschrift, "Segoe UI", sans-serif; font-weight: 300; }
+
+/* ---- the window: near-black, grain, a vignette */
+
+html.study.ink-gold .window {
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 10px;
+    background: var(--grain), radial-gradient(ellipse at 50% 40%, #16171A, #101113 55%, #0A0B0C);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, .75);
+}
+
+html.study.ink-gold .titlebar .title { text-transform: uppercase; letter-spacing: .32em; font-size: 10px; font-weight: 300; color: var(--text2); }
+html.study.ink-gold .caption-btn, html.study.ink-gold .sys-btns div { color: var(--text3); }
+html.study.ink-gold .preview-chiclet { border-color: var(--gold-soft); color: var(--gold); border-radius: 2px; font-weight: 400; letter-spacing: .24em; }
+
+/* ---- hairline controls; gold when active */
+
+html.study.ink-gold .transport { border-bottom-color: var(--hair-faint); height: 56px; flex-basis: 56px; }
+html.study.ink-gold .transport .sep { background: var(--hair-faint); }
+
+html.study.ink-gold .tbtn { border: 1px solid var(--hair-faint); border-radius: 2px; color: var(--text2); background: transparent; }
+html.study.ink-gold .tbtn.on { border-color: var(--gold-soft); background: rgba(233, 196, 106, .06); color: var(--gold); }
+html.study.ink-gold .tbtn.play.on { border-color: var(--gold); background: rgba(233, 196, 106, .10); color: var(--gold); box-shadow: 0 0 18px rgba(233, 196, 106, .18); }
+html.study.ink-gold .tbtn.rec { color: #C9705F; }
+html.study.ink-gold .tbtn.split.on { border-left-color: transparent; }
+
+html.study.ink-gold .lcd { border: 0; border-bottom: 1px solid var(--hair-faint); border-radius: 0; background: transparent; padding-left: 4px; }
+html.study.ink-gold .lcd .big { font-size: 22px; letter-spacing: .08em; color: var(--text); }
+html.study.ink-gold .lcd .small { color: var(--text3); letter-spacing: .06em; }
+
+html.study.ink-gold .btn { border: 1px solid var(--hair-faint); border-radius: 2px; background: transparent; color: var(--text); }
+html.study.ink-gold .btn.subtle { border-color: transparent; }
+html.study.ink-gold .btn.toggled { border-color: var(--gold-soft); background: rgba(233, 196, 106, .06); color: var(--gold); }
+html.study.ink-gold .btn.toggled .gl { color: var(--gold); }
+html.study.ink-gold .field { border: 1px solid var(--hair-faint); border-radius: 2px; background: #1A1B1E; }
+html.study.ink-gold .chip { border-color: var(--hair-faint); border-radius: 2px; background: transparent; letter-spacing: .04em; }
+html.study.ink-gold .chip.on { border-color: rgba(184, 196, 154, .4); color: var(--success); background: transparent; }
+html.study.ink-gold .chip.info { border-color: var(--gold-soft); color: var(--gold); background: transparent; }
+
+/* ---- the arrange */
+
+html.study.ink-gold .arow > .hdr { border-right-color: var(--hair-faint); border-bottom-color: var(--divider); }
+html.study.ink-gold .arow > .launch { background: transparent; border-right-color: var(--hair-faint); border-bottom-color: var(--divider); }
+html.study.ink-gold .arow.track > .hdr[style] { background: rgba(233, 196, 106, .05) !important; box-shadow: inset 2px 0 0 var(--gold); }
+html.study.ink-gold .pinned { background: transparent; }
+html.study.ink-gold .pin-edge { height: 1px; flex-basis: 1px; background: rgba(233, 196, 106, .3); box-shadow: 0 8px 20px rgba(0, 0, 0, .6); }
+
+/* folders read as labels between hairlines */
+html.study.ink-gold .arow.folder > .hdr { background: transparent; }
+html.study.ink-gold .arow.folder .tname { text-transform: uppercase; letter-spacing: .22em; font-size: 10.5px; font-weight: 400; color: var(--text2); }
+html.study.ink-gold .arow.folder > .lane { background-color: transparent; }
+
+html.study.ink-gold .strip { width: 2px; flex-basis: 2px; margin-left: 2px; background: var(--tc); opacity: .85; }
+html.study.ink-gold .indent::after { background: var(--hair-faint); }
+html.study.ink-gold .tname { font-weight: 500; }
+html.study.ink-gold .ticon { color: var(--text2); }
+
+/* M, S and R as hairline rings, and white pucks when on */
+html.study.ink-gold .tb { width: 22px; height: 22px; border: 1px solid var(--hair); border-radius: 11px; background: transparent; color: var(--text3); font-weight: 500; }
+html.study.ink-gold .tb.r { color: #B56A5C; }
+html.study.ink-gold .tb.m.on, html.study.ink-gold .tb.s.on { border-color: #ECE9E2; background: #ECE9E2; color: #101113; box-shadow: 0 0 0 3px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .6); }
+html.study.ink-gold .tb.r.on { border-color: var(--rec); background: var(--rec); color: #101113; }
+
+html.study.ink-gold .led { background: rgba(255, 255, 255, .1); }
+html.study.ink-gold .led.out { background: var(--gold); box-shadow: 0 0 8px rgba(233, 196, 106, .7); }
+html.study.ink-gold .led.in { background: #ECE9E2; box-shadow: 0 0 8px rgba(236, 233, 226, .6); }
+
+html.study.ink-gold .arow.ruler { background: transparent; }
+html.study.ink-gold .scene { border-right-color: var(--hair-faint); color: var(--text2); text-transform: uppercase; letter-spacing: .14em; font-size: 10.5px; }
+html.study.ink-gold .scene .n { color: var(--gold); }
+html.study.ink-gold .bar-num { border-left-color: rgba(255, 255, 255, .12); color: var(--text3); }
+html.study.ink-gold .loop-range { border: 0; border-top: 1px solid var(--gold); border-radius: 0; height: 6px; background: rgba(233, 196, 106, .14); }
+
+/* the launcher: graphite pads with a muted top edge; the playing one in gold */
+
+html.study.ink-gold .slot { border-right-color: rgba(255, 255, 255, .035); }
+
+html.study.ink-gold .cell {
+    border: 0;
+    border-top: 2px solid var(--tc);
+    border-radius: 2px;
+    background: #1E1F23;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .45);
+}
+
+html.study.ink-gold .cell .nm { color: var(--text); }
+html.study.ink-gold .cell .tri, html.study.ink-gold .cell .kind { color: var(--text3); }
+html.study.ink-gold .cell .mini svg rect, html.study.ink-gold .cell .mini svg circle { fill: #ECE9E2; fill-opacity: .7; }
+html.study.ink-gold .cell.playing { border-top-color: var(--gold); background: #24231F; box-shadow: inset 0 0 0 1px rgba(233, 196, 106, .45), 0 0 22px rgba(233, 196, 106, .12); }
+html.study.ink-gold .cell.playing .tri { color: var(--gold); }
+html.study.ink-gold .cell.playing .mini svg rect { fill: var(--gold); fill-opacity: .9; }
+html.study.ink-gold .cell .prog { height: 1px; background: var(--gold); }
+html.study.ink-gold .cell.queued { border: 0; border-top: 2px solid var(--tc); box-shadow: inset 0 0 0 1px rgba(236, 233, 226, .5); }
+html.study.ink-gold .cell.rec { border-top-color: var(--rec); background: #251C1A; }
+html.study.ink-gold .cell.rec .prog { background: var(--rec); }
+html.study.ink-gold .cell .when { background: #08090A; color: var(--gold); border-radius: 2px; }
+html.study.ink-gold .empty { border: 1px solid rgba(255, 255, 255, .04); border-radius: 2px; background: transparent; color: rgba(255, 255, 255, .14); }
+html.study.ink-gold .empty.armed { color: rgba(210, 85, 63, .7); }
+
+/* the timeline */
+
+html.study.ink-gold .arow > .lane {
+    border-bottom-color: rgba(255, 255, 255, .04);
+    background-color: transparent;
+    background-image:
+        repeating-linear-gradient(to right, rgba(255, 255, 255, .07) 0 1px, transparent 1px var(--bar)),
+        repeating-linear-gradient(to right, rgba(255, 255, 255, .035) 0 1px, transparent 1px calc(var(--bar) / 4));
+}
+
+html.study.ink-gold .arow.ruler > .lane { background-image: none; }
+
+html.study.ink-gold .tclip {
+    border: 0;
+    border-top: 2px solid var(--tc);
+    border-radius: 2px;
+    background: #23242A;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .5);
+}
+
+html.study.ink-gold .tclip .cap { background: transparent; color: var(--text2); letter-spacing: .03em; }
+html.study.ink-gold .tclip .body svg rect, html.study.ink-gold .tclip .body svg circle { fill: #ECE9E2; fill-opacity: .82; }
+html.study.ink-gold .tclip.sel { border-top-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold), 0 0 22px rgba(233, 196, 106, .14); }
+html.study.ink-gold .tclip.sel .body svg rect { fill: var(--gold); }
+html.study.ink-gold .tclip.gen { border-style: solid; background: repeating-linear-gradient(135deg, #23242A 0 7px, #202126 7px 14px); }
+html.study.ink-gold .tclip.muted { opacity: .45; }
+html.study.ink-gold .tclip.summary { border-top-width: 1px; background: rgba(255, 255, 255, .03); box-shadow: none; }
+
+html.study.ink-gold .loopmark { border-left-color: rgba(255, 255, 255, .22); }
+html.study.ink-gold .lane-overlay { background: repeating-linear-gradient(135deg, rgba(10, 11, 12, .82) 0 6px, rgba(16, 17, 19, .74) 6px 12px); color: var(--text2); }
+
+/* the playhead in gold, with a short fading trail */
+html.study.ink-gold .playhead { width: 1px; background: var(--gold); box-shadow: 0 0 8px rgba(233, 196, 106, .6); }
+
+html.study.ink-gold .playhead::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 1px;
+    width: 26px;
+    background: linear-gradient(to right, transparent, rgba(233, 196, 106, .10));
+}
+
+html.study.ink-gold .ruler .playhead::before { border-top-color: var(--gold); }
+html.study.ink-gold .tag > span { background: transparent; color: var(--text); border: 1px solid color-mix(in srgb, var(--tagc, #D7D7D7) 60%, transparent); clip-path: none; border-radius: 1px; padding-left: 6px; }
+html.study.ink-gold .tag > span::after { display: none; }
+
+/* ---- the clip editor */
+
+html.study.ink-gold .editor { border-top-color: rgba(233, 196, 106, .28); background: rgba(255, 255, 255, .012); }
+html.study.ink-gold .ed-head { border-bottom-color: var(--hair-faint); }
+html.study.ink-gold .ed-head .cname { text-transform: uppercase; letter-spacing: .26em; font-size: 12.5px; font-weight: 400; color: var(--gold); }
+html.study.ink-gold .roll, html.study.ink-gold .vlane { background: #0B0C0D; }
+html.study.ink-gold .keys, html.study.ink-gold .lanehead, html.study.ink-gold .rruler .corner { border-right-color: var(--hair-faint); }
+html.study.ink-gold .lanerow { border-top-color: var(--hair-faint); }
+html.study.ink-gold .rruler .loopbar { background: rgba(233, 196, 106, .3); }
+html.study.ink-gold .inspector { background: transparent; border-left-color: var(--hair-faint); }
+html.study.ink-gold .insp-head .t { text-transform: uppercase; letter-spacing: .2em; font-size: 11px; font-weight: 400; color: var(--text2); }
+
+html.study.ink-gold .statusbar { border-top-color: var(--hair-faint); color: var(--text3); letter-spacing: .02em; }
+html.study.ink-gold .statusbar .ok { color: var(--success); }
+html.study.ink-gold .statusbar .recx { color: #D98A7B; }
+html.study.ink-gold .vbar { background: rgba(255, 255, 255, .18); }
+
+/* ---- review fixes (October 19): contrast, untruncated names, quiet keys and tags, and a gold slate */
+
+html.study.ink-gold { --text3: #8C887F; }
+
+/* letter-spaced capitals cut names off; scenes and counts read as typed */
+html.study.ink-gold .scene { text-transform: none; letter-spacing: .02em; font-size: 12px; }
+html.study.ink-gold .arow.folder .tname { letter-spacing: .14em; }
+html.study.ink-gold .arow.folder .tname .cnt { text-transform: none; letter-spacing: 0; }
+
+html.study.ink-gold .keys svg rect[fill="#D9D9D9"] { fill: #2A2B2F; stroke: #0B0C0D; }
+html.study.ink-gold .keys svg rect[fill="#1B1B1B"] { fill: #111214; stroke: #0B0C0D; }
+
+html.study.ink-gold .tag > span { border-color: rgba(255, 255, 255, .16); color: var(--text2); }
+
+/* the position in gold, like a film slate */
+html.study.ink-gold .lcd:not([style]) .big { color: var(--gold); font-weight: 200; font-size: 26px; }
+
+/* ---- review fixes, round 2 (October 19): keys you can tell apart, with their labels */
+
+html.study.ink-gold .keys svg rect[fill="#D9D9D9"] { fill: #3A3B40; }
+html.study.ink-gold .keys svg text { fill: var(--text3); }

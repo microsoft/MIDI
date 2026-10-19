@@ -49,10 +49,16 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OpenClipInEditor(std::wstring const& clipId, std::wstring const& trackId) noexcept
+    void MainWindow::OpenClipInEditor(std::wstring clipId, std::wstring trackId) noexcept
     {
         try
         {
+            // Words still being typed into the clip that's open now are kept before it changes.
+            if (m_editorClipId != clipId)
+            {
+                FlushGeneratorText();
+            }
+
             auto const clip = seq::FindClip(m_doc, clipId);
 
             if (clip == nullptr)
@@ -83,6 +89,8 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            FlushGeneratorText();
+
             if (m_auditioning.has_value())
             {
                 AuditionNote(*m_auditioning, false);
@@ -93,6 +101,7 @@ namespace winrt::midisequencer::implementation
             m_editorTrackId.clear();
             m_roll.SetClip(nullptr, seq::Color{});
             m_pattern.SetClip(nullptr, seq::Color{});
+            m_clipLanes.SetClip(nullptr, seq::Color{});
 
             // The mixer keeps the panel while it's shown.
             EditorPanel().Visibility(MixerShown() ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -125,6 +134,10 @@ namespace winrt::midisequencer::implementation
             m_roll.SetClip(clip, color);
             m_roll.SetMeter(&m_doc.Meter);
             m_pattern.SetClip(clip, color);
+
+            // The lanes under the roll too, so a key pressed before the next drawing finds the clip
+            // as it is now, with a selection that's still there.
+            m_clipLanes.SetClip(clip->Kind == seq::ClipKind::Notes ? clip : nullptr, color);
 
             UpdateEditorHeader();
 
@@ -189,13 +202,16 @@ namespace winrt::midisequencer::implementation
 
             EditorClipName().Text(winrt::hstring{ clip->Name });
 
-            for (auto const& child : EditorKindMark().Children())
+            // The clip's kind in its color: the same symbol as its slot in the launcher.
+            auto kindIcon = seq::MakeClipIcon(seq::IconFor(*clip));
+
+            if (auto const font = kindIcon.try_as<controls::FontIcon>())
             {
-                if (auto const shape = child.try_as<shapes::Shape>())
-                {
-                    shape.Fill(BrushFor(color));
-                }
+                font.FontSize(16);
             }
+
+            kindIcon.Foreground(BrushFor(color));
+            EditorKindMark().Content(kindIcon);
 
             switch (clip->Kind)
             {
@@ -227,6 +243,7 @@ namespace winrt::midisequencer::implementation
             auto const seeded = generator && (clip->Generator->Type != seq::GeneratorType::Arpeggiator || clip->Generator->ArpOrder == seq::ArpeggiatorOrder::Random);
             GeneratorSeedTools().Visibility(visible(seeded));
             PatternVaryButton().Visibility(visible(pattern));
+            PatternTemplatesButton().Visibility(visible(pattern));
             EditorLengthChipFrame().Visibility(visible(!generator));
 
             // An arpeggiator's rate sits with its octaves and note length instead (comp 4).
@@ -568,6 +585,7 @@ namespace winrt::midisequencer::implementation
         {
             if (EditorShowsPattern())
             {
+                ShowEditorSizing(false);
                 OnPatternMoved(args);
                 return;
             }
@@ -576,6 +594,7 @@ namespace winrt::midisequencer::implementation
 
             if (OnClipLanesMoved(position))
             {
+                ShowEditorSizing(false);
                 return;
             }
 
@@ -594,12 +613,48 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            if (m_editorGesture && m_roll.PointerMoved(position))
+            if (m_editorGesture)
             {
-                InvalidateEditor();
+                // Shift keeps the notes on their pitch while they move.
+                auto const keepPitch = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+
+                if (m_roll.PointerMoved(position, keepPitch))
+                {
+                    InvalidateEditor();
+                }
+
+                return;
             }
+
+            // A press there with Ctrl selects instead.
+            auto const control = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Control) == winrt::Windows::System::VirtualKeyModifiers::Control;
+            ShowEditorSizing(!control && m_roll.IsOverNoteEdge(position));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to handle a drag in the editor.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ShowEditorSizing(bool sizing) noexcept
+    {
+        try
+        {
+            if (m_editorSizing == sizing || m_editorCanvas == nullptr)
+            {
+                return;
+            }
+
+            m_editorSizing = sizing;
+
+            if (auto const element = m_editorCanvas.try_as<xaml::IUIElementProtected>())
+            {
+                element.ProtectedCursor(winrt::Microsoft::UI::Input::InputSystemCursor::Create(sizing
+                    ? winrt::Microsoft::UI::Input::InputSystemCursorShape::SizeWestEast
+                    : winrt::Microsoft::UI::Input::InputSystemCursorShape::Arrow));
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
@@ -634,7 +689,8 @@ namespace winrt::midisequencer::implementation
             m_editorGesture = false;
 
             auto const position = args.GetCurrentPoint(m_editorCanvas).Position();
-            auto edit = m_roll.PointerReleased(position);
+            auto const keepPitch = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+            auto edit = m_roll.PointerReleased(position, keepPitch);
             m_editorCanvas.ReleasePointerCaptures();
 
             if (edit.has_value())

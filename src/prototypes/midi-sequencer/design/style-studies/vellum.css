@@ -1,0 +1,221 @@
+/* PROTOTYPE. Style study: Vellum (light). Warm paper, ink hairlines, a serif for names, and one
+   vermilion accent. Clips are watercolor washes with ink notes. Only what floats, like the clip
+   editor, casts a long soft shadow. Sitka ships with Windows. */
+
+html.study.vellum {
+    --paper: #F3F0E8;
+    --sheet: #FBF9F4;
+    --ink: #1F1D1A;
+    --hair: rgba(31, 29, 26, .28);
+    --hair-faint: rgba(31, 29, 26, .12);
+    --vermilion: #D4471E;
+    --indigo: #2E4F7F;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+
+    --text: #1F1D1A;
+    --text2: #59544C;
+    --text3: #7D776D;
+    --divider: rgba(31, 29, 26, .10);
+    --stroke: rgba(31, 29, 26, .12);
+    --stroke-strong: rgba(31, 29, 26, .24);
+    --accent: var(--vermilion);
+    --accent-deep: var(--vermilion);
+    --play: #3F7A45;
+    --success: #3F7A45;
+    --rec: var(--vermilion);
+    --mute: #A9782A;
+    --solo: var(--indigo);
+    --lane-bg: #F6F3EC;
+}
+
+html.study.vellum [style*="#FF8A65"] { --tc: #B4533C !important; }
+html.study.vellum [style*="#5BC0EB"] { --tc: #3F5E91 !important; }
+html.study.vellum [style*="#B4A7FF"] { --tc: #7C527F !important; }
+html.study.vellum [style*="#6CCB5F"] { --tc: #6F8D62 !important; }
+html.study.vellum [style*="#4DD0C4"] { --tc: #4F7E86 !important; }
+html.study.vellum [style*="#9C8CFF"] { --tc: #7C527F !important; }
+html.study.vellum [style*="#F7C948"] { --tc: #C39A3A !important; }
+html.study.vellum [style*="#FF6F91"] { --tc: #A84458 !important; }
+html.study.vellum [style*="#FFB547"] { --tc: #C39A3A !important; }
+html.study.vellum [style*="#BDBDBD"] { --tc: #8A8478 !important; }
+
+html.study.vellum, html.study.vellum body { background: #DDD7CA; }
+html.study.vellum body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+html.study.vellum .caption-above { color: var(--text2); font-family: "Sitka Text", Sitka, Georgia, serif; font-size: 14px; }
+html.study.vellum .caption-above b { color: var(--ink); }
+
+html.study.vellum .tname, html.study.vellum .ed-head .cname, html.study.vellum .titlebar .title,
+html.study.vellum .lcd .big, html.study.vellum .scene .nm, html.study.vellum .insp-head .t { font-family: "Sitka Text", Sitka, Georgia, serif; }
+
+/* ---- the window: a page */
+
+html.study.vellum .window {
+    border: 1px solid rgba(31, 29, 26, .14);
+    border-radius: 6px;
+    background: var(--grain), var(--paper);
+    box-shadow: 0 1px 2px rgba(60, 45, 20, .08), 0 24px 60px rgba(60, 45, 20, .18);
+}
+
+html.study.vellum .titlebar .title { color: var(--text2); font-size: 13px; font-style: italic; }
+html.study.vellum .caption-btn, html.study.vellum .sys-btns div { color: var(--text2); }
+html.study.vellum .preview-chiclet { border-color: rgba(212, 71, 30, .55); color: var(--vermilion); border-radius: 2px; }
+
+/* ---- ink controls: an outline at rest, filled with ink when on */
+
+html.study.vellum .transport { border-bottom: 1px solid var(--hair-faint); }
+html.study.vellum .transport .sep { background: var(--hair-faint); }
+
+html.study.vellum .tbtn { border: 1px solid var(--hair); border-radius: 2px; background: transparent; color: var(--ink); }
+html.study.vellum .tbtn.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+html.study.vellum .tbtn.play.on { border-color: var(--ink); background: var(--ink); color: #FBF9F4; box-shadow: inset 0 -2px 0 var(--vermilion); }
+html.study.vellum .tbtn.rec { color: var(--vermilion); }
+
+/* readouts as type, not as boxes */
+html.study.vellum .lcd { border: 0; border-bottom: 1px solid var(--hair); border-radius: 0; background: transparent; padding-left: 2px; }
+html.study.vellum .lcd .big { font-size: 22px; color: var(--ink); }
+html.study.vellum .lcd .small { color: var(--text3); }
+
+html.study.vellum .btn { border: 1px solid var(--hair); border-radius: 2px; background: transparent; color: var(--ink); }
+html.study.vellum .btn.subtle { border-color: transparent; }
+html.study.vellum .btn.toggled { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+html.study.vellum .btn.toggled .gl { color: var(--paper); }
+html.study.vellum .field { border: 0; border-bottom: 1px solid var(--hair); border-radius: 0; background: transparent; }
+html.study.vellum .chip { border-color: var(--hair); border-radius: 2px; background: transparent; color: var(--text2); }
+html.study.vellum .chip.on { border-color: rgba(63, 122, 69, .5); color: var(--play); background: transparent; }
+html.study.vellum .chip.info { border-color: rgba(46, 79, 127, .45); color: var(--indigo); background: transparent; }
+
+/* ---- the arrange: no boxes around the headers, a ruled page for the timeline */
+
+html.study.vellum .arow > .hdr { border-right: 1px solid var(--hair-faint); border-bottom: 1px solid var(--divider); background: transparent; }
+html.study.vellum .arow > .launch { border-right: 1px solid var(--hair-faint); border-bottom: 1px solid var(--divider); background: transparent; }
+html.study.vellum .arow.track > .hdr[style] { background: rgba(212, 71, 30, .05) !important; }
+html.study.vellum .arow.folder > .hdr, html.study.vellum .arow.auto > .hdr { background: transparent; }
+html.study.vellum .pinned { background: rgba(31, 29, 26, .015); }
+html.study.vellum .pin-edge { height: 3px; flex-basis: 3px; background: transparent; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair-faint); box-shadow: none; }
+
+/* the track's color as an ink rule */
+html.study.vellum .strip { width: 2px; flex-basis: 2px; margin-left: 6px; background: var(--tc); }
+html.study.vellum .indent::after { background: var(--hair-faint); }
+html.study.vellum .tname { font-weight: 600; font-size: 14px; }
+html.study.vellum .tname .cnt { font-family: "Segoe UI Variable Text", sans-serif; }
+html.study.vellum .ticon { color: var(--tc); }
+
+/* M, S and R as ink circles */
+html.study.vellum .tb { width: 21px; height: 21px; border: 1px solid var(--hair); border-radius: 11px; background: transparent; color: var(--text2); font-weight: 600; }
+html.study.vellum .tb.r { color: var(--vermilion); }
+html.study.vellum .tb.m.on, html.study.vellum .tb.s.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+html.study.vellum .tb.r.on { border-color: var(--vermilion); background: var(--vermilion); color: var(--paper); }
+html.study.vellum .led { background: transparent; border: 1px solid var(--hair); }
+html.study.vellum .led.out { border-color: var(--play); background: var(--play); box-shadow: none; }
+html.study.vellum .led.in { border-color: var(--vermilion); background: var(--vermilion); box-shadow: none; }
+
+html.study.vellum .arow.ruler { background: transparent; }
+html.study.vellum .scene { border-right-color: var(--hair-faint); color: var(--ink); font-size: 13px; }
+html.study.vellum .scene .n { color: var(--vermilion); font-family: "Sitka Text", Georgia, serif; font-style: italic; }
+html.study.vellum .bar-num { border-left-color: var(--hair); color: var(--text3); font-family: "Sitka Text", Georgia, serif; font-style: italic; }
+html.study.vellum .loop-range { border: 0; border-top: 1px solid var(--vermilion); border-radius: 0; height: 6px; background: rgba(212, 71, 30, .1); }
+
+/* the launcher: cards washed with the track's color */
+
+html.study.vellum .slot { border-right-color: var(--hair-faint); }
+
+html.study.vellum .cell {
+    border: 0;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--tc) 18%, #F8F5EE);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 22%, transparent), 0 0 6px color-mix(in srgb, var(--tc) 14%, transparent);
+}
+
+html.study.vellum .cell .nm { color: var(--ink); }
+html.study.vellum .cell .tri, html.study.vellum .cell .kind { color: var(--text2); }
+html.study.vellum .cell .mini svg rect, html.study.vellum .cell .mini svg circle { fill: var(--ink); fill-opacity: .72; }
+html.study.vellum .cell.playing { box-shadow: inset 0 0 0 1px var(--ink), inset 0 -2px 0 var(--vermilion); }
+html.study.vellum .cell.playing .tri { color: var(--vermilion); }
+html.study.vellum .cell .prog { height: 2px; background: var(--vermilion); }
+html.study.vellum .cell.queued { border: 0; box-shadow: inset 0 0 0 1px var(--ink); outline: 1px dashed var(--hair); outline-offset: 2px; }
+html.study.vellum .cell.rec { background: rgba(212, 71, 30, .12); box-shadow: inset 0 0 0 1px var(--vermilion); }
+html.study.vellum .cell.rec .tri { color: var(--vermilion); }
+html.study.vellum .cell .when { background: var(--ink); color: var(--paper); border-radius: 2px; }
+html.study.vellum .empty { border: 1px dashed var(--hair-faint); border-radius: 3px; background: transparent; color: rgba(31, 29, 26, .25); }
+html.study.vellum .empty.armed { color: var(--vermilion); border-color: rgba(212, 71, 30, .35); }
+
+/* the timeline: ruled like paper; clips are washes with ink notes */
+
+html.study.vellum .arow > .lane {
+    border-bottom: 1px solid var(--divider);
+    background-color: transparent;
+    background-image:
+        repeating-linear-gradient(to right, rgba(31, 29, 26, .16) 0 1px, transparent 1px var(--bar)),
+        repeating-linear-gradient(to right, rgba(31, 29, 26, .05) 0 1px, transparent 1px calc(var(--bar) / 4));
+}
+
+html.study.vellum .arow.ruler > .lane { background-image: none; }
+
+html.study.vellum .tclip {
+    border: 0;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--tc) 22%, #F8F5EE);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 20%, transparent), 0 0 7px color-mix(in srgb, var(--tc) 22%, transparent);
+}
+
+html.study.vellum .tclip .cap { background: transparent; color: var(--ink); font-family: "Sitka Text", Georgia, serif; font-size: 11px; }
+html.study.vellum .tclip .cap .lnk { color: var(--text3); }
+html.study.vellum .tclip .body svg rect, html.study.vellum .tclip .body svg circle { fill: var(--ink); fill-opacity: .74; }
+html.study.vellum .tclip.sel { box-shadow: inset 0 0 0 1px var(--vermilion), 0 0 0 1px var(--vermilion); }
+html.study.vellum .tclip.gen { border: 1px dashed color-mix(in srgb, var(--tc) 60%, transparent); }
+html.study.vellum .tclip.muted { filter: grayscale(.9); opacity: .55; }
+html.study.vellum .tclip.summary { background: color-mix(in srgb, var(--tc) 10%, transparent); box-shadow: none; }
+
+html.study.vellum .loopmark { border-left-color: var(--hair); }
+html.study.vellum .lane-overlay { background: repeating-linear-gradient(135deg, rgba(243, 240, 232, .9) 0 5px, rgba(235, 231, 221, .82) 5px 10px); color: var(--text2); font-style: italic; }
+
+html.study.vellum .playhead { width: 1px; background: var(--vermilion); box-shadow: none; }
+html.study.vellum .ruler .playhead::before { border-top-color: var(--vermilion); }
+html.study.vellum .tag > span { background: transparent; color: var(--ink); clip-path: none; padding-left: 5px; font-family: "Sitka Text", Georgia, serif; font-style: italic; font-weight: 400; border-left: 2px solid var(--tagc, #D7D7D7); }
+html.study.vellum .tag > span::after { display: none; }
+
+/* ---- the clip editor: a sheet lifted off the page */
+
+html.study.vellum .editor {
+    margin: 0 10px;
+    border: 0;
+    border-radius: 8px 8px 0 0;
+    background: var(--sheet);
+    box-shadow: 0 -1px 2px rgba(60, 45, 20, .08), 0 -16px 40px rgba(60, 45, 20, .14);
+}
+
+html.study.vellum .ed-head { border-bottom: 1px solid var(--hair-faint); }
+html.study.vellum .ed-head .cname { font-size: 17px; font-style: italic; }
+html.study.vellum .roll, html.study.vellum .vlane { background: transparent; }
+html.study.vellum .roll svg rect { fill-opacity: .85; }
+html.study.vellum .keys, html.study.vellum .lanehead, html.study.vellum .rruler .corner { border-right-color: var(--hair-faint); }
+html.study.vellum .lanerow { border-top-color: var(--hair-faint); }
+html.study.vellum .rruler .loopbar { background: rgba(212, 71, 30, .22); }
+html.study.vellum .inspector { background: transparent; border-left-color: var(--hair-faint); }
+html.study.vellum .insp-head .t { font-style: italic; font-weight: 600; }
+
+html.study.vellum .statusbar { border-top: 1px solid var(--hair-faint); color: var(--text3); }
+html.study.vellum .statusbar .ok { color: var(--play); }
+html.study.vellum .statusbar .recx { color: var(--vermilion); }
+html.study.vellum .vbar { background: rgba(31, 29, 26, .25); }
+
+/* ---- review fixes (October 19): one solid key, watercolor washes, keys, and rehearsal marks */
+
+html.study.vellum { --text3: #6B655C; }
+
+/* Play stays solid ink; any other key that's on is ringed in ink */
+html.study.vellum .tbtn.on { background: transparent; border: 1.5px solid var(--ink); color: var(--ink); box-shadow: inset 0 -2px 0 var(--vermilion); }
+
+/* washes, darker where the brush landed */
+html.study.vellum .tclip { background: radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, var(--tc) 28%, #F8F5EE), color-mix(in srgb, var(--tc) 10%, #F8F5EE) 75%); box-shadow: 0 0 10px 1px color-mix(in srgb, var(--tc) 20%, transparent); }
+
+html.study.vellum .keys svg rect[fill="#D9D9D9"] { fill: #FBF9F4; stroke: rgba(31, 29, 26, .25); }
+html.study.vellum .keys svg rect[fill="#1B1B1B"] { fill: var(--ink); }
+
+/* section markers as rehearsal marks in a printed score */
+html.study.vellum .arow.tempo .tag > span { border: 1.5px solid var(--ink); padding: 0 5px; font-style: normal; font-weight: 700; }
+
+/* ---- review fixes, round 2 (October 19): no solid ink toggles but Play, and washes on the pads */
+
+html.study.vellum .btn.toggled { background: transparent; border: 1.5px solid var(--ink); color: var(--ink); box-shadow: inset 0 -2px 0 var(--vermilion); }
+html.study.vellum .cell { background: radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, var(--tc) 28%, #F8F5EE), color-mix(in srgb, var(--tc) 10%, #F8F5EE) 75%); }

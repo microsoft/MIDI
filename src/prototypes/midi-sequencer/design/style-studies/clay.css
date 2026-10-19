@@ -1,0 +1,393 @@
+/* PROTOTYPE. Style study: Clay (dark). One violet charcoal material, pressed and carved, with
+   almost no lines. Track color shows up only as thin glowing strips; quiet lowercase labels keep
+   it calm. The same shadow recipe as Porcelain, tuned for dark: deep shadows, faint highlights. */
+
+html.study.clay {
+    --surface: #2F2E33;
+    --well: #26252A;
+    --face: linear-gradient(145deg, #36353A, #2A292E);
+    --face-pressed: #29282D;
+    --raised: -5px -5px 12px rgba(255, 255, 255, .045), 7px 9px 18px rgba(0, 0, 0, .55);
+    --raised-small: -3px -3px 7px rgba(255, 255, 255, .05), 4px 5px 10px rgba(0, 0, 0, .55);
+    --raised-tiny: -2px -2px 4px rgba(255, 255, 255, .05), 2px 3px 6px rgba(0, 0, 0, .5);
+    --pressed: inset 4px 5px 10px rgba(0, 0, 0, .55), inset -3px -3px 8px rgba(255, 255, 255, .04);
+    --groove: inset 5px 6px 12px rgba(0, 0, 0, .5), inset -4px -4px 10px rgba(255, 255, 255, .035);
+
+    --text: #EEECF2;
+    --text2: #ABA8B3;
+    --text3: #807D88;
+    --divider: transparent;
+    --stroke: transparent;
+    --stroke-strong: transparent;
+    --accent: #7FD1E0;
+    --accent-deep: #7FD1E0;
+    --play: #9BD3A2;
+    --success: #9BD3A2;
+    --rec: #F2685A;
+    --mute: #E8D27A;
+    --solo: #7FD1E0;
+    --lane-bg: var(--well);
+}
+
+html.study.clay [style*="#FF8A65"] { --tc: #E9A877 !important; }
+html.study.clay [style*="#5BC0EB"] { --tc: #7FD1E0 !important; }
+html.study.clay [style*="#B4A7FF"] { --tc: #B9A6F0 !important; }
+html.study.clay [style*="#6CCB5F"] { --tc: #9BD3A2 !important; }
+html.study.clay [style*="#4DD0C4"] { --tc: #79C9B8 !important; }
+html.study.clay [style*="#9C8CFF"] { --tc: #B9A6F0 !important; }
+html.study.clay [style*="#F7C948"] { --tc: #E8D27A !important; }
+html.study.clay [style*="#FF6F91"] { --tc: #F2867A !important; }
+html.study.clay [style*="#FFB547"] { --tc: #E8D27A !important; }
+html.study.clay [style*="#BDBDBD"] { --tc: #8E8A96 !important; }
+
+html.study.clay, html.study.clay body { background: #1A191D; }
+html.study.clay body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+html.study.clay .caption-above { color: var(--text2); }
+html.study.clay .caption-above b { color: var(--text); }
+
+/* quiet lowercase labels for the window's own words; names stay as you typed them */
+html.study.clay .tlabel, html.study.clay .chip, html.study.clay .btn, html.study.clay .statusbar,
+html.study.clay .kv .k, html.study.clay .insp-head .t, html.study.clay .tsub, html.study.clay .lanehead { text-transform: lowercase; }
+
+html.study.clay .lcd .big, html.study.clay .lcd .small, html.study.clay .bar-num, html.study.clay .tlabel,
+html.study.clay .scene .n, html.study.clay .tb { font-family: Bahnschrift, "Segoe UI Variable Text", sans-serif; }
+
+html.study.clay .tname, html.study.clay .ed-head .cname { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; }
+
+/* ---- the window */
+
+html.study.clay .window {
+    background: var(--surface);
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+
+html.study.clay .titlebar .title, html.study.clay .caption-btn, html.study.clay .sys-btns div { color: var(--text3); }
+
+html.study.clay .preview-chiclet {
+    border: 0;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--mute);
+}
+
+/* ---- controls */
+
+html.study.clay .btn {
+    border: 0;
+    border-radius: 14px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+    color: var(--text);
+}
+
+html.study.clay .btn .gl { color: var(--text2); }
+html.study.clay .btn.subtle { background: transparent; box-shadow: none; }
+html.study.clay .btn.toggled { background: var(--face-pressed); box-shadow: var(--pressed); color: var(--accent); text-shadow: 0 0 8px rgba(127, 209, 224, .5); }
+
+html.study.clay .field {
+    border: 0;
+    border-radius: 13px;
+    background: var(--well);
+    box-shadow: var(--groove);
+    color: var(--text);
+}
+
+html.study.clay .chip { border: 0; border-radius: 12px; background: var(--face); box-shadow: var(--raised-tiny); color: var(--text2); }
+html.study.clay .chip.on { background: var(--face-pressed); box-shadow: var(--pressed); color: var(--play); text-shadow: 0 0 8px rgba(155, 211, 162, .45); }
+html.study.clay .chip.info { background: var(--face-pressed); box-shadow: var(--pressed); color: var(--accent); }
+
+/* ---- the transport: round keys */
+
+html.study.clay .transport { height: 64px; flex-basis: 64px; border: 0; gap: 10px; padding: 0 18px; }
+html.study.clay .transport .sep { width: 10px; flex-basis: 10px; background: transparent; }
+
+html.study.clay .tbtn {
+    width: 40px;
+    flex-basis: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 20px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+    color: var(--text2);
+}
+
+html.study.clay .tbtn.on { background: var(--face-pressed); box-shadow: var(--pressed); color: var(--accent); text-shadow: 0 0 10px rgba(127, 209, 224, .6); }
+html.study.clay .tbtn.play.on { color: var(--play); text-shadow: 0 0 10px rgba(155, 211, 162, .7); }
+html.study.clay .tbtn.rec { color: var(--rec); }
+html.study.clay .tbtn.split { width: 24px; flex-basis: 24px; height: 24px; margin-left: -6px; border-radius: 12px; }
+
+html.study.clay .lcd {
+    height: 46px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--well);
+    box-shadow: inset 5px 6px 12px rgba(0, 0, 0, .6), inset -3px -3px 8px rgba(255, 255, 255, .035);
+}
+
+html.study.clay .lcd .big { font-weight: 300; font-size: 21px; color: var(--text); letter-spacing: .04em; }
+html.study.clay .lcd .small { color: var(--text3); }
+
+/* ---- the arrange: carved slots holding raised plates */
+
+html.study.clay .arow > .hdr, html.study.clay .arow > .launch, html.study.clay .arow > .lane { border: 0; }
+html.study.clay .arow > .launch { background: transparent; }
+html.study.clay .pinned { background: transparent; }
+
+html.study.clay .pin-edge {
+    height: 3px;
+    flex-basis: 3px;
+    margin: 4px 16px;
+    border-radius: 2px;
+    background: var(--well);
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, .6);
+}
+
+html.study.clay .arow.track > .hdr,
+html.study.clay .arow.tempo > .hdr,
+html.study.clay .arow.folder > .hdr {
+    margin: 4px 10px;
+    width: calc(var(--hdr-w) - 20px);
+    flex-basis: calc(var(--hdr-w) - 20px);
+    border-radius: 14px;
+    background: var(--well);
+    box-shadow: var(--groove);
+}
+
+html.study.clay .arow.track > .hdr[style] { background: var(--face); box-shadow: var(--raised-small); }
+html.study.clay .arow.auto > .hdr { background: transparent; }
+
+/* the track's color as a thin glowing strip */
+html.study.clay .strip {
+    width: 3px;
+    height: 22px;
+    flex: 0 0 3px;
+    align-self: center;
+    margin-left: 10px;
+    border-radius: 2px;
+    background: var(--tc);
+    box-shadow: 0 0 8px var(--tc), 0 0 2px var(--tc);
+}
+
+html.study.clay .indent::after { background: rgba(255, 255, 255, .06); }
+html.study.clay .ticon { color: var(--tc); text-shadow: 0 0 8px var(--tc); }
+
+html.study.clay .tb {
+    width: 24px;
+    height: 22px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--text3);
+}
+
+html.study.clay .tb.r { color: #B8645C; }
+html.study.clay .tb.m.on, html.study.clay .tb.s.on, html.study.clay .tb.r.on { background: var(--face-pressed); box-shadow: inset 2px 3px 5px rgba(0, 0, 0, .6); }
+html.study.clay .tb.m.on { color: var(--mute); text-shadow: 0 0 6px var(--mute); }
+html.study.clay .tb.s.on { color: var(--solo); text-shadow: 0 0 6px var(--solo); }
+html.study.clay .tb.r.on { color: var(--rec); text-shadow: 0 0 6px var(--rec); }
+
+html.study.clay .led { background: var(--well); box-shadow: inset 1px 1px 2px rgba(0, 0, 0, .7); }
+html.study.clay .led.out { background: var(--play); box-shadow: 0 0 8px var(--play); }
+html.study.clay .led.in { background: var(--mute); box-shadow: 0 0 8px var(--mute); }
+
+html.study.clay .arow.ruler { background: transparent; height: 38px; }
+
+html.study.clay .scene {
+    margin: 6px 4px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--face);
+    box-shadow: var(--raised-tiny);
+    color: var(--text);
+}
+
+html.study.clay .scene .n { color: var(--text3); }
+html.study.clay .bar-num { border-left-color: rgba(0, 0, 0, .5); color: var(--text3); }
+html.study.clay .loop-range { height: 7px; border: 0; border-radius: 4px 4px 0 0; background: rgba(127, 209, 224, .45); box-shadow: 0 0 10px rgba(127, 209, 224, .35); }
+
+/* the launcher: raised lozenges in carved dimples, each lit along its top */
+
+html.study.clay .slot { border: 0; padding: 4px 5px; }
+
+html.study.clay .cell {
+    border: 0;
+    border-radius: 11px;
+    background: var(--face);
+    box-shadow: var(--raised-small);
+}
+
+html.study.clay .cell::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10px;
+    right: 10px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--tc);
+    box-shadow: 0 0 8px var(--tc);
+}
+
+html.study.clay .cell .nm { color: var(--text); }
+html.study.clay .cell .tri, html.study.clay .cell .kind { color: var(--text3); }
+html.study.clay .cell .mini svg { filter: drop-shadow(0 0 2px var(--tc)); }
+html.study.clay .cell.playing { background: var(--face-pressed); box-shadow: var(--pressed), 0 0 0 1px rgba(155, 211, 162, .35); }
+html.study.clay .cell.playing .tri { color: var(--play); text-shadow: 0 0 6px var(--play); }
+html.study.clay .cell .prog { height: 2px; left: 8px; bottom: 3px; border-radius: 2px; background: var(--play); box-shadow: 0 0 6px var(--play); }
+html.study.clay .cell.queued { border: 0; outline: 1px dashed rgba(238, 236, 242, .4); outline-offset: -4px; }
+html.study.clay .cell.rec { background: var(--face-pressed); box-shadow: var(--pressed), 0 0 0 1px rgba(242, 104, 90, .4); }
+html.study.clay .cell.rec .tri { color: var(--rec); }
+html.study.clay .cell.rec .prog { background: var(--rec); box-shadow: 0 0 6px var(--rec); }
+html.study.clay .cell.muted { filter: saturate(.2) brightness(.8); }
+html.study.clay .cell .when { background: #1E1D21; color: var(--text2); border-radius: 6px; }
+
+html.study.clay .empty {
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    box-shadow: inset 2px 3px 5px rgba(0, 0, 0, .45), inset -2px -2px 4px rgba(255, 255, 255, .03);
+    color: rgba(255, 255, 255, .12);
+}
+
+html.study.clay .empty.armed { color: rgba(242, 104, 90, .6); }
+
+/* the timeline: carved grooves, the grid carved into them */
+
+html.study.clay .arow > .lane {
+    margin: 4px 14px 4px 4px;
+    border-radius: 13px;
+    background-color: var(--well);
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .42) 0 1px, rgba(255, 255, 255, .035) 1px 2px, transparent 2px var(--bar)),
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .18) 0 1px, transparent 1px calc(var(--bar) / 4));
+    box-shadow: var(--groove);
+}
+
+html.study.clay .arow.ruler > .lane { margin: 0 14px 0 4px; background: transparent; box-shadow: none; }
+html.study.clay .arow.addrow > .lane, html.study.clay .arow.filler > .lane { background: transparent; box-shadow: none; }
+
+html.study.clay .tclip {
+    top: 4px;
+    bottom: 4px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--face);
+    box-shadow: -2px -2px 5px rgba(255, 255, 255, .045), 4px 5px 10px rgba(0, 0, 0, .6);
+}
+
+html.study.clay .tclip::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--tc);
+    box-shadow: 0 0 9px var(--tc);
+    z-index: 1;
+}
+
+html.study.clay .tclip .cap { background: transparent; color: var(--text2); padding-left: 8px; height: 16px; line-height: 17px; }
+html.study.clay .tclip .cap .lnk { color: var(--text3); }
+html.study.clay .tclip .body { top: 16px; }
+html.study.clay .tclip .body svg { filter: drop-shadow(0 0 2.5px var(--tc)); }
+html.study.clay .tclip.sel { border: 0; box-shadow: -3px -3px 7px rgba(255, 255, 255, .06), 7px 9px 16px rgba(0, 0, 0, .7), 0 0 0 1.5px var(--accent), 0 0 14px rgba(127, 209, 224, .3); }
+html.study.clay .tclip.gen { border: 0; outline: 1px dashed rgba(238, 236, 242, .22); outline-offset: -3px; }
+html.study.clay .tclip.muted { filter: saturate(.15) brightness(.75); }
+html.study.clay .tclip.summary { background: transparent; box-shadow: inset 2px 3px 5px rgba(0, 0, 0, .45); }
+html.study.clay .tclip.summary::before { opacity: .5; }
+
+html.study.clay .loopmark { border-left-color: rgba(238, 236, 242, .22); }
+html.study.clay .lane-overlay { border-radius: 13px; background: repeating-linear-gradient(135deg, rgba(38, 37, 42, .9) 0 6px, rgba(32, 31, 36, .82) 6px 12px); color: var(--text2); }
+html.study.clay .lane-overlay .btn { background: var(--face); }
+
+html.study.clay .playhead { width: 1.5px; background: var(--accent); box-shadow: 0 0 10px var(--accent), 0 0 3px var(--accent); }
+html.study.clay .ruler .playhead::before { border-top-color: var(--accent); }
+html.study.clay .tag > span { background: color-mix(in srgb, var(--tagc, #D7D7D7) 70%, #2F2E33); color: #1A191D; }
+
+/* ---- the clip editor: a raised slab, the roll carved into it */
+
+html.study.clay .editor {
+    margin: 6px 14px 6px 14px;
+    border: 0;
+    border-radius: 20px;
+    background: var(--face);
+    box-shadow: var(--raised);
+}
+
+html.study.clay .ed-head { border: 0; }
+html.study.clay .ed-head .sep { background: transparent; }
+
+html.study.clay .rruler, html.study.clay .rruler .corner, html.study.clay .keys, html.study.clay .lanehead,
+html.study.clay .lanerow, html.study.clay .inspector, html.study.clay .insp-head { border: 0; }
+
+html.study.clay .rruler .marks span { border-left-color: rgba(0, 0, 0, .45); }
+html.study.clay .rruler .loopbar { background: rgba(127, 209, 224, .4); border-radius: 3px; box-shadow: 0 0 8px rgba(127, 209, 224, .3); }
+
+html.study.clay .roll, html.study.clay .vlane {
+    margin: 0 8px 8px 0;
+    border-radius: 13px;
+    background: var(--well);
+    box-shadow: var(--groove);
+}
+
+html.study.clay .roll svg, html.study.clay .vlane svg { filter: drop-shadow(0 0 2px rgba(127, 209, 224, .5)); }
+html.study.clay .inspector { background: transparent; }
+
+html.study.clay .statusbar { border: 0; color: var(--text3); }
+html.study.clay .statusbar .ok { color: var(--play); }
+html.study.clay .statusbar .recx { color: var(--rec); }
+html.study.clay .vbar { background: rgba(255, 255, 255, .14); }
+
+/* ---- review fixes (October 19): lit top edges, arcs for track color, keys, and rings of light */
+
+html.study.clay {
+    --face: linear-gradient(145deg, #3B3A40, #2B2A2F);
+    --raised-small: -3px -3px 7px rgba(255, 255, 255, .07), 4px 5px 10px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .07);
+    --text3: #9A97A3;
+    --hdr-w: 300px;
+    --launch-w: 470px;
+}
+
+/* names, devices and buttons as typed: "MIDI keyboard", not "midi keyboard" */
+html.study.clay .btn, html.study.clay .tsub, html.study.clay .statusbar { text-transform: none; }
+
+/* the track's color as a glowing arc, in place of the stripe */
+html.study.clay .strip {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    margin-left: 10px;
+    box-sizing: border-box;
+    background: none;
+    border: 2px solid var(--tc);
+    border-left-color: transparent;
+    border-radius: 50%;
+    transform: rotate(-45deg);
+    box-shadow: none;
+    filter: drop-shadow(0 0 4px var(--tc));
+}
+
+html.study.clay .keys svg rect[fill="#D9D9D9"] { fill: #3A393F; stroke: #1A191D; }
+html.study.clay .keys svg rect[fill="#1B1B1B"] { fill: #201F24; stroke: #1A191D; }
+
+/* a ring of light around a key that's on */
+html.study.clay .tbtn.on { box-shadow: var(--pressed), 0 0 0 3px #2F2E33, 0 0 0 5px rgba(127, 209, 224, .5), 0 0 14px rgba(127, 209, 224, .3); }
+html.study.clay .tbtn.play.on { box-shadow: var(--pressed), 0 0 0 3px #2F2E33, 0 0 0 5px rgba(155, 211, 162, .55), 0 0 14px rgba(155, 211, 162, .3); }
+
+/* ---- review fixes, round 2 (October 19): a full ring of light (an arc read as a spinner),
+   room for names and scene names, rings apart, and readable key labels */
+
+html.study.clay { --hdr-w: 310px; }
+html.study.clay .scene { gap: 4px; padding: 0 6px; }
+html.study.clay .strip { border-left-color: var(--tc); transform: none; background: var(--well); box-shadow: inset 1px 1px 2px rgba(0, 0, 0, .7); }
+html.study.clay .tbtn.on { margin: 0 3px; }
+html.study.clay .keys svg text { fill: var(--text3); }
+
+/* the taller transport and ruler leave Add a track short of room */
+html.study.clay .arow.addrow { height: 32px; }

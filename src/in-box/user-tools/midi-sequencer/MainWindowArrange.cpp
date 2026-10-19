@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "GeneratorNames.h"
 #include "SequenceRender.h"
 #include "StringResources.h"
 
@@ -19,6 +20,9 @@ namespace winrt::midisequencer::implementation
     namespace
     {
         constexpr double SceneWidth = 100.0;
+
+        // The button after the last scene, which adds one.
+        constexpr double AddSceneWidth = 32.0;
         constexpr double TicksPerFourFourBar = 3840.0;
 
         // Pixels from a clip's right end that resize it rather than move it.
@@ -105,6 +109,32 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     media::SolidColorBrush MainWindow::HeaderBackground(seq::ArrangeRow const& row) const
     {
+        // A style that draws the headers draws them behind the row (PlateHeaderRow).
+        if ((row.Kind == seq::ArrangeRowKind::Track || row.Kind == seq::ArrangeRowKind::Folder || row.Kind == seq::ArrangeRowKind::Tempo) && HeadersPlated())
+        {
+            return media::SolidColorBrush{ winrt::Microsoft::UI::Colors::Transparent() };
+        }
+
+        // A theme can color the headers as plates of its own (Aluminum).
+        auto const themed = [this](std::wstring_view token) -> std::optional<winrt::Windows::UI::Color>
+        {
+            if (m_palette.Theme != nullptr && m_palette.Theme->HasToken(token))
+            {
+                return seq::ToUiColor(m_palette.Theme->Token(token));
+            }
+
+            return std::nullopt;
+        };
+
+        auto const selected = row.Kind != seq::ArrangeRowKind::Tempo && !row.TrackId.empty() && (row.TrackId == m_selectedTrackId || IsTrackSelected(row.TrackId));
+
+        if (auto const color = themed(row.Kind == seq::ArrangeRowKind::Lane ? L"headerLane"
+            : selected ? L"headerSelected"
+            : row.Kind == seq::ArrangeRowKind::Folder ? L"headerFolder" : L"headerTrack"); color.has_value())
+        {
+            return media::SolidColorBrush{ *color };
+        }
+
         if (row.Kind == seq::ArrangeRowKind::Lane)
         {
             return media::SolidColorBrush{ m_palette.Light ? seq::Rgba(0, 0, 0, 0.025) : seq::Rgba(0, 0, 0, 0.10) };
@@ -210,7 +240,9 @@ namespace winrt::midisequencer::implementation
             {
                 try
                 {
-                    strong->m_renderer.DrawRuler(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()), strong->DrawContext());
+                    auto context = strong->DrawContext();
+                    context.Creator = sender;
+                    strong->m_renderer.DrawRuler(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()), context);
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the ruler.")
             }
@@ -225,8 +257,10 @@ namespace winrt::midisequencer::implementation
                     try
                     {
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
+                        auto context = strong->DrawContext();
+                        context.Creator = sender;
                         strong->m_renderer.DrawLanes(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
-                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, strong->DrawContext());
+                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
                         strong->DrawKeyboardFocus(args.DrawingSession(), sender);
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the timeline.")
@@ -246,8 +280,10 @@ namespace winrt::midisequencer::implementation
                     try
                     {
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
+                        auto context = strong->DrawContext();
+                        context.Creator = sender;
                         strong->m_renderer.DrawLauncher(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
-                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, strong->DrawContext());
+                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
                         strong->DrawKeyboardFocus(args.DrawingSession(), sender);
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip launcher.")
@@ -336,7 +372,7 @@ namespace winrt::midisequencer::implementation
 
             launcher.PointerWheelChanged([weak](auto&&, input::PointerRoutedEventArgs const& args)
             {
-                if (auto strong = weak.get()) { strong->OnLaneWheel(args); }
+                if (auto strong = weak.get()) { strong->OnLauncherWheel(args, false); }
             });
         }
 
@@ -353,6 +389,26 @@ namespace winrt::midisequencer::implementation
         m_rulerCanvas.PointerReleased([weak](auto&&, input::PointerRoutedEventArgs const& args)
         {
             if (auto strong = weak.get()) { strong->OnRulerReleased(args); }
+        });
+
+        // Lost part way through a drag, say to Alt+Tab: what was dragged so far stays, and the drag
+        // ends, so the pointer passing over later changes nothing.
+        m_rulerCanvas.PointerCaptureLost([weak](auto&&, auto&&)
+        {
+            try
+            {
+                if (auto strong = weak.get(); strong && strong->m_rulerDragging)
+                {
+                    strong->m_rulerDragging = false;
+                    strong->m_loopGrab = LoopGrab::None;
+
+                    if (strong->m_rulerMoved)
+                    {
+                        strong->ApplyEngineSettings();
+                    }
+                }
+            }
+            MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to end a drag on the ruler.")
         });
 
         m_rulerCanvas.PointerWheelChanged([weak](auto&&, input::PointerRoutedEventArgs const& args)
@@ -396,6 +452,7 @@ namespace winrt::midisequencer::implementation
         });
 
         HookArrangeKeyboard();
+        SetUpTimelineBar();
 
         m_editorCanvas.SizeChanged([weak](auto&&, xaml::SizeChangedEventArgs const& args)
         {
@@ -442,6 +499,17 @@ namespace winrt::midisequencer::implementation
         ScrollHeaderCanvas().PointerWheelChanged([weak](auto&&, input::PointerRoutedEventArgs const& args)
         {
             if (auto strong = weak.get()) { strong->OnLaneWheel(args); }
+        });
+
+        SceneHeaderHost().PointerWheelChanged([weak](auto&&, input::PointerRoutedEventArgs const& args)
+        {
+            if (auto strong = weak.get()) { strong->OnLauncherWheel(args, true); }
+        });
+
+        // A wider launcher may show every scene, and a narrower one fewer.
+        m_scrollLauncherCanvas.SizeChanged([weak](auto&&, xaml::SizeChangedEventArgs const&)
+        {
+            if (auto strong = weak.get()) { strong->ScrollScenes(strong->m_sceneScrollX); }
         });
     }
 
@@ -629,6 +697,7 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            m_headerPlates.Remove(L"rows");
             PinnedHeaderCanvas().Children().Clear();
             ScrollHeaderCanvas().Children().Clear();
             m_pinnedHeaders.clear();
@@ -782,6 +851,10 @@ namespace winrt::midisequencer::implementation
         auto const color = track != nullptr ? seq::FromRgb(track->Color) : seq::FromRgb(0xBDBDBD);
         grid.Background(HeaderBackground(row));
 
+        // What a style draws behind the row (PlateHeaderRow).
+        std::vector<std::pair<primitives::ToggleButton, std::wstring_view>> toggles{};
+        shapes::Ellipse light{ nullptr };
+
         shapes::Rectangle strip{};
         strip.Fill(BrushFor(color));
         place(strip, 0);
@@ -877,6 +950,16 @@ namespace winrt::midisequencer::implementation
         controls::TextBlock name{};
         name.FontSize(13);
         name.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
+
+        // A style can name the tracks in a face of its own (Vellum's Candara).
+        if (m_palette.Theme != nullptr)
+        {
+            if (auto const face = m_palette.Theme->Font(L"names", {}); !face.empty())
+            {
+                name.FontFamily(media::FontFamily{ winrt::hstring{ face } });
+                name.FontSize(14);
+            }
+        }
         name.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
         name.TextWrapping(xaml::TextWrapping::NoWrap);
 
@@ -1017,7 +1100,7 @@ namespace winrt::midisequencer::implementation
             buttons.Spacing(3);
             buttons.VerticalAlignment(xaml::VerticalAlignment::Center);
 
-            auto const makeFlag = [&](wchar_t flag, bool on, seq::Color onFill, seq::Color onText, seq::Color offText, std::wstring_view nameKey)
+            auto const makeFlag = [&](wchar_t flag, bool on, seq::Color onFill, seq::Color onText, seq::Color offText, std::wstring_view nameKey, std::wstring_view kind)
             {
                 primitives::ToggleButton toggle{};
                 toggle.Width(compact ? 20 : 22);
@@ -1071,16 +1154,17 @@ namespace winrt::midisequencer::implementation
                 });
 
                 buttons.Children().Append(toggle);
+                toggles.emplace_back(toggle, kind);
             };
 
             auto const dark = seq::FromRgb(0x1A1A1A);
 
-            makeFlag(L'M', track->Muted, m_palette.Mute, dark, m_palette.Text3, L"MuteTrackFormat");
-            makeFlag(L'S', track->Soloed, m_palette.Solo, dark, m_palette.Text3, L"SoloTrackFormat");
+            makeFlag(L'M', track->Muted, m_palette.Mute, dark, m_palette.Text3, L"MuteTrackFormat", L"mute");
+            makeFlag(L'S', track->Soloed, m_palette.Solo, dark, m_palette.Text3, L"SoloTrackFormat", L"solo");
 
             if (!track->IsFolder)
             {
-                makeFlag(L'R', m_armed.contains(track->Id), m_palette.Record, seq::FromRgb(0xFFFFFF), m_palette.Light ? m_palette.RecordText : seq::FromRgb(0xFF8A8E), L"ArmTrackFormat");
+                makeFlag(L'R', m_armed.contains(track->Id), m_palette.Record, seq::FromRgb(0xFFFFFF), m_palette.Light ? m_palette.RecordText : seq::FromRgb(0xFF8A8E), L"ArmTrackFormat", L"record");
             }
             else
             {
@@ -1099,6 +1183,7 @@ namespace winrt::midisequencer::implementation
             place(led, 6);
 
             m_leds.emplace(track->Id, led);
+            light = led;
         }
 
         // Selecting, opening the setup, the track menu, and dragging it somewhere else.
@@ -1175,6 +1260,7 @@ namespace winrt::midisequencer::implementation
         }
 
         AddRowGrip(grid, row);
+        PlateHeaderRow(row, track, grid, strip, toggles, light);
 
         return grid;
     }
@@ -1358,6 +1444,10 @@ namespace winrt::midisequencer::implementation
             auto const lit = BrushFor(m_palette.Play);
             auto const dim = BrushFor(m_palette.Light ? seq::Rgba(0, 0, 0, 0.12) : seq::Rgba(255, 255, 255, 0.14));
 
+            // A style that draws the lights reads whether each is on from its tag.
+            auto const plated = HeaderLedsPlated();
+            auto relight = false;
+
             for (auto const& [id, led] : m_leds)
             {
                 auto on = false;
@@ -1388,6 +1478,17 @@ namespace winrt::midisequencer::implementation
                     }
                 }
 
+                if (plated)
+                {
+                    if (winrt::unbox_value_or<bool>(led.Tag(), false) != on)
+                    {
+                        led.Tag(winrt::box_value(on));
+                        relight = true;
+                    }
+
+                    continue;
+                }
+
                 auto const current = led.Fill().try_as<media::SolidColorBrush>();
                 auto const want = on ? lit.Color() : dim.Color();
 
@@ -1395,6 +1496,11 @@ namespace winrt::midisequencer::implementation
                 {
                     led.Fill(on ? lit : dim);
                 }
+            }
+
+            if (relight)
+            {
+                m_headerPlates.Invalidate();
             }
         }
         catch (...)
@@ -1406,11 +1512,16 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            m_headerPlates.Remove(L"scenes");
             SceneHeaderHost().Children().Clear();
 
             m_sceneHeaderPanel = controls::StackPanel{};
             m_sceneHeaderPanel.Orientation(controls::Orientation::Horizontal);
             m_sceneHeaderPanel.HorizontalAlignment(xaml::HorizontalAlignment::Left);
+
+            // Scenes deleted, or a narrower launcher, can leave it scrolled past the last scene.
+            auto const shown = m_scrollLauncherCanvas != nullptr ? m_scrollLauncherCanvas.ActualWidth() : 0.0;
+            m_sceneScrollX = std::clamp(m_sceneScrollX, 0.0, std::max(0.0, static_cast<double>(m_doc.Scenes.size()) * SceneWidth + AddSceneWidth - shown));
 
             media::TranslateTransform shift{};
             shift.X(-m_sceneScrollX);
@@ -1471,6 +1582,7 @@ namespace winrt::midisequencer::implementation
                 content.Children().Append(play);
 
                 button.Content(content);
+                PlateScene(button, label, number, play);
 
                 auto const accessible = value.Name.empty()
                     ? res::FormatString(L"LaunchSceneFormat", scene + 1)
@@ -1546,7 +1658,7 @@ namespace winrt::midisequencer::implementation
             }
 
             controls::Button add{};
-            add.Width(32);
+            add.Width(AddSceneWidth);
             add.Height(32);
             add.MinHeight(0);
             add.MinWidth(0);
@@ -1592,19 +1704,12 @@ namespace winrt::midisequencer::implementation
             VerticalScroll().Value(m_scrollY);
             VerticalScroll().Visibility(maximumY > 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
-            auto const width = LaneWidth();
+            // Across, the timeline's own scroll bar (MainWindowTimelineBar.cpp) shows where it is.
             auto const pixelsPerTick = m_barWidth / TicksPerFourFourBar;
-            auto const endTick = std::max<int64_t>(seq::SequenceEndTick(m_doc), m_position);
-            auto const contentWidth = static_cast<double>(endTick) * pixelsPerTick + m_barWidth * 16.0;
-            auto const maximumX = std::max(0.0, std::max(contentWidth, m_scrollX + width) - width);
-
-            m_scrollX = std::clamp(m_scrollX, 0.0, maximumX);
-
-            HorizontalScroll().Maximum(maximumX);
-            HorizontalScroll().ViewportSize(width);
-            HorizontalScroll().LargeChange(std::max(1.0, width * 0.9));
-            HorizontalScroll().SmallChange(m_barWidth);
-            HorizontalScroll().Value(m_scrollX);
+            auto const view = TimelineView();
+            auto const limits = TimelineLimits();
+            m_scrollX = std::clamp(m_scrollX, 0.0, std::max(0.0, (limits.End - view.Span) * pixelsPerTick));
+            m_timelineBar.Invalidate();
 
             m_updatingScrollBars = false;
         }
@@ -1628,33 +1733,16 @@ namespace winrt::midisequencer::implementation
         InvalidateLaunchers();
     }
 
-    _Use_decl_annotations_
-    void MainWindow::OnHorizontalScrollChanged(foundation::IInspectable const&, primitives::RangeBaseValueChangedEventArgs const& args)
-    {
-        if (m_updatingScrollBars)
-        {
-            return;
-        }
 
-        m_scrollX = args.NewValue();
-        InvalidateArrange();
-    }
 
     _Use_decl_annotations_
     void MainWindow::SetZoom(double barWidth, double anchorX) noexcept
     {
         try
         {
-            auto const clamped = std::clamp(barWidth, seq::AppSettings::MinimumBarWidth, seq::AppSettings::MaximumBarWidth);
+            // Through the scroll bar's limits, so zooming out stops at the whole sequence.
             auto const tick = (anchorX + m_scrollX) / (m_barWidth / TicksPerFourFourBar);
-
-            m_barWidth = clamped;
-            m_scrollX = std::max(0.0, tick * (m_barWidth / TicksPerFourFourBar) - anchorX);
-
-            seq::AppSettings::Current().BarWidth(m_barWidth);
-
-            UpdateScrollBars();
-            InvalidateArrange();
+            SetTimelineView(seq::ZoomAbout(TimelineView(), barWidth / m_barWidth, tick, TimelineLimits()));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to zoom the timeline.")
     }
@@ -1672,6 +1760,7 @@ namespace winrt::midisequencer::implementation
         try
         {
             UpdateLyricsBar();
+            m_timelineBar.PlayheadMoved(m_position);
 
             auto const x = static_cast<double>(m_position) * (m_barWidth / TicksPerFourFourBar) - m_scrollX;
             auto const width = LaneWidth();
@@ -2074,17 +2163,9 @@ namespace winrt::midisequencer::implementation
 
             EditTracks(std::wstring{ res::GetString(folder ? L"UndoAddFolder" : L"UndoAddTrack") }, [&](seq::Sequence& doc)
             {
-                // A new track goes after the selected one; inside a folder that's selected and open.
-                auto const selected = seq::FindTrack(doc, after);
-
-                if (selected != nullptr && selected->IsFolder && selected->Open && !folder)
-                {
-                    selected->Children.push_back(std::move(track));
-                }
-                else
-                {
-                    seq::InsertTrackAfter(doc, after, std::move(track));
-                }
+                // A new track goes after the selected one; inside a folder that's selected and open,
+                // unless that's deeper than a sequence file keeps.
+                seq::InsertTrackAfter(doc, after, std::move(track));
             });
 
             SelectTrack(id);
@@ -2377,9 +2458,7 @@ namespace winrt::midisequencer::implementation
                 m_laneDrag = LaneDrag::Resize;
                 m_lanePinned = pinned;
                 m_dragStart = point.Position();
-                m_dragOriginalTick = placement.Tick;
                 m_dragOriginalLength = EffectiveLength(m_doc, placement);
-                m_dragTick = m_dragOriginalTick;
                 m_dragLength = m_dragOriginalLength;
                 m_dragTracksBefore = m_doc.Tracks;
             }
@@ -2461,7 +2540,8 @@ namespace winrt::midisequencer::implementation
 
                 m_dragPoint = point;
                 m_dragCopy = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Control) == winrt::Windows::System::VirtualKeyModifiers::Control;
-                UpdateClipDrop(m_dragPoint, m_dragCopy);
+                m_dragKeepTrack = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+                UpdateClipDrop(m_dragPoint, m_dragCopy, m_dragKeepTrack);
                 args.Handled(true);
                 return;
             }
@@ -2498,14 +2578,14 @@ namespace winrt::midisequencer::implementation
             auto const position = args.GetCurrentPoint(canvas).Position();
             auto const dx = static_cast<double>(position.X) - static_cast<double>(m_dragStart.X);
 
-            if (std::abs(dx) < DragThreshold && m_dragTick == m_dragOriginalTick && m_dragLength == m_dragOriginalLength)
+            if (std::abs(dx) < DragThreshold && m_dragLength == m_dragOriginalLength)
             {
                 return;
             }
 
             auto const ticks = static_cast<int64_t>(std::llround(dx / (m_barWidth / TicksPerFourFourBar)));
 
-            // Clips move by whole beats unless snap is finer, so they stay on the grid.
+            // Lengths change by whole beats unless snap is finer, so clips stay on the grid.
             auto const grid = std::max<int64_t>(SnapGrid(), seq::TicksPerQuarterNote);
             auto const track = seq::FindTrack(m_doc, m_selectedTrackId);
 
@@ -2515,17 +2595,8 @@ namespace winrt::midisequencer::implementation
             }
 
             auto& placement = track->Timeline[m_selectedPlacement];
-
-            if (m_laneDrag == LaneDrag::Move)
-            {
-                m_dragTick = std::max<int64_t>(0, seq::SnapTick(m_dragOriginalTick + ticks, grid));
-                placement.Tick = m_dragTick;
-            }
-            else
-            {
-                m_dragLength = std::max<int64_t>(grid, seq::SnapTick(m_dragOriginalLength + ticks, grid));
-                placement.Length = m_dragLength;
-            }
+            m_dragLength = std::max<int64_t>(grid, seq::SnapTick(m_dragOriginalLength + ticks, grid));
+            placement.Length = m_dragLength;
 
             InvalidateArrange();
         }
@@ -2562,13 +2633,12 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            auto const drag = m_laneDrag;
             m_laneDrag = LaneDrag::None;
 
             auto const canvas = pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas;
             canvas.ReleasePointerCaptures();
 
-            auto const changed = m_dragTick != m_dragOriginalTick || m_dragLength != m_dragOriginalLength;
+            auto const changed = m_dragLength != m_dragOriginalLength;
 
             if (!changed)
             {
@@ -2597,7 +2667,7 @@ namespace winrt::midisequencer::implementation
             changes.push_back(seq::MakeTracksChange(std::move(m_dragTracksBefore), m_doc.Tracks));
             m_dragTracksBefore.clear();
 
-            Commit(std::wstring{ res::GetString(drag == LaneDrag::Move ? L"UndoMoveClip" : L"UndoResizeClip") }, std::move(changes));
+            Commit(std::wstring{ res::GetString(L"UndoResizeClip") }, std::move(changes));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to finish dragging a clip.")
     }
@@ -2617,7 +2687,9 @@ namespace winrt::midisequencer::implementation
 
             if (control)
             {
-                SetZoom(m_barWidth * (delta > 0 ? 1.25 : 0.8), std::clamp(static_cast<double>(point.Position().X), 0.0, LaneWidth()));
+                // A touchpad's pinch comes as Ctrl and the wheel, in small steps.
+                m_timelineBar.ForgetFit();
+                SetZoom(m_barWidth * std::pow(1.25, static_cast<double>(delta) / 120.0), std::clamp(static_cast<double>(point.Position().X), 0.0, LaneWidth()));
             }
             else if (shift || point.Properties().IsHorizontalMouseWheel())
             {
@@ -2638,6 +2710,88 @@ namespace winrt::midisequencer::implementation
             args.Handled(true);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to scroll the timeline.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnLauncherWheel(input::PointerRoutedEventArgs const& args, bool sceneNames)
+    {
+        try
+        {
+            using winrt::Windows::System::VirtualKeyModifiers;
+
+            auto const properties = args.GetCurrentPoint(m_scrollLauncherCanvas).Properties();
+            auto const modifiers = args.KeyModifiers();
+            auto const control = (modifiers & VirtualKeyModifiers::Control) == VirtualKeyModifiers::Control;
+            auto const shift = (modifiers & VirtualKeyModifiers::Shift) == VirtualKeyModifiers::Shift;
+
+            // Sideways, the launcher goes through its scenes; up and down, it goes with the tracks.
+            // Over the scene names there's only sideways.
+            if (!control && (shift || sceneNames || properties.IsHorizontalMouseWheel()))
+            {
+                auto const direction = properties.IsHorizontalMouseWheel() ? 1.0 : -1.0;
+                ScrollScenes(m_sceneScrollX + direction * static_cast<double>(properties.MouseWheelDelta()) * 0.5);
+                args.Handled(true);
+                return;
+            }
+
+            OnLaneWheel(args);
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to scroll the clip launcher.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ScrollScenes(double x) noexcept
+    {
+        try
+        {
+            auto const shown = m_scrollLauncherCanvas != nullptr ? m_scrollLauncherCanvas.ActualWidth() : 0.0;
+            auto const furthest = std::max(0.0, static_cast<double>(m_doc.Scenes.size()) * SceneWidth + AddSceneWidth - shown);
+            auto const scrolled = std::clamp(x, 0.0, furthest);
+
+            if (scrolled == m_sceneScrollX)
+            {
+                return;
+            }
+
+            m_sceneScrollX = scrolled;
+
+            if (m_sceneHeaderPanel != nullptr)
+            {
+                if (auto const moved = m_sceneHeaderPanel.RenderTransform().try_as<media::TranslateTransform>())
+                {
+                    moved.X(-m_sceneScrollX);
+                }
+            }
+
+            // Moving them isn't a layout, so their plates are drawn again here.
+            m_headerPlates.Invalidate();
+            InvalidateLaunchers();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ShowScene(size_t scene) noexcept
+    {
+        try
+        {
+            auto const shown = m_scrollLauncherCanvas != nullptr ? m_scrollLauncherCanvas.ActualWidth() : 0.0;
+            auto const left = static_cast<double>(scene) * SceneWidth;
+
+            if (left < m_sceneScrollX)
+            {
+                ScrollScenes(left);
+            }
+            else if (left + SceneWidth > m_sceneScrollX + shown)
+            {
+                ScrollScenes(left + SceneWidth - shown);
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
@@ -2868,14 +3022,27 @@ namespace winrt::midisequencer::implementation
             menu.Items().Append(item);
         };
 
+        // A new clip, pattern or generator shows the same symbol its slot will (design section 27).
+        auto const addKind = [&menu](winrt::hstring const& text, seq::ClipIcon kind, std::function<void()> action)
+        {
+            controls::MenuFlyoutItem item{};
+            item.Text(text);
+            item.Icon(seq::MakeClipIcon(kind));
+            item.Click([action](auto&&, auto&&) { action(); });
+            menu.Items().Append(item);
+        };
+
         if (row.Kind == seq::ArrangeRowKind::Track)
         {
-            add(res::GetString(L"MenuNewClipHere"), L"\uE710", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick); } });
-            add(res::GetString(L"MenuNewDrumPatternHere"), L"\uE80A", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, seq::PatternMode::Drums); } });
-            add(res::GetString(L"MenuNewMelodicPatternHere"), L"\uE80A", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, seq::PatternMode::Melodic); } });
-            add(res::GetString(L"MenuNewEuclideanHere"), L"\uE9F5", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, seq::GeneratorType::Euclidean); } });
-            add(res::GetString(L"MenuNewMelodyHere"), L"\uE9F5", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, seq::GeneratorType::ChanceMelody); } });
-            add(res::GetString(L"MenuNewArpeggiatorHere"), L"\uE9F5", [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, seq::GeneratorType::Arpeggiator); } });
+            addKind(res::GetString(L"MenuNewClipHere"), seq::ClipIcon::Notes, [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick); } });
+            addKind(res::GetString(L"MenuNewDrumPatternHere"), seq::ClipIcon::DrumPattern, [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, seq::PatternMode::Drums); } });
+            addKind(res::GetString(L"MenuNewMelodicPatternHere"), seq::ClipIcon::MelodicPattern, [weak, trackId, tick]() { if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, seq::PatternMode::Melodic); } });
+
+            // Every generator, in groups, with the symbol its clip will have (design section 28).
+            menu.Items().Append(MakeNewGeneratorMenu(res::GetString(L"MenuNewGeneratorHere"), [weak, trackId, tick](seq::GeneratorType type)
+            {
+                if (auto s = weak.get()) { s->CreateClipAt(trackId, tick, std::nullopt, type); }
+            }));
         }
 
         if (row.Kind == seq::ArrangeRowKind::Track || row.Kind == seq::ArrangeRowKind::Tempo)
@@ -3045,7 +3212,7 @@ namespace winrt::midisequencer::implementation
     // ---------------------------------------------------------------- clips on the timeline
 
     _Use_decl_annotations_
-    void MainWindow::CreateClipAt(std::wstring const& trackId, int64_t tick, std::optional<seq::PatternMode> pattern, std::optional<seq::GeneratorType> generator) noexcept
+    void MainWindow::CreateClipAt(std::wstring trackId, int64_t tick, std::optional<seq::PatternMode> pattern, std::optional<seq::GeneratorType> generator) noexcept
     {
         try
         {
@@ -3061,9 +3228,9 @@ namespace winrt::midisequencer::implementation
             auto const start = seq::TickAtBar(m_doc.Meter, position.Bar);
             auto const length = seq::TicksPerBar(seq::MeterAtTick(m_doc.Meter, start));
 
-            // A chance melody gets two bars, as in comp 4.
-            auto const melody = generator == seq::GeneratorType::ChanceMelody;
-            auto const generatorName = melody ? L"DefaultMelodyName" : generator == seq::GeneratorType::Arpeggiator ? L"DefaultArpName" : L"DefaultEuclidName";
+            // A chance melody gets two bars, as in comp 4, and so does Learn.
+            auto const melody = generator.has_value() && seq::StartsTwoBarsLong(*generator);
+            auto const generatorName = generator.has_value() ? seq::GeneratorClipNameKey(*generator) : L"DefaultEuclidName";
 
             auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(generatorName), *generator, melody ? 2 * length : length) :
                 pattern.has_value() ? seq::MakePatternClip(NextClipName(L"DefaultPatternName"), *pattern) : seq::MakeNotesClip(NextClipName(), length);
@@ -3328,6 +3495,9 @@ namespace winrt::midisequencer::implementation
             changes.push_back(seq::MakeTracksChange(before, m_doc.Tracks));
 
             Commit(std::wstring{ res::GetString(L"UndoAddScene") }, std::move(changes));
+
+            // The new scene is the last, so the end of the launcher shows it and the button again.
+            ScrollScenes(std::numeric_limits<double>::max());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to add a scene.")
     }
@@ -3388,29 +3558,20 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            auto const quantize = LaunchQuantize();
-
             // Every track takes part: an empty slot in the scene stops its track.
+            std::vector<seq::PlaybackEngine::SceneLaunch> launches{};
+
             seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
             {
-                if (track.IsFolder)
+                if (!track.IsFolder)
                 {
-                    return true;
-                }
-
-                auto const clipId = scene < track.Slots.size() ? track.Slots[scene] : std::wstring{};
-
-                if (!clipId.empty())
-                {
-                    m_engine->LaunchClip(track.Id, clipId, quantize, static_cast<int32_t>(scene));
-                }
-                else
-                {
-                    m_engine->StopTrack(track.Id, quantize);
+                    launches.push_back({ track.Id, scene < track.Slots.size() ? track.Slots[scene] : std::wstring{} });
                 }
 
                 return true;
             });
+
+            m_engine->LaunchScene(launches, LaunchQuantize(), static_cast<int32_t>(scene));
 
             UpdateTransport();
 
@@ -3479,8 +3640,8 @@ namespace winrt::midisequencer::implementation
             }
 
             auto const length = seq::TicksPerBar(m_doc.Meter.empty() ? seq::MeterChange{} : m_doc.Meter.front());
-            auto const melody = generator == seq::GeneratorType::ChanceMelody;
-            auto const generatorName = melody ? L"DefaultMelodyName" : generator == seq::GeneratorType::Arpeggiator ? L"DefaultArpName" : L"DefaultEuclidName";
+            auto const melody = generator.has_value() && seq::StartsTwoBarsLong(*generator);
+            auto const generatorName = generator.has_value() ? seq::GeneratorClipNameKey(*generator) : L"DefaultEuclidName";
 
             auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(generatorName), *generator, melody ? 2 * length : length) :
                 pattern.has_value() ? seq::MakePatternClip(NextClipName(L"DefaultPatternName"), *pattern) : seq::MakeNotesClip(NextClipName(), length);
@@ -3587,26 +3748,39 @@ namespace winrt::midisequencer::implementation
                 return std::nullopt;
             }
 
-            auto const x = static_cast<double>(point.X) + m_sceneScrollX;
+            auto const scene = SceneAtLauncherX(point.X);
 
-            if (x < 0)
+            if (!scene.has_value())
             {
                 return std::nullopt;
             }
 
-            auto const scene = static_cast<size_t>(x / SceneWidth);
-
-            if (scene >= m_doc.Scenes.size())
-            {
-                return std::nullopt;
-            }
-
-            return std::make_pair(row->TrackId, scene);
+            return std::make_pair(row->TrackId, *scene);
         }
         catch (...)
         {
             return std::nullopt;
         }
+    }
+
+    _Use_decl_annotations_
+    std::optional<size_t> MainWindow::SceneAtLauncherX(double x) const noexcept
+    {
+        auto const scrolled = x + m_sceneScrollX;
+
+        if (scrolled < 0)
+        {
+            return std::nullopt;
+        }
+
+        auto const scene = static_cast<size_t>(scrolled / SceneWidth);
+
+        if (scene >= m_doc.Scenes.size())
+        {
+            return std::nullopt;
+        }
+
+        return scene;
     }
 
     _Use_decl_annotations_
@@ -3808,12 +3982,25 @@ namespace winrt::midisequencer::implementation
                 menu.Items().Append(controls::MenuFlyoutSeparator{});
             }
 
-            add(res::GetString(L"MenuNewClip"), L"\uE710", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene); } });
-            add(res::GetString(L"MenuNewDrumPattern"), L"\uE80A", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, seq::PatternMode::Drums); } });
-            add(res::GetString(L"MenuNewMelodicPattern"), L"\uE80A", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, seq::PatternMode::Melodic); } });
-            add(res::GetString(L"MenuNewEuclidean"), L"\uE9F5", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, seq::GeneratorType::Euclidean); } });
-            add(res::GetString(L"MenuNewMelody"), L"\uE9F5", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, seq::GeneratorType::ChanceMelody); } });
-            add(res::GetString(L"MenuNewArpeggiator"), L"\uE9F5", [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, seq::GeneratorType::Arpeggiator); } });
+            // A new clip, pattern or generator shows the same symbol its slot will (design section 27).
+            auto const addKind = [&menu](winrt::hstring const& text, seq::ClipIcon kind, std::function<void()> action)
+            {
+                controls::MenuFlyoutItem item{};
+                item.Text(text);
+                item.Icon(seq::MakeClipIcon(kind));
+                item.Click([action](auto&&, auto&&) { action(); });
+                menu.Items().Append(item);
+            };
+
+            addKind(res::GetString(L"MenuNewClip"), seq::ClipIcon::Notes, [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene); } });
+            addKind(res::GetString(L"MenuNewDrumPattern"), seq::ClipIcon::DrumPattern, [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, seq::PatternMode::Drums); } });
+            addKind(res::GetString(L"MenuNewMelodicPattern"), seq::ClipIcon::MelodicPattern, [weak, trackId, scene]() { if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, seq::PatternMode::Melodic); } });
+
+            menu.Items().Append(MakeNewGeneratorMenu(res::GetString(L"MenuNewGenerator"), [weak, trackId, scene](seq::GeneratorType type)
+            {
+                if (auto s = weak.get()) { s->CreateClipInSlot(trackId, scene, std::nullopt, type); }
+            }));
+
             add(res::GetString(L"MenuStopTrack"), L"\uE71A", [weak, trackId, scene]() { if (auto s = weak.get()) { s->LaunchSlot(trackId, scene); } });
         }
         else

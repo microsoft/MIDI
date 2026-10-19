@@ -191,12 +191,6 @@ namespace midisequencer
         }
     }
 
-    bool RemoteEndpoint::IsOpen() const noexcept
-    {
-        std::scoped_lock guard{ m_lock };
-        return m_connection != nullptr;
-    }
-
     bool RemoteEndpoint::KnowsWhenAppsConnect() const noexcept
     {
         std::scoped_lock guard{ m_lock };

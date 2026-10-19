@@ -76,6 +76,24 @@ namespace winrt::midisequencer::implementation
 
             m_remoteStarting = true;
 
+            // The endpoint turned off just before has to be gone first: the new one has its id.
+            if (auto closing = std::exchange(m_remoteClosing, nullptr); closing != nullptr)
+            {
+                try
+                {
+                    co_await closing;
+                }
+                catch (...)
+                {
+                }
+
+                if (m_closing || !seq::AppSettings::Current().RemoteControlEnabled())
+                {
+                    m_remoteStarting = false;
+                    co_return;
+                }
+            }
+
             auto remote = std::make_shared<seq::RemoteEndpoint>(m_session);
             auto const name = std::wstring{ res::GetString(L"RemoteEndpointName") };
             auto const description = std::wstring{ res::GetString(L"RemoteEndpointDescription") };
@@ -155,7 +173,8 @@ namespace winrt::midisequencer::implementation
         }
     }
 
-    void MainWindow::StopRemoteControl() noexcept
+    _Use_decl_annotations_
+    void MainWindow::StopRemoteControl(bool inBackground) noexcept
     {
         try
         {
@@ -166,7 +185,14 @@ namespace winrt::midisequencer::implementation
 
             if (auto remote = std::exchange(m_remote, nullptr); remote != nullptr)
             {
-                remote->Close();
+                if (inBackground)
+                {
+                    m_remoteClosing = ::midisequencer::RunOnBackgroundAsync([remote]() { remote->Close(); });
+                }
+                else
+                {
+                    remote->Close();
+                }
             }
 
             m_remoteShown.reset();
@@ -469,7 +495,7 @@ namespace winrt::midisequencer::implementation
                     }
                     else
                     {
-                        window->StopRemoteControl();
+                        window->StopRemoteControl(true);
                         window->ShowMessage(res::GetString(L"RemoteOff"));
                     }
                 });

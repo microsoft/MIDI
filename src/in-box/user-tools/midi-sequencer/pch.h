@@ -146,6 +146,8 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "PreviewBuild.h"
 #include "LiveRegion.h"
+#include "SpinButtons.h"
+#include "PopupBackdrop.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 #include "AppearanceFlyout.h"

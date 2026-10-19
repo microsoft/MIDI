@@ -56,6 +56,43 @@ namespace winrt::midisequencer::implementation
             return filter;
         }
 
+        // A note-on or note-off, in MIDI 1.0 or 2.0: its group, channel and note, and the note-off
+        // that ends it.
+        struct EchoNote
+        {
+            uint32_t Key{ 0 };
+            bool On{ false };
+            std::array<uint32_t, 2> Off{};
+        };
+
+        std::optional<EchoNote> EchoNoteOf(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept
+        {
+            auto const type = words[0] >> 28;
+            auto const status = (words[0] >> 20) & 0x0F;
+
+            if ((type != 0x2 && type != 0x4) || (status != 0x8 && status != 0x9) || (type == 0x4 && wordCount < 2))
+            {
+                return std::nullopt;
+            }
+
+            EchoNote note{};
+            note.Key = (words[0] >> 8) & 0x0F0F7F;
+
+            // In MIDI 1.0 a note-on at velocity 0 lets the key go; in MIDI 2.0 it doesn't.
+            note.On = status == 0x9 && (type == 0x4 || (words[0] & 0x7F) != 0);
+
+            // The same group, channel and note, at the release velocity a device sends when it
+            // has none of its own.
+            note.Off[0] = (words[0] & 0xFF0FFF00) | 0x00800000 | (type == 0x2 ? 0x40 : 0x00);
+            note.Off[1] = type == 0x4 ? 0x80000000 : 0;
+            return note;
+        }
+
+        uint8_t OffWordCount(_In_ std::array<uint32_t, 2> const& off) noexcept
+        {
+            return (off[0] >> 28) == 0x4 ? 2 : 1;
+        }
+
         std::wstring FormatTime(double seconds)
         {
             if (seconds < 0)
@@ -169,9 +206,11 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
-            // One at a time; a change that arrives during one is covered by the next.
+            // One at a time. A change that arrives during one may have come after it looked, so
+            // it runs once more when it's done.
             if (m_endpointRefreshPending.exchange(true))
             {
+                m_endpointRefreshAgain = true;
                 return;
             }
 
@@ -292,6 +331,11 @@ namespace winrt::midisequencer::implementation
 
                     strong->UpdateStatusBar();
                     strong->PrepareConnectionsAsync();
+
+                    if (strong->m_endpointRefreshAgain.exchange(false))
+                    {
+                        strong->RefreshEndpoints();
+                    }
                 }
                 catch (...)
                 {
@@ -705,8 +749,7 @@ namespace winrt::midisequencer::implementation
 
             auto const on = seq::AppSettings::Current().MetronomeEnabled();
             MetronomeToggle().IsChecked(on);
-            MetronomeIconPath().Stroke(BrushFor(on ? m_palette.Accent : m_palette.Text2));
-            MetronomeIconWeight().Fill(BrushFor(on ? m_palette.Accent : m_palette.Text2));
+            ColorMetronome();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the transport.")
     }
@@ -769,7 +812,6 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            m_recordStartTick = start;
             m_recording = true;
             m_recordingPreview.clear();
             m_recordingPreviewTrackId = *m_armed.begin();
@@ -1230,8 +1272,6 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            m_lastInputTicks = timestamp;
-
             // Keys for arpeggiators go to the engine. A track whose arpeggiator is playing them
             // doesn't echo or record them: it plays, and records, the arpeggiator's notes.
             std::vector<std::wstring> arpeggiated{};
@@ -1247,19 +1287,75 @@ namespace winrt::midisequencer::implementation
             auto const tick = m_engine != nullptr && m_recording ? m_engine->TickAtTime(timestamp) : -1;
             auto const slotTick = m_engine != nullptr && m_slotRecording ? m_engine->UnwrappedTickAtTime(timestamp) : -1;
 
+            auto const note = EchoNoteOf(words, wordCount);
+
             std::scoped_lock guard{ m_inputLock };
+
+            // Forgets a key the track echoed, now let go, sending the note-off it echoed it with
+            // when asked.
+            auto const letGo = [&](std::wstring const& trackId, bool send)
+            {
+                auto const notes = m_echoedNotes.find(trackId);
+
+                if (notes == m_echoedNotes.end())
+                {
+                    return;
+                }
+
+                if (auto const off = notes->second.Offs.find(note->Key); off != notes->second.Offs.end())
+                {
+                    if (send)
+                    {
+                        SendNow(notes->second.Destination, off->second.data(), OffWordCount(off->second));
+                    }
+
+                    notes->second.Offs.erase(off);
+                }
+
+                if (notes->second.Offs.empty())
+                {
+                    m_echoedNotes.erase(notes);
+                }
+            };
 
             for (auto const& route : m_echoRoutes)
             {
-                if (!SameEndpoint(route.SourceId, endpointId) || !seq::PassesRecordFilter(route.Filter, words, wordCount) ||
-                    std::find(arpeggiated.begin(), arpeggiated.end(), route.TrackId) != arpeggiated.end())
+                if (!SameEndpoint(route.SourceId, endpointId) || !seq::PassesRecordFilter(route.Filter, words, wordCount))
                 {
+                    continue;
+                }
+
+                if (std::find(arpeggiated.begin(), arpeggiated.end(), route.TrackId) != arpeggiated.end())
+                {
+                    // A key echoed before the track's arpeggiator took over still gets its note-off.
+                    if (note.has_value() && !note->On)
+                    {
+                        letGo(route.TrackId, true);
+                    }
+
                     continue;
                 }
 
                 if (route.Echo)
                 {
                     SendNow(route.Destination, words, wordCount);
+
+                    if (note.has_value() && note->On)
+                    {
+                        auto& notes = m_echoedNotes[route.TrackId];
+
+                        if (notes.Offs.empty())
+                        {
+                            notes.SourceId = route.SourceId;
+                            notes.Destination = route.Destination;
+                        }
+
+                        notes.Offs[note->Key] = note->Off;
+                    }
+                    else if (note.has_value())
+                    {
+                        letGo(route.TrackId, false);
+                    }
                 }
 
                 if (tick >= 0)
@@ -1410,19 +1506,51 @@ namespace winrt::midisequencer::implementation
                 return true;
             });
 
-            std::scoped_lock guard{ m_inputLock };
-            m_echoRoutes = std::move(routes);
+            std::vector<std::pair<seq::TrackDestination, std::array<uint32_t, 2>>> offs{};
 
-            for (auto it = m_heard.begin(); it != m_heard.end();)
             {
-                it = m_armed.contains(it->first) ? std::next(it) : m_heard.erase(it);
+                std::scoped_lock guard{ m_inputLock };
+                m_echoRoutes = std::move(routes);
+
+                for (auto it = m_heard.begin(); it != m_heard.end();)
+                {
+                    it = m_armed.contains(it->first) ? std::next(it) : m_heard.erase(it);
+                }
+
+                // A key held while its track stops echoing it, or starts echoing it somewhere else,
+                // would never get its note-off: it gets it now, where its note-on went.
+                for (auto it = m_echoedNotes.begin(); it != m_echoedNotes.end();)
+                {
+                    auto& notes = it->second;
+                    auto const route = std::find_if(m_echoRoutes.begin(), m_echoRoutes.end(), [&](EchoRoute const& candidate) { return candidate.TrackId == it->first; });
+                    auto const same = route != m_echoRoutes.end() && route->Echo && route->Destination == notes.Destination && SameEndpoint(route->SourceId, notes.SourceId);
+
+                    for (auto off = notes.Offs.begin(); off != notes.Offs.end();)
+                    {
+                        if (same && seq::PassesRecordFilter(route->Filter, off->second.data(), OffWordCount(off->second)))
+                        {
+                            ++off;
+                            continue;
+                        }
+
+                        offs.emplace_back(notes.Destination, off->second);
+                        off = notes.Offs.erase(off);
+                    }
+
+                    it = notes.Offs.empty() ? m_echoedNotes.erase(it) : std::next(it);
+                }
+            }
+
+            for (auto const& [destination, off] : offs)
+            {
+                SendNow(destination, off.data(), OffWordCount(off));
             }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update what's echoed.")
     }
 
     _Use_decl_annotations_
-    void MainWindow::SendNow(seq::TrackDestination const& destination, uint32_t const* words, uint8_t wordCount) noexcept
+    void MainWindow::SendNow(seq::TrackDestination const& destination, uint32_t const* words, uint8_t wordCount, uint64_t timestamp) noexcept
     {
         // Any thread. Sends in the protocol the destination group speaks.
         try
@@ -1459,7 +1587,7 @@ namespace winrt::midisequencer::implementation
 
             for (uint8_t i = 0; i < translated.Count; ++i)
             {
-                m_output->Send(destination.Endpoint, 0, translated.Messages[i].data(), translated.WordCounts[i]);
+                m_output->Send(destination.Endpoint, timestamp, translated.Messages[i].data(), translated.WordCounts[i]);
             }
         }
         catch (...)
@@ -1841,6 +1969,7 @@ namespace winrt::midisequencer::implementation
 
         controls::Flyout flyout{};
         flyout.Content(panel);
+        midiapp::UseMenuBackdrop(flyout);
         flyout.ShowAt(MetronomeMenuButton());
     }
 

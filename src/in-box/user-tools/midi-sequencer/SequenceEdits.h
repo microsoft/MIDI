@@ -36,14 +36,10 @@ namespace midisequencer
     // One clip's settings (name, color, length, loop, seed), leaving its notes and events alone.
     std::unique_ptr<SequenceChange> MakeClipSettingsChange(_In_ Clip const& before, _In_ Clip const& after);
 
-    // A clip's events (controllers, per-note changes and the rest) before and after.
-    std::unique_ptr<SequenceChange> MakeClipEventsChange(_In_ std::wstring clipId, _In_ std::vector<ClipEvent> before, _In_ std::vector<ClipEvent> after);
-
     std::unique_ptr<SequenceChange> MakeTempoChange(_In_ std::vector<TempoPoint> before, _In_ std::vector<TempoPoint> after);
     std::unique_ptr<SequenceChange> MakeMeterChange(_In_ std::vector<MeterChange> before, _In_ std::vector<MeterChange> after);
     std::unique_ptr<SequenceChange> MakeSequenceTagsChange(_In_ std::vector<Tag> before, _In_ std::vector<Tag> after);
     std::unique_ptr<SequenceChange> MakeScenesChange(_In_ std::vector<Scene> before, _In_ std::vector<Scene> after);
-    std::unique_ptr<SequenceChange> MakeNameChange(_In_ std::wstring before, _In_ std::wstring after);
 
     // Where a track sits: the list that holds it (the top level or a folder's children) and its
     // index in that list. Nothing when the id isn't in the sequence.
@@ -66,7 +62,8 @@ namespace midisequencer
     Track MakeTrack(_In_ Sequence const& sequence, _In_ std::wstring name, _In_ bool folder);
 
     // Inserts after the given track, in the same list, or at the end of the top level when the id
-    // is empty or unknown. Returns where it went.
+    // is empty or unknown. After an open folder it goes inside it, at the end, unless that would
+    // nest it deeper than a sequence file keeps.
     void InsertTrackAfter(_Inout_ Sequence& sequence, _In_ std::wstring_view afterId, _In_ Track track);
 
     // Moves a track into a folder (at its end), or to the top level when folderId is empty.
@@ -123,14 +120,6 @@ namespace midisequencer
 
     // Snaps a tick to a grid. A grid of 0 leaves it alone.
     int64_t SnapTick(_In_ int64_t tick, _In_ int64_t grid) noexcept;
-
-    // The notes of a clip that start inside [fromTick, toTick) and lie inside [lowNote, highNote].
-    std::vector<size_t> NotesInBox(
-        _In_ Clip const& clip,
-        _In_ int64_t fromTick,
-        _In_ int64_t toTick,
-        _In_ uint8_t lowNote,
-        _In_ uint8_t highNote);
 
     // ---- automation ----
 

@@ -1,0 +1,141 @@
+/* PROTOTYPE. Style study: Porcelain, dark. The second pass (porcelain-2.css, no well) in a dark,
+   warm gray porcelain that sits with a dark mode desktop: mid grays, not black. The same recipe,
+   tuned for dark: soft shadows below and to the right, drawn in a deep shade of the porcelain
+   rather than black, and faint light above and to the left, so the keys are still defined by
+   their shadows. A layer over porcelain.css and porcelain-2.css,
+   which it leaves as they are; the page has the classes "study porcelain porcelain-2 no-well
+   porcelain-dark".
+
+   The surfaces sit on one ladder of lightness (OKLCH L, with the light study's whisper of warmth),
+   so porcelain-tint.css can glaze them in the window's color by changing only hue and chroma:
+   well 0.265, pressed 0.285, surface 0.305, keys 0.345 to 0.295, clips 0.375 to 0.325. */
+
+html.study.porcelain.porcelain-dark {
+    --surface: #302F2D;
+    --well: #262523;
+    --face: linear-gradient(145deg, #3A3937, #2D2C2A);
+    --face-pressed: #2B2A28;
+
+    /* Soft shadows (picked from porcelain-soft.css, C, October 19): about half the old depth and
+       more diffuse, with a faint 1 px contact shadow so edges stay crisp. They're drawn in a deep
+       shade of the porcelain, or of the window's color (porcelain-tint.css), not black, and the
+       light from the top left is a pale tint of it. Every shadow is a variable.
+
+       The shade stays inside sRGB for every window color. C's aqua shade didn't, and Edge draws a
+       blurred shadow in a color outside sRGB about a quarter lighter than its alpha says, so C's
+       strengths are three quarters of soft-c's here, to look as C did on aqua for every color. */
+    --shade: oklch(0.13 0.01 85);
+    --glint: oklch(0.97 0.006 85);
+    --raised: 0 1px 2px oklch(from var(--shade) l c h / .17), 4px 6px 22px oklch(from var(--shade) l c h / .26), -4px -4px 16px oklch(from var(--glint) l c h / .04);
+    --raised-small: 0 1px 1px oklch(from var(--shade) l c h / .17), 3px 4px 15px oklch(from var(--shade) l c h / .26), -3px -3px 11px oklch(from var(--glint) l c h / .05), inset 0 1px 0 oklch(from var(--glint) l c h / .07);
+    --raised-tiny: 0 1px 1px oklch(from var(--shade) l c h / .14), 2px 3px 10px oklch(from var(--shade) l c h / .24), -2px -2px 7px oklch(from var(--glint) l c h / .04), inset 0 1px 0 oklch(from var(--glint) l c h / .05);
+    --pressed: inset 2px 3px 9px oklch(from var(--shade) l c h / .3), inset -2px -2px 7px oklch(from var(--glint) l c h / .035);
+    --groove: inset 3px 4px 14px oklch(from var(--shade) l c h / .26), inset -3px -3px 11px oklch(from var(--glint) l c h / .03);
+    --clip-shadow: 0 1px 1px oklch(from var(--shade) l c h / .17), 2px 3px 12px oklch(from var(--shade) l c h / .26), -2px -2px 8px oklch(from var(--glint) l c h / .04);
+    --clip-lift: 0 1px 1px oklch(from var(--shade) l c h / .14), 3px 5px 17px oklch(from var(--shade) l c h / .23), -3px -3px 10px oklch(from var(--glint) l c h / .05);
+    --dimple: inset 1px 2px 7px oklch(from var(--shade) l c h / .26), inset -1px -1px 5px oklch(from var(--glint) l c h / .03);
+    --readout-well: inset 2px 3px 10px oklch(from var(--shade) l c h / .3), inset -2px -2px 8px oklch(from var(--glint) l c h / .03);
+    --key-down: inset 1px 2px 7px oklch(from var(--shade) l c h / .32), inset -1px -1px 5px oklch(from var(--glint) l c h / .035);
+    --led-dimple: inset 1px 1px 3px oklch(from var(--shade) l c h / .35);
+    --pin: inset 1px 1px 3px oklch(from var(--shade) l c h / .29);
+    --cap-shade: oklch(from var(--shade) l c h / .2);
+
+    --clip-face: linear-gradient(145deg, #42413F, #353432);
+    --cap-ring: #3A3937;
+    --overlay-a: rgba(48, 47, 45, .9);
+    --overlay-b: rgba(40, 39, 37, .85);
+    --lit-band: linear-gradient(to right, rgba(255, 255, 255, .09), rgba(255, 255, 255, .03));
+    --grid-line: rgba(0, 0, 0, .42);
+    --grid-light: rgba(255, 255, 255, .045);
+    --grid-beat: rgba(0, 0, 0, .14);
+    --seam-dark: rgba(0, 0, 0, .35);
+    --seam-light: rgba(255, 255, 255, .04);
+    --engrave-dark: rgba(0, 0, 0, .55);
+    --engrave-light: rgba(255, 255, 255, .06);
+
+    /* the dark roll's rows already average to the well */
+    --field: var(--well);
+
+    --text: #EDEBE6;
+    --text2: #C4C2BC;
+    --text3: #ADABA5;
+    --accent: #5BB6EA;
+    --accent-deep: #5BB6EA;
+    --play: #3FD07C;
+    --success: #3FD07C;
+    --rec: #FF6B33;
+    --mute: #F4B11E;
+    --solo: #5BB6EA;
+    --lane-bg: var(--well);
+}
+
+/* track colors: the same caps, a little brighter for dark; the graphite cap turns ivory */
+html.study.porcelain.porcelain-dark [style*="#FF8A65"] { --tc: #FF7A45 !important; }
+html.study.porcelain.porcelain-dark [style*="#5BC0EB"] { --tc: #45AEEB !important; }
+html.study.porcelain.porcelain-dark [style*="#B4A7FF"] { --tc: #A29EE0 !important; }
+html.study.porcelain.porcelain-dark [style*="#6CCB5F"] { --tc: #3FD07C !important; }
+html.study.porcelain.porcelain-dark [style*="#4DD0C4"] { --tc: #4DBDB5 !important; }
+html.study.porcelain.porcelain-dark [style*="#9C8CFF"] { --tc: #C9C7C1 !important; }
+html.study.porcelain.porcelain-dark [style*="#F7C948"] { --tc: #F4B11E !important; }
+html.study.porcelain.porcelain-dark [style*="#FF6F91"] { --tc: #F0607A !important; }
+html.study.porcelain.porcelain-dark [style*="#FFB547"] { --tc: #F4B11E !important; }
+html.study.porcelain.porcelain-dark [style*="#BDBDBD"] { --tc: #A8A6A0 !important; }
+
+/* a dark desktop under the window */
+html.study.porcelain.porcelain-dark, html.study.porcelain.porcelain-dark body { background: #1C1C1E; }
+html.study.porcelain.porcelain-dark .caption-above { color: #B5B3AE; }
+html.study.porcelain.porcelain-dark .caption-above b { color: #F2F0EB; }
+
+html.study.porcelain.porcelain-dark .window {
+    border: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: 0 34px 70px rgba(0, 0, 0, .55), 0 4px 10px rgba(0, 0, 0, .35);
+}
+
+/* ---- keys, chips, and the transport */
+
+html.study.porcelain.porcelain-dark .chip.on { color: #5FD08A; }
+html.study.porcelain.porcelain-dark .chip.info { color: var(--accent); }
+html.study.porcelain.porcelain-dark .transport .sep { background: linear-gradient(to right, rgba(0, 0, 0, .5) 0 1px, rgba(255, 255, 255, .06) 1px 2px); }
+html.study.porcelain.porcelain-dark .tbtn { color: #D8D6D0; }
+html.study.porcelain.porcelain-dark .tbtn.on { color: var(--text); }
+html.study.porcelain.porcelain-dark .tbtn.rec { color: var(--rec); }
+html.study.porcelain.porcelain-dark .lcd { box-shadow: var(--readout-well); }
+
+/* ---- the arrange */
+
+html.study.porcelain.porcelain-dark .pin-edge { background: linear-gradient(to bottom, rgba(0, 0, 0, .5), rgba(255, 255, 255, .06)); }
+html.study.porcelain.porcelain-dark .indent::after { background: rgba(255, 255, 255, .08); }
+html.study.porcelain.porcelain-dark .tb.m.on,
+html.study.porcelain.porcelain-dark .tb.s.on,
+html.study.porcelain.porcelain-dark .tb.r.on { box-shadow: var(--key-down); }
+html.study.porcelain.porcelain-dark .tb.m.on { color: var(--mute); }
+html.study.porcelain.porcelain-dark .tsub.recx { color: #FF7A45; }
+/* only an unlit one: a lit one keeps its glow */
+html.study.porcelain.porcelain-dark .led:not(.out):not(.in) { box-shadow: var(--led-dimple); }
+html.study.porcelain.porcelain-dark .bar-num { border-left-color: rgba(255, 255, 255, .1); }
+html.study.porcelain.porcelain-dark .loop-range { background: color-mix(in oklch, var(--accent) 45%, transparent); box-shadow: none; }
+
+/* the launcher: raised pads, empty slots as dimples */
+html.study.porcelain.porcelain-dark .cell.queued { outline-color: rgba(255, 255, 255, .4); }
+html.study.porcelain.porcelain-dark .cell .when { box-shadow: var(--pin); }
+html.study.porcelain.porcelain-dark .empty { box-shadow: var(--dimple); color: rgba(255, 255, 255, .15); }
+html.study.porcelain.porcelain-dark .empty.armed { color: rgba(255, 107, 51, .75); }
+
+/* the timeline: clips raised from the field */
+html.study.porcelain.porcelain-dark .tclip:not(.summary) { box-shadow: var(--clip-shadow); }
+html.study.porcelain.porcelain-dark .tclip.sel { box-shadow: var(--clip-lift), 0 0 0 2px var(--accent); }
+html.study.porcelain.porcelain-dark .tclip.summary { box-shadow: var(--dimple); }
+html.study.porcelain.porcelain-dark .loopmark { border-left-color: rgba(255, 255, 255, .25); }
+html.study.porcelain.porcelain-dark .tag > span { background: color-mix(in srgb, var(--tagc, #D7D7D7) 70%, #302F2D); color: #1A1918; }
+
+/* ---- the clip editor */
+
+html.study.porcelain.porcelain-dark .ed-head .sep { background: linear-gradient(to right, rgba(0, 0, 0, .5) 0 1px, rgba(255, 255, 255, .06) 1px 2px); }
+html.study.porcelain.porcelain-dark .rruler .marks span { border-left-color: rgba(255, 255, 255, .1); }
+html.study.porcelain.porcelain-dark .rruler .loopbar { background: color-mix(in oklch, var(--accent) 40%, transparent); }
+html.study.porcelain.porcelain-dark .keys svg rect[fill="#D9D9D9"] { fill: #C9C7C1; stroke: rgba(0, 0, 0, .4); }
+html.study.porcelain.porcelain-dark .keys svg rect[fill="#1B1B1B"] { fill: #1C1B1A; stroke: rgba(0, 0, 0, .4); }
+
+html.study.porcelain.porcelain-dark .statusbar .ok { color: #5FD08A; }
+html.study.porcelain.porcelain-dark .statusbar .recx { color: #FF7A45; }
+html.study.porcelain.porcelain-dark .vbar { background: rgba(255, 255, 255, .18); }

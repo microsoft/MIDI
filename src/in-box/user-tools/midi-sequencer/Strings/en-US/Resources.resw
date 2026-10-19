@@ -2713,26 +2713,47 @@
   <data name="DefaultMelodyName" xml:space="preserve">
     <value>Melody</value>
   </data>
-  <data name="MenuNewEuclideanHere" xml:space="preserve">
-    <value>New Euclidean rhythm here</value>
+  <data name="MenuNewGeneratorHere" xml:space="preserve">
+    <value>New generator here</value>
   </data>
-  <data name="MenuNewMelodyHere" xml:space="preserve">
-    <value>New chance melody here</value>
+  <data name="MenuNewGenerator" xml:space="preserve">
+    <value>New generator</value>
   </data>
-  <data name="MenuNewEuclidean" xml:space="preserve">
-    <value>New Euclidean rhythm</value>
+  <data name="GeneratorGroupRhythm" xml:space="preserve">
+    <value>Rhythms</value>
   </data>
-  <data name="MenuNewMelody" xml:space="preserve">
-    <value>New chance melody</value>
+  <data name="GeneratorGroupMelody" xml:space="preserve">
+    <value>Melodies</value>
+  </data>
+  <data name="GeneratorGroupPlayAlong" xml:space="preserve">
+    <value>Plays along</value>
   </data>
   <data name="DefaultArpName" xml:space="preserve">
     <value>Arp</value>
   </data>
-  <data name="MenuNewArpeggiatorHere" xml:space="preserve">
-    <value>New arpeggiator here</value>
+  <data name="DefaultLifeName" xml:space="preserve">
+    <value>Life</value>
   </data>
-  <data name="MenuNewArpeggiator" xml:space="preserve">
-    <value>New arpeggiator</value>
+  <data name="DefaultLifeDrumsName" xml:space="preserve">
+    <value>Life drums</value>
+  </data>
+  <data name="DefaultLearnName" xml:space="preserve">
+    <value>Learned</value>
+  </data>
+  <data name="DefaultWordsName" xml:space="preserve">
+    <value>Words</value>
+  </data>
+  <data name="DefaultEvolveName" xml:space="preserve">
+    <value>Evolve</value>
+  </data>
+  <data name="DefaultInfinityName" xml:space="preserve">
+    <value>Infinity</value>
+  </data>
+  <data name="DefaultLSystemName" xml:space="preserve">
+    <value>Grow</value>
+  </data>
+  <data name="DefaultRingingName" xml:space="preserve">
+    <value>Bells</value>
   </data>
   <data name="GeneratorTypeLabel.Text" xml:space="preserve">
     <value>Type</value>
@@ -2774,7 +2795,7 @@
     <value>Seed</value>
   </data>
   <data name="GeneratorSeedBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>The number chance starts from, in hex. The same seed always plays the same way. The button next to it picks a new one.</value>
+    <value>Where chance starts: a number in hex, or any words, such as "Midnight drive". The same seed always plays the same way. The button next to it picks a new one.</value>
   </data>
   <data name="GeneratorNewSeedButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>New seed</value>
@@ -2783,7 +2804,7 @@
     <value>Pick a new seed, so chance and choices come out differently</value>
   </data>
   <data name="GeneratorSeedInvalid" xml:space="preserve">
-    <value>A seed is up to eight hex digits, 0 to 9 and A to F.</value>
+    <value>Type a seed: up to eight hex digits, or any words.</value>
   </data>
   <data name="UndoSeed" xml:space="preserve">
     <value>Change seed</value>
@@ -2854,6 +2875,54 @@
   </data>
   <data name="GeneratorAboutArpeggiator" xml:space="preserve">
     <value>Plays the notes you hold, or another track's notes, one after another.</value>
+  </data>
+  <data name="GeneratorTypeLife" xml:space="preserve">
+    <value>Life</value>
+  </data>
+  <data name="GeneratorTypeLifeDrums" xml:space="preserve">
+    <value>Life drums</value>
+  </data>
+  <data name="GeneratorTypeLearn" xml:space="preserve">
+    <value>Learn</value>
+  </data>
+  <data name="GeneratorTypeWords" xml:space="preserve">
+    <value>Words</value>
+  </data>
+  <data name="GeneratorTypeEvolve" xml:space="preserve">
+    <value>Evolve</value>
+  </data>
+  <data name="GeneratorTypeInfinity" xml:space="preserve">
+    <value>Infinity series</value>
+  </data>
+  <data name="GeneratorTypeLSystem" xml:space="preserve">
+    <value>L-system</value>
+  </data>
+  <data name="GeneratorTypeChangeRinging" xml:space="preserve">
+    <value>Change ringing</value>
+  </data>
+  <data name="GeneratorAboutLife" xml:space="preserve">
+    <value>Cells live, die, and are born on a board of notes. Each pass is the next generation.</value>
+  </data>
+  <data name="GeneratorAboutLifeDrums" xml:space="preserve">
+    <value>The Game of Life with a row for each drum, so the groove grows and changes.</value>
+  </data>
+  <data name="GeneratorAboutLearn" xml:space="preserve">
+    <value>Learns which note follows which in a tune, a clip, or words, then wanders in that style.</value>
+  </data>
+  <data name="GeneratorAboutWords" xml:space="preserve">
+    <value>Spells what you type as a melody, a letter a step.</value>
+  </data>
+  <data name="GeneratorAboutEvolve" xml:space="preserve">
+    <value>Each pass is the best of eight changed copies of the last, by rules you weight.</value>
+  </data>
+  <data name="GeneratorAboutInfinity" xml:space="preserve">
+    <value>Per Nørgård's endless melody, which hides copies of itself inside.</value>
+  </data>
+  <data name="GeneratorAboutLSystem" xml:space="preserve">
+    <value>A rule that grows like a plant. The melody follows its drawing up and down.</value>
+  </data>
+  <data name="GeneratorAboutChangeRinging" xml:space="preserve">
+    <value>Rings bells in a new order every row, the way bell ringers do.</value>
   </data>
   <data name="GeneratorRepeatable" xml:space="preserve">
     <value>Every result comes from the clip's seed and the pass number, so jumping back replays the same notes, and an export writes what you heard.</value>
@@ -3842,5 +3911,762 @@
   </data>
   <data name="StartupSystemExclusive" xml:space="preserve">
     <value>System exclusive</value>
+  </data>
+  <data name="PatternTemplatesButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Templates</value>
+  </data>
+  <data name="PatternTemplatesButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start from a pattern in a well-known style, or add one to what's here</value>
+  </data>
+  <data name="PatternTemplatesText.Text" xml:space="preserve">
+    <value>Templates</value>
+  </data>
+  <data name="PatternHearToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hear steps</value>
+  </data>
+  <data name="PatternHearToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Hear steps: play a step's sound when you turn it on</value>
+  </data>
+  <data name="PatternTemplateKeyFormat" xml:space="preserve">
+    <value>Key: {0}</value>
+    <comment>{0} is a note name such as C or F#. Melodic templates are put in this key.</comment>
+  </data>
+  <data name="PatternTemplateTempoFormat" xml:space="preserve">
+    <value>Usually played at about {0} BPM</value>
+    <comment>{0} is a tempo in beats per minute.</comment>
+  </data>
+  <data name="PatternTemplateAskTitleFormat" xml:space="preserve">
+    <value>Use the {0} template?</value>
+    <comment>{0} is a template's name, such as Boom bap.</comment>
+  </data>
+  <data name="PatternTemplateAskText" xml:space="preserve">
+    <value>This pattern already has steps. Replace them with the template, or add the template's steps on top of them? Where both have a step, the template's step is used. Undo puts the pattern back either way.</value>
+  </data>
+  <data name="PatternTemplateReplace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="PatternTemplateAddOnTop" xml:space="preserve">
+    <value>Add on top</value>
+  </data>
+  <data name="UndoUseTemplateFormat" xml:space="preserve">
+    <value>Use the {0} template</value>
+    <comment>{0} is a template's name.</comment>
+  </data>
+  <data name="UndoAddTemplateFormat" xml:space="preserve">
+    <value>Add the {0} template</value>
+    <comment>{0} is a template's name.</comment>
+  </data>
+  <data name="PatternTemplateGroupDrumMachine" xml:space="preserve">
+    <value>Drum machine classics</value>
+  </data>
+  <data name="PatternTemplateGroupElectronic" xml:space="preserve">
+    <value>Electronic</value>
+  </data>
+  <data name="PatternTemplateGroupHipHop" xml:space="preserve">
+    <value>Hip hop</value>
+  </data>
+  <data name="PatternTemplateGroupWorld" xml:space="preserve">
+    <value>Latin, Caribbean, and African</value>
+  </data>
+  <data name="PatternTemplateGroupBasslines" xml:space="preserve">
+    <value>Basslines</value>
+  </data>
+  <data name="PatternTemplateGroupSequences" xml:space="preserve">
+    <value>Sequences and arpeggios</value>
+  </data>
+  <data name="PatternTemplateFourOnTheFloor" xml:space="preserve">
+    <value>Four on the floor</value>
+  </data>
+  <data name="PatternTemplateRock" xml:space="preserve">
+    <value>Rock</value>
+  </data>
+  <data name="PatternTemplateDisco" xml:space="preserve">
+    <value>Disco</value>
+  </data>
+  <data name="PatternTemplateFunk" xml:space="preserve">
+    <value>Funk</value>
+  </data>
+  <data name="PatternTemplateShuffle" xml:space="preserve">
+    <value>Shuffle</value>
+  </data>
+  <data name="PatternTemplateBreakbeat" xml:space="preserve">
+    <value>Breakbeat</value>
+  </data>
+  <data name="PatternTemplateHouse" xml:space="preserve">
+    <value>House</value>
+  </data>
+  <data name="PatternTemplateTechno" xml:space="preserve">
+    <value>Techno</value>
+  </data>
+  <data name="PatternTemplateElectro" xml:space="preserve">
+    <value>Electro</value>
+  </data>
+  <data name="PatternTemplateUkGarage" xml:space="preserve">
+    <value>UK garage (2-step)</value>
+  </data>
+  <data name="PatternTemplateDrumAndBass" xml:space="preserve">
+    <value>Drum and bass</value>
+  </data>
+  <data name="PatternTemplateDubstep" xml:space="preserve">
+    <value>Dubstep</value>
+  </data>
+  <data name="PatternTemplateBoomBap" xml:space="preserve">
+    <value>Boom bap</value>
+  </data>
+  <data name="PatternTemplateLoFi" xml:space="preserve">
+    <value>Lo-fi hip hop</value>
+  </data>
+  <data name="PatternTemplateTrap" xml:space="preserve">
+    <value>Trap</value>
+  </data>
+  <data name="PatternTemplateDrill" xml:space="preserve">
+    <value>Drill</value>
+  </data>
+  <data name="PatternTemplateReggaeton" xml:space="preserve">
+    <value>Reggaeton</value>
+  </data>
+  <data name="PatternTemplateAfrobeats" xml:space="preserve">
+    <value>Afrobeats</value>
+  </data>
+  <data name="PatternTemplateBossaNova" xml:space="preserve">
+    <value>Bossa nova</value>
+  </data>
+  <data name="PatternTemplateOneDrop" xml:space="preserve">
+    <value>Reggae one drop</value>
+  </data>
+  <data name="PatternTemplateSonClave" xml:space="preserve">
+    <value>Son clave</value>
+  </data>
+  <data name="PatternTemplateAcidTechno" xml:space="preserve">
+    <value>Acid techno</value>
+  </data>
+  <data name="PatternTemplateAcidHouse" xml:space="preserve">
+    <value>Acid house</value>
+  </data>
+  <data name="PatternTemplateRollingTechno" xml:space="preserve">
+    <value>Rolling techno</value>
+  </data>
+  <data name="PatternTemplateOffbeatHouse" xml:space="preserve">
+    <value>Offbeat house</value>
+  </data>
+  <data name="PatternTemplateOctaveDisco" xml:space="preserve">
+    <value>Disco octaves</value>
+  </data>
+  <data name="PatternTemplateSynthwaveEighths" xml:space="preserve">
+    <value>Synthwave eighths</value>
+  </data>
+  <data name="PatternTemplateFunkBass" xml:space="preserve">
+    <value>Funk</value>
+  </data>
+  <data name="PatternTemplateElectroBass" xml:space="preserve">
+    <value>Electro</value>
+  </data>
+  <data name="PatternTemplateTranceGallop" xml:space="preserve">
+    <value>Trance gallop</value>
+  </data>
+  <data name="PatternTemplateUkGarageBass" xml:space="preserve">
+    <value>UK garage</value>
+  </data>
+  <data name="PatternTemplateReggaeDub" xml:space="preserve">
+    <value>Dub</value>
+  </data>
+  <data name="PatternTemplateTrap808" xml:space="preserve">
+    <value>Trap 808</value>
+  </data>
+  <data name="PatternTemplateWalkingBass" xml:space="preserve">
+    <value>Walking bass</value>
+  </data>
+  <data name="PatternTemplateMinimalTechno" xml:space="preserve">
+    <value>Minimal techno</value>
+  </data>
+  <data name="PatternTemplateBerlinSchool" xml:space="preserve">
+    <value>Berlin school</value>
+  </data>
+  <data name="PatternTemplateUpDownArpeggio" xml:space="preserve">
+    <value>Up and down arpeggio</value>
+  </data>
+  <data name="GeneratorKeySection" xml:space="preserve">
+    <value>Key and range</value>
+  </data>
+  <data name="GeneratorRangeKeyboard" xml:space="preserve">
+    <value>Range: drag either end, or the middle to move it. Scroll to move it an octave.</value>
+  </data>
+  <data name="GeneratorJump" xml:space="preserve">
+    <value>Largest jump</value>
+  </data>
+  <data name="GeneratorJumpAny" xml:space="preserve">
+    <value>Any</value>
+  </data>
+  <data name="GeneratorJumpOctave" xml:space="preserve">
+    <value>Octave</value>
+  </data>
+  <data name="GeneratorJumpFifth" xml:space="preserve">
+    <value>Fifth</value>
+  </data>
+  <data name="GeneratorJumpThird" xml:space="preserve">
+    <value>Third</value>
+  </data>
+  <data name="GeneratorJumpStep" xml:space="preserve">
+    <value>Step</value>
+  </data>
+  <data name="GeneratorRootEnds" xml:space="preserve">
+    <value>Start and end on the root</value>
+  </data>
+  <data name="GeneratorPassShownFormat" xml:space="preserve">
+    <value>Pass {0} · {1} steps</value>
+  </data>
+  <data name="GeneratorPassPrevious" xml:space="preserve">
+    <value>Previous pass</value>
+  </data>
+  <data name="GeneratorPassNext" xml:space="preserve">
+    <value>Next pass</value>
+  </data>
+  <data name="UntitledClip" xml:space="preserve">
+    <value>Untitled clip</value>
+  </data>
+  <data name="LifeBoardName" xml:space="preserve">
+    <value>Life board</value>
+  </data>
+  <data name="LifeBoardTip" xml:space="preserve">
+    <value>Draw the first pass's cells here. While it plays, the board grows.</value>
+  </data>
+  <data name="LifeFilmName" xml:space="preserve">
+    <value>Passes</value>
+  </data>
+  <data name="LifeFilmTip" xml:space="preserve">
+    <value>Select a pass to see it. A dot means it stopped changing there.</value>
+  </data>
+  <data name="LifeBackToStart" xml:space="preserve">
+    <value>Back to the first pass</value>
+  </data>
+  <data name="LifeStartHere" xml:space="preserve">
+    <value>Start from this pass</value>
+  </data>
+  <data name="LifeStart" xml:space="preserve">
+    <value>Start with</value>
+  </data>
+  <data name="LifeScatter" xml:space="preserve">
+    <value>A scatter</value>
+  </data>
+  <data name="LifeGlider" xml:space="preserve">
+    <value>Glider</value>
+  </data>
+  <data name="LifeBlinker" xml:space="preserve">
+    <value>Blinker</value>
+  </data>
+  <data name="LifeRPentomino" xml:space="preserve">
+    <value>R-pentomino</value>
+  </data>
+  <data name="LifeClear" xml:space="preserve">
+    <value>Nothing</value>
+  </data>
+  <data name="LifeYourOwn" xml:space="preserve">
+    <value>Your own</value>
+    <comment>Lit when the board's first pass was drawn by hand or started from a later pass, rather than one of the named shapes.</comment>
+  </data>
+  <data name="LifeDensity" xml:space="preserve">
+    <value>How full</value>
+  </data>
+  <data name="LifeRule" xml:space="preserve">
+    <value>Rule</value>
+  </data>
+  <data name="LifeRuleLife" xml:space="preserve">
+    <value>Life</value>
+  </data>
+  <data name="LifeRuleHighLife" xml:space="preserve">
+    <value>HighLife</value>
+  </data>
+  <data name="LifeRuleSeeds" xml:space="preserve">
+    <value>Seeds</value>
+  </data>
+  <data name="LifePlays" xml:space="preserve">
+    <value>Plays</value>
+  </data>
+  <data name="LifeLowest" xml:space="preserve">
+    <value>Lowest cell</value>
+  </data>
+  <data name="LifeHighest" xml:space="preserve">
+    <value>Highest cell</value>
+  </data>
+  <data name="LifeAll" xml:space="preserve">
+    <value>Every cell</value>
+  </data>
+  <data name="LifeJoin" xml:space="preserve">
+    <value>Join neighbors</value>
+  </data>
+  <data name="LifeBirths" xml:space="preserve">
+    <value>New cells</value>
+  </data>
+  <data name="LifeBirthsPlain" xml:space="preserve">
+    <value>Like the rest</value>
+  </data>
+  <data name="LifeBirthsOnly" xml:space="preserve">
+    <value>Only new ones</value>
+  </data>
+  <data name="LifeSettledTitle" xml:space="preserve">
+    <value>When it stops changing</value>
+  </data>
+  <data name="LifeStartAgain" xml:space="preserve">
+    <value>Start again</value>
+  </data>
+  <data name="LifeAddCells" xml:space="preserve">
+    <value>Add cells</value>
+  </data>
+  <data name="LifeHold" xml:space="preserve">
+    <value>Keep going</value>
+  </data>
+  <data name="LifeRestartEvery" xml:space="preserve">
+    <value>Start again every</value>
+  </data>
+  <data name="LifeNever" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="LifePassesFormat" xml:space="preserve">
+    <value>{0} passes</value>
+  </data>
+  <data name="LifeDrums" xml:space="preserve">
+    <value>Drums</value>
+  </data>
+  <data name="LifeDrumsTip" xml:space="preserve">
+    <value>Select a drum's name on the board to change it.</value>
+  </data>
+  <data name="LifeAddDrum" xml:space="preserve">
+    <value>Add a drum</value>
+  </data>
+  <data name="LifeRemoveDrum" xml:space="preserve">
+    <value>Remove this drum</value>
+  </data>
+  <data name="LearnGraphName" xml:space="preserve">
+    <value>What it learned</value>
+  </data>
+  <data name="LearnGraphTip" xml:space="preserve">
+    <value>Each line is a move it learned from one note to the next, thicker the more often. The lit ones are this pass's.</value>
+  </data>
+  <data name="LearnPassRollName" xml:space="preserve">
+    <value>What this pass plays</value>
+  </data>
+  <data name="LearnFrom" xml:space="preserve">
+    <value>Learn from</value>
+  </data>
+  <data name="LearnOde" xml:space="preserve">
+    <value>Ode to Joy</value>
+  </data>
+  <data name="LearnFrere" xml:space="preserve">
+    <value>Frère Jacques</value>
+  </data>
+  <data name="LearnTwinkle" xml:space="preserve">
+    <value>Twinkle, Twinkle</value>
+  </data>
+  <data name="LearnWords" xml:space="preserve">
+    <value>Words</value>
+  </data>
+  <data name="LearnedFromFormat" xml:space="preserve">
+    <value>Learned from {0}</value>
+  </data>
+  <data name="LearnButton" xml:space="preserve">
+    <value>Learn</value>
+  </data>
+  <data name="LearnNeedsNotes" xml:space="preserve">
+    <value>That needs at least two notes to learn from. It's still picked, so Keep listening can hear it when it plays.</value>
+  </data>
+  <data name="UndoLearn" xml:space="preserve">
+    <value>Learn from a clip or a track</value>
+  </data>
+  <data name="ListenPick" xml:space="preserve">
+    <value>A clip or a track</value>
+    <comment>The list of the sequence's tracks and clips a generator can learn from or listen to.</comment>
+  </data>
+  <data name="ListenTracks" xml:space="preserve">
+    <value>Tracks</value>
+    <comment>A heading in the list of things to learn from.</comment>
+  </data>
+  <data name="ListenClips" xml:space="preserve">
+    <value>Clips</value>
+    <comment>A heading in the list of things to learn from.</comment>
+  </data>
+  <data name="ListenKeep" xml:space="preserve">
+    <value>Keep listening</value>
+  </data>
+  <data name="ListenKeepTip" xml:space="preserve">
+    <value>Each pass, hear what it played during the pass before.</value>
+  </data>
+  <data name="ListeningToFormat" xml:space="preserve">
+    <value>Listening to {0}</value>
+  </data>
+  <data name="ListenTo" xml:space="preserve">
+    <value>Listen to</value>
+  </data>
+  <data name="LearnMemory" xml:space="preserve">
+    <value>How closely it follows</value>
+  </data>
+  <data name="LearnWanders" xml:space="preserve">
+    <value>Wanders</value>
+  </data>
+  <data name="LearnBalanced" xml:space="preserve">
+    <value>In between</value>
+  </data>
+  <data name="LearnStaysClose" xml:space="preserve">
+    <value>Stays close</value>
+  </data>
+  <data name="LearnRepeats" xml:space="preserve">
+    <value>Repeats a pass</value>
+  </data>
+  <data name="WordsTitle" xml:space="preserve">
+    <value>Words</value>
+  </data>
+  <data name="WordsBox" xml:space="preserve">
+    <value>Type anything</value>
+  </data>
+  <data name="WordsBoxName" xml:space="preserve">
+    <value>Words to play</value>
+  </data>
+  <data name="WordsLegend" xml:space="preserve">
+    <value>Letters climb the scale. A space rests, a period ends on the root, and a question ends on the fifth. Capitals are louder.</value>
+  </data>
+  <data name="WordsDrawingName" xml:space="preserve">
+    <value>The words as notes</value>
+  </data>
+  <data name="EvolveFamilyName" xml:space="preserve">
+    <value>This pass and where it came from</value>
+  </data>
+  <data name="EvolveFamilyTip" xml:space="preserve">
+    <value>On top, this pass, with outlines of what it heard when it listens to something. Below, the eight changed copies made from it, each with a bar for its score. The framed one plays next.</value>
+  </data>
+  <data name="EvolveScoresName" xml:space="preserve">
+    <value>Each pass's score</value>
+  </data>
+  <data name="EvolveListensFor" xml:space="preserve">
+    <value>What it listens for</value>
+  </data>
+  <data name="EvolveSoundsLike" xml:space="preserve">
+    <value>Like what it hears</value>
+  </data>
+  <data name="EvolveSteps" xml:space="preserve">
+    <value>Small steps</value>
+  </data>
+  <data name="EvolveShape" xml:space="preserve">
+    <value>Rise and fall</value>
+  </data>
+  <data name="EvolveSyncopation" xml:space="preserve">
+    <value>Syncopation</value>
+  </data>
+  <data name="EvolveMotif" xml:space="preserve">
+    <value>A motif that comes back</value>
+  </data>
+  <data name="EvolveEnding" xml:space="preserve">
+    <value>Ending on the root</value>
+  </data>
+  <data name="EvolveMutations" xml:space="preserve">
+    <value>Changes in each copy</value>
+  </data>
+  <data name="InfinityDrawingName" xml:space="preserve">
+    <value>The series</value>
+  </data>
+  <data name="InfinityDrawingTip" xml:space="preserve">
+    <value>Each dot is a step of the series. The lit dots, every fourth one, are the whole series again, a quarter as fast. The band is this pass.</value>
+  </data>
+  <data name="InfinityStartsFormat" xml:space="preserve">
+    <value>Starts at note {0} of the series. A new seed starts it somewhere else.</value>
+  </data>
+  <data name="InfinityInterval" xml:space="preserve">
+    <value>Each step of the series is</value>
+  </data>
+  <data name="InfinitySteps" xml:space="preserve">
+    <value>A step of the scale</value>
+  </data>
+  <data name="InfinityThirds" xml:space="preserve">
+    <value>A third</value>
+  </data>
+  <data name="InfinityFourths" xml:space="preserve">
+    <value>A fourth</value>
+  </data>
+  <data name="InfinityVoices" xml:space="preserve">
+    <value>Voices</value>
+  </data>
+  <data name="InfinityOneVoice" xml:space="preserve">
+    <value>One</value>
+  </data>
+  <data name="InfinityTwoVoices" xml:space="preserve">
+    <value>Two, as a canon</value>
+  </data>
+  <data name="InfinityThreeVoices" xml:space="preserve">
+    <value>Three</value>
+  </data>
+  <data name="LSystemDrawingName" xml:space="preserve">
+    <value>What it grew</value>
+  </data>
+  <data name="LSystemDrawingTip" xml:space="preserve">
+    <value>The drawing its rules grow. The melody follows it up and down, and the lit part is this pass.</value>
+  </data>
+  <data name="LSystemGrownFormat" xml:space="preserve">
+    <value>Grown {0} times · {1} steps before it starts again</value>
+  </data>
+  <data name="LSystemShape" xml:space="preserve">
+    <value>Shape</value>
+  </data>
+  <data name="LSystemYourOwn" xml:space="preserve">
+    <value>Your own</value>
+  </data>
+  <data name="LSystemDragon" xml:space="preserve">
+    <value>Dragon</value>
+  </data>
+  <data name="LSystemHilbert" xml:space="preserve">
+    <value>Hilbert</value>
+  </data>
+  <data name="LSystemKoch" xml:space="preserve">
+    <value>Koch</value>
+  </data>
+  <data name="LSystemPlant" xml:space="preserve">
+    <value>Plant</value>
+  </data>
+  <data name="LSystemSierpinski" xml:space="preserve">
+    <value>Sierpiński</value>
+  </data>
+  <data name="LSystemCantor" xml:space="preserve">
+    <value>Cantor</value>
+  </data>
+  <data name="LSystemRules" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="LSystemAxiom" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="LSystemRulePlaceholder" xml:space="preserve">
+    <value>Add a rule, such as F=F+F-F</value>
+  </data>
+  <data name="LSystemRuleFormat" xml:space="preserve">
+    <value>Rule {0}</value>
+  </data>
+  <data name="LSystemAngle" xml:space="preserve">
+    <value>Turn</value>
+  </data>
+  <data name="LSystemLegend" xml:space="preserve">
+    <value>Capitals play and small letters rest. + and - turn, and [ and ] branch. X, Y, and Z only steer the growing.</value>
+  </data>
+  <data name="RingingDrawingName" xml:space="preserve">
+    <value>The method's blue line</value>
+  </data>
+  <data name="RingingDrawingTip" xml:space="preserve">
+    <value>Each row is the order the bells ring in. The treble's path is red and the second bell's is blue, the way ringers draw a method.</value>
+  </data>
+  <data name="RingingCourseFormat" xml:space="preserve">
+    <value>{0} rows before rounds come back</value>
+  </data>
+  <data name="RingingBells" xml:space="preserve">
+    <value>Bells</value>
+  </data>
+  <data name="RingingMethod" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="RingingPlainHunt" xml:space="preserve">
+    <value>Plain Hunt</value>
+  </data>
+  <data name="RingingPlainBob" xml:space="preserve">
+    <value>Plain Bob</value>
+  </data>
+  <data name="RingingGrandsire" xml:space="preserve">
+    <value>Grandsire</value>
+  </data>
+  <data name="RingingGap" xml:space="preserve">
+    <value>Handstroke gap</value>
+  </data>
+  <data name="RingingTenorCovers" xml:space="preserve">
+    <value>Grandsire rings an odd number of bells, so the last bell rings last in every row.</value>
+  </data>
+  <data name="ClipLearnedFormat" xml:space="preserve">
+    <value>{0}, learned from {1}</value>
+  </data>
+  <data name="ClipWordsFormat" xml:space="preserve">
+    <value>{0}, from the words “{1}”</value>
+  </data>
+  <data name="GeneratorVelocityBand" xml:space="preserve">
+    <value>Velocity range: drag the top or bottom edge, or the middle to move it. Scroll to move it.</value>
+  </data>
+  <data name="VelocityShapeSteady" xml:space="preserve">
+    <value>Steady</value>
+    <comment>A way a generator sets each note's velocity: every note the same.</comment>
+  </data>
+  <data name="VelocityShapeSteadyTip" xml:space="preserve">
+    <value>Every note in the middle of the range.</value>
+  </data>
+  <data name="VelocityShapeBeat" xml:space="preserve">
+    <value>On the beat</value>
+  </data>
+  <data name="VelocityShapeBeatTip" xml:space="preserve">
+    <value>Loudest at the start of the bar, then on each beat.</value>
+  </data>
+  <data name="VelocityShapeSwell" xml:space="preserve">
+    <value>Swell</value>
+  </data>
+  <data name="VelocityShapeSwellTip" xml:space="preserve">
+    <value>Louder toward the middle of each pass.</value>
+  </data>
+  <data name="VelocityShapeRandom" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="VelocityShapeRandomTip" xml:space="preserve">
+    <value>A different velocity for each note, the same each time the pass plays.</value>
+  </data>
+  <data name="VelocityShapeAge" xml:space="preserve">
+    <value>By age</value>
+    <comment>Life: how many passes a cell has lived.</comment>
+  </data>
+  <data name="VelocityShapeAgeTip" xml:space="preserve">
+    <value>New cells loudest, softer as they grow old.</value>
+  </data>
+  <data name="VelocityShapeCrowding" xml:space="preserve">
+    <value>By neighbors</value>
+    <comment>Life: how many live cells are next to a cell.</comment>
+  </data>
+  <data name="VelocityShapeCrowdingTip" xml:space="preserve">
+    <value>The more neighbors a cell has, the louder.</value>
+  </data>
+  <data name="VelocityShapeSurprise" xml:space="preserve">
+    <value>By surprise</value>
+  </data>
+  <data name="VelocityShapeSurpriseTip" xml:space="preserve">
+    <value>Expected moves soft, surprising ones loud.</value>
+  </data>
+  <data name="VelocityShapeLearned" xml:space="preserve">
+    <value>As learned</value>
+  </data>
+  <data name="VelocityShapeLearnedTip" xml:space="preserve">
+    <value>Loud and soft, as in the clip it learned from.</value>
+  </data>
+  <data name="VelocityShapeSpeech" xml:space="preserve">
+    <value>As spoken</value>
+  </data>
+  <data name="VelocityShapeSpeechTip" xml:space="preserve">
+    <value>Each word's first letter and capitals stressed, rising to the end of each sentence.</value>
+  </data>
+  <data name="VelocityShapeEvolved" xml:space="preserve">
+    <value>Evolved</value>
+  </data>
+  <data name="VelocityShapeEvolvedTip" xml:space="preserve">
+    <value>Loud and soft evolve along with the notes.</value>
+  </data>
+  <data name="VelocityShapeFourths" xml:space="preserve">
+    <value>Every fourth</value>
+    <comment>The infinity series: every fourth note.</comment>
+  </data>
+  <data name="VelocityShapeFourthsTip" xml:space="preserve">
+    <value>Every fourth step louder: the series again, more slowly.</value>
+  </data>
+  <data name="VelocityShapeDistance" xml:space="preserve">
+    <value>By distance</value>
+  </data>
+  <data name="VelocityShapeDistanceTip" xml:space="preserve">
+    <value>Louder the farther the series wanders from the middle note.</value>
+  </data>
+  <data name="VelocityShapeClimb" xml:space="preserve">
+    <value>Climbing</value>
+  </data>
+  <data name="VelocityShapeClimbTip" xml:space="preserve">
+    <value>Louder as the turtle climbs, softer as it falls.</value>
+  </data>
+  <data name="VelocityShapeDepth" xml:space="preserve">
+    <value>By branch</value>
+  </data>
+  <data name="VelocityShapeDepthTip" xml:space="preserve">
+    <value>Softer the deeper the branch.</value>
+  </data>
+  <data name="VelocityShapeLead" xml:space="preserve">
+    <value>Lead bell</value>
+    <comment>Change ringing: the bell that rings first in each row.</comment>
+  </data>
+  <data name="VelocityShapeLeadTip" xml:space="preserve">
+    <value>The bell leading each row loudest.</value>
+  </data>
+  <data name="VelocityShapeStrokes" xml:space="preserve">
+    <value>Hand and back</value>
+    <comment>Change ringing: handstroke and backstroke rows, which alternate.</comment>
+  </data>
+  <data name="VelocityShapeStrokesTip" xml:space="preserve">
+    <value>Handstroke rows louder than backstroke rows.</value>
+  </data>
+  <data name="VelocityShapeTreble" xml:space="preserve">
+    <value>Treble</value>
+    <comment>Change ringing: bell 1, the highest.</comment>
+  </data>
+  <data name="VelocityShapeTrebleTip" xml:space="preserve">
+    <value>The treble rings out wherever it goes.</value>
+  </data>
+  <data name="AppearanceStyle" xml:space="preserve">
+    <value>Style</value>
+    <comment>The look of the whole window, chosen from a list of named looks.</comment>
+  </data>
+  <data name="StyleNightDrive" xml:space="preserve">
+    <value>Night drive</value>
+    <comment>Name of a visual style: quiet see-through layers over the window's backdrop.</comment>
+  </data>
+  <data name="StyleTactile" xml:space="preserve">
+    <value>Tactile</value>
+    <comment>Name of a visual style: one soft material whose keys are shaped by their shadows.</comment>
+  </data>
+  <data name="StyleAluminum" xml:space="preserve">
+    <value>Aluminum</value>
+    <comment>Name of a visual style: machined metal plates with small dark keys.</comment>
+  </data>
+  <data name="StyleVellum" xml:space="preserve">
+    <value>Vellum</value>
+    <comment>Name of a visual style: paper and ink.</comment>
+  </data>
+  <data name="AppearanceStyleSolidNote" xml:space="preserve">
+    <value>{0} is a solid material, so it doesn't use the backdrop. Your window color tints it.</value>
+    <comment>{0} is the name of a visual style, such as Tactile.</comment>
+  </data>
+  <data name="TimelineBarName" xml:space="preserve">
+    <value>Timeline scroll bar</value>
+  </data>
+  <data name="TimelineBarHelp" xml:space="preserve">
+    <value>Drag the view to scroll, or drag either end to zoom. Ctrl + wheel or a pinch zooms where you point. Double-click the view to fit the sequence, and again to go back.</value>
+  </data>
+  <data name="TimelineBarViewFormat" xml:space="preserve">
+    <value>Bars {0} to {1} of {2}</value>
+  </data>
+  <data name="TimelineBarPlainTip" xml:space="preserve">
+    <value>Plain scroll bar</value>
+  </data>
+  <data name="TimelineBarOverviewTip" xml:space="preserve">
+    <value>Overview: tracks and sections</value>
+  </data>
+  <data name="TimelineZoomOutTip" xml:space="preserve">
+    <value>Zoom out (Ctrl+minus)</value>
+  </data>
+  <data name="TimelineZoomInTip" xml:space="preserve">
+    <value>Zoom in (Ctrl+plus)</value>
+  </data>
+  <data name="TimelineZoomFitTip" xml:space="preserve">
+    <value>Zoom to fit the sequence (Ctrl+0)</value>
+  </data>
+  <data name="TimelineBarEndTip" xml:space="preserve">
+    <value>Drag to zoom. Ctrl + wheel zooms where you point, and so does a pinch.</value>
+  </data>
+  <data name="TimelineBarViewTip" xml:space="preserve">
+    <value>Drag to scroll, or up and down to zoom. Double-click to fit the sequence.</value>
+  </data>
+  <data name="TimelineBarOverviewItem" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="TimelineBarPlainItem" xml:space="preserve">
+    <value>Plain scroll bar</value>
+  </data>
+  <data name="TimelineBarUnderItem" xml:space="preserve">
+    <value>Under the timeline</value>
+  </data>
+  <data name="TimelineBarAboveItem" xml:space="preserve">
+    <value>Above the ruler</value>
+  </data>
+  <data name="TimelineZoomFitItem" xml:space="preserve">
+    <value>Zoom to fit the sequence</value>
+  </data>
+  <data name="TimelineZoomSelectionItem" xml:space="preserve">
+    <value>Zoom to the selection</value>
+  </data>
+  <data name="AppearanceTimelineBar" xml:space="preserve">
+    <value>Timeline scroll bar</value>
+  </data>
+  <data name="AppearanceTimelineBarPlace" xml:space="preserve">
+    <value>Where it goes</value>
   </data>
 </root>

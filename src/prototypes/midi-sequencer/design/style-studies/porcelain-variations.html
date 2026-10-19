@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer: Porcelain, dark, and the window color</title>
+<style>
+    body { margin: 0; padding: 28px 32px 48px; background: #EDEBE7; color: #2A2A2D; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+    a { color: #2B6CB0; }
+    .back { font-size: 13px; margin: 0 0 10px; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 6px; }
+    h2 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 20px; margin: 30px 0 12px; }
+    p.lead, ul.rules { max-width: 1100px; font-size: 14px; line-height: 1.55; color: #4A4A50; margin: 0 0 12px; }
+    ul.rules { padding-left: 20px; }
+    ul.rules li { margin-bottom: 4px; }
+    code { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: #E2DFD9; padding: 1px 5px; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; }
+    .colhead { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .colhead .swatch { width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(0, 0, 0, .25); }
+    .colhead .hex { font-weight: 400; color: #6A6A70; }
+    figure { margin: 0; background: #FFFFFF; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .08); }
+    figure img.full { width: 100%; display: block; border-radius: 6px; }
+    .label { font-size: 11px; color: #8A8A90; margin: 10px 0 4px 2px; }
+    .crop { overflow: hidden; border-radius: 6px; position: relative; }
+    .crop img { position: absolute; width: 1668px; max-width: none; }
+    .crop.transport { height: 58px; }
+    .crop.transport img { left: -180px; top: -82px; }
+    .crop.headers { height: 110px; }
+    .crop.headers img { left: -13px; top: -282px; }
+    .crop.timeline { height: 60px; }
+    .crop.timeline img { left: -920px; top: -300px; }
+    figcaption { font-size: 13px; line-height: 1.5; color: #4A4A50; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">All the style studies</a> · <a href="porcelain-second-pass.html">Porcelain, second pass</a> · <a href="porcelain-shadows.html">Softer shadows</a></p>
+<h1>Porcelain, dark, and the window color</h1>
+<p class="lead">The approved second pass of Porcelain (no well, with the timeline on a field a step darker, the piano roll's color), in a dark version that sits with a dark mode desktop, and both versions in the window color you pick in Appearance: your Sequencer's dark aqua <code>#031E24</code>, and the plum, <code>#33192F</code>, you picked for MIDI Clock. The light second pass is as you approved it, apart from the darker field; dark and the window color are layers over it (<code>porcelain-dark.css</code> and <code>porcelain-tint.css</code>).</p>
+
+<p class="lead">Aluminum anodizes its strips deep. Porcelain is one material, so the color glazes all of it instead:</p>
+<ul class="rules">
+    <li><b>Your color brings the hue, and the theme brings the lightness</b>, as with Aluminum, so one color works in light and dark.</li>
+    <li><b>The glaze covers the whole body</b>: the surface, the keys (the piano keys too), and the clip faces, which are pressed out of the same porcelain. Because it covers everything, it stays low, so it reads as a tint in the glaze rather than paint.</li>
+    <li><b>It pools in the hollows</b>, as glaze does: the wells, the readouts, the timeline's field, and the piano roll take a little more color.</li>
+    <li><b>The shadows are a deep shade of it</b>, and the light from the top left a pale tint of it. They're the soft ones you picked (<a href="porcelain-shadows.html">Softer shadows</a>), gentler again in light.</li>
+    <li><b>The LEDs on the keys, the selection, the loop, and toggled keys light up in it</b>, and <b>the readouts' digits are printed in it</b>: a deep ink in light, a pale one in dark.</li>
+    <li><b>What stays as it is</b>: the track caps, the notes, and the colors that mean something: play, record, mute, and solo.</li>
+</ul>
+<p class="lead">To try another color, open any of these pages with <code>?tint=RRGGBB</code>, for example <a href="porcelain-2-dark.html?tint=1E2A44">porcelain-2-dark.html?tint=1E2A44</a>. Add <code>&amp;glaze=0</code> for plain porcelain, so only the lights and readouts take the color: <a href="porcelain-2-dark-aqua.html?glaze=0">aqua, plain porcelain</a>.</p>
+
+<h2>Light</h2>
+<div class="grid">
+    <div class="colhead">No window color</div>
+    <div class="colhead"><span class="swatch" style="background: #031E24"></span>Your aqua <span class="hex">#031E24</span></div>
+    <div class="colhead"><span class="swatch" style="background: #33192F"></span>MIDI Clock's plum <span class="hex">#33192F</span></div>
+
+    <figure>
+        <a href="porcelain-2-no-well.html"><img class="full" src="shots/porcelain-2-no-well.png" alt="Porcelain, light, with no window color"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/porcelain-2-no-well.png" alt=""></div>
+        <figcaption>The approved second pass, with the timeline on a field a step darker, the piano roll's color.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="porcelain-2-aqua.html"><img class="full" src="shots/porcelain-2-aqua.png" alt="Porcelain, light, in aqua"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-aqua.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-aqua.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/porcelain-2-aqua.png" alt=""></div>
+        <figcaption>A pale aqua glaze, with the LEDs and selection in teal and the readouts printed in deep teal.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="porcelain-2-plum.html"><img class="full" src="shots/porcelain-2-plum.png" alt="Porcelain, light, in plum"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-plum.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-plum.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/porcelain-2-plum.png" alt=""></div>
+        <figcaption>A pale mauve glaze, with pink-violet LEDs and selection and the readouts printed in deep plum.</figcaption>
+    </figure>
+</div>
+
+<h2>Dark</h2>
+<div class="grid">
+    <div class="colhead">No window color</div>
+    <div class="colhead"><span class="swatch" style="background: #031E24"></span>Your aqua <span class="hex">#031E24</span></div>
+    <div class="colhead"><span class="swatch" style="background: #33192F"></span>MIDI Clock's plum <span class="hex">#33192F</span></div>
+
+    <figure>
+        <a href="porcelain-2-dark.html"><img class="full" src="shots/porcelain-2-dark.png" alt="Porcelain, dark, with no window color"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-dark.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-dark.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/porcelain-2-dark.png" alt=""></div>
+        <figcaption>A dark, warm gray porcelain: mid grays, not black. Soft shadows below and faint highlights above, so the keys are still defined by their shadows.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="porcelain-2-dark-aqua.html"><img class="full" src="shots/porcelain-2-dark-aqua.png" alt="Porcelain, dark, in aqua"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-dark-aqua.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-dark-aqua.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/porcelain-2-dark-aqua.png" alt=""></div>
+        <figcaption>A dark slate glaze in your aqua, with the LEDs, the selection, and the readouts lit in it.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="porcelain-2-dark-plum.html"><img class="full" src="shots/porcelain-2-dark-plum.png" alt="Porcelain, dark, in plum"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/porcelain-2-dark-plum.png" alt=""></div>
+        <div class="label">Track headers, with Bass selected</div>
+        <div class="crop headers"><img src="shots/porcelain-2-dark-plum.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/porcelain-2-dark-plum.png" alt=""></div>
+        <figcaption>A dark plum glaze, with pink-violet lights and readouts.</figcaption>
+    </figure>
+</div>
+
+</body>
+</html>

@@ -5,8 +5,11 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
 #include "ThemePalette.h"
+
+#include <algorithm>
+#include <cmath>
+#include <string_view>
 
 namespace midisequencer
 {
@@ -73,7 +76,6 @@ namespace midisequencer
             p.FolderLaneBackground = Rgba(255, 255, 255, 0.025);
             p.LauncherBackground = Rgba(0, 0, 0, 0.10);
             p.LauncherEdge = Rgba(255, 255, 255, 0.14);
-            p.PinnedTint = Rgba(96, 205, 255, 0.035);
             p.BarLine = Rgba(255, 255, 255, 0.075);
             p.BeatLine = Rgba(255, 255, 255, 0.028);
 
@@ -90,7 +92,6 @@ namespace midisequencer
             p.ArmedSlotGlyph = Rgba(255, 90, 95, 0.7);
 
             p.SelectionStroke = Rgba(255, 255, 255);
-            p.CaptionText = Rgba(255, 255, 255);
 
             p.OverlayStripeA = Rgba(20, 20, 20, 0.78);
             p.OverlayStripeB = Rgba(20, 20, 20, 0.66);
@@ -133,7 +134,6 @@ namespace midisequencer
             p.FolderLaneBackground = Rgba(0, 0, 0, 0.02);
             p.LauncherBackground = Rgba(0, 0, 0, 0.018);
             p.LauncherEdge = Rgba(0, 0, 0, 0.12);
-            p.PinnedTint = Rgba(0, 95, 184, 0.035);
             p.BarLine = Rgba(0, 0, 0, 0.085);
             p.BeatLine = Rgba(0, 0, 0, 0.03);
 
@@ -150,7 +150,6 @@ namespace midisequencer
             p.ArmedSlotGlyph = Rgba(209, 52, 56, 0.75);
 
             p.SelectionStroke = FromRgb(0x1A1A1A);
-            p.CaptionText = FromRgb(0x1A1A1A);
 
             p.OverlayStripeA = Rgba(243, 243, 243, 0.86);
             p.OverlayStripeB = Rgba(243, 243, 243, 0.72);
@@ -179,51 +178,217 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    Color ToUiColor(themeengine::Color const& color) noexcept
+    {
+        auto const argb = color.ToArgb();
+        return Color{ static_cast<uint8_t>(argb >> 24), static_cast<uint8_t>(argb >> 16), static_cast<uint8_t>(argb >> 8), static_cast<uint8_t>(argb) };
+    }
+
+    _Use_decl_annotations_
+    themeengine::Color ToThemeColor(Color const& color) noexcept
+    {
+        return themeengine::Color::FromArgb(
+            (static_cast<uint32_t>(color.A) << 24) | (static_cast<uint32_t>(color.R) << 16) | (static_cast<uint32_t>(color.G) << 8) | color.B);
+    }
+
+    namespace
+    {
+        // A track color through one of the theme's colors that depends on the track, or the
+        // built-in formula when the palette has no theme or the theme has no such color.
+        template <typename Formula>
+        Color TrackColor(Palette const& palette, std::wstring_view token, Color trackColor, Formula&& formula) noexcept
+        {
+            try
+            {
+                if (palette.Theme != nullptr && palette.Theme->HasToken(token))
+                {
+                    return ToUiColor(palette.Theme->Token(token, ToThemeColor(trackColor), ToThemeColor(formula())));
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return formula();
+        }
+    }
+
+    _Use_decl_annotations_
+    Palette MakePalette(std::shared_ptr<themeengine::ResolvedTheme const> const& theme) noexcept
+    {
+        auto const light = theme == nullptr || !theme->IsDark();
+        auto p = MakePalette(light);
+
+        if (theme == nullptr)
+        {
+            return p;
+        }
+
+        try
+        {
+            p.Theme = theme;
+
+            auto const set = [&theme](Color& field, std::wstring_view name)
+            {
+                if (theme->HasToken(name))
+                {
+                    field = ToUiColor(theme->Token(name));
+                }
+            };
+
+            set(p.Text, L"text");
+            set(p.Text2, L"text2");
+            set(p.Text3, L"text3");
+            set(p.Divider, L"divider");
+            set(p.StrokeStrong, L"strokeStrong");
+            set(p.Accent, L"accent");
+            set(p.Play, L"play");
+            set(p.Record, L"record");
+            set(p.RecordText, L"recordText");
+            set(p.Mute, L"mute");
+            set(p.Solo, L"solo");
+            set(p.Caution, L"caution");
+
+            set(p.LaneBackground, L"laneBackground");
+            set(p.FolderLaneBackground, L"folderLaneBackground");
+            set(p.LauncherBackground, L"launcherBackground");
+            set(p.LauncherEdge, L"launcherEdge");
+            set(p.BarLine, L"barLine");
+            set(p.BeatLine, L"beatLine");
+            set(p.BarLineLight, L"barLineLight");
+            set(p.LaneSeam, L"laneSeam");
+            set(p.LaneSeamLight, L"laneSeamLight");
+
+            set(p.RulerBackground, L"rulerBackground");
+            set(p.RulerBarLine, L"rulerBarLine");
+            set(p.RulerBeatLine, L"rulerBeatLine");
+            set(p.LoopFill, L"loopFill");
+            set(p.LoopStroke, L"loopStroke");
+            set(p.Playhead, L"playhead");
+
+            set(p.EmptySlotFill, L"emptySlotFill");
+            set(p.EmptySlotStroke, L"emptySlotStroke");
+            set(p.EmptySlotGlyph, L"emptySlotGlyph");
+            set(p.ArmedSlotGlyph, L"armedSlotGlyph");
+
+            set(p.SelectionStroke, L"selectionStroke");
+
+            set(p.OverlayStripeA, L"overlayStripeA");
+            set(p.OverlayStripeB, L"overlayStripeB");
+
+            set(p.RollBackground, L"rollBackground");
+            set(p.RollBlackKeyRow, L"rollBlackKeyRow");
+            set(p.RollWhiteKeyRow, L"rollWhiteKeyRow");
+            set(p.RollOctaveLine, L"rollOctaveLine");
+            set(p.RollBarLine, L"rollBarLine");
+            set(p.RollBeatLine, L"rollBeatLine");
+            set(p.RollStepLine, L"rollStepLine");
+            set(p.KeyWhite, L"keyWhite");
+            set(p.KeyBlack, L"keyBlack");
+            set(p.KeyEdge, L"keyEdge");
+            set(p.KeyLabel, L"keyLabel");
+            set(p.NoteEdge, L"noteEdge");
+            set(p.LaneEdge, L"laneEdge");
+            set(p.TempoLine, L"tempoLine");
+            set(p.TempoLabelFill, L"tempoLabelFill");
+            set(p.TempoLabelStroke, L"tempoLabelStroke");
+            set(p.TempoLabelText, L"tempoLabelText");
+            set(p.HandleFill, L"handleFill");
+        }
+        catch (...)
+        {
+        }
+
+        return p;
+    }
+
+    _Use_decl_annotations_
+    Color ThemedTrackColor(Palette const& palette, Color trackColor) noexcept
+    {
+        try
+        {
+            if (palette.Theme != nullptr)
+            {
+                auto const rgb = (static_cast<uint32_t>(trackColor.R) << 16) | (static_cast<uint32_t>(trackColor.G) << 8) | trackColor.B;
+                auto themed = ToUiColor(palette.Theme->TrackColor(rgb));
+                themed.A = trackColor.A;
+                return themed;
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return trackColor;
+    }
+
+    _Use_decl_annotations_
     Color ClipFill(Palette const& palette, Color trackColor) noexcept
     {
-        return palette.Light ? Mix(trackColor, 0.20, FromRgb(0xFFFFFF)) : Mix(trackColor, 0.22, FromRgb(0x1C1C1C));
+        return TrackColor(palette, L"clipFill", trackColor, [&]()
+        {
+            return palette.Light ? Mix(trackColor, 0.20, FromRgb(0xFFFFFF)) : Mix(trackColor, 0.22, FromRgb(0x1C1C1C));
+        });
     }
 
     _Use_decl_annotations_
     Color ClipStroke(Palette const& palette, Color trackColor) noexcept
     {
-        // color-mix(tc 80%, #000 10%) leaves 10% unaccounted for, which CSS takes as transparency.
-        return palette.Light ? WithAlpha(Mix(trackColor, 0.8 / 0.9, FromRgb(0x000000)), 0.9) : WithAlpha(trackColor, 0.62);
+        return TrackColor(palette, L"clipStroke", trackColor, [&]()
+        {
+            // color-mix(tc 80%, #000 10%) leaves 10% unaccounted for, which CSS takes as transparency.
+            return palette.Light ? WithAlpha(Mix(trackColor, 0.8 / 0.9, FromRgb(0x000000)), 0.9) : WithAlpha(trackColor, 0.62);
+        });
     }
 
     _Use_decl_annotations_
     Color ClipCaption(Palette const& palette, Color trackColor) noexcept
     {
-        return palette.Light ? Mix(trackColor, 0.48, FromRgb(0xFFFFFF)) : Mix(trackColor, 0.55, FromRgb(0x202020));
+        return TrackColor(palette, L"clipCaption", trackColor, [&]()
+        {
+            return palette.Light ? Mix(trackColor, 0.48, FromRgb(0xFFFFFF)) : Mix(trackColor, 0.55, FromRgb(0x202020));
+        });
     }
 
     _Use_decl_annotations_
     Color CellFill(Palette const& palette, Color trackColor, bool playing) noexcept
     {
-        if (palette.Light)
+        return TrackColor(palette, playing ? L"cellFillPlaying" : L"cellFill", trackColor, [&]()
         {
-            return Mix(trackColor, playing ? 0.46 : 0.26, FromRgb(0xFFFFFF));
-        }
+            if (palette.Light)
+            {
+                return Mix(trackColor, playing ? 0.46 : 0.26, FromRgb(0xFFFFFF));
+            }
 
-        return Mix(trackColor, playing ? 0.42 : 0.22, FromRgb(0x1E1E1E));
+            return Mix(trackColor, playing ? 0.42 : 0.22, FromRgb(0x1E1E1E));
+        });
     }
 
     _Use_decl_annotations_
     Color CellStroke(Palette const& palette, Color trackColor) noexcept
     {
-        return palette.Light ? WithAlpha(Mix(trackColor, 0.75 / 0.85, FromRgb(0x000000)), 0.85) : WithAlpha(trackColor, 0.5);
+        return TrackColor(palette, L"cellStroke", trackColor, [&]()
+        {
+            return palette.Light ? WithAlpha(Mix(trackColor, 0.75 / 0.85, FromRgb(0x000000)), 0.85) : WithAlpha(trackColor, 0.5);
+        });
     }
 
     _Use_decl_annotations_
     Color SummaryFill(Palette const& palette, Color trackColor) noexcept
     {
-        return WithAlpha(trackColor, palette.Light ? 0.22 : 0.14);
+        return TrackColor(palette, L"summaryFill", trackColor, [&]()
+        {
+            return WithAlpha(trackColor, palette.Light ? 0.22 : 0.14);
+        });
     }
 
     _Use_decl_annotations_
     Color SummaryStroke(Palette const& palette, Color trackColor) noexcept
     {
-        // On white, a light track color has to be darkened to show at all.
-        return palette.Light ? WithAlpha(Mix(trackColor, 0.6, FromRgb(0x000000)), 0.75) : WithAlpha(trackColor, 0.35);
+        return TrackColor(palette, L"summaryStroke", trackColor, [&]()
+        {
+            // On white, a light track color has to be darkened to show at all.
+            return palette.Light ? WithAlpha(Mix(trackColor, 0.6, FromRgb(0x000000)), 0.75) : WithAlpha(trackColor, 0.35);
+        });
     }
 }

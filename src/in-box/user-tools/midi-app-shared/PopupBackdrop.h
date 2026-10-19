@@ -596,4 +596,59 @@ namespace midiapp
             }
         });
     }
+
+    namespace details
+    {
+        inline winrt::Windows::UI::Color Mix(winrt::Windows::UI::Color from, winrt::Windows::UI::Color to, double amount) noexcept
+        {
+            auto const blend = [amount](uint8_t a, uint8_t b) { return static_cast<uint8_t>(std::lround(a + (static_cast<double>(b) - a) * amount)); };
+            return winrt::Windows::UI::Color{ 255, blend(from.R, to.R), blend(from.G, to.G), blend(from.B, to.B) };
+        }
+
+        inline double Luminance(winrt::Windows::UI::Color color) noexcept
+        {
+            return (0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B) / 255.0;
+        }
+    }
+
+    // Tooltips in the window's color. WinUI fills a tooltip with a neutral gray, ToolTipBackground,
+    // and gives it no backdrop. With a background color picked in Appearance, a tooltip takes that
+    // color lifted a little toward white, as the menus' acrylic lifts it, so it stands out from
+    // the window as a menu does. Lifted more if the text on it would be hard to read. Without a
+    // picked color it keeps WinUI's gray. The brushes go in the app's dark and light theme
+    // dictionaries, so high contrast keeps its own colors, and they stay there, so a tooltip
+    // already made changes color with them. Call as the window starts and whenever its color
+    // changes.
+    inline void TintToolTips(bool useCustom, uint32_t argb) noexcept
+    {
+        try
+        {
+            winrt::Windows::UI::Color const custom{ 255, static_cast<uint8_t>((argb >> 16) & 0xFF), static_cast<uint8_t>((argb >> 8) & 0xFF), static_cast<uint8_t>(argb & 0xFF) };
+            winrt::Windows::UI::Color const white{ 255, 255, 255, 255 };
+
+            // WinUI's own tooltip gray in each theme (SystemChromeMediumLowColor).
+            winrt::Windows::UI::Color const darkGray{ 255, 0x2B, 0x2B, 0x2B };
+            winrt::Windows::UI::Color const lightGray{ 255, 0xF2, 0xF2, 0xF2 };
+
+            auto dark = useCustom ? details::Mix(custom, white, 0.10) : darkGray;
+            auto light = useCustom ? details::Mix(custom, white, 0.35) : lightGray;
+
+            // Light text needs a dark tooltip, and dark text a light one.
+            if (details::Luminance(dark) > 0.35)
+            {
+                dark = details::Mix(dark, darkGray, 0.6);
+            }
+
+            if (details::Luminance(light) < 0.6)
+            {
+                light = details::Mix(light, lightGray, 0.7);
+            }
+
+            details::SetThemeBrush(L"Default", L"ToolTipBackground", dark);
+            details::SetThemeBrush(L"Light", L"ToolTipBackground", light);
+        }
+        catch (...)
+        {
+        }
+    }
 }

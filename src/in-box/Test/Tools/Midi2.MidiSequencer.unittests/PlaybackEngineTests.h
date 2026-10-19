@@ -47,6 +47,7 @@ public:
     TEST_METHOD(ANoteHeldOverTheLoopEndEndsThere);
     TEST_METHOD(ALaunchedClipStartsAtTheNextBar);
     TEST_METHOD(ALaunchLightsOnlyItsSlot);
+    TEST_METHOD(AStoppedSceneStartsEveryClipTogether);
     TEST_METHOD(StoppingATrackSilencesItFromTheNextBar);
     TEST_METHOD(AClipCanStartAtAnExactPlace);
     TEST_METHOD(BackToTimelinePicksUpTheTimeline);

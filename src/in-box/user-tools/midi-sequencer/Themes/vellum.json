@@ -1,0 +1,508 @@
+{
+    "themeEngine": 1,
+    "id": "vellum",
+    "name": "Vellum",
+    "description": "Warm paper and ink: hairlines instead of boxes, Candara for names and numbers, one vermilion accent, and clips as watercolor washes with ink notes. Your window color dyes the paper.",
+    "backdrops": [ "solid" ],
+    "windowColor": "material",
+    "light": {
+        "numbers": {
+            "$comment": "How much of the window color dyes the paper: 1 as designed, 0 for plain paper.",
+            "dye": 1
+        },
+        "tokens": {
+            "$comment": "The Vellum comp (design/style-studies: vellum.css with vellum-2.css, Candara instead of Sitka).",
+            "paper": "#F3F0E8",
+            "sheet": "#FBF9F4",
+            "wash": "#F8F5EE",
+            "paperDeep": "#EBE7DD",
+            "ink": "#1F1D1A",
+            "hair": "rgb(from ink r g b / .28)",
+            "hairFaint": "rgb(from ink r g b / .12)",
+            "vermilion": "#D4471E",
+            "vermilionInk": "#B23A15",
+            "indigo": "#2E4F7F",
+            "pianoWhite": "sheet",
+            "pianoBlack": "ink",
+
+            "text": "ink",
+            "text2": "#59544C",
+            "text3": "#6B655C",
+            "accent": "vermilion",
+            "accentInk": "vermilionInk",
+            "play": "#3F7A45",
+            "record": "vermilion",
+            "recordText": "vermilionInk",
+            "mute": "#A9782A",
+            "solo": "indigo",
+            "caution": "#8A5A00",
+
+            "divider": "rgb(from ink r g b / .10)",
+            "strokeStrong": "rgb(from ink r g b / .24)",
+            "laneBackground": "transparent",
+            "folderLaneBackground": "transparent",
+            "launcherBackground": "transparent",
+            "launcherEdge": "hairFaint",
+            "barLine": "rgb(from ink r g b / .16)",
+            "barLineLight": "transparent",
+            "beatLine": "rgb(from ink r g b / .05)",
+            "laneSeam": "rgb(from ink r g b / .10)",
+            "laneSeamLight": "transparent",
+            "rulerBackground": "transparent",
+            "rulerBarLine": "hair",
+            "rulerBeatLine": "rgb(from ink r g b / .08)",
+            "loopFill": "rgb(from vermilion r g b / .10)",
+            "loopStroke": "vermilion",
+            "playhead": "vermilion",
+            "emptySlotFill": "transparent",
+            "emptySlotStroke": "hair",
+            "emptySlotGlyph": "rgb(from ink r g b / .25)",
+            "armedSlotGlyph": "vermilion",
+            "selectionStroke": "vermilion",
+            "overlayStripeA": "color-mix(in srgb, paper 90%, transparent)",
+            "overlayStripeB": "color-mix(in srgb, paperDeep 82%, transparent)",
+            "rollBackground": "sheet",
+            "rollBlackKeyRow": "rgb(from ink r g b / .035)",
+            "rollWhiteKeyRow": "transparent",
+            "rollOctaveLine": "rgb(from ink r g b / .14)",
+            "rollBarLine": "rgb(from ink r g b / .22)",
+            "rollBeatLine": "rgb(from ink r g b / .09)",
+            "rollStepLine": "rgb(from ink r g b / .04)",
+            "keyWhite": "pianoWhite",
+            "keyBlack": "pianoBlack",
+            "keyEdge": "hair",
+            "keyLabel": "text3",
+            "noteEdge": "rgb(from ink r g b / .5)",
+            "laneEdge": "hairFaint",
+            "tempoLine": "rgb(from ink r g b / .7)",
+            "tempoLabelFill": "sheet",
+            "tempoLabelStroke": "hair",
+            "tempoLabelText": "ink",
+            "handleFill": "sheet",
+
+            "headerTrack": "transparent",
+            "headerSelected": "rgb(from vermilion r g b / .05)",
+            "headerFolder": "transparent",
+            "headerLane": "rgb(from ink r g b / .02)",
+
+            "previewChrome": "paper",
+            "previewField": "paper",
+            "previewClip": "color-mix(in srgb, vermilion 18%, wash)",
+
+            "clipFill": "color-mix(in srgb, track 22%, wash)",
+            "clipStroke": "color-mix(in srgb, track 40%, transparent)",
+            "clipCaption": "color-mix(in srgb, track 30%, wash)",
+            "cellFill": "color-mix(in srgb, track 22%, wash)",
+            "cellFillPlaying": "color-mix(in srgb, track 36%, wash)",
+            "cellStroke": "color-mix(in srgb, track 40%, transparent)",
+            "summaryFill": "rgb(from track r g b / 0.10)",
+            "summaryStroke": "rgb(from track r g b / 0.45)"
+        },
+        "tinted": {
+            "$comment": "vellum-tint.css: the window color dyes the paper and the ink leans toward it; vermilion, the washes and the track colors stay.",
+            "paper": "oklch(from tint 0.955 calc(min(c * 0.36, 0.013) * dye) h)",
+            "sheet": "oklch(from tint 0.982 calc(min(c * 0.22, 0.009) * dye) h)",
+            "paperDeep": "oklch(from tint 0.925 calc(min(c * 0.40, 0.015) * dye) h)",
+            "wash": "oklch(from tint 0.972 calc(min(c * 0.25, 0.01) * dye) h)",
+            "ink": "oklch(from tint 0.22 min(c * 0.5, 0.025) h)",
+            "indigo": "oklch(from tint 0.42 min(0.09, c * 4) h)"
+        },
+        "trackColors": {
+            "$comment": "Track colors as inks and pigments on paper.",
+            "#FF8A65": "#B4533C",
+            "#5BC0EB": "#3F5E91",
+            "#B4A7FF": "#7C527F",
+            "#6CCB5F": "#6F8D62",
+            "#4DD0C4": "#4F7E86",
+            "#9C8CFF": "#7C527F",
+            "#F7C948": "#C39A3A",
+            "#FF6F91": "#A84458",
+            "#FFB547": "#C39A3A",
+            "#BDBDBD": "#8A8478"
+        },
+        "shadows": {
+            "$comment": "Hardly any: washes bleed a little, and outlines are hairlines.",
+            "bleed": "0 0 10px 1px color-mix(in srgb, track 20%, transparent)",
+            "pad-bleed": "inset 0 0 0 1px color-mix(in srgb, track 22%, transparent), 0 0 6px color-mix(in srgb, track 14%, transparent)",
+            "ring": "inset 0 0 0 1px ink",
+            "underline": "inset 0 -2px 0 vermilion"
+        },
+        "fonts": {
+            "label": "Candara",
+            "digits": "Candara",
+            "names": "Candara"
+        },
+        "metrics": {
+            "timelineOverviewHeight": 46,
+            "timelinePlainHeight": 26,
+            "timelineOverviewTrack": 34,
+            "timelinePlainTrack": 8,
+            "timelineThumbHeight": 14,
+            "timelineBarLeft": 4,
+            "timelineBarRight": 8
+        },
+        "parts": {
+            "timeline.clip": {
+                "$comment": "Watercolor washes, darker where the brush landed, with ink notes.",
+                "background": "radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, track 28%, wash), color-mix(in srgb, track 10%, wash) 75%)",
+                "border-radius": "3px",
+                "box-shadow": "bleed",
+                "inset": 4,
+                "caption-height": 15,
+                "caption-font": "label",
+                "caption-size": 12,
+                "caption-color": "ink",
+                "link-color": "text3",
+                "note-color": "rgb(from ink r g b / .74)",
+                "states": {
+                    "selected": { "box-shadow": "inset 0 0 0 1px vermilion, 0 0 0 1px vermilion" },
+                    "generator": { "border": "1px dashed color-mix(in srgb, track 60%, transparent)" },
+                    "muted": { "filter": "saturate(.1)", "opacity": 0.55 },
+                    "summary": { "background": "rgb(from track r g b / .10)", "box-shadow": "none" }
+                }
+            },
+            "launcher.cell": {
+                "background": "radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, track 28%, wash), color-mix(in srgb, track 10%, wash) 75%)",
+                "border-radius": "3px",
+                "box-shadow": "pad-bleed",
+                "margin": "4px 5px",
+                "name-color": "ink",
+                "glyph-color": "text2",
+                "kind-color": "text2",
+                "note-color": "rgb(from ink r g b / .72)",
+                "states": {
+                    "playing": { "box-shadow": "ring, underline", "glyph-color": "vermilion" },
+                    "queued": { "box-shadow": "ring", "outline": "1px dashed hair", "outline-offset": "2px" },
+                    "recording": { "background": "rgb(from vermilion r g b / .12)", "box-shadow": "inset 0 0 0 1px vermilion", "glyph-color": "vermilion" },
+                    "muted": { "filter": "saturate(.1)", "opacity": 0.55 },
+                    "selected": { "outline": "1.5px solid vermilion", "outline-offset": "2px" }
+                }
+            },
+            "launcher.empty": {
+                "border": "1px dashed hairFaint",
+                "border-radius": "3px",
+                "margin": "4px 5px",
+                "glyph-color": "emptySlotGlyph",
+                "states": {
+                    "armed": { "border": "1px dashed rgb(from vermilion r g b / .35)", "glyph-color": "vermilion" },
+                    "selected": { "outline": "1.5px solid vermilion", "outline-offset": "2px" }
+                }
+            },
+            "launcher.progress": {
+                "background": "vermilion",
+                "height": 2,
+                "margin": "0 4px 2px 4px"
+            },
+            "launcher.when": {
+                "background": "ink",
+                "color": "paper",
+                "border-radius": "2px"
+            },
+            "ruler": {
+                "number-color": "text3",
+                "number-font": "digits",
+                "numerals": "lining"
+            },
+            "ruler.loop": {
+                "background": "loopFill",
+                "border-top": "1px solid vermilion",
+                "height": 6
+            },
+            "timeline.tag": {
+                "$comment": "Section marks in a muted pigment of the tag's color, with ink text.",
+                "background": "color-mix(in srgb, track 45%, sheet)",
+                "color": "ink"
+            },
+            "transport.key": {
+                "$comment": "Ink outlines at rest. A key that's on is ringed in ink and underlined in vermilion; Play, playing, is solid ink.",
+                "border": "1px solid hair",
+                "border-radius": "2px",
+                "color": "ink",
+                "states": {
+                    "hover": { "background": "rgb(from ink r g b / .05)" },
+                    "pressed": { "background": "rgb(from ink r g b / .1)" },
+                    "on": { "border": "1.5px solid ink", "box-shadow": "underline" },
+                    "play-on": { "background": "ink", "color": "sheet" },
+                    "record": { "color": "vermilion" }
+                }
+            },
+            "transport.lcd": {
+                "$comment": "Readouts as type, not boxes: a rule under them.",
+                "border-bottom": "1px solid hair"
+            },
+            "transport.digits": {
+                "color": "ink",
+                "font-family": "digits",
+                "font-size": 21,
+                "numerals": "lining"
+            },
+            "transport.small": {
+                "color": "text3",
+                "font-family": "digits",
+                "font-size": 11,
+                "numerals": "lining"
+            },
+            "transport.separator": {
+                "background": "hairFaint",
+                "width": 1,
+                "height": 24
+            },
+            "title.text": {
+                "font-family": "names",
+                "font-size": 13,
+                "color": "text2"
+            },
+            "editor.name": {
+                "font-family": "names",
+                "font-size": 17
+            },
+            "button": {
+                "border": "1px solid hair",
+                "border-radius": "2px",
+                "color": "ink",
+                "states": {
+                    "hover": { "background": "rgb(from ink r g b / .05)" },
+                    "pressed": { "background": "rgb(from ink r g b / .1)" },
+                    "toggled": { "border": "1.5px solid ink", "box-shadow": "underline", "color": "ink" }
+                }
+            },
+            "button.subtle": {
+                "color": "ink",
+                "states": {
+                    "hover": { "background": "rgb(from ink r g b / .05)", "border-radius": "2px" },
+                    "pressed": { "background": "rgb(from ink r g b / .1)", "border-radius": "2px" },
+                    "toggled": { "border": "1.5px solid ink", "box-shadow": "underline", "border-radius": "2px" }
+                }
+            },
+            "field": {
+                "border-bottom": "1px solid hair",
+                "color": "ink"
+            },
+            "header.track": {
+                "$comment": "No boxes around the headers; the selected one is washed in vermilion.",
+                "states": {
+                    "selected": { "background": "headerSelected" }
+                }
+            },
+            "header.cap": {
+                "$comment": "The track's color as an ink rule.",
+                "background": "track",
+                "width": 2,
+                "margin": "0 0 0 6px"
+            },
+            "header.toggle": {
+                "$comment": "M, S and R as ink circles, filled with ink when on; R in vermilion.",
+                "border": "1px solid hair",
+                "border-radius": "50%",
+                "color": "text2",
+                "font-weight": 600,
+                "width": 21,
+                "height": 21,
+                "states": {
+                    "hover": { "background": "rgb(from ink r g b / .05)" },
+                    "pressed": { "background": "rgb(from ink r g b / .1)" },
+                    "record": { "color": "vermilion" },
+                    "on": { "border": "1px solid ink", "background": "ink", "color": "sheet" },
+                    "record-on": { "border": "1px solid vermilion", "background": "vermilion", "color": "sheet" },
+                    "compact": { "width": 18, "height": 18 }
+                }
+            },
+            "header.led": {
+                "border": "1px solid hair",
+                "border-radius": "50%",
+                "states": {
+                    "out": { "border": "1px solid play", "background": "play" }
+                }
+            },
+            "scene": {
+                "$comment": "Cells ruled with a hairline; the number in vermilion, set as lining figures.",
+                "border-right": "1px solid hairFaint",
+                "color": "ink",
+                "font-family": "names",
+                "font-size": 13,
+                "number-color": "vermilion",
+                "numerals": "lining",
+                "glyph-color": "text2"
+            },
+            "chip": {
+                "border": "1px solid hair",
+                "border-radius": "2px",
+                "color": "text2",
+                "states": {
+                    "on": { "border": "1px solid rgb(from play r g b / .5)", "color": "play" },
+                    "info": { "border": "1px solid rgb(from indigo r g b / .45)", "color": "indigo" }
+                }
+            },
+            "timeline.bar.well": {
+                "$comment": "The overview as a ruled strip of the page.",
+                "border": "1px solid hair",
+                "border-radius": "2px"
+            },
+            "timeline.bar.overview": {
+                "band-color": "rgb(from ink r g b / .035)",
+                "section-color": "text2",
+                "loop-color": "rgb(from vermilion r g b / .14)",
+                "found-color": "vermilion",
+                "playhead-color": "vermilion",
+                "veil-color": "color-mix(in srgb, paper 55%, transparent)"
+            },
+            "timeline.bar.view": {
+                "border-radius": "2px",
+                "box-shadow": "inset 0 0 0 1.5px ink"
+            },
+            "timeline.bar.grip": {
+                "background": "ink",
+                "border-radius": "1.5px",
+                "width": 3,
+                "height": 18,
+                "states": {
+                    "hover": { "background": "vermilion" }
+                }
+            },
+            "timeline.bar.slot": {
+                "background": "rgb(from ink r g b / .08)",
+                "border-radius": "2px"
+            },
+            "timeline.bar.thumb": {
+                "background": "color-mix(in srgb, ink 14%, sheet)",
+                "border": "1px solid hair",
+                "border-radius": "3px",
+                "grip-color": "hair",
+                "states": {
+                    "pressed": { "background": "color-mix(in srgb, ink 22%, sheet)" }
+                }
+            },
+            "timeline.bar.toggle": {
+                "border": "1px solid hair",
+                "border-radius": "2px"
+            },
+            "timeline.bar.segment": {
+                "border-radius": "1px",
+                "color": "text3",
+                "states": {
+                    "hover": { "color": "ink" },
+                    "checked": { "background": "ink", "color": "sheet" }
+                }
+            },
+            "timeline.bar.key": {
+                "border": "1px solid hair",
+                "border-radius": "2px",
+                "color": "ink",
+                "states": {
+                    "hover": { "background": "rgb(from ink r g b / .05)" },
+                    "pressed": { "background": "ink", "color": "sheet" }
+                }
+            },
+            "timeline.bar.separator": {
+                "background": "hairFaint"
+            }
+        },
+        "resources": {
+            "SeqWindowSurfaceBrush": "paper",
+            "SeqDividerBrush": "hairFaint",
+            "SeqStrokeStrongBrush": "transparent",
+            "SeqRulerRowBrush": "transparent",
+            "SeqPinnedTintBrush": "rgb(from ink r g b / .015)",
+            "SeqLcdBrush": "transparent",
+            "SeqLcdStrokeBrush": "transparent",
+            "SeqEditorTopBrush": "hairFaint",
+            "SeqEditorBackgroundBrush": "sheet",
+            "SeqInspectorBackgroundBrush": "transparent",
+            "SeqPlayBrush": "play",
+            "SeqRecordBrush": "vermilion",
+            "SeqRecordTextBrush": "recordText",
+            "SeqAccentTextBrush": "accentInk",
+            "SeqChipBrush": "transparent",
+            "SeqChipInfoBrush": "transparent",
+            "SeqChipInfoStrokeBrush": "transparent",
+            "SeqChipOnBrush": "transparent",
+            "SeqChipOnStrokeBrush": "transparent",
+            "SeqChipSelectedBrush": "rgb(from vermilion r g b / .08)",
+            "SeqChipSelectedStrokeBrush": "rgb(from vermilion r g b / .45)",
+            "SeqWarnTextBrush": "caution",
+            "SeqPinEdgeTopColor": "hair",
+            "SeqPinEdgeBottomColor": "hairFaint",
+            "SeqPinShadowColor": "transparent",
+            "SeqPlayheadBrush": "vermilion",
+            "TextFillColorPrimaryBrush": "text",
+            "TextFillColorSecondaryBrush": "text2",
+            "TextFillColorTertiaryBrush": "text3"
+        }
+    },
+    "dark": {
+        "extends": "light",
+        "tokens": {
+            "$comment": "vellum-dark.css: the same page at night, warm charcoal paper and cream ink.",
+            "paper": "#26231F",
+            "sheet": "#2E2B26",
+            "wash": "#2C2925",
+            "paperDeep": "#211E1B",
+            "ink": "#ECE5D6",
+            "hair": "rgb(from ink r g b / .26)",
+            "hairFaint": "rgb(from ink r g b / .11)",
+            "vermilion": "#F2683C",
+            "vermilionInk": "vermilion",
+            "indigo": "#97AFDA",
+            "pianoWhite": "#CFC8B8",
+            "pianoBlack": "#181613",
+
+            "text2": "#C4BCAD",
+            "text3": "#A1998C",
+            "play": "#8CC491",
+            "mute": "#DDAE5C",
+            "caution": "#FCE100",
+
+            "divider": "rgb(from ink r g b / .09)",
+            "barLine": "rgb(from ink r g b / .13)",
+            "beatLine": "rgb(from ink r g b / .045)",
+            "laneSeam": "rgb(from ink r g b / .09)",
+            "rollBlackKeyRow": "rgba(0, 0, 0, .18)",
+            "keyEdge": "rgba(0, 0, 0, .45)",
+            "keyLabel": "#3A3631",
+            "noteEdge": "rgba(0, 0, 0, .55)",
+
+            "clipFill": "color-mix(in srgb, track 30%, wash)",
+            "cellFill": "color-mix(in srgb, track 30%, wash)",
+            "cellFillPlaying": "color-mix(in srgb, track 44%, wash)",
+            "summaryFill": "rgb(from track r g b / 0.14)"
+        },
+        "tinted": {
+            "$comment": "vellum-tint.css, dark.",
+            "paper": "oklch(from tint 0.25 calc(min(c * 0.60, 0.024) * dye) h)",
+            "sheet": "oklch(from tint 0.285 calc(min(c * 0.55, 0.022) * dye) h)",
+            "paperDeep": "oklch(from tint 0.225 calc(min(c * 0.60, 0.024) * dye) h)",
+            "wash": "oklch(from tint 0.27 calc(min(c * 0.55, 0.022) * dye) h)",
+            "ink": "oklch(from tint 0.93 min(c * 0.3, 0.014) h)",
+            "indigo": "oklch(from tint 0.78 min(0.10, c * 4) h)"
+        },
+        "trackColors": {
+            "$comment": "The inks lifted, to show on dark paper.",
+            "#FF8A65": "#E3805F",
+            "#5BC0EB": "#7FA0D6",
+            "#B4A7FF": "#B993BC",
+            "#6CCB5F": "#98B78A",
+            "#4DD0C4": "#84B3BA",
+            "#9C8CFF": "#B993BC",
+            "#F7C948": "#DDB864",
+            "#FF6F91": "#D77389",
+            "#FFB547": "#DDB864",
+            "#BDBDBD": "#A59E92"
+        },
+        "shadows": {
+            "bleed": "0 0 10px 1px color-mix(in srgb, track 14%, transparent)"
+        },
+        "parts": {
+            "timeline.clip": {
+                "background": "radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, track 34%, wash), color-mix(in srgb, track 14%, wash) 75%)"
+            },
+            "launcher.cell": {
+                "background": "radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, track 34%, wash), color-mix(in srgb, track 14%, wash) 75%)"
+            },
+            "transport.key": {
+                "states": {
+                    "play-on": { "background": "ink", "color": "paper" }
+                }
+            }
+        }
+    }
+}

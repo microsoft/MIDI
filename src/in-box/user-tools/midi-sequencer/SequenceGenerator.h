@@ -23,6 +23,9 @@
 
 namespace midisequencer
 {
+    // How a generator that listens hears its sources (GeneratorListen.h).
+    struct ListenContext;
+
     inline constexpr size_t MaximumEuclidRings = 16;
     inline constexpr uint8_t MaximumRingSteps = 64;
     inline constexpr int64_t MaximumGeneratorSteps = 256;
@@ -48,7 +51,8 @@ namespace midisequencer
 
     // Each note one pass of a generator plays that starts inside [fromTick, toTick), in step order.
     // With applyChance off, every note a ring could play is there with the ring's chance on it,
-    // which is what drawing wants.
+    // which is what drawing wants. A generator that keeps listening hears its source through
+    // listen; without one, it plays from what it learned last.
     void ForEachGeneratorNote(
         _In_ Clip const& clip,
         _In_ int64_t passStart,
@@ -57,13 +61,15 @@ namespace midisequencer
         _In_ int64_t fromTick,
         _In_ int64_t toTick,
         _In_ bool applyChance,
-        _In_ std::function<void(Note const&)> const& add);
+        _In_ std::function<void(Note const&)> const& add,
+        _In_opt_ ListenContext const* listen = nullptr);
 
     // After a generator changes: the notes it draws (the first pass).
     void RefreshGeneratorPreview(_Inout_ Clip& clip);
 
     // An ordinary notes clip that plays what the generator played. A Euclidean rhythm that's the
     // same each pass gives as many passes as its rings take to line up. Anything that changes each
-    // pass gives the first `passes` passes. At most maximumTicks, in whole passes.
-    Clip MakeNotesFromGenerator(_In_ Clip const& generator, _In_ uint32_t passes, _In_ int64_t maximumTicks);
+    // pass gives the first `passes` passes. At most maximumTicks, in whole passes. One that keeps
+    // listening hears its source through listen, side by side from tick 0.
+    Clip MakeNotesFromGenerator(_In_ Clip const& generator, _In_ uint32_t passes, _In_ int64_t maximumTicks, _In_opt_ ListenContext const* listen = nullptr);
 }

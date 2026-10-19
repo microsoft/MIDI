@@ -1,0 +1,151 @@
+/* PROTOTYPE. Style study: Aluminum, dark. The same machined plates, engraved grooves, and graphite
+   keys as Aluminum, anodized a dark gray that sits with a dark mode desktop: mid grays, not black.
+   A layer over aluminum.css, which it leaves as it is; the page has the classes
+   "study aluminum aluminum-dark".
+
+   Every surface is a variable on one ladder of lightness (OKLCH L, with a whisper of warmth like
+   the light plates). aluminum-tint.css anodizes the same ladder in the window's color by swapping
+   only the hue and chroma, so a surface keeps its depth whatever color is picked. */
+
+html.study.aluminum.aluminum-dark {
+    --base: oklch(0.20 0.003 100);          /* the chassis, between the plates */
+    --strip: oklch(0.235 0.003 100);        /* the title bar, transport, and status bar */
+    --strip-field: oklch(0.17 0.003 100);   /* a box set into the strip */
+    --groove: oklch(0.155 0.003 100);       /* an engraved line */
+    --well: oklch(0.255 0.003 100);         /* a box set into a plate */
+    --empty: oklch(0.27 0.003 100);         /* an empty launcher slot */
+    --ruler: oklch(0.285 0.003 100);
+    --lane: oklch(0.30 0.003 100);          /* the timeline: a step down, so the clips stand forward */
+    --folder: oklch(0.31 0.003 100);
+    --inspector: oklch(0.31 0.003 100);
+    --plate: oklch(0.335 0.003 100);        /* track headers and the launcher */
+    --hdr-sel: oklch(0.40 0.003 100);       /* the selected track's header */
+    --roll: oklch(0.255 0.003 100);         /* the piano roll, recessed */
+
+    --graphite: radial-gradient(circle at 35% 30%, #57585D, #222326 72%);
+    --crisp: inset 0 1px 0 rgba(255, 255, 255, .16), 0 2px 3px rgba(0, 0, 0, .55), 0 6px 12px rgba(0, 0, 0, .35);
+    --crisp-light: inset 0 1px 0 rgba(255, 255, 255, .13), 0 1px 2px rgba(0, 0, 0, .6), 0 4px 8px rgba(0, 0, 0, .3);
+    --pressed: inset 0 2px 4px rgba(0, 0, 0, .75);
+    --engraved: 0 1px 0 rgba(255, 255, 255, .045);
+
+    /* the readouts and lights, which the window's color can take over */
+    --lcd-glass: #0B0B0C;
+    --lcd-ink: #F0EFEA;
+    --lcd-dim: #8C8C88;
+    --led: #6FB3FF;
+
+    --text: #EDEDEA;
+    --text2: #C2C2BE;
+    --text3: #A2A29E;
+    --divider: var(--groove);
+    --stroke: rgba(255, 255, 255, .08);
+    --stroke-strong: rgba(255, 255, 255, .14);
+    --accent: #7AA7F5;
+    --accent-deep: #7AA7F5;
+    --play: #6CCB5F;
+    --success: #6CCB5F;
+    --rec: #FF6B5F;
+    --mute: #F2B300;
+    --solo: #7AA7F5;
+    --lane-bg: var(--lane);
+}
+
+/* track colors: the comp's own dark ones, a touch quieter on the metal */
+html.study.aluminum.aluminum-dark [style*="#FF8A65"] { --tc: #F2875F !important; }
+html.study.aluminum.aluminum-dark [style*="#5BC0EB"] { --tc: #56B6E3 !important; }
+html.study.aluminum.aluminum-dark [style*="#B4A7FF"] { --tc: #A69DF2 !important; }
+html.study.aluminum.aluminum-dark [style*="#6CCB5F"] { --tc: #6CC260 !important; }
+html.study.aluminum.aluminum-dark [style*="#4DD0C4"] { --tc: #4DC4B8 !important; }
+html.study.aluminum.aluminum-dark [style*="#9C8CFF"] { --tc: #A69DF2 !important; }
+html.study.aluminum.aluminum-dark [style*="#F7C948"] { --tc: #E9BE45 !important; }
+html.study.aluminum.aluminum-dark [style*="#FF6F91"] { --tc: #F07089 !important; }
+html.study.aluminum.aluminum-dark [style*="#FFB547"] { --tc: #E9BE45 !important; }
+html.study.aluminum.aluminum-dark [style*="#BDBDBD"] { --tc: #A8A8A4 !important; }
+
+/* a dark desktop under the window */
+html.study.aluminum.aluminum-dark, html.study.aluminum.aluminum-dark body { background: #1C1C1E; }
+html.study.aluminum.aluminum-dark .caption-above { color: #B5B5B1; }
+html.study.aluminum.aluminum-dark .caption-above b { color: #F2F2EE; }
+
+/* ---- the window: a hairline edge, as a dark mode window has */
+
+html.study.aluminum.aluminum-dark .window {
+    border: 1px solid rgba(255, 255, 255, .09);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, .55), 0 8px 20px rgba(0, 0, 0, .35);
+}
+
+html.study.aluminum.aluminum-dark .transport { box-shadow: 0 2px 0 rgba(0, 0, 0, .5), 0 3px 0 rgba(255, 255, 255, .04); }
+html.study.aluminum.aluminum-dark .transport .field { background: var(--strip-field); }
+
+html.study.aluminum.aluminum-dark .lcd { background: var(--lcd-glass); box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .07); }
+html.study.aluminum.aluminum-dark .lcd .big { color: var(--lcd-ink); }
+html.study.aluminum.aluminum-dark .lcd .small, html.study.aluminum.aluminum-dark .lcd .unit { color: var(--lcd-dim); }
+html.study.aluminum.aluminum-dark .tbtn.on:not(.play)::after { background: var(--led); box-shadow: 0 0 6px var(--led); }
+
+/* ---- controls on the plates: dark caps, pressed in when on */
+
+html.study.aluminum.aluminum-dark .btn { background: linear-gradient(oklch(0.40 0.003 100), oklch(0.35 0.003 100)); box-shadow: var(--crisp-light); color: var(--text); }
+html.study.aluminum.aluminum-dark .btn.subtle { background: transparent; box-shadow: none; }
+html.study.aluminum.aluminum-dark .btn.toggled { background: var(--well); box-shadow: var(--pressed); color: var(--accent); }
+html.study.aluminum.aluminum-dark .field { background: var(--well); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .6), var(--engraved); color: var(--text); }
+html.study.aluminum.aluminum-dark .chip { background: var(--well); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07), var(--engraved); color: var(--text2); }
+html.study.aluminum.aluminum-dark .chip.info { color: var(--accent); }
+
+/* ---- the arrange: plates and engraved grooves */
+
+html.study.aluminum.aluminum-dark .arow > .hdr,
+html.study.aluminum.aluminum-dark .arow > .launch { box-shadow: var(--engraved), inset -1px 0 0 var(--groove), inset -2px 0 0 rgba(255, 255, 255, .09); }
+html.study.aluminum.aluminum-dark .arow.track > .hdr[style] { background: var(--hdr-sel) !important; --text3: #BDBDB9; }
+html.study.aluminum.aluminum-dark .arow.folder > .hdr, html.study.aluminum.aluminum-dark .arow.auto > .hdr { background: var(--folder); }
+html.study.aluminum.aluminum-dark .pin-edge { background: linear-gradient(var(--groove), var(--well)); box-shadow: inset 0 1px 0 rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .05); }
+html.study.aluminum.aluminum-dark .indent::after { background: rgba(255, 255, 255, .08); }
+html.study.aluminum.aluminum-dark .led { background: oklch(0.38 0.003 100); box-shadow: inset 0 1px 1px rgba(0, 0, 0, .6); }
+html.study.aluminum.aluminum-dark .led.out { background: #5BD34A; box-shadow: 0 0 5px #5BD34A; }
+html.study.aluminum.aluminum-dark .led.in { background: #FFB21A; box-shadow: 0 0 5px #FFB21A; }
+
+html.study.aluminum.aluminum-dark .arow.ruler { background: var(--ruler); box-shadow: inset 0 -1px 0 var(--groove); }
+html.study.aluminum.aluminum-dark .arow.ruler > .hdr, html.study.aluminum.aluminum-dark .arow.ruler > .launch { background: var(--ruler); }
+html.study.aluminum.aluminum-dark .scene { border-right-color: var(--groove); box-shadow: 1px 0 0 rgba(255, 255, 255, .08); }
+html.study.aluminum.aluminum-dark .bar-num { border-left-color: oklch(0.45 0.003 100); }
+html.study.aluminum.aluminum-dark .loop-range { background: color-mix(in oklch, var(--accent) 45%, transparent); }
+
+/* the launcher: graphite pads, empty slots set into the plate */
+html.study.aluminum.aluminum-dark .empty { background: var(--empty); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .5), var(--engraved); color: rgba(255, 255, 255, .18); }
+html.study.aluminum.aluminum-dark .empty.armed { color: rgba(255, 107, 95, .8); }
+
+/* the timeline: a darker plate, its grid engraved; clips are lighter plates with notes printed light */
+html.study.aluminum.aluminum-dark .arow > .lane {
+    background-color: var(--lane);
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .5) 0 1px, rgba(255, 255, 255, .05) 1px 2px, transparent 2px var(--bar)),
+        repeating-linear-gradient(to right, rgba(255, 255, 255, .035) 0 1px, transparent 1px calc(var(--bar) / 4));
+}
+
+html.study.aluminum.aluminum-dark .arow.ruler > .lane { background-image: none; background-color: var(--ruler); }
+
+html.study.aluminum.aluminum-dark .tclip {
+    background: linear-gradient(oklch(0.41 0.003 100), oklch(0.37 0.003 100));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 1px 2px rgba(0, 0, 0, .6), 0 3px 6px rgba(0, 0, 0, .3);
+}
+
+html.study.aluminum.aluminum-dark .tclip .body svg rect, html.study.aluminum.aluminum-dark .tclip .body svg circle { fill: #ECECE8; fill-opacity: .82; }
+html.study.aluminum.aluminum-dark .tclip.gen { background: repeating-linear-gradient(135deg, oklch(0.41 0.003 100) 0 6px, oklch(0.385 0.003 100) 6px 12px); }
+html.study.aluminum.aluminum-dark .tclip.sel { box-shadow: 0 0 0 2px var(--accent), 0 4px 10px rgba(0, 0, 0, .5); }
+html.study.aluminum.aluminum-dark .tclip.summary { background: color-mix(in srgb, var(--tc) 14%, transparent); box-shadow: none; }
+html.study.aluminum.aluminum-dark .loopmark { border-left-color: rgba(255, 255, 255, .28); }
+html.study.aluminum.aluminum-dark .lane-overlay { background: repeating-linear-gradient(135deg, color-mix(in oklch, var(--lane) 92%, transparent) 0 6px, color-mix(in oklch, var(--well) 86%, transparent) 6px 12px); color: var(--text2); }
+html.study.aluminum.aluminum-dark .playhead { background: #F2F2EE; }
+
+/* ---- the clip editor: a plate, the roll recessed, keys like real key caps */
+
+html.study.aluminum.aluminum-dark .editor { box-shadow: inset 0 3px 0 var(--groove), inset 0 4px 0 rgba(255, 255, 255, .09); }
+html.study.aluminum.aluminum-dark .roll, html.study.aluminum.aluminum-dark .vlane { background: var(--roll); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .6); }
+html.study.aluminum.aluminum-dark .inspector { background: var(--inspector); box-shadow: inset 1px 0 0 rgba(255, 255, 255, .04); }
+html.study.aluminum.aluminum-dark .rruler .loopbar { background: color-mix(in oklch, var(--accent) 40%, transparent); }
+
+/* the velocity lane's edge engraved like the rest, not raised */
+html.study.aluminum.aluminum-dark .lanerow { border-top-color: var(--groove); }
+html.study.aluminum.aluminum-dark .keys svg rect[fill="#D9D9D9"] { fill: #C2C2BE; stroke: #1A1A19; }
+html.study.aluminum.aluminum-dark .keys svg rect[fill="#1B1B1B"] { fill: #141413; stroke: #1A1A19; }
+
+html.study.aluminum.aluminum-dark .vbar { background: rgba(255, 255, 255, .14); }

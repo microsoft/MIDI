@@ -8,8 +8,21 @@
 #pragma once
 
 // The colors the drawn parts of the window use: the timeline, the launcher, the ruler and the
-// clip editor. Taken from the design comps' tokens (src/prototypes/midi-sequencer/design/seq.css)
-// for the dark and light themes, so the drawn parts match the XAML around them.
+// clip editor. They come from the theme in use (Themes\*.json, through the theme engine), each
+// field a color of the theme's own by the field's name ("text2", "laneBackground"). The values
+// MakePalette(light) builds are Night drive's, the comps' tokens (design/seq.css): the colors a
+// theme leaves out, and the whole palette if a theme can't be read.
+//
+// Plain C++ and WinRT, without the app's pch, so the unit tests can check Night drive against it.
+
+#include <sal.h>
+
+#include <cstdint>
+#include <memory>
+
+#include <winrt/Windows.UI.h>
+
+#include "ThemeResolver.h"
 
 namespace midisequencer
 {
@@ -37,6 +50,10 @@ namespace midisequencer
     {
         bool Light{ false };
 
+        // The theme the colors came from, for the colors that depend on a track and for the
+        // parts a theme draws as more than a color. Null for the built-in palette.
+        std::shared_ptr<themeengine::ResolvedTheme const> Theme{};
+
         Color Text{};
         Color Text2{};
         Color Text3{};
@@ -54,9 +71,14 @@ namespace midisequencer
         Color FolderLaneBackground{};
         Color LauncherBackground{};
         Color LauncherEdge{};
-        Color PinnedTint{};
         Color BarLine{};
         Color BeatLine{};
+
+        // A grid engraved in the timeline: a light line beside each bar line, and a seam under
+        // each lane. Transparent in the comps' own look, which has neither.
+        Color BarLineLight{};
+        Color LaneSeam{};
+        Color LaneSeamLight{};
 
         Color RulerBackground{};
         Color RulerBarLine{};
@@ -71,7 +93,6 @@ namespace midisequencer
         Color ArmedSlotGlyph{};
 
         Color SelectionStroke{};
-        Color CaptionText{};
 
         Color OverlayStripeA{};
         Color OverlayStripeB{};
@@ -98,6 +119,17 @@ namespace midisequencer
     };
 
     Palette MakePalette(_In_ bool light) noexcept;
+
+    // The palette of a theme worked out for light or dark. Never throws; a color the theme doesn't
+    // have keeps Night drive's.
+    Palette MakePalette(_In_ std::shared_ptr<themeengine::ResolvedTheme const> const& theme) noexcept;
+
+    Color ToUiColor(_In_ themeengine::Color const& color) noexcept;
+    themeengine::Color ToThemeColor(_In_ Color const& color) noexcept;
+
+    // A track's color (its own, as the sequence keeps it) as the theme shows it: a theme made of a
+    // material can have caps of its own for the app's colors.
+    Color ThemedTrackColor(_In_ Palette const& palette, _In_ Color trackColor) noexcept;
 
     // A track color as it appears on each kind of drawn surface, worked out the way the comps'
     // CSS mixes it.

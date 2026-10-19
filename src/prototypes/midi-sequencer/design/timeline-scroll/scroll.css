@@ -1,0 +1,334 @@
+/* PROTOTYPE. The timeline's own scroll bar (scroll.js), over the style studies' Tactile (porcelain)
+   and Aluminum looks: its row, the timeline scrolled and zoomed, the plain bar, the overview, the zoom
+   controls, then each look. Colors come from each look's own variables, so the dark versions and the
+   window color follow. */
+
+/* ---- the timeline at the view: what's placed in time moves; a lane's overlay doesn't */
+
+html.study .arow > .lane { background-position-x: calc(-1 * var(--scroll, 0px)) !important; }
+html.study .arow > .lane > :not(.lane-overlay) { translate: calc(-1 * var(--scroll, 0px)) 0; }
+
+/* the ruler at the scale: every other bar far out, beats close in */
+html.study .bar-num.skip { visibility: hidden; }
+html.study .bar-num.beat { font-size: 9.5px; opacity: .6; }
+
+/* ---- the bar's row, in the arrange's columns */
+
+html.study.hbar-overview { --hbar-h: 52px; }
+html.study.hbar-plain { --hbar-h: 26px; }
+
+html.study .arow.tlbar { height: var(--hbar-h); flex: 0 0 var(--hbar-h); align-self: stretch; width: 100%; }
+html.study .arow.tlbar > .hdr,
+html.study .arow.tlbar > .launch { border-bottom: 0 !important; background: transparent; box-shadow: none; }
+html.study .arow.tlbar > .hdr { padding: 0 10px 0 12px; gap: 8px; }
+
+html.study .hb-lane {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+html.study .hb-track { position: relative; flex: 1 1 auto; min-width: 0; }
+html.study .hb-clip { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+html.study .hb-map { position: absolute; left: 0; top: 0; }
+html.study .hb-sec {
+    position: absolute;
+    top: 1px;
+    font: 10px/12px Bahnschrift, "Segoe UI Variable Text", sans-serif;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+html.study .hb-veil { position: absolute; top: 0; bottom: 0; }
+html.study .hb-view, html.study .hb-thumb { position: absolute; }
+html.study .grip { position: absolute; }
+html.study .hb-tick { position: absolute; z-index: 2; }
+
+/* the switch between the overview and the plain bar */
+html.study .hb-toggle { display: flex; flex: 0 0 auto; align-items: center; }
+html.study .hb-toggle .seg { display: grid; place-items: center; width: 26px; height: 20px; }
+html.study .hb-toggle svg { width: 16px; height: 16px; display: block; }
+html.study .hb-toggle .o { fill: none; stroke: currentColor; stroke-width: 1.2; }
+html.study .hb-toggle .f, html.study .hb-toggle .c1, html.study .hb-toggle .c2, html.study .hb-toggle .c3 { fill: currentColor; }
+
+/* the zoom controls: keys, or a slider between a small and a large triangle */
+html.study .hb-zoom { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; }
+html.study .hb-zoom .k { display: grid; place-items: center; width: 26px; height: 22px; font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 11px; }
+html.study .hb-zoom .zsep { width: 2px; height: 16px; margin: 0 1px; }
+html.study .hb-zoom .zlabel { font: 600 14px/1 "Segoe UI Variable Text", "Segoe UI", sans-serif; margin-right: 2px; }
+html.study .hb-zoom .rail { position: relative; width: 72px; height: 8px; }
+html.study .hb-zoom .knob { position: absolute; top: 50%; translate: -50% -50%; }
+html.study .hb-zoom .tri { width: 0; height: 0; border-style: solid; border-color: transparent transparent currentColor transparent; }
+html.study .hb-zoom .tri.small { border-width: 0 4px 6px 4px; }
+html.study .hb-zoom .tri.big { border-width: 0 6.5px 10px 6.5px; }
+
+/* the bar's menu, and a tooltip */
+html.study .hb-menu {
+    position: absolute;
+    z-index: 30;
+    min-width: 280px;
+    padding: 4px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+html.study .hb-menu .mi { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 6px; border-radius: 4px; white-space: nowrap; }
+html.study .hb-menu .ck { width: 18px; font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-size: 11px; text-align: center; }
+html.study .hb-menu .sub { font-size: 11px; margin-left: 4px; }
+html.study .hb-menu .key { margin-left: auto; padding-left: 18px; font-size: 11px; }
+html.study .hb-menu .ms { height: 1px; margin: 4px 6px; }
+
+html.study .hb-hint {
+    position: absolute;
+    z-index: 30;
+    width: 300px;
+    padding: 8px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+/* =========================================================== Tactile (porcelain) */
+
+html.study.porcelain {
+    --hb-ring: color-mix(in oklch, var(--surface) 45%, var(--glint));
+    --hb-ink: var(--text);
+    --hb-veil: color-mix(in oklch, var(--surface) 44%, transparent);
+    --hb-band: oklch(from var(--shade) l c h / .05);
+}
+
+html.study.porcelain.porcelain-dark {
+    --hb-ring: color-mix(in oklch, var(--surface) 82%, var(--glint));
+    --hb-veil: color-mix(in oklch, var(--surface) 50%, transparent);
+    --hb-band: rgba(0, 0, 0, .14);
+}
+
+/* the field stops short of the bar */
+html.study.porcelain.porcelain-2.no-well.hbar-bottom .arrange::before { bottom: calc(var(--hbar-h) + 8px); }
+html.study.porcelain.porcelain-2.no-well.hbar-top .arrange::before { top: calc(var(--hbar-h) + 40px); }
+
+/* how fine the engraved grid is */
+html.study.porcelain.porcelain-2.no-well.grid-coarse .arow:not(.ruler):not(.addrow):not(.filler) > .lane {
+    background-image:
+        repeating-linear-gradient(to right, var(--grid-line) 0 1px, var(--grid-light) 1px 2px, transparent 2px calc(var(--bar) * 4)),
+        repeating-linear-gradient(to right, var(--grid-beat) 0 1px, transparent 1px var(--bar)) !important;
+}
+
+html.study.porcelain.porcelain-2.no-well.grid-fine .arow:not(.ruler):not(.addrow):not(.filler) > .lane {
+    background-image:
+        repeating-linear-gradient(to right, var(--grid-line) 0 1px, var(--grid-light) 1px 2px, transparent 2px var(--bar)),
+        repeating-linear-gradient(to right, color-mix(in srgb, var(--grid-line) 60%, transparent) 0 1px, transparent 1px calc(var(--bar) / 4)),
+        repeating-linear-gradient(to right, var(--grid-beat) 0 1px, transparent 1px calc(var(--bar) / 16)) !important;
+}
+
+/* the bar sits on the surface under the field, as wide as it */
+html.study.porcelain .hb-lane { margin: 0 12px 0 4px; }
+html.study.porcelain.hbar-bottom .hb-lane { padding: 0 0 6px; }
+html.study.porcelain.hbar-top .hb-lane { padding: 6px 0 0; }
+html.study.porcelain .hb-lane, html.study.porcelain .hb-zoom, html.study.porcelain .hb-toggle { color: var(--text2); }
+
+/* plain: a slot, and a porcelain key riding in it as long as the view, with a grip at each end; it
+   stands taller than the slot, so its shadow falls on the surface like a key's */
+html.study.porcelain.hbar-plain .hb-track { height: 8px; border-radius: 4px; background: color-mix(in oklch, var(--well), var(--shade) 7%); box-shadow: var(--groove); }
+html.study.porcelain .hb-thumb { top: -5px; bottom: -5px; border-radius: 9px; background: var(--clip-face, var(--face)); box-shadow: 0 1px 2px oklch(from var(--shade) l c h / .3), inset 0 1px 0 oklch(from var(--glint) l c h / .7), var(--raised); }
+html.study.porcelain .hb-thumb .grip { top: 3px; bottom: 3px; width: 5px; background: linear-gradient(to right, var(--engrave-dark) 0 1px, var(--engrave-light) 1px 2px, transparent 2px 3px, var(--engrave-dark) 3px 4px, var(--engrave-light) 4px 5px); }
+html.study.porcelain .hb-thumb .grip.l { left: 6px; }
+html.study.porcelain .hb-thumb .grip.r { right: 6px; }
+html.study.porcelain .hb-thumb.hover-r .grip.r { background: linear-gradient(to right, var(--accent) 0 1.5px, transparent 1.5px 3px, var(--accent) 3px 4.5px); }
+html.study.porcelain .hb-tick { top: -6px; bottom: -6px; width: 2px; border-radius: 1px; background: var(--rec); }
+
+/* the overview: in a well the field's color, with a raised clear frame on the view */
+html.study.porcelain.hbar-overview .hb-track { height: 40px; border-radius: 11px; background: var(--field); box-shadow: var(--groove); }
+html.study.porcelain .hb-sec { color: var(--text2); }
+html.study.porcelain .hb-map .sec-band { fill: var(--hb-band); }
+html.study.porcelain .hb-map .sec-mark { opacity: .9; }
+html.study.porcelain .hb-map .clip { opacity: 1; }
+html.study.porcelain .hb-map .clip.muted { opacity: .3; }
+html.study.porcelain .hb-map .loop { fill: color-mix(in oklch, var(--accent) 18%, transparent); }
+html.study.porcelain .hb-map .ph { fill: var(--rec); }
+html.study.porcelain .hb-map .found { fill: var(--accent); opacity: .55; }
+html.study.porcelain .hb-map .found.sel { opacity: 1; }
+html.study.porcelain .hb-veil { background: var(--hb-veil); }
+
+html.study.porcelain .hb-view {
+    top: 0;
+    bottom: 0;
+    border-radius: 9px;
+    box-shadow:
+        inset 0 0 0 2.5px var(--hb-ring),
+        inset 2px 3px 6px oklch(from var(--shade) l c h / .22),
+        var(--raised-tiny);
+}
+
+/* the ends you drag to zoom: small porcelain grips on the frame */
+html.study.porcelain .hb-view .grip { top: 50%; width: 9px; height: 22px; translate: 0 -50%; border-radius: 4.5px; background: var(--face); box-shadow: var(--raised-tiny); }
+html.study.porcelain .hb-view .grip.l { left: -3px; }
+html.study.porcelain .hb-view .grip.r { right: -3px; }
+html.study.porcelain .hb-view .grip::after { content: ""; position: absolute; left: 3.5px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(to right, var(--engrave-dark) 0 1px, var(--engrave-light) 1px 2px); }
+html.study.porcelain .hb-view.hover-r .grip.r { box-shadow: var(--raised-tiny), 0 0 0 2px var(--accent); }
+
+/* the switch: a groove with the chosen side raised */
+html.study.porcelain .hb-toggle { gap: 2px; padding: 2px; border-radius: 12px; background: var(--well); box-shadow: var(--groove); }
+html.study.porcelain .hb-toggle .seg { border-radius: 10px; color: var(--text3); }
+html.study.porcelain .hb-toggle .seg.on { background: var(--face); box-shadow: var(--raised-tiny); color: var(--text); }
+html.study.porcelain .hb-toggle .seg.map.on .c1 { fill: var(--rec); }
+html.study.porcelain .hb-toggle .seg.map.on .c2 { fill: var(--accent); }
+html.study.porcelain .hb-toggle .seg.map.on .c3 { fill: var(--play); }
+
+/* zoom keys, and the slider in a groove with a porcelain knob */
+html.study.porcelain .hb-zoom .k { border-radius: 11px; background: var(--face); box-shadow: var(--raised-tiny); color: var(--text2); }
+html.study.porcelain .hb-zoom .zsep { background: linear-gradient(to right, var(--engrave-dark) 0 1px, var(--engrave-light) 1px 2px); }
+html.study.porcelain .hb-zoom .rail { border-radius: 4px; background: var(--well); box-shadow: var(--groove); }
+html.study.porcelain .hb-zoom .knob { width: 15px; height: 15px; border-radius: 8px; background: var(--clip-face, var(--face)); box-shadow: 0 1px 2px oklch(from var(--shade) l c h / .3), inset 0 1px 0 oklch(from var(--glint) l c h / .7), var(--raised-tiny); }
+html.study.porcelain .hb-zoom .tri, html.study.porcelain .hb-zoom .zlabel { color: var(--text3); }
+
+html.study.porcelain .hb-menu { background: color-mix(in oklch, var(--surface) 72%, var(--glint)); color: var(--text); box-shadow: var(--raised); }
+html.study.porcelain .hb-menu .mi:nth-child(2) { background: oklch(from var(--shade) l c h / .07); }
+html.study.porcelain .hb-menu .sub, html.study.porcelain .hb-menu .key { color: var(--text3); }
+html.study.porcelain .hb-menu .ck { color: var(--accent-deep); }
+html.study.porcelain .hb-menu .ms { background: linear-gradient(var(--engrave-dark) 0 1px, transparent 1px); }
+html.study.porcelain .hb-hint { background: color-mix(in oklch, var(--surface) 70%, var(--glint)); color: var(--text2); box-shadow: var(--raised-small); }
+html.study.porcelain .hb-hint b { color: var(--text); font-weight: 600; }
+
+/* =========================================================== Aluminum */
+
+html.study.aluminum {
+    --hb-metal: linear-gradient(to right, #F6F6F3, #C6C6C2);
+    --hb-bracket: #E6E6E2;
+    --hb-ink: var(--lcd-ink, #F0EFEA);
+}
+
+html.study.aluminum.aluminum-dark {
+    --hb-metal: linear-gradient(to right, #C9C9C5, #8E8E8A);
+    --hb-bracket: #B9B9B5;
+}
+
+/* how fine the printed grid is */
+html.study.aluminum.grid-coarse .arow:not(.ruler):not(.addrow):not(.filler) > .lane {
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .26) 0 1px, transparent 1px calc(var(--bar) * 4)),
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .08) 0 1px, transparent 1px var(--bar)) !important;
+}
+
+html.study.aluminum.grid-fine .arow:not(.ruler):not(.addrow):not(.filler) > .lane {
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .26) 0 1px, transparent 1px var(--bar)),
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .11) 0 1px, transparent 1px calc(var(--bar) / 4)),
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .045) 0 1px, transparent 1px calc(var(--bar) / 16)) !important;
+}
+
+html.study.aluminum.aluminum-dark.grid-coarse .arow:not(.ruler):not(.addrow):not(.filler) > .lane {
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .5) 0 1px, rgba(255, 255, 255, .05) 1px 2px, transparent 2px calc(var(--bar) * 4)),
+        repeating-linear-gradient(to right, rgba(255, 255, 255, .035) 0 1px, transparent 1px var(--bar)) !important;
+}
+
+html.study.aluminum.aluminum-dark.grid-fine .arow:not(.ruler):not(.addrow):not(.filler) > .lane {
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .5) 0 1px, rgba(255, 255, 255, .05) 1px 2px, transparent 2px var(--bar)),
+        repeating-linear-gradient(to right, rgba(255, 255, 255, .055) 0 1px, transparent 1px calc(var(--bar) / 4)),
+        repeating-linear-gradient(to right, rgba(255, 255, 255, .025) 0 1px, transparent 1px calc(var(--bar) / 16)) !important;
+}
+
+/* the bar's row is a plate, with an engraved groove between it and the timeline */
+html.study.aluminum .arow.tlbar > .hdr,
+html.study.aluminum .arow.tlbar > .launch,
+html.study.aluminum .hb-lane { background: var(--plate); }
+html.study.aluminum.hbar-bottom .arow.tlbar { border-top: 2px solid var(--divider); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
+html.study.aluminum.hbar-top .arow.tlbar { border-bottom: 2px solid var(--divider); }
+html.study.aluminum.aluminum-dark .arow.tlbar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05); }
+html.study.aluminum .hb-lane { padding: 0 10px; }
+html.study.aluminum .hb-lane, html.study.aluminum .hb-zoom { color: var(--text2); }
+
+/* plain: an engraved slot, and a brushed thumb with knurled ends */
+html.study.aluminum.hbar-plain .hb-track { height: 10px; border-radius: 5px; background: var(--well); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .4), var(--engraved); }
+html.study.aluminum .hb-thumb {
+    top: -2px;
+    bottom: -2px;
+    border-radius: 4px;
+    background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .16) 0 1px, transparent 1px 2px), linear-gradient(#F2F2EF, #C8C8C4);
+    box-shadow: var(--crisp-light);
+}
+html.study.aluminum.aluminum-dark .hb-thumb { background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .08) 0 1px, transparent 1px 2px), linear-gradient(#8E8E8A, #5E5E5B); }
+html.study.aluminum .hb-thumb .grip { top: 2px; bottom: 2px; width: 7px; border-radius: 2px; background: repeating-linear-gradient(to right, rgba(0, 0, 0, .32) 0 1px, rgba(255, 255, 255, .55) 1px 2px, transparent 2px 3px); }
+html.study.aluminum .hb-thumb .grip.l { left: 3px; }
+html.study.aluminum .hb-thumb .grip.r { right: 3px; }
+html.study.aluminum .hb-tick { top: -3px; bottom: -3px; width: 2px; background: var(--rec); box-shadow: 0 0 4px var(--rec); }
+
+/* the overview: a dark display like the readouts, with a metal bracket on the view */
+html.study.aluminum.hbar-overview .hb-track {
+    height: 38px;
+    border-radius: 5px;
+    background: var(--lcd-glass, #141416);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .45);
+}
+html.study.aluminum.aluminum-dark.hbar-overview .hb-track { box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .07); }
+html.study.aluminum .hb-sec { color: var(--lcd-dim, #8C8C88); font-family: "Bahnschrift SemiCondensed", Bahnschrift, sans-serif; }
+html.study.aluminum .hb-map .sec-band { fill: rgba(255, 255, 255, .04); }
+html.study.aluminum .hb-map .clip { opacity: 1; }
+html.study.aluminum .hb-map { filter: saturate(1.15) brightness(1.2); }
+html.study.aluminum .hb-map .clip.muted { opacity: .3; }
+html.study.aluminum .hb-map .loop { fill: color-mix(in oklch, var(--led, #6FB3FF) 26%, transparent); }
+html.study.aluminum .hb-map .ph { fill: #FF5A4E; }
+html.study.aluminum .hb-map .found { fill: var(--led, #6FB3FF); opacity: .6; }
+html.study.aluminum .hb-map .found.sel { opacity: 1; }
+html.study.aluminum .hb-veil { background: rgba(0, 0, 0, .36); }
+
+html.study.aluminum .hb-view {
+    top: -2px;
+    bottom: -2px;
+    border-radius: 4px;
+    box-shadow:
+        inset 0 0 0 2px var(--hb-bracket),
+        inset 0 0 0 3px rgba(0, 0, 0, .55),
+        0 0 0 1px rgba(0, 0, 0, .55),
+        0 2px 4px rgba(0, 0, 0, .35);
+}
+
+/* knurled tabs at the ends */
+html.study.aluminum .hb-view .grip {
+    top: 50%;
+    width: 8px;
+    height: 24px;
+    translate: 0 -50%;
+    border-radius: 2px;
+    background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, .3) 0 1px, transparent 1px 3px), var(--hb-metal);
+    box-shadow: var(--crisp-light);
+}
+html.study.aluminum .hb-view .grip.l { left: -3px; }
+html.study.aluminum .hb-view .grip.r { right: -3px; }
+html.study.aluminum .hb-view.hover-r .grip.r { box-shadow: var(--crisp-light), 0 0 0 2px var(--led, var(--accent)); }
+html.study.aluminum .hb-thumb.hover-r .grip.r { background: repeating-linear-gradient(to right, var(--accent) 0 1px, rgba(255, 255, 255, .55) 1px 2px, transparent 2px 3px); }
+
+/* the switch: an engraved well with the chosen side a graphite key */
+html.study.aluminum .hb-toggle { gap: 2px; padding: 2px; border-radius: 6px; background: var(--well); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .35), var(--engraved); }
+html.study.aluminum .hb-toggle .seg { border-radius: 4px; color: var(--text3); }
+html.study.aluminum .hb-toggle .seg.on { background: var(--graphite); box-shadow: var(--crisp); color: #EDEDEA; }
+html.study.aluminum .hb-toggle .seg.map.on .c1 { fill: #FF8A65; }
+html.study.aluminum .hb-toggle .seg.map.on .c2 { fill: #6FB3FF; }
+html.study.aluminum .hb-toggle .seg.map.on .c3 { fill: #7BE36A; }
+
+/* zoom keys in graphite, and a slot with a fader cap */
+html.study.aluminum .hb-zoom .k { width: 24px; height: 20px; border-radius: 5px; background: var(--graphite); box-shadow: var(--crisp); color: #E2E2DE; }
+html.study.aluminum .hb-zoom .zsep { width: 1px; background: var(--divider); box-shadow: 1px 0 0 rgba(255, 255, 255, .45); }
+html.study.aluminum .hb-zoom .rail { height: 6px; border-radius: 3px; background: var(--well); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .45), var(--engraved); }
+html.study.aluminum .hb-zoom .knob {
+    width: 10px;
+    height: 18px;
+    border-radius: 2px;
+    background: linear-gradient(to bottom, transparent 8px, rgba(0, 0, 0, .55) 8px 10px, transparent 10px), linear-gradient(#F4F4F1, #BDBDB9);
+    box-shadow: var(--crisp-light);
+}
+html.study.aluminum.aluminum-dark .hb-zoom .knob { background: linear-gradient(to bottom, transparent 8px, rgba(0, 0, 0, .7) 8px 10px, transparent 10px), linear-gradient(#A9A9A5, #6E6E6B); }
+html.study.aluminum .hb-zoom .tri, html.study.aluminum .hb-zoom .zlabel { color: var(--text2); }
+
+html.study.aluminum .hb-menu { background: var(--plate-light, var(--plate)); color: var(--text); box-shadow: var(--crisp), 0 10px 24px rgba(0, 0, 0, .25); }
+html.study.aluminum .hb-menu .mi:nth-child(2) { background: rgba(0, 0, 0, .07); }
+html.study.aluminum .hb-menu .sub, html.study.aluminum .hb-menu .key { color: var(--text3); }
+html.study.aluminum .hb-menu .ck { color: var(--accent); }
+html.study.aluminum .hb-menu .ms { background: var(--divider); }
+html.study.aluminum .hb-hint { background: #2B2B2D; color: #C8C8C4; box-shadow: var(--crisp); }
+html.study.aluminum .hb-hint b { color: #F4F4F0; font-weight: 600; }

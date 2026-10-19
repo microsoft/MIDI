@@ -31,8 +31,6 @@
                         <SolidColorBrush x:Key="SeqEditorTopBrush" Color="#29FFFFFF" />
                         <SolidColorBrush x:Key="SeqEditorBackgroundBrush" Color="#05FFFFFF" />
                         <SolidColorBrush x:Key="SeqInspectorBackgroundBrush" Color="#04FFFFFF" />
-                        <SolidColorBrush x:Key="SeqFolderHeaderBrush" Color="#08FFFFFF" />
-                        <SolidColorBrush x:Key="SeqSelectedHeaderBrush" Color="#0F60CDFF" />
                         <SolidColorBrush x:Key="SeqPlayBrush" Color="#FF6CCB5F" />
                         <SolidColorBrush x:Key="SeqRecordBrush" Color="#FFFF5A5F" />
                         <SolidColorBrush x:Key="SeqRecordTextBrush" Color="#FFFFB3B5" />
@@ -42,14 +40,17 @@
                         <SolidColorBrush x:Key="SeqChipInfoStrokeBrush" Color="#6660CDFF" />
                         <SolidColorBrush x:Key="SeqChipOnBrush" Color="#1F6CCB5F" />
                         <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#736CCB5F" />
-                        <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#1CFCE100" />
-                        <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#66FCE100" />
                         <SolidColorBrush x:Key="SeqChipSelectedBrush" Color="#1F60CDFF" />
                         <SolidColorBrush x:Key="SeqChipSelectedStrokeBrush" Color="#7360CDFF" />
                         <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FFFCE100" />
                         <Color x:Key="SeqPinEdgeTopColor">#33FFFFFF</Color>
                         <Color x:Key="SeqPinEdgeBottomColor">#0FFFFFFF</Color>
                         <Color x:Key="SeqPinShadowColor">#59000000</Color>
+                        <!-- Set by a style made of a material (Themes\*.json); Night drive shows the backdrop. -->
+                        <SolidColorBrush x:Key="SeqWindowSurfaceBrush" Color="Transparent" />
+                        <!-- A style's title bar, transport and status bar, when it has a strip of its own (Aluminum). -->
+                        <SolidColorBrush x:Key="SeqStripBrush" Color="Transparent" />
+                        <SolidColorBrush x:Key="SeqPlayheadBrush" Color="#FFFFFFFF" />
 
                         <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#2960CDFF" />
                         <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#3860CDFF" />
@@ -71,8 +72,6 @@
                         <SolidColorBrush x:Key="SeqEditorTopBrush" Color="#1F000000" />
                         <SolidColorBrush x:Key="SeqEditorBackgroundBrush" Color="#73FFFFFF" />
                         <SolidColorBrush x:Key="SeqInspectorBackgroundBrush" Color="#73FFFFFF" />
-                        <SolidColorBrush x:Key="SeqFolderHeaderBrush" Color="#06000000" />
-                        <SolidColorBrush x:Key="SeqSelectedHeaderBrush" Color="#0F005FB8" />
                         <SolidColorBrush x:Key="SeqPlayBrush" Color="#FF0F7B0F" />
                         <SolidColorBrush x:Key="SeqRecordBrush" Color="#FFD13438" />
                         <SolidColorBrush x:Key="SeqRecordTextBrush" Color="#FFA4262C" />
@@ -82,14 +81,16 @@
                         <SolidColorBrush x:Key="SeqChipInfoStrokeBrush" Color="#66005FB8" />
                         <SolidColorBrush x:Key="SeqChipOnBrush" Color="#140F7B0F" />
                         <SolidColorBrush x:Key="SeqChipOnStrokeBrush" Color="#730F7B0F" />
-                        <SolidColorBrush x:Key="SeqChipWarnBrush" Color="#FFFFF4CE" />
-                        <SolidColorBrush x:Key="SeqChipWarnStrokeBrush" Color="#669D5D00" />
                         <SolidColorBrush x:Key="SeqChipSelectedBrush" Color="#12005FB8" />
                         <SolidColorBrush x:Key="SeqChipSelectedStrokeBrush" Color="#66005FB8" />
                         <SolidColorBrush x:Key="SeqWarnTextBrush" Color="#FF9D5D00" />
                         <Color x:Key="SeqPinEdgeTopColor">#1A000000</Color>
                         <Color x:Key="SeqPinEdgeBottomColor">#05000000</Color>
                         <Color x:Key="SeqPinShadowColor">#24000000</Color>
+                        <SolidColorBrush x:Key="SeqWindowSurfaceBrush" Color="Transparent" />
+                        <!-- A style's title bar, transport and status bar, when it has a strip of its own (Aluminum). -->
+                        <SolidColorBrush x:Key="SeqStripBrush" Color="Transparent" />
+                        <SolidColorBrush x:Key="SeqPlayheadBrush" Color="#FF1A1A1A" />
 
                         <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#1A005FB8" />
                         <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#26005FB8" />
@@ -173,6 +174,12 @@
                     <Setter Property="Height" Value="26" />
                     <Setter Property="MinHeight" Value="0" />
                     <Setter Property="Padding" Value="8,0,0,0" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+                <!-- A number box the size of SmallComboStyle's combo boxes. The text box inside a NumberBox takes its height
+                     and padding from TextControlThemeMinHeight and TextControlThemePadding, so the editor's header sets those. -->
+                <Style x:Key="SmallNumberBoxStyle" TargetType="NumberBox">
                     <Setter Property="FontSize" Value="12" />
                     <Setter Property="VerticalAlignment" Value="Center" />
                 </Style>
@@ -319,8 +326,15 @@
                 Grid.RowSpan="5"
                 Visibility="Collapsed" />
 
+        <!-- A style made of a material (Tactile, Aluminum, Vellum) covers the backdrop with it. -->
+        <Border x:Name="WindowSurface"
+                Grid.Row="0"
+                Grid.RowSpan="5"
+                IsHitTestVisible="False"
+                Background="{ThemeResource SeqWindowSurfaceBrush}" />
+
         <!-- ================================ Title bar ================================ -->
-        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="{ThemeResource SeqStripBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
                 <ColumnDefinition Width="Auto" />
@@ -412,6 +426,7 @@
         <!-- ================================ Transport ================================ -->
         <Grid x:Name="TransportBar"
               Grid.Row="1"
+              Background="{ThemeResource SeqStripBrush}"
               Height="52"
               Padding="12,0,12,0"
               BorderThickness="0,0,0,1"
@@ -422,7 +437,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <StackPanel x:Name="TransportLeft" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
 
                 <!-- Not in the comps: the comps have no place for file commands, so they're here. -->
                 <Button x:Name="FileMenuButton"
@@ -607,7 +622,7 @@
                         Content="&#xE70D;"
                         Click="OnMetronomeMenuClick" />
 
-                <Rectangle Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
+                <Rectangle x:Name="TransportSeparator1" Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
 
                 <!-- The two displays: where playback is, and the tempo and meter there. -->
                 <Grid x:Name="PositionDisplay" Height="40" MinWidth="132">
@@ -652,7 +667,7 @@
                     </StackPanel>
                 </Button>
 
-                <Rectangle Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
+                <Rectangle x:Name="TransportSeparator2" Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
 
                 <TextBlock x:Uid="LaunchLabel" Style="{StaticResource TransportLabelStyle}" />
                 <ComboBox x:Name="LaunchCombo"
@@ -676,7 +691,7 @@
                 </Button>
             </StackPanel>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <StackPanel x:Name="TransportRight" Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                 <!-- Volume, pan and sends for every track, where the editor goes. -->
                 <ToggleButton x:Name="MixerToggle"
                               x:Uid="MixerToggle"
@@ -697,7 +712,7 @@
                     </StackPanel>
                 </Button>
 
-                <Rectangle Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
+                <Rectangle x:Name="TransportSeparator3" Width="1" Height="24" Margin="6,0,6,0" Fill="{ThemeResource SeqDividerBrush}" />
 
                 <Button x:Name="UndoButton"
                         x:Uid="UndoButton"
@@ -736,18 +751,21 @@
                 <ColumnDefinition x:Name="InspectorColumn" Width="0" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <!-- The timeline's scroll bar, above the ruler or under the timeline (MainWindowTimelineBar.cpp). -->
+                <RowDefinition x:Name="TimelineBarTopRow" Height="0" />
                 <RowDefinition Height="32" />
                 <RowDefinition x:Name="PinnedRow" Height="44" />
                 <RowDefinition Height="6" />
                 <RowDefinition Height="*" />
+                <RowDefinition x:Name="TimelineBarBottomRow" Height="0" />
             </Grid.RowDefinitions>
 
-            <Rectangle Grid.Row="0" Grid.ColumnSpan="3" Fill="{ThemeResource SeqRulerRowBrush}" />
-            <Rectangle Grid.Row="1" Grid.ColumnSpan="3" Fill="{ThemeResource SeqPinnedTintBrush}" />
+            <Rectangle Grid.Row="1" Grid.ColumnSpan="3" Fill="{ThemeResource SeqRulerRowBrush}" />
+            <Rectangle Grid.Row="2" Grid.ColumnSpan="3" Fill="{ThemeResource SeqPinnedTintBrush}" />
 
             <!-- The track list's own toolbar, above the rows. -->
             <Grid x:Name="ArrangeToolbar"
-                  Grid.Row="0"
+                  Grid.Row="1"
                   Grid.Column="0"
                   Padding="10,0,8,0"
                   ColumnSpacing="8"
@@ -782,19 +800,19 @@
             </Grid>
 
             <Grid x:Name="SceneHeaderHost"
-                  Grid.Row="0"
+                  Grid.Row="1"
                   Grid.Column="1"
                   BorderThickness="0,0,1,1"
                   BorderBrush="{ThemeResource SeqStrokeStrongBrush}" />
 
-            <Grid x:Name="RulerHost" Grid.Row="0" Grid.Column="2" />
+            <Grid x:Name="RulerHost" Grid.Row="1" Grid.Column="2" />
 
-            <Canvas x:Name="PinnedHeaderCanvas" Grid.Row="1" Grid.Column="0" />
-            <Grid x:Name="PinnedLauncherHost" Grid.Row="1" Grid.Column="1" />
-            <Grid x:Name="PinnedLaneHost" Grid.Row="1" Grid.Column="2" />
+            <Canvas x:Name="PinnedHeaderCanvas" Grid.Row="2" Grid.Column="0" />
+            <Grid x:Name="PinnedLauncherHost" Grid.Row="2" Grid.Column="1" />
+            <Grid x:Name="PinnedLaneHost" Grid.Row="2" Grid.Column="2" />
 
             <!-- seq.css .pin-edge: everything under it scrolls. -->
-            <Grid Grid.Row="2" Grid.ColumnSpan="3" IsHitTestVisible="False">
+            <Grid Grid.Row="3" Grid.ColumnSpan="3" IsHitTestVisible="False">
                 <Rectangle>
                     <Rectangle.Fill>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -805,10 +823,10 @@
                 </Rectangle>
             </Grid>
 
-            <Canvas x:Name="ScrollHeaderCanvas" Grid.Row="3" Grid.Column="0" Background="Transparent" />
-            <Grid x:Name="ScrollLauncherHost" Grid.Row="3" Grid.Column="1" />
+            <Canvas x:Name="ScrollHeaderCanvas" Grid.Row="4" Grid.Column="0" Background="Transparent" />
+            <Grid x:Name="ScrollLauncherHost" Grid.Row="4" Grid.Column="1" />
 
-            <Grid x:Name="ScrollLaneHost" Grid.Row="3" Grid.Column="2">
+            <Grid x:Name="ScrollLaneHost" Grid.Row="4" Grid.Column="2">
                 <primitives:ScrollBar x:Name="VerticalScroll"
                                       x:Uid="VerticalScroll"
                                       Orientation="Vertical"
@@ -817,19 +835,10 @@
                                       Minimum="0"
                                       SmallChange="46"
                                       ValueChanged="OnVerticalScrollChanged" />
-                <primitives:ScrollBar x:Name="HorizontalScroll"
-                                      x:Uid="HorizontalScroll"
-                                      Orientation="Horizontal"
-                                      VerticalAlignment="Bottom"
-                                      IndicatorMode="MouseIndicator"
-                                      Minimum="0"
-                                      SmallChange="34"
-                                      Margin="0,0,12,0"
-                                      ValueChanged="OnHorizontalScrollChanged" />
             </Grid>
 
             <!-- A shadow under the pinned rows, over what scrolls. -->
-            <Rectangle Grid.Row="3" Grid.ColumnSpan="3" Height="6" VerticalAlignment="Top" IsHitTestVisible="False">
+            <Rectangle Grid.Row="4" Grid.ColumnSpan="3" Height="6" VerticalAlignment="Top" IsHitTestVisible="False">
                 <Rectangle.Fill>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                         <GradientStop Color="{ThemeResource SeqPinShadowColor}" Offset="0" />
@@ -839,14 +848,14 @@
             </Rectangle>
 
             <!-- The playhead, over the ruler and every lane. -->
-            <Canvas x:Name="PlayheadLayer" Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" IsHitTestVisible="False">
-                <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource TextFillColorPrimaryBrush}" />
-                <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Canvas x:Name="PlayheadLayer" Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" IsHitTestVisible="False">
+                <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
+                <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
             </Canvas>
 
             <!-- A track's setup, beside the timeline (comp 5). -->
             <Grid x:Name="TrackInspector"
-                  Grid.Row="0"
+                  Grid.Row="1"
                   Grid.RowSpan="4"
                   Grid.Column="3"
                   Visibility="Collapsed"
@@ -1028,7 +1037,7 @@
             <!-- Drag these to make the track list and the clip launcher wider or narrower. Placed in
                  code, on the line between the columns, and last so they sit above the canvases. -->
             <Grid x:Name="HeaderSplitter"
-                  Grid.Row="0"
+                  Grid.Row="1"
                   Grid.RowSpan="4"
                   Grid.ColumnSpan="3"
                   Width="8"
@@ -1041,7 +1050,7 @@
             </Grid>
 
             <Grid x:Name="LauncherSplitter"
-                  Grid.Row="0"
+                  Grid.Row="1"
                   Grid.RowSpan="4"
                   Grid.ColumnSpan="3"
                   Width="8"
@@ -1071,6 +1080,12 @@
                   Padding="12,0,12,0"
                   BorderThickness="0,0,0,1"
                   BorderBrush="{ThemeResource SeqDividerBrush}">
+                <!-- The number boxes as short as the combo boxes beside them (SmallNumberBoxStyle), with their text
+                     centered as a combo box's is: a text box puts its text at the top of the space inside. -->
+                <Grid.Resources>
+                    <x:Double x:Key="TextControlThemeMinHeight">26</x:Double>
+                    <Thickness x:Key="TextControlThemePadding">8,4,6,2</Thickness>
+                </Grid.Resources>
                 <!-- The left side gives way first, so the close button never leaves the window. -->
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -1079,16 +1094,13 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Viewbox Width="18" Height="18">
-                        <Canvas x:Name="EditorKindMark" Width="16" Height="16">
-                            <Rectangle Canvas.Left="1" Canvas.Top="3" Width="6" Height="2.4" RadiusX="1" RadiusY="1" />
-                            <Rectangle Canvas.Left="6" Canvas.Top="7" Width="8" Height="2.4" RadiusX="1" RadiusY="1" />
-                            <Rectangle Canvas.Left="3" Canvas.Top="11" Width="5" Height="2.4" RadiusX="1" RadiusY="1" />
-                        </Canvas>
+                    <!-- The clip's kind in its color, the same symbol as its launcher slot (design section 27). -->
+                    <Viewbox Width="18" Height="18" AutomationProperties.AccessibilityView="Raw">
+                        <ContentPresenter x:Name="EditorKindMark" Width="16" Height="16" />
                     </Viewbox>
                     <TextBlock x:Name="EditorClipName" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis" />
 
-                    <Grid Height="22" VerticalAlignment="Center">
+                    <Grid x:Name="EditorKindChipFrame" Height="22" VerticalAlignment="Center">
                         <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
                                    Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
                         <TextBlock x:Name="EditorKindChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -1109,7 +1121,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
+                    <Rectangle x:Name="EditorSeparator1" Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
 
                     <StackPanel x:Name="NotesTools" Orientation="Horizontal" Spacing="8">
                         <ToggleButton x:Name="EditorDrawToggle" x:Uid="EditorDrawToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorDrawClick">
@@ -1158,14 +1170,18 @@
                     <!-- A pattern clip's settings. Shown instead of the notes tools. -->
                     <StackPanel x:Name="PatternTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
                         <TextBlock x:Uid="PatternStepsLabel" Style="{StaticResource TransportLabelStyle}" />
-                        <NumberBox x:Name="PatternStepsBox" x:Uid="PatternStepsBox" Width="92" Minimum="1" Maximum="64" SmallChange="1" LargeChange="4"
-                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnPatternStepsChanged" />
+                        <NumberBox x:Name="PatternStepsBox" x:Uid="PatternStepsBox" Style="{StaticResource SmallNumberBoxStyle}" Width="92" Minimum="1" Maximum="64" SmallChange="1" LargeChange="4"
+                                   SpinButtonPlacementMode="Hidden" ValueChanged="OnPatternStepsChanged" />
                         <TextBlock x:Uid="PatternStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
                         <ComboBox x:Name="PatternStepSizeCombo" x:Uid="PatternStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnPatternStepSizeChanged" />
                         <TextBlock x:Uid="PatternSwingLabel" Style="{StaticResource TransportLabelStyle}" />
-                        <NumberBox x:Name="PatternSwingBox" x:Uid="PatternSwingBox" Width="92" Minimum="50" Maximum="75" SmallChange="1" LargeChange="5"
-                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnPatternSwingChanged" />
+                        <NumberBox x:Name="PatternSwingBox" x:Uid="PatternSwingBox" Style="{StaticResource SmallNumberBoxStyle}" Width="92" Minimum="50" Maximum="75" SmallChange="1" LargeChange="5"
+                                   SpinButtonPlacementMode="Hidden" ValueChanged="OnPatternSwingChanged" />
                         <ToggleButton x:Name="PatternKeepLengthToggle" x:Uid="PatternKeepLengthToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnPatternKeepLengthClick" />
+                        <!-- Plays a step's sound as it's turned on (design section 27). -->
+                        <ToggleButton x:Name="PatternHearToggle" x:Uid="PatternHearToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnPatternHearClick">
+                            <FontIcon Glyph="&#xE767;" FontSize="12" />
+                        </ToggleButton>
                     </StackPanel>
 
                     <!-- A generator clip's settings (comp 4). -->
@@ -1183,13 +1199,22 @@
                                         HorizontalContentAlignment="Left">
                             <DropDownButton.Flyout>
                                 <Flyout x:Name="GeneratorTypeFlyout" Placement="BottomEdgeAlignedLeft">
-                                    <StackPanel x:Name="GeneratorTypeList" Width="300" Spacing="4" />
+                                    <!-- The presenter's own theme width is 456, narrower than two columns of tiles, which made it
+                                         scroll sideways. BasedOn keeps its corners, border and padding. -->
+                                    <Flyout.FlyoutPresenterStyle>
+                                        <Style TargetType="FlyoutPresenter" BasedOn="{StaticResource DefaultFlyoutPresenterStyle}">
+                                            <Setter Property="MaxWidth" Value="700" />
+                                            <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+                                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                                        </Style>
+                                    </Flyout.FlyoutPresenterStyle>
+                                    <StackPanel x:Name="GeneratorTypeList" Width="620" Spacing="6" />
                                 </Flyout>
                             </DropDownButton.Flyout>
                         </DropDownButton>
                         <TextBlock x:Uid="GeneratorBarsLabel" Style="{StaticResource TransportLabelStyle}" />
-                        <NumberBox x:Name="GeneratorBarsBox" x:Uid="GeneratorBarsBox" Width="92" Minimum="1" Maximum="16" SmallChange="1" LargeChange="4"
-                                   SpinButtonPlacementMode="Compact" VerticalAlignment="Center" ValueChanged="OnGeneratorBarsChanged" />
+                        <NumberBox x:Name="GeneratorBarsBox" x:Uid="GeneratorBarsBox" Style="{StaticResource SmallNumberBoxStyle}" Width="92" Minimum="1" Maximum="16" SmallChange="1" LargeChange="4"
+                                   SpinButtonPlacementMode="Hidden" ValueChanged="OnGeneratorBarsChanged" />
                         <TextBlock x:Name="GeneratorStepSizeText" x:Uid="GeneratorStepSizeLabel" Style="{StaticResource TransportLabelStyle}" />
                         <ComboBox x:Name="GeneratorStepSizeCombo" x:Uid="GeneratorStepSizeCombo" Style="{StaticResource SmallComboStyle}" Width="118" SelectionChanged="OnGeneratorStepSizeChanged" />
                     </StackPanel>
@@ -1198,23 +1223,26 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <!-- A generator's seed and whether each pass is the same, on the right as in comp 4. -->
                     <StackPanel x:Name="GeneratorSeedTools" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
-                        <TextBlock x:Uid="GeneratorSeedLabel" Style="{StaticResource TransportLabelStyle}" />
-                        <StackPanel Orientation="Horizontal" Spacing="2">
-                            <TextBox x:Name="GeneratorSeedBox"
-                                     x:Uid="GeneratorSeedBox"
-                                     Width="84"
-                                     Height="26"
-                                     MinHeight="0"
-                                     Padding="8,3,6,3"
-                                     FontSize="12"
-                                     FontFamily="Cascadia Mono,Consolas"
-                                     VerticalAlignment="Center"
-                                     MaxLength="8"
-                                     KeyDown="OnGeneratorSeedKeyDown"
-                                     LostFocus="OnGeneratorSeedCommitted" />
-                            <Button x:Name="GeneratorNewSeedButton" x:Uid="GeneratorNewSeedButton" Style="{StaticResource SubtleSmallButtonStyle}" Width="28" Padding="0" Click="OnPatternVaryClick">
-                                <FontIcon Glyph="&#xE8B1;" FontSize="12" />
-                            </Button>
+                        <!-- Typed as a number or as words (design section 28). -->
+                        <StackPanel x:Name="GeneratorSeedPart" Orientation="Horizontal" Spacing="8">
+                            <TextBlock x:Uid="GeneratorSeedLabel" Style="{StaticResource TransportLabelStyle}" />
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <TextBox x:Name="GeneratorSeedBox"
+                                         x:Uid="GeneratorSeedBox"
+                                         Width="128"
+                                         Height="26"
+                                         MinHeight="0"
+                                         Padding="8,4,6,2"
+                                         FontSize="12"
+                                         FontFamily="Cascadia Mono,Consolas"
+                                         VerticalAlignment="Center"
+                                         MaxLength="64"
+                                         KeyDown="OnGeneratorSeedKeyDown"
+                                         LostFocus="OnGeneratorSeedCommitted" />
+                                <Button x:Name="GeneratorNewSeedButton" x:Uid="GeneratorNewSeedButton" Style="{StaticResource SubtleSmallButtonStyle}" Width="28" Padding="0" Click="OnPatternVaryClick">
+                                    <FontIcon Glyph="&#xE8B1;" FontSize="12" />
+                                </Button>
+                            </StackPanel>
                         </StackPanel>
                         <TextBlock x:Uid="GeneratorEachPassLabel" Style="{StaticResource TransportLabelStyle}" />
                         <StackPanel Orientation="Horizontal">
@@ -1223,6 +1251,17 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel x:Name="PatternActions" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                        <!-- Starter patterns, built when the menu opens (design section 27). -->
+                        <Button x:Name="PatternTemplatesButton" x:Uid="PatternTemplatesButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8F1;" FontSize="12" />
+                                <TextBlock x:Uid="PatternTemplatesText" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="PatternTemplatesMenu" Placement="BottomEdgeAlignedRight" Opening="OnPatternTemplatesOpening" />
+                            </Button.Flyout>
+                        </Button>
                         <Button x:Name="PatternVaryButton" x:Uid="PatternVaryButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternVaryClick">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE8B1;" FontSize="12" />
@@ -1230,7 +1269,7 @@
                             </StackPanel>
                         </Button>
                         <Button x:Name="PatternMakeNotesButton" x:Uid="PatternMakeNotesButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnPatternMakeNotesClick" />
-                        <Rectangle Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
+                        <Rectangle x:Name="EditorSeparator2" Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
                     </StackPanel>
                     <TextBlock x:Name="ValuesAsLabel" x:Uid="ShowValuesAsLabel" Style="{StaticResource TransportLabelStyle}" />
                     <ComboBox x:Name="ValuesAsCombo" x:Uid="ValuesAsCombo" Style="{StaticResource SmallComboStyle}" Width="150" SelectionChanged="OnValuesAsChanged" />
@@ -1337,6 +1376,7 @@
         <!-- ================================ Status bar ================================ -->
         <Grid x:Name="StatusBar"
               Grid.Row="4"
+              Background="{ThemeResource SeqStripBrush}"
               Height="28"
               Padding="14,0,14,0"
               BorderThickness="0,1,0,0"

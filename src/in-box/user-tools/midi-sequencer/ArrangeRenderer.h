@@ -12,8 +12,10 @@
 // XAML elements, so the cost of a frame follows what's on screen, not the size of the sequence.
 
 #include "ArrangeLayout.h"
+#include "ClipIcons.h"
 #include "PlaybackEngine.h"
 #include "SequenceModel.h"
+#include "ThemePainter.h"
 #include "ThemePalette.h"
 
 namespace midisequencer
@@ -81,6 +83,9 @@ namespace midisequencer
         Sequence const* Doc{ nullptr };
         Palette const* Colors{ nullptr };
         TimelineView View{};
+
+        // The canvas being drawn, for the parts a theme draws as more than a color.
+        canvas::ICanvasResourceCreatorWithDpi Creator{ nullptr };
 
         // The selected placement: its track and its index on that track's timeline.
         std::wstring SelectedTrackId{};
@@ -170,10 +175,52 @@ namespace midisequencer
         foundation::Rect TagLabelBounds(_In_ Tag const& tag, _In_ float x, _In_ float top, _In_ float height, _In_ bool atTop);
 
         // The clip's pitch range is worked out once per clip and kept until the sequence changes.
-        void InvalidateCaches() noexcept { m_pitchRanges.clear(); }
+        // A theme's shadows are kept until the theme changes.
+        void InvalidateCaches() noexcept { m_pitchRanges.clear(); m_painter.Reset(); m_themedFormats.clear(); }
 
     private:
         void EnsureFormats();
+
+        // ---- the parts a theme draws as more than a color (ArrangeRendererParts.cpp) ----
+
+        // The field a theme lays under the timeline, as a clip for what's drawn on it. Null when
+        // the theme has none. pinnedCanvas: the rows that don't scroll, above the others.
+        canvas::CanvasActiveLayer DrawField(_In_ canvas::CanvasDrawingSession const& ds, _In_ float width, _In_ float height, _In_ bool pinnedCanvas, _In_ ArrangeDrawContext const& context);
+
+        // The line under a lane: the divider, and a theme's engraved seam.
+        void DrawRowSeam(_In_ canvas::CanvasDrawingSession const& ds, _In_ float bottom, _In_ float width, _In_ Palette const& colors);
+
+        // True when the theme draws the part, so the comps' own drawing is skipped.
+        bool DrawThemedClip(
+            _In_ canvas::CanvasDrawingSession const& ds,
+            _In_ Track const& track,
+            _In_ Clip const& clip,
+            _In_ Placement const& placement,
+            _In_ bool selected,
+            _In_ bool muted,
+            _In_ float top,
+            _In_ float height,
+            _In_ float width,
+            _In_ ArrangeDrawContext const& context);
+
+        bool DrawThemedCell(
+            _In_ canvas::CanvasDrawingSession const& ds,
+            _In_ Track const& track,
+            _In_ size_t scene,
+            _In_ foundation::Rect const& slot,
+            _In_ bool muted,
+            _In_ ArrangeDrawContext const& context);
+
+        bool DrawThemedLoop(_In_ canvas::CanvasDrawingSession const& ds, _In_ float x0, _In_ float x1, _In_ float height, _In_ ArrangeDrawContext const& context);
+
+        // How many placements and slots use the clip, counted for this frame.
+        static size_t UseCount(_In_ std::wstring const& clipId) noexcept;
+
+        // A text format in one of the theme's fonts, kept.
+        canvasText::CanvasTextFormat ThemedFormat(_In_ std::wstring const& family, _In_ float size, _In_ uint16_t weight, _In_ bool centered = false);
+
+        themeengine::ThemePainter m_painter{};
+        std::unordered_map<std::wstring, canvasText::CanvasTextFormat> m_themedFormats{};
 
         void DrawGrid(
             _In_ canvas::CanvasDrawingSession const& ds,
@@ -248,7 +295,8 @@ namespace midisequencer
             _In_ bool muted,
             _In_ ArrangeDrawContext const& context);
 
-        void DrawKindMark(_In_ canvas::CanvasDrawingSession const& ds, _In_ ClipKind kind, _In_ float x, _In_ float y, _In_ float size, _In_ Color color);
+        // The clip's kind in a corner of its slot (design section 27).
+        void DrawKindMark(_In_ canvas::CanvasDrawingSession const& ds, _In_ ClipIcon icon, _In_ float x, _In_ float y, _In_ float size, _In_ Color color);
 
         std::pair<uint8_t, uint8_t> PitchRange(_In_ Clip const& clip, _In_ std::vector<Note> const& notes);
 
@@ -260,6 +308,7 @@ namespace midisequencer
         canvasText::CanvasTextFormat m_cellName{ nullptr };
         canvasText::CanvasTextFormat m_cellGlyph{ nullptr };
         canvasText::CanvasTextFormat m_slotGlyph{ nullptr };
+        canvasText::CanvasTextFormat m_kindGlyph{ nullptr };
         canvasText::CanvasTextFormat m_badge{ nullptr };
         canvasText::CanvasTextFormat m_tempoLabel{ nullptr };
         canvasText::CanvasTextFormat m_meterLabel{ nullptr };

@@ -1,0 +1,87 @@
+/* PROTOTYPE. Porcelain and the window's color. The app lets you pick one window color, and the
+   same color is used in light and dark. Porcelain is one material, so the color glazes all of it:
+   the body, the wells, the keys, and the clip faces, which are pressed out of the same porcelain.
+   Each surface keeps its lightness from porcelain.css (light) or porcelain-dark.css, and takes only
+   the color's hue and some of its chroma, kept low because it covers everything, and pooling a
+   little deeper in the hollows, as glaze does. --glaze scales it, from 1 (as shown) to 0 (plain
+   porcelain).
+
+   - The LEDs on the keys, the selection, the loop, and toggled keys light up in it.
+   - The shadows are a deep shade of it, and the light from the top left a pale tint of it.
+   - The readouts' digits are printed in it: a deep ink in light, a pale one in dark.
+   - What doesn't change: the track caps, notes, and the colors that mean something: play,
+     record, mute, and solo.
+
+   The page sets --tint, and the class "tinted" turns this on. It works with porcelain-2.css, whose
+   colors are variables. */
+
+/* ---- light */
+
+html.study.porcelain.tinted:not(.porcelain-dark) {
+    --glaze: 1;
+
+    --surface: oklch(from var(--tint) 0.915 calc(min(c * 0.45, 0.012) * var(--glaze)) h);
+    --face: linear-gradient(145deg, oklch(from var(--tint) 0.94 calc(min(c * 0.38, 0.010) * var(--glaze)) h), oklch(from var(--tint) 0.894 calc(min(c * 0.45, 0.012) * var(--glaze)) h));
+    --face-pressed: oklch(from var(--tint) 0.897 calc(min(c * 0.50, 0.013) * var(--glaze)) h);
+    --clip-face: linear-gradient(145deg, oklch(from var(--tint) 0.952 calc(min(c * 0.32, 0.009) * var(--glaze)) h), oklch(from var(--tint) 0.909 calc(min(c * 0.38, 0.010) * var(--glaze)) h));
+    --cap-ring: oklch(from var(--tint) 0.925 calc(min(c * 0.38, 0.010) * var(--glaze)) h);
+
+    /* glaze pools in the hollows: the wells, readouts, field, and roll take half again as much */
+    --well: oklch(from var(--tint) 0.891 calc(min(c * 0.60, 0.018) * var(--glaze)) h);
+    --overlay-a: color-mix(in oklch, var(--surface) 90%, transparent);
+    --overlay-b: color-mix(in oklch, var(--well) 82%, transparent);
+
+    /* a chroma that stays in sRGB at this lightness for every hue */
+    --accent: oklch(from var(--tint) 0.53 min(0.09, c * 4) h);
+    --accent-deep: var(--accent);
+    --accent-ink: oklch(from var(--tint) 0.43 min(0.09, c * 4) h);
+    --led: oklch(from var(--tint) 0.66 min(0.14, c * 5) h);
+    --digits: oklch(from var(--tint) 0.34 min(0.06, c * 2) h);
+
+    /* The shadows are a deep shade of the glaze, and the light a pale tint of it. Both stay inside
+       sRGB for every hue (the chroma limits are sRGB's at that lightness, for the narrowest hue),
+       because Edge draws a blurred shadow in a color outside sRGB lighter than its alpha says. */
+    --shade: oklch(from var(--tint) 0.42 min(c, 0.05) h);
+    --glint: oklch(from var(--tint) 0.99 min(c, 0.004) h);
+}
+
+/* ---- dark */
+
+html.study.porcelain.porcelain-dark.tinted {
+    --glaze: 1;
+
+    --surface: oklch(from var(--tint) 0.305 calc(min(c * 0.50, 0.016) * var(--glaze)) h);
+    --well: oklch(from var(--tint) 0.265 calc(min(c * 0.65, 0.021) * var(--glaze)) h);
+    --face: linear-gradient(145deg, oklch(from var(--tint) 0.345 calc(min(c * 0.45, 0.015) * var(--glaze)) h), oklch(from var(--tint) 0.295 calc(min(c * 0.50, 0.016) * var(--glaze)) h));
+    --face-pressed: oklch(from var(--tint) 0.285 calc(min(c * 0.50, 0.016) * var(--glaze)) h);
+    --clip-face: linear-gradient(145deg, oklch(from var(--tint) 0.375 calc(min(c * 0.40, 0.013) * var(--glaze)) h), oklch(from var(--tint) 0.325 calc(min(c * 0.45, 0.014) * var(--glaze)) h));
+    --cap-ring: oklch(from var(--tint) 0.345 calc(min(c * 0.45, 0.015) * var(--glaze)) h);
+    --overlay-a: color-mix(in oklch, var(--surface) 90%, transparent);
+    --overlay-b: color-mix(in oklch, var(--well) 85%, transparent);
+
+    --accent: oklch(from var(--tint) 0.76 min(0.11, c * 4) h);
+    --accent-deep: var(--accent);
+    --accent-ink: var(--accent);
+    --led: oklch(from var(--tint) 0.80 min(0.14, c * 5) h);
+    --digits: oklch(from var(--tint) 0.90 min(0.07, c * 2.5) h);
+
+    /* inside sRGB for every hue, as in light */
+    --shade: oklch(from var(--tint) 0.13 min(c, 0.021) h);
+    --glint: oklch(from var(--tint) 0.97 min(c, 0.013) h);
+}
+
+/* ---- both */
+
+html.study.porcelain.tinted .loop-range { background: color-mix(in oklch, var(--accent) 40%, transparent); }
+html.study.porcelain.tinted .rruler .loopbar { background: color-mix(in oklch, var(--accent) 35%, transparent); }
+html.study.porcelain.tinted .btn.toggled,
+html.study.porcelain.tinted .btn.toggled .gl,
+html.study.porcelain.tinted .chip.info,
+html.study.porcelain.tinted .tsub.accent { color: var(--accent-ink); }
+
+/* the piano keys are porcelain too */
+html.study.porcelain.tinted:not(.porcelain-dark) .keys svg rect[fill="#D9D9D9"] { fill: oklch(from var(--tint) 0.946 calc(min(c * 0.38, 0.010) * var(--glaze)) h); }
+html.study.porcelain.tinted:not(.porcelain-dark) .keys svg rect[fill="#1B1B1B"] { fill: oklch(from var(--tint) 0.452 calc(min(c * 0.50, 0.016) * var(--glaze)) h); }
+html.study.porcelain.porcelain-dark.tinted .keys svg rect[fill="#D9D9D9"] { fill: oklch(from var(--tint) 0.83 calc(min(c * 0.40, 0.012) * var(--glaze)) h); }
+html.study.porcelain.porcelain-dark.tinted .keys svg rect[fill="#1B1B1B"] { fill: oklch(from var(--tint) 0.223 calc(min(c * 0.50, 0.012) * var(--glaze)) h); }
+

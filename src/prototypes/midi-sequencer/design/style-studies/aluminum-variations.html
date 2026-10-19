@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer: Aluminum, further</title>
+<style>
+    body { margin: 0; padding: 28px 32px 48px; background: #EDEBE7; color: #2A2A2D; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+    a { color: #2B6CB0; }
+    .back { font-size: 13px; margin: 0 0 10px; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 6px; }
+    h2 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 20px; margin: 30px 0 12px; }
+    p.lead, ul.rules { max-width: 1100px; font-size: 14px; line-height: 1.55; color: #4A4A50; margin: 0 0 12px; }
+    ul.rules { padding-left: 20px; }
+    ul.rules li { margin-bottom: 4px; }
+    code { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: #E2DFD9; padding: 1px 5px; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 20px; }
+    .colhead { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .colhead .swatch { width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25), 0 0 0 1px rgba(0, 0, 0, .25); }
+    .colhead .hex { font-weight: 400; color: #6A6A70; }
+    figure { margin: 0; background: #FFFFFF; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .08); }
+    figure img.full { width: 100%; display: block; border-radius: 6px; }
+    .crop { margin-top: 8px; overflow: hidden; border-radius: 6px; position: relative; }
+    .crop img { position: absolute; width: 1668px; max-width: none; }
+    .crop.transport { height: 58px; }
+    .crop.transport img { left: -150px; top: -80px; }
+    .crop.timeline { height: 50px; }
+    .crop.timeline img { left: -940px; top: -290px; }
+    .label { font-size: 11px; color: #8A8A90; margin: 8px 0 -4px 2px; text-transform: none; }
+    figcaption { font-size: 13px; line-height: 1.5; color: #4A4A50; margin-top: 10px; }
+    figcaption a { margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">All the style studies</a></p>
+<h1>Aluminum, further</h1>
+<p class="lead">Aluminum in a dark version that sits with a dark mode desktop, and both versions in the window color you pick in Appearance. Your Sequencer's color is the dark aqua <code>#031E24</code>, and the plum, <code>#33192F</code>, is the one you picked for MIDI Clock. The original Aluminum is unchanged; the new looks are layers over it (<code>aluminum-dark.css</code> and <code>aluminum-tint.css</code>).</p>
+
+<p class="lead">How the window color comes in, the way anodizing colors metal:</p>
+<ul class="rules">
+    <li><b>Your color brings the hue, and the theme brings the lightness.</b> The app keeps one color for light and dark, so each surface keeps the depth it has in the theme and takes only the color's hue and some of its chroma. A dark color, a light one, a vivid one, and a quiet one all work in both themes.</li>
+    <li><b>The strips are anodized deep in it</b>: the title bar, transport, and status bar, the chassis of the window. In dark, that's about the color as you picked it.</li>
+    <li><b>The plates take a whisper of it</b>, capped so a vivid color doesn't flood them.</li>
+    <li><b>The readouts are backlit in it</b>, and <b>the LEDs that mean "on", the selection, the loop, and toggled buttons light up in it.</b></li>
+    <li><b>What stays as it is</b>: what you made (track colors, clips, and notes), the keys and pads, which are objects on the panel, and the colors that mean something: play, record, mute, and solo.</li>
+</ul>
+<p class="lead">To try another color, open any of the new pages with <code>?tint=RRGGBB</code>, for example <a href="aluminum-dark.html?tint=1E2A44">aluminum-dark.html?tint=1E2A44</a>. Add <code>&amp;anodize=0</code> to keep the metal plain, so only the strips, readouts, and lights take the color: <a href="aluminum-dark-aqua.html?anodize=0">aqua, plain metal</a>.</p>
+
+<h2>Light</h2>
+<div class="grid">
+    <div class="colhead">No window color</div>
+    <div class="colhead"><span class="swatch" style="background: #031E24"></span>Your aqua <span class="hex">#031E24</span></div>
+    <div class="colhead"><span class="swatch" style="background: #33192F"></span>MIDI Clock's plum <span class="hex">#33192F</span></div>
+
+    <figure>
+        <a href="aluminum.html"><img class="full" src="shots/aluminum.png" alt="Aluminum, light, with no window color"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/aluminum.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/aluminum.png" alt=""></div>
+        <figcaption>Aluminum as it is. With no window color picked, the metal stays plain.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="aluminum-aqua.html"><img class="full" src="shots/aluminum-aqua.png" alt="Aluminum, light, in aqua"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/aluminum-aqua.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/aluminum-aqua.png" alt=""></div>
+        <figcaption>Deep teal strips, pale aqua plates, a teal-backlit readout, and the LEDs and selection lit in teal.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="aluminum-plum.html"><img class="full" src="shots/aluminum-plum.png" alt="Aluminum, light, in plum"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/aluminum-plum.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/aluminum-plum.png" alt=""></div>
+        <figcaption>Deep plum strips, mauve-gray plates, a pink-backlit readout, and pink-violet LEDs and selection.</figcaption>
+    </figure>
+</div>
+
+<h2>Dark</h2>
+<div class="grid">
+    <div class="colhead">No window color</div>
+    <div class="colhead"><span class="swatch" style="background: #031E24"></span>Your aqua <span class="hex">#031E24</span></div>
+    <div class="colhead"><span class="swatch" style="background: #33192F"></span>MIDI Clock's plum <span class="hex">#33192F</span></div>
+
+    <figure>
+        <a href="aluminum-dark.html"><img class="full" src="shots/aluminum-dark.png" alt="Aluminum, dark, with no window color"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/aluminum-dark.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/aluminum-dark.png" alt=""></div>
+        <figcaption>Mid grays, not black, like a dark mode window. The timeline is a step darker than the headers, so the clips stand forward.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="aluminum-dark-aqua.html"><img class="full" src="shots/aluminum-dark-aqua.png" alt="Aluminum, dark, in aqua"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/aluminum-dark-aqua.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/aluminum-dark-aqua.png" alt=""></div>
+        <figcaption>The strips are about the aqua you picked, the plates a dark anodized teal, and the readout and lights glow aqua.</figcaption>
+    </figure>
+
+    <figure>
+        <a href="aluminum-dark-plum.html"><img class="full" src="shots/aluminum-dark-plum.png" alt="Aluminum, dark, in plum"></a>
+        <div class="label">Transport</div>
+        <div class="crop transport"><img src="shots/aluminum-dark-plum.png" alt=""></div>
+        <div class="label">Timeline, with a clip selected</div>
+        <div class="crop timeline"><img src="shots/aluminum-dark-plum.png" alt=""></div>
+        <figcaption>Plum strips, aubergine plates, and a pink-violet readout and lights.</figcaption>
+    </figure>
+</div>
+
+</body>
+</html>

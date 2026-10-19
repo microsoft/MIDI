@@ -28,7 +28,7 @@ It doesn't record or play audio. To play sounds, it uses a synth or a device: th
 4. **Launch** sets when a clip you launch starts playing, such as at the next bar. **Snap** sets the grid that clips and notes snap to. **Capture** makes a clip from what you just played on the armed tracks, even if you weren't recording. **Silence** stops every note on every device.
 5. **Undo** and **Redo** go back and forward through your changes. The chip at the end says whether the sequence is saved.
 6. **The tracks.** Each track plays to one device. Select a track to set it up. **M**, **S** and **R** mute it, solo it, and arm it to record. Folders hold tracks, and the **Tempo and meter** track at the top holds tempo changes and tags that mark parts of the song.
-7. **The clip launcher** plays clips live. Each column is a scene. Select a clip to start it on its track, or a scene at the top to start every clip in its column at once.
+7. **The clip launcher** plays clips live. Each column is a scene. Select a clip to start it on its track, or a scene at the top to start every clip in its column at once. When there are more scenes than fit, scroll over the scene names, or hold Shift and scroll over the clips, to see the rest.
 8. **The timeline** is the song from start to end. Each block is a clip. A clip can loop, and one clip can be placed in many spots, so a change to it changes every copy.
 9. **The editor** shows the selected clip: a piano roll for notes, a grid of steps for a pattern, or the settings for a generator.
 10. **The status bar** shows whether the MIDI service is running, which clock the sequence follows, and how many devices it plays to. Select the number of devices to open **Studio setup**.
@@ -78,17 +78,58 @@ The track sends its sound as a program change, with its bank when you chose one,
 
 Double-click the edge beside the track names or the launcher, or the bottom edge of a track, to put it back the way it started. Track heights are saved with the sequence. The other sizes are saved with the app, so every sequence opens the same way.
 
+### Move around and zoom
+
+The bar under the timeline shows the whole sequence: a line for each track where its clips are, and the sections by name. The frame on it is what the timeline shows.
+
+- **To move**, drag the frame, or select anywhere beside it to go there. Shift + mouse wheel scrolls through time too.
+- **To zoom**, drag either end of the frame. You can also press Ctrl and turn the mouse wheel, or pinch on a touchpad or a touch screen, to zoom where you point. Dragging the frame up or down zooms too.
+- **The keys at the bar's right end** zoom out, zoom in, and fit the whole sequence. On the timeline, Ctrl+plus and Ctrl+minus zoom, Ctrl+0 fits the sequence, and Ctrl+Shift+0 fits the selected clip.
+- **Double-click the frame** to see the whole sequence, and again to go back.
+
+The switch at the bar's left end changes it to a plain scroll bar. Right-click the bar to choose that, or to put it above the ruler instead. Both choices are also under **Appearance**.
+
+### Choose a style
+
+Select **Appearance** (the gear at the top right) and pick a style. Each one comes in light and dark, following the theme you choose there.
+
+- **Night drive** is the Sequencer's own look. It sits on the window's backdrop: solid, Mica or acrylic.
+- **Tactile** is one warm gray material, with keys and clips pressed out of it and soft shadows.
+- **Aluminum** is machined metal plates under a dark strip, with graphite pads and backlit readouts.
+- **Vellum** is paper and ink: hairlines instead of boxes, one vermilion accent, and clips as watercolor washes.
+
+If you pick a window color of your own, Tactile, Aluminum and Vellum take it into the material itself, so they don't use the backdrop.
+
 ## Clips, patterns and generators
 
 There are three kinds of clips:
 
-- **Notes clips** hold notes you draw, type, record or import. The piano roll edits them. **B** turns on drawing, and **Q** moves notes onto the grid.
+- **Notes clips** hold notes you draw, type, record or import. The piano roll edits them. **B** turns on drawing, and **Q** moves notes onto the grid. Hold Shift while you drag notes to move them in time without changing their pitch.
 - **Pattern clips** are step sequences, for drums or for melodies. Each lane has its own number of steps, so lanes can drift against each other and come back together. Steps can have a chance, or play only on some passes. **Swing** pushes every second step later. To change the order of the lanes, drag a lane by its name. **Make notes** turns a pattern into a notes clip that plays the same thing.
-- **Generator clips** make their notes as they play. A **Euclidean rhythm** spreads hits as evenly as it can over a number of steps. A **Chance melody** picks notes from a scale. An **Arpeggiator** plays the notes you hold, or another track's notes, one after another.
+- **Generator clips** make their notes as they play. A **Euclidean rhythm** spreads hits as evenly as it can over a number of steps. A **Chance melody** picks notes from a scale. An **Arpeggiator** plays the notes you hold, or another track's notes, one after another. Eight more grow, learn, and spell their notes: **Life**, **Life drums**, **Learn**, **Words**, **Evolve**, the **Infinity series**, **L-system**, and **Change ringing**.
 
-Right-click the timeline or an empty launcher slot to make any of them.
+Right-click the timeline or an empty launcher slot to make any of them. The generators are under **New generator**.
 
-To move a clip, drag it to another time, another track, or another launcher slot. Hold Ctrl as you let go to place it again instead of moving it. Both spots then play the same clip, so a change to one changes both. Drag a clip from the launcher onto the timeline, or from the timeline into a launcher slot, to place it there too.
+To move a clip, drag it to another time, another track, or another launcher slot. Hold Ctrl as you let go to place it again instead of moving it. Both spots then play the same clip, so a change to one changes both. Drag a clip from the launcher onto the timeline, or from the timeline into a launcher slot, to place it there too. Hold Shift while you drag to keep the clip on its own track, so it moves only in time, or between that track's launcher slots.
+
+### Start a pattern from a template
+
+Not sure where to start? **Templates**, at the top of a pattern, has starter patterns, like the presets on a drum machine.
+
+- **For a drum pattern**: drum machine classics (four on the floor, rock, disco, funk, shuffle, and breakbeat), electronic styles (house, techno, electro, UK garage, drum and bass, and dubstep), hip hop (boom bap, lo-fi, trap, and drill), and Latin, Caribbean, and African rhythms (reggaeton, Afrobeats, bossa nova, reggae one drop, and son clave).
+- **For a melodic pattern**: basslines (acid techno, acid house, rolling techno, offbeat house, disco octaves, synthwave, funk, electro, trance gallop, UK garage, dub, trap 808, walking bass, and minimal techno) and sequences (a Berlin school sequence and an up and down arpeggio). Pick a key first, under **Key**. The sequencer remembers it until you close the window.
+
+Point at a template to see the tempo the style is usually played at. Using a template doesn't change your sequence's tempo.
+
+If the pattern already has steps, the sequencer asks what to do. **Replace** swaps them for the template. **Add on top** keeps your steps and adds the template's. Each drum goes on the lane that already plays it, and a drum you don't have gets a new lane. Where you both have a step, the template's step is used. Either way, **Undo** puts the pattern back the way it was.
+
+The drum templates use the General MIDI drum notes. They sound right on the General MIDI Synth built into Windows, and on most drum machines, when the track plays on channel 10.
+
+### Hear the steps
+
+To hear each step as you add it, leave **Hear steps** (the speaker button at the top of a pattern) on. When you turn a step on, its sound plays, so you know which drum a lane plays before you start the sequence. In a melodic pattern, the up and down arrow keys play a step's new note too. Turn the button off to add steps quietly. The sequencer remembers your choice.
+
+To change a number such as **Steps** or **Swing**, type it, or click in the box and then scroll or use the up and down arrow keys. With touch or a pen, up and down buttons appear beside the box when you tap it.
 
 ### Generators
 
@@ -97,8 +138,22 @@ A generator shows all of its settings in the editor. Select **Type** to change w
 - **A Euclidean rhythm** draws its rings. Each dot is a step, and the lit dots are the hits. Drag around a ring to turn it, so its hits start later. Scroll over a ring to add or take away hits. The table next to it sets each ring's note, hits (**Pulses**), steps, turn (**Rotate**), velocity and chance. **What it plays** shows two bars of the result.
 - **A chance melody** shows its first four passes, with new notes outlined, so you can see how much changes each time round.
 - **An arpeggiator** sets where its notes come from, the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
+- **Life** plays the Game of Life on a board with a column for each step and a row for each note of the key. Draw the first pass's cells on the board, or start with a scatter or a shape such as a glider. Each pass is the next generation: a cell with two or three neighbors lives on, and an empty cell with three is born. The edges wrap, so a glider that walks off the end of the bar comes back in at the start. Select any pass under the board to see it, and **Start from this pass** to begin there.
+- **Life drums** does the same with a row for each drum. Select a drum's name on the board to change it.
+- **Learn** learns which note tends to follow which (a Markov chain) from a tune, a clip you pick, or words you type, then makes up new melodies in that style, in the key you choose. **How closely it follows** sets how many notes back it remembers. The drawing shows the moves it learned, with this pass's lit. It learns only from what you give it.
+- **Words** spells what you type as a melody. The letters climb the scale, a space rests, a period ends on the root, a question ends on the fifth, and capitals are louder. You hear the changes as you type.
+- **Evolve** makes eight changed copies of each pass and plays the one that best fits the rules you weight, such as small steps or a motif that comes back. The drawing shows the copies and which one won, and the line under it shows the score climbing.
+- **The infinity series** plays Per Nørgård's endless melody, which contains itself: every fourth note is the whole series again. Add voices to hear it against itself at half speed.
+- **An L-system** grows a drawing from a short rule, like a plant, and the melody follows the drawing up and down. Pick a shape, or open **Rules** to write your own.
+- **Change ringing** rings bells the way bell towers do, in a new order every row, with methods such as Plain Bob and Grandsire. The drawing is the method's blue line.
 
-A generator plays the same notes on every pass, unless you set **Each pass** to **Changes**. The **Seed** is the number its chances start from. The same seed always plays the same way. To hear something different, select the button next to the seed to pick a new one.
+The melodies have a **Key and range**. Pick the key and the scale, and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Largest jump**, and **Start and end on the root**.
+
+Life, Learn, Words, Evolve, the infinity series, L-systems, and change ringing also have a **Velocity** section. Its chips pick how loud each note plays. Each generator's own ideas come first, such as **By age** for Life (new cells loudest), **By surprise** for Learn, **As spoken** for Words, and **Hand and back** for change ringing. **Steady**, **On the beat**, **Swell**, and **Random** work for all of them. After Learn learns from a clip, **As learned** plays the clip's loud and soft notes. The drawing shows this pass's notes over the range they play in. Drag the top or bottom edge of the band, or drag its middle to move it, or scroll over it to move it 10%.
+
+Learn, Life, Life drums, Evolve, and change ringing can **Listen to** another clip or a whole track, even one that's a generator. Pick it from the list, and they learn from it straight away: Learn learns its melody, Life drops a pass of its notes onto the board as new cells, Evolve starts from it and gets a **Like what it hears** slider, and change ringing rings its most played notes as its bells. Turn on **Keep listening**, and each pass hears what the source played during the pass before, so it changes as the source does. A clip is heard as if both started together, and a track is heard where the listener plays. Two clips can even listen to each other, each a pass behind.
+
+A generator plays the same notes on every pass, unless you set **Each pass** to **Changes**. The ones that grow, learn, and spell start out changing. The **Seed** is where its chances start. The same seed always plays the same way. You can type words as the seed, such as "Midnight drive," and the same words play the same way on any PC. To hear something different, select the button next to the seed to pick a new one.
 
 ## Recording
 
@@ -108,11 +163,11 @@ If you played something good without recording, select **Capture**. It makes a c
 
 ## Automation and tempo
 
-Automation lanes change a controller, pitch bend, pressure or program over time. Right-click a track and select **Add automation…**, then draw on the new lane. Drag a point to move it, and double-click a point to delete it.
+Automation lanes change a controller, pitch bend, pressure or program over time. Right-click a track and select **Add automation…**, then draw on the new lane. Drag a point to move it, and double-click a point to delete it. Hold Shift while you drag a point to keep its value, so it moves only in time.
 
 A ramp goes to a device in small steps, no more often than the automation interval set for that device in MIDI Settings, or every 10 ms when it has none. That keeps a slow device, or an old MIDI cable, from falling behind. When a device has its own interval, its lanes say so.
 
-The **Tempo and meter** track holds the tempo map. Click its tempo line to add a tempo change, and drag a change to move it or to make it faster or slower. Double-click a change to delete it. A tempo change can jump or ramp to the next one, and the meter can change at the start of any bar.
+The **Tempo and meter** track holds the tempo map. Click its tempo line to add a tempo change, and drag a change to move it or to make it faster or slower. Hold Shift while you drag to keep its tempo and move it only in time. Double-click a change to delete it. A tempo change can jump or ramp to the next one, and the meter can change at the start of any bar.
 
 Tags mark parts of the song, like the verse and the chorus. They sit along the top of **Tempo and meter**. Double-click there to add one. Drag a tag to move it, and right-click it to rename it, change its color or delete it. To change where the loop starts and ends, drag its edges on the ruler, or drag the middle to move the whole loop.
 

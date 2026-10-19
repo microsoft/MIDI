@@ -1,0 +1,67 @@
+/* PROTOTYPE. Vellum, dark (October 19): over vellum.css and vellum-2.css. The same page at night:
+   a warm charcoal paper, cream ink, hairlines in it, and a brighter vermilion. Clips are still
+   watercolor washes, in track colors lifted to show on the dark paper. The page has the classes
+   "study vellum vellum-dark". */
+
+html.study.vellum.vellum-dark {
+    --paper: #26231F;
+    --sheet: #2E2B26;
+    --paper-deep: #211E1B;
+    --wash: #2C2925;
+    --desk: #141210;
+    --ink: #ECE5D6;
+    --hair: rgba(236, 229, 214, .26);
+    --hair-faint: rgba(236, 229, 214, .11);
+    --vermilion: #F2683C;
+    --indigo: #97AFDA;
+    --lift: rgba(0, 0, 0, .45);
+    --lift-near: rgba(0, 0, 0, .3);
+    --grid-bar: rgba(236, 229, 214, .13);
+    --grid-beat: rgba(236, 229, 214, .045);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .85 0 0 0 0 .75 0 0 0 .03 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+
+    --text: #ECE5D6;
+    --text2: #C4BCAD;
+    --text3: #A1998C;
+    --divider: rgba(236, 229, 214, .09);
+    --stroke: rgba(236, 229, 214, .12);
+    --stroke-strong: rgba(236, 229, 214, .22);
+    --accent: var(--vermilion);
+    --accent-deep: var(--vermilion);
+    --play: #8CC491;
+    --success: #8CC491;
+    --rec: var(--vermilion);
+    --mute: #DDAE5C;
+    --solo: var(--indigo);
+    --lane-bg: transparent;
+}
+
+/* track colors as inks that show on dark paper */
+html.study.vellum.vellum-dark [style*="#FF8A65"] { --tc: #E3805F !important; }
+html.study.vellum.vellum-dark [style*="#5BC0EB"] { --tc: #7FA0D6 !important; }
+html.study.vellum.vellum-dark [style*="#B4A7FF"] { --tc: #B993BC !important; }
+html.study.vellum.vellum-dark [style*="#6CCB5F"] { --tc: #98B78A !important; }
+html.study.vellum.vellum-dark [style*="#4DD0C4"] { --tc: #84B3BA !important; }
+html.study.vellum.vellum-dark [style*="#9C8CFF"] { --tc: #B993BC !important; }
+html.study.vellum.vellum-dark [style*="#F7C948"] { --tc: #DDB864 !important; }
+html.study.vellum.vellum-dark [style*="#FF6F91"] { --tc: #D77389 !important; }
+html.study.vellum.vellum-dark [style*="#FFB547"] { --tc: #DDB864 !important; }
+html.study.vellum.vellum-dark [style*="#BDBDBD"] { --tc: #A59E92 !important; }
+
+html.study.vellum.vellum-dark .caption-above { color: var(--text2); }
+
+/* the play key, solid ink: cream on dark */
+html.study.vellum.vellum-dark .tbtn.play.on { color: var(--paper); }
+
+/* washes a little stronger, so the color reads on dark paper */
+html.study.vellum.vellum-dark .tclip,
+html.study.vellum.vellum-dark .cell { background: radial-gradient(130% 150% at 25% 15%, color-mix(in srgb, var(--tc) 34%, var(--wash)), color-mix(in srgb, var(--tc) 14%, var(--wash)) 75%); }
+html.study.vellum.vellum-dark .tclip { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--tc) 14%, transparent); }
+
+html.study.vellum.vellum-dark .tag > span { color: var(--ink); }
+html.study.vellum.vellum-dark .arow.tempo .tag > span { border-color: var(--ink); }
+html.study.vellum.vellum-dark .cell .when { color: var(--paper); }
+
+/* the piano roll's keys: ivory and ink, as on a real keyboard, not the page's colors */
+html.study.vellum.vellum-dark .keys svg rect[fill="#D9D9D9"] { fill: #CFC8B8; stroke: rgba(0, 0, 0, .45); }
+html.study.vellum.vellum-dark .keys svg rect[fill="#1B1B1B"] { fill: #181613; }

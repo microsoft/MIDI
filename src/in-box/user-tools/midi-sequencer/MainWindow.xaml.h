@@ -20,6 +20,7 @@
 #include "TrackSound.h"
 #include "EndpointDirectory.h"
 #include "DawProject.h"
+#include "GeneratorKinds.h"
 #include "GeneratorView.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
@@ -36,6 +37,9 @@
 #include "SessionEngineOutput.h"
 #include "SourceMonitor.h"
 #include "ThemePalette.h"
+#include "ThemeXaml.h"
+#include "TimelineBar.h"
+#include "ThemePlates.h"
 
 namespace winrt::midisequencer::implementation
 {
@@ -102,7 +106,7 @@ namespace winrt::midisequencer::implementation
         void OnMixerToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnMixerCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnVerticalScrollChanged(_In_ foundation::IInspectable const& sender, _In_ primitives::RangeBaseValueChangedEventArgs const& args);
-        void OnHorizontalScrollChanged(_In_ foundation::IInspectable const& sender, _In_ primitives::RangeBaseValueChangedEventArgs const& args);
+
 
         void OnInspectorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTrackNameCommitted(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -130,6 +134,8 @@ namespace winrt::midisequencer::implementation
         void OnPatternKeepLengthClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnPatternVaryClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnPatternMakeNotesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatternHearClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPatternTemplatesOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
         void OnGeneratorBarsChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnGeneratorStepSizeChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnGeneratorSameClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -148,12 +154,51 @@ namespace winrt::midisequencer::implementation
         void InitializeKeyboard() noexcept;
         void ApplyPalette() noexcept;
         void UpdateTitle() noexcept;
+
+        // ---- the style: the theme the window takes its look from (MainWindowStyle.cpp) ----
+        void LoadStyles() noexcept;
+        void ApplyStyle() noexcept;
+        void RefreshStyle() noexcept;
+        xaml::UIElement MakeStylePicker();
+        xaml::UIElement MakeTimelineBarSettings();
+        xaml::UIElement MakeStylePreview(_In_ themeengine::ThemeDefinition const& definition, _In_ bool dark, _In_ std::optional<themeengine::Color> tint);
+        void ApplyStrips() noexcept;
+        void ColorMetronome() noexcept;
+
+        // A style's plates behind the transport, the track list's toolbar and the editor's
+        // header, and behind the track headers and scene headers (MainWindowPlates.cpp).
+        void SetUpPlates() noexcept;
+        void ApplyPlates() noexcept;
+        void RefreshPlates() noexcept;
+        bool HeadersPlated() const noexcept;
+        bool HeaderLedsPlated() const noexcept;
+        void PlateHeaderRow(
+            _In_ seq::ArrangeRow const& row,
+            _In_opt_ seq::Track const* track,
+            _In_ controls::Grid const& grid,
+            _In_ shapes::Rectangle const& strip,
+            _In_ std::vector<std::pair<primitives::ToggleButton, std::wstring_view>> const& toggles,
+            _In_opt_ shapes::Ellipse const& led) noexcept;
+        void PlateScene(
+            _In_ controls::Button const& button,
+            _In_ controls::TextBlock const& label,
+            _In_ ::winrt::Microsoft::UI::Xaml::Documents::Run const& number,
+            _In_ controls::FontIcon const& play) noexcept;
         void UpdateStatusBar() noexcept;
         void UpdateClockStatus() noexcept;
         void ShowMessage(_In_ winrt::hstring const& text) noexcept;
         void OnFrame() noexcept;
         void OnServiceTimer() noexcept;
         void OnWindowClosing(_In_ winrt::Microsoft::UI::Windowing::AppWindowClosingEventArgs const& args);
+
+        // Whether the window can close now, for the close button and File > Close alike. A take
+        // being recorded goes into the sequence first. Unsaved changes are saved, or asked about;
+        // the save or the answer then closes the window itself.
+        bool ReadyToClose() noexcept;
+        winrt::fire_and_forget AskAboutUnsavedChanges();
+
+        // A close asked for while a save was writing goes ahead once it's done.
+        void CloseIfAsked() noexcept;
         void Shutdown() noexcept;
         HWND WindowHandle() noexcept;
         void OnKeyboardAccelerator(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
@@ -180,6 +225,7 @@ namespace winrt::midisequencer::implementation
         winrt::fire_and_forget PasteMessagesAsync();
         winrt::fire_and_forget SaveAsync(bool chooseName);
         winrt::fire_and_forget AutosaveAsync();
+        void RunPendingSave() noexcept;
 
         // One sequence per window: a window can take another sequence only while it holds an
         // untouched new one. Otherwise the other sequence opens in a window of its own.
@@ -204,6 +250,10 @@ namespace winrt::midisequencer::implementation
         void Publish() noexcept;
         void Undo() noexcept;
         void Redo() noexcept;
+
+        // A drag keeps what changed between its press and its release as one edit, so undo and
+        // redo wait until it's let go.
+        bool GestureActive() const noexcept;
         void UpdateUndoButtons() noexcept;
         void UpdateSavedState() noexcept;
 
@@ -220,6 +270,20 @@ namespace winrt::midisequencer::implementation
         double LaneWidth() noexcept;
         double ScrollViewportHeight() noexcept;
         void SetZoom(_In_ double barWidth, _In_ double anchorX) noexcept;
+
+        // The timeline's scroll bar and zoom (MainWindowTimelineBar.cpp, design section 31).
+        void SetUpTimelineBar() noexcept;
+        void PlaceTimelineBar() noexcept;
+        void SetTimelineOverview(_In_ bool overview) noexcept;
+        void SetTimelineBarAtTop(_In_ bool atTop) noexcept;
+        seq::TimelineSpan TimelineView() noexcept;
+        seq::TimelineLimits TimelineLimits() noexcept;
+        seq::TimelineBarModel TimelineBarState();
+        void SetTimelineView(_In_ seq::TimelineSpan const& view) noexcept;
+        void ZoomTimelineStep(_In_ double factor) noexcept;
+        void ZoomTimelineToFit() noexcept;
+        void ZoomTimelineToSelection() noexcept;
+        void OnTimelinePinch(_In_ input::ManipulationDeltaRoutedEventArgs const& args, _In_ xaml::UIElement const& canvas);
         void ScrollToTick(_In_ int64_t tick) noexcept;
         void UpdatePlayhead() noexcept;
         xaml::UIElement MakeHeaderRow(_In_ seq::ArrangeRow const& row);
@@ -236,6 +300,12 @@ namespace winrt::midisequencer::implementation
         void OnLaneMoved(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
         void OnLaneReleased(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
         void OnLaneWheel(_In_ input::PointerRoutedEventArgs const& args);
+        void OnLauncherWheel(_In_ input::PointerRoutedEventArgs const& args, _In_ bool sceneNames);
+
+        // The launcher scrolled sideways to x, kept between its first scene and its last, or just
+        // far enough to show a scene.
+        void ScrollScenes(_In_ double x) noexcept;
+        void ShowScene(_In_ size_t scene) noexcept;
         void OnLaneDoubleTapped(_In_ bool pinned, _In_ input::DoubleTappedRoutedEventArgs const& args);
         void OnLaneRightTapped(_In_ bool pinned, _In_ input::RightTappedRoutedEventArgs const& args);
         void OnRulerPressed(_In_ input::PointerRoutedEventArgs const& args);
@@ -257,7 +327,8 @@ namespace winrt::midisequencer::implementation
         LaneHit HitTestLane(_In_ bool pinned, _In_ foundation::Point point) noexcept;
         void ShowPlacementMenu(_In_ std::wstring const& trackId, _In_ size_t placement, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         void ShowLaneMenu(_In_ seq::ArrangeRow const& row, _In_ int64_t tick, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
-        void CreateClipAt(_In_ std::wstring const& trackId, _In_ int64_t tick, _In_ std::optional<seq::PatternMode> pattern = std::nullopt, _In_ std::optional<seq::GeneratorType> generator = std::nullopt) noexcept;
+        // The track id is a copy: making the clip rebuilds the layout a caller's id may live in.
+        void CreateClipAt(_In_ std::wstring trackId, _In_ int64_t tick, _In_ std::optional<seq::PatternMode> pattern = std::nullopt, _In_ std::optional<seq::GeneratorType> generator = std::nullopt) noexcept;
         void DeleteSelectedPlacement() noexcept;
         void DuplicateSelectedPlacement() noexcept;
         void MakePlacementUnique(_In_ std::wstring const& trackId, _In_ size_t placement) noexcept;
@@ -272,6 +343,9 @@ namespace winrt::midisequencer::implementation
         void DeleteSlotClip(_In_ std::wstring const& trackId, _In_ size_t scene) noexcept;
         void ShowSlotMenu(_In_ std::wstring const& trackId, _In_ size_t scene, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         std::optional<std::pair<std::wstring, size_t>> HitTestSlot(_In_ bool pinned, _In_ foundation::Point point) noexcept;
+
+        // The scene under a point on a launcher canvas, by its distance from the canvas's left edge.
+        std::optional<size_t> SceneAtLauncherX(_In_ double x) const noexcept;
         void ShowTextPrompt(_In_ winrt::hstring const& title, _In_ winrt::hstring const& initial, _In_ std::function<void(std::wstring const&)> done);
         void OnArrangeSizeChanged() noexcept;
         void SetLauncherVisible(_In_ bool visible) noexcept;
@@ -319,7 +393,10 @@ namespace winrt::midisequencer::implementation
         void BeginSlotDrag(_In_ bool pinned, _In_ std::wstring const& trackId, _In_ size_t scene, _In_ input::PointerRoutedEventArgs const& args);
         void OnLauncherMoved(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
         void OnLauncherReleased(_In_ bool pinned, _In_ bool canceled);
-        void UpdateClipDrop(_In_ foundation::Point inArrange, _In_ bool copy) noexcept;
+
+        // With keepTrack (Shift held while dragging), the clip stays on the track it came from and
+        // only the pointer's left and right movement counts.
+        void UpdateClipDrop(_In_ foundation::Point inArrange, _In_ bool copy, _In_ bool keepTrack) noexcept;
         void FinishClipDrag(_In_ bool drop) noexcept;
         void StartDragScroll() noexcept;
         void OnDragScrollTick() noexcept;
@@ -376,7 +453,8 @@ namespace winrt::midisequencer::implementation
         media::Brush ThemeBrush(_In_ wchar_t const* key);
 
         // ---- the clip editor (MainWindowEditor.cpp) ----
-        void OpenClipInEditor(_In_ std::wstring const& clipId, _In_ std::wstring const& trackId) noexcept;
+        // Copies of the ids: words still being typed are kept first, which builds the layout again.
+        void OpenClipInEditor(_In_ std::wstring clipId, _In_ std::wstring trackId) noexcept;
         void CloseEditor() noexcept;
         void RefreshEditor() noexcept;
         void UpdateEditorHeader() noexcept;
@@ -384,6 +462,9 @@ namespace winrt::midisequencer::implementation
         void ApplyRollEdit(_In_ std::optional<seq::RollEdit> edit) noexcept;
         void OnEditorPressed(_In_ input::PointerRoutedEventArgs const& args);
         void OnEditorMoved(_In_ input::PointerRoutedEventArgs const& args);
+
+        // The resize arrows over the end of a note, which a drag makes longer or shorter.
+        void ShowEditorSizing(_In_ bool sizing) noexcept;
         void OnEditorReleased(_In_ input::PointerRoutedEventArgs const& args);
         void OnEditorWheel(_In_ input::PointerRoutedEventArgs const& args);
         void OnEditorKeyDown(_In_ input::KeyRoutedEventArgs const& args);
@@ -421,6 +502,9 @@ namespace winrt::midisequencer::implementation
         void ApplyPatternEdit(_In_ std::optional<seq::PatternEdit> edit) noexcept;
         void EditPattern(_In_ std::wstring const& name, _In_ std::function<void(seq::PatternSettings&)> const& edit) noexcept;
         void EditSelectedStep(_In_ std::wstring const& name, _In_ std::function<void(seq::PatternStep&)> const& edit) noexcept;
+
+        // One step of the open pattern, if it's still the clip named.
+        void EditStep(_In_ std::wstring const& clipId, _In_ size_t lane, _In_ uint16_t index, _In_ std::wstring const& name, _In_ std::function<void(seq::PatternStep&)> const& edit) noexcept;
         std::wstring PatternLaneName(_In_ seq::PatternLane const& lane, _In_ seq::PatternMode mode) const;
         void ShowPatternLaneMenu(_In_ size_t lane, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         void AddPatternLane() noexcept;
@@ -430,6 +514,10 @@ namespace winrt::midisequencer::implementation
         void OnPatternMoved(_In_ input::PointerRoutedEventArgs const& args);
         void OnPatternReleased(_In_ input::PointerRoutedEventArgs const& args);
         bool OnPatternKeyDown(_In_ winrt::Windows::System::VirtualKey key, _In_ bool shift) noexcept;
+
+        // ---- starter patterns, and hearing steps as they go on (MainWindowPatternTemplates.cpp) ----
+        void UsePatternTemplate(_In_ std::wstring const& id) noexcept;
+        void HearPatternStep(_In_ uint8_t note, _In_ uint16_t velocity) noexcept;
 
         // ---- generator clips (MainWindowGenerator.cpp) ----
         bool EditorShowsGenerator() const noexcept;
@@ -456,6 +544,57 @@ namespace winrt::midisequencer::implementation
         void OnRingMoved(_In_ input::PointerRoutedEventArgs const& args);
         void OnRingReleased();
         void OnRingWheel(_In_ input::PointerRoutedEventArgs const& args);
+
+        // Design section 28's generators: the pieces their panels share (MainWindowGeneratorKit.cpp),
+        // and a panel for each with a drawing to play with (MainWindowLife.cpp, MainWindowLearn.cpp,
+        // MainWindowEvolve.cpp and MainWindowStreams.cpp).
+        using GeneratorEdit = std::function<void(std::function<void(seq::GeneratorSettings&)>)>;
+
+        void BuildGeneratorTypePicker();
+        controls::NumberBox MakeGeneratorNumberBox(_In_ winrt::hstring const& name, _In_ double minimum, _In_ double maximum, _In_ double value, _In_ std::optional<bool> note);
+        controls::MenuFlyoutSubItem MakeNewGeneratorMenu(_In_ winrt::hstring const& text, _In_ std::function<void(seq::GeneratorType)> const& create);
+        controls::StackPanel AddGeneratorSection(_In_ controls::StackPanel const& panel, _In_ wchar_t const* titleKey);
+        controls::StackPanel MakeChipRow(_In_ std::vector<winrt::hstring> const& labels, _In_ size_t selected, _In_ winrt::hstring const& name, _In_ std::function<void(size_t)> const& choose);
+        primitives::ToggleButton MakeChip(_In_ winrt::hstring const& label, _In_ bool on, _In_ std::function<void(bool)> const& toggled);
+        void AppendSeparateChip(_In_ controls::StackPanel const& row, _In_ primitives::ToggleButton const& chip);
+        void AddKeyAndRange(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit, _In_ bool rules);
+        void AddKeyRules(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+
+        // How loud it plays: the ways it can set each note's velocity, and the range they play in
+        // over the pass's notes (MainWindowVelocity.cpp).
+        void AddVelocity(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void SetGeneratorVelocity(_In_ uint16_t low, _In_ uint16_t high) noexcept;
+
+        // Listening to another clip or a track (MainWindowListen.cpp, design section 29): the list
+        // of sources with Learn and Keep listening, learning from one, and the settings a pass
+        // shown in the editor plays with, after what it heard. Life and Evolve carry what they
+        // heard before every pass instead; the hearing they're drawn with uses the clip, so it's
+        // used while the clip is.
+        void AddListenSource(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void LearnFromSource(_In_ seq::ListenKind kind, _In_ std::wstring const& id) noexcept;
+        seq::GeneratorSettings ShownPassSettings(_In_ seq::Clip const& clip, _In_ uint64_t pass) const;
+        seq::PassHearing ShownPassHearing(_In_ seq::Clip const& clip, _In_ uint64_t pass) const;
+        int64_t ListenPassStart(_In_ seq::Clip const& clip, _In_ uint64_t pass) const noexcept;
+        controls::Border FrameGeneratorDrawing(_In_ xaml::FrameworkElement const& drawing);
+        controls::Button MakeGeneratorNotesButton(_In_ std::wstring const& clipId);
+        controls::Grid MakeGeneratorLayout(_In_ xaml::FrameworkElement const& drawing, _In_ controls::StackPanel const& settings, _In_ controls::StackPanel const& side);
+        double GeneratorDrawingWidth(_In_ double least, _In_ double most) const noexcept;
+        void EditGeneratorInPlace(_In_ std::function<void(seq::GeneratorSettings&)> const& change) noexcept;
+
+        // The panel built again once the pointer event under way is over, if the clip is still
+        // open: built inside it, what replaces the control under the pointer loses the next press.
+        void QueueGeneratorPanelUpdate() noexcept;
+        uint64_t ShownGeneratorPass(_In_ seq::Clip const& clip) const noexcept;
+        int64_t PlayingGeneratorStep(_In_ seq::Clip const& clip) const noexcept;
+        void PickGeneratorPass(_In_ uint64_t pass) noexcept;
+
+        void AddLifeSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void AddLearnSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void AddWordsSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void AddEvolveSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void AddInfinitySettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void AddLSystemSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
+        void AddRingingSettings(_In_ controls::StackPanel const& body, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
 
         // The arpeggiator (MainWindowArpeggiator.cpp): its settings, Make notes, and the keys
         // played on the sources of tracks it plays from.
@@ -531,7 +670,9 @@ namespace winrt::midisequencer::implementation
         void OnFollowedClock(_In_ uint64_t timestamp, _In_ uint32_t word0) noexcept;
         void OnFollowedTransport() noexcept;
         void UpdateEchoRoutes() noexcept;
-        void SendNow(_In_ seq::TrackDestination const& destination, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
+        // Sends in the protocol the destination group speaks. A timestamp of 0 sends at once; a
+        // later one is held by the service until then.
+        void SendNow(_In_ seq::TrackDestination const& destination, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount, _In_ uint64_t timestamp = 0) noexcept;
         void AuditionNote(_In_ uint8_t note, _In_ bool on) noexcept;
         void LaunchKeyboard(_In_ std::wstring const& endpointId, _In_ uint8_t group, _In_ int8_t channel, _In_ std::wstring const& programsFromId = {}, _In_ uint8_t programsGroup = 0) noexcept;
         void ShowMetronomeFlyout();
@@ -605,7 +746,9 @@ namespace winrt::midisequencer::implementation
 
         // ---- remote control and MIDI Glass (MainWindowRemote.cpp) ----
         winrt::fire_and_forget StartRemoteControlAsync();
-        void StopRemoteControl() noexcept;
+        // Closing waits on the MIDI service: in the background when it's turned off, and right away
+        // when the window closes, so it's gone before the process is.
+        void StopRemoteControl(_In_ bool inBackground = false) noexcept;
         void OnRemoteMessage(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
         seq::RemoteState CurrentRemoteState();
         void UpdateRemoteFeedback() noexcept;
@@ -632,6 +775,17 @@ namespace winrt::midisequencer::implementation
         bool m_loaded{ false };
         bool m_closing{ false };
         bool m_closeConfirmed{ false };
+
+        // A save closing the window couldn't write, so closing asks rather than trying again.
+        bool m_closeSaveFailed{ false };
+
+        // The window was asked to close while a save was writing.
+        bool m_closeRequested{ false };
+
+        // One save at a time: a save asked for while another writes waits for it. 1 saves, 2 asks
+        // for a name.
+        bool m_saving{ false };
+        uint8_t m_savePending{ 0 };
 
         seq::Sequence m_doc{};
         std::wstring m_path{};
@@ -686,14 +840,12 @@ namespace winrt::midisequencer::implementation
         std::wstring m_inspectorTrackId{};
         bool m_inspectorUpdating{ false };
 
-        // A drag on the timeline.
-        enum class LaneDrag : uint8_t { None, Move, Resize, Loop };
+        // A clip's end, dragged on the timeline to change its length.
+        enum class LaneDrag : uint8_t { None, Resize };
         LaneDrag m_laneDrag{ LaneDrag::None };
         bool m_lanePinned{ false };
         foundation::Point m_dragStart{};
-        int64_t m_dragOriginalTick{ 0 };
         int64_t m_dragOriginalLength{ 0 };
-        int64_t m_dragTick{ 0 };
         int64_t m_dragLength{ 0 };
         std::vector<seq::Track> m_dragTracksBefore{};
         int64_t m_loopDragStart{ 0 };
@@ -773,6 +925,7 @@ namespace winrt::midisequencer::implementation
         xaml::DispatcherTimer m_dragScrollTimer{ nullptr };
         foundation::Point m_dragPoint{};
         bool m_dragCopy{ false };
+        bool m_dragKeepTrack{ false };
 
         // A tag being dragged along its row.
         struct TagDrag
@@ -919,6 +1072,93 @@ namespace winrt::midisequencer::implementation
 
         RingDrag m_ringDrag{};
 
+        // Design section 28's panels. An edit the panel already shows doesn't build it again, so a
+        // box keeps its caret while it's typed in.
+        bool m_keepGeneratorPanel{ false };
+
+        // The pass a generator's drawing shows while it isn't playing, picked by the person.
+        uint64_t m_pickedPass{ 0 };
+        std::wstring m_pickedPassClip{};
+
+        std::vector<controls::RadioButton> m_generatorTypeChoices{};
+
+        // The open panel's own sizing, run when the editor changes size.
+        std::function<void()> m_fitGenerator{};
+
+        // The room a generator's drawing has beside its settings and the key and range, or
+        // beside its settings alone. MakeGeneratorLayout's fit works it out before the panel's own.
+        double m_generatorRoomBeside{ 0 };
+        double m_generatorRoomAlone{ 0 };
+
+        // Cells being drawn on a Life board: on or off, kept as one edit when it's let go.
+        struct LifePaint
+        {
+            bool Active{ false };
+            bool On{ true };
+            std::vector<seq::LifeCell> Cells{};
+        };
+
+        LifePaint m_lifePaint{};
+
+        // An end of the key and range being dragged along its keyboard, or the whole range.
+        struct RangeDrag
+        {
+            bool Active{ false };
+            int32_t Grip{ 0 };              // 0 the lowest note, 1 the highest, 2 both
+            int32_t From{ 0 };              // the key it was picked up on
+            uint8_t StartLow{ 0 };
+            uint8_t StartHigh{ 0 };
+            uint8_t Low{ 0 };
+            uint8_t High{ 0 };
+        };
+
+        RangeDrag m_rangeDrag{};
+
+        // The last wheel notch the range keyboard took, so the same notch can't move it twice.
+        uint64_t m_lastRangeWheel{ 0 };
+        uint64_t m_lastRingWheel{ 0 };
+        bool m_generatorPanelQueued{ false };
+
+        // An edge of a generator's velocity range being dragged, or the whole band.
+        struct VelocityDrag
+        {
+            bool Active{ false };
+            int32_t Grip{ 0 };              // 0 the lowest, 1 the highest, 2 both
+            uint16_t From{ 0 };             // the velocity it was picked up at
+            uint16_t StartLow{ 0 };
+            uint16_t StartHigh{ 0 };
+            uint16_t Low{ 0 };
+            uint16_t High{ 0 };
+        };
+
+        VelocityDrag m_velocityDrag{};
+        uint64_t m_lastVelocityWheel{ 0 };
+
+        // The velocity range's boxes. A change to the range is shown in place rather than by
+        // building the panel again, so these are set to match, and their own change is ignored.
+        controls::NumberBox m_velocityLowBox{ nullptr };
+        controls::NumberBox m_velocityHighBox{ nullptr };
+        bool m_settingVelocityBoxes{ false };
+
+        // The list of clips and tracks to listen to, which gets the focus back after a pick
+        // builds the panel again.
+        controls::ComboBox m_listenSources{ nullptr };
+
+        // Words typed into a generator, kept a moment after the last key: the text, and the clip it
+        // was typed for. Anything that edits the generator, opens another clip or closes the
+        // editor commits it first, so nothing typed is lost or lands in another clip. A words box
+        // built again takes over from the one it replaces instead, so building the panel never
+        // edits the clip in the middle of being built.
+        xaml::DispatcherTimer m_generatorTextTimer{ nullptr };
+        std::shared_ptr<std::wstring> m_generatorTextPending{};
+        std::wstring m_generatorTextClip{};
+        void FlushGeneratorText() noexcept;
+        std::shared_ptr<std::wstring> WordsStillTyped(_In_ std::wstring const& clipId) const noexcept;
+        void TrackTypedWords(_In_ xaml::DispatcherTimer const& timer, _In_ std::shared_ptr<std::wstring> pending, _In_ std::wstring const& clipId, _In_ bool waiting) noexcept;
+
+        // The clip the header's Bars box had the focus for.
+        std::wstring m_generatorBarsClip{};
+
         // Dragging a point on an automation lane or a tempo change, or drawing on a lane.
         struct PointDrag
         {
@@ -936,6 +1176,10 @@ namespace winrt::midisequencer::implementation
 
             // The tempo row's scale when the drag began.
             seq::TempoRange Range{};
+
+            // The point's value when the drag began, which Shift keeps while it moves.
+            double StartBeatsPerMinute{ 0 };
+            uint32_t StartValue{ 0 };
 
             std::vector<seq::AutomationLane> LanesBefore{};
             std::vector<seq::TempoPoint> TempoBefore{};
@@ -984,17 +1228,45 @@ namespace winrt::midisequencer::implementation
         size_t m_lyricsBarSungCount{ SIZE_MAX };
 
         seq::Palette m_palette{};
+
+        // The themes the app carries, the one in use, and it worked out for light and dark with
+        // the window color. Set by ApplyStyle; the palette is the half the window shows.
+        std::vector<std::shared_ptr<themeengine::ThemeDefinition const>> m_styles{};
+        std::shared_ptr<themeengine::ThemeDefinition const> m_style{};
+        std::shared_ptr<themeengine::ResolvedTheme const> m_styleLight{};
+        std::shared_ptr<themeengine::ResolvedTheme const> m_styleDark{};
+        themeengine::XamlThemeResources m_styleResources{};
+
+        // The window color the style was last worked out with (0xAARRGGBB), or none.
+        std::optional<uint32_t> m_styleTint{};
+
         seq::ArrangeRenderer m_renderer{};
+        seq::TimelineBar m_timelineBar{};
+        themeengine::PlateLayer m_transportPlates{};
+        themeengine::PlateLayer m_toolbarPlates{};
+        themeengine::PlateLayer m_editorPlates{};
+
+        // Behind the track headers ("rows") and the scene headers ("scenes").
+        themeengine::PlateLayer m_headerPlates{};
+        double m_defaultTransportHeight{ 52 };
+
+        // The transport's colors: the window's, or the dark look's on a style's dark strip.
+        seq::Palette m_stripPalette{};
+        double m_defaultTransportSpacing{ 6 };
         seq::PianoRoll m_roll{};
         seq::ClipLaneStrip m_clipLanes{};
         bool m_clipLaneGesture{ false };
         seq::PatternEditor m_pattern{};
         bool m_updatingPatternUi{ false };
         bool m_patternGesture{ false };
+
+        // The key a melodic template is put in, 0 (C) to 11 (B), until the window closes.
+        uint8_t m_templateKey{ 0 };
         std::optional<uint8_t> m_auditioning{};
         std::chrono::steady_clock::time_point m_lastEditorPressTime{};
         foundation::Point m_lastEditorPressPoint{};
         bool m_editorGesture{ false };
+        bool m_editorSizing{ false };
 
         canvasXaml::CanvasControl m_rulerCanvas{ nullptr };
         canvasXaml::CanvasControl m_pinnedLaneCanvas{ nullptr };
@@ -1015,6 +1287,10 @@ namespace winrt::midisequencer::implementation
         std::atomic<bool> m_preparing{ false };
         std::atomic<bool> m_preparePending{ false };
         std::atomic<bool> m_endpointRefreshPending{ false };
+
+        // A refresh asked for while one runs: that one runs again when it's done, since the
+        // change may have come after it looked.
+        std::atomic<bool> m_endpointRefreshAgain{ false };
         bool m_serviceRunning{ false };
         int64_t m_position{ 0 };
         std::unordered_map<std::wstring, seq::TrackLaunchView> m_launchViews{};
@@ -1035,6 +1311,18 @@ namespace winrt::midisequencer::implementation
         std::mutex m_inputLock{};
         std::vector<EchoRoute> m_echoRoutes{};
 
+        // Notes echoed and not let go yet, under m_inputLock: by track, then by group, channel and
+        // note, each with the note-off that ends it. When a track stops echoing a key that's held,
+        // or echoes it somewhere else, UpdateEchoRoutes sends the note-off it would have had.
+        struct EchoedNotes
+        {
+            std::wstring SourceId{};
+            seq::TrackDestination Destination{};
+            std::map<uint32_t, std::array<uint32_t, 2>> Offs{};
+        };
+
+        std::map<std::wstring, EchoedNotes> m_echoedNotes{};
+
         // Tracks with an arpeggiator that plays the keys held on their source, read on the
         // service's thread under m_inputLock. The UI thread keeps the ids, to tell the engine to
         // forget the keys of a track that stops listening.
@@ -1048,7 +1336,6 @@ namespace winrt::midisequencer::implementation
         std::vector<ArpeggiatorRoute> m_arpeggiatorRoutes{};
         std::unordered_set<std::wstring> m_arpeggiatorTracks{};
         std::map<std::wstring, seq::RecordingTake> m_takes{};
-        int64_t m_recordStartTick{ 0 };
 
         // A take being recorded into a launcher slot. m_slotTake belongs to the UI thread; the take
         // itself is fed on the service's thread, under m_inputLock. Places are unwrapped ticks.
@@ -1087,7 +1374,6 @@ namespace winrt::midisequencer::implementation
         };
 
         std::map<std::wstring, std::deque<HeardMessage>> m_heard{};
-        std::atomic<uint64_t> m_lastInputTicks{ 0 };
 
         // The device whose clock the sequence follows, read on the service's thread under
         // m_inputLock. Its Start and Stop reach the window through the queue.
@@ -1098,6 +1384,10 @@ namespace winrt::midisequencer::implementation
 
         // Remote control: the sequencer's own endpoint, and what a surface was last told.
         std::shared_ptr<seq::RemoteEndpoint> m_remote{};
+
+        // The endpoint turned off last, still closing in the background. Turned on again, the new
+        // one waits for it: the service won't make a second endpoint with the same id.
+        winrt::Windows::Foundation::IAsyncAction m_remoteClosing{ nullptr };
         bool m_remoteStarting{ false };
         std::optional<seq::RemoteState> m_remoteShown{};
         xaml::DispatcherTimer m_remoteTimer{ nullptr };
@@ -1121,7 +1411,6 @@ namespace winrt::midisequencer::implementation
         xaml::DispatcherTimer m_frameTimer{ nullptr };
         xaml::DispatcherTimer m_serviceTimer{ nullptr };
         xaml::DispatcherTimer m_autosaveTimer{ nullptr };
-        winrt::event_token m_renderingToken{};
         winrt::event_token m_closingToken{};
 
         static constexpr uint32_t SampleSeed = 20266;

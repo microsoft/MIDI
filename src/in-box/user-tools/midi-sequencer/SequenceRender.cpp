@@ -8,6 +8,7 @@
 #include "SequenceRender.h"
 #include "Lyrics.h"
 #include "SequenceArpeggiator.h"
+#include "GeneratorListen.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -22,11 +23,6 @@ namespace midisequencer
         // A ramp longer than this many steps in one render is stepped more coarsely, so a hostile
         // file can't keep an export busy for minutes.
         constexpr int64_t MaximumLaneStepsPerSegment = 2000000;
-
-        // A file can loop a one-tick clip with nothing in it for billions of ticks, which renders
-        // nothing and would take minutes. One render stops after this many passes; a real song
-        // loops a short clip a few thousand times.
-        constexpr size_t MaximumRenderedPasses = 4000000;
 
         int64_t PlacementLength(_In_ Placement const& placement, _In_ Clip const& clip) noexcept
         {
@@ -280,7 +276,9 @@ namespace midisequencer
             }
             else if (generated)
             {
-                ForEachGeneratorNote(clip, passStart, passEnd, pass, windowStart, windowEnd, true, addNote);
+                // A generator that listens hears its sources through this same path.
+                ListenContext const listen{ &sequence, options.HearTrack, options.HearEpoch };
+                ForEachGeneratorNote(clip, passStart, passEnd, pass, windowStart, windowEnd, true, addNote, &listen);
             }
 
             // A note comes out with its end, even when the end is past the window. The engine holds
@@ -502,7 +500,8 @@ namespace midisequencer
     {
         auto const firstNew = messages.size();
         auto const maximum = firstNew + options.MaximumMessages;
-        size_t passes{ 0 };
+        size_t ownPasses{ MaximumRenderedPasses };
+        auto& passesLeft = options.PassesLeft != nullptr ? *options.PassesLeft : ownPasses;
 
         for (auto const& placement : track.Timeline)
         {
@@ -534,10 +533,12 @@ namespace midisequencer
             {
                 auto const passStart = placement.Tick + pass * clip->Length;
 
-                if (passStart >= end || passStart >= toTick || messages.size() >= maximum || ++passes > MaximumRenderedPasses)
+                if (passStart >= end || passStart >= toTick || messages.size() >= maximum || passesLeft == 0)
                 {
                     break;
                 }
+
+                --passesLeft;
 
                 RenderPass(sequence, *clip, passStart, std::min(end, passStart + clip->Length), static_cast<uint64_t>(pass), fromTick, toTick, options, maximum, messages);
             }

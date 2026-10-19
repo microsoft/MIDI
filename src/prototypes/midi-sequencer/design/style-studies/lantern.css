@@ -1,0 +1,353 @@
+/* PROTOTYPE. Style study: Lantern (dark). Paper lanterns in a dark room: one warm pool of light,
+   clips as lit paper with their notes in ink, launcher clips dark until they play, and keys that
+   light up from inside. It began as a night lake of blue glass, which read as the contra look;
+   the redirection is the block at the end, which overrides the rules before it. In the app: a
+   blurred copy of the clips drawn under the sharp ones (Win2D GaussianBlurEffect) for the glow. */
+
+html.study.lantern {
+    --glass: rgba(18, 24, 34, .62);
+    --glass-edge: inset 0 1px 0 rgba(255, 255, 255, .10);
+    --hair: rgba(232, 238, 248, .38);
+    --hair-faint: rgba(232, 238, 248, .14);
+
+    --text: #F1F4F9;
+    --text2: #AFB8C8;
+    --text3: #7D879A;
+    --divider: rgba(232, 238, 248, .07);
+    --stroke: rgba(232, 238, 248, .10);
+    --stroke-strong: rgba(232, 238, 248, .22);
+    --accent: #E8EEF8;
+    --accent-deep: #E8EEF8;
+    --play: #6FE0B0;
+    --success: #6FE0B0;
+    --rec: #FF7A59;
+    --mute: #E8C27A;
+    --solo: #8FB4FF;
+    --lane-bg: transparent;
+}
+
+html.study.lantern [style*="#FF8A65"] { --tc: #FF7A59 !important; }
+html.study.lantern [style*="#5BC0EB"] { --tc: #4FC0D8 !important; }
+html.study.lantern [style*="#B4A7FF"] { --tc: #A06BF0 !important; }
+html.study.lantern [style*="#6CCB5F"] { --tc: #5B7BE6 !important; }
+html.study.lantern [style*="#4DD0C4"] { --tc: #46D6C0 !important; }
+html.study.lantern [style*="#9C8CFF"] { --tc: #A06BF0 !important; }
+html.study.lantern [style*="#F7C948"] { --tc: #E8C27A !important; }
+html.study.lantern [style*="#FF6F91"] { --tc: #FF6FA0 !important; }
+html.study.lantern [style*="#FFB547"] { --tc: #E8C27A !important; }
+html.study.lantern [style*="#BDBDBD"] { --tc: #AFB8C8 !important; }
+
+html.study.lantern, html.study.lantern body { background: #05080D; }
+html.study.lantern body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+html.study.lantern .caption-above { color: var(--text2); }
+html.study.lantern .caption-above b { color: var(--text); }
+html.study.lantern .tname, html.study.lantern .ed-head .cname, html.study.lantern .lcd .big { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 300; }
+html.study.lantern .tname { font-weight: 400; }
+
+/* ---- the window: the lake, with a spotlight where the playhead is */
+
+html.study.lantern .window {
+    border: 1px solid rgba(232, 238, 248, .08);
+    border-radius: 16px;
+    background:
+        radial-gradient(ellipse 900px 520px at 62% 40%, rgba(70, 110, 190, .22), transparent 70%),
+        radial-gradient(ellipse at 60% 35%, #1C2636, #121925 45%, #0A0E15);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, .7);
+}
+
+html.study.lantern .titlebar .title { text-transform: uppercase; letter-spacing: .28em; font-size: 10.5px; font-weight: 300; color: var(--text2); }
+html.study.lantern .caption-btn, html.study.lantern .sys-btns div { color: var(--text3); }
+html.study.lantern .preview-chiclet { border-color: rgba(232, 194, 122, .55); color: var(--mute); background: transparent; font-weight: 400; letter-spacing: .2em; }
+
+/* ---- glass */
+
+html.study.lantern .transport,
+html.study.lantern .arow > .hdr,
+html.study.lantern .arow > .launch,
+html.study.lantern .editor,
+html.study.lantern .statusbar {
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+}
+
+html.study.lantern .transport { height: 58px; flex-basis: 58px; border-bottom: 0; box-shadow: var(--glass-edge), 0 1px 0 rgba(0, 0, 0, .35); gap: 8px; }
+html.study.lantern .transport .sep { background: var(--hair-faint); }
+
+/* hairline controls */
+html.study.lantern .tbtn {
+    width: 36px;
+    flex-basis: 36px;
+    height: 36px;
+    border: 1px solid var(--hair-faint);
+    border-radius: 18px;
+    background: transparent;
+    color: var(--text2);
+}
+
+html.study.lantern .tbtn.on { border-color: rgba(232, 238, 248, .5); background: rgba(232, 238, 248, .10); color: var(--text); box-shadow: 0 0 14px rgba(143, 180, 255, .35); }
+html.study.lantern .tbtn.play.on { border-color: rgba(111, 224, 176, .7); color: var(--play); box-shadow: 0 0 16px rgba(111, 224, 176, .45), inset 0 0 8px rgba(111, 224, 176, .2); }
+html.study.lantern .tbtn.rec { color: var(--rec); }
+html.study.lantern .tbtn.split { width: 20px; flex-basis: 20px; height: 20px; margin-left: -4px; border-radius: 10px; }
+
+html.study.lantern .lcd { border: 0; border-radius: 10px; background: rgba(5, 8, 13, .55); box-shadow: inset 0 0 0 1px rgba(232, 238, 248, .08); }
+html.study.lantern .lcd .big { color: var(--text); font-size: 21px; letter-spacing: .06em; }
+
+html.study.lantern .btn { border: 1px solid var(--hair-faint); border-radius: 16px; background: transparent; color: var(--text); }
+html.study.lantern .btn.subtle { border-color: transparent; }
+html.study.lantern .btn.toggled { border-color: rgba(232, 238, 248, .5); background: rgba(232, 238, 248, .10); color: var(--text); box-shadow: 0 0 12px rgba(143, 180, 255, .3); }
+html.study.lantern .btn.toggled .gl { color: var(--text); }
+html.study.lantern .field { border: 0; border-bottom: 1px solid var(--hair); border-radius: 0; background: transparent; }
+html.study.lantern .chip { border-color: var(--hair-faint); background: transparent; }
+html.study.lantern .chip.on { border-color: rgba(111, 224, 176, .5); color: var(--play); background: rgba(111, 224, 176, .06); }
+html.study.lantern .chip.info { border-color: rgba(143, 180, 255, .45); color: #CFE0FF; background: rgba(143, 180, 255, .07); }
+
+/* ---- the arrange */
+
+html.study.lantern .arow > .hdr { border-right: 0; border-bottom: 1px solid var(--divider); box-shadow: inset -1px 0 0 rgba(232, 238, 248, .06); }
+html.study.lantern .arow > .launch { border-right: 1px solid rgba(232, 238, 248, .08); border-bottom: 1px solid var(--divider); }
+html.study.lantern .arow.track > .hdr[style] { background: rgba(60, 90, 150, .28); }
+html.study.lantern .pinned { background: rgba(232, 238, 248, .02); }
+html.study.lantern .pin-edge { height: 1px; flex-basis: 1px; background: rgba(232, 238, 248, .16); box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
+
+/* the track's color as a small lit diamond */
+html.study.lantern .strip {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    align-self: center;
+    margin: 0 4px 0 12px;
+    transform: rotate(45deg);
+    background: var(--tc);
+    box-shadow: 0 0 10px var(--tc), 0 0 3px var(--tc);
+}
+
+html.study.lantern .indent::after { background: rgba(232, 238, 248, .08); }
+html.study.lantern .ticon { color: var(--tc); text-shadow: 0 0 10px var(--tc); }
+
+html.study.lantern .tb { width: 22px; height: 22px; border: 1px solid var(--hair-faint); border-radius: 11px; background: transparent; color: var(--text3); font-weight: 600; }
+html.study.lantern .tb.r { color: rgba(255, 122, 89, .8); }
+html.study.lantern .tb.m.on { border-color: var(--mute); background: rgba(232, 194, 122, .12); color: var(--mute); box-shadow: 0 0 10px rgba(232, 194, 122, .45); }
+html.study.lantern .tb.s.on { border-color: var(--solo); background: rgba(143, 180, 255, .12); color: var(--solo); box-shadow: 0 0 10px rgba(143, 180, 255, .45); }
+html.study.lantern .tb.r.on { border-color: var(--rec); background: rgba(255, 122, 89, .14); color: var(--rec); box-shadow: 0 0 10px rgba(255, 122, 89, .55); }
+
+html.study.lantern .led { background: rgba(232, 238, 248, .12); }
+html.study.lantern .led.out { background: var(--play); box-shadow: 0 0 10px var(--play); }
+html.study.lantern .led.in { background: var(--mute); box-shadow: 0 0 10px var(--mute); }
+
+html.study.lantern .arow.ruler { background: transparent; }
+html.study.lantern .scene { border-right-color: var(--divider); color: var(--text2); }
+html.study.lantern .scene .gl { color: var(--text3); }
+html.study.lantern .bar-num { border-left-color: rgba(232, 238, 248, .14); color: var(--text3); }
+html.study.lantern .loop-range { border: 0; border-radius: 3px 3px 0 0; background: rgba(143, 180, 255, .35); box-shadow: 0 0 14px rgba(143, 180, 255, .45); }
+
+/* the launcher: light in glass */
+
+html.study.lantern .slot { border-right-color: rgba(232, 238, 248, .05); }
+
+html.study.lantern .cell {
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--tc) 26%, transparent), color-mix(in srgb, var(--tc) 7%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--tc) 55%, transparent), 0 0 16px color-mix(in srgb, var(--tc) 18%, transparent);
+}
+
+html.study.lantern .cell .nm { color: var(--text); }
+html.study.lantern .cell .tri, html.study.lantern .cell .kind { color: var(--text2); }
+html.study.lantern .cell .mini svg { filter: drop-shadow(0 0 3px var(--tc)) brightness(1.25); }
+html.study.lantern .cell.playing { box-shadow: inset 0 0 0 1px rgba(111, 224, 176, .8), 0 0 20px rgba(111, 224, 176, .35); }
+html.study.lantern .cell.playing .tri { color: var(--play); }
+html.study.lantern .cell .prog { height: 2px; background: var(--play); box-shadow: 0 0 8px var(--play); }
+html.study.lantern .cell.queued { border: 0; box-shadow: inset 0 0 0 1px rgba(232, 238, 248, .55); }
+html.study.lantern .cell.rec { background: linear-gradient(to bottom, rgba(255, 122, 89, .32), rgba(255, 122, 89, .08)); box-shadow: inset 0 0 0 1px rgba(255, 122, 89, .7), 0 0 18px rgba(255, 122, 89, .35); }
+html.study.lantern .cell.rec .prog { background: var(--rec); box-shadow: 0 0 8px var(--rec); }
+html.study.lantern .cell .when { background: rgba(5, 8, 13, .7); color: var(--text); }
+html.study.lantern .empty { border: 1px solid rgba(232, 238, 248, .05); background: transparent; color: rgba(232, 238, 248, .16); border-radius: 8px; }
+html.study.lantern .empty.armed { color: rgba(255, 122, 89, .7); border-color: rgba(255, 122, 89, .25); }
+
+/* the timeline: the lake itself */
+
+html.study.lantern .arow > .lane {
+    border-bottom: 1px solid rgba(232, 238, 248, .04);
+    background-color: transparent;
+    background-image:
+        repeating-linear-gradient(to right, rgba(232, 238, 248, .10) 0 1px, transparent 1px var(--bar)),
+        repeating-linear-gradient(to right, rgba(232, 238, 248, .045) 0 1px, transparent 1px calc(var(--bar) / 4));
+}
+
+html.study.lantern .arow.ruler > .lane { background-image: none; }
+
+html.study.lantern .tclip {
+    border: 0;
+    border-radius: 7px;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--tc) 32%, transparent), color-mix(in srgb, var(--tc) 8%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--tc) 70%, transparent), 0 0 22px color-mix(in srgb, var(--tc) 30%, transparent);
+}
+
+html.study.lantern .tclip .cap { background: transparent; color: var(--text); text-shadow: 0 0 8px rgba(0, 0, 0, .8); }
+html.study.lantern .tclip .cap .lnk { opacity: .6; }
+html.study.lantern .tclip .body svg { filter: drop-shadow(0 0 3px var(--tc)) brightness(1.35); }
+html.study.lantern .tclip.sel { border: 0; box-shadow: inset 0 0 0 1px rgba(232, 238, 248, .9), 0 0 26px color-mix(in srgb, var(--tc) 55%, transparent); }
+html.study.lantern .tclip.gen { border: 0; background: linear-gradient(to bottom, color-mix(in srgb, var(--tc) 20%, transparent), transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 45%, transparent), 0 0 20px color-mix(in srgb, var(--tc) 22%, transparent); }
+html.study.lantern .tclip.muted { filter: saturate(.1) brightness(.6); }
+html.study.lantern .tclip.summary { background: color-mix(in srgb, var(--tc) 10%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--tc) 15%, transparent); }
+
+html.study.lantern .loopmark { border-left-color: rgba(232, 238, 248, .3); }
+html.study.lantern .lane-overlay { background: rgba(10, 14, 21, .72); backdrop-filter: blur(3px); color: var(--text2); }
+
+html.study.lantern .playhead { width: 1.5px; background: #FFFFFF; box-shadow: 0 0 12px rgba(232, 238, 248, .9), 0 0 30px rgba(143, 180, 255, .5); }
+html.study.lantern .tag > span { background: color-mix(in srgb, var(--tagc, #D7D7D7) 85%, #FFFFFF); box-shadow: 0 0 10px color-mix(in srgb, var(--tagc, #D7D7D7) 60%, transparent); }
+
+/* ---- the clip editor: a glass sheet over the lake */
+
+html.study.lantern .editor { border-top: 0; box-shadow: var(--glass-edge), 0 -14px 40px rgba(0, 0, 0, .45); }
+html.study.lantern .ed-head { border-bottom-color: var(--divider); }
+html.study.lantern .ed-head .cname { text-transform: uppercase; letter-spacing: .2em; font-size: 13px; }
+html.study.lantern .roll, html.study.lantern .vlane { background: rgba(5, 8, 13, .4); }
+html.study.lantern .roll svg { filter: drop-shadow(0 0 3px var(--tc)); }
+html.study.lantern .keys, html.study.lantern .lanehead, html.study.lantern .rruler .corner { border-right-color: rgba(232, 238, 248, .10); }
+html.study.lantern .inspector { background: transparent; border-left-color: var(--divider); }
+
+html.study.lantern .statusbar { border-top: 0; box-shadow: var(--glass-edge); color: var(--text3); }
+html.study.lantern .statusbar .ok { color: var(--play); }
+html.study.lantern .statusbar .recx { color: #FFB09A; }
+
+/* ---- review fixes (October 19): a brighter pool of light, visible glass, lit clips, and a column of light */
+
+html.study.lantern .window {
+    background:
+        radial-gradient(ellipse 760px 420px at 62% 42%, rgba(120, 150, 220, .32), transparent 70%),
+        radial-gradient(ellipse 520px 300px at 28% 85%, rgba(160, 107, 240, .14), transparent 70%),
+        #07090F;
+}
+
+html.study.lantern .arow > .hdr, html.study.lantern .arow > .launch { background: rgba(200, 215, 255, .05); }
+
+/* clips and pads lit from below, not painted */
+html.study.lantern .tclip, html.study.lantern .cell { background: radial-gradient(70% 130% at 50% 100%, color-mix(in srgb, var(--tc) 24%, transparent), transparent 75%); box-shadow: 0 0 28px -8px var(--tc); }
+
+html.study.lantern .keys svg rect[fill="#D9D9D9"] { fill: rgba(232, 238, 248, .10); stroke: rgba(232, 238, 248, .12); }
+html.study.lantern .keys svg rect[fill="#1B1B1B"] { fill: #05080D; stroke: rgba(232, 238, 248, .12); }
+
+html.study.lantern .playhead::after {
+    content: "";
+    position: absolute;
+    inset: 0 -40px;
+    background: radial-gradient(closest-side, rgba(232, 238, 248, .14), transparent);
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+/* ---- redirection, round 2 (October 19): paper lanterns in a dark room. Blue glass and neon read
+   as the contra look, so: a warm, very dark room with one amber pool of light; timeline clips as
+   lit paper with their notes in ink; launcher clips dark until they play, so light means sound;
+   keys that light up from inside; amber readouts; each track's color as a tiny paper lantern;
+   and a flame for the playhead, with a column of light. */
+
+html.study.lantern {
+    --room: #0F0C0A;
+    --lamp: #FFC27A;
+    --flame: #FFE3B0;
+    --ink: #24170D;
+    --glass: rgba(28, 21, 16, .62);
+    --glass-edge: inset 0 1px 0 rgba(255, 226, 190, .06);
+    --hair: rgba(255, 226, 190, .26);
+    --hair-faint: rgba(255, 226, 190, .12);
+    --text: #F4E9DA;
+    --text2: #C4B5A2;
+    --text3: #998A77;
+    --divider: rgba(255, 226, 190, .06);
+    --stroke: rgba(255, 226, 190, .10);
+    --stroke-strong: rgba(255, 226, 190, .18);
+    --accent: var(--lamp);
+    --accent-deep: var(--lamp);
+    --play: #A8D98A;
+    --success: #A8D98A;
+    --rec: #FF6A45;
+    --mute: var(--lamp);
+    --solo: #D6E6FF;
+    --lane-bg: transparent;
+    --hdr-w: 300px;
+    --launch-w: 470px;
+}
+
+html.study.lantern [style*="#FF8A65"] { --tc: #E8743B !important; }
+html.study.lantern [style*="#5BC0EB"] { --tc: #5E7CC2 !important; }
+html.study.lantern [style*="#B4A7FF"], html.study.lantern [style*="#9C8CFF"] { --tc: #A65C9A !important; }
+html.study.lantern [style*="#6CCB5F"] { --tc: #86A84A !important; }
+html.study.lantern [style*="#4DD0C4"] { --tc: #4FA394 !important; }
+html.study.lantern [style*="#F7C948"], html.study.lantern [style*="#FFB547"] { --tc: #D9A441 !important; }
+html.study.lantern [style*="#FF6F91"] { --tc: #D2463C !important; }
+html.study.lantern [style*="#BDBDBD"] { --tc: #A89A88 !important; }
+
+html.study.lantern .window {
+    border-color: rgba(255, 226, 190, .07);
+    background:
+        radial-gradient(ellipse 760px 440px at 68% 30%, rgba(255, 176, 96, .16), transparent 70%),
+        radial-gradient(ellipse 1200px 380px at 40% 108%, rgba(150, 80, 30, .14), transparent 70%),
+        var(--room);
+}
+
+html.study.lantern .arow > .hdr, html.study.lantern .arow > .launch { background: transparent; }
+
+/* the header carries an inline style, so only !important reaches it */
+html.study.lantern .arow.track > .hdr[style] { background: rgba(255, 194, 122, .07) !important; }
+
+/* each track's color as a tiny paper lantern */
+html.study.lantern .strip {
+    width: 9px;
+    height: 14px;
+    flex: 0 0 9px;
+    margin: 0 4px 0 12px;
+    transform: none;
+    border-block: 2px solid #3B2A1B;
+    border-radius: 4px;
+    background: radial-gradient(circle, var(--flame), color-mix(in srgb, var(--tc) 85%, #000) 80%);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--tc) 75%, transparent);
+}
+
+/* dark caps that light up from inside */
+html.study.lantern .tbtn, html.study.lantern .tb {
+    border: 0;
+    border-radius: 6px;
+    background: linear-gradient(#2B221A, #1B1511);
+    box-shadow: inset 0 1px 0 rgba(255, 226, 190, .10), 0 2px 6px rgba(0, 0, 0, .55);
+}
+
+html.study.lantern .tbtn.on, html.study.lantern .tbtn.play.on, html.study.lantern .btn.toggled, html.study.lantern .chip.info, html.study.lantern .loop-range {
+    border-color: transparent;
+    background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--lit, var(--lamp)) 50%, transparent), transparent 75%), #2A1F16;
+    color: var(--flame);
+    text-shadow: 0 0 8px var(--lit, var(--lamp));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lit, var(--lamp)) 60%, transparent), 0 0 16px color-mix(in srgb, var(--lit, var(--lamp)) 40%, transparent);
+}
+
+html.study.lantern .tbtn.play.on { --lit: var(--play); }
+html.study.lantern .lcd .big, html.study.lantern .keys svg text { color: var(--lamp); fill: var(--lamp); text-shadow: 0 0 10px rgba(255, 170, 80, .5); }
+html.study.lantern .btn, html.study.lantern .chip { border-radius: 5px; }
+
+/* the piano keys in the room's colors */
+html.study.lantern .keys svg rect[fill="#D9D9D9"] { fill: rgba(255, 226, 190, .10); stroke: rgba(255, 226, 190, .12); }
+html.study.lantern .keys svg rect[fill="#1B1B1B"] { fill: #0A0806; stroke: rgba(255, 226, 190, .12); }
+
+/* launcher clips stay dark until they play */
+html.study.lantern .cell, html.study.lantern .lane-overlay { border-radius: 5px; background: color-mix(in srgb, var(--tc) 12%, #18120E); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 28%, transparent); }
+
+/* lit paper, with the notes in ink */
+html.study.lantern .tclip, html.study.lantern .cell.playing, html.study.lantern .cell.rec {
+    border: 0;
+    border-block: 2px solid rgba(36, 23, 13, .55);
+    border-radius: 5px;
+    background: radial-gradient(120% 140% at 50% 45%, color-mix(in srgb, var(--tc) 60%, var(--flame)) 35%, color-mix(in srgb, var(--tc) 60%, #120A05));
+    box-shadow: 0 0 18px -3px color-mix(in srgb, var(--tc) 70%, var(--lamp));
+}
+
+html.study.lantern .tclip.sel, html.study.lantern .cell.queued { box-shadow: 0 0 0 2px var(--flame), 0 0 24px rgba(255, 170, 80, .45); }
+
+html.study.lantern .tclip:not(.gen) .cap,
+html.study.lantern .cell:is(.playing, .rec) :is(.nm, .tri, .kind),
+html.study.lantern .tclip:not(.gen) .body svg :is(rect, circle),
+html.study.lantern .cell:is(.playing, .rec) .mini svg :is(rect, circle) { color: var(--ink); fill: var(--ink); fill-opacity: .8; text-shadow: none; }
+
+/* a flame, and an unbroken column of light */
+html.study.lantern .playhead { width: 2px; background: var(--flame); box-shadow: 0 0 8px var(--lamp), 0 0 22px rgba(255, 150, 60, .5); }
+html.study.lantern .playhead::after { inset: 0 -60px; background: linear-gradient(to right, transparent, rgba(255, 190, 110, .10), transparent); }

@@ -11,7 +11,13 @@
 // every track that records from it. Messages arrive on the service's thread and go straight to
 // the handler, which must be quick and thread safe: echo is sent from there so it isn't held up.
 
-#include "PlaybackEngine.h"
+#include <sal.h>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
 
 namespace midisequencer
 {

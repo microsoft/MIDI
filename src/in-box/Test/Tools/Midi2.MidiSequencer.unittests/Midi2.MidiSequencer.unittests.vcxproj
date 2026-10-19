@@ -69,7 +69,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-sequencer;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(ProjectDir)..\..\..\Inc;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-sequencer;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(ProjectDir)..\..\..\user-tools\theme-engine;$(ProjectDir)..\..\..\Inc;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /utf-8 /bigobj</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -115,6 +115,9 @@
     <ClInclude Include="TrackSoundTests.h" />
     <ClInclude Include="PatternTemplatesTests.h" />
     <ClInclude Include="GeneratorKindsTests.h" />
+    <ClInclude Include="GeneratorListenTests.h" />
+    <ClInclude Include="ThemeEngineTests.h" />
+    <ClInclude Include="TimelineViewTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -174,6 +177,9 @@
     <ClCompile Include="TrackSoundTests.cpp" />
     <ClCompile Include="PatternTemplatesTests.cpp" />
     <ClCompile Include="GeneratorKindsTests.cpp" />
+    <ClCompile Include="GeneratorListenTests.cpp" />
+    <ClCompile Include="ThemeEngineTests.cpp" />
+    <ClCompile Include="TimelineViewTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
@@ -205,8 +211,15 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SampleSequence.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\StudioSetup.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecentSequences.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\TimelineView.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\TrackSound.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PatternTemplates.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\ThemePalette.cpp" />
+    <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeColor.cpp" />
+    <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeSyntax.cpp" />
+    <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeStyle.cpp" />
+    <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeDefinition.cpp" />
+    <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeResolver.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ClockFollower.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />

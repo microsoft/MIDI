@@ -52,8 +52,6 @@ namespace midisequencer
 
         bool IsEmpty() const noexcept { return m_notes.empty() && m_events.empty() && m_open.empty(); }
 
-        size_t NoteCount() const noexcept { return m_notes.size() + m_open.size(); }
-
         int64_t StartTick() const noexcept { return m_startTick; }
 
         // Ends the take at endTick. Notes still held end there. The clip runs from the start of

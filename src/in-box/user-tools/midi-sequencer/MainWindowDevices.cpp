@@ -457,6 +457,7 @@ namespace winrt::midisequencer::implementation
 
             controls::Flyout flyout{};
             flyout.Content(scroller);
+            midiapp::UseMenuBackdrop(flyout);
             flyout.ShowAt(anchor);
 
             if (!summary.has_value())

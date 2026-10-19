@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer: softer shadows for Porcelain</title>
+<style>
+    body { margin: 0; padding: 28px 32px 48px; background: #18181A; color: #E8E6E1; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+    a { color: #7FC4EE; }
+    .back { font-size: 13px; margin: 0 0 10px; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 6px; }
+    p.lead { max-width: 1100px; font-size: 14px; line-height: 1.55; color: #BDBAB4; margin: 0 0 12px; }
+    code { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: #2A2A2D; padding: 1px 5px; border-radius: 4px; }
+    table { border-collapse: collapse; font-size: 13px; color: #BDBAB4; margin: 4px 0 18px; }
+    th, td { padding: 4px 14px 4px 0; text-align: left; }
+    th { color: #E8E6E1; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    figure { margin: 0; background: #222225; border-radius: 12px; padding: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); }
+    figure h2 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 18px; margin: 2px 0 8px 2px; }
+    figure h2 span { font-weight: 400; color: #9C9993; font-size: 14px; margin-left: 6px; }
+    figure img.full { width: 100%; display: block; border-radius: 6px; }
+    .label { font-size: 11px; color: #8E8B85; margin: 10px 0 4px 2px; }
+    .crop { overflow: hidden; border-radius: 6px; position: relative; }
+    .crop img { position: absolute; width: 1668px; max-width: none; }
+    .crop.transport { height: 58px; }
+    .crop.transport img { left: -13px; top: -82px; }
+    .crop.launcher { height: 145px; }
+    .crop.launcher img { left: -13px; top: -215px; }
+    .crop.timeline { height: 60px; }
+    .crop.timeline img { left: -830px; top: -300px; }
+    .pair { display: flex; gap: 8px; }
+    .crop.zoom { width: 380px; height: 132px; flex: 0 0 auto; }
+    .crop.zoom img { width: 3336px; }
+    .crop.zoom.keys img { left: -250px; top: -168px; }
+    .crop.zoom.pads img { left: -820px; top: -600px; }
+    figcaption { font-size: 13px; line-height: 1.5; color: #BDBAB4; margin-top: 10px; }
+    h2.section { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 22px; margin: 40px 0 8px; }
+</style>
+</head>
+<body>
+
+<p class="back"><a href="index.html">All the style studies</a> · <a href="porcelain-variations.html">Porcelain, dark, and the window color</a></p>
+<h1>Softer shadows for Porcelain</h1>
+<p class="lead">You picked C for dark Porcelain. Here it is carried over: it's now the default on every dark page, and light has the same idea, more gently. Each page is shown before and now, with keys and pads at twice their size. The candidates you chose from are further down.</p>
+
+<h2 class="section">Carried over</h2>
+<p class="lead"><b>Dark.</b> C's shadows are now in <code>porcelain-dark.css</code>, and dark aqua looks as it did when you picked it. Plain and plum came out deeper than aqua at first. Your aqua's deep shade was just outside sRGB, and Edge draws a blurred shadow in such a color about a quarter lighter than its alpha says. The shade now stays inside sRGB for every window color, at three quarters of C's strength, which is how C drew on aqua, so all three match. Also fixed: the dark pages had lost the glow on the track headers' LEDs.</p>
+<p class="lead"><b>Light.</b> The same idea, more gently, since dark was the bigger problem. The shadows are in the glaze's shade and more diffuse: about three quarters as deep at the edge, and reaching 12 px instead of 8 or 9. Light leaves out dark's 1 px contact shadow, which on a light surface read as a dark rim.</p>
+
+<table>
+    <tr><th></th><th>Keys</th><th>Pads</th><th>Overall</th></tr>
+    <tr><td>Dark: plain, aqua, plum</td><td>49%, 46%, 51%</td><td>63%, 57%, 59%</td><td>about half</td></tr>
+    <tr><td>Light: plain, aqua, plum</td><td>69%, 73%, 74%</td><td>74%, 77%, 81%</td><td>about the same, spread wider</td></tr>
+</table>
+<p class="lead">Each shadow at its deepest, as a share of before, in perceived lightness (OKLab) just below a key and a pad. Overall is the whole shadow, summed down to where it fades out.</p>
+
+<div class="grid">
+
+<figure>
+    <h2>Dark <span>in your aqua</span></h2>
+    <div class="label">Keys at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt="Before"></div><div class="crop zoom keys"><img src="shots/porcelain-2-dark-aqua.png" alt="Now"></div></div>
+    <div class="label">Pads at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt="Before"></div><div class="crop zoom pads"><img src="shots/porcelain-2-dark-aqua.png" alt="Now"></div></div>
+    <figcaption>As you picked it. <a href="porcelain-2-dark-aqua.html">The whole page</a> · <a href="shots/before-soft/porcelain-2-dark-aqua.png">before</a></figcaption>
+</figure>
+
+<figure>
+    <h2>Light <span>in your aqua</span></h2>
+    <div class="label">Keys at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-aqua.png" alt="Before"></div><div class="crop zoom keys"><img src="shots/porcelain-2-aqua.png" alt="Now"></div></div>
+    <div class="label">Pads at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-aqua.png" alt="Before"></div><div class="crop zoom pads"><img src="shots/porcelain-2-aqua.png" alt="Now"></div></div>
+    <figcaption>The shadows are a deep shade of the glaze. <a href="porcelain-2-aqua.html">The whole page</a> · <a href="shots/before-soft/porcelain-2-aqua.png">before</a></figcaption>
+</figure>
+
+<figure>
+    <h2>Dark <span>plain</span></h2>
+    <div class="label">Keys at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-dark.png" alt="Before"></div><div class="crop zoom keys"><img src="shots/porcelain-2-dark.png" alt="Now"></div></div>
+    <div class="label">Pads at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-dark.png" alt="Before"></div><div class="crop zoom pads"><img src="shots/porcelain-2-dark.png" alt="Now"></div></div>
+    <figcaption>Was deeper than aqua; now the same. <a href="porcelain-2-dark.html">The whole page</a> · <a href="shots/before-soft/porcelain-2-dark.png">before</a></figcaption>
+</figure>
+
+<figure>
+    <h2>Light <span>plain</span></h2>
+    <div class="label">Keys at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-no-well.png" alt="Before"></div><div class="crop zoom keys"><img src="shots/porcelain-2-no-well.png" alt="Now"></div></div>
+    <div class="label">Pads at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-no-well.png" alt="Before"></div><div class="crop zoom pads"><img src="shots/porcelain-2-no-well.png" alt="Now"></div></div>
+    <figcaption>The shadows are the porcelain's warm gray. <a href="porcelain-2-no-well.html">The whole page</a> · <a href="shots/before-soft/porcelain-2-no-well.png">before</a></figcaption>
+</figure>
+
+<figure>
+    <h2>Dark <span>in plum</span></h2>
+    <div class="label">Keys at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-dark-plum.png" alt="Before"></div><div class="crop zoom keys"><img src="shots/porcelain-2-dark-plum.png" alt="Now"></div></div>
+    <div class="label">Pads at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-dark-plum.png" alt="Before"></div><div class="crop zoom pads"><img src="shots/porcelain-2-dark-plum.png" alt="Now"></div></div>
+    <figcaption>Was deeper than aqua; now the same. <a href="porcelain-2-dark-plum.html">The whole page</a> · <a href="shots/before-soft/porcelain-2-dark-plum.png">before</a></figcaption>
+</figure>
+
+<figure>
+    <h2>Light <span>in plum</span></h2>
+    <div class="label">Keys at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-plum.png" alt="Before"></div><div class="crop zoom keys"><img src="shots/porcelain-2-plum.png" alt="Now"></div></div>
+    <div class="label">Pads at 2x: before, and now</div>
+    <div class="pair"><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-plum.png" alt="Before"></div><div class="crop zoom pads"><img src="shots/porcelain-2-plum.png" alt="Now"></div></div>
+    <figcaption>The shadows are a deep shade of the glaze. <a href="porcelain-2-plum.html">The whole page</a> · <a href="shots/before-soft/porcelain-2-plum.png">before</a></figcaption>
+</figure>
+
+</div>
+
+<h2 class="section">The candidates</h2>
+<p class="lead">You found dark Porcelain's shadows too dark and too deep, and chose from these three, tried on dark in your aqua, next to how it was. Each is a set of shadows in <code>porcelain-soft.css</code>. The close-ups are at 100% and at twice that.</p>
+
+<table>
+    <tr><th></th><th>Keys</th><th>Pads</th><th>Clips</th><th>Readouts</th></tr>
+    <tr><td>Before</td><td>20</td><td>19</td><td>20</td><td>18</td></tr>
+    <tr><td>A, lighter</td><td>11</td><td>11</td><td>11</td><td>9</td></tr>
+    <tr><td>B, lighter and more diffuse</td><td>9</td><td>9</td><td>12</td><td>7</td></tr>
+    <tr><td>C, B in the glaze</td><td>9</td><td>7</td><td>11</td><td>7</td></tr>
+</table>
+<p class="lead">How much darker than the surface each shadow gets at its deepest, in levels out of 255, measured against the same page with no shadows. The clips include the selected one, which sits highest.</p>
+
+<div class="grid">
+
+<figure>
+    <h2>Before</h2>
+    <a href="shots/before-soft/porcelain-2-dark-aqua.png"><img class="full" src="shots/before-soft/porcelain-2-dark-aqua.png" alt="Dark Porcelain in aqua, with the shadows before"></a>
+    <div class="label">Transport</div>
+    <div class="crop transport"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt=""></div>
+    <div class="label">Launcher</div>
+    <div class="crop launcher"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt=""></div>
+    <div class="label">Timeline, with a clip selected</div>
+    <div class="crop timeline"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt=""></div>
+    <div class="label">Keys and pads, at 2x</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt=""></div><div class="crop zoom pads"><img src="shots/before-soft/porcelain-2-dark-aqua.png" alt=""></div></div>
+    <figcaption>Black shadows, offset well down and to the right, at up to 55%.</figcaption>
+</figure>
+
+<figure>
+    <h2>A <span>lighter</span></h2>
+    <a href="porcelain-2-dark-aqua-soft-a.html"><img class="full" src="shots/porcelain-2-dark-aqua-soft-a.png" alt="Option A: lighter"></a>
+    <div class="label">Transport</div>
+    <div class="crop transport"><img src="shots/porcelain-2-dark-aqua-soft-a.png" alt=""></div>
+    <div class="label">Launcher</div>
+    <div class="crop launcher"><img src="shots/porcelain-2-dark-aqua-soft-a.png" alt=""></div>
+    <div class="label">Timeline, with a clip selected</div>
+    <div class="crop timeline"><img src="shots/porcelain-2-dark-aqua-soft-a.png" alt=""></div>
+    <div class="label">Keys and pads, at 2x</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/porcelain-2-dark-aqua-soft-a.png" alt=""></div><div class="crop zoom pads"><img src="shots/porcelain-2-dark-aqua-soft-a.png" alt=""></div></div>
+    <figcaption>The same shadows at about half the strength: your first idea, opacity alone.</figcaption>
+</figure>
+
+<figure>
+    <h2>B <span>lighter and more diffuse</span></h2>
+    <a href="porcelain-2-dark-aqua-soft-b.html"><img class="full" src="shots/porcelain-2-dark-aqua-soft-b.png" alt="Option B: lighter and more diffuse"></a>
+    <div class="label">Transport</div>
+    <div class="crop transport"><img src="shots/porcelain-2-dark-aqua-soft-b.png" alt=""></div>
+    <div class="label">Launcher</div>
+    <div class="crop launcher"><img src="shots/porcelain-2-dark-aqua-soft-b.png" alt=""></div>
+    <div class="label">Timeline, with a clip selected</div>
+    <div class="crop timeline"><img src="shots/porcelain-2-dark-aqua-soft-b.png" alt=""></div>
+    <div class="label">Keys and pads, at 2x</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/porcelain-2-dark-aqua-soft-b.png" alt=""></div><div class="crop zoom pads"><img src="shots/porcelain-2-dark-aqua-soft-b.png" alt=""></div></div>
+    <figcaption>About half the strength and half again the blur, a little closer to the surface, so things sit lower. A faint 1 px contact shadow keeps the edges crisp.</figcaption>
+</figure>
+
+<figure>
+    <h2>C <span>B, in the glaze: picked</span></h2>
+    <a href="porcelain-2-dark-aqua-soft-c.html"><img class="full" src="shots/porcelain-2-dark-aqua-soft-c.png" alt="Option C: B in the glaze's color"></a>
+    <div class="label">Transport</div>
+    <div class="crop transport"><img src="shots/porcelain-2-dark-aqua-soft-c.png" alt=""></div>
+    <div class="label">Launcher</div>
+    <div class="crop launcher"><img src="shots/porcelain-2-dark-aqua-soft-c.png" alt=""></div>
+    <div class="label">Timeline, with a clip selected</div>
+    <div class="crop timeline"><img src="shots/porcelain-2-dark-aqua-soft-c.png" alt=""></div>
+    <div class="label">Keys and pads, at 2x</div>
+    <div class="pair"><div class="crop zoom keys"><img src="shots/porcelain-2-dark-aqua-soft-c.png" alt=""></div><div class="crop zoom pads"><img src="shots/porcelain-2-dark-aqua-soft-c.png" alt=""></div></div>
+    <figcaption>As deep as B, but the shadows are a deep shade of your aqua instead of black, and the light from the top left a pale tint of it, so the color sits in the porcelain rather than under a gray film.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>

@@ -315,6 +315,16 @@ A chance melody's `settings` look like this:
 
 `type` is `euclidean`, `chanceMelody` or `arpeggiator`. `eachPass` is `same` or `changes`, and `noteLength` is a percent of a step. A ring has a `note`, `pulses` (how many hits), `steps` (1 to 64), `rotate` (how many steps later it starts), `velocity` (16-bit) and `chance` (percent). A chance melody has a `scale`, a `root` (0 is C), `low` and `high` notes, `busy` (about how many steps play, in percent), `keep` (the percent kept from the last pass, used only with `changes`), and `velocity` as the lowest and highest 16-bit values. `scale` is `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `harmonicMinor`, `majorPentatonic`, `minorPentatonic`, `blues` or `chromatic`. Each type writes only its own settings. The clip's `length` is how long one pass is.
 
+Section 28's generators (October 18) add these types and settings. Every melodic one writes `scale`, `root`, `low`, and `high`, plus `jump` (the largest jump in semitones) and `rootEnds: true` when they're set; a chance melody writes those two as well.
+
+- `life` and `lifeDrums`: `rule` (`life`, `highLife`, or `seeds`), `start` (`scatter` or `cells`), `density` (percent), `cells` as `[step, row]` pairs counted up from the bottom row (only with `cells`), `voice` (`lowest`, `highest`, or `all`), `births` (`plain` or `only`; an older file's `accent` plays like `plain`), `join`, `settled` (`startAgain`, `addCells`, or `hold`), `restartEvery` (passes, written when it's set), and for drums, `drums` as each row's note from the bottom up.
+- `learn`: `from` (`tune`, `clip`, or `words`), `tune` (0 Ode to Joy, 1 Frère Jacques, 2 Twinkle, Twinkle, Little Star), `memory` (how many notes back, 1 to 3), `keep` (the chance a pass repeats the one before), `learned` as `[position, gap, hold]` triples (scale steps from the key note, seven to an octave, then steps), with a fourth number, how hard the note was played from 1 to 5, when the clip said, `learnedFrom` (the clip's name), and `text`.
+- `words`: `text`. `evolve`: `busy`, `weights` (five percents: small steps, rise and fall, syncopation, motif, ending on the root), and `mutations`. `infinity`: `busy`, `interval` (scale steps per step of the series), and `voices`.
+- `lSystem`: `axiom`, `grammar` as an object from each symbol to what it becomes, and `angle` in degrees. `changeRinging`: `bells`, `method` (`plainHunt`, `plainBob`, or `grandsire`), and `handstrokeGap`.
+- All of them (October 19): `velocity` as the lowest and highest 16-bit values, as a chance melody has, and `velocityBy`: `steady`, `beat`, `swell`, or `random` for any of them, or the type's own: `age` or `crowding` (Life), `surprise` or `learned` (Learn), `speech` (Words), `evolved` (Evolve), `fourths` or `distance` (infinity), `climb` or `depth` (L-system), and `lead`, `strokes`, or `treble` (change ringing). Without it, a clip plays its type's first.
+- Listening (October 19, section 29), for `learn`, `life`, `lifeDrums`, `evolve`, and `changeRinging`: `listen` (`clip` or `track`), `listenId`, and `keepListening: true` when it's on. Evolve and change ringing also keep what they learned once as `learned` and `learnedFrom`, as Learn does; Life keeps the cells it heard in `cells`, and `learnedFrom`. Evolve writes `soundsLike` (percent, 70 when it's missing).
+- A clip whose seed was typed as words keeps them as `seedWords`, next to `seed`.
+
 **Rules carried over from the other tools:** a file from an older version is converted with the original copied to an Earlier versions folder (MIDI Patchbay's rule). A file from a newer version is opened read-only rather than saved over, so newer settings aren't lost (the guard MIDI Patchbay and MIDI Glass got in October). A sequence or MIDI file can arrive by double-click from the internet, so every count and length in it is capped and checked, the way the SMF reader already does it.
 
 **Undo.** MIDI Patchbay keeps a whole copy of the patch per undo step. That won't scale to a sequence with a hundred thousand notes, so the sequencer undoes by change: an edit to notes records only the notes it took out and put in, and small things (a track's settings, the tempo map) keep a before and after copy. The history stays under a memory ceiling by forgetting its oldest steps, but always keeps the newest.
@@ -768,3 +778,353 @@ The ask: keep the last 100 sequences for an Open recent popup, newest first, wit
 - Sound names from a device that doesn't speak MIDI-CI, such as from a file of names.
 - A meter for what's played in live, or one that knows how long the sound rings. The second can't be done from MIDI alone.
 - Asking every device for its names at once. Each track asks on its own, and only when someone selects Ask.
+
+## 27. Update, October 18: Shift while dragging, starter patterns, hearing steps, clip symbols, and spin buttons
+
+You asked for five changes after using the app: Shift to keep a drag level, starter patterns for both kinds of pattern, a way to hear drums while adding steps, a different symbol for each kind of pattern and generator, and no spin button pop-up with the mouse. You also asked whether we should ship our own icons, and for more generator ideas. This section covers all of them.
+
+### Shift while dragging
+
+Holding Shift during a drag keeps the vertical value, so only the position changes. It's read on every move, so pressing or letting go of Shift partway through a drag works too.
+
+- **Clips** stay on the track they came from. Left and right still move them along the timeline, between that track's launcher slots, and between the timeline and the launcher. The rows don't scroll up or down while Shift holds a clip.
+- **Tempo changes** keep their tempo.
+- **Notes in the piano roll** keep their pitch. Pressing Shift as you click a note still adds it to the selection.
+- **Automation points**, on a track's lanes and on a clip's own lanes, keep their value. You didn't ask for these, but they're the same gesture on the same kind of line as a tempo change, and it would be odd if Shift worked on one and not the other.
+
+### Starter patterns
+
+**Templates** sits in a pattern's header, next to Vary. It lists the templates for the kind of pattern that's open, in groups:
+
+| Kind | Group | Templates |
+| --- | --- | --- |
+| Drums | Drum machine classics | Four on the floor, Rock, Disco, Funk, Shuffle, Breakbeat |
+| Drums | Electronic | House, Techno, Electro, UK garage (2-step), Drum and bass, Dubstep |
+| Drums | Hip hop | Boom bap, Lo-fi hip hop, Trap, Drill |
+| Drums | Latin, Caribbean, and African | Reggaeton, Afrobeats, Bossa nova, Reggae one drop, Son clave |
+| Melodic | Basslines | Acid techno, Acid house, Rolling techno, Offbeat house, Disco octaves, Synthwave eighths, Funk, Electro, Trance gallop, UK garage, Dub, Trap 808, Walking bass, Minimal techno |
+| Melodic | Sequences and arpeggios | Berlin school, Up and down arpeggio |
+
+- **They use what patterns already do.** Accents, ghost notes, and soft hits are velocities. The trap hat rolls are ratchets. The lo-fi hats play by chance, so the loop doesn't repeat exactly. The shuffle styles use swing, or eighth-note steps swung to triplets. The acid lines use the melodic pattern's accent and slide rows, the way a TB-303 line does.
+- **Melodic templates are in a key.** The menu starts with **Key**, C to B, kept while the window is open. The root goes in the octave nearest the template's C (C1 for basslines, C2 for sequences), so B is just below C1 rather than almost an octave above it.
+- **Nothing changes the tempo.** Each template's tooltip says what the style is usually played at.
+- **A pattern with steps asks first.** The dialog offers **Replace**, **Add on top**, and **Cancel**. Replace takes the template's steps, step size, swing, and lanes, and keeps the pattern's channel, because the template doesn't know which instrument plays it. Add on top keeps the pattern's step size, swing, and channel. The template's steps move to the pattern's step size by their time, each drum goes onto the lane with the same note or becomes a new lane, and where both have a step, the template's wins. The pattern gets longer if the template is, up to 64 steps. Either way it's one undo step.
+- **Written as text.** A drum lane is a line of characters, one a step: "x" a hit, "X" an accent, "o" soft, "g" a ghost note, "?" half the time, a digit for a ratchet, and "." a rest. A melodic line is a word a step: semitones from the root ("0", "12~" to slide, "-5!" for an accent), "." for a rest, and "-" to hold. It reads like a drum machine's grid, so a change to one is easy to review.
+- **As built.** PatternTemplates.h/.cpp holds the templates and the code that makes and overlays them, with no XAML, so PatternTemplatesTests checks that every template is well formed (lane lengths, characters, notes, one bar each, every word understood), that a drum template makes its lanes and plays, that a melodic one follows the key and holds, accents, and slides, and that Add on top keeps what was there, keeps time across step sizes, and works on melodic patterns. MainWindowPatternTemplates.cpp has the menu and the question.
+
+### Hearing steps
+
+There was no way to hear a step while adding it. Now **Hear steps**, a speaker toggle in the pattern header, is on by default and remembered on the PC. Turning a step on, with the mouse or with Space or Enter, plays its note on the track's destination. In a melodic pattern, the up and down arrow keys play the step's new note.
+
+- **The right channel.** The note is on the pattern's channel unless the track's destination sets one, the same as playback, so a drum pattern on channel 10 sounds like drums. The piano roll's audition uses channel 1 when a destination keeps each message's channel, so the step preview doesn't reuse it.
+- **No timer.** The note off is sent with the note on, timestamped 250 ms later, so the service sends it on time and the app doesn't have to remember the note.
+
+### Clip symbols
+
+Each kind of pattern and generator now has its own symbol: in the corner of its launcher slot, in the menus that make clips, and in the editor's header, which used to show the notes symbol for every kind.
+
+| Kind | Symbol |
+| --- | --- |
+| Notes clip | Three bars, drawn (unchanged) |
+| Drum pattern | GridviewGroup, F207 |
+| Melodic pattern | MusicNote, EC4F |
+| Euclidean rhythm | The ring with three hits the launcher already drew, now also a PathIcon in the menus |
+| Chance melody | Shuffle, E8B1: notes picked by chance |
+| Arpeggiator | SignalBars4, E86F: notes stepping up |
+
+You weren't sure about the chance melody and the arpeggiator, so those two are my picks. I drew the candidates side by side. The others I looked at were a question mark (F142) and a dotted ring (F16A, too close to the Euclidean ring) for chance, and Sort (E8CB) and Equalizer (E9E9, already the mixer's symbol) for the arpeggiator. A die would be the clearest symbol for chance, but the font doesn't have one, and F207 already looks like a die showing four.
+
+**F207 is on every supported PC.** Microsoft added it, with 59 other glyphs, to its Segoe Fluent Icons list only on February 19, 2026, after Windows 11 25H2 shipped, so I first had the app fall back to GridView (F0E2) when the font lacked it. You checked a 25H2 PC on October 18, and its Segoe Fluent Icons has F207. 25H2 is the oldest Windows these tools support, so the app uses F207 directly and the fallback is gone.
+
+**New clip matches too.** New clip and New clip here showed a plus. They now show the notes symbol, as a notes clip's slot does, so every item that makes a clip shows the symbol its slot will have.
+
+### Spin buttons and the mouse
+
+Customers found the Compact NumberBox pop-up (large up and down buttons beside the box when it gets focus) confusing with a mouse, and it covered what was next to the box. WinUI's NumberBox opens the pop-up when it gets focus, and only if it's in Compact mode at that moment. A pointer always enters a box before it presses it, so the mode can follow the device. midiapp::UseTouchSpinButtons, in midi-app-shared/SpinButtons.h, sets Compact when a finger or a pen enters or presses the box, and Hidden for a mouse. The keyboard gets no pop-up either.
+
+- **No setting is needed**, because every pointer event says which kind of device sent it.
+- **The mouse wheel and the arrow keys** still change a box that has focus, and the docs say so.
+- **Not Inline for the mouse.** Inline buttons always show, but they need a column about 72 pixels wide, and these boxes are 92.
+- **Where.** All eight Compact boxes in the sequencer use it. The other apps still set Compact. Each can switch with one line per box.
+
+### Pop-ups in the window's color
+
+You asked for the flyouts, lists, and tooltips to match the context menus, which take on the color you pick in Appearance.
+
+- **Menus** get WinUI's acrylic system backdrop from their presenter style, with a see-through background. A Flyout and a ComboBox's list get a plain gray fill instead, and a tooltip a gray of its own.
+- **Flyouts** now take the menus' backdrop and background, through midiapp::UseMenuBackdrop in midi-app-shared/PopupBackdrop.h. A system backdrop needs a pop-up that's a window of its own, so they are, as menus are, which lets them reach past the window's edge. The Appearance flyout opens toward the middle of the window, so it doesn't.
+- **Lists.** A ComboBox's list can't show a backdrop: WinUI draws the backdrop of a pop-up inside a control's template offset by the control's place in the window, so it never shows (microsoft-ui-xaml issue 10087). Instead, midiapp::UseMenuBackdropForLists fills every ComboBox list, AutoSuggestBox suggestion list, and NumberBox spin pop-up with the color the menus' acrylic shows over the window, worked out with WinUI's own acrylic recipe and the menus' settings: a #021B20 window gives #1C3135, against #1C3138 measured. The window's color sets it, so it follows the Appearance flyout. One call covers every list, in flyouts and dialogs too.
+- **Tooltips** can't take a backdrop, so they take your color, lifted a little toward white as the menus' acrylic lifts it, through the app's light and dark theme dictionaries. High contrast keeps its own colors, and so does a window with no color picked.
+- **Only the sequencer** does this so far. Another tool can opt in with two lines.
+
+### The header's number boxes
+
+The Steps, Swing %, and Bars boxes were WinUI's standard 14-point, 32-pixel number boxes, beside 12-point, 26-pixel lists. SmallNumberBoxStyle gives them the lists' font size. The text box inside a NumberBox takes its height and padding from TextControlThemeMinHeight and TextControlThemePadding, so the editor's header sets those, as the Euclidean rings' table already does.
+
+### Our own icons: a font, or SVG files?
+
+My recommendation is **SVG path data, not a font**, for the symbols that are ours, and Segoe Fluent Icons for the standard commands (play, stop, delete, and rename), so the apps still look like Windows.
+
+- **Both of the places we draw icons take path data.** XAML's PathIcon takes it as Data, and Win2D can draw the same path, as a CanvasGeometry or with CanvasSvgDocument. One string per icon serves the launcher, the menus, and the header. The Euclidean ring is already done this way.
+- **No build step and no extra file.** A font needs a tool to build it from the drawings (FontForge is GPL, so it would have to be one of the MIT-licensed builders), a .ttf in every installer, and care to load a private font in an unpackaged app. Path data is text in the source, so a change shows up in a diff.
+- **We decide when a symbol changes.** A system font can gain or change glyphs in a Windows update, so each glyph we pick has to be checked against the oldest Windows we support, as F207 had to be.
+- **When a font would win:** hundreds of icons, or icons inside lines of text. We have neither.
+
+**Decided (October 18): yes, later.** Converting the current icons to purpose-designed SVG symbols is an open item, not started. You'll ask for help designing them. The plan is still a midi-app-shared/MidiIcons.h, with each symbol as a path on a 16-unit square, a MakePathIcon for XAML, and a DrawIcon for Win2D, starting with the symbols the comps draw: the Euclidean ring, notes, piano keys, the metronome, and the drum grid.
+
+### More generators to consider
+
+In the order I'd look at them:
+
+1. **Shapes for automation lanes.** Fill a lane with a sine, triangle, saw, square, or random steps, in time with the tempo: a filter sweep every two bars, or a trance gate on volume. MIDI Patchbay's LFO code is already shared (LfoWave and LfoSweep), so this is the cheapest.
+2. **Chords.** A key, a progression (such as I-V-vi-IV, ii-V-I, or i-VI-III-VII), a voicing, and a rhythm (pads, stabs, offbeat house stabs, or a strum). I think it's what people who don't play a keyboard need most, and it goes with the basslines.
+3. **A bassline that follows chords.** Root, fifth, and octave patterns that follow another track's chords, the way the arpeggiator follows another track's notes.
+4. **Fills.** A drum fill on the last bar of every 4 or 8, from a density setting, like the fill button on a drum machine.
+5. **Polyrhythm.** Lanes in different subdivisions, such as 3 against 4 or 5 against 4. A Euclidean ring spreads hits over steps; this spreads steps over the bar.
+6. **A melody learned from a clip.** It learns which note tends to follow which (a Markov chain) from a clip you give it, then wanders in that style. Section 4 already lists it. Its provenance is algorithmic and based on that clip, because nothing is trained on anyone else's music.
+7. **MIDI 2.0 tunings.** A chance melody or arpeggiator in just intonation, maqam, or gamelan scales, using each note's pitch attribute (Pitch 7.9). Only a MIDI 2.0 destination can play it, such as the General MIDI Synth in Windows, which makes it a good showcase.
+8. **A bouncing ball, and a looping random line.** Repeats that speed up or slow down like a dropped ball, and a short random line that changes a little each pass, which Eurorack players know from the Turing Machine module. The second could be a mode of the chance melody.
+
+Your follow-up (October 18): the lane shapes, chords, and a bassline that follows chords may come later as effects on what a track sends, rather than as clips. Section 28 has more ideas for clips.
+
+## 28. Proposal, October 18: clip generators that grow, learn, and spell
+
+You asked for clip generators besides the Euclidean rhythm: something based on the Game of Life where each pass grows from the last, a Markov chain like the one in Xinwan Wang's "A Comprehensive Study on Algorithm-Based Music Generation" (ICMLCA 2023), perhaps learning from text someone types, and rules for key, scale, and octaves in every melodic generator. Nothing here uses a trained model. Each one is a short set of rules a person can read, and, like every generator here, a pass depends only on the clip's seed and the pass number (section 4).
+
+### Key and range, for every melodic generator
+
+The chance melody already has a key, a scale (11 of them), a lowest note, and a highest note. They become one shared group, **Key and range**, in every melodic generator. The generators below work in steps of the scale, not semitones, so every note they play is in the key without any correcting. Two more rules join it, off by default:
+
+- **Largest jump**, an octave unless you pick less, so a line stays singable.
+- **Start and end on the root**: a pass's first and last notes land on the key's root, which makes a loop sound finished.
+
+A generator that learns from notes you give it also gets **Notes outside the key**: move each to the nearest note in the key (the default), or keep it.
+
+### Life: a melody that grows like the Game of Life
+
+- **The board.** A grid whose columns are the clip's steps and whose rows are the notes of the key and range, lowest at the bottom. A drum version has a row for each drum, like a pattern's lanes.
+- **Each pass is the next generation.** Conway's rule is the default: a live cell with two or three live neighbors stays, an empty cell with exactly three is born, and every other cell is empty next time. Two other rules give different characters: HighLife (also born with six) runs a little busier, and Seeds (born with two, nothing stays) flickers, since every cell lasts one pass. The edges wrap, so a glider walks off the end of the bar and comes back in at the start, and off the top into the bass.
+- **The start.** Drawn on the grid like a pattern, filled from the seed at a density you choose, or one of a few named starts: a glider, a blinker, or the R-pentomino. On an open board the R-pentomino keeps changing for 1,103 generations, but on a one-bar board of 16 steps it settles after 67.
+- **Cells into notes.** Each live cell plays its row's note on its step. **Notes at once** keeps a step to its lowest, its highest, or up to a number of notes, so it can be a line or chords. Cells born this pass can be accented, or be the only cells played, which gives a sparse line that follows the board's growth. Live cells next to each other in a row can join into one longer note.
+- **Keeping it going.** Small boards settle. In a quick test of random starts on a one-bar board of 16 steps, half had settled within 40 to 150 passes under Conway's rule, depending on the density and the number of rows. At 120 BPM that's 1 to 5 minutes. Up to 15% died out, and under Seeds none settled within 5,000 passes. **When it stops changing** can start again, add a few cells from the seed, or hold the last board. **Start again every** so many passes makes the whole growth repeat, so it fits a song's sections.
+- **Cost.** A 16 by 24 board stepped ten thousand times is a few million cell checks, worked out when a pass is first needed and kept.
+
+### Learn: a Markov melody from your own notes
+
+Wang's Markov chain counts which note follows which in a piece, then walks those counts to make new notes. It needs something to learn from, so this one learns only from what the customer gives it:
+
+- **A clip** in the sequence, notes or pattern. It learns two things separately: moves in steps of the scale, so it can play them in another key, and note lengths.
+- **Words**, below.
+- **How much it remembers:** one, two, or three notes back. One wanders furthest; three stays close to the source.
+- The study points out that a Markov chain has no sense of longer form. **Keep from the last pass** (the chance melody's) holds most of a phrase while a few notes change, and **Phrase length** repeats a one- or two-bar phrase, with changes, inside the clip.
+- The clip keeps the counts it learned, not a link to the source, so the result doesn't change when the source does until you select **Learn** again. Saved counts also keep the file whole on another PC.
+
+### Words: a melody from typed text
+
+Two separate ideas, both small:
+
+1. **Seed from words.** The seed box takes words as well as a number, for every generator. "Midnight drive" always gives the same passes, on any PC. The words become the clip's seed through a fixed hash, and the clip keeps the words, so the box still shows them.
+2. **Spell the words.** Letters become notes, much as composers have spelled names in music for centuries: the letters run up the scale, A on its first note, B on the second, and so on, starting again after the scale's last note. Each letter fills one step of the clip, a repeated letter holds its note, a space is a rest, a comma is a longer rest, a period ends the phrase on the root, a question mark ends it on the fifth, and a capital letter is accented. Played as it is, it's the words in music. With **Learn** on, the words are the source of a Markov melody, so they set the style and each pass varies it.
+
+### Also worth considering
+
+- **L-system (grows like a plant).** A short rewrite rule, such as A becomes AB and B becomes A, applied over and over, grows a string of letters that never repeats exactly but keeps echoing itself. Each letter is a move up or down the scale, a held note, or a rest, and each pass plays the next part of the string. (Restarting the string each pass wouldn't work: each new string starts with the one before, so a clip cut to length would stop changing after a few passes.)
+- **Evolve (a genetic algorithm).** Each pass is the best of several changed copies of the last pass, scored by plain rules like the study's: small steps more often than leaps, a line that rises and falls, some syncopation, a motif that comes back, and an ending on the root. You weight the rules. Nothing is learned from other music.
+- **Infinity series.** Per Nørgård's number rule makes an endless melody that hides copies of itself: every second note plays the whole melody upside down, and every fourth note plays it as it is. It's one line of arithmetic, placed in the key and range, and each pass plays the next part.
+- **Change ringing.** Bell ringers play their bells in a new order each time round, following rules called methods, such as Plain Hunt and Plain Bob. Here the bells are four to eight notes of the key. Each pass plays the next few orders, no order comes twice, and after the last one the notes are back where they started.
+
+### Provenance
+
+All of these are algorithmicMedia (section 13). One that learned from a clip names that clip as its source, and one made from words keeps the words, so About this sequence can say where it came from.
+
+### Decided (October 18)
+
+You answered: all of them, Life first (melodic, then drums), then Learn and Words, then Evolve, the infinity series, L-systems, and change ringing. You asked for panels that are engaging and fun, not data entry and not much explanatory text, with drawings like the Euclidean rings wherever there's something to show.
+
+### As built (October 18)
+
+- **One engine file for each family**, free of XAML like the rest of the model: GeneratorKinds.h (the shared API and the key and range rules), GeneratorLife.cpp, GeneratorLearn.cpp (Learn and Words), GeneratorEvolve.cpp, and GeneratorStreams.cpp (the infinity series, L-systems, and change ringing). ForEachGeneratorNote sends the new types to GeneratedPass, which keeps recent passes, since playback asks for each pass in small pieces.
+- **Generators that build on the pass before** (Life and Evolve) keep their latest pass and one every 32 or 64 passes, so playing on is one step a pass and jumping back starts from the nearest kept pass. They stop at pass 20,000, about 11 hours of a one-bar clip at 120 BPM, and play that pass from then on.
+- **Life** treats a board as settled when it's empty or the same as one or two passes before (still, or blinking). Adding cells drops in a glider or an R-pentomino where the seed says. Joined cells play one longer note. The drum version's rows default to kick, snare, clap, closed and open hi-hats, two toms, and a ride, on channel 10.
+- **Learn** works out a clip's key with Krumhansl and Kessler's key profiles, then learns each note as steps of that key's scale, so it plays in whatever key the generator is in. It keeps the melody's highest note where there are chords. Notes and rhythm are two chains with the same memory, and the learned notes loop, so every run of notes has a next one. The three tunes built in are in the public domain.
+- **Words**: a seed typed as words is FNV-1a over the words in lowercase, so it's the same on every PC and the case doesn't matter. Up to eight hex digits are still a number.
+- **Evolve** always moves on to the best of the eight copies, even when it scores lower than the pass before, so it keeps changing.
+- **L-systems** grow until the melody is at least 3,000 steps long, at most 12 times. Each step of the turtle is a step of the melody, and its height is the note, reflected back into the range. The six shapes are the dragon curve, the Hilbert curve, a Koch curve, a plant, the Sierpiński triangle, and the Cantor set (a rhythm on one note).
+- **Change ringing** reads methods as place notation. Grandsire on an even number of bells rings the odd number below it, with the last bell covering. The tenor is the key's root, and the other bells go up the scale from it.
+- **The panels**: each puts a drawing that plays along on the left, its own chips in the middle, and the key and range with **Make notes** in a third column, which moves under the chips when the editor is narrow. The key and range is a keyboard whose lit part you drag, with number boxes beside it for the keyboard and screen readers. Life's board is drawn on directly, with a strip of the passes under it to select and Start from this pass. Learn draws the moves it learned round a circle, Words writes each letter over its note, Evolve draws the eight copies like a family tree with a line of the score climbing, the infinity series lights every fourth dot (where it hides itself), an L-system draws its turtle, and change ringing draws the method's blue line.
+- **The type picker** is a grid of tiles in three groups (rhythms, melodies, and what plays along), each with its symbol, in a flyout wide enough that it never scrolls sideways. The timeline's and the launcher's menus put every generator under one **New generator** submenu in the same groups, which replaced the three generator items they had.
+- **Symbols**: Words is Font (E8D2) and change ringing is Ringer (EA8F), from Segoe Fluent Icons. The others are drawn from dots, rings, lines, and boxes in ClipIcons.cpp, which give both the PathIcon's markup and the launcher's Win2D drawing: a glider for Life, a glider of rings (drum heads) for Life drums, three joined notes for Learn, a twist for Evolve, two rings for infinity, and a branching stem for L-systems. They're stand-ins until the purpose-designed SVG symbols in section 27.
+- **Tests**: GeneratorKindsTests (22): a blinker blinks, a glider comes home after 704 passes on a 16 by 11 board, an R-pentomino settles on pass 70, Learn's moves are all moves the tune made, a G major clip learns as G major, the key rules hold, seeds from words match on every PC, spelling, Evolve picks its best copy and its score climbs, the series and its self-similarity, the L-system shapes, every course's length with no row twice, and the file round trip, including damaged files.
+
+### Velocity, as built (October 19)
+
+You asked what these generators could add to set velocity inside a range you choose. Each now has a **Velocity** section in its third column, under the key and range:
+
+- **The range** is the clip's lowest and highest velocity, 50% to 95% unless you change it, drawn as a band behind the pass's notes, each a stem as tall as it's loud. Drag the band's top or bottom edge, or its middle to move it. Scroll moves it 10%. Dragged edges land on whole percents, and number boxes give the same edges for the keyboard and screen readers.
+- **The shapes**: each generator's own come first, then four they all share:
+  - **Steady** (every note in the middle of the range), **On the beat** (counted from the pass's start in 4/4: the bar's first step loudest, then each beat, then each half beat), **Swell** (rising to the middle of the pass, then falling), and **Random** (from the seed, so it plays the same each time).
+  - Life and Life drums: **By age** (a cell is loudest the pass it's born and softer over its next three, which gives drums ghost notes) and **By neighbors** (louder the more crowded).
+  - Learn: **By surprise** (how often the source made each move from the note before it, counted one note back whatever the memory: its usual moves soft, its rare ones loud) and **As learned**, a third chain beside the notes and the rhythm, from how hard the clip it learned from was played, in five levels. As learned shows only after learning from a clip.
+  - Words: **As spoken** (each word's first letter stressed, rising through a sentence, capitals and "!" hardest).
+  - Evolve: **Evolved** (each note's loudness mutates with it, starting with the downbeats louder; the rules don't score it).
+  - The infinity series: **Every fourth** (the notes on every fourth step, which play the series again) and **By distance** (from the middle note).
+  - L-systems: **Climbing** (a note above the one before louder, one below it softer, so the melody swells as the turtle climbs) and **By branch** (softer the deeper the branch). By branch shows only for rules that branch, such as the plant's, or while it's in use.
+  - Change ringing: **Lead bell**, **Hand and back** (handstroke rows louder), and **Treble**.
+- **How**: each generator works out a loudness from 0 to 1 and writes it as a velocity in the default range. GeneratedPass then moves it into the clip's own range, or replaces it with a shared shape. Life's **New cells** row lost **Louder**, which By age replaces.
+- **The file** keeps `"velocity": [low, high]` and `"velocityBy"` for these types, and a learned note's level as a fourth number. A clip saved before this gets its type's first shape, so it plays with more light and shade than it did.
+- **Tests**: seven more in GeneratorKindsTests, 29 in all: every shape stays in its range and plays the same again, the shared shapes, Life's new cells loudest, Learn's loud and soft as learned and by surprise (a built-in tune isn't one level throughout), Words' stress, the bells' three shapes, and an L-system climbing and branching.
+
+## 29. Update, October 19: generators that listen to another clip or a track
+
+You asked whether the generators that learn from a song could take another track or a generator as their input, for "some real fun chaos." You decided:
+
+- **Both ways, as a choice on the clip.** Learn once, as Learn does now, or **Keep listening**: each pass learns again from what the source played during the pass before, so it changes as the source does, even when the source is another generator.
+- **The source can be any clip** (notes, a pattern, or a generator) **or a whole track.**
+- **Loops are allowed.** A can listen to B while B listens to A, or to the track A plays on. Each hears what the other played on the pass before, so it stays repeatable, and a jump far ahead works through the passes before it, as Life and Evolve do.
+- **All four generators that can use it get it, Learn first:** Learn learns from it; Life drops the notes it heard onto the board as new cells; Evolve gets a **Sounds like** rule that favors copies close to what it heard; and change ringing rings the notes it heard as its bells.
+- **How a source is heard.** A clip is heard **side by side**: pass n hears what that clip would have played during pass n − 1, as if both started together, so it's the same on the timeline, in the launcher, and in an export. A track is heard **where the listener plays**: whatever the track played during the listener's last pass, from its timeline or from a clip launched on it. An export hears each track's timeline. The first pass, or a pass that heard fewer than two notes, plays from what the clip learned last.
+
+### Design
+
+- **One source for every generator**: `listen` (a clip or a track), its id, and `keepListening`, in GeneratorSettings. What Learn learned once stays in `learned`, and every listening generator starts from it. Choosing a source learns once straight away, so there's always something to start from; **Learn** learns it again after the source changes.
+- **Hearing uses the one render path.** A clip is rendered as if placed at tick 0 and looping, and a track is rendered as it is, so a listener hears exactly what plays, including chances, patterns, and other generators. Learned notes are worked out from what's heard with the same key finding as learning from a clip.
+- **Kept results.** A pass's result depends on what it heard, so what's heard is kept by a fingerprint of the listener and of everything it can hear: the source's settings and notes, and for a track, its placements and their clips, followed through the whole listening graph. Learn's own results are kept by its settings with the notes it heard, as now.
+- **Loops without deep recursion.** In a loop, before a pass is worked out, the passes before it that aren't kept are worked out in order, oldest first, so each one finds the pass it needs already kept. A depth limit stops anything else from running away, and a pass past the limit hears nothing.
+- **Playback** passes the hearing in with the render options, like the arpeggiator's held keys. A track source in the launcher is heard as it played there.
+
+### As built (October 19)
+
+- **Learn and change ringing** learn afresh each pass from what they heard. Change ringing rings the source's most played notes (ties go to the one heard first), placed in its key and range the way Learn places learned notes, filled from its own bells when it heard fewer, highest first.
+- **Life**, learning once, drops one pass of the source onto its start board: a clip's first pass, or a track's first pass that plays anything. Each note's step is its column, and its row is the row whose note it is, or the nearest, once it's moved an octave at a time into the rows' range, so a kick lands on the kick row. They're ordinary cells, so you can tap them off. Keeping listening, the notes heard before each pass land on that pass's board, after the step, as new cells.
+- **Evolve** starts from what it learned, and a sixth rule, **Like what it hears** (`soundsLike`, 70 by default), scores each copy half on rhythm (of the steps either plays, how many both play) and half on pitch (how near the notes are where both play, an octave of scale steps being as far as it counts). The drawing outlines what it's aiming for over the pass on top. Keeping listening, each pass aims at what was heard before it, or at what it learned when it heard fewer than two notes.
+- **Keep listening** turns on **Changes** each pass for Life and Evolve, since they hear only between passes.
+- **Carrying what was heard.** Life and Evolve depend on every pass before, so they step with their lock held and hear the next 32 passes with it let go: hearing plays other clips, which in a loop can be this one. A board or a melody is kept by the listener, a print of everything it can hear, and, for a track, where its first pass starts. Playback's live hearing leaves out what's launched, so a board carries on through launches and loop cycles instead of starting over, and a pass more than 64 past what was worked out steps the earlier ones without hearing, so starting partway through a song doesn't stall playback.
+- What's heard is kept both ways: as notes on the listener's steps, for Life and Evolve, and as learned notes, for Learn and change ringing.
+
+## 30. Proposal, October 19: style studies
+
+You asked for a handful of light and dark looks that stay familiar but don't look like every other agent-built DAW, with the soft-shadow hardware look in mind. The contra screenshots share flat navy or charcoal panels, clips filled with a tint of their track's color, a glowing stripe at the left of each track header, and pill chips everywhere.
+
+The studies are CSS over the main comp, so they show the real layout: open `style-studies/index.html`, or the shots in `style-studies/shots/`. `style-studies/make.ps1` builds each page and captures it with Edge.
+
+| Study | | The idea |
+|---|---|---|
+| **Porcelain** | light | One warm gray material. Every control is a key pressed out of it, lit from the top left, so shadows alone define it, as on the OP-1. Lanes are grooves, color only appears as small caps, and the transport is round keys on a raised deck. |
+| **Aluminum** | light | Brushed plates with a graphite strip of domed keys and black readouts. M, S, and R are graphite keys with LEDs, and the launcher is a graphite pad bank. |
+| **Vellum** | light | Paper and ink: Sitka for names, a ruled timeline, clips as watercolor washes, one vermilion accent, and section markers as rehearsal marks. |
+| **Clay** | dark | Porcelain's recipe in violet charcoal: raised plates in carved slots, track color as small glowing rings, and a ring of light around a key that's on. |
+| **Lantern** | dark | Paper lanterns in a dark room: one warm pool of light, clips as lit paper with their notes in ink, launcher clips that stay dark until they play, keys that light up from inside, and a flame for the playhead. |
+| **Ink and Gold** | dark | Graphite and ivory with one gold for what's playing, what's selected, and the position, plus faint film grain. |
+
+Two rounds of review, with fixes after each, ranked Porcelain first and Clay, its dark twin, second as the best fit for what you described, then Aluminum, Ink and Gold, and Vellum. Lantern began as blue glass and neon, which read as the contra look, so it became warm paper lanterns instead.
+
+**What each takes in WinUI 3.** The arrange view, launcher, and editors are already drawn with Win2D, so most of a style is colors in `Palette` plus a few drawing changes. The XAML around them needs its own resources.
+
+- **Shadows that define controls (Porcelain, Clay)** need two shadows per shape, a light one up and to the left and a dark one down and to the right, and pressed keys need inner shadows. In Win2D that's a blurred nine-slice bitmap per corner radius, drawn once and stretched, so hundreds of clips stay cheap. XAML buttons get the same from a Composition `DropShadow` pair behind each one, or from a Win2D canvas behind the transport.
+- **Brushed metal and domes (Aluminum)** are gradient brushes, including WinUI's `RadialGradientBrush`, plus a tiled texture.
+- **Paper and washes (Vellum)** are a texture baked once with Win2D's `TurbulenceEffect` and a radial gradient per clip. Sitka ships with Windows.
+- **Glow (Lantern)** is a blurred nine-slice like the shadows, drawn additively, and a lit clip is a radial gradient from its middle.
+- **Grain (Ink and Gold)** is the same baked noise at low opacity.
+
+A style would be one setting that picks a `Palette`, a XAML resource dictionary, and a shadow recipe, alongside the light and dark theme it already follows.
+
+### Aluminum, further (October 19)
+
+You liked Aluminum's classic hardware feel and asked for a dark version that fits a dark mode desktop without being black, and for how light and dark could each take the window color. Open `style-studies/aluminum-variations.html`. The original Aluminum is unchanged; the new looks are two layers over it, `aluminum-dark.css` and `aluminum-tint.css`.
+
+**Dark.** The same plates, engraved grooves, and graphite keys, anodized a dark gray at a dark mode window's depth: mid grays, not black. Every surface sits on one ladder of lightness (OKLCH L), with the light plates' whisper of warmth:
+
+| Surface | L | Neutral |
+|---|---|---|
+| Engraved line | 0.155 | `#0C0C0B` |
+| Chassis, between plates | 0.20 | `#161615` |
+| Strips: title bar, transport, status bar | 0.235 | `#1E1E1C` |
+| A box set into a plate | 0.255 | `#232321` |
+| Timeline lanes | 0.30 | `#2E2E2C` |
+| Plates: track headers, launcher, editor | 0.335 | `#373735` |
+| Selected track header | 0.40 | `#484846` |
+
+The timeline is a step darker than the headers, so clips, which are lighter plates with notes printed light, stand forward. The piano keys stay like real key caps.
+
+**The window color.** The app keeps one color for light and dark, so Aluminum anodizes the metal in it: each surface keeps its lightness from the ladder above (or the light one) and takes only the color's hue and some of its chroma. That way a dark color, a light one, a vivid one, and a quiet one all work in both themes.
+
+- The strips are anodized deep in it: the window's chassis. In dark, that's about the color as you picked it.
+- The plates take a whisper of it: chroma = min(the color's chroma × 0.3 to 0.6, a cap of 0.011 to 0.020) × anodize. The cap keeps a vivid color from flooding large surfaces; it brought MIDI Clock's plum from pink to a mauve gray and left your aqua alone. Anodize is one knob from 1 (as shown) to 0 (plain metal, with only the strips, readouts, and lights in color).
+- The LCD readouts are backlit in it: L 0.88 on dark glass, with a slight glow.
+- The LEDs that mean "on", the selection, the loop, and toggled buttons light up in it, at a lightness that stays above 3:1 against the plates (light 0.53, dark 0.76) and a chroma that stays in sRGB for every hue (light 0.09, dark 0.11). Words in it, such as a toggled button's label in light, use a deeper ink (L 0.43) to stay above 4.5:1.
+- The edges stay bare metal. The lit edges of the seams and the editor are neutral highlights, as on an anodized panel whose edges are cut after it's dyed, so the color reads as a finish on metal rather than paint.
+- What stays as it is: what you made (track colors, clips, and notes), the keys and pads, which are objects on the panel, and the colors that mean something: play, record, mute, and solo.
+
+**In the app.** It's arithmetic done once when the color or theme changes: sRGB to OKLCH and back for a dozen surfaces, which feed `Palette` for the Win2D drawing and theme brushes for the XAML, the way `TintToolTips` already sets the tooltip fill. With Mica or Acrylic, the strips are where the material shows, tinted with the strip color. A color that's nearly gray (chroma under about 0.01) has no hue to give, so the accents keep their defaults. Any of the new pages takes `?tint=RRGGBB` and `&anodize=0`, to try another color or plain metal.
+
+### Porcelain, second pass (October 19)
+
+You asked for another iteration of Porcelain: no raised border around the transport, which should be part of the window's chrome; no separate well for each track's lane, so one well for all of them or none; track headers that aren't raised, though the clips can stay as they are; and no raised frame around the clip editor, also part of the chrome, perhaps with a separator. Open `style-studies/porcelain-second-pass.html`, which shows Porcelain as it is beside both versions, with close-ups of each change. The original is unchanged; the second pass is a layer, `porcelain-2.css`.
+
+- **The chrome is one flat surface.** The transport has no deck: its round keys stand straight up from the window, like the title bar's buttons. The clip editor has no frame; an engraved line, like the transport's separators, sets it apart from the busy arrange above it.
+- **The track headers sit flush.** The selected track is lit, a soft highlight across its header, rather than pressed in. What's raised is what you touch and what you made: keys (including M, S, and R), clips, and launcher pads.
+- **The timeline, two ways.** One well holds every track's lane, like a screen set into the case, with faint engraved lines between the tracks; or the timeline sits on the surface with its grid engraved in it, so only the clips stand out. The piano roll keeps its own well in both.
+
+**Approved: no well** (October 19), with the timeline "slightly darker, like the piano roll background at the bottom": it sits on one flat field in the roll's color as it's drawn (its well, with the few percent of shading `seq.js` gives its rows: `#D5D4D0`), under all the tracks, with its grid engraved in it.
+
+### Porcelain, dark, and the window color (October 19)
+
+Then the same study as Aluminum's, for the approved Porcelain: light and dark, each with no color, your aqua, and MIDI Clock's plum. Open `style-studies/porcelain-variations.html`. The dark version and the window color are layers, `porcelain-dark.css` and `porcelain-tint.css`; the second pass's colors became variables so they could follow.
+
+**Dark.** The same design in a dark, warm gray porcelain at a dark mode window's depth: mid grays, not black. The shadow recipe is tuned for dark, as Clay's is: soft shadows below and to the right, faint highlights above and to the left, so the keys are still defined by their shadows. The track caps brighten a little, and the graphite cap turns ivory.
+
+| Surface | L | Neutral |
+|---|---|---|
+| Wells, the timeline field, the piano roll | 0.265 | `#262523` |
+| A pressed key | 0.285 | `#2B2A28` |
+| The body | 0.305 | `#302F2D` |
+| Keys, top left to bottom right | 0.345 to 0.295 | `#3A3937` to `#2D2C2A` |
+| Clip faces | 0.375 to 0.325 | `#42413F` to `#353432` |
+
+**The window color glazes the porcelain.** Aluminum anodizes its strips deep; Porcelain is one material, so the color glazes all of it instead. As with Aluminum, your color brings the hue and the theme brings the lightness.
+
+- The glaze covers the body, the keys (the piano keys too), and the clip faces, which are pressed out of the same porcelain. Because it covers everything, it stays low: chroma = min(the color's chroma × 0.32 to 0.5, a cap of 0.009 to 0.013 in light and 0.013 to 0.016 in dark) × glaze, where glaze runs from 1 (as shown) to 0 (plain porcelain).
+- It pools in the hollows, as glaze does: the wells, the readouts, the timeline's field, and the piano roll take about half again as much (caps 0.018 in light, 0.021 in dark), so they read deeper and more colored.
+- The shadows are a deep shade of it (L 0.42 in light, 0.13 in dark), and the light from the top left a pale tint of it.
+- The LEDs on the keys, the selection, the loop, and toggled keys light up in it, at the same lightness and chroma limits as Aluminum's accents.
+- The readouts' digits are printed in it: a deep ink in light (L 0.34) and a pale one in dark (L 0.90), both above 8:1.
+- What stays as it is: the track caps, the notes, and the colors that mean something: play, record, mute, and solo.
+
+In the app it's the same arithmetic as Aluminum's, done once when the color or theme changes. Any of these pages takes `?tint=RRGGBB` and `&glaze=0`.
+
+**Softer shadows** (October 19). You found the dark shadows too dark and too deep: just below a key they were about 20 levels darker than the surface. Of three candidates, tried on dark in your aqua (`style-studies/porcelain-shadows.html`, each a set of shadows in `porcelain-soft.css`), you picked C: about half the strength, about half again the blur, a little less offset, and a faint 1 px contact shadow to keep edges crisp, all drawn in a deep shade of the window color instead of black. Every shadow is a variable. The same page now shows it carried over, before and after.
+
+- **Dark** has C's shadows by default, in `porcelain-dark.css`. Just below a key or a pad, they're half to three fifths as deep as before, in every color.
+- **Light** has the same idea, more gently, since dark was the bigger problem: shadows in the glaze's shade (the porcelain's warm gray, `#504C44`, with no window color), about three quarters as deep at the edge, and reaching 12 px instead of 8 or 9. Light leaves out the contact shadow, which on a light surface read as a dark rim.
+- **The shade stays inside sRGB.** Your aqua's deep shade was just outside it, and Edge draws a blurred shadow in a color outside sRGB about a quarter lighter than its alpha says, so plain and plum came out deeper than the aqua you picked. The shade's chroma is now capped at sRGB's limit for the narrowest hue at its lightness (0.021 at L 0.13; the light's glint 0.004 at L 0.99), and dark's strengths are three quarters of C's numbers, which is how C drew on aqua. Dark aqua looks as it did; plain and plum now match it.
+- **Fixed:** the dark pages had lost the glow on the track headers' LEDs, because a dark rule for the LEDs' dimples replaced it.
+
+## 31. Proposal, October 19: the timeline's scroll bar and zoom
+
+You asked for a scroll bar the app draws itself, probably with the whole timeline as one control, that zooms as well as scrolls. You wanted a pinch for time zoom on touch screens and touchpads, zoom controls at the bar, and a switch between a plain bar and a contextual one: an overview like Bitwig's or Visual Studio's map mode, with a few pixels per track and the sections by name. A setting puts it at the top or the bottom. The comps, in Tactile and Aluminum, light and dark in your aqua, are in `timeline-scroll/index.html`, with research on what eleven DAWs and video editors do.
+
+- **Either kind:** drag the view to scroll and either end to zoom; Ctrl + wheel and a pinch zoom about the pointer; Shift + wheel scrolls in time; zoom keys or a slider at the bar's end; double-click to fit.
+- **The overview** shows a line for each track where its clips are, the sections, the loop, the playhead, and where the selected clip's linked copies play. The view is a frame, and what's outside it is veiled.
+- **Windows sends a touchpad's pinch as Ctrl + wheel** to apps that don't use DirectManipulation, so one handler covers both; a touch screen's pinch comes through manipulation events.
+- **Building it:** a `TimelineView` that owns the time axis, and a `TimelineScrollBar` drawn through the theme engine's parts. The settings are `TimelineScrollBar` (overview or plain) and `TimelineScrollBarPlace` (bottom or top).
+- **Built (October 19).** Approved as proposed. The bar is `TimelineBar.h/.cpp`, drawn with Win2D. A theme's `timeline.bar.*` parts draw it (Tactile has them), and without them it's drawn from the palette (Night drive). `TimelineBarHost` tells UI Automation it's a scroll bar whose value is the first bar in view, with "Bars 5 to 17 of 26" as its status. The time arithmetic is `TimelineView.h/.cpp`, with 8 tests. The time axis stays the window's (`m_barWidth`, `m_scrollX`), and every zoom goes through `SetTimelineView`, so zooming out stops at the sequence and four bars after it (at least 16 bars). Above the ruler, the switch and the zoom keys sit over the track list, as keys rather than the slider in the comp. The grid adds sixteenths and numbers the beats close in, and draws only every fourth bar strongly far out. Both settings are in the bar's menu and in Appearance.
+
+## 32. Update, October 19: four styles in the app
+
+The theme engine (`src/in-box/user-tools/theme-engine`, its README.md) draws four styles, each light and dark, picked from tiles in **Appearance** that show each style in its own colors:
+
+- **Night drive**, the look the app has had, on the window's backdrop (solid, Mica or acrylic). Its theme file reproduces the old palette exactly; a unit test checks it.
+- **Tactile**, the approved Porcelain comp, renamed. One warm gray material, glazed in your window color.
+- **Aluminum**, the approved Aluminum comp and its dark and anodized variations. Its title bar, transport and status bar are a dark strip in light too, so they take the dark look, and the caption buttons are white.
+- **Vellum**, second pass (`style-studies/vellum-2*.html`): Candara where the comp had Sitka, which you picked from Candara, Corbel and Segoe UI Variable; figures are asked for as lining and tabular, since Candara's default ones descend. A dark version (warm charcoal paper and cream ink) and your window color dyeing the paper are new, designed for this pass, and approved.
+
+What's drawn as each comp has it: the timeline's clips and grid, the launcher's pads, the ruler, the timeline's scroll bar, the piano roll's and step editor's colors, and, behind the XAML controls, plates (`ThemePlates.h`) for the transport's keys and readouts, its buttons, fields and chips, the track list's toolbar, the editor's header, the track headers and the scene headers. A test checks that each style's text stays readable on its surfaces in light and dark across six window colors; it caught Aluminum's accent text at 3.16:1 on light plates.
+
+The track headers, as each comp draws them (parts `header.track`, `header.cap`, `header.toggle`, `header.led` and `scene`, in a plate layer behind the track list and the scene headers):
+
+- **Tactile:** the headers flush on the surface, the selected one lit; the track's color as a cap set in a ring; M, S and R as small round keys, pressed in and colored when on; the light as a dimple that glows green while the track plays; each scene a small key with its number in red.
+- **Aluminum:** each header a plate, engraved under the one above; the track's color as a ring around a graphite knob; M, S and R as graphite keys whose light at the top right is lit amber, blue or red when on; the scenes cells in the ruler's plate, split by grooves.
+- **Vellum:** no boxes; the track's color as an ink rule; M, S and R as ink circles, filled when on; the light a hollow circle, filled when playing; the scenes ruled with hairlines, their numbers in vermilion.
+- **Night drive** keeps the app's own controls.
+
+A row being dragged fades, plates and all.

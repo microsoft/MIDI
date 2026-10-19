@@ -14,6 +14,8 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "GeneratorKinds.h"
+#include "GeneratorNames.h"
 #include "GeneratorView.h"
 #include "SequenceGenerator.h"
 #include "StringResources.h"
@@ -29,9 +31,6 @@ namespace winrt::midisequencer::implementation
 {
     namespace
     {
-        constexpr std::array<wchar_t const*, 3> TypeKeys{ L"GeneratorTypeEuclidean", L"GeneratorTypeChanceMelody", L"GeneratorTypeArpeggiator" };
-        constexpr std::array<wchar_t const*, 3> AboutKeys{ L"GeneratorAboutEuclidean", L"GeneratorAboutMelody", L"GeneratorAboutArpeggiator" };
-
         constexpr std::array<wchar_t const*, 11> ScaleKeys{
             L"ScaleMajor", L"ScaleMinor", L"ScaleDorian", L"ScalePhrygian", L"ScaleLydian", L"ScaleMixolydian",
             L"ScaleHarmonicMinor", L"ScaleMajorPentatonic", L"ScaleMinorPentatonic", L"ScaleBlues", L"ScaleChromatic" };
@@ -85,12 +84,7 @@ namespace winrt::midisequencer::implementation
 
         bool SameGenerator(seq::GeneratorSettings const& a, seq::GeneratorSettings const& b) noexcept
         {
-            return a.Type == b.Type && a.StepTicks == b.StepTicks && a.ChangesEachPass == b.ChangesEachPass && a.Channel == b.Channel &&
-                a.NoteLength == b.NoteLength && a.Rings == b.Rings && a.ScaleRoot == b.ScaleRoot && a.Scale == b.Scale &&
-                a.LowNote == b.LowNote && a.HighNote == b.HighNote && a.Busy == b.Busy && a.Keep == b.Keep &&
-                a.VelocityLow == b.VelocityLow && a.VelocityHigh == b.VelocityHigh &&
-                a.ArpSource == b.ArpSource && a.ArpTrackId == b.ArpTrackId && a.ArpOrder == b.ArpOrder &&
-                a.ArpOctaves == b.ArpOctaves && a.ArpLatch == b.ArpLatch;
+            return seq::SameGeneratorSettings(a, b);
         }
 
         controls::TextBlock Text(winrt::hstring const& text, media::Brush const& brush, double size = 12)
@@ -294,7 +288,7 @@ namespace winrt::midisequencer::implementation
             box.Maximum(maximum);
             box.SmallChange(1);
             box.LargeChange(note.value_or(false) ? 12 : 10);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
             box.FontSize(13);
 
             if (note.has_value())
@@ -305,6 +299,12 @@ namespace winrt::midisequencer::implementation
             box.Value(value);
             return box;
         }
+    }
+
+    _Use_decl_annotations_
+    controls::NumberBox MainWindow::MakeGeneratorNumberBox(winrt::hstring const& name, double minimum, double maximum, double value, std::optional<bool> note)
+    {
+        return MakeNumberBox(name, minimum, maximum, value, note);
     }
 
     bool MainWindow::EditorShowsGenerator() const noexcept
@@ -324,48 +324,26 @@ namespace winrt::midisequencer::implementation
         {
             m_updatingPatternUi = true;
 
+            // The header's number box shows its spin pop-up for touch only.
+            midiapp::UseTouchSpinButtons(GeneratorBarsBox());
+
+            // Which clip the box is being typed for: it commits as it loses the focus, which can
+            // be after another clip has opened.
+            GeneratorBarsBox().GotFocus([weak = get_weak()](auto&&, auto&&)
+            {
+                if (auto s = weak.get())
+                {
+                    s->m_generatorBarsClip = s->m_editorClipId;
+                }
+            });
+
             for (auto const ticks : seq::PatternStepSizes)
             {
                 GeneratorStepSizeCombo().Items().Append(winrt::box_value(res::GetString(L"PatternStepSize" + std::to_wstring(ticks))));
             }
 
-            // The type list: each type with what it does under its name (comp 4).
-            for (size_t i = 0; i < TypeKeys.size(); ++i)
-            {
-                controls::TextBlock name{};
-                name.Text(res::GetString(TypeKeys[i]));
-                name.FontSize(13);
-
-                controls::TextBlock about{};
-                about.Text(res::GetString(AboutKeys[i]));
-                about.FontSize(11);
-                about.TextWrapping(xaml::TextWrapping::Wrap);
-                about.Foreground(BrushFor(m_palette.Text3));
-
-                controls::StackPanel content{};
-                content.Spacing(1);
-                content.Children().Append(name);
-                content.Children().Append(about);
-
-                controls::RadioButton choice{};
-                choice.GroupName(L"GeneratorType");
-                choice.Content(content);
-                choice.Padding(xaml::Thickness{ 8, 4, 4, 6 });
-                choice.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-                automation::AutomationProperties::SetName(choice, res::GetString(TypeKeys[i]));
-                automation::AutomationProperties::SetHelpText(choice, res::GetString(AboutKeys[i]));
-
-                choice.Checked([weak = get_weak(), i](auto&&, auto&&)
-                {
-                    if (auto strong = weak.get(); strong && !strong->m_updatingPatternUi)
-                    {
-                        strong->GeneratorTypeFlyout().Hide();
-                        strong->SetGeneratorType(static_cast<seq::GeneratorType>(i));
-                    }
-                });
-
-                GeneratorTypeList().Children().Append(choice);
-            }
+            // The type list: each type's symbol, with what it does under its name, in groups.
+            BuildGeneratorTypePicker();
 
             // The rings drawing follows the editor's height, and what it plays the editor's width.
             GeneratorPanel().SizeChanged([weak = get_weak()](auto&&, auto&&)
@@ -394,17 +372,16 @@ namespace winrt::midisequencer::implementation
 
             auto const& generator = *clip->Generator;
             auto const& meter = m_doc.Meter.empty() ? seq::MeterChange{} : m_doc.Meter.front();
-            auto const type = std::min<size_t>(static_cast<size_t>(generator.Type), TypeKeys.size() - 1);
 
             m_updatingPatternUi = true;
 
-            GeneratorTypeButton().Content(winrt::box_value(res::GetString(TypeKeys[type])));
+            GeneratorTypeButton().Content(winrt::box_value(res::GetString(seq::GeneratorTypeKey(generator.Type))));
 
-            for (uint32_t i = 0; i < GeneratorTypeList().Children().Size(); ++i)
+            for (size_t i = 0; i < m_generatorTypeChoices.size(); ++i)
             {
-                if (auto const choice = GeneratorTypeList().Children().GetAt(i).try_as<controls::RadioButton>())
+                if (auto const& choice = m_generatorTypeChoices[i]; choice != nullptr)
                 {
-                    choice.IsChecked(i == type);
+                    choice.IsChecked(i == static_cast<size_t>(generator.Type));
                 }
             }
 
@@ -424,9 +401,12 @@ namespace winrt::midisequencer::implementation
             GeneratorSameToggle().IsChecked(!generator.ChangesEachPass);
             GeneratorChangesToggle().IsChecked(generator.ChangesEachPass);
 
-            // An arpeggiator plays what it's given. Its seed only picks a random order's notes, so
-            // the header shows it only then.
-            GeneratorSeedBox().Text(winrt::hstring{ std::format(L"{:04X}", clip->Seed) });
+            // The seed as words when it was typed as words, or as its number. It shows only when it
+            // changes what the generator plays: an arpeggiator's random order, say, but not words.
+            // An arpeggiator plays what it's given, so it shows neither the seed nor each pass,
+            // unless its order is random.
+            GeneratorSeedBox().Text(clip->SeedWords.empty() ? winrt::hstring{ std::format(L"{:04X}", clip->Seed) } : winrt::hstring{ clip->SeedWords });
+            GeneratorSeedPart().Visibility(seq::GeneratorUsesSeed(generator) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             GeneratorSeedTools().Visibility(generator.Type != seq::GeneratorType::Arpeggiator || generator.ArpOrder == seq::ArpeggiatorOrder::Random
                 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
@@ -474,6 +454,21 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // An edit the panel already shows, such as words being typed: only the drawings change.
+            // The flag lasts the whole edit (EditGeneratorInPlace clears it), since an edit refreshes
+            // the editor more than once.
+            if (m_keepGeneratorPanel && GeneratorBody().Children().Size() > 0)
+            {
+                for (auto const& canvas : m_generatorCanvases)
+                {
+                    canvas.Invalidate();
+                }
+
+                UpdateGeneratorFooter();
+                UpdatePassCaption();
+                return;
+            }
+
             auto const body = GeneratorBody();
             body.Children().Clear();
             m_ringCanvas = nullptr;
@@ -484,12 +479,26 @@ namespace winrt::midisequencer::implementation
             m_generatorCanvases.clear();
             m_ringRows.clear();
             m_ringDrag = RingDrag{};
+            m_lifePaint = LifePaint{};
+            m_rangeDrag = RangeDrag{};
+            m_velocityDrag = VelocityDrag{};
+            m_velocityLowBox = nullptr;
+            m_velocityHighBox = nullptr;
+            m_listenSources = nullptr;
+            m_fitGenerator = nullptr;
 
             auto const clip = seq::FindClip(m_doc, m_editorClipId);
 
             if (clip == nullptr || !clip->Generator.has_value())
             {
                 return;
+            }
+
+            // A pass picked in another clip's drawing doesn't carry over.
+            if (m_pickedPassClip != clip->Id)
+            {
+                m_pickedPassClip = clip->Id;
+                m_pickedPass = 0;
             }
 
             auto const& generator = *clip->Generator;
@@ -521,6 +530,35 @@ namespace winrt::midisequencer::implementation
 
             case seq::GeneratorType::Arpeggiator:
                 AddArpeggiatorSettings(body, generator, edit);
+                break;
+
+            case seq::GeneratorType::Life:
+            case seq::GeneratorType::LifeDrums:
+                AddLifeSettings(body, *clip, edit);
+                break;
+
+            case seq::GeneratorType::Learn:
+                AddLearnSettings(body, *clip, edit);
+                break;
+
+            case seq::GeneratorType::Words:
+                AddWordsSettings(body, *clip, edit);
+                break;
+
+            case seq::GeneratorType::Evolve:
+                AddEvolveSettings(body, *clip, edit);
+                break;
+
+            case seq::GeneratorType::Infinity:
+                AddInfinitySettings(body, *clip, edit);
+                break;
+
+            case seq::GeneratorType::LSystem:
+                AddLSystemSettings(body, *clip, edit);
+                break;
+
+            case seq::GeneratorType::ChangeRinging:
+                AddRingingSettings(body, *clip, edit);
                 break;
 
             default:
@@ -909,6 +947,12 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // Section 28's panels size their own drawings.
+            if (m_fitGenerator)
+            {
+                m_fitGenerator();
+            }
+
             if (m_ringCanvas == nullptr)
             {
                 return;
@@ -970,6 +1014,11 @@ namespace winrt::midisequencer::implementation
             {
                 auto const step = m_editorPlayhead / std::max<int64_t>(1, clip->Generator->StepTicks);
                 text = res::FormatString(L"GeneratorPassStepFormat", m_editorPass + 1, step + 1, steps);
+            }
+            else if (seq::IsSectionTwentyEightGenerator(clip->Generator->Type))
+            {
+                // The pass the drawing shows, which the person can pick.
+                text = res::FormatString(L"GeneratorPassShownFormat", ShownGeneratorPass(*clip) + 1, steps);
             }
             else
             {
@@ -1113,13 +1162,22 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            EditGenerator(std::wstring{ res::GetString(L"UndoGeneratorSettings") }, [&drag](seq::GeneratorSettings& generator)
+            // Kept now, so the ring doesn't turn back while it waits; the table under it, which
+            // shows each ring's numbers, follows once the release is over.
+            EditGeneratorInPlace([&drag](seq::GeneratorSettings& generator)
             {
                 if (drag.Ring < generator.Rings.size() && drag.Ring < drag.Rings.size())
                 {
                     generator.Rings[drag.Ring].Rotate = drag.Rings[drag.Ring].Rotate;
                 }
             });
+
+            if (m_ringCanvas != nullptr)
+            {
+                m_ringCanvas.Invalidate();
+            }
+
+            QueueGeneratorPanelUpdate();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to turn a ring.")
     }
@@ -1137,23 +1195,39 @@ namespace winrt::midisequencer::implementation
             }
 
             auto const point = args.GetCurrentPoint(m_ringCanvas);
+            auto const at = point.Position();
+            auto const delta = point.Properties().MouseWheelDelta();
             auto const& rings = clip->Generator->Rings;
             auto const geometry = seq::MeasureRings(static_cast<float>(m_ringCanvas.ActualWidth()), static_cast<float>(m_ringCanvas.ActualHeight()), rings.size());
-            auto const ring = seq::RingAtPoint(geometry, rings.size(), point.Position().X, point.Position().Y);
+            auto const ring = seq::RingAtPoint(geometry, rings.size(), at.X, at.Y);
 
             if (ring == SIZE_MAX)
             {
                 return;
             }
 
+            args.Handled(true);
+
+            // One notch changes the ring once. As on the range keyboard, a notch that comes again
+            // once the panel was built under the pointer is skipped, and so is one from outside.
+            if (delta == 0 || point.Timestamp() == m_lastRingWheel || at.X < 0 || at.Y < 0 ||
+                at.X > m_ringCanvas.ActualWidth() || at.Y > m_ringCanvas.ActualHeight())
+            {
+                return;
+            }
+
+            m_lastRingWheel = point.Timestamp();
+
             // The wheel adds or takes away a pulse, and with Shift a step.
-            auto const up = point.Properties().MouseWheelDelta() > 0;
+            auto const up = delta > 0;
             auto const shift = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
 
             m_selectedRing = ring;
-            args.Handled(true);
 
-            EditGenerator(std::wstring{ res::GetString(L"UndoGeneratorSettings") }, [ring, up, shift](seq::GeneratorSettings& generator)
+            // Changed in place, so the next notch starts from this one; the table follows once
+            // the wheel's event is over.
+            QueueGeneratorPanelUpdate();
+            EditGeneratorInPlace([ring, up, shift](seq::GeneratorSettings& generator)
             {
                 if (ring >= generator.Rings.size())
                 {
@@ -1365,6 +1439,9 @@ namespace winrt::midisequencer::implementation
             numberBox(L"GeneratorHighNote", 0, 127, generator.HighNote, true, [](seq::GeneratorSettings& edited, double value) { edited.HighNote = static_cast<uint8_t>(std::lround(value)); }),
             L"GeneratorRangeTo");
 
+        // How far it may jump, and whether it starts and ends on the root (design section 28).
+        AddKeyRules(form, clip, edit);
+
         // How busy, and how much it keeps from the pass before, as sliders.
         auto const clipId = clip.Id;
         auto const weak = get_weak();
@@ -1512,6 +1589,9 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // Words still being typed go in first, as an edit of their own.
+            FlushGeneratorText();
+
             auto const clip = seq::FindClip(m_doc, m_editorClipId);
 
             if (clip == nullptr || clip->Kind != seq::ClipKind::Generator || !clip->Generator.has_value())
@@ -1549,6 +1629,7 @@ namespace winrt::midisequencer::implementation
     {
         EditGenerator(std::wstring{ res::GetString(L"UndoGeneratorSettings") }, [type](seq::GeneratorSettings& generator)
         {
+            auto const from = generator.Type;
             generator.Type = type;
 
             // A Euclidean rhythm starts with the comp's rings rather than none.
@@ -1556,6 +1637,31 @@ namespace winrt::midisequencer::implementation
             {
                 generator.Rings = seq::MakeEuclideanGenerator().Rings;
             }
+
+            // Section 28's generators grow and change, so they start out changing each pass, with a
+            // key and range wide enough to play in, and drums on channel 10.
+            if (seq::IsSectionTwentyEightGenerator(type) && !seq::IsSectionTwentyEightGenerator(from))
+            {
+                auto const made = seq::MakeSectionTwentyEightGenerator(type);
+                generator.ChangesEachPass = true;
+                generator.VelocityBy = made.VelocityBy;
+
+                if (seq::ScaleNotes(generator.ScaleRoot, generator.Scale, generator.LowNote, generator.HighNote).size() < 8)
+                {
+                    generator.ScaleRoot = made.ScaleRoot;
+                    generator.Scale = made.Scale;
+                    generator.LowNote = made.LowNote;
+                    generator.HighNote = made.HighNote;
+                }
+            }
+
+            if (type == seq::GeneratorType::LifeDrums && from != seq::GeneratorType::LifeDrums)
+            {
+                generator.Channel = 9;
+                generator.Voice = seq::LifeVoice::All;
+            }
+
+            seq::PrepareGenerator(generator);
         });
 
         UpdateGeneratorToolbar();
@@ -1576,7 +1682,10 @@ namespace winrt::midisequencer::implementation
             auto const clip = seq::FindClip(m_doc, m_editorClipId);
             auto const value = args.NewValue();
 
-            if (clip == nullptr || !std::isfinite(value))
+            // Only a generator has this box, and a value it lets go of as another clip opens was
+            // typed for the clip before: it changes nothing.
+            if (clip == nullptr || clip->Kind != seq::ClipKind::Generator || !std::isfinite(value) ||
+                (!m_generatorBarsClip.empty() && m_generatorBarsClip != m_editorClipId))
             {
                 UpdateGeneratorToolbar();
                 return;
@@ -1674,38 +1783,32 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            // The seed as the header shows it: up to eight hex digits.
-            std::wstring const text{ GeneratorSeedBox().Text() };
-            uint32_t seed{ 0 };
-            auto valid = !text.empty() && text.size() <= 8;
+            // Up to eight hex digits are the seed itself. Anything else is words, which make the
+            // seed and are kept, so the box still shows them (design section 28).
+            std::wstring text{ GeneratorSeedBox().Text() };
+            auto const first = text.find_first_not_of(L" \t");
+            text = first == std::wstring::npos ? std::wstring{} : text.substr(first, text.find_last_not_of(L" \t") - first + 1);
 
-            for (auto const ch : text)
-            {
-                auto const digit = std::iswdigit(ch) ? ch - L'0' : (std::towupper(ch) >= L'A' && std::towupper(ch) <= L'F') ? std::towupper(ch) - L'A' + 10 : -1;
-
-                if (digit < 0)
-                {
-                    valid = false;
-                    break;
-                }
-
-                seed = (seed << 4) | static_cast<uint32_t>(digit);
-            }
-
-            if (!valid)
+            if (text.empty())
             {
                 ShowMessage(res::GetString(L"GeneratorSeedInvalid"));
                 UpdateGeneratorToolbar();
                 return;
             }
 
-            if (seed == clip->Seed)
+            auto const number = seq::SeedFromHex(text);
+            auto const seed = number.value_or(seq::SeedFromWords(text));
+            auto const words = number.has_value() ? std::wstring{} : text.substr(0, 64);
+
+            if (seed == clip->Seed && words == clip->SeedWords)
             {
+                UpdateGeneratorToolbar();
                 return;
             }
 
             auto changed = *clip;
             changed.Seed = seed;
+            changed.SeedWords = words;
 
             seq::ChangeList changes{};
             changes.push_back(seq::MakeClipSettingsChange(*clip, changed));

@@ -681,7 +681,7 @@ namespace winrt::midisequencer::implementation
                         view->Offset.Value(row.Sync.OffsetMilliseconds);
                         view->Offset.SmallChange(1);
                         view->Offset.LargeChange(10);
-                        view->Offset.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                        midiapp::UseTouchSpinButtons(view->Offset);
                         view->Offset.VerticalAlignment(xaml::VerticalAlignment::Center);
                         PlaceIn(view->Grid, view->Offset, OffsetColumn);
                     }

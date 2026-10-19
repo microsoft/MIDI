@@ -14,6 +14,20 @@ namespace midisequencer
         WrapPanel();
     }
 
+    // Where the timeline's scroll bar is drawn (TimelineBar.h). It tells UI Automation it's a
+    // scroll bar, whose value is the bar the view starts at.
+    [default_interface]
+    runtimeclass TimelineBarHost : Microsoft.UI.Xaml.Controls.Grid
+    {
+        TimelineBarHost();
+    }
+
+    [default_interface]
+    runtimeclass TimelineBarAutomationPeer : Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer, Microsoft.UI.Xaml.Automation.Provider.IRangeValueProvider
+    {
+        TimelineBarAutomationPeer(TimelineBarHost owner);
+    }
+
     // One entry in a device list: the name, the id needed to connect, the device's picture from
     // MIDI Settings (or its transport's), and its description for a tooltip.
     [default_interface]

@@ -951,12 +951,6 @@ namespace midisequencer
         }
     }
 
-    void PatternEditor::CancelGesture() noexcept
-    {
-        m_gesture = Gesture::None;
-        m_dropBefore = SIZE_MAX;
-    }
-
     std::optional<size_t> PatternEditor::PressedLaneName() const noexcept
     {
         return m_gesture == Gesture::LanePress ? std::optional<size_t>{ m_pressHit.Lane } : std::nullopt;

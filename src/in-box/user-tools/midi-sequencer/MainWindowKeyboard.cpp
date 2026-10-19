@@ -229,6 +229,24 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            // Zoom to fit the sequence, or with Shift to the selected clip (design section 31).
+            if (control && (key == VirtualKey::Number0 || key == VirtualKey::NumberPad0))
+            {
+                m_timelineBar.ForgetFit();
+
+                if (KeyIsDown(VirtualKey::Shift))
+                {
+                    ZoomTimelineToSelection();
+                }
+                else
+                {
+                    ZoomTimelineToFit();
+                }
+
+                args.Handled(true);
+                return;
+            }
+
             auto const rows = KeyboardRows(false);
 
             if (rows.empty())
@@ -433,6 +451,7 @@ namespace winrt::midisequencer::implementation
                 m_selectedSlot = scene;
                 SelectTrack(rows[index]->TrackId);
                 ShowRowForKeyboard(*rows[index]);
+                ShowScene(scene);
                 AnnounceKeyboardCursor(true);
             }
 

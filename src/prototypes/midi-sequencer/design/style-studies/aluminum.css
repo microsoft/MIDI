@@ -1,0 +1,293 @@
+/* PROTOTYPE. Style study: Aluminum (light). Matte machined plates split by engraved grooves, under a
+   dark header strip. What you touch is a small graphite object with a short, crisp shadow; color
+   lives in rings, LEDs and the top edge of each clip. Notes are printed in ink. */
+
+html.study.aluminum {
+    --plate: #D3D3CF;
+    --plate-light: #DCDCD8;
+    --base: #C9C9C5;
+    --well: #BDBDB8;
+    --strip: #2B2B2D;
+    --graphite: radial-gradient(circle at 35% 30%, #5A5A60, #2A2A2D 72%);
+    --crisp: inset 0 1px 0 rgba(255, 255, 255, .35), 0 2px 3px rgba(0, 0, 0, .35), 0 6px 12px rgba(0, 0, 0, .16);
+    --crisp-light: inset 0 1px 0 rgba(255, 255, 255, .9), 0 1px 2px rgba(0, 0, 0, .28), 0 4px 8px rgba(0, 0, 0, .1);
+    --pressed: inset 0 2px 4px rgba(0, 0, 0, .55);
+    --engraved: 0 1px 0 rgba(255, 255, 255, .5);
+
+    --text: #1B1B1D;
+    --text2: #47474B;
+    --text3: #66666B;
+    --divider: #A3A39F;
+    --stroke: rgba(0, 0, 0, .12);
+    --stroke-strong: rgba(0, 0, 0, .2);
+    --accent: #3B6FD6;
+    --accent-deep: #3B6FD6;
+    --play: #3C9A2F;
+    --success: #3C9A2F;
+    --rec: #D23A3A;
+    --mute: #E0A100;
+    --solo: #3B6FD6;
+    --lane-bg: var(--plate-light);
+}
+
+html.study.aluminum [style*="#FF8A65"] { --tc: #E0672C !important; }
+html.study.aluminum [style*="#5BC0EB"] { --tc: #2F86C9 !important; }
+html.study.aluminum [style*="#B4A7FF"] { --tc: #747CD6 !important; }
+html.study.aluminum [style*="#6CCB5F"] { --tc: #4C993B !important; }
+html.study.aluminum [style*="#4DD0C4"] { --tc: #1F9C93 !important; }
+html.study.aluminum [style*="#9C8CFF"] { --tc: #747CD6 !important; }
+html.study.aluminum [style*="#F7C948"] { --tc: #D49A00 !important; }
+html.study.aluminum [style*="#FF6F91"] { --tc: #C83F49 !important; }
+html.study.aluminum [style*="#FFB547"] { --tc: #D49A00 !important; }
+html.study.aluminum [style*="#BDBDBD"] { --tc: #6E6E72 !important; }
+
+html.study.aluminum, html.study.aluminum body { background: #A8A8A4; }
+html.study.aluminum body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+html.study.aluminum .caption-above { color: #2E2E30; }
+html.study.aluminum .caption-above b { color: #111; }
+html.study.aluminum .lcd .big, html.study.aluminum .lcd .small, html.study.aluminum .bar-num, html.study.aluminum .tb,
+html.study.aluminum .scene .n, html.study.aluminum .tlabel { font-family: "Bahnschrift SemiCondensed", Bahnschrift, sans-serif; }
+
+/* ---- the window: plates on a base, a dark strip on top */
+
+html.study.aluminum .window {
+    border: 0;
+    border-radius: 10px;
+    background: var(--base);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .6) inset, 0 30px 60px rgba(0, 0, 0, .35);
+}
+
+html.study.aluminum .titlebar { background: var(--strip); }
+html.study.aluminum .titlebar .title { color: #CFCFCB; }
+html.study.aluminum .caption-btn, html.study.aluminum .sys-btns div { color: #A9A9A5; }
+html.study.aluminum .preview-chiclet { color: #F2B300; border-color: rgba(242, 179, 0, .6); }
+
+html.study.aluminum .transport {
+    height: 58px;
+    flex-basis: 58px;
+    background: var(--strip);
+    border-bottom: 0;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, .2), 0 3px 0 rgba(255, 255, 255, .25);
+    color: #E8E8E6;
+    --text: #EDEDEA;
+    --text2: #B9B9B5;
+    --text3: #8C8C88;
+}
+
+html.study.aluminum .transport .sep { background: rgba(255, 255, 255, .12); box-shadow: 1px 0 0 rgba(0, 0, 0, .5); }
+
+/* graphite domes, with an LED above when on */
+html.study.aluminum .tbtn {
+    position: relative;
+    width: 38px;
+    flex-basis: 38px;
+    height: 34px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--graphite);
+    box-shadow: var(--crisp);
+    color: #D8D8D4;
+}
+
+html.study.aluminum .tbtn.on { background: radial-gradient(circle at 35% 30%, #4A4A50, #222225 72%); box-shadow: var(--pressed); color: #FFFFFF; }
+
+html.study.aluminum .tbtn.on::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    width: 5px;
+    height: 5px;
+    border-radius: 3px;
+    background: #6FB3FF;
+    box-shadow: 0 0 6px #6FB3FF;
+}
+
+html.study.aluminum .tbtn.play.on::after { background: #7BE36A; box-shadow: 0 0 6px #7BE36A; }
+html.study.aluminum .tbtn.rec { color: #FF8A80; }
+html.study.aluminum .tbtn.split { width: 20px; flex-basis: 20px; margin-left: -4px; }
+html.study.aluminum .tbtn.split.on::after { display: none; }
+
+html.study.aluminum .lcd {
+    border: 0;
+    border-radius: 5px;
+    background: #141416;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .14);
+}
+
+html.study.aluminum .lcd .big { color: #F0EFEA; font-size: 21px; letter-spacing: .05em; }
+html.study.aluminum .lcd .small { color: #8C8C88; }
+
+html.study.aluminum .transport .btn { background: linear-gradient(#46464B, #343437); border: 0; box-shadow: var(--crisp); color: #EDEDEA; border-radius: 6px; }
+html.study.aluminum .transport .btn.subtle { background: transparent; box-shadow: none; }
+html.study.aluminum .transport .field { background: #1E1E20; border: 0; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .1); color: #EDEDEA; border-radius: 5px; }
+html.study.aluminum .transport .chip.on { border-color: rgba(123, 227, 106, .45); background: rgba(123, 227, 106, .08); color: #9BEA8C; }
+
+/* ---- controls on the plates */
+
+html.study.aluminum .btn { border: 0; border-radius: 6px; background: linear-gradient(#E9E9E6, #D7D7D3); box-shadow: var(--crisp-light); color: var(--text); }
+html.study.aluminum .btn.subtle { background: transparent; box-shadow: none; }
+html.study.aluminum .btn.toggled { background: #C7C7C3; box-shadow: var(--pressed); color: var(--accent); }
+html.study.aluminum .field { border: 0; border-radius: 5px; background: var(--well); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .3), var(--engraved); }
+html.study.aluminum .chip { border: 0; border-radius: 5px; background: var(--plate-light); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .14), var(--engraved); }
+html.study.aluminum .chip.info { color: var(--accent); }
+
+/* ---- the arrange: plates and engraved grooves */
+
+html.study.aluminum .arow > .hdr { background: var(--plate); border-right: 0; border-bottom: 1px solid var(--divider); box-shadow: var(--engraved), inset -1px 0 0 #A3A39F, inset -2px 0 0 rgba(255, 255, 255, .5); }
+html.study.aluminum .arow > .launch { background: var(--plate); border-right: 0; border-bottom: 1px solid var(--divider); box-shadow: var(--engraved), inset -1px 0 0 #A3A39F, inset -2px 0 0 rgba(255, 255, 255, .5); }
+html.study.aluminum .arow.track > .hdr[style] { background: #DEDEDA !important; }
+html.study.aluminum .arow.folder > .hdr, html.study.aluminum .arow.auto > .hdr { background: #CBCBC7; }
+html.study.aluminum .pinned { background: transparent; }
+html.study.aluminum .pin-edge { height: 4px; flex-basis: 4px; background: linear-gradient(#9E9E9A, #B9B9B5); box-shadow: inset 0 1px 0 rgba(0, 0, 0, .25), 0 1px 0 rgba(255, 255, 255, .6); }
+
+/* the track's color as a ring around a small graphite knob */
+html.study.aluminum .strip {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    align-self: center;
+    margin-left: 10px;
+    border-radius: 7px;
+    background: var(--graphite);
+    box-shadow: 0 0 0 2px var(--tc), 0 2px 3px 2px rgba(0, 0, 0, .25);
+}
+
+html.study.aluminum .indent::after { background: rgba(0, 0, 0, .14); }
+html.study.aluminum .ticon { color: var(--text2); }
+
+/* M, S and R as small keys, each with an LED */
+html.study.aluminum .tb {
+    position: relative;
+    width: 24px;
+    height: 21px;
+    border: 0;
+    border-radius: 4px;
+    background: linear-gradient(#EFEFEC, #D9D9D5);
+    box-shadow: var(--crisp-light);
+    color: var(--text2);
+    font-size: 10.5px;
+}
+
+html.study.aluminum .tb::after { content: ""; position: absolute; top: 2px; right: 2px; width: 3px; height: 3px; border-radius: 2px; background: rgba(0, 0, 0, .18); }
+html.study.aluminum .tb.r { color: var(--rec); }
+html.study.aluminum .tb.m.on, html.study.aluminum .tb.s.on, html.study.aluminum .tb.r.on { background: #C9C9C5; box-shadow: var(--pressed); color: var(--text); }
+html.study.aluminum .tb.m.on::after { background: #FFC21A; box-shadow: 0 0 4px #FFC21A; }
+html.study.aluminum .tb.s.on::after { background: #4C8DFF; box-shadow: 0 0 4px #4C8DFF; }
+html.study.aluminum .tb.r.on::after { background: #FF3B30; box-shadow: 0 0 4px #FF3B30; }
+
+html.study.aluminum .led { background: #8F8F8B; box-shadow: inset 0 1px 1px rgba(0, 0, 0, .4); }
+html.study.aluminum .led.out { background: #5BD34A; box-shadow: 0 0 5px #5BD34A, inset 0 -1px 1px rgba(0, 0, 0, .2); }
+html.study.aluminum .led.in { background: #FFB21A; box-shadow: 0 0 5px #FFB21A; }
+
+html.study.aluminum .arow.ruler { background: #C4C4C0; box-shadow: inset 0 -1px 0 #A3A39F; }
+html.study.aluminum .arow.ruler > .hdr, html.study.aluminum .arow.ruler > .launch { background: #C4C4C0; }
+html.study.aluminum .scene { border-right: 1px solid #A3A39F; box-shadow: 1px 0 0 rgba(255, 255, 255, .5); color: var(--text); }
+html.study.aluminum .scene .n { color: var(--rec); }
+html.study.aluminum .bar-num { border-left-color: #8F8F8B; color: var(--text2); }
+html.study.aluminum .loop-range { border: 0; border-radius: 2px 2px 0 0; background: rgba(59, 111, 214, .45); }
+
+/* the launcher: pads with a colored top edge */
+
+html.study.aluminum .slot { border-right: 0; }
+
+html.study.aluminum .cell {
+    border: 0;
+    border-top: 2px solid var(--tc);
+    border-radius: 4px;
+    background: linear-gradient(#ECECE9, #DCDCD8);
+    box-shadow: var(--crisp-light);
+}
+
+html.study.aluminum .cell .nm { color: var(--text); }
+html.study.aluminum .cell .tri, html.study.aluminum .cell .kind { color: var(--text3); }
+html.study.aluminum .cell .mini svg rect, html.study.aluminum .cell .mini svg circle { fill: #2B2B2D; fill-opacity: .78; }
+html.study.aluminum .cell.playing { background: #D5E5CF; box-shadow: var(--pressed); }
+html.study.aluminum .cell.playing .tri { color: var(--play); }
+html.study.aluminum .cell .prog { height: 2px; background: var(--play); }
+html.study.aluminum .cell.queued { border: 0; border-top: 2px solid var(--tc); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .45); }
+html.study.aluminum .cell.rec { background: #EAD3D1; box-shadow: var(--pressed); }
+html.study.aluminum .cell.rec .tri { color: var(--rec); }
+html.study.aluminum .cell.rec .prog { background: var(--rec); }
+html.study.aluminum .cell .when { background: #2B2B2D; color: #EDEDEA; }
+html.study.aluminum .empty { border: 0; border-radius: 4px; background: #CDCDC9; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .18), var(--engraved); color: rgba(0, 0, 0, .25); }
+
+/* the timeline: a light plate with a printed grid; clips are tinted tiles with ink notes */
+
+html.study.aluminum .arow > .lane {
+    border-bottom: 1px solid var(--divider);
+    box-shadow: var(--engraved);
+    background-color: var(--plate-light);
+    background-image:
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .26) 0 1px, transparent 1px var(--bar)),
+        repeating-linear-gradient(to right, rgba(0, 0, 0, .07) 0 1px, transparent 1px calc(var(--bar) / 4));
+}
+
+html.study.aluminum .arow.ruler > .lane { background-image: none; background-color: #C4C4C0; box-shadow: none; }
+
+html.study.aluminum .tclip {
+    border: 0;
+    border-top: 2px solid var(--tc);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--tc) 20%, #E6E6E2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 1px 2px rgba(0, 0, 0, .3), 0 3px 6px rgba(0, 0, 0, .12);
+}
+
+html.study.aluminum .tclip .cap { background: transparent; color: var(--text); font-weight: 600; }
+html.study.aluminum .tclip .cap .lnk { color: var(--text3); }
+html.study.aluminum .tclip .body svg rect, html.study.aluminum .tclip .body svg circle { fill: #2B2B2D; fill-opacity: .8; }
+html.study.aluminum .tclip.sel { border-top-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 4px 10px rgba(0, 0, 0, .25); }
+html.study.aluminum .tclip.gen { border-style: solid; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--tc) 20%, #E6E6E2) 0 6px, color-mix(in srgb, var(--tc) 12%, #E6E6E2) 6px 12px); }
+html.study.aluminum .tclip.muted { filter: saturate(.1); opacity: .55; }
+html.study.aluminum .tclip.summary { border-top-width: 1px; background: color-mix(in srgb, var(--tc) 12%, transparent); box-shadow: none; }
+
+html.study.aluminum .loopmark { border-left-color: rgba(0, 0, 0, .35); }
+html.study.aluminum .lane-overlay { background: repeating-linear-gradient(135deg, rgba(211, 211, 207, .9) 0 6px, rgba(201, 201, 197, .82) 6px 12px); color: var(--text2); }
+
+html.study.aluminum .playhead { width: 1.5px; background: #1B1B1D; box-shadow: none; }
+html.study.aluminum .ruler .playhead::before { border-top-color: #D23A3A; }
+html.study.aluminum .tag > span { color: #111; }
+
+/* ---- the clip editor: a plate, the roll recessed */
+
+html.study.aluminum .editor { border-top: 0; background: var(--plate); box-shadow: inset 0 3px 0 #A3A39F, inset 0 4px 0 rgba(255, 255, 255, .55); }
+html.study.aluminum .ed-head { border-bottom: 1px solid var(--divider); box-shadow: var(--engraved); }
+html.study.aluminum .roll, html.study.aluminum .vlane { background: #E2E2DE; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .22); }
+html.study.aluminum .keys, html.study.aluminum .lanehead, html.study.aluminum .rruler .corner { border-right-color: var(--divider); }
+html.study.aluminum .inspector { background: #CDCDC9; border-left: 1px solid var(--divider); box-shadow: inset 1px 0 0 rgba(255, 255, 255, .5); }
+
+html.study.aluminum .statusbar { background: var(--strip); border-top: 0; color: #B9B9B5; }
+html.study.aluminum .statusbar .ok { color: #7BE36A; }
+html.study.aluminum .statusbar .recx { color: #FF8A80; }
+html.study.aluminum .vbar { background: rgba(0, 0, 0, .3); }
+
+/* ---- review fixes (October 19): plain plates for clips, graphite keys and pads, deeper engraving */
+
+html.study.aluminum { --text3: #56565B; }
+
+/* clips: brushed plates, with the track's color on the top edge only */
+html.study.aluminum .tclip { background: linear-gradient(#EFEFEC, #DADAD6); }
+html.study.aluminum .tclip.gen { background: repeating-linear-gradient(135deg, #EFEFEC 0 6px, #E2E2DE 6px 12px); }
+
+/* M, S and R as graphite keys, with LEDs you can see */
+html.study.aluminum .tb { background: var(--graphite); color: #E8E8E4; box-shadow: var(--crisp); }
+html.study.aluminum .tb.m.on, html.study.aluminum .tb.s.on, html.study.aluminum .tb.r.on { background: #1E1E20; color: #F4F4F0; }
+html.study.aluminum .tb::after { width: 4px; height: 4px; background: rgba(255, 255, 255, .16); }
+
+/* deeper engraving between rows */
+html.study.aluminum .arow > .hdr, html.study.aluminum .arow > .launch, html.study.aluminum .arow > .lane { border-bottom-width: 2px; }
+
+/* the launcher as a graphite pad bank */
+html.study.aluminum .cell { background: var(--graphite); box-shadow: var(--crisp); }
+html.study.aluminum .cell .nm { color: #EDEDEA; }
+html.study.aluminum .cell .tri, html.study.aluminum .cell .kind { color: #B9B9B5; }
+html.study.aluminum .cell .mini svg rect, html.study.aluminum .cell .mini svg circle { fill: #EDEDEA; }
+html.study.aluminum .cell.playing { background: #222225; box-shadow: var(--pressed), 0 0 10px var(--tc); }
+html.study.aluminum .cell.queued { box-shadow: var(--crisp), inset 0 0 0 1px rgba(255, 255, 255, .55); }
+html.study.aluminum .cell.rec { background: radial-gradient(circle at 35% 30%, #5E3C3A, #2A1E1E 72%); box-shadow: var(--pressed), 0 0 10px rgba(255, 59, 48, .45); }
+
+/* ---- review fixes, round 2 (October 19): names, a readable R, and muted pads that look muted */
+
+html.study.aluminum { --hdr-w: 290px; }
+html.study.aluminum .tb.r { color: #FF8A80; }
+html.study.aluminum .cell.muted { opacity: .45; }

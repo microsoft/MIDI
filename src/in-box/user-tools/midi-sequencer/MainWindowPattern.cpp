@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "GeneratorListen.h"
 #include "SequencePattern.h"
 #include "StringResources.h"
 
@@ -166,6 +167,10 @@ namespace winrt::midisequencer::implementation
 
             m_pattern.SetStrings(std::move(strings));
 
+            // The header's number boxes show their spin pop-up for touch only.
+            midiapp::UseTouchSpinButtons(PatternStepsBox());
+            midiapp::UseTouchSpinButtons(PatternSwingBox());
+
             m_updatingPatternUi = true;
 
             for (auto const ticks : seq::PatternStepSizes)
@@ -225,6 +230,7 @@ namespace winrt::midisequencer::implementation
             PatternStepSizeCombo().SelectedIndex(sizeIndex);
             PatternKeepLengthToggle().IsChecked(pattern.LanesKeepLength);
             PatternKeepLengthToggle().Visibility(pattern.Mode == seq::PatternMode::Melodic ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            PatternHearToggle().IsChecked(seq::AppSettings::Current().HearPatternSteps());
 
             m_updatingPatternUi = false;
         }
@@ -367,9 +373,11 @@ namespace winrt::midisequencer::implementation
                 });
             };
 
-            auto const stepEdit = [later](std::wstring name, std::function<void(seq::PatternStep&)> change)
+            // The step this was built for: a box that lets go of its value as another step or clip
+            // is picked changes this one, not the one picked.
+            auto const stepEdit = [later, clipId = m_editorClipId, laneIndex, index](std::wstring name, std::function<void(seq::PatternStep&)> change)
             {
-                later([name, change](MainWindow& window) { window.EditSelectedStep(name, change); });
+                later([name, change, clipId, laneIndex, index](MainWindow& window) { window.EditStep(clipId, laneIndex, index, name, change); });
             };
 
             auto const section = [&body](xaml::UIElement const& element, double top = 10)
@@ -418,7 +426,7 @@ namespace winrt::midisequencer::implementation
                 box.SmallChange(smallChange);
                 box.LargeChange(smallChange * 10);
                 box.Value(value);
-                box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                midiapp::UseTouchSpinButtons(box);
                 box.ValueChanged([stepEdit, header, apply](controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const& args)
                 {
                     auto const newValue = args.NewValue();
@@ -670,8 +678,17 @@ namespace winrt::midisequencer::implementation
             return;
         }
 
-        auto const lane = m_pattern.SelectedLane();
-        auto const index = m_pattern.SelectedStep();
+        EditStep(m_editorClipId, m_pattern.SelectedLane(), m_pattern.SelectedStep(), name, edit);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::EditStep(std::wstring const& clipId, size_t lane, uint16_t index, std::wstring const& name, std::function<void(seq::PatternStep&)> const& edit) noexcept
+    {
+        // Only in the clip it was meant for.
+        if (m_editorClipId != clipId)
+        {
+            return;
+        }
 
         EditPattern(name, [&](seq::PatternSettings& pattern)
         {
@@ -900,6 +917,7 @@ namespace winrt::midisequencer::implementation
             do
             {
                 varied.Seed = seq::MakeSeed();
+                varied.SeedWords.clear();
             } while (varied.Seed == clip->Seed);
 
             seq::ChangeList changes{};
@@ -934,10 +952,12 @@ namespace winrt::midisequencer::implementation
             auto const patternId = clip->Id;
             auto const patternLength = clip->Length;
 
-            // A generator that changes each pass gives its first four passes, like comp 4.
+            // A generator that changes each pass gives its first four passes, like comp 4. One that
+            // keeps listening hears its source side by side, as if both started together.
             auto const& meter = m_doc.Meter.empty() ? seq::MeterChange{} : m_doc.Meter.front();
             auto const ceiling = seq::TicksPerBar(meter) * MakeNotesMaximumBars;
-            auto notes = clip->Generator.has_value() ? seq::MakeNotesFromGenerator(*clip, 4, ceiling) : seq::MakeNotesFromPattern(*clip, ceiling);
+            seq::ListenContext const listen{ &m_doc, nullptr };
+            auto notes = clip->Generator.has_value() ? seq::MakeNotesFromGenerator(*clip, 4, ceiling, &listen) : seq::MakeNotesFromPattern(*clip, ceiling);
             auto const notesId = notes.Id;
 
             auto const before = m_doc.Tracks;
@@ -1049,6 +1069,20 @@ namespace winrt::midisequencer::implementation
 
         default:
             break;
+        }
+
+        // A step about to go on plays now, so its sound is heard as it's added.
+        if (!right && hit.Target == seq::PatternTarget::Step)
+        {
+            if (auto const clip = seq::FindClip(m_doc, m_editorClipId); clip != nullptr && clip->Pattern.has_value() && hit.Lane < clip->Pattern->Lanes.size())
+            {
+                auto const& lane = clip->Pattern->Lanes[hit.Lane];
+
+                if (seq::FindStep(lane, hit.Step) == nullptr)
+                {
+                    HearPatternStep(clip->Pattern->Mode == seq::PatternMode::Melodic ? m_pattern.NextNote() : lane.Note, seq::PatternStep{}.Velocity);
+                }
+            }
         }
 
         if (m_pattern.PointerPressed(position, right))
@@ -1165,10 +1199,15 @@ namespace winrt::midisequencer::implementation
                     if (step != nullptr)
                     {
                         auto const amount = direction * (shift ? 12 : 1);
+                        auto const heard = static_cast<uint8_t>(std::clamp(static_cast<int32_t>(step->Note) + amount, 0, 127));
+                        auto const velocity = step->Accent ? uint16_t{ 0xFFFF } : step->Velocity;
+
                         EditSelectedStep(std::wstring{ res::GetString(L"UndoEditSteps") }, [amount](seq::PatternStep& edited)
                         {
                             edited.Note = static_cast<uint8_t>(std::clamp(static_cast<int32_t>(edited.Note) + amount, 0, 127));
                         });
+
+                        HearPatternStep(heard, velocity);
                     }
 
                     return true;
@@ -1191,6 +1230,11 @@ namespace winrt::midisequencer::implementation
                         seq::SetStepOn(pattern.Lanes[lane], index, on, note);
                     }
                 });
+
+                if (on)
+                {
+                    HearPatternStep(note, seq::PatternStep{}.Velocity);
+                }
 
                 return true;
             }

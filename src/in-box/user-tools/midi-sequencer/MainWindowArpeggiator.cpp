@@ -264,7 +264,7 @@ namespace winrt::midisequencer::implementation
             box.LargeChange(10);
             box.Value(value);
             box.Width(170);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+            midiapp::UseTouchSpinButtons(box);
             box.ValueChanged([edit, apply](controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const& args)
             {
                 auto const newValue = args.NewValue();

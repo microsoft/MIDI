@@ -11,6 +11,7 @@
 #include "pch.h"
 #include "MainWindow.xaml.h"
 
+#include "GeneratorNames.h"
 #include "SequenceProvenance.h"
 #include "StringResources.h"
 
@@ -187,12 +188,25 @@ namespace winrt::midisequencer::implementation
 
                 if (clip.Generator.has_value())
                 {
-                    auto const typeKey =
-                        clip.Generator->Type == ::midisequencer::GeneratorType::Euclidean ? L"GeneratorTypeEuclidean" :
-                        clip.Generator->Type == ::midisequencer::GeneratorType::ChanceMelody ? L"GeneratorTypeChanceMelody" :
-                        L"GeneratorTypeArpeggiator";
+                    // Design section 28: a clip that learned from another names it, and one made
+                    // from words keeps them.
+                    auto const& generator = *clip.Generator;
+                    auto const type = std::wstring{ res::GetString(::midisequencer::GeneratorTypeKey(generator.Type)) };
+                    auto const seed = clip.SeedWords.empty() ? std::format(L"{:04X}", clip.Seed & 0xFFFF) : L"\u201C" + clip.SeedWords + L"\u201D";
+                    auto const learning = generator.Type == ::midisequencer::GeneratorType::Learn;
 
-                    row.Detail = res::FormatString(L"ClipGeneratorFormat", std::wstring{ res::GetString(typeKey) }, std::format(L"{:04X}", clip.Seed & 0xFFFF));
+                    if (learning && generator.LearnFrom == ::midisequencer::LearnSource::Clip && !generator.LearnedFrom.empty())
+                    {
+                        row.Detail = res::FormatString(L"ClipLearnedFormat", type, generator.LearnedFrom);
+                    }
+                    else if (generator.Type == ::midisequencer::GeneratorType::Words || (learning && generator.LearnFrom == ::midisequencer::LearnSource::Words))
+                    {
+                        row.Detail = res::FormatString(L"ClipWordsFormat", type, generator.Text.substr(0, 40));
+                    }
+                    else
+                    {
+                        row.Detail = res::FormatString(L"ClipGeneratorFormat", type, seed);
+                    }
                 }
                 break;
             }

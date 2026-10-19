@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Windows MIDI Sequencer: the timeline's scroll bar and zoom</title>
+<style>
+    body { margin: 0; padding: 28px 32px 56px; background: #EDEBE7; color: #2A2A2D; font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; }
+    a { color: #2B6CB0; }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 28px; margin: 0 0 6px; }
+    h2 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; font-size: 21px; margin: 36px 0 10px; }
+    h3 { font-size: 15px; margin: 18px 0 6px; }
+    p, li { max-width: 1180px; font-size: 14px; line-height: 1.55; color: #3E3E44; }
+    p { margin: 0 0 10px; }
+    ul { padding-left: 20px; margin: 0 0 12px; }
+    li { margin-bottom: 4px; }
+    code, kbd { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: #E2DFD9; padding: 1px 5px; border-radius: 4px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 924px); gap: 18px 22px; }
+    .grid.three { grid-template-columns: repeat(3, 609px); }
+    figure { margin: 0; background: #FFFFFF; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .08); }
+    figure img.full { width: 900px; display: block; border-radius: 6px; }
+    .grid.three figure img.full { width: 585px; }
+    .crop { margin-top: 8px; overflow: hidden; border-radius: 6px; position: relative; width: 900px; }
+    .grid.three .crop { width: 585px; }
+    .crop img { position: absolute; width: 1668px; max-width: none; }
+    figcaption { font-size: 13px; line-height: 1.5; color: #4A4A50; margin-top: 10px; }
+    figcaption b { color: #2A2A2D; }
+    .note { background: #F7F5F1; border-left: 3px solid #C9C3B8; padding: 8px 12px; border-radius: 0 6px 6px 0; max-width: 1156px; }
+    table { border-collapse: collapse; font-size: 13px; max-width: 1860px; background: #FFFFFF; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
+    th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid #ECE9E3; line-height: 1.45; }
+    th { background: #F4F2EE; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>The timeline's scroll bar, and zoom</h1>
+<p>The timeline gets a scroll bar of its own, drawn by the app like the rest of the timeline. It zooms as well as scrolls, and you can switch it between two kinds: a <b>plain bar</b>, and an <b>overview</b> of the whole sequence like Bitwig Studio's, with a line for each track and the sections by name. It goes under the timeline or above the ruler, as you choose. Below are comps of both kinds in Tactile and Aluminum, in their light looks and, dark, in your aqua. The timelines in the comps are drawn at the zoom they show: 12 bars across, the whole sequence, and 3&frac12; bars.</p>
+<p class="note">The comps are pages over the main window comp (<code>make.ps1</code> builds them; <code>scroll.js</code> and <code>scroll.css</code> add the bar). Click any picture for its page. The research on what other DAWs do is <a href="#others">near the end</a>.</p>
+
+<!-- ================================================================== -->
+<h2>What it does, either kind</h2>
+<ul>
+    <li><b>Scroll in time:</b> drag the view (the plain bar's thumb, or the overview's frame). Click outside it to jump there. Shift + wheel, a tilting wheel, or a two-finger sideways swipe on a touchpad scrolls in time; the wheel on its own still scrolls the tracks.</li>
+    <li><b>Zoom:</b> drag either end of the view, which keeps the other end where it is. <kbd>Ctrl</kbd> + wheel zooms about the pointer. A pinch on a touch screen or a touchpad zooms time only, about the pinch. The zoom controls at the bar's end zoom about the playhead when it's in view, and about the middle when it isn't. Drag the view up or down to zoom, as Live's overview does. Double-click the view to zoom to fit the sequence, and double-click again to go back.</li>
+    <li><b>Keys</b> (when the timeline has focus): <kbd>Ctrl</kbd>+<kbd>=</kbd> zoom in, <kbd>Ctrl</kbd>+<kbd>-</kbd> zoom out, <kbd>Ctrl</kbd>+<kbd>0</kbd> zoom to fit, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>0</kbd> zoom to the selection. Bitwig and Resolve use the same; see the research for the others.</li>
+    <li><b>The grid follows the zoom.</b> Far out it marks bars, every fourth one stronger, and the ruler numbers every other bar. In the middle it marks bars and beats. Close in it adds sixteenths, and the ruler numbers the beats. Lines are never closer than about 6 pixels, and numbers never closer than about 40.</li>
+    <li><b>Limits:</b> out to the whole sequence and a little room after it; in to about one beat across the timeline.</li>
+    <li><b>The switch</b> at the bar's left end changes between the overview and the plain bar. <b>Right-click</b> the bar for the same choice, for where the bar goes, and to zoom to fit or to the selection. The same two settings are in the app's settings.</li>
+</ul>
+
+<!-- ================================================================== -->
+<h2>The overview, under the timeline</h2>
+<p>A line for each track where its clips are, in its color. A closed folder is one line. Muted clips are faint. The sections (the tempo track's tags) are named across the top, with a mark where each starts. You also see the loop and the playhead, and, under the lines, where the selected clip's linked copies play, the way Visual Studio's scroll bar marks what a search found. What's outside the view is veiled. The view is a frame: drag it to move, or drag a grip at either end to zoom.</p>
+<div class="grid">
+    <figure>
+        <a href="tactile-overview.html?theme=light"><img class="full" src="shots/tactile-overview.png" alt="Tactile, with the overview under the timeline"></a>
+        <div class="crop" style="height:152px;width:872px"><img src="shots/tactile-overview.png" style="left:-740px;top:-579px" alt=""></div>
+        <figcaption><b>Tactile.</b> The overview sits in a well the color of the timeline's field, and the view is a raised, clear frame with a porcelain grip at each end. Zoom keys at the right: zoom out, zoom in, and zoom to fit.</figcaption>
+    </figure>
+    <figure>
+        <a href="aluminum-overview.html?theme=light"><img class="full" src="shots/aluminum-overview.png" alt="Aluminum, with the overview under the timeline"></a>
+        <div class="crop" style="height:152px;width:872px"><img src="shots/aluminum-overview.png" style="left:-740px;top:-560px" alt=""></div>
+        <figcaption><b>Aluminum.</b> The overview is a dark display like the transport's readouts, and the view a metal bracket with a knurled tab at each end. The zoom control here is a slider between a small and a large triangle, as in Studio One.</figcaption>
+    </figure>
+</div>
+
+<!-- ================================================================== -->
+<h2>The plain bar</h2>
+<p>The same view and zoom with nothing else in the bar but the playhead's mark. The tooltip shows what pointing at an end tells you.</p>
+<div class="grid">
+    <figure>
+        <a href="tactile-plain.html?theme=light"><img class="full" src="shots/tactile-plain.png" alt="Tactile, with the plain bar"></a>
+        <div class="crop" style="height:132px;width:872px"><img src="shots/tactile-plain.png" style="left:-740px;top:-580px" alt=""></div>
+        <figcaption><b>Tactile.</b> A slot, with a porcelain key riding in it as long as the view. Here the zoom control is the slider with triangles.</figcaption>
+    </figure>
+    <figure>
+        <a href="aluminum-plain.html?theme=light"><img class="full" src="shots/aluminum-plain.png" alt="Aluminum, with the plain bar"></a>
+        <div class="crop" style="height:105px;width:872px"><img src="shots/aluminum-plain.png" style="left:-740px;top:-607px" alt=""></div>
+        <figcaption><b>Aluminum.</b> An engraved slot with a brushed thumb and knurled ends. Graphite zoom keys at the right.</figcaption>
+    </figure>
+</div>
+
+<!-- ================================================================== -->
+<h2>Above the ruler</h2>
+<p>With the setting at the top, the overview lines up with the ruler and the timeline under it, and the zoom moves into the track list's toolbar, beside the switch, as Logic Pro puts its zoom above the tracks.</p>
+<div class="grid">
+    <figure>
+        <a href="tactile-top.html?theme=light"><img class="full" src="shots/tactile-top.png" alt="Tactile, with the overview above the ruler"></a>
+        <div class="crop" style="height:98px"><img src="shots/tactile-top.png" style="left:-12px;top:-130px" alt=""></div>
+        <div class="crop" style="height:98px;width:826px"><img src="shots/tactile-top.png" style="left:-786px;top:-130px" alt=""></div>
+        <figcaption><b>Tactile.</b> At 1:1, the switch and the zoom over the track list, then the overview over the ruler.</figcaption>
+    </figure>
+    <figure>
+        <a href="aluminum-top.html?theme=light"><img class="full" src="shots/aluminum-top.png" alt="Aluminum, with the overview above the ruler"></a>
+        <div class="crop" style="height:82px"><img src="shots/aluminum-top.png" style="left:-12px;top:-138px" alt=""></div>
+        <div class="crop" style="height:82px;width:812px"><img src="shots/aluminum-top.png" style="left:-800px;top:-138px" alt=""></div>
+        <figcaption><b>Aluminum.</b> The display under the transport's readouts, which it echoes.</figcaption>
+    </figure>
+</div>
+
+<!-- ================================================================== -->
+<h2>Zoom changes the grid</h2>
+<p>The same Tactile window at three zooms. Watch the view in the overview grow and shrink, the grid and the ruler get finer, and the clips spread out.</p>
+<div class="grid three">
+    <figure>
+        <a href="tactile-whole.html?theme=light"><img class="full" src="shots/tactile-whole.png" alt="Zoomed out to the whole sequence"></a>
+        <div class="crop" style="height:108px"><img src="shots/tactile-whole.png" style="width:1201px;left:-573px;top:-94px" alt=""></div>
+        <div class="crop" style="height:43px"><img src="shots/tactile-whole.png" style="width:1201px;left:-573px;top:-472px" alt=""></div>
+        <figcaption><b>The whole sequence.</b> The frame fills the overview. Bars faint, every fourth one stronger; every other bar numbered.</figcaption>
+    </figure>
+    <figure>
+        <a href="tactile-twelve.html?theme=light"><img class="full" src="shots/tactile-twelve.png" alt="Twelve bars"></a>
+        <div class="crop" style="height:108px"><img src="shots/tactile-twelve.png" style="width:1201px;left:-573px;top:-94px" alt=""></div>
+        <div class="crop" style="height:43px"><img src="shots/tactile-twelve.png" style="width:1201px;left:-573px;top:-472px" alt=""></div>
+        <figcaption><b>Twelve bars.</b> The frame covers about half the overview. Bars and beats; every bar numbered.</figcaption>
+    </figure>
+    <figure>
+        <a href="tactile-close.html?theme=light"><img class="full" src="shots/tactile-close.png" alt="Zoomed in to bar 9"></a>
+        <div class="crop" style="height:108px"><img src="shots/tactile-close.png" style="width:1201px;left:-573px;top:-94px" alt=""></div>
+        <div class="crop" style="height:43px"><img src="shots/tactile-close.png" style="width:1201px;left:-573px;top:-472px" alt=""></div>
+        <figcaption><b>Three and a half bars.</b> Beats and sixteenths, and the beats numbered; the frame is narrow.</figcaption>
+    </figure>
+</div>
+<p>These crops are at 72%, so each shows the whole width of the timeline.</p>
+<!-- ================================================================== -->
+<h2>Dark, in your aqua</h2>
+<div class="grid">
+    <figure>
+        <a href="tactile-dark-aqua.html"><img class="full" src="shots/tactile-dark-aqua.png" alt="Tactile, dark, in aqua"></a>
+        <div class="crop" style="height:152px;width:872px"><img src="shots/tactile-dark-aqua.png" style="left:-740px;top:-559px" alt=""></div>
+        <figcaption><b>Tactile, dark.</b> The well and the frame in the dark glaze; the loop and the linked copies lit in your aqua.</figcaption>
+    </figure>
+    <figure>
+        <a href="aluminum-dark-aqua.html"><img class="full" src="shots/aluminum-dark-aqua.png" alt="Aluminum, dark, in aqua"></a>
+        <div class="crop" style="height:152px;width:872px"><img src="shots/aluminum-dark-aqua.png" style="left:-740px;top:-559px" alt=""></div>
+        <figcaption><b>Aluminum, dark.</b> The display backlit in your aqua, like the readouts.</figcaption>
+    </figure>
+</div>
+
+<!-- ================================================================== -->
+<h2>The bar's menu, and the settings</h2>
+<div class="grid">
+    <figure>
+        <a href="tactile-menu.html?theme=light"><img class="full" src="shots/tactile-menu.png" alt="The bar's menu"></a>
+        <div class="crop" style="height:263px;width:852px"><img src="shots/tactile-menu.png" style="left:-760px;top:-449px" alt=""></div>
+        <figcaption><b>Right-click the bar.</b> The kind of bar, where it goes, and zoom to fit or to the selection. The two choices are also settings (<code>TimelineScrollBar</code>: overview or plain; <code>TimelineScrollBarPlace</code>: bottom or top), shown in the app's settings with the other timeline options.</figcaption>
+    </figure>
+    <figure style="align-self:start">
+        <h3 style="margin-top:4px">Three kinds of zoom control</h3>
+        <div class="crop" style="height:36px;width:122px"><img src="shots/tactile-overview.png" style="left:-1490px;top:-684px" alt=""></div>
+        <p style="margin:6px 0 12px"><b>Keys at the bar's end:</b> zoom out, zoom in, zoom to fit, like the &minus; and + at the ends of Cubase's zoom slider. One click, one step; the easiest to find and to hit with a finger.</p>
+        <div class="crop" style="height:32px;width:120px"><img src="shots/aluminum-overview.png" style="left:-1490px;top:-671px" alt=""></div>
+        <p style="margin:6px 0 12px"><b>A slider between triangles at the bar's end</b> (Studio One): shows where the zoom is, and drags smoothly from the whole sequence to one beat. The triangles step it.</p>
+        <div class="crop" style="height:36px;width:238px"><img src="shots/tactile-top.png" style="left:-82px;top:-148px" alt=""></div>
+        <p style="margin:6px 0 0"><b>The slider in the track list's toolbar</b> (Logic Pro): out of the timeline's way, which suits the bar above the ruler.</p>
+    </figure>
+</div>
+
+<!-- ================================================================== -->
+<h2 id="others">What other DAWs do</h2>
+<p>From vendor manuals and help pages where they could be read; anything from forums or secondary summaries says so. "Unverified" means the research couldn't confirm it either way. No GPL sources were used.</p>
+<table>
+<tr><th>App</th><th>Zoom with the wheel</th><th>Scroll in time</th><th>Pinch</th><th>Zoom control on screen</th><th>Drag the thumb's ends to zoom</th><th>Overview</th><th>Zoom keys</th></tr>
+<tr><td><b>Cubase</b> 13&ndash;15</td><td>Ctrl + wheel, at the pointer; Ctrl+Shift + wheel for track height <a href="#s1">[1]</a></td><td>Shift + wheel</td><td>Not on a Mac trackpad; a third-party utility adds it (forum) <a href="#s2">[2]</a></td><td>Zoom sliders and presets at the bottom right, beside the scroll bar</td><td>No; an open feature request asks for it <a href="#s3">[3]</a></td><td>The overview line, at the top: drag or resize its box <a href="#s4">[4]</a></td><td>H and G; Shift+F fit; Alt+S selection</td></tr>
+<tr><td><b>Studio One</b> 6/7</td><td>Ctrl+Shift + wheel; Ctrl + wheel zooms track height (secondary) <a href="#s5">[5]</a></td><td>Shift + wheel</td><td>Unverified</td><td>A wedge-shaped zoom slider at the bottom right, between triangles <a href="#s6">[6]</a></td><td>Unverified</td><td>None built in</td><td>None fixed</td></tr>
+<tr><td><b>Logic Pro</b> 11</td><td>No wheel binding documented; zooms about the pointer, or the playhead when the pointer is near it <a href="#s7">[7]</a></td><td>&mdash;</td><td>Trackpad</td><td>Horizontal and vertical zoom sliders in the tracks area's menu bar</td><td>No</td><td>None</td><td>Cmd + arrows (secondary)</td></tr>
+<tr><td><b>Ableton Live</b> 12</td><td>Ctrl/Cmd + wheel; Alt + wheel for track height <a href="#s8">[8]</a></td><td>&mdash;</td><td>Trackpad scroll with Ctrl/Cmd</td><td>None; the overview and the ruler zoom</td><td>No scroll bar</td><td>At the top: drag sideways to scroll, up or down to zoom, double-click to fit</td><td>+ and &minus;; Z selection; X back</td></tr>
+<tr><td><b>Bitwig Studio</b> 5</td><td>Ctrl+Alt + wheel; drag the ruler up or down <a href="#s9">[9]</a></td><td>Drag the ruler sideways</td><td>Trackpad</td><td>None found</td><td>Unverified</td><td>At the bottom, as in your screenshot (not in the manual the research could read)</td><td>Ctrl+Plus, Ctrl+Minus</td></tr>
+<tr><td><b>REAPER</b> 7</td><td>The wheel alone, at the pointer; remappable (forum) <a href="#s10">[10]</a></td><td>Shift + wheel</td><td>Unverified</td><td>None by default</td><td>Unverified</td><td>None</td><td>Remappable</td></tr>
+<tr><td><b>Pro Tools</b></td><td>Alt + wheel, about the edit selection, not the pointer <a href="#s11">[11]</a></td><td>&mdash;</td><td>No</td><td>The zoom cluster in the Edit window's toolbar</td><td>Unverified</td><td>The Universe window, above the rulers <a href="#s12">[12]</a></td><td>R and T; Alt+F selection; Alt+A session</td></tr>
+<tr><td><b>FL Studio</b></td><td>Ctrl + wheel, at the pointer; Alt + wheel for height <a href="#s13">[13]</a></td><td>&mdash;</td><td>Unverified</td><td>None (a menu)</td><td>Unverified</td><td>None; Ctrl + right-click shows the whole project for a moment (forum)</td><td>T and U; Ctrl+Shift+H fit (forum)</td></tr>
+<tr><td><b>Premiere Pro</b></td><td>Alt + wheel (community) <a href="#s14">[14]</a></td><td>&mdash;</td><td>Unverified</td><td>The zoom scroll bar, under the timeline</td><td><b>Yes</b>: "Drag the edges to zoom in or out of the timeline" <a href="#s15">[15]</a></td><td>None; the zoom scroll bar is it</td><td>= and &minus;; \ fit</td></tr>
+<tr><td><b>DaVinci Resolve</b></td><td>Alt + wheel (secondary) <a href="#s16">[16]</a></td><td>&mdash;</td><td>Unverified</td><td>A zoom slider under the timeline, with handles</td><td>Yes (secondary)</td><td>The Timeline Navigator, above the timeline <a href="#s17">[17]</a></td><td>Ctrl+= and &minus;; Shift+Z fit</td></tr>
+<tr><td><b>Final Cut Pro</b></td><td>None documented</td><td>&mdash;</td><td>Trackpad <a href="#s18">[18]</a></td><td>A slider in the Clip Appearance pop-up</td><td>Unverified</td><td>None</td><td>Cmd + Plus and Minus; Shift+Z fit</td></tr>
+</table>
+
+<h3>What it means here</h3>
+<ul>
+    <li><b>Ctrl + wheel zooms</b>, about the pointer, as in Cubase, Live and FL Studio. Pro Tools, Premiere and Resolve use Alt instead, so the modifier could become a setting later.</li>
+    <li><b>A touchpad's pinch comes free with it.</b> For an app that doesn't use DirectManipulation, Windows sends a precision touchpad's pinch as the wheel with Ctrl held (WM_MOUSEWHEEL with MK_CONTROL) <a href="#s19">[19]</a>, so in WinUI it arrives as <code>PointerWheelChanged</code> with the Control modifier. One handler covers both.</li>
+    <li><b>A touch screen's pinch</b> comes through manipulation events (<code>ManipulationModes</code> Scale, <code>ManipulationDelta</code>) <a href="#s20">[20]</a>, which come from touch only; a touchpad's pinch never produces them (community) <a href="#s21">[21]</a>. <code>InteractionTracker</code> may pick up the touchpad too; that needs a try on real hardware.</li>
+    <li><b>Shift + wheel scrolls in time</b>, as in Cubase, Studio One and REAPER.</li>
+    <li><b>Dragging the thumb's ends</b> is how Premiere and Resolve zoom, and something Cubase users have asked for.</li>
+    <li><b>Overviews are at the top</b> in Live, Pro Tools, Resolve and Cubase's overview line, and <b>at the bottom</b> in Bitwig, where it replaces the scroll bar as it does here. Both are familiar, which is a good reason for the setting. From Live, two gestures worth copying: drag the view up or down to zoom, and double-click to fit.</li>
+    <li><b>What a zoom stays about</b> differs: the pointer in Logic, Live and Cubase, and the edit selection in Pro Tools. Here, the pointer for the wheel and a pinch, and for keys and buttons the playhead when it's in view, else the middle, much as Logic does.</li>
+</ul>
+
+<h3>Sources</h3>
+<ol style="font-size:12.5px;line-height:1.5;color:#4A4A50;max-width:1500px">
+    <li id="s1">Cubase Pro 15, Zoom key commands (steinberg.help; the page could only be read through secondary summaries)</li>
+    <li id="s2"><a href="https://forums.steinberg.net/t/new-solution-continuous-pinch-to-zoom-for-cubase-on-macos/830052">Steinberg forums: PinchBar</a></li>
+    <li id="s3"><a href="https://forums.steinberg.net/t/feature-request-add-the-ability-to-zoom-in-out-by-dragging-resizing-the-scrollbars/1033859">Steinberg forums: feature request, zoom by dragging the scroll bars</a></li>
+    <li id="s4">Cubase Pro 15, The Overview Line (steinberg.help)</li>
+    <li id="s5"><a href="https://pae-web.presonusmusic.com/downloads/products/pdf/STUDIO_ONE_-_KEY_COMMANDS_SHEET.pdf">Studio One key commands (PDF)</a></li>
+    <li id="s6"><a href="https://www.soundonsound.com/techniques/studio-one-session-navigation">Sound On Sound: Studio One session navigation</a></li>
+    <li id="s7"><a href="https://support.apple.com/guide/logicpro/lgcpf7c0b924/mac">Apple: scroll and zoom in the Tracks area in Logic Pro</a></li>
+    <li id="s8"><a href="https://www.ableton.com/en/live-manual/12/arrangement-view/">Ableton Live 12 manual: Arrangement View</a></li>
+    <li id="s9"><a href="https://www.bitwig.com/userguide/latest/the_arrange_view_and_tracks/">Bitwig Studio user guide: the Arrange view and tracks</a></li>
+    <li id="s10">Cockos forums, threads on the default mouse modifiers</li>
+    <li id="s11"><a href="https://www.avid.com/pro-tools/user-guide/zoom">Avid: Pro Tools user guide, Zoom</a></li>
+    <li id="s12"><a href="https://www.production-expert.com/production-expert-1/how-to-use-the-pro-tools-universe-and-video-universe-windows">Production Expert: the Pro Tools Universe window</a></li>
+    <li id="s13"><a href="https://www.image-line.com/fl-studio-learning-content/fl-studio-online-manual/html/playlist.htm">FL Studio manual: the Playlist</a></li>
+    <li id="s14">Adobe community: changing track size in the timeline</li>
+    <li id="s15"><a href="https://helpx.adobe.com/premiere/desktop/edit-projects/change-clip-sequence/navigation-controls-in-the-timeline.html">Adobe: navigation controls in the timeline</a></li>
+    <li id="s16">DaVinci Resolve shortcut summaries (cined.com, davinciresolveclub.com); the manual PDF couldn't be read</li>
+    <li id="s17"><a href="https://www.blackmagicdesign.com/products/davinciresolve/edit">Blackmagic Design: DaVinci Resolve, Edit page</a></li>
+    <li id="s18"><a href="https://support.apple.com/guide/final-cut-pro/zoom-in-to-and-out-of-the-timeline-ver4e2edcc/mac">Apple: zoom in and out of the timeline in Final Cut Pro</a></li>
+    <li id="s19"><a href="https://learn.microsoft.com/en-us/windows/win32/wintouch/windows-touch-gestures-overview">Microsoft Learn: Windows Touch Gestures Overview</a>; <a href="https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousewheel">WM_MOUSEWHEEL</a></li>
+    <li id="s20"><a href="https://learn.microsoft.com/en-us/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.input.manipulationmodes">Microsoft Learn: ManipulationModes</a></li>
+    <li id="s21">microsoft/microsoft-ui-xaml issue 7221 and Stack Overflow 64205623 (community)</li>
+</ol>
+
+<!-- ================================================================== -->
+<h2>Building it</h2>
+<ul>
+    <li><b>The timeline becomes one control,</b> <code>TimelineView</code>, which owns the time axis (where the view starts, in ticks, and how many ticks a pixel is) and the vertical scroll. It draws the ruler, the lanes and the playhead with Win2D as now, keeps the pinned rows apart from the ones that scroll, and hosts the bar. The track headers and the launcher keep their own controls and follow its vertical scroll.</li>
+    <li><b>The bar is a control of its own,</b> <code>TimelineScrollBar</code>, drawn with Win2D through the theme engine. Each style draws its well, view, grips, veil and zoom controls from parts in its theme file (<code>timeline.scrollbar.*</code>, <code>timeline.overview.*</code>), the way the clips and launcher pads are drawn now, so Night drive, Tactile, Aluminum and Vellum each get their own without code of their own. The piano roll and the drum pattern editor can use the plain bar later for their own zoom.</li>
+    <li><b>Zoom keeps the point you zoom about still:</b> the tick under the pointer (or the pinch, or the end you didn't drag) stays where it is on screen. Steps from the keys and the controls glide over about 120 ms; wheels, pinches and drags follow your hand without easing.</li>
+    <li><b>The overview is drawn once</b> into an image when the sequence changes, and the view, the veil and the playhead are drawn over it as they move, so it costs nothing while playing.</li>
+    <li><b>Input:</b> pointer capture for dragging the view and its ends. <code>PointerWheelChanged</code> for the wheel: Ctrl zooms, which also takes a touchpad's pinch, since Windows sends it as Ctrl + wheel; Shift or a horizontal wheel scrolls. Manipulation events (<code>ManipulationModes</code> TranslateX and Scale) for a touch screen's pinch and drag.</li>
+    <li><b>Accessibility and keys:</b> the bar takes focus. The arrow keys move the view, and Ctrl with an arrow zooms. UI Automation exposes it as a scroll bar whose value is the view's start and whose view size is the zoom. Narrator reads, for example, "Bars 5 to 17 of 26".</li>
+    <li><b>Settings:</b> <code>TimelineScrollBar</code> (overview or plain) and <code>TimelineScrollBarPlace</code> (bottom or top), each with the bar's menu and the app's settings to change it. The zoom and the view are saved with the sequence, as they are now.</li>
+</ul>
+
+<h2>What I'd suggest</h2>
+<p>The <b>overview under the timeline</b> by default, with the plain bar a click away. Both kinds zoom by dragging an end, with <kbd>Ctrl</kbd> + wheel and with a pinch. Put <b>keys at the bar's end</b> (zoom out, zoom in, fit), the easiest to find and to touch; the slider is a close second if you'd rather see where the zoom is. Offer the top placement through the setting, for people who know an overview there from Live, Pro Tools or Cubase, with the zoom moving to the track list's toolbar.</p>
+
+</body>
+</html>
