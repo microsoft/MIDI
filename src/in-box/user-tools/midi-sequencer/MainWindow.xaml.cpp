@@ -842,8 +842,9 @@ namespace winrt::midisequencer::implementation
             }
 
             // A sequence with a file saves itself as it goes; this is the one still waiting. A file
-            // from a newer version, or one that wouldn't save, asks instead.
-            if (!m_path.empty() && !m_readOnly && !m_closeSaveFailed)
+            // from a newer version, or one that wouldn't save, asks instead, and so does every
+            // sequence when saving by itself is off.
+            if (!m_path.empty() && !m_readOnly && !m_closeSaveFailed && seq::AppSettings::Current().AutoSave())
             {
                 m_closeConfirmed = true;
                 SaveAsync(false);
@@ -892,10 +893,11 @@ namespace winrt::midisequencer::implementation
 
             if (result == controls::ContentDialogResult::Primary)
             {
-                // Under a name of its own: a new sequence, a file from a newer version, or one that
+                // To its file when it has one that saves (saving by itself is off). Otherwise under
+                // a name of its own: a new sequence, a file from a newer version, or one that
                 // wouldn't save where it was.
                 m_closeConfirmed = true;
-                SaveAsync(true);
+                SaveAsync(m_path.empty() || m_readOnly || m_closeSaveFailed);
             }
             else if (result == controls::ContentDialogResult::Secondary)
             {

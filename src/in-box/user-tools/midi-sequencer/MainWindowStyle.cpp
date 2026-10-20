@@ -301,6 +301,9 @@ namespace winrt::midisequencer::implementation
         // The timeline's scroll bar: which kind, and where (MainWindowTimelineBar.cpp).
         panel.Children().Append(MakeTimelineBarSettings());
 
+        // Saving by itself (MainWindowAutoSave.cpp).
+        panel.Children().Append(MakeAutoSaveSetting());
+
         return panel;
     }
 

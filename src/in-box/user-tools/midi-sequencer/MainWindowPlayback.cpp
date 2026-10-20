@@ -198,6 +198,9 @@ namespace winrt::midisequencer::implementation
             {
                 StartRemoteControlAsync();
             }
+
+            // A launch or Play pressed while MIDI was starting.
+            RunWaitingForMidi();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start MIDI.")
     }
@@ -577,7 +580,11 @@ namespace winrt::midisequencer::implementation
         {
             if (m_engine == nullptr)
             {
-                ShowMessage(res::GetString(L"MidiNotReady"));
+                // MIDI is still starting: it plays from here once it has.
+                WaitForMidi([weak = get_weak(), fromTick]()
+                {
+                    if (auto strong = weak.get()) { strong->Play(fromTick); }
+                });
                 UpdateTransport();
                 return;
             }
@@ -628,15 +635,13 @@ namespace winrt::midisequencer::implementation
 
             m_position = m_engine->PositionTick();
             m_engine->Stop();
-            m_launchViews.clear();
 
             // Writing from the mixer ends with the music.
             CommitMixerEdit();
 
-            UpdateTransport();
+            // What each track will play when playback starts again.
+            RefreshLaunchViews();
             UpdateLeds();
-            InvalidateArrange();
-            InvalidateLaunchers();
             InvalidateEditor();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to stop.")
@@ -692,7 +697,7 @@ namespace winrt::midisequencer::implementation
                 return true;
             });
 
-            UpdateTransport();
+            RefreshLaunchViews();
             ShowMessage(res::GetString(L"Silenced"));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to silence the devices.")
@@ -2198,6 +2203,7 @@ namespace winrt::midisequencer::implementation
         if (m_engine != nullptr)
         {
             m_engine->ReturnToTimeline(std::wstring{}, LaunchQuantize());
+            RefreshLaunchViews();
         }
     }
 

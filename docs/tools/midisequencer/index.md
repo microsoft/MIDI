@@ -20,12 +20,12 @@ It doesn't record or play audio. To play sounds, it uses a synth or a device: th
 
 ## Quick start
 
-![The Windows MIDI Sequencer main window with the sample sequence open, and numbered callouts on the File menu button, the transport buttons, the position and tempo display, the Launch, Snap, Capture and Silence controls, Undo and Redo, the track list, the clip launcher, the timeline, the editor, and the status bar]({{ site.baseurl }}/assets/images/midisequencer-quick-start.png)
+![The Windows MIDI Sequencer main window with the sample sequence open, and numbered callouts on the File menu button, the transport buttons, the position and tempo display, the Launch, Snap, Capture and Panic controls, Undo and Redo, the track list, the clip launcher, the timeline, the editor, and the status bar]({{ site.baseurl }}/assets/images/midisequencer-quick-start.png)
 
 1. **The File menu** has New sequence, Open, Open recent, Save, Import and Export, and a sample sequence to look around in. It also has **Lyrics…**, **About this sequence…**, **Studio setup…**, and **Remote control and MIDI Glass…**.
 2. **The transport buttons** go to the start, play, stop, record, loop and play the metronome. Space plays and stops. To set where the loop goes, drag along the ruler above the timeline.
 3. **The position and tempo display** shows where the playhead is, in bars and in time, and the tempo and meter. Select the tempo to change it. **Internal clock** opens **Clock and sync**, where the sequence can follow another device's clock or send MIDI Time Code.
-4. **Launch** sets when a clip you launch starts playing, such as at the next bar. **Snap** sets the grid that clips and notes snap to. **Capture** makes a clip from what you just played on the armed tracks, even if you weren't recording. **Silence** stops every note on every device.
+4. **Launch** sets when a clip you launch starts playing, such as at the next bar. **Snap** sets the grid that clips and notes snap to. **Capture** makes a clip from what you just played on the armed tracks, even if you weren't recording. **Panic**, in red, stops playback and every note on every device. It's a one-time action, not a mute switch.
 5. **Undo** and **Redo** go back and forward through your changes. The chip at the end says whether the sequence is saved.
 6. **The tracks.** Each track plays to one device. Select a track to set it up. **M**, **S** and **R** mute it, solo it, and arm it to record. Folders hold tracks, and the **Tempo and meter** track at the top holds tempo changes and tags that mark parts of the song.
 7. **The clip launcher** plays clips live. Each column is a scene. Select the triangle at a clip's top left to start it on its track, or a scene at the top to start every clip in its column at once. When there are more scenes than fit, scroll over the scene names, or hold Shift and scroll over the clips, to see the rest.
@@ -210,7 +210,7 @@ Lyrics in a Standard MIDI File come in when you import it, including karaoke fil
 
 ## The clip launcher
 
-The launcher plays clips without following the timeline. Select **Launcher** to show it. Select the triangle at a clip's top left to play it on its track, and select it again to stop it. Select the rest of the clip to open it in the editor; it keeps playing, or not, as it was. Double-click an empty slot to make a clip there. A track playing a launched clip shows **Playing a launched clip** across its timeline. Select **Back to timeline** to go back to the timeline. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.
+The launcher plays clips without following the timeline. Select **Launcher** to show it. Select the triangle at a clip's top left to play it on its track, and select it again to stop it. Select the rest of the clip to open it in the editor; it keeps playing, or not, as it was. Double-click an empty slot to make a clip there. A track playing a launched clip shows **Playing a launched clip** across its timeline. That stays after you stop, so the next Play carries on with what each track was playing. Select **Back to timeline** to go back to the timeline, whether or not the sequence is playing. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.
 
 ## Studio setup
 
@@ -271,7 +271,7 @@ Windows MIDI Keyboard is different. When it opens on a device, it asks the devic
 
 ## Your sequence files
 
-Sequences are saved as `.midisequence` files in **Documents &rsaquo; MIDI Sequences**. A sequence that has been saved once saves itself again as you work. A file from a newer version of the app opens, but it can't be saved over, because it might hold settings this version doesn't know about. Use **Save as…** to keep a copy.
+Sequences are saved as `.midisequence` files in **Documents &rsaquo; MIDI Sequences**. A sequence that has been saved once saves itself again as you work, and when you close it. To save only when you choose **Save**, turn off **Save automatically** in the settings (the gear at the top right); then closing asks about unsaved changes. A file from a newer version of the app opens, but it can't be saved over, because it might hold settings this version doesn't know about. Use **Save as…** to keep a copy.
 
 To open a sequence you've used before, select **File**, then **Open recent…**, or press Ctrl+Shift+O. It lists the last 100 sequences you opened or saved, newest first. Type in the box at the top to find one by its name or folder.
 

@@ -555,13 +555,13 @@
     <value>Every track back to its timeline</value>
   </data>
   <data name="SilenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Silence</value>
+    <value>Panic</value>
   </data>
   <data name="SilenceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Stop every note on every device the sequence plays to</value>
+    <value>Panic: stop playback, and stop every note on every device the sequence plays to</value>
   </data>
   <data name="SilenceButtonText.Text" xml:space="preserve">
-    <value>Silence</value>
+    <value>Panic</value>
   </data>
   <data name="UndoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Undo</value>
@@ -1807,7 +1807,7 @@
     <value>MIDI isn't ready yet.</value>
   </data>
   <data name="Silenced" xml:space="preserve">
-    <value>Sent all notes off to every device.</value>
+    <value>Panic: stopped, and sent all notes off to every device.</value>
   </data>
   <data name="RecordNothingArmed" xml:space="preserve">
     <value>Arm a track first: select R on the track you want to record.</value>
@@ -4677,4 +4677,19 @@
   </data>
   <data name="SoundCategoryName" xml:space="preserve">
     <value>Category</value>
-  </data></root>
+  </data>  <data name="MidiStarting" xml:space="preserve">
+    <value>MIDI is still starting. This plays as soon as it's ready.</value>
+  </data>
+  <data name="AutoSaveHeader" xml:space="preserve">
+    <value>Save automatically</value>
+  </data>
+  <data name="AutoSaveOn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="AutoSaveOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="AutoSaveHelp" xml:space="preserve">
+    <value>When this is on, a sequence that has a file saves itself a moment after each change, and when you close it. When it's off, it saves only when you choose Save, and closing asks about unsaved changes.</value>
+  </data>
+</root>

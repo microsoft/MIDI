@@ -2442,6 +2442,7 @@ namespace winrt::midisequencer::implementation
                 if (m_engine != nullptr)
                 {
                     m_engine->ReturnToTimeline(hit.Row->TrackId, LaunchQuantize());
+                    RefreshLaunchViews();
                 }
 
                 args.Handled(true);
@@ -3572,6 +3573,14 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (WaitForMidi([weak = get_weak(), scene]()
+                {
+                    if (auto strong = weak.get()) { strong->LaunchScene(scene); }
+                }))
+            {
+                return;
+            }
+
             if (m_engine == nullptr || scene >= m_doc.Scenes.size())
             {
                 return;
@@ -3591,13 +3600,7 @@ namespace winrt::midisequencer::implementation
             });
 
             m_engine->LaunchScene(launches, LaunchQuantize(), static_cast<int32_t>(scene));
-
-            UpdateTransport();
-
-            if (m_frameTimer != nullptr)
-            {
-                m_frameTimer.Start();
-            }
+            RefreshLaunchViews();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to launch a scene.")
     }
@@ -3607,6 +3610,14 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (WaitForMidi([weak = get_weak(), trackId, scene]()
+                {
+                    if (auto strong = weak.get()) { strong->LaunchSlot(trackId, scene); }
+                }))
+            {
+                return;
+            }
+
             auto const track = seq::FindTrack(m_doc, trackId);
 
             if (m_engine == nullptr || track == nullptr || scene >= track->Slots.size())
@@ -3623,10 +3634,11 @@ namespace winrt::midisequencer::implementation
             }
             else
             {
-                // A second click on the playing clip stops it.
+                // A second click on the playing clip stops it. While playback is stopped, a click
+                // plays it, even on the clip a track was left playing.
                 auto view = m_launchViews.find(trackId);
 
-                if (view != m_launchViews.end() && view->second.Plays(clipId, scene) && !view->second.Pending)
+                if (m_engine->IsPlaying() && view != m_launchViews.end() && view->second.Plays(clipId, scene) && !view->second.Pending)
                 {
                     m_engine->StopTrack(trackId, quantize);
                 }
@@ -3636,12 +3648,7 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            UpdateTransport();
-
-            if (m_frameTimer != nullptr)
-            {
-                m_frameTimer.Start();
-            }
+            RefreshLaunchViews();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to launch a clip.")
     }

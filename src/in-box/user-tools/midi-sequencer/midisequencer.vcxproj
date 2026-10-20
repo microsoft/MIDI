@@ -253,6 +253,8 @@
     <ClCompile Include="MainWindowPlates.cpp" />
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowRecordPlayed.cpp" />
+    <ClCompile Include="MainWindowLaunchState.cpp" />
+    <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="..\theme-engine\ThemePlates.cpp" />
     <ClCompile Include="..\theme-engine\ThemeCanvas.cpp" />
     <ClCompile Include="TimelineView.cpp">

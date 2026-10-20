@@ -320,7 +320,8 @@
                 "states": {
                     "hover": { "background": "linear-gradient(btnTop, btnTop)" },
                     "pressed": { "background": "toggledFace", "box-shadow": "pressed" },
-                    "toggled": { "background": "toggledFace", "box-shadow": "pressed", "color": "accentInk" }
+                    "toggled": { "background": "toggledFace", "box-shadow": "pressed", "color": "accentInk" },
+                    "panic": { "background": "linear-gradient(color-mix(in srgb, record 16%, btnTop), color-mix(in srgb, record 18%, btnBottom))", "color": "recordText" }
                 }
             },
             "button.subtle": {

@@ -162,6 +162,7 @@ namespace winrt::midisequencer::implementation
         void RefreshStyle() noexcept;
         xaml::UIElement MakeStylePicker();
         xaml::UIElement MakeTimelineBarSettings();
+        xaml::UIElement MakeAutoSaveSetting();
         xaml::UIElement MakeStylePreview(_In_ themeengine::ThemeDefinition const& definition, _In_ bool dark, _In_ std::optional<themeengine::Color> tint);
         void ApplyStrips() noexcept;
         void ColorDialogs() noexcept;
@@ -605,6 +606,13 @@ namespace winrt::midisequencer::implementation
         void UpdateArpeggiatorRoutes() noexcept;
         std::vector<std::wstring> FeedArpeggiators(_In_ std::wstring const& endpointId, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
         void RecordArpeggiatedNotes() noexcept;
+
+        // The launcher's state from the engine, and what waits for MIDI to start
+        // (MainWindowLaunchState.cpp). WaitForMidi is true when it kept the action for later.
+        void RefreshLaunchViews() noexcept;
+        bool WaitForMidi(_In_ std::function<void()> action) noexcept;
+        void RunWaitingForMidi() noexcept;
+        std::vector<std::function<void()>> m_waitingForMidi{};
 
         // What armed tracks play from launched clips, into their takes (MainWindowRecordPlayed.cpp).
         void SetRecordedTracks(_In_ bool recording) noexcept;

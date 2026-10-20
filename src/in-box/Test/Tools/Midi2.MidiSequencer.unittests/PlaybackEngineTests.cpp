@@ -1250,6 +1250,36 @@ void PlaybackEngineTests::ARecordedLaunchIsCutByTheNextLaunch()
     VERIFY_IS_TRUE(std::any_of(clip.Notes.begin(), clip.Notes.end(), [](Note const& n) { return n.Number == 76 && n.Tick == Bar * 2; }));
 }
 
+void PlaybackEngineTests::ALaunchWhileStoppedStartsPlaybackWithTheClip()
+{
+    auto sequence = KeysSequence();
+
+    Clip loop{};
+    loop.Id = L"c-loop";
+    loop.Length = Bar / 2;
+    loop.Loop = true;
+    loop.Notes = { testdata::MakeNote(0, 240, 72) };
+    sequence.Clips.push_back(loop);
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+
+    // Launched with the app's own quantize setting, a bar in ticks.
+    f.Engine.LaunchClip(L"t-keys", L"c-loop", Bar, 0);
+    VERIFY_IS_TRUE(f.Engine.IsPlaying());
+
+    RunUntil(f, At(Bar));
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_IS_TRUE(ons.size() >= 2);
+    VERIFY_ARE_EQUAL(uint8_t{ 72 }, NoteNumber(ons[0]));
+    VERIFY_ARE_EQUAL(At(0), ons[0].Timestamp);
+
+    auto const state = f.Engine.LaunchState();
+    VERIFY_ARE_EQUAL(size_t{ 1 }, state.size());
+    VERIFY_IS_TRUE(state[0].Mode == TrackPlayMode::Clip);
+}
+
 void PlaybackEngineTests::ALaunchLightsOnlyItsSlot()
 {
     auto sequence = KeysSequence();

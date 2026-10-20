@@ -239,7 +239,7 @@ namespace winrt::midisequencer::implementation
                 if (m_engine != nullptr)
                 {
                     m_engine->StopTrack(trackId, LaunchQuantize());
-                    UpdateTransport();
+                    RefreshLaunchViews();
                 }
                 break;
 
@@ -247,6 +247,7 @@ namespace winrt::midisequencer::implementation
                 if (m_engine != nullptr)
                 {
                     m_engine->ReturnToTimeline(trackId, LaunchQuantize());
+                    RefreshLaunchViews();
                 }
                 break;
 
@@ -283,7 +284,7 @@ namespace winrt::midisequencer::implementation
                         m_engine->StopTrack(id, LaunchQuantize());
                     }
 
-                    UpdateTransport();
+                    RefreshLaunchViews();
                 }
                 break;
 
@@ -291,6 +292,7 @@ namespace winrt::midisequencer::implementation
                 if (m_engine != nullptr)
                 {
                     m_engine->ReturnToTimeline(std::wstring{}, LaunchQuantize());
+                    RefreshLaunchViews();
                 }
                 break;
 

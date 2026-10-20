@@ -265,7 +265,8 @@
                 "states": {
                     "hover": { "background": "rgb(from ink r g b / .05)" },
                     "pressed": { "background": "rgb(from ink r g b / .1)" },
-                    "toggled": { "border": "1.5px solid ink", "box-shadow": "underline", "color": "ink" }
+                    "toggled": { "border": "1.5px solid ink", "box-shadow": "underline", "color": "ink" },
+                    "panic": { "border": "1px solid rgb(from vermilion r g b / .6)", "background": "rgb(from vermilion r g b / .08)", "color": "vermilionInk" }
                 }
             },
             "button.subtle": {

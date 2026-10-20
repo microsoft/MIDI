@@ -181,10 +181,13 @@ namespace winrt::midisequencer::implementation
             m_transportPlates.Add(AppTitleTextBlock(), L"title.text");
             m_editorPlates.Add(EditorClipName(), L"editor.name");
 
-            for (auto const& button : { ClockButton(), CaptureButton(), SilenceButton(), BackToTimelineButton() })
+            for (auto const& button : { ClockButton(), CaptureButton(), BackToTimelineButton() })
             {
                 m_transportPlates.Add(button, L"button", OnStates());
             }
+
+            // Panic, tinted red in each style's own way (its part's "panic" state).
+            m_transportPlates.Add(SilenceButton(), L"button", OnStates({ L"panic" }));
 
             m_transportPlates.Add(MixerToggle(), L"button", OnStates());
             m_transportPlates.Add(UndoButton(), L"button.subtle", OnStates());
