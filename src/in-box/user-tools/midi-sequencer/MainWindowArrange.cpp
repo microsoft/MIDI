@@ -1837,6 +1837,7 @@ namespace winrt::midisequencer::implementation
 
             // In place: rebuilding the headers here would remove the one being double-clicked.
             RefreshHeaderBackgrounds();
+            FollowSelectionInInspector();
 
             InvalidateArrange();
         }
@@ -3284,6 +3285,7 @@ namespace winrt::midisequencer::implementation
 
             m_selectedTrackId = trackId;
             Commit(std::wstring{ res::GetString(L"UndoNewClip") }, std::move(changes));
+            FollowSelectionInInspector();
             OpenClipInEditor(clipId, trackId);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to make a clip.")
@@ -3911,11 +3913,9 @@ namespace winrt::midisequencer::implementation
             {
                 CreateClipInSlot(trackId, scene);
             }
-            else
-            {
-                LaunchSlot(trackId, scene);
-            }
 
+            // A clip's two presses already did what each does, opened it or started or stopped
+            // it; the double click itself does nothing more, or it would undo the second.
             args.Handled(true);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to handle a double click in the clip launcher.")

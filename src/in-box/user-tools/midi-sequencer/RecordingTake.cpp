@@ -105,6 +105,65 @@ namespace midisequencer
             return;
         }
 
+        Keep(tick, words, wordCount, false);
+    }
+
+    _Use_decl_annotations_
+    void RecordingTake::AddPlayed(int64_t tick, uint32_t const* words, uint8_t wordCount)
+    {
+        if (wordCount == 0)
+        {
+            return;
+        }
+
+        Keep(tick, words, wordCount, true);
+    }
+
+    _Use_decl_annotations_
+    void RecordingTake::CutPlayed(int64_t tick)
+    {
+        auto const at = std::max(tick, m_startTick) - m_startTick;
+
+        for (auto const index : m_playedNotes)
+        {
+            if (index < m_notes.size())
+            {
+                auto& note = m_notes[index];
+
+                if (note.Tick < at && note.Tick + note.Length > at)
+                {
+                    note.Length = at - note.Tick;
+                }
+            }
+        }
+
+        for (auto& open : m_open)
+        {
+            if (open.Played && open.Value.Tick < at && (open.CutAt < 0 || at < open.CutAt))
+            {
+                open.CutAt = at;
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    Note RecordingTake::Close(OpenNote const& open, int64_t endTick) const noexcept
+    {
+        auto note = open.Value;
+        auto end = endTick - m_startTick;
+
+        if (open.CutAt >= 0)
+        {
+            end = std::min(end, open.CutAt);
+        }
+
+        note.Length = std::max<int64_t>(1, end - note.Tick);
+        return note;
+    }
+
+    _Use_decl_annotations_
+    void RecordingTake::Keep(int64_t tick, uint32_t const* words, uint8_t wordCount, bool played)
+    {
         if (m_notes.size() + m_events.size() + m_open.size() >= MaximumTakeItems)
         {
             return;
@@ -136,12 +195,16 @@ namespace midisequencer
 
                 if (open != m_open.end())
                 {
-                    auto note = open->Value;
-                    note.Length = std::max<int64_t>(1, (tick - m_startTick) - note.Tick);
+                    auto note = Close(*open, tick);
 
                     if (StatusOf(word0) == 0x8)
                     {
                         note.ReleaseVelocity = static_cast<uint16_t>(message[1] >> 16);
+                    }
+
+                    if (open->Played)
+                    {
+                        m_playedNotes.push_back(m_notes.size());
                     }
 
                     m_notes.push_back(note);
@@ -151,6 +214,7 @@ namespace midisequencer
                 if (StatusOf(word0) == 0x9)
                 {
                     OpenNote note{};
+                    note.Played = played;
                     note.Value.Tick = tick - m_startTick;
                     note.Value.Channel = channel;
                     note.Value.Number = number;
@@ -183,12 +247,11 @@ namespace midisequencer
 
         for (auto const& open : m_open)
         {
-            auto note = open.Value;
-            note.Length = std::max<int64_t>(1, (end - m_startTick) - note.Tick);
-            m_notes.push_back(note);
+            m_notes.push_back(Close(open, end));
         }
 
         m_open.clear();
+        m_playedNotes.clear();
 
         Clip clip{};
         clip.Id = std::move(clipId);
@@ -305,6 +368,7 @@ namespace midisequencer
 
         m_notes.clear();
         m_open.clear();
+        m_playedNotes.clear();
         m_events.clear();
         m_placementTick = m_startTick;
 

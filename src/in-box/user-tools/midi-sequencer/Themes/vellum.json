@@ -86,6 +86,8 @@
             "headerLane": "rgb(from ink r g b / .02)",
 
             "previewChrome": "paper",
+            "$comment-dialog": "dialog: what dialogs are filled with (MainWindowDialogs.cpp): the lifted sheet, like the editor.",
+            "dialog": "sheet",
             "previewField": "paper",
             "previewClip": "color-mix(in srgb, vermilion 18%, wash)",
 

@@ -310,6 +310,7 @@ namespace winrt::midisequencer::implementation
                 if (auto strong = weak.get())
                 {
                     strong->ApplyPalette();
+                    strong->ColorDialogs();
                     strong->RebuildHeaders();
                     strong->RebuildSceneHeaders();
                     strong->InvalidateArrange();
@@ -526,6 +527,7 @@ namespace winrt::midisequencer::implementation
 
                         strong->m_chrome.ApplyTheme();
                         midiapp::TintToolTips(settings.UseCustomBackgroundColor(), settings.BackgroundColorArgb());
+                        strong->ColorDialogs();
 
                         // A style made of a material takes the window color into its own colors.
                         std::optional<uint32_t> const tint = settings.UseCustomBackgroundColor()
@@ -734,6 +736,7 @@ namespace winrt::midisequencer::implementation
             UpdatePlayhead();
             UpdateDisplays(m_position);
             RecordArpeggiatedNotes();
+            RecordPlayedNotes();
             UpdateSlotRecording();
 
             // A followed clock's tempo, twice a second.

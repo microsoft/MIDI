@@ -922,17 +922,50 @@ namespace midisequencer
             return;
         }
 
-        auto left = drawing.Lines.front().X0;
+        auto const* lines = &drawing.Lines;
+
+        auto left = lines->front().X0;
         auto right = left;
-        auto bottom = drawing.Lines.front().Y0;
+        auto bottom = lines->front().Y0;
         auto top = bottom;
 
-        for (auto const& line : drawing.Lines)
+        auto const measure = [&]()
         {
-            left = std::min({ left, line.X0, line.X1 });
-            right = std::max({ right, line.X0, line.X1 });
-            bottom = std::min({ bottom, line.Y0, line.Y1 });
-            top = std::max({ top, line.Y0, line.Y1 });
+            left = right = lines->front().X0;
+            bottom = top = lines->front().Y0;
+
+            for (auto const& line : *lines)
+            {
+                left = std::min({ left, line.X0, line.X1 });
+                right = std::max({ right, line.X0, line.X1 });
+                bottom = std::min({ bottom, line.Y0, line.Y1 });
+                top = std::max({ top, line.Y0, line.Y1 });
+            }
+        };
+
+        measure();
+
+        // A drawing on one line, such as Cantor's, is too long and thin to see whole: it's laid
+        // out in rows, as text is, as near square as it goes, so its gaps line up down the rows.
+        // Each line is one step, so the rows read in the order it plays.
+        std::vector<TurtleLine> wrapped{};
+
+        if (top - bottom < 0.5f && lines->size() > 64)
+        {
+            auto const count = lines->size();
+            auto const perRow = static_cast<size_t>(std::ceil(std::sqrt(static_cast<double>(count))));
+            wrapped.reserve(count);
+
+            for (size_t i = 0; i < count; ++i)
+            {
+                auto const column = static_cast<float>(i % perRow);
+                auto const row = -static_cast<float>(i / perRow);
+                auto const& line = (*lines)[i];
+                wrapped.push_back(TurtleLine{ column, row, column + 1.0f, row, line.Step, line.Plays });
+            }
+
+            lines = &wrapped;
+            measure();
         }
 
         auto const margin = 16.0f;
@@ -951,7 +984,7 @@ namespace midisequencer
 
         canvasGeometry::CanvasPathBuilder all{ ds };
 
-        for (auto const& line : drawing.Lines)
+        for (auto const& line : *lines)
         {
             if (line.Plays)
             {
@@ -974,9 +1007,9 @@ namespace midisequencer
         {
             auto const index = static_cast<size_t>(((passFirst + step) % total + total) % total);
 
-            if (index < drawing.Lines.size() && drawing.Lines[index].Plays)
+            if (index < lines->size() && (*lines)[index].Plays)
             {
-                auto const& line = drawing.Lines[index];
+                auto const& line = (*lines)[index];
                 glow.BeginFigure(point(line.X0, line.Y0));
                 glow.AddLine(point(line.X1, line.Y1));
                 glow.EndFigure(canvasGeometry::CanvasFigureLoop::Open);
@@ -997,9 +1030,9 @@ namespace midisequencer
         {
             auto const index = static_cast<size_t>(((passFirst + step) % total + total) % total);
 
-            if (index < drawing.Lines.size())
+            if (index < lines->size())
             {
-                auto const& line = drawing.Lines[index];
+                auto const& line = (*lines)[index];
                 ds.DrawLine(point(line.X0, line.Y0), point(line.X1, line.Y1), line.Plays ? color : rest, line.Plays ? 2.5f : 1.0f);
             }
         }
@@ -1008,9 +1041,9 @@ namespace midisequencer
         {
             auto const index = static_cast<size_t>(playing % total);
 
-            if (index < drawing.Lines.size())
+            if (index < lines->size())
             {
-                auto const& line = drawing.Lines[index];
+                auto const& line = (*lines)[index];
                 ds.FillCircle(point(line.X1, line.Y1), 4.5f, colors.Text);
                 ds.FillCircle(point(line.X1, line.Y1), 3.0f, color);
             }

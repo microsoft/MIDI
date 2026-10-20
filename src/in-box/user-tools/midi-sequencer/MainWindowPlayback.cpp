@@ -816,6 +816,7 @@ namespace winrt::midisequencer::implementation
             m_recordingPreview.clear();
             m_recordingPreviewTrackId = *m_armed.begin();
             m_recordingPreviewStart = start;
+            SetRecordedTracks(true);
 
             if (!m_engine->IsPlaying())
             {
@@ -845,11 +846,21 @@ namespace winrt::midisequencer::implementation
 
             auto const end = m_engine != nullptr && m_engine->IsPlaying() ? m_engine->PositionTick() : m_position;
 
+            // The last of what the tracks played, up to where the take ends, and nothing they
+            // played sounding past it.
+            RecordPlayedNotes(end);
+            SetRecordedTracks(false);
+
             std::map<std::wstring, seq::RecordingTake> takes{};
 
             {
                 std::scoped_lock guard{ m_inputLock };
                 takes.swap(m_takes);
+            }
+
+            for (auto& [trackId, take] : takes)
+            {
+                take.CutPlayed(end);
             }
 
             m_recordingPreview.clear();

@@ -164,6 +164,7 @@ namespace winrt::midisequencer::implementation
         xaml::UIElement MakeTimelineBarSettings();
         xaml::UIElement MakeStylePreview(_In_ themeengine::ThemeDefinition const& definition, _In_ bool dark, _In_ std::optional<themeengine::Color> tint);
         void ApplyStrips() noexcept;
+        void ColorDialogs() noexcept;
         void ColorMetronome() noexcept;
 
         // A style's plates behind the transport, the track list's toolbar and the editor's
@@ -605,6 +606,10 @@ namespace winrt::midisequencer::implementation
         std::vector<std::wstring> FeedArpeggiators(_In_ std::wstring const& endpointId, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
         void RecordArpeggiatedNotes() noexcept;
 
+        // What armed tracks play from launched clips, into their takes (MainWindowRecordPlayed.cpp).
+        void SetRecordedTracks(_In_ bool recording) noexcept;
+        void RecordPlayedNotes(_In_ int64_t until = std::numeric_limits<int64_t>::max()) noexcept;
+
         // ---- automation and the tempo map (MainWindowAutomation.cpp) ----
         // The lane functions take the id of the track or the clip the lanes belong to.
         std::vector<seq::AutomationLane>* LanesOwnedBy(_In_ std::wstring const& ownerId) noexcept;
@@ -734,6 +739,7 @@ namespace winrt::midisequencer::implementation
         void UpdateSoundSection() noexcept;
         void ShowSoundDialog();
         void FillSoundList(_Inout_ SoundDialogState& state);
+        void ShowSoundCategories(_Inout_ SoundDialogState& state);
         void ShowSoundNumbers(_Inout_ SoundDialogState& state);
         void TrySound(_Inout_ SoundDialogState& state);
         winrt::fire_and_forget AskDeviceForSounds(_In_ std::shared_ptr<SoundDialogState> state);
@@ -764,6 +770,7 @@ namespace winrt::midisequencer::implementation
 
         // ---- the track inspector (MainWindowTrack.cpp) ----
         void ShowInspector(_In_ std::wstring const& trackId) noexcept;
+        void FollowSelectionInInspector() noexcept;
         void HideInspector() noexcept;
         void RefreshInspector() noexcept;
         void FillEndpointCombo(_In_ controls::ComboBox const& combo, _In_ bool sources, _In_ seq::EndpointRef const& selected);

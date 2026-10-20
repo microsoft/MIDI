@@ -39,6 +39,9 @@ namespace winrt::midisequencer::implementation
         // The General MIDI family or the device's category, for finding it.
         std::wstring Group{};
 
+        // The categories it's listed under: its General MIDI family, or the device's own.
+        std::vector<std::wstring> Categories{};
+
         seq::TrackSound Sound{};
     };
 
@@ -70,9 +73,16 @@ namespace winrt::midisequencer::implementation
         std::vector<SoundChoice> Choices{};
         bool FromDevice{ false };
 
+        // The categories in the list, in the order they first come, and the one picked; none
+        // is every sound.
+        std::vector<std::wstring> Categories{};
+        std::wstring Category{};
+
         controls::ToggleSwitch Enabled{ nullptr };
         controls::StackPanel Body{ nullptr };
+        controls::Grid FindRow{ nullptr };
         controls::TextBox Find{ nullptr };
+        controls::ComboBox CategoryBox{ nullptr };
         controls::ListView List{ nullptr };
         controls::TextBlock Names{ nullptr };
         controls::NumberBox Program{ nullptr };
@@ -127,11 +137,13 @@ namespace winrt::midisequencer::implementation
         std::vector<SoundChoice> GeneralMidiChoices(bool const drums)
         {
             std::vector<SoundChoice> choices{};
+            auto const standardKit = midiapp::GeneralMidiDrumKitName(0);
 
             for (uint32_t program = 0; program < 128; ++program)
             {
-                // A drum channel lists only the kits General MIDI names.
-                if (drums && midiapp::GeneralMidiDrumKitName(static_cast<uint8_t>(program)).empty())
+                // A drum channel lists only the kits General MIDI names. A program without a kit
+                // of its own plays the standard kit, and is named for it, so it isn't listed again.
+                if (drums && program != 0 && midiapp::GeneralMidiDrumKitName(static_cast<uint8_t>(program)) == standardKit)
                 {
                     continue;
                 }
@@ -139,6 +151,12 @@ namespace winrt::midisequencer::implementation
                 SoundChoice choice{};
                 choice.Name = GeneralMidiText(static_cast<uint8_t>(program), drums);
                 choice.Group = drums ? std::wstring{} : midiapp::GeneralMidiFamilyName(static_cast<uint8_t>(program));
+
+                if (!choice.Group.empty())
+                {
+                    choice.Categories.push_back(choice.Group);
+                }
+
                 choice.Sound.Set = true;
                 choice.Sound.Program = static_cast<uint8_t>(program);
                 choices.push_back(std::move(choice));
@@ -165,6 +183,11 @@ namespace winrt::midisequencer::implementation
                 for (auto const& category : entry.Categories)
                 {
                     choice.Group += category + L" ";
+
+                    if (!category.empty() && std::find(choice.Categories.begin(), choice.Categories.end(), category) == choice.Categories.end())
+                    {
+                        choice.Categories.push_back(category);
+                    }
                 }
 
                 choice.Group += entry.CollectionTitle;
@@ -373,6 +396,11 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::FillSoundList(SoundDialogState& state)
     {
+        // With no list to show (a device that hasn't shared its names), only the numbers show.
+        auto const listed = !state.Choices.empty();
+        state.FindRow.Visibility(listed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+        state.List.Visibility(listed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
         auto const items = winrt::single_threaded_observable_vector<foundation::IInspectable>();
         auto const filter = Lowercase(std::wstring{ state.Find.Text() });
         int32_t selected{ -1 };
@@ -382,6 +410,11 @@ namespace winrt::midisequencer::implementation
             auto const& choice = state.Choices[i];
 
             if (!filter.empty() && Lowered(choice.Name).find(filter) == std::wstring::npos && Lowered(choice.Group).find(filter) == std::wstring::npos)
+            {
+                continue;
+            }
+
+            if (!state.Category.empty() && std::find(choice.Categories.begin(), choice.Categories.end(), state.Category) == choice.Categories.end())
             {
                 continue;
             }
@@ -405,8 +438,51 @@ namespace winrt::midisequencer::implementation
         }
 
         auto const names = state.FromDevice ? res::FormatString(L"SoundNamesDeviceFormat", state.DeviceName)
+            : !listed ? res::FormatString(L"SoundNamesUnknownFormat", state.DeviceName)
             : res::GetString(state.Drums ? L"SoundNamesDrums" : L"SoundNamesGeneralMidi");
         state.Names.Text(names);
+    }
+
+    // The categories the list's sounds are in, to pick from, when there are two or more.
+    _Use_decl_annotations_
+    void MainWindow::ShowSoundCategories(SoundDialogState& state)
+    {
+        state.Categories.clear();
+
+        for (auto const& choice : state.Choices)
+        {
+            for (auto const& category : choice.Categories)
+            {
+                if (std::find(state.Categories.begin(), state.Categories.end(), category) == state.Categories.end())
+                {
+                    state.Categories.push_back(category);
+                }
+            }
+        }
+
+        if (std::find(state.Categories.begin(), state.Categories.end(), state.Category) == state.Categories.end())
+        {
+            state.Category.clear();
+        }
+
+        state.Updating = true;
+        state.CategoryBox.Items().Clear();
+        state.CategoryBox.Items().Append(winrt::box_value(res::GetString(L"SoundCategoryAll")));
+        int32_t selected{ 0 };
+
+        for (size_t i = 0; i < state.Categories.size(); ++i)
+        {
+            state.CategoryBox.Items().Append(winrt::box_value(winrt::hstring{ state.Categories[i] }));
+
+            if (state.Categories[i] == state.Category)
+            {
+                selected = static_cast<int32_t>(i) + 1;
+            }
+        }
+
+        state.CategoryBox.SelectedIndex(selected);
+        state.CategoryBox.Visibility(state.Categories.size() >= 2 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+        state.Updating = false;
     }
 
     _Use_decl_annotations_
@@ -467,12 +543,15 @@ namespace winrt::midisequencer::implementation
                 state->Current = state->Original;
                 state->CurrentName = state->OriginalName;
 
+                // Names only where they're known: the device's own, once it has shared them over
+                // MIDI-CI, or General MIDI's on the General MIDI Synth built into Windows. Another
+                // device may have other sounds at those numbers, so it has only the numbers.
                 if (auto const known = strong->m_deviceSounds.find(state->ListKey); known != strong->m_deviceSounds.end())
                 {
                     state->Choices = DeviceChoices(known->second);
                     state->FromDevice = true;
                 }
-                else
+                else if (strong->IsGeneralMidiDevice(track->Destination.Endpoint))
                 {
                     state->Choices = GeneralMidiChoices(state->Drums);
                 }
@@ -503,7 +582,25 @@ namespace winrt::midisequencer::implementation
                 state->Find = controls::TextBox{};
                 state->Find.PlaceholderText(res::GetString(L"SoundFindPlaceholder"));
                 automation::AutomationProperties::SetName(state->Find, res::GetString(L"SoundFindName"));
-                state->Body.Children().Append(state->Find);
+
+                // Finding by name, and the categories beside it when the list has them.
+                state->CategoryBox = controls::ComboBox{};
+                state->CategoryBox.MinWidth(170);
+                automation::AutomationProperties::SetName(state->CategoryBox, res::GetString(L"SoundCategoryName"));
+
+                state->FindRow = controls::Grid{};
+                state->FindRow.ColumnSpacing(8);
+
+                for (auto const width : { xaml::GridLength{ 1, xaml::GridUnitType::Star }, xaml::GridLength{ 1, xaml::GridUnitType::Auto } })
+                {
+                    controls::ColumnDefinition column{};
+                    column.Width(width);
+                    state->FindRow.ColumnDefinitions().Append(column);
+                }
+
+                PlaceIn(state->FindRow, state->Find, 0);
+                PlaceIn(state->FindRow, state->CategoryBox, 1);
+                state->Body.Children().Append(state->FindRow);
 
                 state->List = controls::ListView{};
                 state->List.Height(SoundListHeight);
@@ -596,6 +693,7 @@ namespace winrt::midisequencer::implementation
                         auto const on = current->Enabled.IsOn();
                         current->Body.Opacity(on ? 1.0 : 0.5);
                         current->Find.IsEnabled(on);
+                        current->CategoryBox.IsEnabled(on);
                         current->List.IsEnabled(on);
                         current->Program.IsEnabled(on);
                         current->UseBank.IsEnabled(on);
@@ -623,6 +721,22 @@ namespace winrt::midisequencer::implementation
                     {
                         window->FillSoundList(*current);
                     }
+                });
+
+                state->CategoryBox.SelectionChanged([weak, weakState](auto&&, auto&&)
+                {
+                    auto const window = weak.get();
+                    auto const current = weakState.lock();
+
+                    if (!window || !current || current->Updating)
+                    {
+                        return;
+                    }
+
+                    auto const index = current->CategoryBox.SelectedIndex();
+                    current->Category = index > 0 && static_cast<size_t>(index) <= current->Categories.size()
+                        ? current->Categories[static_cast<size_t>(index) - 1] : std::wstring{};
+                    window->FillSoundList(*current);
                 });
 
                 state->List.SelectionChanged([weak, weakState](auto&&, auto&&)
@@ -699,6 +813,7 @@ namespace winrt::midisequencer::implementation
                     }
                 });
 
+                strong->ShowSoundCategories(*state);
                 strong->FillSoundList(*state);
                 strong->ShowSoundNumbers(*state);
                 enable();
@@ -945,6 +1060,7 @@ namespace winrt::midisequencer::implementation
                     state->Choices = DeviceChoices(entries);
                     state->FromDevice = true;
                     state->CurrentName = NameFor(state->Choices, state->Current, true);
+                    ShowSoundCategories(*state);
                     FillSoundList(*state);
                     state->Status.Text(res::FormatString(L"SoundFoundFormat", static_cast<uint32_t>(entries.size()), state->DeviceName));
                     break;

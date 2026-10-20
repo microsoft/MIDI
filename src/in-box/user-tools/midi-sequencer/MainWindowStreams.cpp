@@ -219,13 +219,15 @@ namespace winrt::midisequencer::implementation
             edit([index](seq::GeneratorSettings& edited) { seq::UseLSystemPreset(edited, index); });
         });
 
-        // Always there, so lighting it doesn't move the key and range. It's dimmed until the rules
-        // are your own.
-        auto own = MakeChip(res::GetString(L"LSystemYourOwn"), matching == SIZE_MAX, [](bool) {});
-        own.IsHitTestVisible(false);
-        own.IsTabStop(false);
-        own.IsEnabled(matching == SIZE_MAX);
-        shapeRow.Children().GetAt(0).as<winrt::midisequencer::WrapPanel>().Children().Append(own);
+        // A chip that's lit when the rules are your own, there only then: the rules below are
+        // what make them yours.
+        if (matching == SIZE_MAX)
+        {
+            auto own = MakeChip(res::GetString(L"LSystemYourOwn"), true, [](bool) {});
+            own.IsHitTestVisible(false);
+            own.IsTabStop(false);
+            shapeRow.Children().GetAt(0).as<winrt::midisequencer::WrapPanel>().Children().Append(own);
+        }
 
         AddGeneratorSection(settings, L"LSystemShape").Children().Append(shapeRow);
 

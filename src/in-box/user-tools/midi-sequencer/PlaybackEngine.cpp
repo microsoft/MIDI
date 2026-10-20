@@ -854,6 +854,19 @@ namespace midisequencer
                             auto const at = message.Kind == RenderedKind::NoteOff ? std::min(message.Tick, clampOffsAt) : message.Tick;
                             m_arpeggiated.push_back(ArpeggiatedNote{ track.Id, TimestampAtTick(at), message.Words, message.WordCount });
                         }
+                        else if (!message.Arpeggiated && state.Mode == TrackPlayMode::Clip && m_recorded.contains(track.Id) &&
+                            m_played.size() < MaximumArpeggiated && message.WordCount > 0)
+                        {
+                            // What a launched clip plays on a track being recorded: its channel
+                            // voice messages, not its lyrics.
+                            auto const type = message.Words[0] >> 28;
+
+                            if (type == 0x2 || type == 0x4)
+                            {
+                                auto const at = message.Kind == RenderedKind::NoteOff ? std::min(message.Tick, clampOffsAt) : message.Tick;
+                                m_played.push_back(ArpeggiatedNote{ track.Id, TimestampAtTick(at), message.Words, message.WordCount });
+                            }
+                        }
                     }
 
                     SendRendered(track, info, clampOffsAt, now, messages);
@@ -875,6 +888,13 @@ namespace midisequencer
                         ++m_counters.MessagesSent;
                         note.HandedOver = true;
                     }
+                }
+
+                // What a launched clip played on a track being recorded is cut off here in the
+                // take too: a marker with no words, at the switch itself.
+                if (state.Mode == TrackPlayMode::Clip && m_recorded.contains(track.Id) && m_played.size() < 16384)
+                {
+                    m_played.push_back(ArpeggiatedNote{ track.Id, TimestampAtTick(Wrap(stretchEnd)), {}, 0 });
                 }
 
                 state.Mode = state.PendingMode;
@@ -2094,6 +2114,27 @@ namespace midisequencer
 
         std::scoped_lock guard{ m_lock };
         taken.swap(m_arpeggiated);
+        return taken;
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetRecordedTracks(std::unordered_set<std::wstring> trackIds)
+    {
+        std::scoped_lock guard{ m_lock };
+        m_recorded = std::move(trackIds);
+
+        if (m_recorded.empty())
+        {
+            m_played.clear();
+        }
+    }
+
+    std::vector<ArpeggiatedNote> PlaybackEngine::TakePlayed()
+    {
+        std::vector<ArpeggiatedNote> taken{};
+
+        std::scoped_lock guard{ m_lock };
+        taken.swap(m_played);
         return taken;
     }
 

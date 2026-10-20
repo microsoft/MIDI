@@ -736,6 +736,7 @@ namespace winrt::midisequencer::implementation
 
             m_selectedPlacement = SIZE_MAX;
             RefreshHeaderBackgrounds();
+            FollowSelectionInInspector();
             InvalidateArrange();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to select tracks.")

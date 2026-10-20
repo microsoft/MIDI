@@ -28,7 +28,7 @@ It doesn't record or play audio. To play sounds, it uses a synth or a device: th
 4. **Launch** sets when a clip you launch starts playing, such as at the next bar. **Snap** sets the grid that clips and notes snap to. **Capture** makes a clip from what you just played on the armed tracks, even if you weren't recording. **Silence** stops every note on every device.
 5. **Undo** and **Redo** go back and forward through your changes. The chip at the end says whether the sequence is saved.
 6. **The tracks.** Each track plays to one device. Select a track to set it up. **M**, **S** and **R** mute it, solo it, and arm it to record. Folders hold tracks, and the **Tempo and meter** track at the top holds tempo changes and tags that mark parts of the song.
-7. **The clip launcher** plays clips live. Each column is a scene. Select a clip to start it on its track, or a scene at the top to start every clip in its column at once. When there are more scenes than fit, scroll over the scene names, or hold Shift and scroll over the clips, to see the rest.
+7. **The clip launcher** plays clips live. Each column is a scene. Select the triangle at a clip's top left to start it on its track, or a scene at the top to start every clip in its column at once. When there are more scenes than fit, scroll over the scene names, or hold Shift and scroll over the clips, to see the rest.
 8. **The timeline** is the song from start to end. Each block is a clip. A clip can loop, and one clip can be placed in many spots, so a change to it changes every copy.
 9. **The editor** shows the selected clip: a piano roll for notes, a grid of steps for a pattern, or the settings for a generator.
 10. **The status bar** shows whether the MIDI service is running, which clock the sequence follows, and how many devices it plays to. Select the number of devices to open **Studio setup**.
@@ -47,7 +47,7 @@ To look around first, select **File**, then **Open the sample sequence**.
 
 ## Tracks and devices
 
-Each track plays to one device, on one group and channel. **Track setup** picks them. **As is** keeps each note on the channel it was recorded or drawn on. When a device has a timing offset set in MIDI Settings, the sequence sends to it a little early or late to line it up. You can turn that off in **Clock and sync**.
+Each track plays to one device, on one group and channel. **Track setup** picks them. While it's open, it shows the track you selected last, by its name or one of its clips. **As is** keeps each note on the channel it was recorded or drawn on. When a device has a timing offset set in MIDI Settings, the sequence sends to it a little early or late to line it up. You can turn that off in **Clock and sync**.
 
 Devices show the picture and description you gave them in MIDI Settings, in the device lists, on each track and in **Studio setup**. A device without a picture shows one for how it's connected, such as USB or Bluetooth. On a device with more than one port, such as a MIDI interface, a track shows the name of the port it plays to.
 
@@ -59,12 +59,13 @@ To move a track, drag it by its name. Drop it on a folder to put it inside, or b
 
 ### Choose each track's sound
 
-Most synths have many sounds, such as a piano, strings or a drum kit. A track can pick one of them for you each time playback starts. Select the track's name to open **Track setup**, then select **Sound** under **Start-up messages**.
+Most synths have many sounds, such as a piano, strings or a drum kit. A track can pick one of them for you each time playback starts. Select the track's name to open **Track setup**, then select **Sound** under **Start-up messages** to open the **Patch Browser**.
 
 - Turn on **Choose this track's sound**. Then pick a sound from the list, or type its program number. Some devices also need a bank. The device's manual says which.
 - Choosing a sound sends it to the device right away, so you can hear it. **Cancel** puts the old one back.
-- The list shows the General MIDI names. The General MIDI Synth built into Windows uses them, and so do many other devices. A device that isn't General MIDI may have other sounds at those numbers. On channel 10, the list shows drum kits instead.
+- The list shows only names the sequencer knows the device has. The General MIDI Synth built into Windows gets the General MIDI names, or its drum kits on channel 10. Another device gets no list until it shares its own names, since it may have other sounds at those numbers; pick its sounds by number from its manual.
 - A device that speaks MIDI-CI may share its own names for its sounds. To get them, select **Ask … for its sound names**. The sequencer asks only when you select that, and never asks a group whose **Play to** is off in **Studio setup**.
+- When the sounds come in categories, such as the device's own or General MIDI's families, **All categories** beside the search box shows one at a time.
 
 The track sends its sound as a program change, with its bank when you chose one, before anything else it sends when playback starts. **Start-up messages** lists anything else the track sends, in words.
 
@@ -159,6 +160,8 @@ A generator plays the same notes on every pass, unless you set **Each pass** to 
 
 Select **R** on the tracks you want to record into, then select **Record**. A track records from the device set in its **Track setup**. To play into it from the screen, **Record from MIDI Keyboard** opens Windows MIDI Keyboard, already set up to play into the track. If the device the track plays to lists its sounds, MIDI Keyboard shows that list, so you can pick a sound by name.
 
+A track also records what it plays from the launcher: clips you launch on it, and a generator's notes as it makes them. They're merged with what comes in from its device into one new clip on the timeline, so you can play the launcher live and keep the performance. A track doesn't need a device to record from for that. What it plays from its timeline isn't recorded again, since it's already there.
+
 If you played something good without recording, select **Capture**. It makes a clip from what you just played on the armed tracks.
 
 ## Automation and tempo
@@ -207,7 +210,7 @@ Lyrics in a Standard MIDI File come in when you import it, including karaoke fil
 
 ## The clip launcher
 
-The launcher plays clips without following the timeline. Select **Launcher** to show it. Select a clip to play it on its track, and select it again to stop it. A track playing a launched clip shows **Playing a launched clip** across its timeline. Select **Back to timeline** to go back to the timeline. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.
+The launcher plays clips without following the timeline. Select **Launcher** to show it. Select the triangle at a clip's top left to play it on its track, and select it again to stop it. Select the rest of the clip to open it in the editor; it keeps playing, or not, as it was. Double-click an empty slot to make a clip there. A track playing a launched clip shows **Playing a launched clip** across its timeline. Select **Back to timeline** to go back to the timeline. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.
 
 ## Studio setup
 

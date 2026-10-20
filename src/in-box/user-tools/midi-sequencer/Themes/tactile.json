@@ -36,6 +36,8 @@
             "tagPaper": "#F4F3EF",
             "viewRing": "color-mix(in oklch, surface 45%, glint)",
             "previewChrome": "surface",
+            "$comment-dialog": "dialog: what dialogs are filled with (MainWindowDialogs.cpp).",
+            "dialog": "surface",
             "previewField": "field",
             "previewClip": "clipFaceTop",
 

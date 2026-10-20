@@ -50,6 +50,15 @@ namespace midisequencer
         // A message as it arrived, at its place on the timeline.
         void Add(_In_ int64_t tick, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount);
 
+        // A message the track played itself, from a launched clip: kept whatever the track
+        // records from, since it's on the channel the track plays to.
+        void AddPlayed(_In_ int64_t tick, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount);
+
+        // Where what the track played was cut off, by a launch, a stop, or the end of the take:
+        // every note it played that sounds past here ends here. What came in on its source is
+        // left as it was played.
+        void CutPlayed(_In_ int64_t tick);
+
         bool IsEmpty() const noexcept { return m_notes.empty() && m_events.empty() && m_open.empty(); }
 
         int64_t StartTick() const noexcept { return m_startTick; }
@@ -77,14 +86,26 @@ namespace midisequencer
         Clip FinishLoop(_In_ int64_t length, _In_ std::wstring clipId, _In_ std::wstring name, _In_ std::wstring originDetail);
 
     private:
+        void Keep(_In_ int64_t tick, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount, _In_ bool played);
+
         struct OpenNote
         {
             Note Value{};
+
+            // Played by the track itself, and where a cut ends it, or -1.
+            bool Played{ false };
+            int64_t CutAt{ -1 };
         };
+
+        // A note ending: at endTick, or where a cut ended it if that's sooner.
+        Note Close(_In_ OpenNote const& open, _In_ int64_t endTick) const noexcept;
 
         int64_t m_startTick{ 0 };
         RecordFilter m_filter{};
         std::vector<Note> m_notes{};
+
+        // Which of m_notes the track played itself.
+        std::vector<size_t> m_playedNotes{};
         std::vector<OpenNote> m_open{};
         std::vector<ClipEvent> m_events{};
         int64_t m_lastTick{ 0 };

@@ -111,6 +111,8 @@
             "headerLane": "base",
 
             "previewChrome": "plate",
+            "$comment-dialog": "dialog: what dialogs are filled with (MainWindowDialogs.cpp).",
+            "dialog": "plate",
             "previewStrip": "strip",
             "previewField": "plateLight",
             "previewClip": "clipTop",

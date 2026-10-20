@@ -1065,7 +1065,7 @@
     <value>Arm {0} to record</value>
   </data>
   <data name="ArmedWithoutSource" xml:space="preserve">
-    <value>This track doesn't record from anything yet. Choose a device under Record from in its setup.</value>
+    <value>This track doesn't record from a device yet, so it records only what it plays from the launcher. To play into it too, choose a device under Record from in its setup.</value>
   </data>
   <data name="NoDestination" xml:space="preserve">
     <value>Not playing to anything</value>
@@ -1813,7 +1813,7 @@
     <value>Arm a track first: select R on the track you want to record.</value>
   </data>
   <data name="RecordedNothing" xml:space="preserve">
-    <value>Nothing was played, so nothing was recorded.</value>
+    <value>Nothing was played or launched on the armed tracks, so nothing was recorded.</value>
   </data>
   <data name="SlotProgressFormat" xml:space="preserve">
     <value>{0} of {1}</value>
@@ -3796,7 +3796,7 @@
     <comment>{0} is a program number, counted from 1. {1} is its General MIDI name, such as "Lead 1 (square)", which isn't translated.</comment>
   </data>
   <data name="SoundDialogTitleFormat" xml:space="preserve">
-    <value>Sound for {0}</value>
+    <value>Patch Browser: {0}</value>
     <comment>{0} is a track's name.</comment>
   </data>
   <data name="SoundEnabled" xml:space="preserve">
@@ -3815,10 +3815,10 @@
     <value>Sounds</value>
   </data>
   <data name="SoundNamesGeneralMidi" xml:space="preserve">
-    <value>General MIDI names. A device that isn't General MIDI may have other sounds at these numbers.</value>
+    <value>General MIDI names, which the General MIDI Synth built into Windows uses.</value>
   </data>
   <data name="SoundNamesDrums" xml:space="preserve">
-    <value>General MIDI drum kits, because this track plays on channel 10. A device that isn't General MIDI may have other kits at these numbers.</value>
+    <value>General MIDI drum kits, because this track plays on channel 10.</value>
   </data>
   <data name="SoundNamesDeviceFormat" xml:space="preserve">
     <value>{0}'s own names for its sounds, from the device over MIDI-CI.</value>
@@ -4669,4 +4669,12 @@
   <data name="AppearanceTimelineBarPlace" xml:space="preserve">
     <value>Where it goes</value>
   </data>
-</root>
+  <data name="SoundNamesUnknownFormat" xml:space="preserve">
+    <value>{0} hasn't shared the names of its sounds, so pick one by its numbers, from the device's manual. If the device speaks MIDI-CI, you can ask it for its names below.</value>
+  </data>
+  <data name="SoundCategoryAll" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="SoundCategoryName" xml:space="preserve">
+    <value>Category</value>
+  </data></root>
