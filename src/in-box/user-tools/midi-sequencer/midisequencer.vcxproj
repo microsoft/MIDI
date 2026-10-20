@@ -191,6 +191,8 @@
     <ClInclude Include="..\theme-engine\ThemeXaml.h" />
     <ClInclude Include="..\theme-engine\ThemePainter.h" />
     <ClInclude Include="..\theme-engine\ThemePlates.h" />
+    <ClInclude Include="..\theme-engine\ThemePixels.h" />
+    <ClInclude Include="..\theme-engine\ThemeCanvas.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
@@ -250,6 +252,7 @@
     <ClCompile Include="MainWindowTimelineBar.cpp" />
     <ClCompile Include="MainWindowPlates.cpp" />
     <ClCompile Include="..\theme-engine\ThemePlates.cpp" />
+    <ClCompile Include="..\theme-engine\ThemeCanvas.cpp" />
     <ClCompile Include="TimelineView.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

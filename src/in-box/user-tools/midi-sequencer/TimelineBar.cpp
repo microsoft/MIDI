@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "TimelineBar.h"
 #include "TimelineBarHost.h"
+#include "ThemeCanvas.h"
 
 #include "StringResources.h"
 
@@ -140,6 +141,7 @@ namespace midisequencer
 
         m_canvas = canvasXaml::CanvasControl{};
         m_canvas.ClearColor(winrt::Microsoft::UI::Colors::Transparent());
+        themeengine::KeepWholePixels(m_canvas);
         m_canvas.ManipulationMode(input::ManipulationModes::Scale);
         automation::AutomationProperties::SetAccessibilityView(m_canvas, automation::Peers::AccessibilityView::Raw);
         m_host.Children().Append(m_canvas);
@@ -152,7 +154,10 @@ namespace midisequencer
             {
                 try
                 {
-                    Draw(args.DrawingSession(), sender, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                    m_steady.Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                    {
+                        Draw(ds, sender, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                    });
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the timeline's scroll bar.")
             }

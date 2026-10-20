@@ -11,6 +11,7 @@
 #include "GeneratorNames.h"
 #include "SequenceRender.h"
 #include "StringResources.h"
+#include "ThemeCanvas.h"
 
 namespace res = ::midisequencer::resources;
 namespace documents = ::winrt::Microsoft::UI::Xaml::Documents;
@@ -209,6 +210,10 @@ namespace winrt::midisequencer::implementation
             canvasXaml::CanvasControl canvas{};
             canvas.ClearColor(winrt::Microsoft::UI::Colors::Transparent());
 
+            // These are drawn again many times a second while a sequence plays; a size that isn't a
+            // whole number of DIPs and pixels makes Win2D shake them by a pixel (ThemeCanvas.h).
+            themeengine::KeepWholePixels(canvas);
+
             if (underOthers)
             {
                 host.Children().InsertAt(0, canvas);
@@ -242,7 +247,10 @@ namespace winrt::midisequencer::implementation
                 {
                     auto context = strong->DrawContext();
                     context.Creator = sender;
-                    strong->m_renderer.DrawRuler(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()), context);
+                    strong->m_steadyRuler.Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                    {
+                        strong->m_renderer.DrawRuler(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()), context);
+                    });
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the ruler.")
             }
@@ -259,9 +267,12 @@ namespace winrt::midisequencer::implementation
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
                         auto context = strong->DrawContext();
                         context.Creator = sender;
-                        strong->m_renderer.DrawLanes(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
-                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
-                        strong->DrawKeyboardFocus(args.DrawingSession(), sender);
+                        strong->m_steadyLanes[pinned ? 0 : 1].Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                        {
+                            strong->m_renderer.DrawLanes(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
+                                rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
+                            strong->DrawKeyboardFocus(ds, sender);
+                        });
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the timeline.")
                 }
@@ -282,9 +293,12 @@ namespace winrt::midisequencer::implementation
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
                         auto context = strong->DrawContext();
                         context.Creator = sender;
-                        strong->m_renderer.DrawLauncher(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
-                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
-                        strong->DrawKeyboardFocus(args.DrawingSession(), sender);
+                        strong->m_steadyLaunchers[pinned ? 0 : 1].Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                        {
+                            strong->m_renderer.DrawLauncher(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
+                                rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
+                            strong->DrawKeyboardFocus(ds, sender);
+                        });
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip launcher.")
                 }
@@ -300,14 +314,17 @@ namespace winrt::midisequencer::implementation
             {
                 try
                 {
-                    if (strong->EditorShowsPattern())
+                    strong->m_steadyEditor.Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
                     {
-                        strong->m_pattern.Draw(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
-                    }
-                    else
-                    {
-                        strong->DrawNotesEditor(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
-                    }
+                        if (strong->EditorShowsPattern())
+                        {
+                            strong->m_pattern.Draw(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                        }
+                        else
+                        {
+                            strong->DrawNotesEditor(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                        }
+                    });
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip editor.")
             }

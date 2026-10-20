@@ -17,6 +17,7 @@
 
 #include "ThemePalette.h"
 #include "ThemePainter.h"
+#include "ThemeCanvas.h"
 #include "TimelineView.h"
 
 #include <functional>
@@ -204,6 +205,7 @@ namespace midisequencer
 
         winrt::Microsoft::UI::Xaml::Controls::Grid m_host{ nullptr };
         winrt::Microsoft::Graphics::Canvas::UI::Xaml::CanvasControl m_canvas{ nullptr };
+        themeengine::SteadyCanvas m_steady{};
         winrt::Microsoft::UI::Xaml::Controls::ToolTip m_tip{ nullptr };
         themeengine::ThemePainter m_painter{};
 

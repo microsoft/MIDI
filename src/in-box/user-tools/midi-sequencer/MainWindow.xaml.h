@@ -40,6 +40,7 @@
 #include "ThemeXaml.h"
 #include "TimelineBar.h"
 #include "ThemePlates.h"
+#include "ThemeCanvas.h"
 
 namespace winrt::midisequencer::implementation
 {
@@ -1241,6 +1242,13 @@ namespace winrt::midisequencer::implementation
         std::optional<uint32_t> m_styleTint{};
 
         seq::ArrangeRenderer m_renderer{};
+
+        // Each canvas drawn while a sequence plays draws through a picture of its own, so its text
+        // stays put (ThemeCanvas.h).
+        themeengine::SteadyCanvas m_steadyRuler{};
+        themeengine::SteadyCanvas m_steadyLanes[2]{};
+        themeengine::SteadyCanvas m_steadyLaunchers[2]{};
+        themeengine::SteadyCanvas m_steadyEditor{};
         seq::TimelineBar m_timelineBar{};
         themeengine::PlateLayer m_transportPlates{};
         themeengine::PlateLayer m_toolbarPlates{};
