@@ -292,6 +292,16 @@ namespace midisequencer
         // What arpeggiators played since the last call, oldest first. Any thread.
         std::vector<ArpeggiatedNote> TakeArpeggiated();
 
+        // Tracks being recorded: what each plays from a launched clip, a generator's notes as it
+        // makes them included, is kept for its take, merged with what comes in on its source. Its
+        // timeline isn't kept: that's already in the sequence. Any thread.
+        void SetRecordedTracks(_In_ std::unordered_set<std::wstring> trackIds);
+
+        // What those tracks played since the last call, oldest first, as rendered for their
+        // destinations. One with no words marks where a launch or a stop cut the track's launched
+        // clip off (RecordingTake::CutPlayed). Any thread.
+        std::vector<ArpeggiatedNote> TakePlayed();
+
         // How hard each track's notes play between two times: the highest velocity, from 0 to 1,
         // of the notes it holds then, timed as the device gets them. A note counts from its note
         // on to its note off and no longer: how long the sound rings on is up to the device, and
@@ -476,6 +486,10 @@ namespace midisequencer
         std::unordered_map<std::wstring, ArpeggiatorInput> m_keys{};
         std::unordered_set<std::wstring> m_arpeggiating{};
         std::vector<ArpeggiatedNote> m_arpeggiated{};
+
+        // Tracks being recorded, and what they played from launched clips (SetRecordedTracks).
+        std::unordered_set<std::wstring> m_recorded{};
+        std::vector<ArpeggiatedNote> m_played{};
 
         // Following another device's clock: the pace of its pulses, whether it's running, the
         // number of its next pulse counted from the top (24 a quarter note), and when its last

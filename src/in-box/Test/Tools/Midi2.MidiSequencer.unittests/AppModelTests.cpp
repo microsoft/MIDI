@@ -358,6 +358,54 @@ void AppModelTests::TheRecordFilterLeavesThingsOut()
     take.Add(0, &controller, 1);
     take.Add(0, &noteChannel2, 1);
     VERIFY_IS_TRUE(take.IsEmpty());
+
+    // Except what the track played itself, which is on the channel it plays to.
+    take.AddPlayed(0, &noteChannel2, 1);
+    VERIFY_IS_FALSE(take.IsEmpty());
+}
+
+void AppModelTests::ACutEndsOnlyWhatTheTrackPlayed()
+{
+    std::vector<MeterChange> meter{ MeterChange{} };
+
+    RecordingTake take{ 0 };
+    auto const playedOn = Midi1(0x9, 0, 72, 90);
+    auto const playedOff = Midi1(0x8, 0, 72, 0);
+    auto const heldOn = Midi1(0x9, 0, 60, 90);
+    auto const heldOff = Midi1(0x8, 0, 60, 0);
+    auto const lateOn = Midi1(0x9, 0, 74, 90);
+    auto const lateOff = Midi1(0x8, 0, 74, 0);
+
+    // A launched clip's note, rendered whole before a launch cut it at 480, and a key held on
+    // the source across the cut.
+    take.AddPlayed(0, &playedOn, 1);
+    take.AddPlayed(960, &playedOff, 1);
+    take.Add(0, &heldOn, 1);
+
+    // One still sounding when the cut comes ends there, whenever its end arrives.
+    take.AddPlayed(240, &lateOn, 1);
+    take.CutPlayed(480);
+    take.AddPlayed(1200, &lateOff, 1);
+    take.Add(960, &heldOff, 1);
+
+    auto const clip = take.Finish(1920, meter, L"c", L"Take", L"");
+    VERIFY_ARE_EQUAL(size_t{ 3 }, clip.Notes.size());
+
+    for (auto const& note : clip.Notes)
+    {
+        if (note.Number == 72)
+        {
+            VERIFY_ARE_EQUAL(int64_t{ 480 }, note.Length);
+        }
+        else if (note.Number == 74)
+        {
+            VERIFY_ARE_EQUAL(int64_t{ 240 }, note.Length);
+        }
+        else
+        {
+            VERIFY_ARE_EQUAL(int64_t{ 960 }, note.Length);
+        }
+    }
 }
 
 void AppModelTests::ARepeatedNoteOnRestartsTheNote()

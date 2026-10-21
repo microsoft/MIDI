@@ -36,6 +36,8 @@
             "tagPaper": "#F4F3EF",
             "viewRing": "color-mix(in oklch, surface 45%, glint)",
             "previewChrome": "surface",
+            "$comment-dialog": "dialog: what dialogs are filled with (MainWindowDialogs.cpp).",
+            "dialog": "surface",
             "previewField": "field",
             "previewClip": "clipFaceTop",
 
@@ -384,7 +386,8 @@
                 "states": {
                     "hover": { "background": "linear-gradient(145deg, faceTop, faceTop)" },
                     "pressed": { "background": "facePressed", "box-shadow": "pressed" },
-                    "toggled": { "background": "facePressed", "box-shadow": "pressed", "color": "accentInk", "glyph-color": "accentInk" }
+                    "toggled": { "background": "facePressed", "box-shadow": "pressed", "color": "accentInk", "glyph-color": "accentInk" },
+                    "panic": { "background": "linear-gradient(145deg, color-mix(in srgb, record 13%, faceTop), color-mix(in srgb, record 16%, faceBottom))", "color": "recordText", "glyph-color": "recordText" }
                 }
             },
             "button.subtle": {

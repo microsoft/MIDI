@@ -82,6 +82,42 @@ namespace winrt::midisequencer::implementation
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the track setup.")
     }
 
+    // Track setup, while it's open, shows the track selected last, by its name or by one of its
+    // clips, so what's changed there is that track's. A name being typed for the track it showed
+    // goes to that track first.
+    void MainWindow::FollowSelectionInInspector() noexcept
+    {
+        try
+        {
+            if (m_inspectorTrackId.empty() || m_selectedTrackId.empty() || m_selectedTrackId == m_inspectorTrackId ||
+                TrackInspector().Visibility() != xaml::Visibility::Visible)
+            {
+                return;
+            }
+
+            auto const track = seq::FindTrack(m_doc, m_selectedTrackId);
+
+            if (track == nullptr || track->IsFolder)
+            {
+                return;
+            }
+
+            if (input::FocusManager::GetFocusedElement(Content().XamlRoot()) == TrackNameBox())
+            {
+                OnTrackNameCommitted(nullptr, nullptr);
+            }
+
+            ShowInspector(m_selectedTrackId);
+
+            // The box keeps what's typed while it has focus; it shows the new track's name, so
+            // losing focus later doesn't rename it.
+            m_inspectorUpdating = true;
+            TrackNameBox().Text(winrt::hstring{ track->Name });
+            m_inspectorUpdating = false;
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the selected track's setup.")
+    }
+
     void MainWindow::HideInspector() noexcept
     {
         try

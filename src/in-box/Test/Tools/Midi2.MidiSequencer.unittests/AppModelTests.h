@@ -33,6 +33,7 @@ public:
     TEST_METHOD(AHeldNoteEndsWhereTheTakeStops);
     TEST_METHOD(ATakeStartsAndEndsOnBars);
     TEST_METHOD(TheRecordFilterLeavesThingsOut);
+    TEST_METHOD(ACutEndsOnlyWhatTheTrackPlayed);
     TEST_METHOD(ARepeatedNoteOnRestartsTheNote);
     TEST_METHOD(ASlotTakeLoopsAtItsExactLength);
 

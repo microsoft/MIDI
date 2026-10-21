@@ -509,13 +509,14 @@ namespace winrt::midisequencer::implementation
             });
         }));
 
-        // Always there, so lighting it doesn't widen the column and move the key and range. It's
-        // dimmed until the cells are drawn by hand.
-        auto own = MakeChip(res::GetString(L"LifeYourOwn"), !named, [](bool) {});
-        own.IsHitTestVisible(false);
-        own.IsTabStop(false);
-        own.IsEnabled(!named);
-        starts.Children().Append(own);
+        // A chip that's lit when the cells are drawn by hand, there only then.
+        if (!named)
+        {
+            auto own = MakeChip(res::GetString(L"LifeYourOwn"), true, [](bool) {});
+            own.IsHitTestVisible(false);
+            own.IsTabStop(false);
+            starts.Children().Append(own);
+        }
 
         start.Children().Append(starts);
 

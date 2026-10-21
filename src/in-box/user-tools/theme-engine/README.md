@@ -20,6 +20,7 @@ ported from an HTML comp looks like the comp.
 | `ThemeXaml` | Sets the theme's brushes in a resource dictionary's theme dictionaries | the app's `pch.h` (WinUI) |
 | `ThemePainter` | Draws a part with Win2D: shadows (cached nine-slice blurs), backgrounds, borders, outlines, opacity, filters | the app's `pch.h` (Win2D) |
 | `ThemePlates` | Draws parts behind XAML controls, in their states, and gives the controls the part's text color and font | the app's `pch.h` |
+| `ThemePixels`, `ThemeCanvas` | Keeps a Win2D canvas at a size it draws steadily at (below) | none; the app's `pch.h` |
 
 The first six compile without the app's precompiled header (`NotUsing`), so unit tests can take
 them. The last three include the consuming app's `pch.h`, as the files in `midi-app-shared` do.
@@ -85,6 +86,23 @@ plate is drawn as see-through as its element and what holds it. Rows that are bu
 (the Sequencer's track headers) go in a `Group`, taken off together with `Remove` before they're
 built again. A key's light (`led-color`, and `led-size`, `led-top`, `led-right`, `led-bottom`,
 `led-glow` for where and whether it glows) is the app's own decoration, drawn by `Decorate`.
+
+## Canvases at 125%, 150% and 175%
+
+Text on a Win2D `CanvasControl` that's drawn again and again, as a sequencer's is while it plays,
+can shake: by a pixel at some sizes
+([microsoft/Win2D#989](https://github.com/microsoft/Win2D/issues/989), open), and by a quarter
+pixel at others. The control draws through a translation, to where XAML keeps its picture, that's
+exact one time and a hair off the next; shapes don't show that, but Direct2D places glyphs
+differently. Two things in `ThemeCanvas.h` stop it, and a canvas drawn often needs both:
+
+- `KeepWholePixels(canvas)` sizes the canvas to the largest whole number of DIPs and pixels that
+  fits where layout puts it (`ThemePixels.h`: a multiple of 4 DIPs at 125% and 175%, 2 at 150%),
+  at the top left, and keeps it so.
+- `SteadyCanvas::Draw(sender, args, draw)`, in the Draw handler, draws into a picture of the
+  canvas's own size, where the translation is exact, and copies it over pixel for pixel.
+
+Plate layers do the first themselves; they're drawn seldom, so they don't need the second.
 
 ## Taking it into another app
 

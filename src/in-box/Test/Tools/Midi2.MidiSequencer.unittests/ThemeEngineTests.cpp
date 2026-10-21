@@ -19,6 +19,7 @@
 #include "ThemeColor.h"
 #include "ThemeDefinition.h"
 #include "ThemePalette.h"
+#include "ThemePixels.h"
 #include "ThemeResolver.h"
 #include "ThemeStyle.h"
 #include "ThemeSyntax.h"
@@ -723,4 +724,41 @@ void ThemeEngineTests::VellumTextIsReadableInEveryColor()
         { L"text3", L"paper", 4.5 }, { L"accentInk", L"paper", 4.5 }, { L"recordText", L"paper", 4.5 }, { L"indigo", L"paper", 4.5 },
         { L"play", L"paper", 3.0 }, { L"sheet", L"ink", 7.0 }, { L"sheet", L"vermilion", 3.0 }, { L"vermilion", L"paper", 3.0 },
     });
+}
+void ThemeEngineTests::CanvasSizesAreWholePixels()
+{
+    // The fewest DIPs that are whole pixels at each scale Windows offers.
+    VERIFY_ARE_EQUAL(1.0, te::WholePixelStep(1.0));
+    VERIFY_ARE_EQUAL(4.0, te::WholePixelStep(1.25));
+    VERIFY_ARE_EQUAL(2.0, te::WholePixelStep(1.5));
+    VERIFY_ARE_EQUAL(4.0, te::WholePixelStep(1.75));
+    VERIFY_ARE_EQUAL(1.0, te::WholePixelStep(2.0));
+    VERIFY_ARE_EQUAL(4.0, te::WholePixelStep(2.25));
+    VERIFY_ARE_EQUAL(2.0, te::WholePixelStep(2.5));
+    VERIFY_ARE_EQUAL(1.0, te::WholePixelStep(0.0));
+
+    // Win2D#989's canvas: 1311 by 1243 pixels at 175%, which layout gives as 749.14 by 710.29 DIPs.
+    VERIFY_ARE_EQUAL(748.0, te::WholePixelLength(1311.0 / 1.75, 1.75));
+    VERIFY_ARE_EQUAL(708.0, te::WholePixelLength(1243.0 / 1.75, 1.75));
+
+    // A size already whole stays, even written a hair short.
+    VERIFY_ARE_EQUAL(588.0, te::WholePixelLength(588.0, 1.75));
+    VERIFY_ARE_EQUAL(588.0, te::WholePixelLength(1029.0 / 1.75 - 1e-9, 1.75));
+    VERIFY_ARE_EQUAL(301.0, te::WholePixelLength(301.6, 1.0));
+    VERIFY_ARE_EQUAL(0.0, te::WholePixelLength(-3.0, 1.75));
+
+    // Every length that comes out is a whole number of pixels, and no longer than what's there.
+    for (auto const scale : { 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0 })
+    {
+        for (int pixels = 0; pixels < 3000; pixels += 7)
+        {
+            auto const available = static_cast<double>(pixels) / scale;
+            auto const length = te::WholePixelLength(available, scale);
+            auto const out = length * scale;
+
+            VERIFY_IS_TRUE(length <= available + 1e-6);
+            VERIFY_IS_TRUE(std::abs(out - std::round(out)) < 1e-9);
+            VERIFY_IS_TRUE(std::abs(length - std::round(length)) < 1e-9);
+        }
+    }
 }

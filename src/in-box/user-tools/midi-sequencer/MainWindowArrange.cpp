@@ -11,6 +11,7 @@
 #include "GeneratorNames.h"
 #include "SequenceRender.h"
 #include "StringResources.h"
+#include "ThemeCanvas.h"
 
 namespace res = ::midisequencer::resources;
 namespace documents = ::winrt::Microsoft::UI::Xaml::Documents;
@@ -209,6 +210,10 @@ namespace winrt::midisequencer::implementation
             canvasXaml::CanvasControl canvas{};
             canvas.ClearColor(winrt::Microsoft::UI::Colors::Transparent());
 
+            // These are drawn again many times a second while a sequence plays; a size that isn't a
+            // whole number of DIPs and pixels makes Win2D shake them by a pixel (ThemeCanvas.h).
+            themeengine::KeepWholePixels(canvas);
+
             if (underOthers)
             {
                 host.Children().InsertAt(0, canvas);
@@ -242,7 +247,10 @@ namespace winrt::midisequencer::implementation
                 {
                     auto context = strong->DrawContext();
                     context.Creator = sender;
-                    strong->m_renderer.DrawRuler(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()), context);
+                    strong->m_steadyRuler.Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                    {
+                        strong->m_renderer.DrawRuler(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()), context);
+                    });
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the ruler.")
             }
@@ -259,9 +267,12 @@ namespace winrt::midisequencer::implementation
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
                         auto context = strong->DrawContext();
                         context.Creator = sender;
-                        strong->m_renderer.DrawLanes(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
-                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
-                        strong->DrawKeyboardFocus(args.DrawingSession(), sender);
+                        strong->m_steadyLanes[pinned ? 0 : 1].Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                        {
+                            strong->m_renderer.DrawLanes(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
+                                rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
+                            strong->DrawKeyboardFocus(ds, sender);
+                        });
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the timeline.")
                 }
@@ -282,9 +293,12 @@ namespace winrt::midisequencer::implementation
                         auto const& rows = pinned ? strong->m_layout.Pinned : strong->m_layout.Scrolling;
                         auto context = strong->DrawContext();
                         context.Creator = sender;
-                        strong->m_renderer.DrawLauncher(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
-                            rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
-                        strong->DrawKeyboardFocus(args.DrawingSession(), sender);
+                        strong->m_steadyLaunchers[pinned ? 0 : 1].Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
+                        {
+                            strong->m_renderer.DrawLauncher(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()),
+                                rows, pinned ? 0.0 : strong->m_scrollY, !pinned, context);
+                            strong->DrawKeyboardFocus(ds, sender);
+                        });
                     }
                     MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip launcher.")
                 }
@@ -300,14 +314,17 @@ namespace winrt::midisequencer::implementation
             {
                 try
                 {
-                    if (strong->EditorShowsPattern())
+                    strong->m_steadyEditor.Draw(sender, args, [&](canvas::CanvasDrawingSession const& ds)
                     {
-                        strong->m_pattern.Draw(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
-                    }
-                    else
-                    {
-                        strong->DrawNotesEditor(args.DrawingSession(), static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
-                    }
+                        if (strong->EditorShowsPattern())
+                        {
+                            strong->m_pattern.Draw(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                        }
+                        else
+                        {
+                            strong->DrawNotesEditor(ds, static_cast<float>(sender.ActualWidth()), static_cast<float>(sender.ActualHeight()));
+                        }
+                    });
                 }
                 MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to draw the clip editor.")
             }
@@ -1820,6 +1837,7 @@ namespace winrt::midisequencer::implementation
 
             // In place: rebuilding the headers here would remove the one being double-clicked.
             RefreshHeaderBackgrounds();
+            FollowSelectionInInspector();
 
             InvalidateArrange();
         }
@@ -2424,6 +2442,7 @@ namespace winrt::midisequencer::implementation
                 if (m_engine != nullptr)
                 {
                     m_engine->ReturnToTimeline(hit.Row->TrackId, LaunchQuantize());
+                    RefreshLaunchViews();
                 }
 
                 args.Handled(true);
@@ -3267,6 +3286,7 @@ namespace winrt::midisequencer::implementation
 
             m_selectedTrackId = trackId;
             Commit(std::wstring{ res::GetString(L"UndoNewClip") }, std::move(changes));
+            FollowSelectionInInspector();
             OpenClipInEditor(clipId, trackId);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to make a clip.")
@@ -3553,6 +3573,14 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (WaitForMidi([weak = get_weak(), scene]()
+                {
+                    if (auto strong = weak.get()) { strong->LaunchScene(scene); }
+                }))
+            {
+                return;
+            }
+
             if (m_engine == nullptr || scene >= m_doc.Scenes.size())
             {
                 return;
@@ -3572,13 +3600,7 @@ namespace winrt::midisequencer::implementation
             });
 
             m_engine->LaunchScene(launches, LaunchQuantize(), static_cast<int32_t>(scene));
-
-            UpdateTransport();
-
-            if (m_frameTimer != nullptr)
-            {
-                m_frameTimer.Start();
-            }
+            RefreshLaunchViews();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to launch a scene.")
     }
@@ -3588,6 +3610,14 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            if (WaitForMidi([weak = get_weak(), trackId, scene]()
+                {
+                    if (auto strong = weak.get()) { strong->LaunchSlot(trackId, scene); }
+                }))
+            {
+                return;
+            }
+
             auto const track = seq::FindTrack(m_doc, trackId);
 
             if (m_engine == nullptr || track == nullptr || scene >= track->Slots.size())
@@ -3604,10 +3634,11 @@ namespace winrt::midisequencer::implementation
             }
             else
             {
-                // A second click on the playing clip stops it.
+                // A second click on the playing clip stops it. While playback is stopped, a click
+                // plays it, even on the clip a track was left playing.
                 auto view = m_launchViews.find(trackId);
 
-                if (view != m_launchViews.end() && view->second.Plays(clipId, scene) && !view->second.Pending)
+                if (m_engine->IsPlaying() && view != m_launchViews.end() && view->second.Plays(clipId, scene) && !view->second.Pending)
                 {
                     m_engine->StopTrack(trackId, quantize);
                 }
@@ -3617,12 +3648,7 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            UpdateTransport();
-
-            if (m_frameTimer != nullptr)
-            {
-                m_frameTimer.Start();
-            }
+            RefreshLaunchViews();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to launch a clip.")
     }
@@ -3894,11 +3920,9 @@ namespace winrt::midisequencer::implementation
             {
                 CreateClipInSlot(trackId, scene);
             }
-            else
-            {
-                LaunchSlot(trackId, scene);
-            }
 
+            // A clip's two presses already did what each does, opened it or started or stopped
+            // it; the double click itself does nothing more, or it would undo the second.
             args.Handled(true);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to handle a double click in the clip launcher.")

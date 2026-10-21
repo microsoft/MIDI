@@ -1130,8 +1130,9 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            // Only a sequence that already has a file saves itself. A new one asks for a name first.
-            if (m_path.empty() || !m_dirty || m_readOnly || m_closing)
+            // Only a sequence that already has a file saves itself, and only when that's on. A new
+            // one asks for a name first.
+            if (m_path.empty() || !m_dirty || m_readOnly || m_closing || !seq::AppSettings::Current().AutoSave())
             {
                 co_return;
             }

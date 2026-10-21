@@ -10,6 +10,7 @@
 
 #include "MessageTranslation.h"
 #include "PlaybackEngine.h"
+#include "RecordingTake.h"
 #include "SequenceEdits.h"
 
 #include <windows.h>
@@ -1144,6 +1145,139 @@ void PlaybackEngineTests::ALaunchedClipStartsAtTheNextBar()
     VERIFY_ARE_EQUAL(size_t{ 1 }, playing.size());
     VERIFY_IS_TRUE(playing[0].Mode == TrackPlayMode::Clip);
     VERIFY_IS_FALSE(playing[0].Pending);
+}
+
+void PlaybackEngineTests::ARecordedTrackKeepsWhatItsLaunchedClipPlays()
+{
+    auto sequence = KeysSequence();
+
+    Clip loop{};
+    loop.Id = L"c-loop";
+    loop.Length = Bar / 2;
+    loop.Loop = true;
+    loop.Notes = { testdata::MakeNote(0, 240, 72) };
+    sequence.Clips.push_back(loop);
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.SetRecordedTracks({ L"t-keys" });
+    f.Engine.Play(0);
+    RunUntil(f, At(480));
+
+    f.Engine.LaunchClip(L"t-keys", L"c-loop", -1);
+    RunUntil(f, At(Bar * 2));
+
+    // Only the launched clip's notes, from bar 2: the timeline's bar is already in the sequence.
+    auto const played = f.Engine.TakePlayed();
+    std::vector<ArpeggiatedNote> ons{};
+    std::copy_if(played.begin(), played.end(), std::back_inserter(ons), [](ArpeggiatedNote const& note)
+    {
+        return ((note.Words[0] >> 20) & 0x0F) == 0x9;
+    });
+
+    VERIFY_IS_TRUE(ons.size() >= 2);
+
+    for (auto const& on : ons)
+    {
+        VERIFY_ARE_EQUAL(std::wstring{ L"t-keys" }, on.TrackId);
+        VERIFY_ARE_EQUAL(uint32_t{ 72 }, (on.Words[0] >> 8) & 0x7F);
+        VERIFY_IS_TRUE(on.Timestamp >= At(Bar));
+    }
+
+    VERIFY_IS_TRUE(std::any_of(played.begin(), played.end(), [](ArpeggiatedNote const& note) { return ((note.Words[0] >> 20) & 0x0F) == 0x8; }));
+
+    // Once recording ends, nothing more is kept.
+    f.Engine.SetRecordedTracks({});
+    RunUntil(f, At(Bar * 3));
+    VERIFY_IS_TRUE(f.Engine.TakePlayed().empty());
+}
+
+void PlaybackEngineTests::ARecordedLaunchIsCutByTheNextLaunch()
+{
+    auto sequence = KeysSequence();
+
+    // A clip whose one note lasts two bars, and a short loop to launch over it.
+    Clip held{};
+    held.Id = L"c-held";
+    held.Length = Bar * 2;
+    held.Loop = true;
+    held.Notes = { testdata::MakeNote(0, Bar * 2, 72) };
+    sequence.Clips.push_back(held);
+
+    Clip loop{};
+    loop.Id = L"c-loop";
+    loop.Length = Bar / 2;
+    loop.Loop = true;
+    loop.Notes = { testdata::MakeNote(0, 240, 76) };
+    sequence.Clips.push_back(loop);
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+    f.Engine.SetRecordedTracks({ L"t-keys" });
+    f.Engine.Play(0);
+    RunUntil(f, At(480));
+
+    f.Engine.LaunchClip(L"t-keys", L"c-held", -1);
+    RunUntil(f, At(Bar + 480));
+    f.Engine.LaunchClip(L"t-keys", L"c-loop", -1);
+    RunUntil(f, At(Bar * 3));
+
+    // Into a take, as the window does: the held note started at bar 2 and was cut at bar 3.
+    RecordingTake take{ 0 };
+
+    for (auto const& played : f.Engine.TakePlayed())
+    {
+        auto const tick = f.Engine.TickAtTime(played.Timestamp);
+
+        if (played.WordCount == 0)
+        {
+            take.CutPlayed(tick);
+        }
+        else
+        {
+            take.AddPlayed(tick, played.Words.data(), played.WordCount);
+        }
+    }
+
+    auto const clip = take.Finish(Bar * 3, std::vector<MeterChange>{ MeterChange{} }, L"c", L"Take", L"");
+    auto const note = std::find_if(clip.Notes.begin(), clip.Notes.end(), [](Note const& n) { return n.Number == 72; });
+
+    VERIFY_IS_TRUE(note != clip.Notes.end());
+    VERIFY_ARE_EQUAL(Bar, note->Tick);
+    VERIFY_ARE_EQUAL(Bar, note->Length);
+    VERIFY_IS_TRUE(std::any_of(clip.Notes.begin(), clip.Notes.end(), [](Note const& n) { return n.Number == 76 && n.Tick == Bar * 2; }));
+}
+
+void PlaybackEngineTests::ALaunchWhileStoppedStartsPlaybackWithTheClip()
+{
+    auto sequence = KeysSequence();
+
+    Clip loop{};
+    loop.Id = L"c-loop";
+    loop.Length = Bar / 2;
+    loop.Loop = true;
+    loop.Notes = { testdata::MakeNote(0, 240, 72) };
+    sequence.Clips.push_back(loop);
+    NormalizeSequence(sequence);
+
+    Fixture f{};
+    f.Engine.SetSequence(Snapshot(sequence));
+
+    // Launched with the app's own quantize setting, a bar in ticks.
+    f.Engine.LaunchClip(L"t-keys", L"c-loop", Bar, 0);
+    VERIFY_IS_TRUE(f.Engine.IsPlaying());
+
+    RunUntil(f, At(Bar));
+    auto const ons = NoteOns(f.Output.All());
+    VERIFY_IS_TRUE(ons.size() >= 2);
+    VERIFY_ARE_EQUAL(uint8_t{ 72 }, NoteNumber(ons[0]));
+    VERIFY_ARE_EQUAL(At(0), ons[0].Timestamp);
+
+    auto const state = f.Engine.LaunchState();
+    VERIFY_ARE_EQUAL(size_t{ 1 }, state.size());
+    VERIFY_IS_TRUE(state[0].Mode == TrackPlayMode::Clip);
 }
 
 void PlaybackEngineTests::ALaunchLightsOnlyItsSlot()

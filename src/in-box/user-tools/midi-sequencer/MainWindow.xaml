@@ -705,9 +705,38 @@
 
                 <Button x:Name="BackToTimelineButton" x:Uid="BackToTimelineButton" Style="{StaticResource SmallButtonStyle}" Click="OnBackToTimelineClick" />
 
+                <!-- Panic: stops playback and sends all notes off. Tinted red, so it doesn't read as a mute switch. -->
                 <Button x:Name="SilenceButton" x:Uid="SilenceButton" Style="{StaticResource SmallButtonStyle}" Click="OnSilenceClick">
+                    <Button.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Default">
+                                    <SolidColorBrush x:Key="ButtonBackground" Color="#2EFF5A5F" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#42FF5A5F" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#24FF5A5F" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#66FF5A5F" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#8CFF5A5F" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#52FF5A5F" />
+                                    <SolidColorBrush x:Key="ButtonForeground" Color="#FFFFB3B5" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFC9CA" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFB3B5" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <SolidColorBrush x:Key="ButtonBackground" Color="#1AD13438" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#29D13438" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14D13438" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#66D13438" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#8CD13438" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#52D13438" />
+                                    <SolidColorBrush x:Key="ButtonForeground" Color="#FFA4262C" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FF8E1F25" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCA4262C" />
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                        </ResourceDictionary>
+                    </Button.Resources>
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <FontIcon Glyph="&#xE74F;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <FontIcon Glyph="&#xE74F;" FontSize="12" />
                         <TextBlock x:Uid="SilenceButtonText" />
                     </StackPanel>
                 </Button>

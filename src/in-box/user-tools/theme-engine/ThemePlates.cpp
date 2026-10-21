@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ThemePlates.h"
+#include "ThemeCanvas.h"
 #include "ThemeXaml.h"
 
 #include <cmath>
@@ -779,6 +780,7 @@ namespace themeengine
         state.Canvas = wgcx::CanvasControl{};
         state.Canvas.ClearColor(winrt::Microsoft::UI::Colors::Transparent());
         state.Canvas.IsHitTestVisible(false);
+        KeepWholePixels(state.Canvas);
         winrt::Microsoft::UI::Xaml::Automation::AutomationProperties::SetAccessibilityView(state.Canvas, winrt::Microsoft::UI::Xaml::Automation::Peers::AccessibilityView::Raw);
 
         auto const children = host.Children();

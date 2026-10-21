@@ -130,6 +130,11 @@ namespace midisequencer
         bool TimelineBarAtTop() const noexcept { return m_timelineBarAtTop; }
         void TimelineBarAtTop(bool value) noexcept;
 
+        // A sequence with a file saves itself a moment after each change, and when the window
+        // closes. Off, it's saved only when asked, and closing asks about unsaved changes.
+        bool AutoSave() const noexcept { return m_autoSave; }
+        void AutoSave(bool value) noexcept;
+
         // Pixels for one bar on the timeline, at 100% scaling.
         double BarWidth() const noexcept { return m_barWidth; }
         void BarWidth(double value) noexcept;
@@ -232,6 +237,7 @@ namespace midisequencer
         bool m_showMixer{ false };
         bool m_timelineOverview{ true };
         bool m_timelineBarAtTop{ false };
+        bool m_autoSave{ true };
         double m_barWidth{ DefaultBarWidth };
         uint32_t m_snapTicks{ 240 };
         uint32_t m_launchQuantizeTicks{ 3840 };

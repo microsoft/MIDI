@@ -310,6 +310,7 @@ namespace winrt::midisequencer::implementation
                 if (auto strong = weak.get())
                 {
                     strong->ApplyPalette();
+                    strong->ColorDialogs();
                     strong->RebuildHeaders();
                     strong->RebuildSceneHeaders();
                     strong->InvalidateArrange();
@@ -526,6 +527,7 @@ namespace winrt::midisequencer::implementation
 
                         strong->m_chrome.ApplyTheme();
                         midiapp::TintToolTips(settings.UseCustomBackgroundColor(), settings.BackgroundColorArgb());
+                        strong->ColorDialogs();
 
                         // A style made of a material takes the window color into its own colors.
                         std::optional<uint32_t> const tint = settings.UseCustomBackgroundColor()
@@ -734,6 +736,7 @@ namespace winrt::midisequencer::implementation
             UpdatePlayhead();
             UpdateDisplays(m_position);
             RecordArpeggiatedNotes();
+            RecordPlayedNotes();
             UpdateSlotRecording();
 
             // A followed clock's tempo, twice a second.
@@ -839,8 +842,9 @@ namespace winrt::midisequencer::implementation
             }
 
             // A sequence with a file saves itself as it goes; this is the one still waiting. A file
-            // from a newer version, or one that wouldn't save, asks instead.
-            if (!m_path.empty() && !m_readOnly && !m_closeSaveFailed)
+            // from a newer version, or one that wouldn't save, asks instead, and so does every
+            // sequence when saving by itself is off.
+            if (!m_path.empty() && !m_readOnly && !m_closeSaveFailed && seq::AppSettings::Current().AutoSave())
             {
                 m_closeConfirmed = true;
                 SaveAsync(false);
@@ -889,10 +893,11 @@ namespace winrt::midisequencer::implementation
 
             if (result == controls::ContentDialogResult::Primary)
             {
-                // Under a name of its own: a new sequence, a file from a newer version, or one that
+                // To its file when it has one that saves (saving by itself is off). Otherwise under
+                // a name of its own: a new sequence, a file from a newer version, or one that
                 // wouldn't save where it was.
                 m_closeConfirmed = true;
-                SaveAsync(true);
+                SaveAsync(m_path.empty() || m_readOnly || m_closeSaveFailed);
             }
             else if (result == controls::ContentDialogResult::Secondary)
             {

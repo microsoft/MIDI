@@ -79,6 +79,7 @@ namespace winrt::midisequencer::implementation
                 m_styleLight = nullptr;
                 m_styleDark = nullptr;
                 ApplyPalette();
+                ColorDialogs();
                 return;
             }
 
@@ -106,6 +107,7 @@ namespace winrt::midisequencer::implementation
 
             ApplyPalette();
             ApplyStrips();
+            ColorDialogs();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to apply the style.")
     }
@@ -298,6 +300,9 @@ namespace winrt::midisequencer::implementation
 
         // The timeline's scroll bar: which kind, and where (MainWindowTimelineBar.cpp).
         panel.Children().Append(MakeTimelineBarSettings());
+
+        // Saving by itself (MainWindowAutoSave.cpp).
+        panel.Children().Append(MakeAutoSaveSetting());
 
         return panel;
     }

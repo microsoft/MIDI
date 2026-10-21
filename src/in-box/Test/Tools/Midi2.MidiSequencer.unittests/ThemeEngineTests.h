@@ -34,4 +34,5 @@ public:
     TEST_METHOD(NightDriveDrawsWhatTheBuiltInPaletteDid);
     TEST_METHOD(AluminumTextIsReadableInEveryColor);
     TEST_METHOD(VellumTextIsReadableInEveryColor);
+    TEST_METHOD(CanvasSizesAreWholePixels);
 };

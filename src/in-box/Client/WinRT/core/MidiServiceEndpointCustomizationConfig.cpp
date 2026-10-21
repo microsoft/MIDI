@@ -170,7 +170,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         {
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
             props.GroupIndex = group.Index();
-            props.Name = name;
+            props.Name = internal::TruncateHStringCopy(name, MAXPNAMELEN - 1);
 
             m_props->Midi1Sources[props.GroupIndex] = props;
         }
@@ -193,7 +193,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         {
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
             props.GroupIndex = group.Index();
-            props.Name = name;
+            props.Name = internal::TruncateHStringCopy(name, MAXPNAMELEN - 1);
 
             m_props->Midi1Destinations[props.GroupIndex] = props;
         }

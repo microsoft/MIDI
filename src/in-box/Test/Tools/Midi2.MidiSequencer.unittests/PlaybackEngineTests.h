@@ -47,6 +47,9 @@ public:
     TEST_METHOD(ANoteHeldOverTheLoopEndEndsThere);
     TEST_METHOD(ALaunchedClipStartsAtTheNextBar);
     TEST_METHOD(ALaunchLightsOnlyItsSlot);
+    TEST_METHOD(ALaunchWhileStoppedStartsPlaybackWithTheClip);
+    TEST_METHOD(ARecordedTrackKeepsWhatItsLaunchedClipPlays);
+    TEST_METHOD(ARecordedLaunchIsCutByTheNextLaunch);
     TEST_METHOD(AStoppedSceneStartsEveryClipTogether);
     TEST_METHOD(StoppingATrackSilencesItFromTheNextBar);
     TEST_METHOD(AClipCanStartAtAnExactPlace);

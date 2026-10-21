@@ -198,6 +198,9 @@ namespace winrt::midisequencer::implementation
             {
                 StartRemoteControlAsync();
             }
+
+            // A launch or Play pressed while MIDI was starting.
+            RunWaitingForMidi();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start MIDI.")
     }
@@ -577,7 +580,11 @@ namespace winrt::midisequencer::implementation
         {
             if (m_engine == nullptr)
             {
-                ShowMessage(res::GetString(L"MidiNotReady"));
+                // MIDI is still starting: it plays from here once it has.
+                WaitForMidi([weak = get_weak(), fromTick]()
+                {
+                    if (auto strong = weak.get()) { strong->Play(fromTick); }
+                });
                 UpdateTransport();
                 return;
             }
@@ -628,15 +635,13 @@ namespace winrt::midisequencer::implementation
 
             m_position = m_engine->PositionTick();
             m_engine->Stop();
-            m_launchViews.clear();
 
             // Writing from the mixer ends with the music.
             CommitMixerEdit();
 
-            UpdateTransport();
+            // What each track will play when playback starts again.
+            RefreshLaunchViews();
             UpdateLeds();
-            InvalidateArrange();
-            InvalidateLaunchers();
             InvalidateEditor();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to stop.")
@@ -692,7 +697,7 @@ namespace winrt::midisequencer::implementation
                 return true;
             });
 
-            UpdateTransport();
+            RefreshLaunchViews();
             ShowMessage(res::GetString(L"Silenced"));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to silence the devices.")
@@ -816,6 +821,7 @@ namespace winrt::midisequencer::implementation
             m_recordingPreview.clear();
             m_recordingPreviewTrackId = *m_armed.begin();
             m_recordingPreviewStart = start;
+            SetRecordedTracks(true);
 
             if (!m_engine->IsPlaying())
             {
@@ -845,11 +851,21 @@ namespace winrt::midisequencer::implementation
 
             auto const end = m_engine != nullptr && m_engine->IsPlaying() ? m_engine->PositionTick() : m_position;
 
+            // The last of what the tracks played, up to where the take ends, and nothing they
+            // played sounding past it.
+            RecordPlayedNotes(end);
+            SetRecordedTracks(false);
+
             std::map<std::wstring, seq::RecordingTake> takes{};
 
             {
                 std::scoped_lock guard{ m_inputLock };
                 takes.swap(m_takes);
+            }
+
+            for (auto& [trackId, take] : takes)
+            {
+                take.CutPlayed(end);
             }
 
             m_recordingPreview.clear();
@@ -2187,6 +2203,7 @@ namespace winrt::midisequencer::implementation
         if (m_engine != nullptr)
         {
             m_engine->ReturnToTimeline(std::wstring{}, LaunchQuantize());
+            RefreshLaunchViews();
         }
     }
 
