@@ -10,11 +10,13 @@ _Use_decl_annotations_
 RtpMidiEndpoint::RtpMidiEndpoint(
     GUID const& entryId,
     std::wstring const& instanceId,
-    std::wstring const& endpointName) :
+    std::wstring const& endpointName,
+    std::wstring const& hostRemoteName) :
     m_entryId(entryId),
     m_instanceId(instanceId),
     m_normalizedInstanceId(internal::NormalizeDeviceInstanceIdWStringCopy(instanceId)),
     m_endpointName(endpointName),
+    m_hostRemoteName(hostRemoteName),
     m_disconnectedSinceTick(GetTickCount64())
 {
 }
@@ -55,6 +57,7 @@ RtpMidiEndpoint::Attach(std::shared_ptr<RtpMidiConnection> const& connection)
 
     m_connection = connection;
     m_disconnectedSinceTick = 0;
+    m_releaseWhenConnectionEnds = false;
 
     m_connection->SetEndpointIds(m_normalizedInstanceId, m_interfaceId);
 

@@ -306,7 +306,8 @@ namespace midi2console
             table.Render();
         }
 
-        // Listed whether or not the device is connected right now
+        // Listed whether or not the device is connected right now. One that is away and keeps
+        // its endpoint shows that, with the endpoint's id under it.
         void WriteRemoteClientSpeeds(_In_ midi2rtp::MidiRtpConfiguredHost const& host)
         {
             auto const settingsList = host.RemoteClientSettings();
@@ -316,11 +317,12 @@ namespace midi2console
                 return;
             }
 
-            ConsoleTable table{ ResourceString(IDS_NET_REMOTE_CLIENT_SPEEDS_TABLE_TITLE) };
+            ConsoleTable table{ ResourceString(IDS_RTP_REMOTE_CLIENT_SETTINGS_TABLE_TITLE) };
 
             table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
             table.SetLastColumnShrinkable();
             table.AddColumn(ResourceString(IDS_NET_LABEL_SEND_SPEED), ColumnAlignment::Left, fieldValueTextStyle);
+            table.AddColumn(ResourceString(IDS_BT_LABEL_KEEP_WHEN_OFFLINE), ColumnAlignment::Left, fieldValueTextStyle);
 
             for (auto const& settings : settingsList)
             {
@@ -335,6 +337,13 @@ namespace midi2console
                     static_cast<uint32_t>(settings.SendSpeedLimit()),
                     false,
                     settings.SkipInBetweenValuesToCatchUp()));
+                table.AddCell(FormatOfflineRetention(settings.OfflineRetentionSeconds()));
+
+                if (!settings.EndpointDeviceId().empty())
+                {
+                    table.AddRowDetail(ResourceString(IDS_RTP_REMOTE_CLIENT_KEPT_OFFLINE), warningTextStyle);
+                    table.AddRowDetail(ToUtf8(settings.EndpointDeviceId()), endpointIdTextStyle);
+                }
             }
 
             table.Render();

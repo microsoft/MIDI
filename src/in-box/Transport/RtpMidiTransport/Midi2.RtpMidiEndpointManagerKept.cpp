@@ -7,8 +7,8 @@
 // all it sees, and many DAWs drop a control surface's setup when they start without its port. So a
 // client entry can keep its endpoint: made when the transport starts, handed each new connection,
 // and dropping what apps send while the remote is away, the way a switched off DIN device would.
-// Only client entries can, because a remote that connects to a host is known only by the name it
-// sends, and any device on the network could send that name to take over an open port.
+// A host's remotes can keep theirs too, each one only when the customer has given it its own
+// settings by name. See Midi2.RtpMidiEndpointManagerHostKept.cpp.
 // ============================================================================
 
 #include "pch.h"
@@ -299,7 +299,8 @@ _Use_decl_annotations_
 bool
 CMidi2RtpMidiEndpointManager::AttachToKeptEndpoint(std::shared_ptr<RtpMidiConnection> const& connection)
 {
-    if (connection == nullptr || connection->ThisPcIsHost()) return false;
+    if (connection == nullptr) return false;
+    if (connection->ThisPcIsHost()) return AttachToKeptHostEndpoint(connection);
 
     auto const endpoint = FindEndpointForEntry(connection->EntryId());
     if (endpoint == nullptr || !endpoint->IsKept()) return false;
@@ -315,7 +316,8 @@ _Use_decl_annotations_
 bool
 CMidi2RtpMidiEndpointManager::DetachFromKeptEndpoint(std::shared_ptr<RtpMidiConnection> const& connection)
 {
-    if (connection == nullptr || connection->ThisPcIsHost()) return false;
+    if (connection == nullptr) return false;
+    if (connection->ThisPcIsHost()) return DetachFromKeptHostEndpoint(connection);
 
     auto const endpoint = FindEndpointForConnection(connection.get());
     if (endpoint == nullptr || !endpoint->IsKept()) return false;
@@ -401,7 +403,8 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
 
             for (auto const& endpoint : m_createdEndpoints)
             {
-                if (endpoint->IsKept()) kept.push_back(endpoint);
+                // a host's remotes are reconciled below, against the host's settings
+                if (endpoint->IsKept() && !endpoint->IsHostRemoteEndpoint()) kept.push_back(endpoint);
             }
         }
 
@@ -420,10 +423,15 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
                 continue;
             }
 
+            // read now: the remote can leave after this pass began, and an earlier tick would wrap
+            auto const disconnectedSince = endpoint->DisconnectedSinceTick();
+            auto const currentTick = GetTickCount64();
+
             bool const expired =
                 !connected &&
                 definition->OfflineRetentionSeconds > 0 &&
-                now - endpoint->DisconnectedSinceTick() >= static_cast<uint64_t>(definition->OfflineRetentionSeconds) * 1000;
+                currentTick > disconnectedSince &&
+                currentTick - disconnectedSince >= static_cast<uint64_t>(definition->OfflineRetentionSeconds) * 1000;
 
             // A new name or a new remote is a new endpoint, made again below
             if (expired || !matches(endpoint, *definition))
@@ -488,6 +496,8 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
                 m_keptEndpointRetryTicks[definition.EntryId] = now + MIDI_RTP_KEPT_ENDPOINT_RETRY_INTERVAL_MS;
             }
         }
+
+        ReconcileHostKeptEndpoints(now);
     }
     CATCH_LOG();
 }

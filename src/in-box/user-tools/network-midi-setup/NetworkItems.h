@@ -1025,6 +1025,35 @@ namespace winrt::midinetworksetup::implementation
 
         bool IsRtpMidi() const noexcept { return m_isRtpMidi; }
 
+        int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        winrt::hstring OfflineRetentionText() const noexcept { return m_offlineRetentionText; }
+        bool IsKeptOffline() const noexcept { return m_isKeptOffline; }
+
+        winrt::Microsoft::UI::Xaml::Visibility OfflineRetentionVisibility() const noexcept
+        {
+            return m_offlineRetentionText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        winrt::Microsoft::UI::Xaml::Visibility KeptOfflineVisibility() const noexcept
+        {
+            return m_isKeptOffline ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
+        // Called before the row is shown, like the ports below. An empty text hides the line.
+        void InternalInitializeOfflineRetention(
+            _In_ int32_t const offlineRetentionSeconds,
+            _In_ winrt::hstring const& offlineRetentionText,
+            _In_ bool const isKeptOffline) noexcept
+        {
+            m_offlineRetentionSeconds = offlineRetentionSeconds;
+            m_offlineRetentionText = offlineRetentionText;
+            m_isKeptOffline = isKeptOffline;
+        }
+
         // the name the setting is keyed on, which may be empty where DisplayName is not
         winrt::hstring RemoteName() const noexcept { return m_remoteName; }
 
@@ -1106,6 +1135,10 @@ namespace winrt::midinetworksetup::implementation
         bool m_reduceSendSpeedAutomatically{ false };
         bool m_skipInBetweenValuesToCatchUp{ true };
         bool m_isRtpMidi{ false };
+
+        int32_t m_offlineRetentionSeconds{ 0 };
+        winrt::hstring m_offlineRetentionText{};
+        bool m_isKeptOffline{ false };
 
         bool m_usesHostSendSpeed{ false };
         bool m_hasOwnMidi1Ports{ false };

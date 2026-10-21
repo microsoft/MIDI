@@ -99,7 +99,7 @@ CmdletsToExport = @(
     # RTP-MIDI
     'Get-MidiRtpAdvertisedHost', 'Get-MidiRtpConfiguredHost', 'Get-MidiRtpConfiguredClient',
     'Connect-MidiRtpHost', 'Disconnect-MidiRtpHost',
-    'Set-MidiRtpRemoteClientSendSpeed', 'Remove-MidiRtpRemoteClientSendSpeed',
+    'Set-MidiRtpRemoteClientSettings', 'Remove-MidiRtpRemoteClientSettings',
 
     # built-in General MIDI synthesizer
     'Get-MidiSynth', 'Get-MidiSynthEndpointDeviceId', 'Set-MidiSynth',

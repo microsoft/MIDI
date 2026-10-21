@@ -212,11 +212,13 @@ bool RtpMidiTransportTests::ClassSetup()
         L"a create section for one host is accepted");
 
     DefineKeptClientBeforeStart();
+    DefineKeptHostRemoteBeforeStart();
 
     VERIFY_SUCCEEDED(m_transport->Activate(__uuidof(IMidiEndpointManager), reinterpret_cast<void**>(&m_endpointManager)));
     VERIFY_SUCCEEDED(m_endpointManager->Initialize(m_deviceManager, m_protocolManager));
 
     NoteKeptEndpointAfterStart();
+    NoteKeptHostEndpointAfterStart();
 
     VERIFY_IS_TRUE(WaitFor([&]()
     {

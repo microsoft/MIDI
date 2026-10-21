@@ -12,10 +12,10 @@ using Windows.Devices.Midi2.Transports.Rtp;
 
 namespace WindowsMidiServices
 {
-    // The device goes back to the host's sending speed. A device already connected changes speed
-    // straight away.
-    [Cmdlet(VerbsCommon.Remove, "MidiRtpRemoteClientSendSpeed", SupportsShouldProcess = true)]
-    public class CommandRemoveMidiRtpRemoteClientSendSpeed : MidiRtpRemoteClientSpeedCmdletBase
+    // The device goes back to the host's settings. A device already connected changes speed
+    // straight away. One that is away loses the endpoint the host was keeping for it.
+    [Cmdlet(VerbsCommon.Remove, "MidiRtpRemoteClientSettings", SupportsShouldProcess = true)]
+    public class CommandRemoveMidiRtpRemoteClientSettings : MidiRtpRemoteClientSettingsCmdletBase
     {
         protected override void ProcessRecord()
         {
@@ -32,15 +32,15 @@ namespace WindowsMidiServices
             if (!hasThisRemoteClient)
             {
                 WriteNonTerminating(
-                    new ItemNotFoundException(Format(Strings.RemoteClientSpeedNotFoundFormat, RemoteClientTarget)),
-                    "MidiRtpRemoteClientSpeedNotFound",
+                    new ItemNotFoundException(Format(Strings.RemoteClientSettingsNotFoundFormat, RemoteClientTarget)),
+                    "MidiRtpRemoteClientSettingsNotFound",
                     ErrorCategory.ObjectNotFound,
                     RemoteClientTarget);
 
                 return;
             }
 
-            if (!ShouldProcess(RemoteClientTarget, Strings.RemoteClientSpeedRemoveAction))
+            if (!ShouldProcess(RemoteClientTarget, Strings.RemoteClientSettingsRemoveAction))
             {
                 return;
             }

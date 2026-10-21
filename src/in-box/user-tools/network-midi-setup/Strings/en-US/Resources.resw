@@ -1180,6 +1180,12 @@
   <data name="ChangeSendSpeedLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Change sending speed</value>
   </data>
+  <data name="ChangeDeviceSettingsLink.Content" xml:space="preserve">
+    <value>Settings...</value>
+  </data>
+  <data name="ChangeDeviceSettingsLink.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change this device's settings</value>
+  </data>
   <data name="ChangeSendSpeedDeviceIntro.Text" xml:space="preserve">
     <value>This changes only how fast this host sends to this device. Windows remembers it, and uses it again the next time the device connects.</value>
   </data>
@@ -1206,6 +1212,51 @@
   <data name="RemoteClientSendSpeedResetFormat" xml:space="preserve">
     <value>{0} now uses the host's sending speed.</value>
     <comment>{0} is the name of a device which connects to a host on this PC.</comment>
+  </data>
+  <data name="RemoteClientSettingsExpander.Header" xml:space="preserve">
+    <value>Devices with their own settings</value>
+  </data>
+  <data name="RemoteClientSettingsChangeButton.Content" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="RemoteClientSettingsChangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change settings</value>
+  </data>
+  <data name="RemoteClientSettingsUseHostButton.Content" xml:space="preserve">
+    <value>Use the host's settings</value>
+  </data>
+  <data name="RemoteClientKeptOfflineText.Text" xml:space="preserve">
+    <value>Offline, endpoint kept</value>
+    <comment>Shown for an RTP-MIDI device that connects to a host on this PC, while the device is away and the host keeps its endpoint.</comment>
+  </data>
+  <data name="RemoteClientKeepsEndpointAlways" xml:space="preserve">
+    <value>Keeps its endpoint when offline</value>
+  </data>
+  <data name="RemoteClientKeepsEndpointSecondsFormat" xml:space="preserve">
+    <value>Keeps its endpoint for {0} seconds when offline</value>
+    <comment>{0} is a number of seconds.</comment>
+  </data>
+  <data name="RemoteClientSettingsChangedFormat" xml:space="preserve">
+    <value>{0} now has its own settings.</value>
+    <comment>{0} is the name of a device which connects to a host on this PC.</comment>
+  </data>
+  <data name="RemoteClientSettingsResetFormat" xml:space="preserve">
+    <value>{0} now uses the host's settings.</value>
+    <comment>{0} is the name of a device which connects to a host on this PC.</comment>
+  </data>
+  <data name="ChangeDeviceSettingsTitleFormat" xml:space="preserve">
+    <value>Settings for {0}</value>
+    <comment>{0} is the name of a device which connects to a host on this PC.</comment>
+  </data>
+  <data name="ChangeDeviceSettingsIntro.Text" xml:space="preserve">
+    <value>These settings are only for this device on this host. Windows remembers them by the device's name, and uses them again the next time it connects.</value>
+  </data>
+  <data name="ChangeSettingsUseHostFormat" xml:space="preserve">
+    <value>Use the host's settings: sending speed {0}, endpoint removed when offline</value>
+    <comment>{0} is the host's sending speed, such as Unlimited or 4× MIDI 1.0 wire speed.</comment>
+  </data>
+  <data name="ChangeOfflineRetentionComboBox.Header" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
   </data>
   <data name="SendSpeedChangeFailedGeneral" xml:space="preserve">
     <value>Windows could not change the sending speed.</value>

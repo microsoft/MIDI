@@ -244,6 +244,7 @@
 #define MIDIDIAG_SECTION_LABEL_RTP_MIDI                                  L"transport_rtp_midi"
 #define MIDIDIAG_FIELD_LABEL_NETWORK_HOST                                L"host"
 #define MIDIDIAG_FIELD_LABEL_NETWORK_HOST_CONNECTION                     L"host_connection"
+#define MIDIDIAG_FIELD_LABEL_NETWORK_HOST_REMOTE_CLIENT_SETTINGS         L"host_remote_client_settings"
 #define MIDIDIAG_FIELD_LABEL_NETWORK_CLIENT                              L"client"
 #define MIDIDIAG_FIELD_LABEL_NETWORK_CLIENT_CONNECTION                   L"client_connection"
 #define MIDIDIAG_FIELD_LABEL_ADVERTISED_HOST                             L"advertised_host"

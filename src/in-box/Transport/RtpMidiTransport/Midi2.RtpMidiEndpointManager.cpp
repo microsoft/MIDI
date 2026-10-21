@@ -296,6 +296,7 @@ CMidi2RtpMidiEndpointManager::Shutdown()
 
         m_lastWrittenLatencyTicks.clear();
         m_keptEndpointRetryTicks.clear();
+        m_keptHostEndpointRetryTicks.clear();
 
         m_midiDeviceManager.reset();
         m_midiProtocolManager.reset();
@@ -1101,12 +1102,20 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
         std::wstring customEndpointName{};
         std::wstring readableName{ connection->RemoteName() };
         std::wstring identity{ internal::GuidToString(connection->EntryId()) };
+        std::wstring hostRemoteName{};
 
         if (connection->ThisPcIsHost())
         {
             // A host serves many remotes. The name each one gives is the only identity that
             // survives a restart on both ends: its SSRC and ports change every time.
-            identity += L"|" + connection->RemoteName();
+            identity = HostRemoteIdentity(connection->EntryId(), connection->RemoteName());
+
+            // A kept endpoint for this name came back to a remote while this waited
+            if (AttachToKeptHostEndpoint(connection)) return S_OK;
+
+            // Only one endpoint per name can be found again by name. Another remote sending a name
+            // in use, in any case, falls back to the address below.
+            if (FindHostRemoteEndpoint(connection->EntryId(), connection->RemoteName()) == nullptr) hostRemoteName = connection->RemoteName();
         }
         else
         {
@@ -1133,13 +1142,17 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
         {
             identity += L"|" + RtpMidiNet::AddressToString(connection->RemoteControl()) + L"|" + std::to_wstring(connection->RemoteControl().Port);
             instanceId = BuildInstanceId(readableName, identity);
+            hostRemoteName.clear();
         }
 
         auto const uniqueIdentifier = RtpMidiText::StableHash(identity);
         auto const endpointDescription = internal::ResourceGetWString(
             connection->ThisPcIsHost() ? IDS_RTP_ENDPOINT_DESCRIPTION_HOST : IDS_RTP_ENDPOINT_DESCRIPTION_CLIENT);
 
-        auto const endpoint = std::make_shared<RtpMidiEndpoint>(connection->EntryId(), instanceId, endpointName);
+        auto const endpoint = std::make_shared<RtpMidiEndpoint>(connection->EntryId(), instanceId, endpointName, hostRemoteName);
+
+        // follows the remote's settings while it is connected, and decided again when it leaves
+        if (endpoint->IsHostRemoteEndpoint()) endpoint->SetKept(HostKeepsEndpointFor(connection->EntryId(), hostRemoteName));
 
         // before activation, so an app which opens the endpoint meanwhile already reaches the remote
         endpoint->Attach(connection);
@@ -1416,6 +1429,9 @@ CMidi2RtpMidiEndpointManager::DisconnectConnection(GUID const& entryId, uint32_t
     // an ended connection is kept briefly by the engine, but is gone as far as a caller can tell
     RETURN_HR_IF(E_NOTFOUND, participant.State == RtpMidi::ParticipantState::Ended);
 
+    // ended by the customer, so a host's remote doesn't keep a timed endpoint
+    ReleaseHostEndpointWhenConnectionEnds(entryId, connectionId);
+
     RETURN_IF_FAILED(node->EndConnection(connectionId));
 
     return S_OK;
@@ -1445,6 +1461,8 @@ CMidi2RtpMidiEndpointManager::EndConnectionsFromRemote(GUID const& hostId, std::
 
         if (CompareStringOrdinal(name.c_str(), static_cast<int>(name.size()), remoteName.c_str(), static_cast<int>(remoteName.size()), TRUE) != CSTR_EQUAL) continue;
 
+        ReleaseHostEndpointWhenConnectionEnds(hostId, participant.Id);
+
         if (SUCCEEDED(node->EndConnection(participant.Id))) ended++;
     }
 
@@ -1456,6 +1474,9 @@ _Use_decl_annotations_
 void
 CMidi2RtpMidiEndpointManager::ApplyRemoteClientSettings(GUID const& hostId)
 {
+    // the endpoints of remotes away are the worker's, which this update wakes
+    RefreshHostEndpointsKept(hostId);
+
     std::shared_ptr<RtpMidiNode> node{ nullptr };
 
     {
@@ -1700,12 +1721,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
 
         for (auto const& settings : TransportState::Current().GetRemoteClientSettings(definition.EntryId))
         {
-            json::JsonObject settingsItem;
-            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_NAME_KEY, JsonString(settings.RemoteName));
-            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, JsonNumber(settings.SendSpeedLimit));
-            settingsItem.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, JsonBoolean(settings.SkipInBetweenValuesToCatchUp));
-
-            remoteClientSettings.Append(settingsItem);
+            remoteClientSettings.Append(BuildRemoteClientSettingsJson(definition.EntryId, settings));
         }
 
         item.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_REMOTE_CLIENT_SETTINGS_KEY, remoteClientSettings);

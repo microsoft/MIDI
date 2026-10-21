@@ -490,15 +490,25 @@ Get-MidiRtpConfiguredHost | Format-Table -AutoSize
 Get-MidiRtpConfiguredClient | Format-Table -AutoSize
 ```
 
-### Set-MidiRtpRemoteClientSendSpeed and Remove-MidiRtpRemoteClientSendSpeed
+### Set-MidiRtpRemoteClientSettings and Remove-MidiRtpRemoteClientSettings
 
-These work like the Network MIDI 2.0 ones. An RTP-MIDI device gives only a name when it connects, so that's all the host knows it by. It's the `RemoteName` of the device's connection.
+These give one device that connects to a host on this PC settings of its own, used instead of the host's. An RTP-MIDI device gives only a name when it connects, so that's all the host knows it by. It's the `RemoteName` of the device's connection.
+
+`Set-MidiRtpRemoteClientSettings` takes the same settings, with the same names and values, as `Connect-MidiRtpHost`: `-SendSpeedLimit`, `-NoSkippingInBetweenValues` and `-OfflineRetentionSeconds`. Like `Connect-MidiRtpHost`, it sets all of them, so a setting you leave out goes back to its default. A device that's already connected changes speed right away. It uses the new `-OfflineRetentionSeconds` the next time it leaves.
+
+`-OfflineRetentionSeconds -1` keeps the device's MIDI ports while it's switched off, so an app you start in the meantime still finds them. The ports are there from the moment the host starts, even before the device first connects. A number from 1 to 86400 keeps them for that many seconds after the device leaves. `0`, the default, removes them as soon as it leaves.
+
+`Remove-MidiRtpRemoteClientSettings` puts the device back on the host's settings. If the host is keeping the device's ports while it's away, they're removed.
+
+The change lasts until the service restarts unless you add `-SaveToConfiguration`, and that only works for a host that's saved. `Get-MidiRtpConfiguredHost` lists each device's settings in `RemoteClientSettings`. For a device that's away while the host keeps its ports, `EndpointDeviceId` names the endpoint.
 
 ```pwsh
 $studioHost = Get-MidiRtpConfiguredHost | Where-Object { $_.Name -eq 'Studio PC' }
 
-Set-MidiRtpRemoteClientSendSpeed -HostId $studioHost.HostId -RemoteClientName 'Studio Mac' -SendSpeedLimit Midi1WireSpeedTimes2 -SaveToConfiguration
-Remove-MidiRtpRemoteClientSendSpeed -HostId $studioHost.HostId -RemoteClientName 'Studio Mac' -SaveToConfiguration
+Set-MidiRtpRemoteClientSettings -HostId $studioHost.HostId -RemoteClientName 'X-Touch' -OfflineRetentionSeconds -1 -SaveToConfiguration
+Set-MidiRtpRemoteClientSettings -HostId $studioHost.HostId -RemoteClientName 'Studio Mac' -SendSpeedLimit Midi1WireSpeedTimes2 -SaveToConfiguration
+$studioHost.RemoteClientSettings | Format-Table -AutoSize
+Remove-MidiRtpRemoteClientSettings -HostId $studioHost.HostId -RemoteClientName 'Studio Mac' -SaveToConfiguration
 ```
 
 ## General MIDI synthesizer cmdlets
