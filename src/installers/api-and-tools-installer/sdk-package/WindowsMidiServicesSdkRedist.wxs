@@ -172,10 +172,13 @@
             <ComponentRef Id="NetworkSetupProtocol"/>
     </Feature>
 
-    <!-- Only for a PC which already had the notifications app starting at sign-in, so that an
-         upgrade puts back what the customer had rather than leaving them without it until they
-         next sign in. A clean install starts nothing: see the Run entry search in _StartMenu.wxs
-         for why the installer never turns this on by itself.
+    <!-- Only for a PC which already had the notifications app starting at sign-in, or where it was
+         running when setup closed it (CloseMidiTools below), so that an install puts back what
+         the customer had rather than leaving them without it until they next sign in. A clean
+         install starts nothing: see the Run entry search in _StartMenu.wxs for why the installer
+         never turns this on by itself.
+         Not started when a restart is required: files queued for the restart would leave it
+         running new and old files together, which is what crashes.
          Impersonated because a tray icon belongs to the installing user's session, not to SYSTEM,
          and asyncNoWait because the app runs until signed out and would otherwise hang setup.
          Starting a second copy is harmless: the app is single instance and the later one exits. -->
@@ -186,10 +189,52 @@
                   Impersonate="yes"
                   Return="asyncNoWait" />
 
+    <!-- Files in use. See InstallSafetyActions.cs in the Transports installer's custom actions. -->
+    <Binary Id="CustomActionBinary"
+            SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+    <SetProperty Id="MIDIRESTARTCHECKFOLDER"
+                 Value="[TOOLSROOT_INSTALLFOLDER]"
+                 After="CostFinalize"
+                 Sequence="execute" />
+
+    <CustomAction Id="Action_WarnIfMidiRestartPending"
+                  Execute="immediate"
+                  BinaryRef="CustomActionBinary"
+                  DllEntry="WarnIfMidiRestartPending"
+                  Return="check" />
+
+    <CustomAction Id="Action_CloseMidiTools"
+                  Execute="immediate"
+                  BinaryRef="CustomActionBinary"
+                  DllEntry="CloseMidiTools"
+                  Return="ignore" />
+
+    <CustomAction Id="Action_RequireRestartIfMidiFilesPending"
+                  Execute="immediate"
+                  BinaryRef="CustomActionBinary"
+                  DllEntry="RequireRestartIfMidiFilesPending"
+                  Return="ignore" />
+
+    <UI>
+      <Error Id="25000" Message="Windows needs to restart to finish an earlier install or removal of Windows MIDI Services. Restart your PC first, then run this installer again. If you install now, some MIDI apps may not start until you restart and install again.&#13;&#10;&#13;&#10;Select Cancel to stop now, or OK to install anyway." />
+      <ProgressText Action="Action_CloseMidiTools" Message="Closing MIDI apps" />
+    </UI>
+
     <InstallExecuteSequence>
+      <Custom Action="Action_WarnIfMidiRestartPending"
+              Before="Action_CloseMidiTools"
+              Condition='NOT (REMOVE="ALL")' />
+
+      <Custom Action="Action_CloseMidiTools"
+              Before="InstallValidate" />
+
+      <Custom Action="Action_RequireRestartIfMidiFilesPending"
+              After="InstallFinalize" />
+
       <Custom Action="Action_StartNotificationsApp"
-              After="InstallFinalize"
-              Condition="NOT Installed AND MIDINOTIFICATIONSAUTOSTARTPRESENT" />
+              After="Action_RequireRestartIfMidiFilesPending"
+              Condition="NOT Installed AND (MIDINOTIFICATIONSAUTOSTARTPRESENT OR MIDINOTIFICATIONSWASRUNNING) AND NOT MIDIRESTARTREQUIRED" />
     </InstallExecuteSequence>
 
     </Package>
