@@ -111,6 +111,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                     auto settings = winrt::make_self<MidiRtpRemoteClientSettings>(name);
                     settings->SendSpeedLimit(static_cast<rtp::MidiRtpSendSpeedLimit>(MidiRtpSdkJson::SendSpeedLimit(client, MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY)));
                     settings->SkipInBetweenValuesToCatchUp(MidiRtpSdkJson::Boolean(client, MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
+                    settings->OfflineRetentionSeconds(MidiRtpSdkJson::OfflineRetention(client, MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY));
 
                     m_remoteClientSettings.Append(*settings);
                 }

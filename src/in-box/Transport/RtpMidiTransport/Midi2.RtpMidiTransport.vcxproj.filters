@@ -19,6 +19,9 @@
     <ClCompile Include="Midi2.RtpMidiEndpointManagerKept.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.RtpMidiEndpointManagerHostKept.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="RtpMidiEndpoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

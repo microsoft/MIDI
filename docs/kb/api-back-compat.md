@@ -64,7 +64,7 @@ Each of the features listed is from the viewpoint of an application using the AP
 
 \* Messages are translated between the MIDI 1.0 byte format and the MIDI 2.0 UMP format whenever they need to be. The Windows MIDI Services API itself works only in UMP, and includes converters and helpers for applications that need MIDI 1.0 bytes.
 
-\** The in-box Roland GS and General MIDI synthesizer is being rebuilt as a Windows MIDI Services transport. It's available now as a preview for developers, and ships in late 2026 with full MIDI 2.0 capabilities.
+\** The in-box Roland GS and General MIDI synthesizer is being rebuilt as a Windows MIDI Services transport. It's available now as a preview for developers, and ships in 2027 with full MIDI 2.0 capabilities.
 
 \*** Incoming timestamps have been available in the WinMM and WinRT MIDI 1.0 APIs since those APIs were introduced.
 

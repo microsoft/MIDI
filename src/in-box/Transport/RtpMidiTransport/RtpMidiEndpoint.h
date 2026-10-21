@@ -2,8 +2,8 @@
 // Licensed under the MIT License
 // ============================================================================
 // The MIDI endpoint the service sees for one rtpMIDI connection. A client entry set to keep its
-// endpoint has one that outlives its connections and is handed each new one, so the bidi talks to
-// this rather than to a connection.
+// endpoint, or a host's remote whose own settings keep it, has one that outlives its connections
+// and is handed each new one, so the bidi talks to this rather than to a connection.
 // ============================================================================
 
 #pragma once
@@ -16,9 +16,20 @@ public:
     RtpMidiEndpoint(
         _In_ GUID const& entryId,
         _In_ std::wstring const& instanceId,
-        _In_ std::wstring const& endpointName);
+        _In_ std::wstring const& endpointName,
+        _In_ std::wstring const& hostRemoteName = {});
 
     GUID EntryId() const noexcept { return m_entryId; }
+
+    // On a host, the name of the remote this endpoint belongs to, when its id comes from that name
+    // alone. Only such an endpoint can be kept, because only it is found again when the remote
+    // comes back. Empty for a client's endpoint and for a second remote sending a name in use.
+    std::wstring const& HostRemoteName() const noexcept { return m_hostRemoteName; }
+    bool IsHostRemoteEndpoint() const noexcept { return !m_hostRemoteName.empty(); }
+
+    // Set when the customer ends the connection, so its end removes the endpoint even if it is kept
+    void ReleaseWhenConnectionEnds() noexcept { m_releaseWhenConnectionEnds = true; }
+    bool ShouldReleaseWhenConnectionEnds() const noexcept { return m_releaseWhenConnectionEnds.load(); }
 
     // as the device is created with it, and the form ids are compared and removed in
     std::wstring const& InstanceId() const noexcept { return m_instanceId; }
@@ -51,7 +62,9 @@ private:
     std::wstring const m_instanceId;
     std::wstring const m_normalizedInstanceId;
     std::wstring const m_endpointName;
+    std::wstring const m_hostRemoteName;
     std::atomic<bool> m_kept{ false };
+    std::atomic<bool> m_releaseWhenConnectionEnds{ false };
 
     // Never held across a send. The connection's own locks are taken inside it, never the reverse.
     mutable std::mutex m_lock;

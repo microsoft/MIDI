@@ -70,6 +70,9 @@ public:
     // A client's endpoint kept while its remote is away
     TEST_METHOD(TestKeptClientEndpointOutlivesItsRemote);
 
+    // A remote's endpoint kept by a host on this PC while the remote is away
+    TEST_METHOD(TestHostKeptEndpointOutlivesItsRemote);
+
 private:
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
     std::vector<winrt::guid> m_createdHosts{};

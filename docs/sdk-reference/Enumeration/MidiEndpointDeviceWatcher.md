@@ -81,6 +81,8 @@ Unlike Bluetooth MIDI and RTP-MIDI, there's no setting to keep the endpoint whil
 
 By default, when the connection is lost or closed, the endpoint is removed and `Removed` fires. A connection this PC makes can be set to keep its endpoint while the remote device is away. Then no `Removed` event fires, and the endpoint starts working again when the device comes back. When it's set to keep the endpoint always, the endpoint is also there from the moment the MIDI service starts. See [`MidiRtpOfflineRetention`]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/). When the customer disconnects or removes the connection, its endpoint is removed and `Removed` fires.
 
+A host on this PC can keep the endpoint of a device that connects to it, when the host has settings for that device that say so. It works the same way: no `Removed` event while the device is away, and the same endpoint when it connects again. A device kept always has its endpoint from the moment the host starts. See [`MidiRtpRemoteClientSettings`]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/).
+
 ## What happens when an endpoint is disconnected
 
 When an endpoint disconnects because its device went away, every application's connection to it is closed, and so is the service's connection to the device. The message queues between processes are shut down. Any messages still waiting in them, in the scheduler, or anywhere else in the service are lost.

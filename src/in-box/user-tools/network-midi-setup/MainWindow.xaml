@@ -2374,9 +2374,9 @@
                                                                             <ColumnDefinition Width="Auto" MinWidth="76" />
                                                                             <ColumnDefinition Width="*" />
                                                                         </Grid.ColumnDefinitions>
-                                                                        <Button x:Uid="ChangeSendSpeedLink"
+                                                                        <Button x:Uid="ChangeDeviceSettingsLink"
                                                                                 Grid.Column="0"
-                                                                                Content="Speed..."
+                                                                                Content="Settings..."
                                                                                 Style="{StaticResource RowChangeButtonStyle}"
                                                                                 Visibility="{x:Bind ChangeSendSpeedVisibility, Mode=OneWay}"
                                                                                 Click="OnChangeRemoteClientSendSpeedClick" />
@@ -2506,8 +2506,8 @@
                                             </StackPanel>
                                         </Expander>
 
-                                        <Expander x:Uid="RemoteClientSpeedsExpander"
-                                                  Header="Devices with their own sending speed"
+                                        <Expander x:Uid="RemoteClientSettingsExpander"
+                                                  Header="Devices with their own settings"
                                                   HorizontalAlignment="Stretch"
                                                   HorizontalContentAlignment="Stretch"
                                                   Visibility="{x:Bind RemoteClientSpeedsVisibility, Mode=OneWay}"
@@ -2532,17 +2532,28 @@
                                                                                TextWrapping="Wrap"
                                                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <TextBlock Text="{x:Bind OfflineRetentionText}"
+                                                                               Visibility="{x:Bind OfflineRetentionVisibility}"
+                                                                               TextWrapping="Wrap"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <TextBlock x:Uid="RemoteClientKeptOfflineText"
+                                                                               Text="Offline, endpoint kept"
+                                                                               Visibility="{x:Bind KeptOfflineVisibility}"
+                                                                               TextWrapping="Wrap"
+                                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                                                 </StackPanel>
 
                                                                 <StackPanel Grid.Column="1"
                                                                             Orientation="Horizontal"
                                                                             Spacing="8"
                                                                             VerticalAlignment="Center">
-                                                                    <Button x:Uid="RemoteClientSpeedChangeButton"
+                                                                    <Button x:Uid="RemoteClientSettingsChangeButton"
                                                                             Content="Change"
                                                                             Click="OnChangeRemoteClientSpeedEntryClick" />
-                                                                    <Button x:Uid="RemoteClientSpeedUseHostButton"
-                                                                            Content="Use host's speed"
+                                                                    <Button x:Uid="RemoteClientSettingsUseHostButton"
+                                                                            Content="Use the host's settings"
                                                                             Click="OnUseHostSpeedForRemoteClientClick" />
                                                                 </StackPanel>
                                                             </Grid>
@@ -3228,12 +3239,21 @@
             <ContentDialog.Resources>
                 <x:Double x:Key="ContentDialogMaxWidth">640</x:Double>
             </ContentDialog.Resources>
+            <!-- Scrolls, because the dialog's own template never does and an RTP-MIDI device's
+                 settings make it taller than a short window -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="12" MaxWidth="580" Margin="0,4,4,4">
                 <!-- Only for one device on a host. The check box text names the host's speed,
                      so it is set in code. -->
                 <StackPanel x:Name="ChangeSendSpeedDevicePanel" Spacing="8">
-                    <TextBlock x:Uid="ChangeSendSpeedDeviceIntro"
+                    <TextBlock x:Name="ChangeSendSpeedDeviceIntroText"
+                               x:Uid="ChangeSendSpeedDeviceIntro"
                                Text="This changes only how fast this host sends to this device. Windows remembers it, and uses it again the next time the device connects."
+                               TextWrapping="Wrap" />
+                    <!-- RTP-MIDI devices, in place of the one above -->
+                    <TextBlock x:Name="ChangeDeviceSettingsIntroText"
+                               x:Uid="ChangeDeviceSettingsIntro"
+                               Text="These settings are only for this device on this host. Windows remembers them by the device's name, and uses them again the next time it connects."
                                TextWrapping="Wrap" />
                     <CheckBox x:Name="ChangeSendSpeedUseHostCheckBox"
                               Checked="OnChangeSendSpeedUseHostChanged"
@@ -3283,7 +3303,31 @@
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
+
+                <!-- RTP-MIDI devices on a host only. The same choices as an RTP-MIDI device this
+                     PC connects to. The caption shows a duration none of the choices match. -->
+                <StackPanel x:Name="ChangeOfflineRetentionPanel" Spacing="4">
+                    <ComboBox x:Name="ChangeOfflineRetentionComboBox"
+                              x:Uid="ChangeOfflineRetentionComboBox"
+                              Header="Keep endpoint when offline"
+                              HorizontalAlignment="Stretch">
+                        <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
+                        <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
+                        <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
+                        <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
+                    </ComboBox>
+                    <TextBlock x:Name="ChangeOfflineRetentionCaption"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Uid="OfflineRetentionHelp"
+                               Text="Keeping the endpoint means apps hold on to their MIDI ports while the device is off, so they keep their setup. Anything sent to it then is lost. Removing it means the ports go away, which is the only way most apps can tell the device is gone."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
             </StackPanel>
+            </ScrollViewer>
         </ContentDialog>
 
         <!-- The MIDI 1.0 ports a Network MIDI 2.0 connection gets when the device doesn't describe

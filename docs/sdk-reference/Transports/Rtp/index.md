@@ -99,6 +99,8 @@ Many apps, DAWs especially, remember their setup by port. When a device is switc
 
 It's off by default, and it only applies to a client with `AutoReconnect` turned on. Disconnecting the client, turning it off or removing it still removes the endpoint. Read [MidiRtpOfflineRetention]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpOfflineRetentionEnum/) for the details, and for why it's a choice. Added in version 2 of `MidiTransportsRtpApiContract`.
 
+A host on this PC can keep the endpoint of a device that connects to it, too. Give the device settings of its own with `OfflineRetentionSeconds` set, in a [MidiRtpRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/). Its remarks explain how that works.
+
 ## Persistence
 
 Hosts, clients, and decisions made with this API change the running service only, and they're gone when the service restarts. To keep one, also pass the same configuration object to [MidiServiceTransportPluginConfigManager]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceTransportPluginConfigManager/).`SaveUpdate`.

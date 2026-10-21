@@ -3248,7 +3248,9 @@ namespace winrt::midinetworksetup::implementation
         bool const currentSkipInBetweenValues,
         bool const offerReduceAutomatically,
         winrt::hstring const hostSendSpeedText,
-        bool const currentUsesHostSpeed)
+        bool const currentUsesHostSpeed,
+        bool const offerOfflineRetention,
+        int32_t const currentOfflineRetentionSeconds)
     {
         auto strongThis = get_strong();
 
@@ -3259,6 +3261,7 @@ namespace winrt::midinetworksetup::implementation
 
         auto const offerHostSpeed = !hostSendSpeedText.empty();
         auto const startsOnHostSpeed = offerHostSpeed && currentUsesHostSpeed;
+        auto const currentOfflineRetentionIndex = RtpRemoteHostItem::OfflineRetentionIndexFromSeconds(currentOfflineRetentionSeconds);
 
         try
         {
@@ -3269,17 +3272,34 @@ namespace winrt::midinetworksetup::implementation
             ChangeReduceSendSpeedPanel().Visibility(offerReduceAutomatically ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             ChangeRtpNoReduceSendSpeedText().Visibility(offerReduceAutomatically ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
+            // An RTP-MIDI device on a host has more settings than its speed, so the dialog and
+            // its check box speak of settings
             ChangeSendSpeedDevicePanel().Visibility(offerHostSpeed ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-            ChangeSendSpeedUseHostCheckBox().Content(winrt::box_value(res::FormatString(L"ChangeSendSpeedUseHostFormat", hostSendSpeedText)));
+            ChangeSendSpeedDeviceIntroText().Visibility(offerOfflineRetention ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            ChangeDeviceSettingsIntroText().Visibility(offerOfflineRetention ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ChangeSendSpeedUseHostCheckBox().Content(winrt::box_value(res::FormatString(
+                offerOfflineRetention ? L"ChangeSettingsUseHostFormat" : L"ChangeSendSpeedUseHostFormat",
+                hostSendSpeedText)));
             ChangeSendSpeedUseHostCheckBox().IsChecked(startsOnHostSpeed);
+
+            // A duration none of the choices match shows no choice, and says what it is
+            ChangeOfflineRetentionPanel().Visibility(offerOfflineRetention ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ChangeOfflineRetentionComboBox().SelectedIndex(currentOfflineRetentionIndex);
+            ChangeOfflineRetentionCaption().Text(currentOfflineRetentionIndex < 0 ?
+                res::FormatString(L"OfflineRetentionSecondsFormat", currentOfflineRetentionSeconds) :
+                winrt::hstring{});
+            ChangeOfflineRetentionCaption().Visibility(currentOfflineRetentionIndex < 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             // Set here as well as by the check box, which raises nothing when it is already in
             // the state asked for
             ChangeSendSpeedLimitComboBox().IsEnabled(!startsOnHostSpeed);
             ChangeReduceSendSpeedCheckBox().IsEnabled(!startsOnHostSpeed);
             ChangeSkipInBetweenValuesCheckBox().IsEnabled(!startsOnHostSpeed);
+            ChangeOfflineRetentionComboBox().IsEnabled(!startsOnHostSpeed);
 
-            ChangeSendSpeedDialog().Title(winrt::box_value(res::FormatString(L"ChangeSendSpeedTitleFormat", name)));
+            ChangeSendSpeedDialog().Title(winrt::box_value(res::FormatString(
+                offerOfflineRetention ? L"ChangeDeviceSettingsTitleFormat" : L"ChangeSendSpeedTitleFormat",
+                name)));
             ChangeSendSpeedDialog().XamlRoot(Content().XamlRoot());
         }
         catch (...)
@@ -3305,12 +3325,32 @@ namespace winrt::midinetworksetup::implementation
             co_return true;
         }
 
+        // no choice made keeps the duration it had
+        auto const offlineRetentionIndex = ChangeOfflineRetentionComboBox().SelectedIndex();
+
         // nothing to send when nothing changed, and the choices below mean nothing while the
         // device stays on the host's speed
         co_return !usesHostSpeed &&
             (SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()) != currentSendSpeedLimit ||
              (offerReduceAutomatically && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()) != currentReduceAutomatically) ||
-             IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()) != currentSkipInBetweenValues);
+             IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()) != currentSkipInBetweenValues ||
+             (offerOfflineRetention && offlineRetentionIndex >= 0 && offlineRetentionIndex != currentOfflineRetentionIndex));
+    }
+
+    // What the dialog above was left at, or the duration it started with when nothing was chosen
+    _Use_decl_annotations_
+    int32_t MainWindow::ChosenOfflineRetentionSeconds(int32_t const currentOfflineRetentionSeconds) noexcept
+    {
+        try
+        {
+            auto const index = ChangeOfflineRetentionComboBox().SelectedIndex();
+
+            return index < 0 ? currentOfflineRetentionSeconds : RtpRemoteHostItem::OfflineRetentionSecondsFromIndex(index);
+        }
+        catch (...)
+        {
+            return currentOfflineRetentionSeconds;
+        }
     }
 
     _Use_decl_annotations_
@@ -3318,12 +3358,13 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
-            // the choices below describe a speed of the device's own
+            // the choices below describe settings of the device's own
             auto const ownSpeed = !IsCheckBoxChecked(ChangeSendSpeedUseHostCheckBox());
 
             ChangeSendSpeedLimitComboBox().IsEnabled(ownSpeed);
             ChangeReduceSendSpeedCheckBox().IsEnabled(ownSpeed);
             ChangeSkipInBetweenValuesCheckBox().IsEnabled(ownSpeed);
+            ChangeOfflineRetentionComboBox().IsEnabled(ownSpeed);
         }
         catch (...)
         {
@@ -3484,6 +3525,27 @@ namespace winrt::midinetworksetup::implementation
 
         auto const hostReduceAutomatically = !isRtpMidi && host.ReduceSendSpeedAutomatically();
 
+        // An RTP-MIDI device's offline retention is kept with its speed on the host
+        int32_t ownOfflineRetentionSeconds{ 0 };
+
+        if (isRtpMidi && hasOwnSpeed)
+        {
+            try
+            {
+                for (auto const& entry : host.RemoteClientSpeeds())
+                {
+                    if (entry != nullptr && IsSameRemoteClientText(winrt::get_self<RemoteClientSpeedItem>(entry)->RemoteName(), remoteName))
+                    {
+                        ownOfflineRetentionSeconds = entry.OfflineRetentionSeconds();
+                        break;
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+
         if (!co_await ShowChangeSendSpeedDialogAsync(
             remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName,
             hasOwnSpeed ? ownSendSpeedLimit : host.SendSpeedLimit(),
@@ -3491,7 +3553,9 @@ namespace winrt::midinetworksetup::implementation
             hasOwnSpeed ? ownSkipInBetweenValues : host.SkipInBetweenValuesToCatchUp(),
             !isRtpMidi,
             SendSpeedValueText(host.SendSpeedLimit(), hostReduceAutomatically, host.SkipInBetweenValuesToCatchUp()),
-            !hasOwnSpeed))
+            !hasOwnSpeed,
+            isRtpMidi,
+            ownOfflineRetentionSeconds))
         {
             co_return;
         }
@@ -3504,7 +3568,8 @@ namespace winrt::midinetworksetup::implementation
             IsCheckBoxChecked(ChangeSendSpeedUseHostCheckBox()),
             SelectedSendSpeedLimit(ChangeSendSpeedLimitComboBox()),
             !isRtpMidi && IsCheckBoxChecked(ChangeReduceSendSpeedCheckBox()),
-            IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()));
+            IsCheckBoxChecked(ChangeSkipInBetweenValuesCheckBox()),
+            isRtpMidi ? ChosenOfflineRetentionSeconds(ownOfflineRetentionSeconds) : 0);
     }
 
     _Use_decl_annotations_
@@ -3516,7 +3581,8 @@ namespace winrt::midinetworksetup::implementation
         bool const useHostSpeed,
         uint32_t const sendSpeedLimit,
         bool const reduceAutomatically,
-        bool const skipInBetweenValues)
+        bool const skipInBetweenValues,
+        int32_t const offlineRetentionSeconds)
     {
         winrt::guid hostId{};
 
@@ -3530,9 +3596,10 @@ namespace winrt::midinetworksetup::implementation
 
         auto const displayName = remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName;
 
+        // an RTP-MIDI device's entry holds more than its speed
         auto const doneMessage = useHostSpeed ?
-            res::FormatString(L"RemoteClientSendSpeedResetFormat", displayName) :
-            res::FormatString(L"RemoteClientSendSpeedChangedFormat", displayName);
+            res::FormatString(isRtpMidi ? L"RemoteClientSettingsResetFormat" : L"RemoteClientSendSpeedResetFormat", displayName) :
+            res::FormatString(isRtpMidi ? L"RemoteClientSettingsChangedFormat" : L"RemoteClientSendSpeedChangedFormat", displayName);
 
         co_await winrt::resume_background();
 
@@ -3581,6 +3648,7 @@ namespace winrt::midinetworksetup::implementation
                     midi2rtp::MidiRtpRemoteClientSettings settings{ remoteName };
                     settings.SendSpeedLimit(static_cast<midi2rtp::MidiRtpSendSpeedLimit>(sendSpeedLimit));
                     settings.SkipInBetweenValuesToCatchUp(skipInBetweenValues);
+                    settings.OfflineRetentionSeconds(offlineRetentionSeconds);
 
                     config.RemoteClientSettings().Append(settings);
                 }

@@ -2367,6 +2367,11 @@ namespace winrt::midinetworksetup::implementation
             bool HasOwnMidi1Ports{ false };
             Midi1PortLayout OwnMidi1Ports{};
             winrt::hstring Midi1PortsText{};
+
+            // RTP-MIDI only. The host is keeping the endpoint of a device which is away when the
+            // id is not empty.
+            int32_t OfflineRetentionSeconds{ 0 };
+            winrt::hstring KeptEndpointDeviceId{};
         };
 
         // These change rarely, so the list is only rebuilt when its contents actually differ.
@@ -2404,7 +2409,9 @@ namespace winrt::midinetworksetup::implementation
                         self->UsesHostSendSpeed() != entries[i].UsesHostSendSpeed ||
                         self->HasOwnMidi1Ports() != entries[i].HasOwnMidi1Ports ||
                         !(self->OwnMidi1Ports() == entries[i].OwnMidi1Ports) ||
-                        self->Midi1PortsText() != entries[i].Midi1PortsText;
+                        self->Midi1PortsText() != entries[i].Midi1PortsText ||
+                        self->OfflineRetentionSeconds() != entries[i].OfflineRetentionSeconds ||
+                        self->IsKeptOffline() != !entries[i].KeptEndpointDeviceId.empty();
                 }
 
                 if (!changed)
@@ -2432,9 +2439,9 @@ namespace winrt::midinetworksetup::implementation
                         entry.SendSpeedLimit,
                         entry.ReduceSendSpeedAutomatically,
                         entry.SkipInBetweenValuesToCatchUp,
-                        // Network MIDI 2.0 shows the ports under the speed, so each line says
-                        // what it is about
-                        isRtpMidi ? speedValue :
+                        // Each line says what it is about: Network MIDI 2.0 shows the ports under
+                        // the speed, and RTP-MIDI how long the endpoint is kept
+                        isRtpMidi ? res::FormatString(L"SendSpeedLineFormat", speedValue) :
                             entry.UsesHostSendSpeed ? res::GetString(L"RemoteClientUsesHostSendSpeed") :
                             res::FormatString(L"SendSpeedLineFormat", speedValue),
                         isRtpMidi);
@@ -2444,6 +2451,23 @@ namespace winrt::midinetworksetup::implementation
                         entry.HasOwnMidi1Ports,
                         entry.OwnMidi1Ports,
                         entry.Midi1PortsText);
+
+                    // the default, removing it at once, needs no line
+                    winrt::hstring offlineRetentionText{};
+
+                    if (isRtpMidi && entry.OfflineRetentionSeconds < 0)
+                    {
+                        offlineRetentionText = res::GetString(L"RemoteClientKeepsEndpointAlways");
+                    }
+                    else if (isRtpMidi && entry.OfflineRetentionSeconds > 0)
+                    {
+                        offlineRetentionText = res::FormatString(L"RemoteClientKeepsEndpointSecondsFormat", entry.OfflineRetentionSeconds);
+                    }
+
+                    created->InternalInitializeOfflineRetention(
+                        entry.OfflineRetentionSeconds,
+                        offlineRetentionText,
+                        isRtpMidi && !entry.KeptEndpointDeviceId.empty());
 
                     list.Append(*created);
                 }
@@ -3741,12 +3765,17 @@ namespace winrt::midinetworksetup::implementation
                         {
                             if (entry != nullptr && !entry.RemoteClientName().empty())
                             {
-                                speedEntries.push_back({
+                                RemoteClientSpeedEntry speedEntry{
                                     entry.RemoteClientName(),
                                     winrt::hstring{},
                                     static_cast<uint32_t>(entry.SendSpeedLimit()),
                                     false,
-                                    entry.SkipInBetweenValuesToCatchUp() });
+                                    entry.SkipInBetweenValuesToCatchUp() };
+
+                                speedEntry.OfflineRetentionSeconds = entry.OfflineRetentionSeconds();
+                                speedEntry.KeptEndpointDeviceId = entry.EndpointDeviceId();
+
+                                speedEntries.push_back(std::move(speedEntry));
                             }
                         }
                     }

@@ -139,9 +139,12 @@ namespace
         return names;
     }
 
-    // Entries without a usable remote name are skipped, and so is a second entry for the same remote
-    std::vector<RtpMidiRemoteClientSettings> ReadRemoteClientSettings(_In_ json::JsonObject const& entry)
+    // Entries without a usable remote name are skipped, and so is a second entry for the same remote.
+    // An entry with an offline retention it cannot read is skipped too, and reported.
+    std::vector<RtpMidiRemoteClientSettings> ReadRemoteClientSettings(_In_ json::JsonObject const& entry, _Out_ bool& anyInvalidRetention)
     {
+        anyInvalidRetention = false;
+
         std::vector<RtpMidiRemoteClientSettings> settings;
 
         json::JsonArray list{ nullptr };
@@ -172,6 +175,12 @@ namespace
 
                 remote.SendSpeedLimit = RtpMidiJson::GetSendSpeedLimit(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY);
                 remote.SkipInBetweenValuesToCatchUp = RtpMidiJson::GetBoolean(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true);
+
+                if (!RtpMidiJson::TryGetOfflineRetention(element.GetObject(), MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, remote.OfflineRetentionSeconds))
+                {
+                    anyInvalidRetention = true;
+                    continue;
+                }
 
                 settings.push_back(std::move(remote));
             }
@@ -703,8 +712,16 @@ CMidi2RtpMidiConfigurationManager::ProcessCreateSection(json::JsonObject const& 
                 continue;
             }
 
+            bool anyInvalidRetention{ false };
+            auto const settings = ReadRemoteClientSettings(entry, anyInvalidRetention);
+
+            if (anyInvalidRetention)
+            {
+                reportFailure(key, RTP_MIDI_ERROR_CODE_INVALID_ENTRY, IDS_RTP_ERROR_INVALID_OFFLINE_RETENTION);
+            }
+
             // ignored for a host which is gone
-            TransportState::Current().SetRemoteClientSettings(hostId, ReadRemoteClientSettings(entry));
+            TransportState::Current().SetRemoteClientSettings(hostId, settings);
 
             // the remotes already connected change speed straight away, without being dropped
             if (auto endpointManager = TransportState::Current().GetEndpointManager())

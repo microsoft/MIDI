@@ -408,6 +408,24 @@ void MidiRtpApiTests::TestRemoteClientSettingsConfigJson()
     VERIFY_IS_TRUE(std::wstring{ remoteClients.GetObjectAt(0).GetNamedString(L"remoteName") } == L"Pete's iPad");
     VERIFY_ARE_EQUAL(remoteClients.GetObjectAt(0).GetNamedNumber(L"sendSpeedLimit"), 1.0, L"MIDI 1.0 wire speed");
 
+    // the endpoint is removed at once by default, and that is written too, so an earlier choice
+    // saved for this remote can never outlive the list
+    VERIFY_ARE_EQUAL(defaults.OfflineRetentionSeconds(), static_cast<int32_t>(MidiRtpOfflineRetention::Immediate), L"a new entry keeps no endpoint");
+    VERIFY_IS_TRUE(defaults.EndpointDeviceId().empty(), L"and has no kept endpoint");
+    VERIFY_IS_TRUE(std::wstring{ remoteClients.GetObjectAt(0).GetNamedString(L"offlineRetention", L"") } == L"immediate");
+
+    for (auto const& [seconds, expected] : std::vector<std::pair<int32_t, std::wstring>>{
+        { static_cast<int32_t>(MidiRtpOfflineRetention::KeepAlways), L"always" }, { 90, L"90" } })
+    {
+        slow.OfflineRetentionSeconds(seconds);
+
+        auto const written = OnlyEntry(TransportSection(config.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"remoteClientSettings"), creation.HostId())
+            .GetNamedArray(L"remoteClients").GetObjectAt(0);
+
+        VERIFY_IS_TRUE(std::wstring{ written.GetNamedString(L"offlineRetention", L"") } == expected, expected.c_str());
+        VERIFY_IS_FALSE(written.HasKey(L"endpointDeviceId"), L"the kept endpoint is the service's to report, never sent");
+    }
+
     // as with the decisions, the speeds only land beside their host if both keys are written the same way
     auto const hostKey = OnlyKey(TransportSection(creation.ConfigJson()).GetNamedObject(L"create").GetNamedObject(L"hosts"));
     VERIFY_IS_TRUE(OnlyKey(settings) == hostKey, L"speeds and host share the same key text");
@@ -896,9 +914,11 @@ void MidiRtpApiTests::TestSavedHostFollowsSavedRemoteClientSettings()
 
     MidiRtpRemoteClientSettings slow(L"MidiApiTest Slow");
     slow.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeed);
+    slow.OfflineRetentionSeconds(static_cast<int32_t>(MidiRtpOfflineRetention::KeepAlways));
 
     MidiRtpRemoteClientSettings faster(L"MidiApiTest Faster");
     faster.SendSpeedLimit(MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4);
+    faster.OfflineRetentionSeconds(300);
 
     MidiRtpHostRemoteClientSettingsConfig settings(hostId);
     settings.RemoteClientSettings().Append(slow);
@@ -913,11 +933,12 @@ void MidiRtpApiTests::TestSavedHostFollowsSavedRemoteClientSettings()
 
     for (auto const& entry : saved.RemoteClientSettings())
     {
-        auto const expected = std::wstring{ entry.RemoteClientName() } == L"MidiApiTest Slow" ?
-            MidiRtpSendSpeedLimit::Midi1WireSpeed :
-            MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4;
+        auto const isSlow = std::wstring{ entry.RemoteClientName() } == L"MidiApiTest Slow";
 
-        VERIFY_IS_TRUE(entry.SendSpeedLimit() == expected, L"each with its own speed");
+        VERIFY_IS_TRUE(entry.SendSpeedLimit() == (isSlow ? MidiRtpSendSpeedLimit::Midi1WireSpeed : MidiRtpSendSpeedLimit::Midi1WireSpeedTimes4),
+            L"each with its own speed");
+        VERIFY_ARE_EQUAL(entry.OfflineRetentionSeconds(), isSlow ? static_cast<int32_t>(MidiRtpOfflineRetention::KeepAlways) : 300,
+            L"and its own offline retention");
     }
 
     VERIFY_IS_TRUE(saved.SendSpeedLimit() == MidiRtpSendSpeedLimit::Midi1WireSpeedTimes8, L"the host keeps its own speed");

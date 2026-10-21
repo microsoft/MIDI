@@ -13,9 +13,9 @@ using Windows.Devices.Midi2.Transports.Rtp;
 
 namespace WindowsMidiServices
 {
-    // Shared by the cmdlets which change the sending speed a host on this PC uses for one device.
-    // The service replaces a host's whole list on every change, so each change sends all of it.
-    public abstract class MidiRtpRemoteClientSpeedCmdletBase : MidiCmdletBase
+    // Shared by the cmdlets which change the settings a host on this PC uses for one device. The
+    // service replaces a host's whole list on every change, so each change sends all of it.
+    public abstract class MidiRtpRemoteClientSettingsCmdletBase : MidiCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
         public Guid HostId { get; set; }
@@ -97,9 +97,9 @@ namespace WindowsMidiServices
             {
                 WriteNonTerminating(
                     new InvalidOperationException(response is null
-                        ? Strings.RemoteClientSpeedNotApplied
-                        : Format(Strings.RemoteClientSpeedNotAppliedFormat, response.Status)),
-                    "MidiRtpRemoteClientSpeedFailed",
+                        ? Strings.RemoteClientSettingsNotApplied
+                        : Format(Strings.RemoteClientSettingsNotAppliedFormat, response.Status)),
+                    "MidiRtpRemoteClientSettingsFailed",
                     ErrorCategory.WriteError,
                     RemoteClientTarget);
 
@@ -112,7 +112,7 @@ namespace WindowsMidiServices
             }
             else
             {
-                WriteVerbose(Strings.RemoteClientSpeedTransient);
+                WriteVerbose(Strings.RemoteClientSettingsTransient);
             }
 
             return true;

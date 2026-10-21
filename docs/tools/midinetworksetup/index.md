@@ -54,6 +54,13 @@ Many apps, DAWs especially, remember their setup by MIDI port. If a device is sw
 
 Choose it when you connect to an RTP-MIDI device, or later under **Details** on the device's row on the **Network devices** page. Changing it there doesn't disconnect the device. A device you connect to by address starts with **Remove immediately**, so change it under **Details** once it's listed. **Disconnect and forget** always removes the endpoint.
 
+A device that connects to an RTP-MIDI host on this PC can keep its endpoint too. That's for when you want Windows to be the host, and the device connects to this PC. On the **This PC** page, select **Settings...** next to the device under the host, clear **Use the host's settings**, and choose **Keep endpoint when offline**. You can do that while the device is connected. Windows uses the choice the next time the device leaves, and remembers it by the device's name.
+
+- **Always** makes the endpoint as soon as the host starts, even before the device has connected, so apps find its ports at once.
+- A device that's away while its endpoint is kept shows **Offline, endpoint kept** under **Devices with their own settings**, so you can still change it. **Use the host's settings** removes the kept endpoint.
+- **Disconnect** removes a device's endpoint when it's kept for a number of seconds. With **Always**, it stays. Turning off or deleting the host removes every endpoint it kept.
+- If a second device connects with a name that's already connected, it gets its own endpoint, and that one isn't kept.
+
 Network MIDI 2.0 devices don't have this choice. Windows learns a Network MIDI 2.0 device's ports and protocol only when its endpoint is new, so the endpoint is always made again when the device comes back.
 
 ## You don't need to keep this app running
@@ -212,7 +219,7 @@ Each host lists the devices currently connected to it, with the same round trip 
 
 **Disconnect** ends the connection but doesn't stop the device reconnecting. **Block** ends it and refuses that device in future.
 
-Each connected device also shows how fast the host sends to it, and whether that's the host's speed or one set for that device. Select **Speed...** next to it to give the device a speed of its own. See [Choosing a sending speed](#choosing-a-sending-speed).
+Each connected device also shows how fast the host sends to it, and whether that's the host's speed or one set for that device. Select **Speed...** next to it to give the device a speed of its own. See [Choosing a sending speed](#choosing-a-sending-speed). On an RTP-MIDI host the button is **Settings...**, because it also has **Keep endpoint when offline**. See [Keeping the endpoint when a device is offline](#keeping-the-endpoint-when-a-device-is-offline).
 
 Under that are the device's MIDI 1.0 ports, with a **Ports...** button of their own. See [Naming MIDI 1.0 ports](#naming-midi-10-ports).
 
@@ -244,7 +251,7 @@ Changing a host's adapter restarts the host, so the devices connected to it are 
 A network is much faster than a MIDI 1.0 cable, and some devices can't keep up when a lot of data arrives at once. A hardware synth taking a long SysEx dump is the usual example, and so is a network to DIN bridge. If a device misses messages, give it a slower sending speed.
 
 - For a host, pick a **Sending speed** when you create it. To change it later, select **Speed...** next to the host's sending speed. The speed applies to every device connected to that host, except a device with a speed of its own.
-- For one device connected to a host, select **Speed...** next to that device's sending speed, under the host. Clear **Use the host's speed** and choose a speed for just that device. Windows remembers it, and uses it every time that device connects. The other devices on the host keep the host's speed.
+- For one device connected to a host, select **Speed...** next to that device's sending speed, under the host. Clear **Use the host's speed** and choose a speed for just that device. Windows remembers it, and uses it every time that device connects. The other devices on the host keep the host's speed. On an RTP-MIDI host, the button is **Settings...** and the check box is **Use the host's settings**.
 - For a device this PC connects to, choose a speed when you connect, or select **Speed...** next to the sending speed on the device's row. **Customize** has the same setting.
 
 The choices are **Unlimited**, which is the default, **MIDI 1.0 wire speed**, which is the speed of a DIN cable, and 2, 4, 8, 16 or 32 times that. Start with MIDI 1.0 wire speed for a device that was built for a cable, and go faster if it copes.

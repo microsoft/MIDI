@@ -107,6 +107,7 @@
     <ClCompile Include="RtpMidiApprovalTests.cpp" />
     <ClCompile Include="RtpMidiChannelTests.cpp" />
     <ClCompile Include="RtpMidiKeptEndpointTests.cpp" />
+    <ClCompile Include="RtpMidiHostKeptEndpointTests.cpp" />
     <ClCompile Include="RtpMidiDnssdTests.cpp" />
     <ClCompile Include="RtpMidiProtocolTests.cpp" />
     <ClCompile Include="RtpMidiReplySourceTests.cpp" />

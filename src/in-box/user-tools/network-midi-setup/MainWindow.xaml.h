@@ -315,7 +315,12 @@ namespace winrt::midinetworksetup::implementation
             _In_ bool const currentSkipInBetweenValues,
             _In_ bool const offerReduceAutomatically,
             _In_ winrt::hstring const hostSendSpeedText,
-            _In_ bool const currentUsesHostSpeed);
+            _In_ bool const currentUsesHostSpeed,
+            _In_ bool const offerOfflineRetention = false,
+            _In_ int32_t const currentOfflineRetentionSeconds = 0);
+
+        // The offline retention the dialog above was left at
+        int32_t ChosenOfflineRetentionSeconds(_In_ int32_t const currentOfflineRetentionSeconds) noexcept;
 
         // Asks for one device's speed on a host, then applies it. hasOwnSpeed says whether the
         // device already has a speed of its own, which the own values then describe.
@@ -340,7 +345,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ bool const useHostSpeed,
             _In_ uint32_t const sendSpeedLimit,
             _In_ bool const reduceAutomatically,
-            _In_ bool const skipInBetweenValues);
+            _In_ bool const skipInBetweenValues,
+            _In_ int32_t const offlineRetentionSeconds = 0);
 
         // RTP-MIDI has no verb for changing a host, so this creates it again with the same id and
         // the given adapter and speed, copying everything else from what was saved.

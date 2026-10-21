@@ -240,6 +240,14 @@ namespace midinetworksetup
         // which transport's host the setting belongs to
         Boolean IsRtpMidi{ get; };
 
+        // RTP-MIDI only: how long the host keeps the device's endpoint when it leaves, a line
+        // saying so (hidden for the default, removed immediately), and whether the device is away
+        // with its endpoint kept right now
+        Int32 OfflineRetentionSeconds{ get; };
+        String OfflineRetentionText{ get; };
+        Microsoft.UI.Xaml.Visibility OfflineRetentionVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility KeptOfflineVisibility{ get; };
+
         // Network MIDI 2.0 only. A device can have MIDI 1.0 ports of its own and keep the host's
         // speed, so the speed's own button is only offered when it has a speed of its own.
         String Midi1PortsText{ get; };

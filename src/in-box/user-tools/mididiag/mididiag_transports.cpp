@@ -780,6 +780,28 @@ bool DoSectionRtpMidi()
                 .AddBool(L"renamed", host.ServiceInstanceNameWasChanged())
                 .Add(L"name", host.Name()));
 
+            // each device with its own settings, connected or not, and whether the host is
+            // keeping its endpoint while it is away
+            if (auto const settingsList = host.RemoteClientSettings())
+            {
+                for (auto const& settings : settingsList)
+                {
+                    if (settings == nullptr)
+                    {
+                        continue;
+                    }
+
+                    WriteField(MIDIDIAG_FIELD_LABEL_NETWORK_HOST_REMOTE_CLIENT_SETTINGS, KeyValueText{}
+                        .Add(L"host_id", GuidText(host.HostId()))
+                        .AddNumber(L"send_speed_limit", static_cast<uint32_t>(settings.SendSpeedLimit()))
+                        .AddBool(L"skip_in_between_values", settings.SkipInBetweenValuesToCatchUp())
+                        .AddSignedNumber(L"offline_retention", settings.OfflineRetentionSeconds())
+                        .AddBool(L"endpoint_kept_offline", !settings.EndpointDeviceId().empty())
+                        .Add(L"endpoint", settings.EndpointDeviceId())
+                        .Add(L"name", settings.RemoteClientName()));
+                }
+            }
+
             if (connections == nullptr)
             {
                 continue;

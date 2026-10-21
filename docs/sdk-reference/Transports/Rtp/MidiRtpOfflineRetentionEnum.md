@@ -6,7 +6,7 @@ type: enum
 description: How long the MIDI endpoint for an RTP-MIDI connection stays while the remote device is away
 ---
 
-Controls what happens to the MIDI endpoint for a connection this PC makes when the remote device goes away. That's when it's switched off, loses its network connection, or stops answering.
+Controls what happens to the MIDI endpoint for an RTP-MIDI connection when the remote device goes away. That's when it's switched off, loses its network connection, or stops answering. It applies to connections this PC makes, and to devices that connect to a host on this PC and have settings of their own there.
 
 Any value greater than zero is a number of seconds, so this enumeration only names the values that aren't an amount of time. Because of that, the API takes and returns a plain `Int32`, not this type. Use these named values for the special cases, and a number from 1 to 86400 for a delay.
 
@@ -27,10 +27,12 @@ It's off by default because it has a cost. Messages sent while the device is awa
 
 ## Remarks
 
-Only an entry with `AutoReconnect` turned on keeps its endpoint, because only those come back by themselves. Connections that remote devices make to a host on this PC always remove their endpoint when they end.
+Only an entry with `AutoReconnect` turned on keeps its endpoint, because only those come back by themselves. A device that connects to a host on this PC keeps its endpoint only when the host has settings for it with this set, in [MidiRtpRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/). Every other device that connects to a host has its endpoint removed when it leaves.
 
 With a number of seconds, the endpoint stays for that long after the connection ends, then it's removed. It's created again when the device comes back. The time counts from the connection ending, so a device that's off when the MIDI service starts has no endpoint until it first connects.
 
 The endpoint is removed and created again when the entry's name, or the remote device it points at, changes. Changing only this setting doesn't disconnect anything.
 
-Set it with `MidiRtpClientConnectConfig.OfflineRetentionSeconds`, and read it from `MidiRtpConfiguredClient.OfflineRetentionSeconds` and `MidiRtpSavedClient.OfflineRetentionSeconds`. While the device is away, `MidiRtpConfiguredClient.EndpointDeviceId` still gives the endpoint's id.
+For a connection this PC makes, set it with `MidiRtpClientConnectConfig.OfflineRetentionSeconds`, and read it from `MidiRtpConfiguredClient.OfflineRetentionSeconds` and `MidiRtpSavedClient.OfflineRetentionSeconds`. While the device is away, `MidiRtpConfiguredClient.EndpointDeviceId` still gives the endpoint's id.
+
+For a device that connects to a host on this PC, set it with `MidiRtpRemoteClientSettings.OfflineRetentionSeconds`. While the device is away, `MidiRtpRemoteClientSettings.EndpointDeviceId` in `MidiRtpConfiguredHost.RemoteClientSettings` gives the endpoint's id.
