@@ -150,6 +150,22 @@ private:
     static std::wstring KeptEndpointInstanceId(_In_ RtpMidiClientDefinition const& definition);
     static std::wstring KeptEndpointName(_In_ RtpMidiClientDefinition const& definition);
 
+    // A remote which connects to a host and has its own settings there can keep its endpoint while
+    // it is away. Read when its connection ends, so a change reaches a remote already connected.
+    // In Midi2.RtpMidiEndpointManagerHostKept.cpp.
+    static std::wstring HostRemoteIdentity(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
+    static bool HostKeepsEndpointFor(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
+    static bool ShouldKeepHostEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
+    std::shared_ptr<RtpMidiEndpoint> FindHostRemoteEndpoint(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
+    void ReconcileHostKeptEndpoints(_In_ uint64_t const now);
+    HRESULT CreateHostKeptEndpoint(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
+    bool AttachToKeptHostEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    bool DetachFromKeptHostEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    void RefreshHostEndpointsKept(_In_ GUID const& hostId);
+    void ReleaseHostEndpointWhenConnectionEnds(_In_ GUID const& hostId, _In_ uint32_t const connectionId);
+    bool TryRemoveDetachedEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
+    json::JsonObject BuildRemoteClientSettingsJson(_In_ GUID const& hostId, _In_ RtpMidiRemoteClientSettings const& settings);
+
     // The addresses a client should invite, in the order to try them, and the port they share.
     // False when there is nowhere to connect yet.
     bool TryResolveClientTarget(
@@ -198,6 +214,9 @@ private:
 
     // A kept endpoint the service would not create waits before the next try. Worker thread only.
     std::map<GUID, uint64_t, GuidLess> m_keptEndpointRetryTicks;
+
+    // The same for a host's remote, keyed by host id and the remote's name in lowercase
+    std::map<std::wstring, uint64_t> m_keptHostEndpointRetryTicks;
 
     // Repeats this PC's announcements, which the DNS client gets wrong. A host is withdrawn from
     // it before its registration is.

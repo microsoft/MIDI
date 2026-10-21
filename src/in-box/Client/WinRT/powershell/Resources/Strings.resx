@@ -506,7 +506,7 @@
   </data>
   <data name="RemoteClientSpeedNotFoundFormat" xml:space="preserve">
     <value>{0} has no sending speed of its own on this host.</value>
-    <comment>{0} is the device. For Network MIDI 2.0 it is the device name followed by its product instance id in parentheses, and for RTP-MIDI it is the device name.</comment>
+    <comment>{0} is a Network MIDI 2.0 device: its name followed by its product instance id in parentheses.</comment>
   </data>
   <data name="RemoteClientSpeedRemoveAction" xml:space="preserve">
     <value>Use the host's sending speed</value>
@@ -516,6 +516,27 @@
   </data>
   <data name="RemoteClientSpeedTransient" xml:space="preserve">
     <value>This sending speed will be lost when the service restarts. Use -SaveToConfiguration to keep it.</value>
+    <comment>-SaveToConfiguration is a parameter name. Do not translate it.</comment>
+  </data>
+  <data name="RemoteClientSettingsNotApplied" xml:space="preserve">
+    <value>The device's settings were not changed.</value>
+  </data>
+  <data name="RemoteClientSettingsNotAppliedFormat" xml:space="preserve">
+    <value>The device's settings were not changed: {0}</value>
+    <comment>{0} is the reason, an English status name.</comment>
+  </data>
+  <data name="RemoteClientSettingsNotFoundFormat" xml:space="preserve">
+    <value>{0} has no settings of its own on this host.</value>
+    <comment>{0} is the name of an RTP-MIDI device.</comment>
+  </data>
+  <data name="RemoteClientSettingsRemoveAction" xml:space="preserve">
+    <value>Use the host's settings</value>
+  </data>
+  <data name="RemoteClientSettingsSetAction" xml:space="preserve">
+    <value>Give the device its own settings</value>
+  </data>
+  <data name="RemoteClientSettingsTransient" xml:space="preserve">
+    <value>These settings will be lost when the service restarts. Use -SaveToConfiguration to keep them.</value>
     <comment>-SaveToConfiguration is a parameter name. Do not translate it.</comment>
   </data>
   <data name="RtpClientNotFoundFormat" xml:space="preserve">

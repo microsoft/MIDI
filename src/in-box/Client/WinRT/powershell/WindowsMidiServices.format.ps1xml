@@ -483,6 +483,14 @@
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>SkipInBetweenValuesToCatchUp</Label>
+            <Width>28</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>OfflineRetentionSeconds</Label>
+            <Width>23</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>EndpointDeviceId</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -496,6 +504,12 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>SkipInBetweenValuesToCatchUp</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>OfflineRetentionSeconds</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>EndpointDeviceId</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

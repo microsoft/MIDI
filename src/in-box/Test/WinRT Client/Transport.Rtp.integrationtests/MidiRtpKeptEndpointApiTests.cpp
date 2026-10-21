@@ -15,6 +15,8 @@ using namespace WEX::Logging;
 using namespace WEX::Common;
 using namespace winrt::Windows::Devices::Midi2;
 
+namespace svc = winrt::Windows::Devices::Midi2::ServiceConfig;
+
 namespace
 {
     constexpr uint32_t KeptServiceWaitMilliseconds{ 5000 };
@@ -206,4 +208,165 @@ void MidiRtpApiTests::TestKeptClientEndpointOutlivesItsRemote()
 
     VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return !EndpointIsPresent(endpointId); }, KeptServiceWaitMilliseconds),
         L"disconnecting the client removes its endpoint");
+}
+
+
+namespace
+{
+    MidiRtpConfiguredHost FindKeptHost(_In_ winrt::guid const& hostId)
+    {
+        for (auto const& host : MidiRtpTransportManager::GetConfiguredHosts())
+        {
+            if (host.HostId() == hostId) return host;
+        }
+
+        return nullptr;
+    }
+
+    // the endpoint the host is keeping for this remote while it is away, or empty
+    winrt::hstring KeptEndpointFor(_In_ winrt::guid const& hostId, _In_ winrt::hstring const& remoteName)
+    {
+        auto const host = FindKeptHost(hostId);
+        if (host == nullptr) return {};
+
+        for (auto const& settings : host.RemoteClientSettings())
+        {
+            if (settings.RemoteClientName() == remoteName) return settings.EndpointDeviceId();
+        }
+
+        return {};
+    }
+
+    bool SendKeptSettings(_In_ winrt::guid const& hostId, _In_ winrt::hstring const& remoteName, _In_ int32_t const offlineRetentionSeconds)
+    {
+        MidiRtpRemoteClientSettings settings(remoteName);
+        settings.OfflineRetentionSeconds(offlineRetentionSeconds);
+
+        MidiRtpHostRemoteClientSettingsConfig config(hostId);
+        config.RemoteClientSettings().Append(settings);
+
+        auto const response = svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+        return response != nullptr && response.Status() == svc::MidiServiceConfigResponseStatus::Success;
+    }
+}
+
+// A host on this PC keeps the endpoint of a remote which has its own settings there, from before
+// the remote first connects, through the remote coming and going, until the settings say otherwise
+void MidiRtpApiTests::TestHostKeptEndpointOutlivesItsRemote()
+{
+    if (!KeptTransportIsAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"The RTP-MIDI transport is not installed on this PC.");
+        return;
+    }
+
+    winrt::hstring const remoteName{ L"SDK Host Kept Remote" };
+
+    auto const hostId = CreateHost(L"Kept Remotes", MidiRtpRemoteClientPolicy::AllowAny);
+    VERIFY_IS_TRUE(hostId != winrt::guid{}, L"the host is created");
+
+    uint16_t hostPort{ 0 };
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]()
+        {
+            auto const host = FindKeptHost(hostId);
+            hostPort = host == nullptr ? 0 : host.ActualPort();
+            return hostPort != 0;
+        }, KeptServiceWaitMilliseconds), L"and starts");
+
+    VERIFY_IS_TRUE(SendKeptSettings(hostId, remoteName, static_cast<int32_t>(MidiRtpOfflineRetention::KeepAlways)), L"the remote is kept always");
+
+    auto const host = FindKeptHost(hostId);
+    VERIFY_IS_TRUE(host != nullptr && host.RemoteClientSettings().Size() == 1, L"the host lists the remote's settings");
+
+    if (host.RemoteClientSettings().GetAt(0).OfflineRetentionSeconds() != static_cast<int32_t>(MidiRtpOfflineRetention::KeepAlways))
+    {
+        Log::Result(TestResults::Skipped, L"The RTP-MIDI transport on this PC is older than hosts keeping endpoints.");
+        return;
+    }
+
+    winrt::hstring endpointId{};
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]()
+        {
+            endpointId = KeptEndpointFor(hostId, remoteName);
+            return !endpointId.empty();
+        }, KeptServiceWaitMilliseconds), L"the remote has an endpoint before it has ever connected");
+
+    VERIFY_IS_TRUE(EndpointIsPresent(endpointId), L"and Windows lists it");
+
+    std::mutex receivedLock;
+    std::vector<uint32_t> receivedWords{};
+
+    auto session = MidiSession::Create(L"MidiApiTest host kept endpoint");
+    VERIFY_IS_TRUE(session != nullptr);
+
+    if (session == nullptr)
+    {
+        return;
+    }
+
+    auto closeSession = wil::scope_exit([&] { session.Close(); });
+
+    auto endpoint = session.CreateEndpointConnection(endpointId);
+
+    endpoint.MessageReceived([&](auto const&, MidiMessageReceivedEventArgs const& args)
+        {
+            auto lock = std::scoped_lock{ receivedLock };
+            receivedWords.push_back(args.PeekFirstWord());
+        });
+
+    VERIFY_IS_TRUE(endpoint.Open(), L"an app can open it while the remote is away");
+
+    auto const awayStart = std::chrono::steady_clock::now();
+
+    for (uint32_t i = 0; i < 10; i++)
+    {
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(endpoint.SendSingleMessageWords(0, 0x20803E00)), L"and send to it");
+    }
+
+    auto const awayMilliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - awayStart).count();
+    Log::Comment(String().Format(L"10 messages sent while the remote was away in %.0f ms", awayMilliseconds));
+    VERIFY_IS_LESS_THAN(awayMilliseconds, 1000.0, L"without being held up");
+
+    {
+        RtpMidiTest::Peer remote("SDK Host Kept Remote", false);
+        VERIFY_IS_TRUE(remote.Start(), L"the remote binds");
+        remote.Invite(hostPort);
+
+        VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return remote.ConnectedCount() == 1; }, KeptServiceWaitMilliseconds), L"the remote connects to the host");
+        VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return KeptEndpointFor(hostId, remoteName).empty(); }, KeptServiceWaitMilliseconds),
+            L"nothing is reported kept while it is connected");
+
+        auto const connections = FindKeptHost(hostId).Connections();
+        VERIFY_IS_TRUE(connections.Size() == 1 && connections.GetAt(0).EndpointDeviceId() == endpointId, L"its connection has the endpoint it already had");
+
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(endpoint.SendSingleMessageWords(0, 0x20903E64)));
+        VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return Contains(remote.Received(), { 0x90, 0x3E, 0x64 }); }, KeptServiceWaitMilliseconds),
+            L"the connection the app opened earlier reaches the remote");
+        VERIFY_IS_FALSE(Contains(remote.Received(), { 0x80, 0x3E, 0x00 }), L"what was sent while the remote was away is not delivered late");
+
+        remote.Send({ 0x90, 0x41, 0x7F });
+
+        VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]()
+            {
+                auto lock = std::scoped_lock{ receivedLock };
+                return std::find(receivedWords.begin(), receivedWords.end(), 0x2090417Fu) != receivedWords.end();
+            }, KeptServiceWaitMilliseconds), L"and the remote reaches the app");
+
+        remote.EndAll();
+    }
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return KeptEndpointFor(hostId, remoteName) == endpointId; }, KeptServiceWaitMilliseconds),
+        L"the endpoint is kept when the remote leaves");
+    VERIFY_IS_TRUE(EndpointIsPresent(endpointId));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(endpoint.SendSingleMessageWords(0, 0x20803F00)), L"and still takes messages");
+
+    closeSession.reset();
+
+    VERIFY_IS_TRUE(SendKeptSettings(hostId, remoteName, static_cast<int32_t>(MidiRtpOfflineRetention::Immediate)),
+        L"changed to remove the endpoint at once while the remote is away");
+
+    VERIFY_IS_TRUE(RtpMidiTest::WaitFor([&]() { return !EndpointIsPresent(endpointId); }, KeptServiceWaitMilliseconds),
+        L"which removes it straight away");
 }

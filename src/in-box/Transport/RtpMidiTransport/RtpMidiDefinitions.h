@@ -120,6 +120,12 @@ struct RtpMidiRemoteClientSettings
     uint32_t SendSpeedLimit{ 0 };
 
     bool SkipInBetweenValuesToCatchUp{ true };
+
+    // Seconds the remote's endpoint stays after it leaves, the same values a client entry takes.
+    // Read when the connection ends, so a change reaches a remote which is already connected.
+    int32_t OfflineRetentionSeconds{ 0 };
+
+    bool KeepsEndpoint() const noexcept { return OfflineRetentionSeconds != 0; }
 };
 
 

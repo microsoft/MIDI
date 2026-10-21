@@ -25,7 +25,7 @@ Pass this to `MidiServiceTransportPluginConfigManager.SendUpdate` to change a ru
 
 ## Remarks
 
-`RemoteClientSettings` must hold every remote device with a speed of its own, not just the ones that changed. The host's whole list is replaced with what it holds. So start from `MidiRtpConfiguredHost.RemoteClientSettings`, which is the list the running service holds, change it, and send the whole thing. Leaving a device out is how you put it back on the host's speed. An empty list puts every device back on the host's speed.
+`RemoteClientSettings` must hold every remote device with settings of its own, not just the ones that changed. The host's whole list is replaced with what it holds. So start from `MidiRtpConfiguredHost.RemoteClientSettings`, which is the list the running service holds, change it, and send the whole thing. Leaving a device out is how you put it back on the host's settings, which also removes any endpoint the host is keeping for it. An empty list puts every device back on the host's settings.
 
 `SendUpdate` changes the running host. Devices that are already connected change speed right away, and they aren't disconnected. A device that connects later gets its own speed from the start. Changing the host itself, by creating it again with the same `HostId`, keeps the list.
 

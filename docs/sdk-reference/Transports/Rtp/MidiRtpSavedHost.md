@@ -28,7 +28,7 @@ An RTP-MIDI host saved in the configuration file. The service starts it every ti
 | `NetworkAdapterName` | That adapter's name, from when it was chosen |
 | `AllowNetworkAdapterFallback` | True when the host runs on every adapter while its own adapter is missing |
 | `KnownRemoteClients` | Every saved allow and deny decision, as [MidiRtpKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpKnownRemoteClient/) objects |
-| `RemoteClientSettings` | Every saved remote device with a sending speed of its own, as [MidiRtpRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/) objects |
+| `RemoteClientSettings` | Every saved remote device with settings of its own, as [MidiRtpRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Rtp/MidiRtpRemoteClientSettings/) objects |
 
 ## Remarks
 

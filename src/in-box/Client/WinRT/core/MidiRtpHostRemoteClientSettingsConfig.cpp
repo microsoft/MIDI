@@ -32,6 +32,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
                 entry.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SEND_SPEED_LIMIT_KEY, json::JsonValue::CreateNumberValue(static_cast<int32_t>(settings.SendSpeedLimit())));
                 entry.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, json::JsonValue::CreateBooleanValue(settings.SkipInBetweenValuesToCatchUp()));
 
+                // always written, so a remote's earlier choice can never outlive this list
+                entry.SetNamedValue(MIDI_CONFIG_JSON_RTP_MIDI_OFFLINE_RETENTION_KEY, json::JsonValue::CreateStringValue(MidiRtpSdkJson::OfflineRetentionText(settings.OfflineRetentionSeconds())));
+
                 remoteClients.Append(entry);
             }
 

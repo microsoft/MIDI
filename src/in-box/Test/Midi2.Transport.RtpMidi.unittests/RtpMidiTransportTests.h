@@ -86,6 +86,15 @@ public:
     TEST_METHOD(TestKeepingCanBeTurnedOnAndOffWhileConnected);
     TEST_METHOD(TestOfflineRetentionValuesAreChecked);
 
+    // a host which keeps a remote's endpoint while it is away, in RtpMidiHostKeptEndpointTests.cpp
+    TEST_METHOD(TestHostKeptEndpointIsThereBeforeTheRemote);
+    TEST_METHOD(TestHostKeepsAnEndpointChosenWhileConnected);
+    TEST_METHOD(TestHostKeptEndpointGoesWithItsSettingsAndItsHost);
+    TEST_METHOD(TestOnlyOneRemoteOfANameIsKept);
+    TEST_METHOD(TestDisconnectingARemoteHereEndsItsTimedEndpoint);
+    TEST_METHOD(TestRestartedRemoteKeepsItsHostEndpoint);
+    TEST_METHOD(TestHostOfflineRetentionValuesAreChecked);
+
 private:
     winrt::Windows::Data::Json::JsonObject Send(std::wstring const& text, HRESULT* result = nullptr);
     winrt::Windows::Data::Json::JsonObject FindHost(std::wstring const& hostId);
@@ -118,4 +127,11 @@ private:
 
     // the interface id of its endpoint when Initialize returned, empty when there was none
     std::wstring m_keptEndpointAtStart;
+
+    // A remote whose endpoint the shared host keeps always, set before the endpoint manager
+    // starts, which has never connected. In RtpMidiHostKeptEndpointTests.cpp.
+    void DefineKeptHostRemoteBeforeStart();
+    void NoteKeptHostEndpointAfterStart();
+
+    std::wstring m_keptHostEndpointAtStart;
 };

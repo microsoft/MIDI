@@ -37,6 +37,18 @@ namespace Windows.Devices.Midi2.Transports.Rtp
             // When messages back up behind SendSpeedLimit, skip some in-between values so this
             // remote catches up. True by default.
             [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; set; };
+
+            // How long the host keeps this remote's endpoint after it leaves: a
+            // MidiRtpOfflineRetention value or a number of seconds up to 86400. Immediate by
+            // default. Read when the remote leaves, so a change applies to a remote already
+            // connected. KeepAlways makes the endpoint when the host starts, before the remote
+            // has connected.
+            [noexcept] Int32 OfflineRetentionSeconds{ get; set; };
+
+            // The endpoint the host is keeping for this remote while it is away. Empty while the
+            // remote is connected and when nothing is kept. Filled in only on the settings from
+            // MidiRtpConfiguredHost.RemoteClientSettings, and ignored when settings are sent.
+            [noexcept] String EndpointDeviceId{ get; };
         }
     }
 }

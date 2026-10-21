@@ -29,10 +29,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::Rtp::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void SkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        void OfflineRetentionSeconds(_In_ int32_t const value) noexcept { m_offlineRetentionSeconds = value; }
+
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        void InternalSetEndpointDeviceId(_In_ winrt::hstring const& value) noexcept { m_endpointDeviceId = value; }
+
     private:
         winrt::hstring m_remoteClientName{};
         rtp::MidiRtpSendSpeedLimit m_sendSpeedLimit{ rtp::MidiRtpSendSpeedLimit::Unlimited };
         bool m_skipInBetweenValuesToCatchUp{ true };
+        int32_t m_offlineRetentionSeconds{ static_cast<int32_t>(rtp::MidiRtpOfflineRetention::Immediate) };
+        winrt::hstring m_endpointDeviceId{};
     };
 }
 
