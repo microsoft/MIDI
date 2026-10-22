@@ -2137,3 +2137,32 @@ void OscTests::FloatsBecomeMidi2()
     VERIFY_IS_TRUE(std::wstring{ OscConnectionToJson(settings).Stringify() }.find(L"midi2") == std::wstring::npos);
     VERIFY_ARE_NOT_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
 }
+
+void OscTests::DevicesAreSavedAndNamed()
+{
+    // Off unless asked for, and only written when on.
+    auto settings = OscConnectionFromPreset(OscPreset::TouchOsc);
+    VERIFY_IS_FALSE(settings.ShowAsDevice);
+    VERIFY_IS_TRUE(std::wstring{ OscConnectionToJson(settings).Stringify() }.find(L"showAsDevice") == std::wstring::npos);
+
+    settings.ShowAsDevice = true;
+    auto const text = std::wstring{ OscConnectionToJson(settings).Stringify() };
+    VERIFY_IS_TRUE(text.find(L"\"showAsDevice\":true") != std::wstring::npos);
+
+    auto const back = OscConnectionFromJson(json::JsonObject::Parse(text));
+    VERIFY_IS_TRUE(back.ShowAsDevice);
+    VERIFY_ARE_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
+
+    settings.ShowAsDevice = false;
+    VERIFY_ARE_NOT_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
+
+    // The same connection always gets the same product instance id, whatever the case of its
+    // id, and different connections different ones. It's short and plain ASCII, as MIDI 2.0's
+    // product instance id has to be.
+    auto const one = OscDeviceProductInstanceId(L"osc:{1234}|node-1");
+    VERIFY_ARE_EQUAL(one, OscDeviceProductInstanceId(L"OSC:{1234}|NODE-1"));
+    VERIFY_ARE_NOT_EQUAL(one, OscDeviceProductInstanceId(L"osc:{1234}|node-2"));
+    VERIFY_ARE_EQUAL(size_t{ 21 }, one.size());
+    VERIFY_IS_TRUE(one.starts_with(L"PATCHBAY-OSC-"));
+    VERIFY_IS_TRUE(std::all_of(one.begin(), one.end(), [](wchar_t c) { return c >= 0x20 && c < 0x7F; }));
+}

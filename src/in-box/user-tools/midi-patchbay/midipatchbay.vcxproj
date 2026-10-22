@@ -163,6 +163,7 @@
     <ClInclude Include="OscStream.h" />
     <ClInclude Include="OscHub.h" />
     <ClInclude Include="OscDiscovery.h" />
+    <ClInclude Include="OscVirtualDevice.h" />
     <ClInclude Include="OscText.h" />
     <ClInclude Include="..\midi-app-shared\AppFirewall.h" />
     <ClInclude Include="PatchTrace.h" />
@@ -287,6 +288,7 @@
     </ClCompile>
     <ClCompile Include="OscHub.cpp" />
     <ClCompile Include="OscDiscovery.cpp" />
+    <ClCompile Include="OscVirtualDevice.cpp" />
     <ClCompile Include="OscText.cpp" />
     <ClCompile Include="MainWindowOsc.cpp" />
     <ClCompile Include="..\midi-app-shared\AppFirewall.cpp" />

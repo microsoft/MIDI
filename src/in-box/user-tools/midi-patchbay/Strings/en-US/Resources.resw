@@ -5676,4 +5676,32 @@
     <value>What arrives goes into the patch as MIDI 2.0. A value from 0 to 1, like a TouchOSC fader&apos;s, then sets a controller with 32-bit precision instead of 128 steps. Turn it on when the synth or app this connects to takes MIDI 2.0.</value>
     <comment>Hint under the OscMidi2 check box.</comment>
   </data>
+  <data name="OscShowAsDevice" xml:space="preserve">
+    <value>Show to other apps as a MIDI device</value>
+    <comment>Check box on an OSC connection. Other apps on this PC can then open it as a MIDI device.</comment>
+  </data>
+  <data name="OscShowAsDeviceHint" xml:space="preserve">
+    <value>Apps like your DAW can open it by its name while this patch routes, without a loopback. What arrives over OSC goes to them, and what they send goes out over OSC. Each row shows as a block of its own.</value>
+    <comment>Hint under the OscShowAsDevice check box.</comment>
+  </data>
+  <data name="OscDeviceShownFormat" xml:space="preserve">
+    <value>Other apps see it as the MIDI device &quot;{0}&quot;.</value>
+    <comment>Status line. {0} is the device name other apps see.</comment>
+  </data>
+  <data name="OscDeviceFailed" xml:space="preserve">
+    <value>Couldn&apos;t show it to other apps as a MIDI device. Check that Windows MIDI Services is running. If it still doesn&apos;t show, turn this off and on again.</value>
+    <comment>Status line when the virtual MIDI device couldn&apos;t be made.</comment>
+  </data>
+  <data name="OscDeviceSessionName" xml:space="preserve">
+    <value>Windows MIDI Patchbay OSC device</value>
+    <comment>Name of the Windows MIDI Services session that holds an OSC connection&apos;s MIDI device. Shown in MIDI Settings.</comment>
+  </data>
+  <data name="OscDeviceDescription" xml:space="preserve">
+    <value>An OSC connection in Windows MIDI Patchbay</value>
+    <comment>Description of the MIDI device an OSC connection is shown as. Shown in MIDI Settings.</comment>
+  </data>
+  <data name="OscDeviceDefaultName" xml:space="preserve">
+    <value>OSC connection</value>
+    <comment>Name of an OSC connection&apos;s MIDI device when the connection has no name.</comment>
+  </data>
 </root>

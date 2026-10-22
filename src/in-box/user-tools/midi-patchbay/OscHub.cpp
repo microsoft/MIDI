@@ -11,6 +11,7 @@
 #include "OscAddress.h"
 #include "OscStream.h"
 #include "OscTime.h"
+#include "OscVirtualDevice.h"
 #include "StringResources.h"
 
 #include <winsock2.h>
@@ -72,6 +73,9 @@ namespace midipatchbay
         // What may wait to go to one app over TCP. Past it, what's sent doesn't go to that app,
         // so one slow app can't hold up the rest or fill memory.
         constexpr size_t MaximumTcpWaitingBytes = 1 << 20;
+
+        // How often a MIDI device that couldn't be made is tried again.
+        constexpr uint64_t DeviceRetryMilliseconds = 10000;
 
         // Reads from one TCP connection each time the worker wakes, so a fast sender can't keep
         // it from sending.
@@ -819,6 +823,12 @@ namespace midipatchbay
             status.SendFailures = m_sendFailures;
             status.ConnectedApps = m_connectedApps;
             status.TurnedAway = m_turnedAway;
+            status.Device = static_cast<OscDeviceState>(m_deviceState.load());
+
+            {
+                std::scoped_lock guard{ m_statusLock };
+                status.DeviceName = m_deviceName;
+            }
 
             return status;
         }
@@ -1013,6 +1023,12 @@ namespace midipatchbay
                 if (m_used > 0 && m_owner.m_callback != nullptr)
                 {
                     LOG_IF_FAILED(m_owner.m_callback->MessagesReceived(GUID{}, GUID{}, m_timestamp, static_cast<UINT32>(m_used), m_words.data()));
+                }
+
+                // And to the apps that opened it as a device.
+                if (m_used > 0 && m_owner.m_device != nullptr)
+                {
+                    m_owner.m_device->Send(m_timestamp, m_words.data(), static_cast<uint32_t>(m_used));
                 }
 
                 m_used = 0;
@@ -1453,6 +1469,66 @@ namespace midipatchbay
             return next;
         }
 
+        // On the worker: makes the device other apps see when it's asked for, again when what it's
+        // made from changes, and takes it away when it isn't. Blocks on the service.
+        void UpdateDevice(_In_ Config const& config, _In_ uint64_t now, _In_ uint64_t ticksPerSecond)
+        {
+            if (!config.Settings.ShowAsDevice)
+            {
+                RemoveDevice();
+                return;
+            }
+
+            auto shape = OscDeviceShapeOf(m_deviceId, config.Name, config.Settings);
+
+            if (m_deviceState == static_cast<int32_t>(OscDeviceState::Shown) && shape == m_deviceShape)
+            {
+                return;
+            }
+
+            RemoveDevice();
+
+            // What apps send is queued like what the engine sends. The device is taken away
+            // before this connection is, and waits for a message being handed on.
+            auto tryAgain = false;
+            auto device = OscVirtualDevice::Create(shape, [this](uint64_t timestamp, uint32_t const* words, uint32_t wordCount)
+                {
+                    (void)SendMidiMessagesRaw(timestamp, wordCount, words);
+                }, tryAgain);
+
+            auto const shown = device != nullptr;
+
+            // Not again until the settings change, when trying could leave an endpoint behind.
+            m_deviceShape = std::move(shape);
+            m_nextDeviceAttempt = tryAgain ? now + ticksPerSecond * DeviceRetryMilliseconds / 1000 : UINT64_MAX;
+            m_deviceState = static_cast<int32_t>(shown ? OscDeviceState::Shown : OscDeviceState::Failed);
+
+            {
+                std::scoped_lock guard{ m_statusLock };
+                m_deviceName = m_deviceShape.Name;
+            }
+
+            std::scoped_lock guard{ m_dispatch };
+            m_device = std::move(device);
+        }
+
+        // On the worker. The device goes outside the dispatch lock, as taking it away waits on
+        // the service.
+        void RemoveDevice() noexcept
+        {
+            std::unique_ptr<OscVirtualDevice> old{};
+
+            {
+                std::scoped_lock guard{ m_dispatch };
+                old = std::move(m_device);
+            }
+
+            old.reset();
+
+            m_deviceShape = {};
+            m_deviceState = static_cast<int32_t>(OscDeviceState::Off);
+        }
+
         static osc::StreamFraming Framing(_In_ OscConnectionSettings const& settings) noexcept
         {
             return settings.TcpFraming == OscTcpFraming::SizeFirst ? osc::StreamFraming::SizeFirst : osc::StreamFraming::Slip;
@@ -1867,6 +1943,7 @@ namespace midipatchbay
             uint64_t nextResolve{ 0 };
             std::wstring tcpSignature{};
             std::vector<HANDLE> handles{};
+            auto deviceChanged = false;
 
             while (!m_stop)
             {
@@ -1893,6 +1970,8 @@ namespace midipatchbay
                             tcpSignature = std::move(signature);
                             CloseTcp();
                         }
+
+                        deviceChanged = true;
                     }
 
                     if (now >= nextResolve)
@@ -1902,6 +1981,14 @@ namespace midipatchbay
                         auto const failed = !config->Settings.SendHost.empty() && !m_hostResolved;
                         now = internal::GetCurrentMidiTimestamp();
                         nextResolve = now + ticksPerSecond * (failed ? ResolveAfterFailureMilliseconds : ResolveEveryMilliseconds) / 1000;
+                    }
+
+                    if (deviceChanged ||
+                        (m_deviceState == static_cast<int32_t>(OscDeviceState::Failed) && now >= m_nextDeviceAttempt))
+                    {
+                        deviceChanged = false;
+                        UpdateDevice(*config, now, ticksPerSecond);
+                        now = internal::GetCurrentMidiTimestamp();
                     }
 
                     auto const tcp = config->Settings.Transport != OscTransport::Udp;
@@ -1958,6 +2045,7 @@ namespace midipatchbay
 
             ::CancelWaitableTimer(m_timer.get());
             CloseTcp();
+            RemoveDevice();
         }
 
         std::wstring m_deviceId{};
@@ -2006,6 +2094,12 @@ namespace midipatchbay
         // Set by the hub.
         std::atomic<bool> m_everyNetworkAllowed{ false };
 
+        // The device other apps see. Changed by the worker under m_dispatch, and used under it.
+        std::unique_ptr<OscVirtualDevice> m_device{};
+        OscDeviceShape m_deviceShape{};
+        uint64_t m_nextDeviceAttempt{ 0 };
+        std::atomic<int32_t> m_deviceState{ static_cast<int32_t>(OscDeviceState::Off) };
+
         mutable std::mutex m_statusLock{};
         OscListenState m_listening{ OscListenState::NotReceiving };
         bool m_heldByFirewall{ false };
@@ -2013,6 +2107,7 @@ namespace midipatchbay
         std::wstring m_portOwner{};
         bool m_hostNotFound{ false };
         std::wstring m_sendingTo{};
+        std::wstring m_deviceName{};
         int64_t m_lastHeardWhen{ 0 };
         std::wstring m_lastHeardFrom{};
         std::deque<OscHeardMessage> m_heard{};

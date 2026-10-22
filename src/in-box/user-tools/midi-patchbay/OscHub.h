@@ -22,6 +22,10 @@
 // its timestamp, turned into OSC there, and sent when it's due, or at once in a bundle tagged with
 // its time. The same thread looks up the names the connection sends to and takes messages from.
 //
+// Shown to other apps as a MIDI device: the connection's own sending thread makes and takes away
+// the device, outside every lock but its own. What arrives over OSC goes to the apps that opened
+// it as well as to the engine, and what they send is queued like what the engine sends.
+//
 // TCP: a connection's own sending thread also connects, accepts, reads and writes its TCP sockets,
 // so no other thread ever touches them. What arrives is read the same way as a UDP packet.
 //
@@ -48,6 +52,16 @@ namespace midipatchbay
         PortInUse = 3,
 
         Failed = 4,
+    };
+
+    // Whether other apps see the connection as a MIDI device.
+    enum class OscDeviceState : int32_t
+    {
+        Off = 0,
+        Shown = 1,
+
+        // Windows MIDI Services couldn't make it. Tried again every few seconds.
+        Failed = 2,
     };
 
     // Something that arrived, as the inspector lists it.
@@ -94,6 +108,11 @@ namespace midipatchbay
         // Where messages go now, like "192.168.1.20:9000". Empty until known. Over TCP, the app
         // it's connected to.
         std::wstring SendingTo{};
+
+        OscDeviceState Device{ OscDeviceState::Off };
+
+        // The name other apps see it by.
+        std::wstring DeviceName{};
 
         // Over TCP: the apps connected now, and the connections turned away, for being past
         // MaximumOscTcpApps or from a computer it doesn't take messages from.

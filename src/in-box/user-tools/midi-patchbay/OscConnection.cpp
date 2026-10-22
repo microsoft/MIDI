@@ -820,6 +820,11 @@ namespace midipatchbay
             object.Insert(L"tcpFraming", json::JsonValue::CreateStringValue(KeyOf(TcpFramingNames, settings.TcpFraming)));
         }
 
+        if (settings.ShowAsDevice)
+        {
+            object.Insert(L"showAsDevice", json::JsonValue::CreateBooleanValue(true));
+        }
+
         json::JsonObject receive{};
         receive.Insert(L"port", json::JsonValue::CreateNumberValue(settings.ReceivePort));
         receive.Insert(L"listenOn", json::JsonValue::CreateStringValue(KeyOf(ListenOnNames, settings.ListenOn)));
@@ -922,6 +927,7 @@ namespace midipatchbay
         {
             settings.Transport = ReadEnum(object, L"transport", TransportNames, OscTransport::Udp);
             settings.TcpFraming = ReadEnum(object, L"tcpFraming", TcpFramingNames, OscTcpFraming::Slip);
+            settings.ShowAsDevice = ReadBoolean(object, L"showAsDevice", false);
 
             auto const receive = ReadObject(object, L"receive");
 
@@ -1046,9 +1052,10 @@ namespace midipatchbay
     {
         try
         {
-            std::wstring text = std::format(L"n{}:{}|r{}:{}:{}:{}:{}|s{}:{}:{}|t{}:{}:{}:{}",
+            std::wstring text = std::format(L"n{}:{}:{}|r{}:{}:{}:{}:{}|s{}:{}:{}|t{}:{}:{}:{}",
                 static_cast<int32_t>(settings.Transport),
                 static_cast<int32_t>(settings.TcpFraming),
+                settings.ShowAsDevice ? 1 : 0,
                 settings.ReceivePort,
                 settings.Advertise ? 1 : 0,
                 static_cast<int32_t>(settings.ListenOn),
@@ -1103,6 +1110,25 @@ namespace midipatchbay
         {
             return {};
         }
+    }
+
+    _Use_decl_annotations_
+    std::wstring OscDeviceProductInstanceId(std::wstring_view deviceId)
+    {
+        // FNV-1a over the id without regard to case, as device ids are compared.
+        uint32_t hash{ 2166136261u };
+
+        for (auto const c : deviceId)
+        {
+            auto const lower = static_cast<uint32_t>(c >= L'A' && c <= L'Z' ? c + (L'a' - L'A') : c);
+
+            hash ^= lower & 0xFF;
+            hash *= 16777619u;
+            hash ^= lower >> 8;
+            hash *= 16777619u;
+        }
+
+        return std::format(L"PATCHBAY-OSC-{:08X}", hash);
     }
 
     _Use_decl_annotations_

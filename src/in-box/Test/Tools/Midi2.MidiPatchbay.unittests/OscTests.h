@@ -55,4 +55,5 @@ public:
     TEST_METHOD(PacketsAreFramedOnAStream);
     TEST_METHOD(TcpSettingsSurviveTheFile);
     TEST_METHOD(FloatsBecomeMidi2);
+    TEST_METHOD(DevicesAreSavedAndNamed);
 };

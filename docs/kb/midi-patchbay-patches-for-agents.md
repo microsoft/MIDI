@@ -535,7 +535,7 @@ $oscGroups = @{}   # OSC connection id -> the groups it has rows on
 $oscCount = 0
 foreach ($o in (Get-List $patch.oscConnections)) {
     $where = "The OSC connection '$($o.name ?? $o.id)'"
-    Test-Keys $o @('id', 'name', 'x', 'y', 'transport', 'tcpFraming', 'receive', 'send', 'receivedTimeTags', 'spacingDelayMilliseconds', 'sendTiming', 'bundleTogether', 'rows') $where
+    Test-Keys $o @('id', 'name', 'x', 'y', 'transport', 'tcpFraming', 'showAsDevice', 'receive', 'send', 'receivedTimeTags', 'spacingDelayMilliseconds', 'sendTiming', 'bundleTogether', 'rows') $where
     if (-not $o.id) { $problems.Add("$where has no id, so Windows MIDI Patchbay leaves it out."); continue }
     if (-not $kinds.TryAdd($o.id, 'endpoint')) { $problems.Add("The OSC connection '$($o.id)' has an id that an endpoint or another OSC connection already has, so Windows MIDI Patchbay leaves it out."); continue }
     if (++$oscCount -gt 16) { $problems.Add("$where is past the 16 OSC connections a patch can have, so Windows MIDI Patchbay leaves it out.") }
@@ -550,6 +550,7 @@ foreach ($o in (Get-List $patch.oscConnections)) {
     if ($r.acceptFrom -ceq 'list' -and (Get-List $r.acceptAddresses).Count -eq 0) { $problems.Add("$where takes messages from a list with nothing in it, so it takes them from anyone.") }
     if ($null -ne $r.advertise -and $r.advertise -isnot [bool]) { $problems.Add("$where has an advertise that isn't true or false, so it's true.") }
     Test-Choice $o.transport @('udp', 'tcpConnect', 'tcpListen') $where 'transport'
+    if ($null -ne $o.showAsDevice -and $o.showAsDevice -isnot [bool]) { $problems.Add("$where has a showAsDevice that isn't true or false, so it's false.") }
     Test-Choice $o.tcpFraming @('slip', 'sizeFirst') $where 'tcpFraming'
     Test-Choice $o.receivedTimeTags @('playOnArrival', 'useSenderTime', 'keepSenderSpacing') $where 'receivedTimeTags'
     Test-Choice $o.sendTiming @('atItsTime', 'earlyWithTimeTags') $where 'sendTiming'
@@ -1242,6 +1243,7 @@ An OSC connection sends and receives MIDI as Open Sound Control (OSC) messages o
 | `name` | text | empty | The name on the canvas. |
 | `x`, `y` | numbers | 0 | Where its top left corner sits on the canvas. |
 | `transport` | `udp`, `tcpConnect`, `tcpListen` | `udp` | How it reaches the other app. Almost every app uses `udp`. `tcpConnect` connects to `send.host` and `send.port`, and messages come back on that connection. `tcpListen` waits on `receive.port` for up to 8 apps to connect, and sends to all of them. |
+| `showAsDevice` | `true`, `false` | `false` | Other apps on the PC can open it as a MIDI device, by its `name`, while its patch routes. Each row is a function block on its group. |
 | `tcpFraming` | `slip`, `sizeFirst` | `slip` | For TCP: how packets are marked. `slip` is OSC 1.1, which most apps use. `sizeFirst` is OSC 1.0. |
 | `receive.port` | 0 to 65535 | 0 | The port it listens on. 0 doesn't listen. Many apps send to 8000. Not used by `tcpConnect`. |
 | `receive.listenOn` | `everyNetwork`, `thisPc` | `everyNetwork` | `thisPc` hears apps on this PC only. |

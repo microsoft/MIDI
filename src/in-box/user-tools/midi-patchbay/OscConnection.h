@@ -323,6 +323,10 @@ namespace midipatchbay
         // it. Only while it listens on every network and Windows Firewall lets it in.
         bool Advertise{ true };
 
+        // Other apps on this PC see it as a MIDI device while its patch routes, so a DAW can open
+        // it without a loopback. Each row is a function block of its own.
+        bool ShowAsDevice{ false };
+
         std::vector<OscRow> Rows{};
     };
 
@@ -364,6 +368,11 @@ namespace midipatchbay
 
     // Equal for two connections that behave the same way.
     std::wstring OscConnectionSignature(_In_ OscConnectionSettings const& settings) noexcept;
+
+    // The product instance id of the MIDI device a connection is shown to other apps as, from its
+    // device id: "PATCHBAY-OSC-" and eight hex digits. The same connection always has the same
+    // one, so apps remember the device from one run to the next.
+    std::wstring OscDeviceProductInstanceId(_In_ std::wstring_view deviceId);
 
     // The DNS-SD service types OSC is advertised and found under.
     constexpr wchar_t OscUdpServiceType[] = L"_osc._udp.local";

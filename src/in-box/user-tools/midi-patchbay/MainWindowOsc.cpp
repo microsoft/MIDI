@@ -765,6 +765,15 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(nameBox);
 
+                auto device = parts::Check(resources::GetString(L"OscShowAsDevice"), settings.ShowAsDevice);
+                device.Click([change, device](auto&&, auto&&)
+                    {
+                        auto const value = Checked(device);
+                        change([value](patchbay::OscConnectionSettings& s) { s.ShowAsDevice = value; }, false);
+                    });
+                body.Children().Append(device);
+                body.Children().Append(parts::HeadingHint(resources::GetString(L"OscShowAsDeviceHint")));
+
                 m_oscStatusText = Line({}, 12, L"TextFillColorSecondaryBrush");
                 xaml::Automation::AutomationProperties::SetLiveSetting(m_oscStatusText, xaml::Automation::Peers::AutomationLiveSetting::Polite);
                 body.Children().Append(m_oscStatusText);
@@ -1860,6 +1869,17 @@ namespace winrt::midipatchbay::implementation
                 {
                     text += L'\n';
                     text += resources::FormatString(L"OscSendingToFormat", status->SendingTo);
+                }
+
+                if (status->Device == patchbay::OscDeviceState::Shown)
+                {
+                    text += L'\n';
+                    text += resources::FormatString(L"OscDeviceShownFormat", status->DeviceName);
+                }
+                else if (status->Device == patchbay::OscDeviceState::Failed)
+                {
+                    text += L'\n';
+                    text += resources::GetString(L"OscDeviceFailed");
                 }
             }
 

@@ -468,9 +468,7 @@ In the **MIDI type tag** format, each message also carries a port number. Ports 
 
 **Windows Firewall.** Windows Firewall keeps other devices out until it lets Windows MIDI Patchbay in. Until then, an OSC connection set to listen on every network only hears apps on this PC, so Windows never has to ask about it. When that's holding a routing patch back, a bar at the top of the patch window says so, with the same choices as the Firewall page in [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/). **Allow through Windows Firewall** asks for administrator permission and adds two rules for Windows MIDI Patchbay, one for UDP and one for TCP. Sending works either way.
 
-Things OSC connections can't do yet:
-
-- **Not seen by other apps.** Other apps can't open an OSC connection as a MIDI device. Connect it to a [loopback](#loopbacks) to reach one.
+**Open it from other apps.** Check **Show to other apps as a MIDI device** on an OSC connection, and while its patch routes, apps on this PC like your DAW can open it by its name, without a [loopback](#loopbacks). What arrives over OSC goes to them, and what they send goes out over OSC. Each row shows as a block of its own, named for its address, on its group. The same connection keeps the same device from one day to the next, so your DAW remembers it.
 
 For step-by-step setup with REAPER and TouchOSC, see [Using OSC with Windows MIDI Patchbay]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/).
 

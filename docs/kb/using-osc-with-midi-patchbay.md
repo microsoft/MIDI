@@ -82,6 +82,16 @@ In TouchOSC, set up a connection that sends to this PC's address on port `8000` 
 
 It works the other way too. Connect something to the OSC connection's **In**, and a TouchOSC fader with the same address, such as `/midi/1/cc/11`, moves to follow it.
 
+## Open it from your DAW
+
+Your DAW can use an OSC connection like any MIDI device, so TouchOSC can play a track and its faders can follow the DAW, with no loopback in between:
+
+1. Select the OSC connection, and check **Show to other apps as a MIDI device**.
+2. Start the patch routing.
+3. In your DAW, pick the OSC connection by its name as a MIDI input and output.
+
+The device is only there while the patch routes.
+
 ## When nothing happens
 
 Select the OSC connection on the canvas. The details panel shows:
