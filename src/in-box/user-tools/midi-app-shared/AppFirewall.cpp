@@ -462,12 +462,19 @@ namespace midiapp::firewall
                 EndsWithNoCase(Expanded(TextOf(application)), target.ProgramFileName);
         }
 
-        // Network MIDI 2.0, RTP-MIDI and OSC all use UDP, on ports a host can choose, so the rule
-        // lets in UDP on any port and nothing else.
-        HRESULT ApplyRuleSettings(_In_ INetFwRule* const rule, _In_ BSTR const application, _In_ long const networks) noexcept
+        // The protocols a target listens with. Network MIDI 2.0 and RTP-MIDI use UDP, and so does
+        // OSC unless it's set to TCP.
+        std::vector<long> ProtocolsOf(_In_ FirewallTarget const& target)
+        {
+            return target.Protocols.empty() ? std::vector<long>{ UdpProtocol } : target.Protocols;
+        }
+
+        // Ports are ones a host can choose, so each rule lets in one protocol on any port and
+        // nothing else.
+        HRESULT ApplyRuleSettings(_In_ INetFwRule* const rule, _In_ BSTR const application, _In_ long const networks, _In_ long const protocol) noexcept
         {
             RETURN_IF_FAILED(rule->put_ApplicationName(application));
-            RETURN_IF_FAILED(rule->put_Protocol(NET_FW_IP_PROTOCOL_UDP));
+            RETURN_IF_FAILED(rule->put_Protocol(protocol));
             RETURN_IF_FAILED(rule->put_Direction(NET_FW_RULE_DIR_IN));
             RETURN_IF_FAILED(rule->put_Action(NET_FW_ACTION_ALLOW));
             RETURN_IF_FAILED(rule->put_Profiles(networks));
@@ -511,29 +518,57 @@ namespace midiapp::firewall
                 auto const application = wil::make_bstr_nothrow(programPath.c_str());
                 RETURN_IF_NULL_ALLOC(application);
 
-                if (!ownRules.empty())
+                auto const protocols = ProtocolsOf(target);
+                std::vector<bool> covered(protocols.size(), false);
+
+                // Each rule keeps a protocol the program listens with. Any other protocol becomes
+                // the first one no rule has yet.
+                for (auto const& rule : ownRules)
                 {
-                    for (auto const& rule : ownRules)
+                    long protocol{ 0 };
+
+                    if (FAILED(rule->get_Protocol(&protocol)))
                     {
-                        RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks));
+                        protocol = 0;
                     }
 
-                    return S_OK;
+                    auto index = static_cast<size_t>(std::find(protocols.begin(), protocols.end(), protocol) - protocols.begin());
+
+                    if (index == protocols.size())
+                    {
+                        index = static_cast<size_t>(std::find(covered.begin(), covered.end(), false) - covered.begin());
+
+                        if (index == protocols.size())
+                        {
+                            index = 0;
+                        }
+                    }
+
+                    RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks, protocols[index]));
+                    covered[index] = true;
                 }
 
-                auto const name = wil::make_bstr_nothrow(target.RuleName.c_str());
-                auto const description = wil::make_bstr_nothrow(target.RuleDescription.c_str());
-                RETURN_IF_NULL_ALLOC(name);
-                RETURN_IF_NULL_ALLOC(description);
+                for (size_t index = 0; index < protocols.size(); index++)
+                {
+                    if (covered[index])
+                    {
+                        continue;
+                    }
 
-                wil::com_ptr_nothrow<INetFwRule> rule{};
-                RETURN_IF_FAILED(::CoCreateInstance(__uuidof(NetFwRule), nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(rule.put())));
+                    auto const name = wil::make_bstr_nothrow(target.RuleName.c_str());
+                    auto const description = wil::make_bstr_nothrow(target.RuleDescription.c_str());
+                    RETURN_IF_NULL_ALLOC(name);
+                    RETURN_IF_NULL_ALLOC(description);
 
-                // No group: Allowed apps would then list only the group's name, with no path
-                RETURN_IF_FAILED(rule->put_Name(name.get()));
-                RETURN_IF_FAILED(rule->put_Description(description.get()));
-                RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks));
-                RETURN_IF_FAILED(rules->Add(rule.get()));
+                    wil::com_ptr_nothrow<INetFwRule> rule{};
+                    RETURN_IF_FAILED(::CoCreateInstance(__uuidof(NetFwRule), nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(rule.put())));
+
+                    // No group: Allowed apps would then list only the group's name, with no path
+                    RETURN_IF_FAILED(rule->put_Name(name.get()));
+                    RETURN_IF_FAILED(rule->put_Description(description.get()));
+                    RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks, protocols[index]));
+                    RETURN_IF_FAILED(rules->Add(rule.get()));
+                }
 
                 return S_OK;
             }
@@ -662,9 +697,12 @@ namespace midiapp::firewall
                 return state;
             }
 
-            long allowed{ 0 };
+            auto const protocols = ProtocolsOf(target);
+
+            // What lets each protocol in, and what this tool's own rules cover, protocol by protocol
+            std::vector<long> allowedFor(protocols.size(), 0);
+            std::vector<long> ownRuleFor(protocols.size(), 0);
             long blocked{ 0 };
-            long ownRule{ 0 };
 
             auto const walked = ForEachRule(rules.get(), [&](INetFwRule* const rule)
                 {
@@ -675,7 +713,7 @@ namespace midiapp::firewall
                     if (FAILED(rule->get_Direction(&direction)) || direction != NET_FW_RULE_DIR_IN ||
                         FAILED(rule->get_Enabled(&ruleEnabled)) || ruleEnabled == VARIANT_FALSE ||
                         FAILED(rule->get_Protocol(&protocol)) ||
-                        (protocol != NET_FW_IP_PROTOCOL_UDP && protocol != NET_FW_IP_PROTOCOL_ANY) ||
+                        (protocol != NET_FW_IP_PROTOCOL_ANY && std::find(protocols.begin(), protocols.end(), protocol) == protocols.end()) ||
                         !AppliesToProgram(rule, target, state.ProgramPath))
                     {
                         return;
@@ -693,11 +731,19 @@ namespace midiapp::firewall
 
                     if (action == NET_FW_ACTION_ALLOW)
                     {
-                        allowed |= profiles;
+                        auto const own = IsOwnRule(rule, target);
 
-                        if (IsOwnRule(rule, target))
+                        for (size_t index = 0; index < protocols.size(); index++)
                         {
-                            ownRule |= profiles;
+                            if (protocol == NET_FW_IP_PROTOCOL_ANY || protocol == protocols[index])
+                            {
+                                allowedFor[index] |= profiles;
+
+                                if (own)
+                                {
+                                    ownRuleFor[index] |= profiles;
+                                }
+                            }
                         }
                     }
                     else
@@ -723,6 +769,16 @@ namespace midiapp::firewall
             if (FAILED(walked))
             {
                 return state;
+            }
+
+            // A network lets the program in only when it lets in every protocol it listens with.
+            long allowed{ AllNetworks };
+            long ownRule{ AllNetworks };
+
+            for (size_t index = 0; index < protocols.size(); index++)
+            {
+                allowed &= allowedFor[index];
+                ownRule &= ownRuleFor[index];
             }
 
             state.OwnRuleNetworks = ownRule;

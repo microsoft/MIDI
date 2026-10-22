@@ -26,6 +26,10 @@ namespace midiapp::firewall
     constexpr long PublicNetworks = 0x4;
     constexpr long AllNetworks = DomainNetworks | PrivateNetworks | PublicNetworks;
 
+    // IP protocol numbers, as Windows Firewall numbers them
+    constexpr long TcpProtocol = 6;
+    constexpr long UdpProtocol = 17;
+
     enum class FirewallStatus
     {
         // Windows Firewall could not be read
@@ -118,6 +122,11 @@ namespace midiapp::firewall
         // L"--allow-midi-service-through-firewall". It has to be one a protocol or file
         // activation can never produce.
         std::wstring AllowSwitch{};
+
+        // What the program listens with: UdpProtocol, TcpProtocol, or both. The rule this tool adds
+        // lets each in, one rule for each, and the program counts as let in only where all of
+        // them are.
+        std::vector<long> Protocols{ UdpProtocol };
     };
 
     // Reads Windows Firewall as it is now. Needs no administrator rights, but walks every rule,
