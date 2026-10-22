@@ -569,8 +569,6 @@ namespace midipatchbay
 
             if (!Accepts(*config, from))
             {
-                m_notAccepted++;
-
                 Reader reader{ *this, *config, from, arrival, clock, false };
                 osc::ReadPacket(packet, size, reader);
                 return;
@@ -844,6 +842,9 @@ namespace midipatchbay
 
                 if (!m_accepted)
                 {
+                    // Counted as received, so "kept out" reads as part of what arrived.
+                    m_owner.m_oscReceived++;
+                    m_owner.m_notAccepted++;
                     m_owner.RecordHeard(message, m_from, m_clock, false, false);
                     return;
                 }
