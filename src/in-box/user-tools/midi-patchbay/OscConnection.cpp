@@ -771,6 +771,11 @@ namespace midipatchbay
             receive.Insert(L"messagesPerSecond", json::JsonValue::CreateNumberValue(settings.ReceiveRateLimit));
         }
 
+        if (!settings.Advertise)
+        {
+            receive.Insert(L"advertise", json::JsonValue::CreateBooleanValue(false));
+        }
+
         object.Insert(L"receive", receive);
 
         json::JsonObject send{};
@@ -844,6 +849,7 @@ namespace midipatchbay
             settings.ReceivePort = static_cast<uint16_t>(ReadInteger(receive, L"port", 0, 65535, 0));
             settings.ListenOn = ReadEnum(receive, L"listenOn", ListenOnNames, OscListenOn::EveryNetwork);
             settings.AcceptFrom = ReadEnum(receive, L"acceptFrom", AcceptFromNames, OscAcceptFrom::SendHost);
+            settings.Advertise = ReadBoolean(receive, L"advertise", true);
             settings.ReceiveRateLimit = static_cast<uint32_t>(ReadInteger(receive, L"messagesPerSecond",
                 MinimumOscReceiveRateLimit, MaximumOscReceiveRateLimit, DefaultOscReceiveRateLimit));
 
@@ -960,8 +966,9 @@ namespace midipatchbay
     {
         try
         {
-            std::wstring text = std::format(L"r{}:{}:{}:{}|s{}:{}:{}|t{}:{}:{}:{}",
+            std::wstring text = std::format(L"r{}:{}:{}:{}:{}|s{}:{}:{}|t{}:{}:{}:{}",
                 settings.ReceivePort,
+                settings.Advertise ? 1 : 0,
                 static_cast<int32_t>(settings.ListenOn),
                 static_cast<int32_t>(settings.AcceptFrom),
                 settings.ReceiveRateLimit,
@@ -1013,5 +1020,61 @@ namespace midipatchbay
         {
             return {};
         }
+    }
+
+    _Use_decl_annotations_
+    std::wstring OscServiceLabel(std::wstring_view connectionName, std::wstring_view computerName)
+    {
+        // Periods would split the label, and control characters have no place in a name.
+        auto const clean = [](std::wstring_view text)
+            {
+                std::wstring result{};
+
+                for (auto const c : text)
+                {
+                    result += (c == L'.' || c < 0x20 || c == 0x7F) ? L' ' : c;
+                }
+
+                auto const first = result.find_first_not_of(L' ');
+                auto const last = result.find_last_not_of(L' ');
+
+                return first == std::wstring::npos ? std::wstring{} : result.substr(first, last - first + 1);
+            };
+
+        auto const name = clean(connectionName);
+        auto const computer = clean(computerName);
+
+        std::wstring label = name.empty() ? computer : (computer.empty() ? name : name + L" (" + computer + L")");
+
+        if (label.empty())
+        {
+            label = L"OSC";
+        }
+
+        // At most 63 bytes of UTF-8, cut where a whole character ends.
+        size_t bytes{ 0 };
+        size_t keep{ 0 };
+
+        while (keep < label.size())
+        {
+            auto const c = static_cast<uint32_t>(label[keep]);
+            auto const surrogatePair = c >= 0xD800 && c <= 0xDBFF && keep + 1 < label.size();
+            auto const size = c < 0x80 ? 1u : c < 0x800 ? 2u : surrogatePair ? 4u : 3u;
+
+            if (bytes + size > 63)
+            {
+                break;
+            }
+
+            bytes += size;
+            keep += surrogatePair ? 2 : 1;
+        }
+
+        label.resize(keep);
+
+        auto const last = label.find_last_not_of(L' ');
+        label.resize(last == std::wstring::npos ? 0 : last + 1);
+
+        return label;
     }
 }

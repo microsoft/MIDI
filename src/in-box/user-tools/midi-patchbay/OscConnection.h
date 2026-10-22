@@ -286,6 +286,10 @@ namespace midipatchbay
         // Received messages a second, beyond which the rest are dropped and counted.
         uint32_t ReceiveRateLimit{ DefaultOscReceiveRateLimit };
 
+        // Tells apps on the network that it's here, by DNS-SD, so an app like TouchOSC can find
+        // it. Only while it listens on every network and Windows Firewall lets it in.
+        bool Advertise{ true };
+
         std::vector<OscRow> Rows{};
     };
 
@@ -323,6 +327,14 @@ namespace midipatchbay
 
     // Equal for two connections that behave the same way.
     std::wstring OscConnectionSignature(_In_ OscConnectionSettings const& settings) noexcept;
+
+    // The DNS-SD service type OSC over UDP is advertised and found under.
+    constexpr wchar_t OscUdpServiceType[] = L"_osc._udp.local";
+
+    // The name a connection is advertised under: "TouchOSC (STUDIO-PC)". A DNS label: no
+    // periods, no control characters, and at most 63 bytes of UTF-8, cut where a character
+    // ends. Empty names fall back to the computer's name alone.
+    std::wstring OscServiceLabel(_In_ std::wstring_view connectionName, _In_ std::wstring_view computerName);
 
     // The names a patch file uses for each enum.
     std::wstring_view OscFormatKey(_In_ OscFormat format) noexcept;

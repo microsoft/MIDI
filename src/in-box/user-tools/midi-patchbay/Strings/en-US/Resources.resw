@@ -5556,4 +5556,24 @@
     <value>poly pressure on note {0}</value>
     <comment>{0} is a number or a part of an address with an offset.</comment>
   </data>
+  <data name="OscAdvertise" xml:space="preserve">
+    <value>Let apps on the network find this connection</value>
+    <comment>Check box in the OSC connection&apos;s Receiving section. When on, the connection is advertised on the local network by DNS-SD (Zeroconf).</comment>
+  </data>
+  <data name="OscAdvertiseHint" xml:space="preserve">
+    <value>Apps that look for OSC devices, like TouchOSC, then list it by name. This only happens while it listens on every network and Windows Firewall lets MIDI Patchbay in.</value>
+    <comment>Hint under the OscAdvertise check box.</comment>
+  </data>
+  <data name="OscFindButton" xml:space="preserve">
+    <value>Find on the network</value>
+    <comment>Drop-down button that lists OSC apps found on the local network, to fill in the host and port to send to.</comment>
+  </data>
+  <data name="OscFindNone" xml:space="preserve">
+    <value>No OSC apps found yet. Check that the app is on the same network, then open this again in a few seconds.</value>
+    <comment>Disabled menu item shown when no OSC apps have been found on the network.</comment>
+  </data>
+  <data name="OscFindItemFormat" xml:space="preserve">
+    <value>{0} ({1}, port {2})</value>
+    <comment>Menu item for an OSC app found on the network. {0} is the name it advertises, {1} its host address, {2} its port number.</comment>
+  </data>
 </root>

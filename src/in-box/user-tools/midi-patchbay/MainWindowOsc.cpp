@@ -14,6 +14,7 @@
 #include "BackgroundWork.h"
 #include "DialogParts.h"
 #include "OscAddress.h"
+#include "OscDiscovery.h"
 #include "OscHub.h"
 #include "OscRules.h"
 #include "OscText.h"
@@ -105,6 +106,54 @@ namespace winrt::midipatchbay::implementation
         {
             auto const value = box.Value();
             return std::isfinite(value) ? static_cast<uint16_t>(std::clamp(value, 0.0, 65535.0)) : uint16_t{ 0 };
+        }
+
+        // A button listing the OSC apps found on the network. Picking one calls picked.
+        controls::DropDownButton FindOnNetwork(_In_ std::function<void(patchbay::OscFoundApp const&)> picked)
+        {
+            controls::DropDownButton button{};
+            button.Content(winrt::box_value(resources::GetString(L"OscFindButton")));
+            xaml::Automation::AutomationProperties::SetName(button, resources::GetString(L"OscFindButton"));
+
+            controls::MenuFlyout flyout{};
+            flyout.Placement(controls::Primitives::FlyoutPlacementMode::BottomEdgeAlignedLeft);
+
+            // The list is read each time it opens, as apps come and go.
+            flyout.Opening([picked](winrt::Windows::Foundation::IInspectable const& sender, auto&&)
+                {
+                    try
+                    {
+                        auto const menu = sender.as<controls::MenuFlyout>();
+                        menu.Items().Clear();
+
+                        auto const apps = patchbay::OscDiscovery::Current().FoundApps();
+
+                        if (apps.empty())
+                        {
+                            controls::MenuFlyoutItem none{};
+                            none.Text(resources::GetString(L"OscFindNone"));
+                            none.IsEnabled(false);
+                            menu.Items().Append(none);
+                            return;
+                        }
+
+                        for (auto const& app : apps)
+                        {
+                            controls::MenuFlyoutItem item{};
+                            item.Text(resources::FormatString(L"OscFindItemFormat", app.Name, app.Host, static_cast<uint32_t>(app.Port)));
+                            item.Click([picked, app](auto&&, auto&&) { picked(app); });
+                            menu.Items().Append(item);
+                        }
+                    }
+                    MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the OSC apps on the network.")
+                });
+
+            button.Flyout(flyout);
+
+            // Starts looking now, so the list has had a few seconds to fill when it's opened.
+            (void)patchbay::OscDiscovery::Current().FoundApps();
+
+            return button;
         }
 
         std::vector<winrt::hstring> PresetNames()
@@ -312,6 +361,12 @@ namespace winrt::midipatchbay::implementation
 
             body.Children().Append(sendRow);
             body.Children().Append(parts::HeadingHint(resources::GetString(L"OscSendHostHint")));
+
+            body.Children().Append(FindOnNetwork([hostBox, sendPort](patchbay::OscFoundApp const& app)
+                {
+                    hostBox.Text(winrt::hstring{ app.Host });
+                    sendPort.Value(app.Port);
+                }));
 
             controls::StackPanel testRow{};
             testRow.Orientation(controls::Orientation::Horizontal);
@@ -658,6 +713,15 @@ namespace winrt::midipatchbay::implementation
                 section.Children().Append(TwoColumns(port, listen));
                 section.Children().Append(parts::HeadingHint(resources::GetString(L"OscReceivePortHint")));
 
+                auto advertise = parts::Check(resources::GetString(L"OscAdvertise"), settings.Advertise);
+                advertise.Click([change, advertise](auto&&, auto&&)
+                    {
+                        auto const value = Checked(advertise);
+                        change([value](patchbay::OscConnectionSettings& s) { s.Advertise = value; }, false);
+                    });
+                section.Children().Append(advertise);
+                section.Children().Append(parts::HeadingHint(resources::GetString(L"OscAdvertiseHint")));
+
                 auto accept = Choices(resources::GetString(L"OscAcceptHeader"),
                     { resources::GetString(L"OscAcceptAnyone"), resources::GetString(L"OscAcceptSendHost"), resources::GetString(L"OscAcceptList") },
                     static_cast<int32_t>(settings.AcceptFrom));
@@ -729,6 +793,16 @@ namespace winrt::midipatchbay::implementation
 
                 section.Children().Append(TwoColumns(host, port));
                 section.Children().Append(parts::HeadingHint(resources::GetString(L"OscSendHostHint")));
+
+                section.Children().Append(FindOnNetwork([change](patchbay::OscFoundApp const& app)
+                    {
+                        auto const found = app;
+                        change([found](patchbay::OscConnectionSettings& s)
+                            {
+                                s.SendHost = found.Host;
+                                s.SendPort = found.Port;
+                            }, true);
+                    }));
 
                 auto lastSender = parts::Check(resources::GetString(L"OscSendToLastSender"), settings.SendToLastSender);
                 lastSender.Click([change, lastSender](auto&&, auto&&)

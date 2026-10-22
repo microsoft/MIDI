@@ -51,4 +51,5 @@ public:
     TEST_METHOD(CustomRulesSendOsc);
     TEST_METHOD(CustomRulesSurviveTheFile);
     TEST_METHOD(RulesAreSuggestedForTouchOsc);
+    TEST_METHOD(AdvertisingIsSavedAndNamed);
 };

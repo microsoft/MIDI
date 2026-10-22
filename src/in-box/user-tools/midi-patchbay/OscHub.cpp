@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "OscHub.h"
+#include "OscDiscovery.h"
 #include "OscAddress.h"
 #include "OscTime.h"
 #include "StringResources.h"
@@ -479,6 +480,12 @@ namespace midipatchbay
         {
             auto const config = m_config.load();
             return config == nullptr ? OscConnectionSettings{} : config->Settings;
+        }
+
+        std::wstring Name() const
+        {
+            auto const config = m_config.load();
+            return config == nullptr ? std::wstring{} : config->Name;
         }
 
         // Takes effect on the next packet. The worker looks names up again and starts SysEx
@@ -1706,8 +1713,64 @@ namespace midipatchbay
                     connection->SetListening(port->State, held, number, port->Owner);
                 }
             }
+
+            AdvertiseLocked();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to open the OSC ports.")
+    }
+
+    void OscHub::AdvertiseLocked() noexcept
+    {
+        try
+        {
+            using midiapp::firewall::FirewallStatus;
+
+            std::vector<OscAdvertisement> wanted{};
+
+            // Only once Windows Firewall lets the app in, as the announcement goes out from a
+            // socket of the app's own on port 5353, and nobody could reach the port before.
+            auto const firewallLetsIn = m_firewallRead &&
+                (m_firewall.Status == FirewallStatus::Open || m_firewall.Status == FirewallStatus::Off);
+
+            if (firewallLetsIn)
+            {
+                wchar_t computer[256]{};
+                DWORD size = ARRAYSIZE(computer);
+
+                if (!::GetComputerNameExW(ComputerNameDnsHostname, computer, &size))
+                {
+                    computer[0] = L'\0';
+                }
+
+                for (auto const& [number, port] : m_ports)
+                {
+                    if (port->State != OscListenState::EveryNetwork)
+                    {
+                        continue;
+                    }
+
+                    auto const listeners = port->Listeners.load();
+
+                    if (listeners == nullptr)
+                    {
+                        continue;
+                    }
+
+                    // One name for each port: the first connection on it that's set to advertise.
+                    for (auto const& connection : *listeners)
+                    {
+                        if (connection->Settings().Advertise)
+                        {
+                            wanted.push_back(OscAdvertisement{ number, OscServiceLabel(connection->Name(), computer) });
+                            break;
+                        }
+                    }
+                }
+            }
+
+            OscDiscovery::Current().Advertise(std::move(wanted));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to advertise the OSC connections.")
     }
 
     _Use_decl_annotations_
@@ -1769,7 +1832,9 @@ namespace midipatchbay
 
                 if (found != m_connections.end())
                 {
-                    if (OscConnectionSignature(found->second->Settings()) != OscConnectionSignature(planned.Settings))
+                    // The name is advertised, so a new one counts as a change too.
+                    if (OscConnectionSignature(found->second->Settings()) != OscConnectionSignature(planned.Settings) ||
+                        found->second->Name() != planned.Name)
                     {
                         found->second->Update(planned);
                     }
@@ -1856,6 +1921,9 @@ namespace midipatchbay
             UNREFERENCED_PARAMETER(id);
             connection->Stop();
         }
+
+        // Withdraws every advertisement, which waits a little on the DNS client.
+        OscDiscovery::Current().Shutdown();
     }
 
     _Use_decl_annotations_
@@ -1927,6 +1995,11 @@ namespace midipatchbay
             if (before != LetsEveryNetworkIn())
             {
                 ApplyPortsLocked();
+            }
+            else
+            {
+                // The firewall's answer can change what's advertised without changing the ports.
+                AdvertiseLocked();
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read Windows Firewall.")

@@ -1797,3 +1797,64 @@ void OscTests::RulesAreSuggestedForTouchOsc()
     VERIFY_IS_FALSE(suggest(MessageBuilder{ "/text" }.String("x"), {}).has_value());
     VERIFY_IS_FALSE(suggest(MessageBuilder{ "/1/fader*" }.Float(0.5f), {}).has_value());
 }
+
+void OscTests::AdvertisingIsSavedAndNamed()
+{
+    // On unless the file says otherwise, and only written when off.
+    auto settings = OscConnectionFromPreset(OscPreset::Paths);
+    VERIFY_IS_TRUE(settings.Advertise);
+
+    auto const onText = OscConnectionToJson(settings).Stringify();
+    VERIFY_IS_TRUE(std::wstring_view{ onText }.find(L"advertise") == std::wstring_view::npos);
+
+    settings.Advertise = false;
+    auto const offText = OscConnectionToJson(settings).Stringify();
+    VERIFY_IS_TRUE(std::wstring_view{ offText }.find(L"\"advertise\":false") != std::wstring_view::npos);
+
+    auto const back = OscConnectionFromJson(json::JsonObject::Parse(offText));
+    VERIFY_IS_FALSE(back.Advertise);
+    VERIFY_ARE_NOT_EQUAL(OscConnectionSignature(back), OscConnectionSignature(OscConnectionFromJson(json::JsonObject::Parse(onText))));
+
+    // Anything but a Boolean reads as the default.
+    auto object = json::JsonObject::Parse(offText);
+    object.GetNamedObject(L"receive").SetNamedValue(L"advertise", json::JsonValue::CreateStringValue(L"no"));
+    VERIFY_IS_TRUE(OscConnectionFromJson(object).Advertise);
+
+    // The name is the connection's, then the computer's.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Phone (STUDIO-PC)" }, OscServiceLabel(L"Phone", L"STUDIO-PC"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Phone" }, OscServiceLabel(L"Phone", L""));
+    VERIFY_ARE_EQUAL(std::wstring{ L"STUDIO-PC" }, OscServiceLabel(L"", L"STUDIO-PC"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"OSC" }, OscServiceLabel(L"", L""));
+    VERIFY_ARE_EQUAL(std::wstring{ L"OSC" }, OscServiceLabel(L" . ", L"\t"));
+
+    // Periods would split the label, and control characters become spaces too.
+    VERIFY_ARE_EQUAL(std::wstring{ L"v1 2 Pad (pc)" }, OscServiceLabel(L"v1.2\x7FPad", L"pc."));
+    VERIFY_ARE_EQUAL(std::wstring{ L"a b (c)" }, OscServiceLabel(L"a\nb", L"c"));
+
+    // At most 63 bytes of UTF-8, cut where a whole character ends.
+    auto const longLabel = OscServiceLabel(std::wstring(100, L'x'), L"pc");
+    VERIFY_ARE_EQUAL(size_t{ 63 }, longLabel.size());
+
+    auto const utf8Bytes = [](std::wstring const& text)
+        {
+            return winrt::to_string(text).size();
+        };
+
+    // Three bytes each: 21 fit exactly.
+    auto const wide = OscServiceLabel(std::wstring(40, L'\x0FE9'), L"");
+    VERIFY_ARE_EQUAL(size_t{ 21 }, wide.size());
+    VERIFY_ARE_EQUAL(size_t{ 63 }, utf8Bytes(wide));
+
+    // Four bytes for each pair, which is never split: 15 pairs make 60 bytes.
+    std::wstring pairs{};
+
+    for (int i = 0; i < 20; i++)
+    {
+        pairs += L"\xD83C\xDFB9";
+    }
+
+    auto const piano = OscServiceLabel(pairs, L"");
+    VERIFY_ARE_EQUAL(size_t{ 30 }, piano.size());
+    VERIFY_ARE_EQUAL(size_t{ 60 }, utf8Bytes(piano));
+    VERIFY_IS_TRUE(piano.back() == L'\xDFB9');
+}

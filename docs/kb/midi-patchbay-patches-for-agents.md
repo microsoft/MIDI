@@ -541,13 +541,14 @@ foreach ($o in (Get-List $patch.oscConnections)) {
     if (++$oscCount -gt 16) { $problems.Add("$where is past the 16 OSC connections a patch can have, so Windows MIDI Patchbay leaves it out.") }
     if (-not $o.name) { $problems.Add("The OSC connection '$($o.id)' has no name.") }
     $r = $o.receive; $s = $o.send
-    Test-Keys $r @('port', 'listenOn', 'acceptFrom', 'acceptAddresses', 'messagesPerSecond') "The receive settings of the OSC connection '$($o.id)'"
+    Test-Keys $r @('port', 'listenOn', 'acceptFrom', 'acceptAddresses', 'messagesPerSecond', 'advertise') "The receive settings of the OSC connection '$($o.id)'"
     Test-Keys $s @('host', 'port', 'toLastSender') "The send settings of the OSC connection '$($o.id)'"
     if (-not (Test-Range $r.port 0 65535) -or -not (Test-Range $s.port 0 65535)) { $problems.Add("$where has a port outside 0 to 65535, so it's read as 0: not listening, or not sending.") }
     Test-Choice $r.listenOn @('everyNetwork', 'thisPc') $where 'listenOn'
     Test-Choice $r.acceptFrom @('anyone', 'sendHost', 'list') $where 'acceptFrom'
     if (-not (Test-Range $r.messagesPerSecond 10 100000)) { $problems.Add("$where has messagesPerSecond outside 10 to 100000, so it's 5000.") }
     if ($r.acceptFrom -ceq 'list' -and (Get-List $r.acceptAddresses).Count -eq 0) { $problems.Add("$where takes messages from a list with nothing in it, so it takes them from anyone.") }
+    if ($null -ne $r.advertise -and $r.advertise -isnot [bool]) { $problems.Add("$where has an advertise that isn't true or false, so it's true.") }
     Test-Choice $o.receivedTimeTags @('playOnArrival', 'useSenderTime', 'keepSenderSpacing') $where 'receivedTimeTags'
     Test-Choice $o.sendTiming @('atItsTime', 'earlyWithTimeTags') $where 'sendTiming'
     if (-not (Test-Range $o.spacingDelayMilliseconds 0 500)) { $problems.Add("$where has spacingDelayMilliseconds outside 0 to 500, so it's 10.") }
@@ -1235,6 +1236,7 @@ An OSC connection sends and receives MIDI as Open Sound Control (OSC) messages o
 | `receive.acceptFrom` | `anyone`, `sendHost`, `list` | `sendHost` | Who it takes messages from. `sendHost` is the computer it sends to, or anyone when it doesn't send. |
 | `receive.acceptAddresses` | list of names or addresses | empty | For `list`. Up to 16. |
 | `receive.messagesPerSecond` | 10 to 100000 | 5000 | Messages a second beyond which the rest are dropped. |
+| `receive.advertise` | `true`, `false` | `true` | Lets apps that browse the network for OSC, like TouchOSC, find it by name. Only while it listens on every network and Windows Firewall lets the app in. |
 | `send.host` | text | empty | A name or an IP address. `127.0.0.1` is this PC. Empty doesn't send. |
 | `send.port` | 0 to 65535 | 0 | The port the other app listens on. Many apps listen on 9000. |
 | `send.toLastSender` | `true`, `false` | `false` | Sends to whoever sent to it last, on `send.port`. For a phone or tablet whose address changes. |

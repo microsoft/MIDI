@@ -161,6 +161,7 @@ namespace midipatchbay
 
         // Needs m_lock.
         void ApplyPortsLocked() noexcept;
+        void AdvertiseLocked() noexcept;
         bool LetsEveryNetworkIn() const noexcept;
 
         mutable std::mutex m_lock{};

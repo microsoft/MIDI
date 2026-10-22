@@ -458,6 +458,8 @@ In the **MIDI type tag** format, each message also carries a port number. Ports 
 
 **Recently heard.** Select an OSC connection to see the last 50 messages that arrived, newest first, and whether a row took each one. If you don't know what an app sends, this shows you. When an address looks like one of the formats, **Add a row for this** adds a row that takes it. When it doesn't, **Add a rule for this** adds a rule, with a guess at what it should be: a control with a number at the end, like `/1/fader3`, gets a rule for the whole set, `/1/fader{n}`. Buttons become notes, toggles and switches become on/off controllers, and anything else becomes a controller, on numbers no other rule uses. Change the rule in the details panel if the guess isn't what you want.
 
+**Finding apps on the network.** **Find on the network**, under where to send, lists the OSC apps that announce themselves on your network, like TouchOSC. Pick one to fill in its address and port. It works the other way too. While an OSC connection listens on every network and Windows Firewall lets Windows MIDI Patchbay in, apps that look for OSC devices list it by the connection's name and this PC's name, like `TouchOSC (STUDIO-PC)`. Clear **Let apps on the network find this connection** to stop that. Some apps and some networks don't pass these announcements along. When an app isn't listed, type its address and port.
+
 **Who can send to it.** OSC has no passwords, so anyone who can reach this PC can send to the port. By default, an OSC connection only takes messages from the computer it sends to. **Take messages from** can change that to anyone, or to a list of addresses. **Listen for** can keep it to apps on this PC only.
 
 **Timing.** Messages play when they arrive. OSC can also say when a message should play, and an OSC connection can follow that instead, if both computers' clocks are set to the same time, or keep the spacing between messages the sender gave them, which takes out the network's uneven timing. Messages a patch sends ahead of time, like those from the clock and LFO steps, are held until their time and then sent.
@@ -467,8 +469,6 @@ In the **MIDI type tag** format, each message also carries a port number. Ports 
 Things OSC connections can't do yet:
 
 - **UDP only.** OSC over TCP isn't supported.
-- **MIDI only.** OSC messages that aren't MIDI, like a fader at `/1/fader3`, aren't turned into MIDI yet.
-- **No looking up apps on the network.** Type the address and port the other app shows.
 - **Not seen by other apps.** Other apps can't open an OSC connection as a MIDI device. Connect it to a [loopback](#loopbacks) to reach one.
 
 For step-by-step setup with REAPER and TouchOSC, see [Using OSC with Windows MIDI Patchbay]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/).

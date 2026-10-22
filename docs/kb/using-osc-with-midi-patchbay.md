@@ -49,9 +49,9 @@ TouchOSC has no MIDI over OSC of its own. Each control sends an OSC message of i
 The quickest way, with nothing to change in TouchOSC:
 
 1. In Windows MIDI Patchbay, drag **OSC connection** onto the canvas and choose **TouchOSC**.
-2. Leave **Listen on port** at `8000`. In **Send to**, type your phone or tablet's address, with port `9000`. If its address changes from day to day, select the connection after you add it and check **Send to whoever sent to me last** instead.
+2. Leave **Listen on port** at `8000`. In **Send to**, type your phone or tablet's address, with port `9000`. Or select **Find on the network** and pick it: TouchOSC Mk1 shows up as your device's name and model, followed by `(TouchOSC)`. It's only listed while TouchOSC has a **Port (incoming)** set. If its address changes from day to day, select the connection after you add it and check **Send to whoever sent to me last** instead.
 3. Select **Add**. Connect the OSC connection's **Out** to your synth's **In**, and start the patch routing.
-4. In TouchOSC, set up a connection that sends to this PC's address on port `8000` and listens on port `9000`.
+4. In TouchOSC, set up a connection that sends to this PC's address on port `8000` and listens on port `9000`. In TouchOSC Mk1, the OSC settings screen lists the OSC apps it finds below the settings, and the OSC connection is listed there by its name and this PC's name. Pick it to fill in **Host** and **Port (outgoing)**. It's only listed once Windows Firewall lets Windows MIDI Patchbay in.
 
 The TouchOSC preset is a row of rules: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons `/1/push1` and up play notes from middle C, all on channel 1. The rules work both ways, so a controller the patch sends moves the fader on your phone.
 
