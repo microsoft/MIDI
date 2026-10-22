@@ -259,6 +259,11 @@ namespace midipatchbay
         // Timing clock and active sensing. Clock is 48 packets a second at 120 BPM.
         bool SendClock{ false };
 
+        // Received channel messages come in as MIDI 2.0 (UMP type 4) instead of MIDI 1.0. A float
+        // from 0 to 1 then sets the whole 32-bit value, or the 16-bit velocity, rather than 7 bits
+        // of it. Whole numbers are scaled up the way the MIDI 2.0 specification says.
+        bool Midi2{ false };
+
         // 0 to 15: the channel received messages come in on when they carry none. REAPER takes
         // addresses without a channel, and the OSC_MIDI_OSC names never have one.
         uint8_t Channel{ 0 };

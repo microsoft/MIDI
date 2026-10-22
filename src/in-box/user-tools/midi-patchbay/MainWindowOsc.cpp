@@ -1495,6 +1495,15 @@ namespace winrt::midipatchbay::implementation
                         body.Children().Append(clock);
                     }
 
+                    auto midi2 = parts::Check(resources::GetString(L"OscMidi2"), row.Midi2);
+                    midi2.Click([changeRow, group, midi2](auto&&, auto&&)
+                        {
+                            auto const value = Checked(midi2);
+                            changeRow(group, [value](patchbay::OscRow& r) { r.Midi2 = value; }, false);
+                        });
+                    body.Children().Append(midi2);
+                    body.Children().Append(parts::HeadingHint(resources::GetString(L"OscMidi2Hint")));
+
                     // Which group the row is. Moving it takes its links along.
                     std::vector<winrt::hstring> groupNames{};
                     std::vector<uint8_t> groupValues{};

@@ -2008,3 +2008,132 @@ void OscTests::TcpSettingsSurviveTheFile()
     VERIFY_IS_TRUE(odd.Transport == OscTransport::Udp);
     VERIFY_IS_TRUE(odd.TcpFraming == OscTcpFraming::Slip);
 }
+
+void OscTests::FloatsBecomeMidi2()
+{
+    // The 32-bit pitch bend's center is exact, and so are its ends.
+    VERIFY_ARE_EQUAL(0x80000000u, PitchBend32FromUnit(0.5));
+    VERIFY_ARE_EQUAL(0xFFFFFFFFu, PitchBend32FromUnit(1.0));
+    VERIFY_ARE_EQUAL(0u, PitchBend32FromUnit(0.0));
+    VERIFY_ARE_EQUAL(0x40000000u, PitchBend32FromUnit(0.25));
+    VERIFY_ARE_EQUAL(0x80000000u, PitchBend32FromUnit(std::numeric_limits<double>::quiet_NaN()));
+
+    auto row = OscRowFromPreset(OscPreset::Paths, 2);
+    row.Values = OscValueKind::UnitFloats;
+    row.Midi2 = true;
+
+    struct Case
+    {
+        char const* Address;
+        float Value;
+        uint32_t Word0;
+        uint32_t Word1;
+    };
+
+    // Floats from 0 to 1 fill the whole range: 32 bits, or 16 for a velocity.
+    Case const floats[]
+    {
+        { "/midi/1/cc/7", 0.5f, 0x42B00700u, 0x80000000u },
+        { "/midi/1/cc/7", 1.0f, 0x42B00700u, 0xFFFFFFFFu },
+        { "/midi/1/cc/7", 0.25f, 0x42B00700u, 0x40000000u },
+        { "/midi/2/note/60", 1.0f, 0x42913C00u, 0xFFFF0000u },
+        { "/midi/2/note/60", 0.5f, 0x42913C00u, 0x80000000u },
+        { "/midi/2/note/60", 0.0f, 0x42813C00u, 0x00000000u },
+        { "/midi/1/pitch", 0.5f, 0x42E00000u, 0x80000000u },
+        { "/midi/1/pitch", 1.0f, 0x42E00000u, 0xFFFFFFFFu },
+        { "/midi/1/channelpressure", 1.0f, 0x42D00000u, 0xFFFFFFFFu },
+        { "/midi/1/polyaftertouch/64", 0.5f, 0x42A04000u, 0x80000000u },
+    };
+
+    for (auto const& c : floats)
+    {
+        UmpCollector umps{};
+        auto const outcome = Receive({ row }, MessageBuilder{ c.Address }.Float(c.Value), umps);
+
+        VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::Translated), static_cast<int32_t>(outcome.Result));
+        VERIFY_ARE_EQUAL(size_t{ 1 }, umps.Umps.size());
+        VERIFY_ARE_EQUAL(size_t{ 2 }, umps.Umps[0].size());
+        VERIFY_ARE_EQUAL(c.Word0, umps.Umps[0][0]);
+        VERIFY_ARE_EQUAL(c.Word1, umps.Umps[0][1]);
+    }
+
+    // Whole numbers are scaled up the MIDI 2.0 way: the center stays the center and the top the top.
+    auto whole = OscRowFromPreset(OscPreset::Paths, 0);
+    whole.Midi2 = true;
+
+    Case const wholes[]
+    {
+        { "/midi/1/cc/7", 127, 0x40B00700u, 0xFFFFFFFFu },
+        { "/midi/1/cc/7", 64, 0x40B00700u, 0x80000000u },
+        { "/midi/1/cc/7", 0, 0x40B00700u, 0x00000000u },
+        { "/midi/1/note/60", 127, 0x40903C00u, 0xFFFF0000u },
+        { "/midi/1/note/60", 0, 0x40803C00u, 0x00000000u },
+        { "/midi/1/program", 5, 0x40C00000u, 0x05000000u },
+        { "/midi/1/pitch", 8192, 0x40E00000u, 0x80000000u },
+        { "/midi/1/pitch", 16383, 0x40E00000u, 0xFFFFFFFFu },
+    };
+
+    for (auto const& c : wholes)
+    {
+        UmpCollector umps{};
+        Receive({ whole }, MessageBuilder{ c.Address }.Int(static_cast<int32_t>(c.Value)), umps);
+
+        VERIFY_ARE_EQUAL(size_t{ 1 }, umps.Umps.size());
+        VERIFY_ARE_EQUAL(c.Word0, umps.Umps[0][0]);
+        VERIFY_ARE_EQUAL(c.Word1, umps.Umps[0][1]);
+    }
+
+    // System messages stay as they are.
+    {
+        UmpCollector umps{};
+        Receive({ whole }, MessageBuilder{ "/midi/clock" }, umps);
+        VERIFY_ARE_EQUAL(size_t{ 1 }, umps.Umps.size());
+        VERIFY_ARE_EQUAL(0x10F80000u, umps.Umps[0][0]);
+    }
+
+    // TouchOSC's own layout: a fader's float sets its controller to 32 bits, and a push button
+    // plays and lets go of its note.
+    auto touch = OscRowFromPreset(OscPreset::TouchOsc, 0);
+    touch.Midi2 = true;
+    VERIFY_IS_TRUE(OscPresetOf(touch) == OscPreset::TouchOsc);
+
+    {
+        UmpCollector umps{};
+        Receive({ touch }, MessageBuilder{ "/1/fader1" }.Float(0.5f), umps);
+        VERIFY_ARE_EQUAL(size_t{ 1 }, umps.Umps.size());
+        VERIFY_ARE_EQUAL(0x40B04700u, umps.Umps[0][0]);
+        VERIFY_ARE_EQUAL(0x80000000u, umps.Umps[0][1]);
+
+        umps.Umps.clear();
+        Receive({ touch }, MessageBuilder{ "/1/push1" }.Float(1.0f), umps);
+        Receive({ touch }, MessageBuilder{ "/1/push1" }.Float(0.0f), umps);
+        VERIFY_ARE_EQUAL(size_t{ 2 }, umps.Umps.size());
+        VERIFY_ARE_EQUAL(0x40903C00u, umps.Umps[0][0]);
+        VERIFY_ARE_EQUAL(0xFFFF0000u, umps.Umps[0][1]);
+        VERIFY_ARE_EQUAL(0x40803C00u, umps.Umps[1][0]);
+    }
+
+    // Off, the same message is MIDI 1.0 as before.
+    {
+        touch.Midi2 = false;
+        UmpCollector umps{};
+        Receive({ touch }, MessageBuilder{ "/1/fader1" }.Float(0.5f), umps);
+        VERIFY_ARE_EQUAL(size_t{ 1 }, umps.Umps.size());
+        VERIFY_ARE_EQUAL(size_t{ 1 }, umps.Umps[0].size());
+        VERIFY_ARE_EQUAL(0x20B04740u, umps.Umps[0][0]);
+    }
+
+    // Saved only when on, and read back.
+    OscConnectionSettings settings{};
+    settings.ReceivePort = 8000;
+    settings.Rows = { row };
+    auto const text = std::wstring{ OscConnectionToJson(settings).Stringify() };
+    VERIFY_IS_TRUE(text.find(L"\"midi2\":true") != std::wstring::npos);
+    auto const back = OscConnectionFromJson(json::JsonObject::Parse(text));
+    VERIFY_IS_TRUE(back.Rows[0].Midi2);
+    VERIFY_ARE_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
+
+    settings.Rows[0].Midi2 = false;
+    VERIFY_IS_TRUE(std::wstring{ OscConnectionToJson(settings).Stringify() }.find(L"midi2") == std::wstring::npos);
+    VERIFY_ARE_NOT_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
+}

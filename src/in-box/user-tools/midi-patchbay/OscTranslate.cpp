@@ -282,6 +282,43 @@ namespace midipatchbay::osc
             return std::nullopt;
         }
 
+        // A value moved up to more bits the MIDI 2.0 way, min-center-max: the bottom stays the
+        // bottom, the center the center, and the top the top.
+        uint32_t ScaleUp(_In_ uint32_t value, _In_ uint32_t fromBits, _In_ uint32_t toBits) noexcept
+        {
+            auto const scaleBits = toBits - fromBits;
+            auto scaled = value << scaleBits;
+            auto const center = 1u << (fromBits - 1);
+
+            if (value <= center)
+            {
+                return scaled;
+            }
+
+            // Above the center the low bits repeat the value's own, which keeps the top at the top.
+            auto const repeatBits = fromBits - 1;
+            auto repeatValue = value & ((1u << repeatBits) - 1u);
+
+            repeatValue = scaleBits > repeatBits
+                ? repeatValue << (scaleBits - repeatBits)
+                : repeatValue >> (repeatBits - scaleBits);
+
+            while (repeatValue != 0)
+            {
+                scaled |= repeatValue;
+                repeatValue >>= repeatBits;
+            }
+
+            return scaled;
+        }
+
+        // A fraction of a 16-bit or 32-bit range, for a value read from a float.
+        uint32_t FromUnit(_In_ double unit, _In_ uint32_t bits) noexcept
+        {
+            auto const highest = bits >= 32 ? 4294967295.0 : static_cast<double>((1u << bits) - 1u);
+            return static_cast<uint32_t>(std::llround(std::clamp(std::isfinite(unit) ? unit : 0.0, 0.0, 1.0) * highest));
+        }
+
         // Where one received message's MIDI goes: the receiver, counted and capped.
         struct Output
         {
@@ -289,13 +326,71 @@ namespace midipatchbay::osc
             uint32_t Messages{ 0 };
             bool Capped{ false };
 
+            // The row being translated makes MIDI 2.0.
+            bool Midi2{ false };
+
             bool Room() const noexcept
             {
                 return Messages < MaximumMessagesFromOneOscMessage;
             }
 
+            // A MIDI 2.0 channel voice message, UMP type 4: its opcode, channel, the two bytes
+            // after them, and its data word.
+            void Midi2Message(
+                _In_ uint8_t group,
+                _In_ uint8_t opcode,
+                _In_ uint8_t channel,
+                _In_ uint8_t index1,
+                _In_ uint8_t index2,
+                _In_ uint32_t data) noexcept
+            {
+                if (!Room())
+                {
+                    Capped = true;
+                    return;
+                }
+
+                uint32_t const words[2]
+                {
+                    (0x4u << 28) | (static_cast<uint32_t>(group & 0x0F) << 24) | (static_cast<uint32_t>(opcode & 0x0F) << 20) |
+                        (static_cast<uint32_t>(channel & 0x0F) << 16) | (static_cast<uint32_t>(index1 & 0x7F) << 8) | (index2 & 0xFFu),
+                    data,
+                };
+
+                Receiver.OnUmp(words, 2);
+                Messages++;
+            }
+
             void Midi1(_In_ uint8_t group, _In_ uint8_t status, _In_ uint8_t data1, _In_ uint8_t data2) noexcept
             {
+                // On a MIDI 2.0 row, a channel message goes in at MIDI 2.0's resolution, the way
+                // the specification translates MIDI 1.0.
+                if (Midi2 && status >= 0x80 && status < 0xF0)
+                {
+                    auto const opcode = static_cast<uint8_t>(status >> 4);
+                    auto const channel = static_cast<uint8_t>(status & 0x0F);
+                    auto const d1 = static_cast<uint8_t>(data1 & 0x7F);
+                    auto const d2 = static_cast<uint8_t>(data2 & 0x7F);
+
+                    switch (opcode)
+                    {
+                    case 0x8: Midi2Message(group, 0x8, channel, d1, 0, ScaleUp(d2, 7, 16) << 16); return;
+
+                    // A velocity of 0 is still a note off.
+                    case 0x9: Midi2Message(group, d2 == 0 ? 0x8 : 0x9, channel, d1, 0, ScaleUp(d2, 7, 16) << 16); return;
+
+                    case 0xA: Midi2Message(group, 0xA, channel, d1, 0, ScaleUp(d2, 7, 32)); return;
+                    case 0xB: Midi2Message(group, 0xB, channel, d1, 0, ScaleUp(d2, 7, 32)); return;
+
+                    // No bank: the option flags say so.
+                    case 0xC: Midi2Message(group, 0xC, channel, 0, 0, static_cast<uint32_t>(d1) << 24); return;
+
+                    case 0xD: Midi2Message(group, 0xD, channel, 0, 0, ScaleUp(d1, 7, 32)); return;
+                    case 0xE: Midi2Message(group, 0xE, channel, 0, 0, ScaleUp(static_cast<uint32_t>(d1) | (static_cast<uint32_t>(d2) << 7), 14, 32)); return;
+                    default: break;
+                    }
+                }
+
                 if (!Room())
                 {
                     Capped = true;
@@ -509,6 +604,19 @@ namespace midipatchbay::osc
                     return value.has_value() ? std::optional<uint8_t>{ static_cast<uint8_t>(*value) } : std::nullopt;
                 };
 
+            // On a MIDI 2.0 row, a float from 0 to 1 is a fraction of the whole range. Anything
+            // else goes the MIDI 1.0 way, and is scaled up on its way out.
+            auto const fine = [&](size_t index) noexcept -> std::optional<double>
+                {
+                    if (!output.Midi2 || row.Values != OscValueKind::UnitFloats || index >= count ||
+                        !IsFloatType(arguments[index].Type) || !std::isfinite(arguments[index].Real))
+                    {
+                        return std::nullopt;
+                    }
+
+                    return std::clamp(arguments[index].Real, 0.0, 1.0);
+                };
+
             if (number > 127 && kind != Kind::SongPosition)
             {
                 return false;
@@ -520,6 +628,13 @@ namespace midipatchbay::osc
             {
             case Kind::Note:
             {
+                if (auto const unit = fine(0); unit.has_value())
+                {
+                    auto const velocity = FromUnit(*unit, 16);
+                    output.Midi2Message(group, velocity == 0 ? 0x8 : 0x9, channel, n, 0, velocity << 16);
+                    return true;
+                }
+
                 auto const velocity = value7(0);
 
                 if (!velocity.has_value())
@@ -534,6 +649,12 @@ namespace midipatchbay::osc
 
             case Kind::NoteOff:
             {
+                if (auto const unit = fine(0); unit.has_value())
+                {
+                    output.Midi2Message(group, 0x8, channel, n, 0, FromUnit(*unit, 16) << 16);
+                    return true;
+                }
+
                 auto const velocity = count > 0 ? value7(0) : std::optional<uint8_t>{ uint8_t{ 0 } };
 
                 if (!velocity.has_value())
@@ -548,6 +669,12 @@ namespace midipatchbay::osc
             case Kind::PolyPressure:
             case Kind::ControlChange:
             {
+                if (auto const unit = fine(0); unit.has_value())
+                {
+                    output.Midi2Message(group, kind == Kind::PolyPressure ? 0xA : 0xB, channel, n, 0, FromUnit(*unit, 32));
+                    return true;
+                }
+
                 auto const value = value7(0);
 
                 if (!value.has_value())
@@ -562,6 +689,12 @@ namespace midipatchbay::osc
             case Kind::Program:
             case Kind::ChannelPressure:
             {
+                if (auto const unit = fine(0); unit.has_value() && kind == Kind::ChannelPressure)
+                {
+                    output.Midi2Message(group, 0xD, channel, 0, 0, FromUnit(*unit, 32));
+                    return true;
+                }
+
                 auto const value = value7(0);
 
                 if (!value.has_value())
@@ -578,6 +711,12 @@ namespace midipatchbay::osc
                 if (count == 0)
                 {
                     return false;
+                }
+
+                if (auto const unit = fine(0); unit.has_value())
+                {
+                    output.Midi2Message(group, 0xE, channel, 0, 0, PitchBend32FromUnit(*unit));
+                    return true;
                 }
 
                 auto const bend = ReadPitchBend(row, arguments[0]);
@@ -610,6 +749,14 @@ namespace midipatchbay::osc
 
                 auto const status = static_cast<uint8_t>(0xB0 | channel);
                 auto const rpn = kind == Kind::Rpn;
+
+                // MIDI 2.0 has a message of its own for each, with the parameter as bank and index.
+                if (output.Midi2)
+                {
+                    output.Midi2Message(group, rpn ? 0x2 : 0x3, channel, static_cast<uint8_t>(*parameter >> 7),
+                        static_cast<uint8_t>(*parameter & 0x7F), ScaleUp(static_cast<uint32_t>(*value), 14, 32));
+                    return true;
+                }
 
                 output.Midi1(group, status, rpn ? 101 : 99, static_cast<uint8_t>(*parameter >> 7));
                 output.Midi1(group, status, rpn ? 100 : 98, static_cast<uint8_t>(*parameter & 0x7F));
@@ -1004,6 +1151,41 @@ namespace midipatchbay::osc
                 auto const ch = static_cast<uint8_t>(*channel);
                 auto const n = static_cast<uint8_t>(usesNumber ? *number : 0);
                 auto const v7 = static_cast<uint8_t>((std::min)(value, 127u));
+
+                // On a MIDI 2.0 row, a float is a fraction of the whole range. Whole numbers go
+                // the MIDI 1.0 way, and are scaled up on the way out.
+                if (output.Midi2 && IsFloatType(message.Arguments[rule.Argument].Type))
+                {
+                    switch (rule.Message)
+                    {
+                    case OscRuleMessage::ControlChange:
+                        output.Midi2Message(row.Group, 0xB, ch, n, 0, FromUnit(*unit, 32));
+                        return Match::Done;
+
+                    case OscRuleMessage::Note:
+                    {
+                        auto const velocity = FromUnit(*unit, 16);
+                        output.Midi2Message(row.Group, velocity == 0 ? 0x8 : 0x9, ch, n, 0, velocity << 16);
+                        return Match::Done;
+                    }
+
+                    case OscRuleMessage::PitchBend:
+                        output.Midi2Message(row.Group, 0xE, ch, 0, 0, PitchBend32FromUnit(*unit));
+                        return Match::Done;
+
+                    case OscRuleMessage::ChannelPressure:
+                        output.Midi2Message(row.Group, 0xD, ch, 0, 0, FromUnit(*unit, 32));
+                        return Match::Done;
+
+                    case OscRuleMessage::PolyPressure:
+                        output.Midi2Message(row.Group, 0xA, ch, n, 0, FromUnit(*unit, 32));
+                        return Match::Done;
+
+                    default:
+                        // A program change has only its number, which MIDI 1.0's way gives.
+                        break;
+                    }
+                }
 
                 switch (rule.Message)
                 {
@@ -1480,6 +1662,25 @@ namespace midipatchbay::osc
     }
 
     _Use_decl_annotations_
+    uint32_t PitchBend32FromUnit(double unit) noexcept
+    {
+        if (!std::isfinite(unit))
+        {
+            return 0x80000000u;
+        }
+
+        unit = std::clamp(unit, 0.0, 1.0);
+
+        // Each half on its own, so 0.5 is the center exactly and 1 the top.
+        if (unit <= 0.5)
+        {
+            return static_cast<uint32_t>(std::llround(unit * 2.0 * 2147483648.0));
+        }
+
+        return 0x80000000u + static_cast<uint32_t>(std::llround((unit - 0.5) * 2.0 * 2147483647.0));
+    }
+
+    _Use_decl_annotations_
     uint16_t PitchBendFromUnit(double unit) noexcept
     {
         if (!std::isfinite(unit))
@@ -1506,6 +1707,8 @@ namespace midipatchbay::osc
 
         auto const consider = [&](OscRow const& row, std::string_view address) noexcept
             {
+                output.Midi2 = row.Midi2;
+
                 switch (TranslateLiteral(row, address, message, output))
                 {
                 case Match::Done: matched = true; break;

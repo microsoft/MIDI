@@ -54,4 +54,5 @@ public:
     TEST_METHOD(AdvertisingIsSavedAndNamed);
     TEST_METHOD(PacketsAreFramedOnAStream);
     TEST_METHOD(TcpSettingsSurviveTheFile);
+    TEST_METHOD(FloatsBecomeMidi2);
 };

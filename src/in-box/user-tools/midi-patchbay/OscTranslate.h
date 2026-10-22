@@ -8,7 +8,8 @@
 #pragma once
 
 // MIDI to OSC and back, for each of an OSC connection's formats. Received messages become MIDI
-// 1.0 messages (UMP types 1, 2 and 3) on the group of the row they match. Messages going out are
+// 1.0 messages (UMP types 1, 2 and 3) on the group of the row they match, or MIDI 2.0 channel
+// voice messages (type 4) on a row set to make them. Messages going out are
 // MIDI 1.0 first: MIDI 2.0 channel voice messages are translated the way the UMP specification's
 // default translation says. Pure, for the unit tests.
 
@@ -127,9 +128,11 @@ namespace midipatchbay::osc
         _In_reads_(2) uint32_t const* words,
         _Out_writes_to_(4, return) Midi1Message* out) noexcept;
 
-    // Pitch bend as a float from 0 to 1 with its center at exactly 0.5, and back.
+    // Pitch bend as a float from 0 to 1 with its center at exactly 0.5, and back. Also MIDI 2.0's
+    // 32-bit pitch bend from a float, with its center at 0x80000000.
     float UnitFromPitchBend(_In_ uint16_t value) noexcept;
     uint16_t PitchBendFromUnit(_In_ double unit) noexcept;
+    uint32_t PitchBend32FromUnit(_In_ double unit) noexcept;
 
     // The arguments of a received message, for people to read: "i 60, f 0.5, s hello".
     std::wstring ArgumentsText(_In_ MessageView const& message);

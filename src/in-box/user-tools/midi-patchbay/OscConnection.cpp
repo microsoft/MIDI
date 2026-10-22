@@ -351,6 +351,7 @@ namespace midipatchbay
                 first.High == second.High;
         }
 
+        // For telling which preset a row is. Making MIDI 2.0 isn't part of any, so it's left out.
         bool SameRowSettings(_In_ OscRow const& first, _In_ OscRow const& second) noexcept
         {
             return first.Root == second.Root &&
@@ -899,6 +900,11 @@ namespace midipatchbay
             item.Insert(L"sendClock", json::JsonValue::CreateBooleanValue(row.SendClock));
             item.Insert(L"channel", json::JsonValue::CreateNumberValue(row.Channel));
 
+            if (row.Midi2)
+            {
+                item.Insert(L"midi2", json::JsonValue::CreateBooleanValue(true));
+            }
+
             rows.Append(item);
         }
 
@@ -997,6 +1003,7 @@ namespace midipatchbay
                     row.NoteOff = ReadEnum(item, L"noteOff", NoteOffNames, OscNoteOff::VelocityZero);
                     row.SendSysEx = ReadBoolean(item, L"sendSysEx", true);
                     row.SendClock = ReadBoolean(item, L"sendClock", false);
+                    row.Midi2 = ReadBoolean(item, L"midi2", false);
                     row.Channel = static_cast<uint8_t>(ReadInteger(item, L"channel", 0, 15, 0));
 
                     if (auto const rules = ReadArray(item, L"rules"); rules != nullptr)
@@ -1062,7 +1069,7 @@ namespace midipatchbay
 
             for (auto const& row : settings.Rows)
             {
-                text += std::format(L"|g{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}",
+                text += std::format(L"|g{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}",
                     row.Group,
                     std::wstring{ row.Root.begin(), row.Root.end() },
                     static_cast<int32_t>(row.Format),
@@ -1073,7 +1080,8 @@ namespace midipatchbay
                     static_cast<int32_t>(row.NoteOff),
                     row.SendSysEx ? 1 : 0,
                     row.SendClock ? 1 : 0,
-                    row.Channel);
+                    row.Channel,
+                    row.Midi2 ? 1 : 0);
 
                 for (auto const& rule : row.Rules)
                 {

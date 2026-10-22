@@ -5668,4 +5668,12 @@
     <value>OSC · TCP on port {0}</value>
     <comment>Subtitle on the canvas for an OSC connection that waits for apps over TCP. {0} is the port number.</comment>
   </data>
+  <data name="OscMidi2" xml:space="preserve">
+    <value>Make MIDI 2.0 messages</value>
+    <comment>Check box on an OSC connection&apos;s row. Received channel messages go into the patch as MIDI 2.0 instead of MIDI 1.0.</comment>
+  </data>
+  <data name="OscMidi2Hint" xml:space="preserve">
+    <value>What arrives goes into the patch as MIDI 2.0. A value from 0 to 1, like a TouchOSC fader&apos;s, then sets a controller with 32-bit precision instead of 128 steps. Turn it on when the synth or app this connects to takes MIDI 2.0.</value>
+    <comment>Hint under the OscMidi2 check box.</comment>
+  </data>
 </root>

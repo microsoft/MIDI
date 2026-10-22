@@ -567,7 +567,7 @@ foreach ($o in (Get-List $patch.oscConnections)) {
     $groups = [Collections.Generic.HashSet[int]]::new()
     foreach ($row in (Get-List $o.rows)) {
         $in = "A row of the OSC connection '$($o.id)'"
-        Test-Keys $row @('group', 'root', 'format', 'names', 'channelsFromZero', 'values', 'pitchBend', 'noteOff', 'sendSysEx', 'sendClock', 'channel', 'rules') $in
+        Test-Keys $row @('group', 'root', 'format', 'names', 'channelsFromZero', 'values', 'pitchBend', 'noteOff', 'sendSysEx', 'sendClock', 'channel', 'rules', 'midi2') $in
         if (-not (Test-Number $row.group) -or $row.group -lt 0 -or $row.group -gt 15 -or $row.group -ne [Math]::Floor($row.group)) { $problems.Add("$in has no group from 0 to 15, so Windows MIDI Patchbay leaves the row out. The file counts groups from 0."); continue }
         if (-not $groups.Add([int]$row.group)) { $problems.Add("Two rows of the OSC connection '$($o.id)' are on group $($row.group). Windows MIDI Patchbay keeps only the first."); continue }
         $root = "$($row.root)"
@@ -578,6 +578,7 @@ foreach ($o in (Get-List $patch.oscConnections)) {
         Test-Choice $row.pitchBend @('zeroTo16383', 'centeredOnZero') $in 'pitchBend'
         Test-Choice $row.noteOff @('velocityZero', 'ownAddress') $in 'noteOff'
         if (-not (Test-Range $row.channel 0 15)) { $problems.Add("$in has a channel outside 0 to 15, so it's 0. The file counts channels from 0.") }
+        if ($null -ne $row.midi2 -and $row.midi2 -isnot [bool]) { $problems.Add("$in has a midi2 that isn't true or false, so it's false.") }
         if ($row.format -ceq 'midiType' -and $root -eq '') { $problems.Add("$in uses the MIDI type with no address, so Windows MIDI Patchbay uses /midi.") }
         $rules = @(Get-List $row.rules)
         if ($row.format -cne 'custom') {
@@ -1272,6 +1273,7 @@ Each row:
 | `noteOff` | `velocityZero`, `ownAddress` | `velocityZero` | A note off is a note with velocity 0, or an address of its own. |
 | `sendSysEx` | `true`, `false` | `true` | Sends SysEx. |
 | `sendClock` | `true`, `false` | `false` | Sends timing clock and active sensing. |
+| `midi2` | `true`, `false` | `false` | What arrives goes into the patch as MIDI 2.0. A float from 0 to 1, on a row whose `values` is `zeroToOne` or in a rule, sets a controller with 32 bits and a velocity with 16. Whole numbers are scaled up the MIDI 2.0 way. Only for what takes MIDI 2.0. |
 | `channel` | 0 to 15 | 0 | The channel for messages that arrive with none, counted from 0. |
 
 The formats:

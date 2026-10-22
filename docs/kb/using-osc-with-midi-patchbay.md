@@ -57,6 +57,8 @@ The quickest way, with nothing to change in TouchOSC:
 
 The TouchOSC preset is a row of rules: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons `/1/push1` and up play notes from middle C, all on channel 1. The rules work both ways, so a controller the patch sends moves the fader on your phone.
 
+For finer control than MIDI 1.0's 128 steps, select the OSC connection and check **Make MIDI 2.0 messages** on the row. A fader then sets its controller with 32-bit precision. Turn it on only when the synth or app it connects to takes MIDI 2.0.
+
 For other controls, select the OSC connection and move them. **Recently heard** lists what arrives, and **Add a rule for this** adds a rule for each control, or for a whole set of them, like every fader on page 2. To change what a rule does, select the OSC connection and find the rule under **Rows**.
 
 ### Or set up each control yourself
