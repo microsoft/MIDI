@@ -250,6 +250,45 @@ You can also give each piece of gear a connection of its own, instead of a chann
 
 </details>
 
+<details id="connect-touchosc" markdown="1">
+<summary>Connect TouchOSC on a phone or tablet</summary>
+
+Add an **OSC connection** in [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connections), and choose the **TouchOSC** preset. Its faders, toggles, and push buttons then play controllers and notes as they come, with nothing to change in TouchOSC. To find each other without typing addresses, select **Find on the network** in Windows MIDI Patchbay, and pick this PC from the list on TouchOSC's OSC settings screen. Other devices can only reach the OSC connection once you select **Allow through Windows Firewall** in the bar at the top of the patch window.
+
+For other controls, **Add a rule for this** in **Recently heard** maps each one. Or give each control an address and a value range of its own in the free TouchOSC Editor. We checked all of this with TouchOSC Mk1, the older version, on an iPhone, but not yet with the current TouchOSC. See [Connect TouchOSC on a phone or tablet]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#connect-touchosc-on-a-phone-or-tablet).
+
+</details>
+
+<details id="control-reaper-with-osc" markdown="1">
+<summary>Control REAPER with MIDI over OSC</summary>
+
+REAPER can take MIDI over OSC into its virtual keyboard, which any track can record from. In REAPER, open **Options**, then **Preferences**, then **Control/OSC/web**, and add an **OSC (Open Sound Control)** surface with **Mode** set to **Local port [receive only]** on port `8000`. Set a track's input to **MIDI**, then **Virtual MIDI Keyboard**.
+
+In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connections), add an **OSC connection** with the **REAPER virtual keyboard** preset, and connect your keyboard to it. REAPER counts channels from 0 and reads pitch bend as 0 to 16383, which is what the preset sends. REAPER doesn't send its virtual keyboard back over OSC. See [Play REAPER from a keyboard]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#play-reaper-from-a-keyboard).
+
+</details>
+
+<details id="connect-an-osc-midi-type-app" markdown="1">
+<summary>Connect TouchDesigner or another app that uses OSC's MIDI type</summary>
+
+OSC has a type of its own for MIDI messages, which TouchDesigner's documentation says its **OSC In DAT** reads. In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connections), add an **OSC connection** with the **MIDI type tag** preset. Each MIDI message then goes to `/midi` as one MIDI-type message. We haven't checked it with TouchDesigner. See [Connect an app that uses OSC's MIDI type]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#connect-an-app-that-uses-oscs-midi-type).
+
+</details>
+
+<details id="connect-open-stage-control" markdown="1">
+<summary>Connect Open Stage Control</summary>
+
+In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connections), add an **OSC connection** with the **Open Stage Control** preset. It reads and writes the message names in Open Stage Control's MIDI documentation, like `/note` and `/control`, with the channel first. We haven't checked it with Open Stage Control. See [Connect Open Stage Control]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#connect-open-stage-control).
+
+</details>
+
+<details id="use-an-osc-app-in-my-daw" markdown="1">
+<summary>Use an OSC app in my DAW, without a loopback</summary>
+
+In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#opening-it-from-other-apps), select the OSC connection and check **Show to other apps as a MIDI device**. While its patch routes, your DAW can open it by its name, like any MIDI device. What the OSC app sends goes to the DAW, and what the DAW sends goes back to the OSC app. We checked it with the MIDI Console, but not yet with a DAW. See [Open it from your DAW]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#open-it-from-your-daw).
+
+</details>
+
 <details id="keep-ports-while-a-device-is-off" markdown="1">
 <summary>Keep a device in my DAW while it's switched off</summary>
 
