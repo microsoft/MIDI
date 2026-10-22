@@ -28,6 +28,7 @@ public:
     TEST_METHOD(LinesAreSmoothAndMeetTheirPointsLevel);
     TEST_METHOD(LinesSharingAWayAreSpreadApart);
     TEST_METHOD(LabelsSitOnTheirLinesClearOfEachOther);
+    TEST_METHOD(ALabelWithNoRoomBetweenNodesMovesOffThem);
     TEST_METHOD(TheSameLayoutGivesTheSameLines);
     TEST_METHOD(ABigPatchIsQuick);
     TEST_METHOD(NonsenseDoesNotStopIt);
