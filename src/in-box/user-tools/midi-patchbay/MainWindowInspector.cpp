@@ -141,6 +141,10 @@ namespace winrt::midipatchbay::implementation
             m_ciStatusText = nullptr;
             m_logicStatusText = nullptr;
             m_controllerStatusText = nullptr;
+            m_oscInspectedId.clear();
+            m_oscStatusText = nullptr;
+            m_oscCountsText = nullptr;
+            m_oscHeardPanel = nullptr;
             StopControllerLearn();
             m_annotationTextBox = nullptr;
             m_inspectorSummary = nullptr;
@@ -176,7 +180,16 @@ namespace winrt::midipatchbay::implementation
                 if (auto const* endpoint = patch->FindEndpoint(m_canvas.SelectedNodeId()))
                 {
                     InspectorTitle().Text(winrt::hstring{ endpoint->DisplayName });
-                    BuildEndpointInspector(*endpoint);
+
+                    if (endpoint->IsOsc())
+                    {
+                        BuildOscInspector(*endpoint);
+                    }
+                    else
+                    {
+                        BuildEndpointInspector(*endpoint);
+                    }
+
                     return;
                 }
             }
@@ -341,6 +354,9 @@ namespace winrt::midipatchbay::implementation
 
     void MainWindow::UpdateInspectorActivity() noexcept
     {
+        // An OSC connection's status changes on its own too, whether or not it has an activity line.
+        UpdateOscStatus();
+
         try
         {
             if (m_activityText == nullptr || m_activityElementId.empty())

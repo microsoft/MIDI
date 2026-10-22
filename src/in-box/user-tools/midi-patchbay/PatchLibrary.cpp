@@ -658,7 +658,7 @@ namespace midipatchbay
             }
 
             return std::any_of(patch->Endpoints.begin(), patch->Endpoints.end(),
-                [](PatchEndpoint const& e) { return !ResolveEndpoint(e).has_value(); });
+                [](PatchEndpoint const& e) { return IsEndpointMissing(e); });
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to check a patch's endpoints.")
 

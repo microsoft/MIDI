@@ -429,6 +429,45 @@ Because Windows MIDI Patchbay works inside its own process, it can only route *f
 >
 > This works best for a device the app only listens to. A basic loopback sends whatever it's given straight back out, so anything the app sends to that name comes back to the app instead of reaching the device.
 
+## OSC connections
+
+Open Sound Control (OSC) is a way for music apps and devices to send each other messages over a network. Apps like REAPER, TouchOSC, TouchDesigner, and Open Stage Control use it. An **OSC connection** lets a patch send and receive MIDI as OSC messages, so an app on a phone, a tablet, another computer, or this PC can play your synths, and your keyboards can play it.
+
+To add one, open the **Endpoints** tab of a patch window and drag **OSC connection** onto the canvas, or click it. Pick a format, the port to listen on, and where to send. **Play a test note** sends middle C, so you can check the other app hears it before you finish. An OSC connection sits on the canvas like a device, with an **In** and an **Out**, and you connect to it the same way.
+
+**Rows are like groups.** Each row of an OSC connection is an OSC address, like `/midi` or `/vkb_midi`, and acts like a MIDI group. Messages that arrive under that address come into the patch on that row's group, and messages connected into the row go out under its address. A connection can have up to 16 rows. **Add a row** in the details panel, or right-click the connection and choose **Add a row**.
+
+**Formats.** There's no single standard for MIDI in OSC, so each row picks one of three ways to write it. Presets set everything for the apps they're named after.
+
+| Preset | What the messages look like | Use it with |
+| --- | --- | --- |
+| **REAPER virtual keyboard** | `/vkb_midi/0/note/60` with the velocity | REAPER, to play its virtual keyboard input |
+| **Paths** | `/midi/1/note/60` with the velocity | Most apps you set up yourself, such as TouchOSC |
+| **MIDI type tag** | `/midi` with one argument of OSC's own MIDI type | TouchDesigner and other apps that read OSC's MIDI type |
+| **Open Stage Control** | `/note` with the channel, note, and velocity | Open Stage Control |
+| **OSC_MIDI_OSC** | `/noteOn` with the note and velocity, and no channel | OSC_MIDI_OSC |
+
+The **Paths** format covers every MIDI 1.0 message: `note`, `noteoff`, `polyaftertouch`, `cc`, `program`, `channelpressure`, and `pitch` under each channel, and `sysex`, `clock`, `start`, `continue`, `stop`, `songposition`, `songselect`, `tunerequest`, `timecode`, `activesensing`, and `reset` under the row's address. Each row also says whether channels count from 1 or from 0, whether numbers go out as whole numbers, decimal numbers, or 0 to 1, how pitch bend is written, and how a note off is sent. Numbers that arrive are read however they come: whole numbers, decimals, and on and off (true and false) all work.
+
+**MIDI 2.0.** MIDI 2.0 messages go out as their MIDI 1.0 versions, the way the MIDI specification says to translate them. A few MIDI 2.0 messages, such as per-note controllers, have no MIDI 1.0 version, so they aren't sent. The details panel counts them.
+
+**Recently heard.** Select an OSC connection to see the last 50 messages that arrived, newest first, and whether a row took each one. If you don't know what an app sends, this shows you. When an address looks like one of the formats, **Add a row for this** adds a row that takes it.
+
+**Who can send to it.** OSC has no passwords, so anyone who can reach this PC can send to the port. By default, an OSC connection only takes messages from the computer it sends to. **Take messages from** can change that to anyone, or to a list of addresses. **Listen for** can keep it to apps on this PC only.
+
+**Timing.** Messages play when they arrive. OSC can also say when a message should play, and an OSC connection can follow that instead, if both computers' clocks are set to the same time, or keep the spacing between messages the sender gave them, which takes out the network's uneven timing. Messages a patch sends ahead of time, like those from the clock and LFO steps, are held until their time and then sent.
+
+**Windows Firewall.** Windows Firewall keeps other devices out until it lets Windows MIDI Patchbay in. Until then, an OSC connection set to listen on every network only hears apps on this PC, so Windows never has to ask about it. When that's holding a routing patch back, a bar at the top of the patch window says so, with the same choices as the Firewall page in [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/). **Allow through Windows Firewall** asks for administrator permission and adds one rule for Windows MIDI Patchbay. Sending works either way.
+
+Things OSC connections can't do yet:
+
+- **UDP only.** OSC over TCP isn't supported.
+- **MIDI only.** OSC messages that aren't MIDI, like a fader at `/1/fader3`, aren't turned into MIDI yet.
+- **No looking up apps on the network.** Type the address and port the other app shows.
+- **Not seen by other apps.** Other apps can't open an OSC connection as a MIDI device. Connect it to a [loopback](#loopbacks) to reach one.
+
+For step-by-step setup with REAPER and TouchOSC, see [Using OSC with Windows MIDI Patchbay]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/).
+
 ## When a device isn't there
 
 Gear gets unplugged. That's a normal state, not an error.

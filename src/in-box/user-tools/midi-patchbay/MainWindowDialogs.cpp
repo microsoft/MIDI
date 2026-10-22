@@ -1078,19 +1078,38 @@ namespace winrt::midipatchbay::implementation
 
                 auto const endpointId = endpoint->Id;
 
-                addItem(endpoint->ShowAllGroups
-                    ? resources::GetString(L"ActionShowDeclaredGroups")
-                    : resources::GetString(L"ActionShowAllGroups"),
-                    [endpointId](MainWindow& window)
-                    {
-                        auto* current = window.CurrentPatch();
-
-                        if (auto* target = current == nullptr ? nullptr : current->FindEndpoint(endpointId))
+                if (endpoint->IsOsc())
+                {
+                    // An OSC connection's groups are its rows, so it has no others to show.
+                    addItem(resources::GetString(L"OscAddRow"), [endpointId](MainWindow& window)
                         {
-                            target->ShowAllGroups = !target->ShowAllGroups;
-                            window.CommitChange(false);
-                        }
-                    });
+                            window.ChangeOscRows(endpointId, [](patchbay::PatchDocument&, patchbay::PatchEndpoint& target)
+                                {
+                                    if (auto const group = patchbay::FreeOscGroup(*target.Osc))
+                                    {
+                                        auto row = patchbay::OscRowFromPreset(patchbay::OscPreset::Paths, *group);
+                                        row.Root = "/midi" + std::to_string(*group + 1);
+                                        target.Osc->Rows.push_back(row);
+                                    }
+                                });
+                        });
+                }
+                else
+                {
+                    addItem(endpoint->ShowAllGroups
+                        ? resources::GetString(L"ActionShowDeclaredGroups")
+                        : resources::GetString(L"ActionShowAllGroups"),
+                        [endpointId](MainWindow& window)
+                        {
+                            auto* current = window.CurrentPatch();
+
+                            if (auto* target = current == nullptr ? nullptr : current->FindEndpoint(endpointId))
+                            {
+                                target->ShowAllGroups = !target->ShowAllGroups;
+                                window.CommitChange(false);
+                            }
+                        });
+                }
 
                 addSeparator();
                 addEditItems();

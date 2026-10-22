@@ -12,6 +12,7 @@
 // are unit tested exactly as they ship.
 
 #include "ProcessingBlock.h"
+#include "OscConnection.h"
 #include "EndpointMatch.h"
 #include "ContentProvenance.h"
 
@@ -32,18 +33,28 @@ namespace midipatchbay
     // each message keeps the group it already has.
     constexpr int32_t AllGroups = -1;
 
-    // The patch file version this app writes. Version 1 files are converted when they are read.
+    // The patch file version this app writes for a patch with no OSC connection in it. A version 1
+    // file is converted when it is read.
     constexpr int32_t CurrentPatchFileVersion = 2;
+
+    // The version written for a patch with an OSC connection in it, so a version of the app that
+    // doesn't know OSC connections never saves the patch without them.
+    constexpr int32_t OscPatchFileVersion = 3;
+
+    // The newest version this app reads. Anything newer is never saved.
+    constexpr int32_t NewestPatchFileVersion = OscPatchFileVersion;
 
     // Untrusted input guards. These files live in the customer's Documents folder, which other
     // software can write to, so everything read back is bounded before it reaches the UI.
     constexpr size_t MaximumPatchFileBytes = 4 * 1024 * 1024;
     constexpr size_t MaximumEndpointsPerPatch = 64;
+    constexpr size_t MaximumOscConnectionsPerPatch = 16;
     constexpr size_t MaximumBlocksPerPatch = 1024;
     constexpr size_t MaximumConnectionsPerPatch = 2048;
     constexpr size_t MaximumPatchCount = 256;
 
-    // An endpoint placed on the canvas.
+    // An endpoint placed on the canvas, or an OSC connection, which sits on the canvas the same
+    // way and whose rows are its groups.
     struct PatchEndpoint
     {
         std::wstring Id{};                  // stable within the patch, referenced by connections
@@ -57,6 +68,11 @@ namespace midipatchbay
 
         // Devices that declare nothing get one group; this opts a node into showing all sixteen.
         bool ShowAllGroups{ false };
+
+        // Set for an OSC connection, which has no device behind it. DisplayName is its name.
+        std::optional<OscConnectionSettings> Osc{};
+
+        bool IsOsc() const noexcept { return Osc.has_value(); }
     };
 
     // One processing step on the canvas.
@@ -171,6 +187,9 @@ namespace midipatchbay
         // The steps messages go through. Annotations are text on the canvas, not steps.
         size_t StepCount() const noexcept;
 
+        bool HasOscConnections() const noexcept;
+        size_t OscConnectionCount() const noexcept;
+
         // True when the same source point is already wired to the same destination point.
         bool HasConnection(
             _In_ std::wstring const& sourceId,
@@ -196,4 +215,10 @@ namespace midipatchbay
 
     // Whether a link from this block leaves by a way it has.
     bool IsWayOf(_In_ PatchBlock const& block, _In_ int32_t way) noexcept;
+
+    // What the routing engine calls an OSC connection in place of an endpoint device id. Made from
+    // the patch's key and the node's id, so each running copy of a patch has its own.
+    constexpr std::wstring_view OscDeviceIdPrefix{ L"osc:" };
+    std::wstring OscDeviceId(_In_ std::wstring const& patchKey, _In_ std::wstring const& nodeId);
+    bool IsOscDeviceId(_In_ std::wstring_view deviceId) noexcept;
 }

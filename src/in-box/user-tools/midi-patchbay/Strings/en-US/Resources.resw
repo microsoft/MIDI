@@ -4855,4 +4855,560 @@
   <data name="ConverterNoteEndsHint" xml:space="preserve">
     <value>A program change, or a value that moves, is never let go, so each note it plays ends right away.</value>
   </data>
+  <data name="OscFirewallRuleName" xml:space="preserve">
+    <value>Windows MIDI Patchbay (OSC connections)</value>
+    <comment>The name of the rule Windows MIDI Patchbay adds, as Windows Firewall shows it. The app also finds its rule again by this name, so a changed translation leaves the old rule behind.</comment>
+  </data>
+  <data name="OscFirewallRuleDescription" xml:space="preserve">
+    <value>Lets apps and devices on your network send OSC messages to Windows MIDI Patchbay&apos;s OSC connections. Added by Windows MIDI Patchbay.</value>
+    <comment>The description of the rule Windows MIDI Patchbay adds, as Windows Firewall shows it.</comment>
+  </data>
+  <data name="OscPresetReaper" xml:space="preserve">
+    <value>REAPER virtual keyboard</value>
+    <comment>An OSC connection preset. REAPER is a product name; keep it as it is.</comment>
+  </data>
+  <data name="OscPresetPaths" xml:space="preserve">
+    <value>Paths</value>
+    <comment>An OSC connection preset: MIDI messages as addresses like /midi/1/note/60.</comment>
+  </data>
+  <data name="OscPresetMidiType" xml:space="preserve">
+    <value>MIDI type tag</value>
+    <comment>An OSC connection preset: MIDI messages in OSC&apos;s own MIDI argument type, m.</comment>
+  </data>
+  <data name="OscPresetOpenStageControl" xml:space="preserve">
+    <value>Open Stage Control</value>
+    <comment>An OSC connection preset named after the app it matches. A product name; keep it as it is.</comment>
+  </data>
+  <data name="OscPresetOscMidiOsc" xml:space="preserve">
+    <value>OSC_MIDI_OSC</value>
+    <comment>An OSC connection preset named after the project it matches. A project name; keep it as it is.</comment>
+  </data>
+  <data name="OscFormatPaths" xml:space="preserve">
+    <value>Paths</value>
+    <comment>How MIDI goes under an OSC address: the address says which note or controller, the argument says how much.</comment>
+  </data>
+  <data name="OscFormatMidiType" xml:space="preserve">
+    <value>MIDI type tag</value>
+    <comment>How MIDI goes under an OSC address: one argument of OSC&apos;s MIDI type.</comment>
+  </data>
+  <data name="OscFormatArguments" xml:space="preserve">
+    <value>Values in arguments</value>
+    <comment>How MIDI goes under an OSC address: a fixed name for each kind of message, with every number as an argument.</comment>
+  </data>
+  <data name="OscRowFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>A row of an OSC connection on the canvas. {0} is its OSC address, like /vkb_midi. {1} is its preset or format.</comment>
+  </data>
+  <data name="OscRowMidiTypeFormat" xml:space="preserve">
+    <value>{0} (MIDI type, port {1})</value>
+    <comment>A row of an OSC connection that uses OSC&apos;s MIDI type. {0} is its OSC address. {1} is the port number OSC messages carry, 0 to 15.</comment>
+  </data>
+  <data name="OscLastSenderPortFormat" xml:space="preserve">
+    <value>whoever sent last, port {0}</value>
+    <comment>Where an OSC connection sends when set to answer whoever sent to it last. {0} is a port number.</comment>
+  </data>
+  <data name="OscSubtitleBothFormat" xml:space="preserve">
+    <value>OSC · listens on {0} · sends to {1}</value>
+    <comment>Under an OSC connection&apos;s name on the canvas. {0} is a port number. {1} is an address and port, like 192.168.1.20:9000.</comment>
+  </data>
+  <data name="OscSubtitleReceiveFormat" xml:space="preserve">
+    <value>OSC · listens on {0}</value>
+    <comment>Under an OSC connection&apos;s name on the canvas. {0} is a port number.</comment>
+  </data>
+  <data name="OscSubtitleSendFormat" xml:space="preserve">
+    <value>OSC · sends to {0}</value>
+    <comment>Under an OSC connection&apos;s name on the canvas. {0} is an address and port, like 192.168.1.20:9000.</comment>
+  </data>
+  <data name="OscSubtitleNeither" xml:space="preserve">
+    <value>OSC · not set up yet</value>
+    <comment>Under an OSC connection&apos;s name on the canvas, when it has no port to listen on and nowhere to send.</comment>
+  </data>
+  <data name="OscListeningOff" xml:space="preserve">
+    <value>Not listening. Set a port to receive messages.</value>
+  </data>
+  <data name="OscListeningNotRoutingFormat" xml:space="preserve">
+    <value>Listens on port {0} while this patch routes.</value>
+  </data>
+  <data name="OscListeningEveryNetworkFormat" xml:space="preserve">
+    <value>Listening on port {0}, on every network.</value>
+  </data>
+  <data name="OscListeningThisPcFormat" xml:space="preserve">
+    <value>Listening on port {0}, for apps on this PC only.</value>
+  </data>
+  <data name="OscListeningHeldFormat" xml:space="preserve">
+    <value>Listening on port {0}, but only for apps on this PC until Windows Firewall lets Windows MIDI Patchbay in.</value>
+  </data>
+  <data name="OscPortInUseFormat" xml:space="preserve">
+    <value>Port {0} is in use by another app. Pick another port, or close the other app.</value>
+  </data>
+  <data name="OscPortInUseByFormat" xml:space="preserve">
+    <value>Port {0} is in use by {1}. Pick another port, or close that app.</value>
+    <comment>{1} is a program&apos;s file name, like reaper.exe.</comment>
+  </data>
+  <data name="OscListeningFailedFormat" xml:space="preserve">
+    <value>Couldn&apos;t listen on port {0}.</value>
+  </data>
+  <data name="OscNothingHeardYet" xml:space="preserve">
+    <value>Nothing heard yet.</value>
+  </data>
+  <data name="OscLastHeardJustNowFormat" xml:space="preserve">
+    <value>Last heard from {0} just now.</value>
+    <comment>{0} is a network address, like 192.168.1.33.</comment>
+  </data>
+  <data name="OscLastHeardSecondsFormat" xml:space="preserve">
+    <value>Last heard from {0}, {1} seconds ago.</value>
+    <comment>{0} is a network address. {1} is a number of seconds, 2 or more.</comment>
+  </data>
+  <data name="OscLastHeardMinutesFormat" xml:space="preserve">
+    <value>Last heard from {0}, {1} minutes ago.</value>
+    <comment>{0} is a network address. {1} is a number of minutes, 2 or more.</comment>
+  </data>
+  <data name="OscDefaultName" xml:space="preserve">
+    <value>OSC connection</value>
+    <comment>The name a new OSC connection gets until the customer names it.</comment>
+  </data>
+  <data name="OscConnectionLimit" xml:space="preserve">
+    <value>A patch can have up to 16 OSC connections.</value>
+  </data>
+  <data name="OscAddTitle" xml:space="preserve">
+    <value>Add an OSC connection</value>
+  </data>
+  <data name="OscAddButton" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="OscCancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="OscAddIntro" xml:space="preserve">
+    <value>An OSC connection sends and receives MIDI as Open Sound Control (OSC) messages. Use it with an app or device on this PC or on your network, like REAPER or TouchOSC.</value>
+  </data>
+  <data name="OscNameHeader" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="OscPresetHeader" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="OscPresetCustom" xml:space="preserve">
+    <value>Custom settings</value>
+    <comment>Shown in place of a preset when a row&apos;s settings don&apos;t match any preset.</comment>
+  </data>
+  <data name="OscPresetReaperHint" xml:space="preserve">
+    <value>Plays REAPER&apos;s virtual keyboard: /vkb_midi/0/note/60 with the velocity. Turn on an OSC control surface in REAPER&apos;s preferences, under Control/OSC/web.</value>
+    <comment>Keep /vkb_midi/0/note/60 and Control/OSC/web as they are.</comment>
+  </data>
+  <data name="OscPresetPathsHint" xml:space="preserve">
+    <value>The address says which channel and note or controller, and the number says how much: /midi/1/note/60 with the velocity. The same names REAPER uses.</value>
+    <comment>Keep /midi/1/note/60 as it is.</comment>
+  </data>
+  <data name="OscPresetMidiTypeHint" xml:space="preserve">
+    <value>Each MIDI message is one argument of OSC&apos;s own MIDI type, at /midi. TouchDesigner reads and sends it. It can&apos;t carry SysEx, so SysEx goes to /midi/sysex.</value>
+    <comment>Keep /midi and /midi/sysex as they are.</comment>
+  </data>
+  <data name="OscPresetOpenStageControlHint" xml:space="preserve">
+    <value>The names Open Stage Control uses: /note, /control, /pitch and the rest, with the channel first.</value>
+    <comment>Keep /note, /control and /pitch as they are.</comment>
+  </data>
+  <data name="OscPresetOscMidiOscHint" xml:space="preserve">
+    <value>The names OSC_MIDI_OSC uses: /noteOn, /cc, /Pitchbend and the rest. They carry no channel, so messages come in on the channel you choose.</value>
+    <comment>Keep /noteOn, /cc and /Pitchbend as they are.</comment>
+  </data>
+  <data name="OscReceiveHeading" xml:space="preserve">
+    <value>Receiving</value>
+  </data>
+  <data name="OscReceivePortHeader" xml:space="preserve">
+    <value>Listen on port</value>
+  </data>
+  <data name="OscReceivePortHint" xml:space="preserve">
+    <value>The port the other app sends to. Set it to 0 to only send. Many apps send to 8000 unless you change it.</value>
+  </data>
+  <data name="OscListenOnHeader" xml:space="preserve">
+    <value>Listen for</value>
+  </data>
+  <data name="OscListenEveryNetwork" xml:space="preserve">
+    <value>Apps and devices on every network</value>
+  </data>
+  <data name="OscListenThisPc" xml:space="preserve">
+    <value>Apps on this PC only</value>
+  </data>
+  <data name="OscAcceptHeader" xml:space="preserve">
+    <value>Take messages from</value>
+  </data>
+  <data name="OscAcceptAnyone" xml:space="preserve">
+    <value>Anyone</value>
+  </data>
+  <data name="OscAcceptSendHost" xml:space="preserve">
+    <value>Only the computer I send to</value>
+  </data>
+  <data name="OscAcceptList" xml:space="preserve">
+    <value>Only these addresses</value>
+  </data>
+  <data name="OscAcceptAnyoneHint" xml:space="preserve">
+    <value>OSC has no passwords, so anyone who can reach this PC can send to the port.</value>
+  </data>
+  <data name="OscAcceptSendHostHint" xml:space="preserve">
+    <value>Messages from anywhere else are kept out. With nowhere to send to, messages are taken from anyone.</value>
+  </data>
+  <data name="OscAcceptListHint" xml:space="preserve">
+    <value>Messages from anywhere else are kept out.</value>
+  </data>
+  <data name="OscAcceptListHeader" xml:space="preserve">
+    <value>Addresses</value>
+  </data>
+  <data name="OscAcceptListPlaceholder" xml:space="preserve">
+    <value>192.168.1.20, my-ipad.local</value>
+  </data>
+  <data name="OscRateLimitHeader" xml:space="preserve">
+    <value>Most messages a second</value>
+  </data>
+  <data name="OscSendHeading" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="OscSendHostHeader" xml:space="preserve">
+    <value>Send to</value>
+  </data>
+  <data name="OscSendHostPlaceholder" xml:space="preserve">
+    <value>127.0.0.1, 192.168.1.20 or my-ipad.local</value>
+    <comment>Keep the addresses as they are.</comment>
+  </data>
+  <data name="OscSendHostHint" xml:space="preserve">
+    <value>The computer the other app runs on: 127.0.0.1 for this PC, or a name or address on your network. Many apps listen on 9000 unless you change it.</value>
+  </data>
+  <data name="OscSendPortHeader" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="OscSendToLastSender" xml:space="preserve">
+    <value>Send to whoever sent to me last</value>
+  </data>
+  <data name="OscSendToLastSenderHint" xml:space="preserve">
+    <value>For a phone or tablet whose address changes. Messages go to the address that sent last, on the port above.</value>
+  </data>
+  <data name="OscTestButton" xml:space="preserve">
+    <value>Play a test note</value>
+  </data>
+  <data name="OscTestNeedsHost" xml:space="preserve">
+    <value>Set where to send first.</value>
+  </data>
+  <data name="OscTestSending" xml:space="preserve">
+    <value>Playing middle C...</value>
+  </data>
+  <data name="OscTestSent" xml:space="preserve">
+    <value>Sent middle C, on and then off.</value>
+  </data>
+  <data name="OscTestFailed" xml:space="preserve">
+    <value>Couldn&apos;t send. Check the address and the port.</value>
+  </data>
+  <data name="OscRowsHeading" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="OscRowsHint" xml:space="preserve">
+    <value>Each row is an OSC address that acts like a MIDI group. Connect to a row on the canvas the way you connect to a group.</value>
+  </data>
+  <data name="OscRootHeader" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="OscRootPlaceholder" xml:space="preserve">
+    <value>/midi</value>
+  </data>
+  <data name="OscRootInvalid" xml:space="preserve">
+    <value>An address starts with a slash and has no spaces or # * , ? [ ] { } in it, like /midi or /synth/2.</value>
+    <comment>Keep the characters and the examples as they are.</comment>
+  </data>
+  <data name="OscFormatHeader" xml:space="preserve">
+    <value>Messages as</value>
+  </data>
+  <data name="OscFormatPathsHint" xml:space="preserve">
+    <value>The address says which channel and note or controller, and the number says how much.</value>
+  </data>
+  <data name="OscFormatMidiTypeHint" xml:space="preserve">
+    <value>Each MIDI message is one argument of OSC&apos;s MIDI type. Its port is the row&apos;s group, counted from 0.</value>
+  </data>
+  <data name="OscFormatArgumentsHint" xml:space="preserve">
+    <value>A name for each kind of message, with every number as an argument.</value>
+  </data>
+  <data name="OscNamesHeader" xml:space="preserve">
+    <value>Names</value>
+  </data>
+  <data name="OscNamesOpenStageControl" xml:space="preserve">
+    <value>Open Stage Control: /note, /control...</value>
+    <comment>Keep the names as they are.</comment>
+  </data>
+  <data name="OscNamesOscMidiOsc" xml:space="preserve">
+    <value>OSC_MIDI_OSC: /noteOn, /cc...</value>
+    <comment>Keep the names as they are.</comment>
+  </data>
+  <data name="OscChannelsHeader" xml:space="preserve">
+    <value>Channels</value>
+  </data>
+  <data name="OscChannelsFromOne" xml:space="preserve">
+    <value>1 to 16</value>
+  </data>
+  <data name="OscChannelsFromZero" xml:space="preserve">
+    <value>0 to 15</value>
+  </data>
+  <data name="OscValuesHeader" xml:space="preserve">
+    <value>Values sent as</value>
+  </data>
+  <data name="OscValuesIntegers" xml:space="preserve">
+    <value>Whole numbers</value>
+  </data>
+  <data name="OscValuesFloats" xml:space="preserve">
+    <value>Decimal numbers</value>
+  </data>
+  <data name="OscValuesUnit" xml:space="preserve">
+    <value>0 to 1</value>
+  </data>
+  <data name="OscPitchBendHeader" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="OscPitchBendUnsigned" xml:space="preserve">
+    <value>0 to 16383</value>
+  </data>
+  <data name="OscPitchBendSigned" xml:space="preserve">
+    <value>-8192 to 8191</value>
+  </data>
+  <data name="OscNoteOffHeader" xml:space="preserve">
+    <value>Note off</value>
+  </data>
+  <data name="OscNoteOffVelocityZero" xml:space="preserve">
+    <value>Note with velocity 0</value>
+  </data>
+  <data name="OscNoteOffOwnAddress" xml:space="preserve">
+    <value>An address of its own</value>
+  </data>
+  <data name="OscChannelHeader" xml:space="preserve">
+    <value>Channel for messages without one</value>
+  </data>
+  <data name="OscChannelHint" xml:space="preserve">
+    <value>Messages that arrive with no channel in them come in on this channel.</value>
+  </data>
+  <data name="OscSendSysEx" xml:space="preserve">
+    <value>Send SysEx</value>
+  </data>
+  <data name="OscSendClock" xml:space="preserve">
+    <value>Send timing clock and active sensing</value>
+  </data>
+  <data name="OscGroupHeader" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="OscRemoveRow" xml:space="preserve">
+    <value>Remove row</value>
+  </data>
+  <data name="OscAddRow" xml:space="preserve">
+    <value>Add a row</value>
+  </data>
+  <data name="OscTimingHeading" xml:space="preserve">
+    <value>Timing</value>
+  </data>
+  <data name="OscReceivedTimeTagsHeader" xml:space="preserve">
+    <value>Messages that say when to play</value>
+  </data>
+  <data name="OscTimeTagsPlayOnArrival" xml:space="preserve">
+    <value>Play them when they arrive</value>
+  </data>
+  <data name="OscTimeTagsSenderTime" xml:space="preserve">
+    <value>Play them at the time they say</value>
+  </data>
+  <data name="OscTimeTagsKeepSpacing" xml:space="preserve">
+    <value>Keep the spacing the sender gave them</value>
+  </data>
+  <data name="OscTimeTagsPlayOnArrivalHint" xml:space="preserve">
+    <value>Works whatever time the other computer&apos;s clock says. Most apps don&apos;t say when to play anyway.</value>
+  </data>
+  <data name="OscTimeTagsSenderTimeHint" xml:space="preserve">
+    <value>Right only when both computers&apos; clocks are set to the same time, for example by Windows Time. Otherwise messages play early or late.</value>
+  </data>
+  <data name="OscTimeTagsKeepSpacingHint" xml:space="preserve">
+    <value>Takes out the network&apos;s uneven timing without needing the clocks to agree, at the cost of a short delay.</value>
+  </data>
+  <data name="OscSpacingDelayHeader" xml:space="preserve">
+    <value>Extra delay (milliseconds)</value>
+  </data>
+  <data name="OscSendTimingHeader" xml:space="preserve">
+    <value>Messages meant for later</value>
+  </data>
+  <data name="OscSendTimingAtItsTime" xml:space="preserve">
+    <value>Hold each one until its time</value>
+  </data>
+  <data name="OscSendTimingEarly" xml:space="preserve">
+    <value>Send them now, saying when to play</value>
+  </data>
+  <data name="OscSendTimingAtItsTimeHint" xml:space="preserve">
+    <value>MIDI Patchbay&apos;s clock and LFO steps send up to half a second ahead. This holds each message until it&apos;s due, which works with every app.</value>
+  </data>
+  <data name="OscSendTimingEarlyHint" xml:space="preserve">
+    <value>Only for apps that play a message at the time it says, like SuperCollider. Most apps play it as soon as it arrives.</value>
+  </data>
+  <data name="OscBundleTogether" xml:space="preserve">
+    <value>Put messages that play together in one packet</value>
+  </data>
+  <data name="OscBundleTogetherHint" xml:space="preserve">
+    <value>Sends them as one OSC bundle. Not every app reads bundles.</value>
+  </data>
+  <data name="OscActivityHeading" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="OscNotRouting" xml:space="preserve">
+    <value>Start routing this patch to listen and send.</value>
+  </data>
+  <data name="OscCountsFormat" xml:space="preserve">
+    <value>Received {0} OSC messages, which made {1} MIDI messages. Sent {2} MIDI messages in {3} OSC packets.</value>
+  </data>
+  <data name="OscCountUnreadableFormat" xml:space="preserve">
+    <value>Couldn&apos;t read {0}.</value>
+    <comment>{0} is a number of OSC messages.</comment>
+  </data>
+  <data name="OscCountNoRowMatchedFormat" xml:space="preserve">
+    <value>{0} matched no row.</value>
+  </data>
+  <data name="OscCountNotAcceptedFormat" xml:space="preserve">
+    <value>{0} were kept out because of who sent them.</value>
+  </data>
+  <data name="OscCountRateLimitedFormat" xml:space="preserve">
+    <value>{0} were dropped for coming too fast.</value>
+  </data>
+  <data name="OscCountTooManyFormat" xml:space="preserve">
+    <value>{0} had patterns that matched too many addresses, so only the first 128 played.</value>
+  </data>
+  <data name="OscCountTooFarAheadFormat" xml:space="preserve">
+    <value>{0} said to play more than 2 seconds ahead, so they played on arrival.</value>
+  </data>
+  <data name="OscCountNotSendableFormat" xml:space="preserve">
+    <value>{0} MIDI messages have no OSC form, like per-note controllers.</value>
+  </data>
+  <data name="OscCountLeftOutFormat" xml:space="preserve">
+    <value>{0} were left out by row settings, like timing clock.</value>
+  </data>
+  <data name="OscCountNoRowFormat" xml:space="preserve">
+    <value>{0} were on a group with no row.</value>
+  </data>
+  <data name="OscCountDroppedFormat" xml:space="preserve">
+    <value>{0} weren&apos;t sent, because there was nowhere to send them or too many were waiting.</value>
+  </data>
+  <data name="OscCountSendFailuresFormat" xml:space="preserve">
+    <value>{0} sends failed.</value>
+  </data>
+  <data name="OscHostNotFoundFormat" xml:space="preserve">
+    <value>Couldn&apos;t find {0} on the network.</value>
+    <comment>{0} is a computer&apos;s name.</comment>
+  </data>
+  <data name="OscSendingToFormat" xml:space="preserve">
+    <value>Sending to {0}.</value>
+    <comment>{0} is an address and port, like 192.168.1.20:9000.</comment>
+  </data>
+  <data name="OscHeardHeading" xml:space="preserve">
+    <value>Recently heard</value>
+  </data>
+  <data name="OscHeardHint" xml:space="preserve">
+    <value>The last messages that arrived, newest first. If you don&apos;t know what an app sends, this shows you.</value>
+  </data>
+  <data name="OscHeardNothing" xml:space="preserve">
+    <value>Nothing yet.</value>
+  </data>
+  <data name="OscHeardClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="OscHeardMatchedFormat" xml:space="preserve">
+    <value>From {0}. A row took it.</value>
+  </data>
+  <data name="OscHeardNoRowFormat" xml:space="preserve">
+    <value>From {0}. No row takes this address.</value>
+  </data>
+  <data name="OscHeardKeptOutFormat" xml:space="preserve">
+    <value>From {0}. Kept out by &quot;Take messages from&quot;.</value>
+    <comment>Keep the quoted name the same as OscAcceptHeader.</comment>
+  </data>
+  <data name="OscHeardAddRowFormat" xml:space="preserve">
+    <value>Add a row for this: {0}</value>
+    <comment>{0} is a row&apos;s address and format, like /synth2 (Paths).</comment>
+  </data>
+  <data name="OscFirewallTitle" xml:space="preserve">
+    <value>Other devices can&apos;t reach your OSC connections yet</value>
+  </data>
+  <data name="OscFirewallClosedFormat" xml:space="preserve">
+    <value>Windows Firewall is blocking Windows MIDI Patchbay on {0}. Until it&apos;s let in, OSC connections set to listen on every network hear apps on this PC only. Sending still works.</value>
+    <comment>{0} is one or more network names.</comment>
+  </data>
+  <data name="OscFirewallRuleFormat" xml:space="preserve">
+    <value>{0} A rule in Windows Firewall blocks it there: {1}. A rule that blocks wins over one that allows, so turn that rule off or remove it in Windows Firewall first.</value>
+    <comment>{0} is the sentence before. {1} is one or more rule names.</comment>
+  </data>
+  <data name="OscFirewallBlockAllFormat" xml:space="preserve">
+    <value>{0} Windows Firewall is set to block all incoming connections there. That blocks allowed apps too, so turn that setting off in Windows Security first.</value>
+  </data>
+  <data name="OscFirewallManagedFormat" xml:space="preserve">
+    <value>{0} Your organization manages Windows Firewall on this PC, so a change made here might not take effect.</value>
+  </data>
+  <data name="OscFirewallChoose" xml:space="preserve">
+    <value>Let Windows MIDI Patchbay in on:</value>
+  </data>
+  <data name="OscFirewallDomainNetworks" xml:space="preserve">
+    <value>Domain networks, like the one at your workplace or school</value>
+  </data>
+  <data name="OscFirewallPrivateNetworks" xml:space="preserve">
+    <value>Private networks, like the one at home or in your studio</value>
+  </data>
+  <data name="OscFirewallPublicNetworks" xml:space="preserve">
+    <value>Public networks, like the ones at a venue, a hotel, or a coffee shop</value>
+  </data>
+  <data name="OscFirewallConnectedNowFormat" xml:space="preserve">
+    <value>{0} (connected now)</value>
+  </data>
+  <data name="OscFirewallDomainNetworkType" xml:space="preserve">
+    <value>a domain network</value>
+  </data>
+  <data name="OscFirewallPrivateNetworkType" xml:space="preserve">
+    <value>a private network</value>
+  </data>
+  <data name="OscFirewallPublicNetworkType" xml:space="preserve">
+    <value>a public network</value>
+  </data>
+  <data name="OscFirewallPublicHint" xml:space="preserve">
+    <value>Windows treats a network as public until you mark it as private, so your home or studio network might be public. Only allow public networks if you trust the other devices on them.</value>
+  </data>
+  <data name="OscFirewallAllowNote" xml:space="preserve">
+    <value>Windows asks for administrator permission first. This adds one rule for Windows MIDI Patchbay to Windows Firewall, and using it again changes that same rule.</value>
+  </data>
+  <data name="OscFirewallAllowButton" xml:space="preserve">
+    <value>Allow through Windows Firewall</value>
+  </data>
+  <data name="OscFirewallOpenSettings" xml:space="preserve">
+    <value>Open Windows Security</value>
+  </data>
+  <data name="OscFirewallChooseOne" xml:space="preserve">
+    <value>Check at least one kind of network first.</value>
+  </data>
+  <data name="OscFirewallWaiting" xml:space="preserve">
+    <value>Waiting for administrator permission...</value>
+  </data>
+  <data name="OscFirewallAllowed" xml:space="preserve">
+    <value>Windows Firewall now lets Windows MIDI Patchbay in on the networks you chose.</value>
+  </data>
+  <data name="OscFirewallCanceled" xml:space="preserve">
+    <value>Windows Firewall wasn&apos;t changed, because administrator permission wasn&apos;t given.</value>
+  </data>
+  <data name="OscFirewallFailedFormat" xml:space="preserve">
+    <value>Windows Firewall couldn&apos;t be changed (error {0:#010x}).</value>
+  </data>
+  <data name="OscNamePairFormat" xml:space="preserve">
+    <value>{0} and {1}</value>
+  </data>
+  <data name="OscNameSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>Goes between names in a list. Keep the space after the comma.</comment>
+  </data>
+  <data name="OscNameSeriesFormat" xml:space="preserve">
+    <value>{0}, and {1}</value>
+  </data>
+  <data name="PaletteOscHeading" xml:space="preserve">
+    <value>OSC</value>
+  </data>
+  <data name="PaletteOscConnection" xml:space="preserve">
+    <value>OSC connection</value>
+  </data>
+  <data name="PaletteOscConnectionDetail" xml:space="preserve">
+    <value>Send and receive MIDI as OSC messages</value>
+  </data>
+  <data name="TileOscFirewall" xml:space="preserve">
+    <value>OSC blocked by Windows Firewall</value>
+  </data>
 </root>

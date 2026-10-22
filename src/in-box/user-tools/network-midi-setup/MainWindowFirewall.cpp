@@ -319,7 +319,7 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
-            m_firewallServiceFound = !state.ServicePath.empty();
+            m_firewallServiceFound = !state.ProgramPath.empty();
             m_firewallOwnRuleNetworks = state.OwnRuleNetworks;
             m_firewallShowDomain = state.JoinedToDomain || (state.ConnectedNetworks & firewall::DomainNetworks) != 0;
 
@@ -351,9 +351,9 @@ namespace winrt::midinetworksetup::implementation
             FirewallNetworksText().Text(lines);
             FirewallNetworksPanel().Visibility(lines.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
-            FirewallServicePathText().Text(state.ServicePath.empty() ?
+            FirewallServicePathText().Text(state.ProgramPath.empty() ?
                 res::GetString(L"FirewallServicePathUnknown") :
-                winrt::hstring{ state.ServicePath });
+                winrt::hstring{ state.ProgramPath });
 
             auto const privateBoxNetworks = PrivateBoxNetworks(m_firewallShowDomain);
 

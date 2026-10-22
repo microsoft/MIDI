@@ -18,7 +18,7 @@ This article is written for AI agents and online AI chats that plan patches for 
 The rules that matter most:
 
 1. **Ask before you build.** Get the device names, what plays what, and on which channels.
-2. **Write `"fileVersion": 2`.** Without it, Windows MIDI Patchbay reads the file as the older format and leaves out every step and connection.
+2. **Write `"fileVersion": 2`,** or `3` when the patch has [OSC connections](#osc-connections). Without it, Windows MIDI Patchbay reads the file as the older format and leaves out every step and connection.
 3. **Hand the file over to be imported,** and write `"activateAtStartup": false`. The customer turns routing on in Windows MIDI Patchbay after they've looked at it.
 4. **Count channels and groups from 0 in the file.** People, manuals, and Windows MIDI Patchbay's own screens count them from 1.
 5. **Name each device the way Windows shows it, and match it by name.** You can't know a device's ID.
@@ -71,6 +71,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Windows MIDI 
 | Which devices are involved? Get each one's name exactly as Windows shows it, for example in MIDI Settings, or on the **Endpoints** tab of a patch in Windows MIDI Patchbay. | The file finds devices by name. A name that's only close doesn't match. |
 | What should play what? For example, the keyboard plays both synths. | Each pair is a path of connections, with any steps along the way. |
 | Are any of them apps on the same PC, such as a DAW? | Windows MIDI Patchbay reaches an app through a loopback. See [What Windows MIDI Patchbay can't do](#what-patchbay-cant-do). |
+| Does any of it talk OSC, such as REAPER or TouchOSC? Get the address and port it sends to, and the address and port it listens on. | That's an [OSC connection](#osc-connections), with the ports the other way around: what the app sends to, the OSC connection listens on. |
 | Which channels does each device send and listen on? | Most synths listen on one channel. A channel mapper step fixes a mismatch. |
 | Should the keyboard be split? At which note? | A split is a note filter step on each side. Ask for the note by name, such as middle C. |
 | Should anything be transposed, by how much, and on which side of the split? | That's a transpose step. |
@@ -163,7 +164,7 @@ The numbers are explained in [Step settings](#step-settings).
 
 - **JSON, saved as UTF-8.** A byte order mark is allowed, but not needed.
 - **Strict JSON.** No comments, no comma after the last item in a list or an object, and no hexadecimal numbers. JSON has no `0x`.
-- **`"fileVersion": 2`,** every time.
+- **`"fileVersion": 2`,** every time, or `3` when the patch has [OSC connections](#osc-connections).
 - **Names for choices,** spelled exactly as this article shows them, capital letters included.
 - **Ids are text,** unique within the patch across endpoints and steps together. Windows MIDI Patchbay writes GUIDs, but any unique text works, such as `keyboard` or `below-middle-c`.
 - **Lay it out from left to right,** as [Where things go on the canvas](#where-things-go-on-the-canvas) shows. Windows MIDI Patchbay puts everything exactly where the file says.
@@ -484,8 +485,9 @@ $stepKeys = @{
 $generators = @('clockGenerator', 'timeCodeGenerator', 'lfoGenerator', 'controllerButton', 'controllerAxis')
 $noInput = @('clockGenerator', 'timeCodeGenerator', 'annotation', 'controllerButton', 'controllerAxis')
 
-Test-Keys $patch @('_comment', 'fileVersion', 'name', 'description', 'provenance', 'activateAtStartup', 'waitForSendComplete', 'created', 'modified', 'endpoints', 'blocks', 'connections') 'The patch'
-if ($patch.fileVersion -ne 2) { $problems.Add('fileVersion isn''t 2, so Windows MIDI Patchbay reads this as an older patch and leaves out every step and connection.') }
+Test-Keys $patch @('_comment', 'fileVersion', 'name', 'description', 'provenance', 'activateAtStartup', 'waitForSendComplete', 'created', 'modified', 'endpoints', 'oscConnections', 'blocks', 'connections') 'The patch'
+$version = if ((Get-List $patch.oscConnections).Count -gt 0) { 3 } else { 2 }
+if ($patch.fileVersion -ne $version) { $problems.Add($(if ($version -eq 3) { 'fileVersion isn''t 3. A patch with OSC connections is version 3, so an earlier Windows MIDI Patchbay never saves it without them.' } else { 'fileVersion isn''t 2, so Windows MIDI Patchbay reads this as an older patch and leaves out every step and connection.' })) }
 if ($patch.activateAtStartup -ne $false) { $problems.Add('activateAtStartup isn''t false. If this file is put in the patches folder without being imported, it can start routing when Windows MIDI Patchbay starts.') }
 if ($null -ne $patch.waitForSendComplete -and $patch.waitForSendComplete -isnot [bool]) { $problems.Add('waitForSendComplete isn''t true or false, so Windows MIDI Patchbay ignores it.') }
 
@@ -499,6 +501,50 @@ foreach ($e in (Get-List $patch.endpoints)) {
     if (-not $e.displayName) { $problems.Add("The endpoint '$($e.id)' has no displayName.") }
     if ($mode -cnotin @('endpointDeviceId', 'usbVendorAndProduct', 'endpointName')) { $problems.Add("$where has the matchMode '$mode'.") }
     elseif ($mode -ceq 'endpointDeviceId' -and -not $e.match.endpointDeviceId) { $problems.Add("$where matches by device ID but has none, so the customer has to pick the device. Use endpointName.") }
+}
+
+# OSC connections sit on the canvas like endpoints. Each row is a group.
+$oscGroups = @{}   # OSC connection id -> the groups it has rows on
+$oscCount = 0
+foreach ($o in (Get-List $patch.oscConnections)) {
+    $where = "The OSC connection '$($o.name ?? $o.id)'"
+    Test-Keys $o @('id', 'name', 'x', 'y', 'receive', 'send', 'receivedTimeTags', 'spacingDelayMilliseconds', 'sendTiming', 'bundleTogether', 'rows') $where
+    if (-not $o.id) { $problems.Add("$where has no id, so Windows MIDI Patchbay leaves it out."); continue }
+    if (-not $kinds.TryAdd($o.id, 'endpoint')) { $problems.Add("The OSC connection '$($o.id)' has an id that an endpoint or another OSC connection already has, so Windows MIDI Patchbay leaves it out."); continue }
+    if (++$oscCount -gt 16) { $problems.Add("$where is past the 16 OSC connections a patch can have, so Windows MIDI Patchbay leaves it out.") }
+    if (-not $o.name) { $problems.Add("The OSC connection '$($o.id)' has no name.") }
+    $r = $o.receive; $s = $o.send
+    Test-Keys $r @('port', 'listenOn', 'acceptFrom', 'acceptAddresses', 'messagesPerSecond') "The receive settings of the OSC connection '$($o.id)'"
+    Test-Keys $s @('host', 'port', 'toLastSender') "The send settings of the OSC connection '$($o.id)'"
+    if (-not (Test-Range $r.port 0 65535) -or -not (Test-Range $s.port 0 65535)) { $problems.Add("$where has a port outside 0 to 65535, so it's read as 0: not listening, or not sending.") }
+    Test-Choice $r.listenOn @('everyNetwork', 'thisPc') $where 'listenOn'
+    Test-Choice $r.acceptFrom @('anyone', 'sendHost', 'list') $where 'acceptFrom'
+    if (-not (Test-Range $r.messagesPerSecond 10 100000)) { $problems.Add("$where has messagesPerSecond outside 10 to 100000, so it's 5000.") }
+    if ($r.acceptFrom -ceq 'list' -and (Get-List $r.acceptAddresses).Count -eq 0) { $problems.Add("$where takes messages from a list with nothing in it, so it takes them from anyone.") }
+    Test-Choice $o.receivedTimeTags @('playOnArrival', 'useSenderTime', 'keepSenderSpacing') $where 'receivedTimeTags'
+    Test-Choice $o.sendTiming @('atItsTime', 'earlyWithTimeTags') $where 'sendTiming'
+    if (-not (Test-Range $o.spacingDelayMilliseconds 0 500)) { $problems.Add("$where has spacingDelayMilliseconds outside 0 to 500, so it's 10.") }
+    $listens = (Test-Number $r.port) -and $r.port -gt 0 -and $r.port -le 65535
+    $sends = (Test-Number $s.port) -and $s.port -gt 0 -and $s.port -le 65535 -and ($s.host -or $s.toLastSender -eq $true)
+    if (-not $listens -and -not $sends) { $problems.Add("$where neither listens on a port nor has a host and port to send to, so it does nothing.") }
+    $groups = [Collections.Generic.HashSet[int]]::new()
+    foreach ($row in (Get-List $o.rows)) {
+        $in = "A row of the OSC connection '$($o.id)'"
+        Test-Keys $row @('group', 'root', 'format', 'names', 'channelsFromZero', 'values', 'pitchBend', 'noteOff', 'sendSysEx', 'sendClock', 'channel') $in
+        if (-not (Test-Number $row.group) -or $row.group -lt 0 -or $row.group -gt 15 -or $row.group -ne [Math]::Floor($row.group)) { $problems.Add("$in has no group from 0 to 15, so Windows MIDI Patchbay leaves the row out. The file counts groups from 0."); continue }
+        if (-not $groups.Add([int]$row.group)) { $problems.Add("Two rows of the OSC connection '$($o.id)' are on group $($row.group). Windows MIDI Patchbay keeps only the first."); continue }
+        $root = "$($row.root)"
+        if ($root -cnotmatch '^(?:/[\x21-\x2E\x30-\x7E]+)*$' -or $root -match '[#*,?\[\]{}]') { $problems.Add("$in has the address '$root'. An address is empty, or starts with a slash and has no spaces, no slash at the end, and none of # * , ? [ ] { }, so Windows MIDI Patchbay leaves the row out.") }
+        Test-Choice $row.format @('paths', 'midiType', 'arguments') $in 'format'
+        Test-Choice $row.names @('openStageControl', 'oscMidiOsc') $in 'names'
+        Test-Choice $row.values @('integers', 'floats', 'zeroToOne') $in 'values'
+        Test-Choice $row.pitchBend @('zeroTo16383', 'centeredOnZero') $in 'pitchBend'
+        Test-Choice $row.noteOff @('velocityZero', 'ownAddress') $in 'noteOff'
+        if (-not (Test-Range $row.channel 0 15)) { $problems.Add("$in has a channel outside 0 to 15, so it's 0. The file counts channels from 0.") }
+        if ($row.format -ceq 'midiType' -and $root -eq '') { $problems.Add("$in uses the MIDI type with no address, so Windows MIDI Patchbay uses /midi.") }
+    }
+    if ($groups.Count -eq 0) { $problems.Add("$where has no rows, so no MIDI goes in or out of it.") }
+    $oscGroups[$o.id] = $groups
 }
 
 foreach ($b in (Get-List $patch.blocks)) {
@@ -827,6 +873,8 @@ foreach ($c in (Get-List $patch.connections)) {
     if ($kinds[$c.source] -cne 'endpoint' -and $null -ne $c.sourceGroup) { $problems.Add("$where has a sourceGroup, but a step has one Out, so it's ignored.") }
     if ($kinds[$c.destination] -cne 'endpoint' -and $null -ne $c.destinationGroup) { $problems.Add("$where has a destinationGroup, but a step has one In, so it's ignored.") }
     if (-not (Test-Range $c.sourceGroup -1 15) -or -not (Test-Range $c.destinationGroup -1 15)) { $problems.Add("$where has a group outside -1 to 15. The file counts groups from 0, and -1 is all groups.") }
+    if ($oscGroups.ContainsKey($c.source) -and (Test-Number $c.sourceGroup) -and $c.sourceGroup -ge 0 -and -not $oscGroups[$c.source].Contains([int]$c.sourceGroup)) { $problems.Add("$where comes out of group $($c.sourceGroup), where the OSC connection has no row, so nothing comes out of it.") }
+    if ($oscGroups.ContainsKey($c.destination) -and (Test-Number $c.destinationGroup) -and $c.destinationGroup -ge 0 -and -not $oscGroups[$c.destination].Contains([int]$c.destinationGroup)) { $problems.Add("$where goes into group $($c.destinationGroup), where the OSC connection has no row, so nothing it carries is sent.") }
     # The way out of a branch or a switch the connection leaves by.
     $way = $null
     if ($kinds[$c.source] -ceq 'branch') {
@@ -1011,6 +1059,7 @@ Tell the customer about these before they find out on their own.
 - **It only sees its own connections.** A cable between two devices, or another routing app, can close a loop Windows MIDI Patchbay can't see.
 - **An annotation's text doesn't wrap.** Each `\n` in `text` starts a new line, and a long line stays one line, so break it yourself. Nothing can connect to an annotation.
 - **Game controller steps read up to four Xbox controllers, and other controllers by name.** Windows numbers Xbox controllers 1 to 4 in the order they were plugged in, so plugged in again in a different order, a step can follow a different one. Any other controller is found by its name and USB port, so two of the same can swap if they're moved to other ports. Extra buttons on an Xbox controller, such as the paddles on an Elite controller, aren't seen unless the Xbox Accessories app maps them to a standard button. Nothing uses force feedback, rumble, or lights.
+- **OSC connections carry MIDI, over UDP.** OSC messages that aren't MIDI, such as a TouchOSC fader at `/1/fader3`, aren't turned into MIDI, and OSC over TCP isn't supported. Other apps can't open an OSC connection as a MIDI device. Until Windows Firewall lets Windows MIDI Patchbay in, an OSC connection hears apps on this PC only, and the patch window offers to fix that.
 
 ## The patch file
 
@@ -1110,6 +1159,71 @@ Every key, and what to put in it, is in [Who made it]({{ site.baseurl }}/kb/midi
 ```
 
 Windows MIDI Patchbay compares the name in `match` with each device's own name and with the name Windows shows for it, which the customer may have changed in MIDI Settings. Capital letters don't matter, but everything else must be the same. If `match` has no name, it compares `displayName` instead. Two identical devices have the same name, so name matching can't tell them apart. When the app saves a device the customer added, `match` also holds the device's ID and USB details.
+
+### OSC connections
+
+An OSC connection sends and receives MIDI as Open Sound Control (OSC) messages over the network, to and from an app like REAPER or TouchOSC. It goes in its own top-level array, `oscConnections`, next to `endpoints`. A patch with one is `"fileVersion": 3`. On the canvas it's like an endpoint: connections name it by `id`, and each of its rows is a group, so `sourceGroup` and `destinationGroup` name a row by its `group`. Up to 16 in a patch.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `id` | text | required | Unique in the patch, among endpoints, OSC connections, and steps together. |
+| `name` | text | empty | The name on the canvas. |
+| `x`, `y` | numbers | 0 | Where its top left corner sits on the canvas. |
+| `receive.port` | 0 to 65535 | 0 | The port it listens on. 0 doesn't listen. Many apps send to 8000. |
+| `receive.listenOn` | `everyNetwork`, `thisPc` | `everyNetwork` | `thisPc` hears apps on this PC only. |
+| `receive.acceptFrom` | `anyone`, `sendHost`, `list` | `sendHost` | Who it takes messages from. `sendHost` is the computer it sends to, or anyone when it doesn't send. |
+| `receive.acceptAddresses` | list of names or addresses | empty | For `list`. Up to 16. |
+| `receive.messagesPerSecond` | 10 to 100000 | 5000 | Messages a second beyond which the rest are dropped. |
+| `send.host` | text | empty | A name or an IP address. `127.0.0.1` is this PC. Empty doesn't send. |
+| `send.port` | 0 to 65535 | 0 | The port the other app listens on. Many apps listen on 9000. |
+| `send.toLastSender` | `true`, `false` | `false` | Sends to whoever sent to it last, on `send.port`. For a phone or tablet whose address changes. |
+| `receivedTimeTags` | `playOnArrival`, `useSenderTime`, `keepSenderSpacing` | `playOnArrival` | What to do when a message says when it should play. |
+| `spacingDelayMilliseconds` | 0 to 500 | 10 | For `keepSenderSpacing`: how long to wait, so uneven network timing can be taken out. |
+| `sendTiming` | `atItsTime`, `earlyWithTimeTags` | `atItsTime` | Messages meant for later are held until their time, or sent at once saying when to play. |
+| `bundleTogether` | `true`, `false` | `false` | Messages that play at the same moment go in one OSC bundle. |
+| `rows` | list of rows | empty | Its address spaces, one per group. With no rows, no MIDI goes in or out. |
+
+Each row:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `group` | 0 to 15 | required | The group its messages come in on and go out from. Each row has its own. |
+| `root` | text | empty | The OSC address its messages go under, like `/midi` or `/vkb_midi`. Empty is the top level. Starts with a slash, with no spaces, no slash at the end, and none of `# * , ? [ ] { }`. |
+| `format` | `paths`, `midiType`, `arguments` | `paths` | How MIDI is written. See below. |
+| `names` | `openStageControl`, `oscMidiOsc` | `openStageControl` | For `arguments`: whose names to use. |
+| `channelsFromZero` | `true`, `false` | `false` | Channels in addresses and arguments count from 0 instead of 1. |
+| `values` | `integers`, `floats`, `zeroToOne` | `integers` | How numbers go out. `zeroToOne` suits TouchOSC's controls. Numbers that come in are read however they're written. |
+| `pitchBend` | `zeroTo16383`, `centeredOnZero` | `zeroTo16383` | How pitch bend is written. |
+| `noteOff` | `velocityZero`, `ownAddress` | `velocityZero` | A note off is a note with velocity 0, or an address of its own. |
+| `sendSysEx` | `true`, `false` | `true` | Sends SysEx. |
+| `sendClock` | `true`, `false` | `false` | Sends timing clock and active sensing. |
+| `channel` | 0 to 15 | 0 | The channel for messages that arrive with none, counted from 0. |
+
+The formats:
+
+| `format` | What a note on channel 1 looks like | Use it for |
+| --- | --- | --- |
+| `paths` | `/midi/1/note/60` with the velocity: `<root>/<channel>/note/<note>`. Also `noteoff`, `polyaftertouch`, `cc` with a number, and `program`, `channelpressure`, `pitch` without one. | REAPER (root `/vkb_midi`, `channelsFromZero` true), and most apps you set up yourself, like TouchOSC |
+| `midiType` | `/midi` with one argument of OSC's MIDI type. Its port is the row's `group`. SysEx goes to `<root>/sysex`. | TouchDesigner, and apps that read OSC's MIDI type |
+| `arguments` with `openStageControl` | `/note` with the channel, note, and velocity | Open Stage Control (root empty) |
+| `arguments` with `oscMidiOsc` | `/noteOn` with the note and velocity, and no channel | OSC_MIDI_OSC (root empty) |
+
+A REAPER OSC connection that plays REAPER's virtual keyboard from a keyboard on the same PC:
+
+```json
+"oscConnections": [
+  {
+    "id": "reaper",
+    "name": "REAPER",
+    "x": 420, "y": 60,
+    "receive": { "port": 0 },
+    "send": { "host": "127.0.0.1", "port": 8000 },
+    "rows": [ { "group": 0, "root": "/vkb_midi", "format": "paths", "channelsFromZero": true } ]
+  }
+]
+```
+
+With a connection `{ "id": "to-reaper", "source": "keyboard", "destination": "reaper", "destinationGroup": 0 }`. Tell the customer to add an OSC control surface in REAPER with the mode **Local port [receive only]** on port 8000, and to record from REAPER's **Virtual MIDI Keyboard** input.
 
 ### Steps
 
@@ -2153,7 +2267,9 @@ In a `ProgramList`, `bankPC` is the bank MSB, the bank LSB, and the program, eac
 
 > **For agents:** Each of these loads without an error and gives the customer the wrong patch.
 >
-> - `fileVersion` isn't 2, so every step and connection is left out.
+> - `fileVersion` isn't 2, so every step and connection is left out. With OSC connections, it's 3.
+> - An OSC connection's ports are the same as the app's, instead of the other way around. What the app sends to, the OSC connection listens on.
+> - A connection into an OSC connection names a group it has no row on, so nothing it carries is sent.
 > - A key from version 1 of the file is used, such as `filter`, `transform`, `sourceEndpointId`, `sendSpeedLimit`, or `active`. Windows MIDI Patchbay ignores it.
 > - A key or a choice is spelled differently from this article, such as `NoteFilter` or `keep_out`. Capital letters matter.
 > - A velocity rescaler has no `"valueScale": "percent"`, so its percentages are ignored.

@@ -154,6 +154,14 @@
     <ClInclude Include="ControllerStepRunner.h" />
     <ClInclude Include="HidControllers.h" />
     <ClInclude Include="HidHub.h" />
+    <ClInclude Include="OscAddress.h" />
+    <ClInclude Include="OscConnection.h" />
+    <ClInclude Include="OscPacket.h" />
+    <ClInclude Include="OscTime.h" />
+    <ClInclude Include="OscTranslate.h" />
+    <ClInclude Include="OscHub.h" />
+    <ClInclude Include="OscText.h" />
+    <ClInclude Include="..\midi-app-shared\AppFirewall.h" />
     <ClInclude Include="PatchTrace.h" />
     <ClInclude Include="CapabilityInquiry.h" />
     <ClInclude Include="CiFileStore.h" />
@@ -251,6 +259,28 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="HidControllers.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscAddress.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscConnection.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscPacket.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscTime.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscTranslate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscHub.cpp" />
+    <ClCompile Include="OscText.cpp" />
+    <ClCompile Include="MainWindowOsc.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppFirewall.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PatchTrace.cpp">

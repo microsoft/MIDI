@@ -13,6 +13,7 @@
 
 #include "App.xaml.h"
 #include "MidiServiceStatus.h"
+#include "OscText.h"
 #include "PatchCanvas.h"
 #include "PatchLayout.h"
 #include "RoundedShape.h"
@@ -202,13 +203,19 @@ namespace winrt::midipatchbay::implementation
                 }
 
                 auto const missing = std::count_if(patch.Endpoints.begin(), patch.Endpoints.end(),
-                    [](patchbay::PatchEndpoint const& endpoint) { return !patchbay::ResolveEndpoint(endpoint).has_value(); });
+                    [](patchbay::PatchEndpoint const& endpoint) { return patchbay::IsEndpointMissing(endpoint); });
 
                 if (missing > 0)
                 {
                     return { ChipTone::Caution, missing == 1
                         ? resources::GetString(L"TileOneDeviceMissing")
                         : resources::FormatString(L"TileDevicesMissingFormat", static_cast<int32_t>(missing)) };
+                }
+
+                // Its OSC connections hear only this PC until Windows Firewall lets the app in.
+                if (library.IsRouting(patch.SessionKey) && patchbay::OscFirewallHolds(patch))
+                {
+                    return { ChipTone::Caution, resources::GetString(L"TileOscFirewall") };
                 }
 
                 if (patch.Endpoints.empty())
@@ -1496,7 +1503,7 @@ namespace winrt::midipatchbay::implementation
             {
                 auto const size = patchbay::EstimatedNodeSize(patch, endpoint.Id);
                 boxes.push_back(Box{ endpoint.Id, endpoint.CanvasX, endpoint.CanvasY, size.Width, size.Height,
-                    std::nullopt, !patchbay::ResolveEndpoint(endpoint).has_value() });
+                    std::nullopt, patchbay::IsEndpointMissing(endpoint) });
             }
 
             // Notes on the canvas route nothing, so the sketch leaves them out.

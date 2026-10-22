@@ -87,6 +87,37 @@ namespace midipatchbay
             [](PatchBlock const& block) { return !IsAnnotation(block.Kind); }));
     }
 
+    bool PatchDocument::HasOscConnections() const noexcept
+    {
+        return OscConnectionCount() > 0;
+    }
+
+    size_t PatchDocument::OscConnectionCount() const noexcept
+    {
+        return static_cast<size_t>(std::count_if(Endpoints.begin(), Endpoints.end(),
+            [](PatchEndpoint const& endpoint) { return endpoint.IsOsc(); }));
+    }
+
+    _Use_decl_annotations_
+    std::wstring OscDeviceId(std::wstring const& patchKey, std::wstring const& nodeId)
+    {
+        std::wstring id{ OscDeviceIdPrefix };
+        id += patchKey;
+        id += L'|';
+        id += nodeId;
+
+        // The engine keys its connections by lowercased device id.
+        std::transform(id.begin(), id.end(), id.begin(), [](wchar_t c) { return static_cast<wchar_t>(::towlower(c)); });
+
+        return id;
+    }
+
+    _Use_decl_annotations_
+    bool IsOscDeviceId(std::wstring_view deviceId) noexcept
+    {
+        return deviceId.starts_with(OscDeviceIdPrefix);
+    }
+
     _Use_decl_annotations_
     bool PatchDocument::HasConnection(
         std::wstring const& sourceId,
