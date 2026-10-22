@@ -159,6 +159,7 @@
     <ClInclude Include="OscPacket.h" />
     <ClInclude Include="OscTime.h" />
     <ClInclude Include="OscTranslate.h" />
+    <ClInclude Include="OscRules.h" />
     <ClInclude Include="OscHub.h" />
     <ClInclude Include="OscText.h" />
     <ClInclude Include="..\midi-app-shared\AppFirewall.h" />
@@ -274,6 +275,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="OscTranslate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscRules.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="OscHub.cpp" />

@@ -10,6 +10,7 @@
 #include "OscAddress.h"
 #include "OscConnection.h"
 #include "OscPacket.h"
+#include "OscRules.h"
 #include "OscTime.h"
 #include "OscTranslate.h"
 #include "PatchSerializer.h"
@@ -901,6 +902,12 @@ void OscTests::EveryPresetRoundTripsEveryMessage()
 
     for (int32_t preset = 0; preset < OscPresetCount; preset++)
     {
+        // Custom rules only carry the messages they name: their own tests cover them.
+        if (static_cast<OscPreset>(preset) == OscPreset::TouchOsc)
+        {
+            continue;
+        }
+
         for (auto const values : { OscValueKind::Integers, OscValueKind::Floats, OscValueKind::UnitFloats })
         {
             auto row = OscRowFromPreset(static_cast<OscPreset>(preset), 2);
@@ -1517,4 +1524,276 @@ void OscTests::OscConnectionsRouteLikeEndpoints()
 
     VERIFY_ARE_NOT_EQUAL(graph.Signature, CompileRoutes({ changedInput }).Signature);
     VERIFY_ARE_EQUAL(graph.Signature, CompileRoutes({ input }).Signature);
+}
+
+void OscTests::RuleAddressesAndNumbersRead()
+{
+    VERIFY_IS_TRUE(IsValidRuleAddress("/1/fader{n}"));
+    VERIFY_IS_TRUE(IsValidRuleAddress("/{p}/push{n}"));
+    VERIFY_IS_TRUE(IsValidRuleAddress("/track/{t}/volume"));
+    VERIFY_IS_TRUE(IsValidRuleAddress("/play"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("fader{n}"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/a/{n}{m}"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/a/{n}5"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/a/{N}"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/a/{}"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/a/*"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/a b"));
+    VERIFY_IS_FALSE(IsValidRuleAddress("/{a}/{b}/{c}/{d}/{e}"));
+
+    RuleParts parts{};
+    VERIFY_IS_TRUE(MatchRuleAddress("/{p}/push{n}", "/2/push16", parts));
+    VERIFY_ARE_EQUAL(2, parts.Find("p").value_or(-1));
+    VERIFY_ARE_EQUAL(16, parts.Find("n").value_or(-1));
+    VERIFY_IS_FALSE(MatchRuleAddress("/1/fader{n}", "/1/fader", parts));
+    VERIFY_IS_FALSE(MatchRuleAddress("/1/fader{n}", "/1/faderx", parts));
+    VERIFY_IS_FALSE(MatchRuleAddress("/1/fader{n}", "/1/fader3/z", parts));
+    VERIFY_IS_FALSE(MatchRuleAddress("/{n}/x{n}", "/1/x2", parts));
+    VERIFY_IS_TRUE(MatchRuleAddress("/{n}/x{n}", "/3/x3", parts));
+    VERIFY_IS_FALSE(MatchRuleAddress("/a{n}", "/a1234567", parts));
+
+    RuleParts fill{};
+    fill.Set("p", 4);
+    fill.Set("n", 12);
+    VERIFY_ARE_EQUAL(std::string{ "/4/push12" }, BuildRuleAddress("/{p}/push{n}", fill).value_or(""));
+    fill = RuleParts{};
+    fill.Set("p", 4);
+    VERIFY_IS_FALSE(BuildRuleAddress("/{p}/push{n}", fill).has_value());
+
+    auto number = ParseRuleNumber(L"{n}+70");
+    VERIFY_IS_TRUE(number.has_value() && number->Part == "n" && number->Offset == 70);
+    number = ParseRuleNumber(L"{n} - 1");
+    VERIFY_IS_TRUE(number.has_value() && number->Part == "n" && number->Offset == -1);
+    number = ParseRuleNumber(L"74");
+    VERIFY_IS_TRUE(number.has_value() && number->Part.empty() && number->Offset == 74);
+    VERIFY_IS_FALSE(ParseRuleNumber(L"").has_value());
+    VERIFY_IS_FALSE(ParseRuleNumber(L"{n}*2").has_value());
+    VERIFY_IS_FALSE(ParseRuleNumber(L"seven").has_value());
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"{n}+70" }, RuleNumberText(OscRuleNumber{ "n", 70 }));
+    VERIFY_ARE_EQUAL(std::wstring{ L"{c}" }, RuleNumberText(OscRuleNumber{ "c", -1 }, 1));
+    VERIFY_ARE_EQUAL(std::wstring{ L"5" }, RuleNumberText(OscRuleNumber{ {}, 4 }, 1));
+
+    // Out needs every part from the channel or the number; in needs every number's part in the address.
+    OscRule rule{};
+    rule.Address = "/{p}/push{n}";
+    rule.Message = OscRuleMessage::Note;
+    rule.Number = OscRuleNumber{ "n", 59 };
+    VERIFY_IS_TRUE(RuleReceives(rule));
+    VERIFY_IS_FALSE(RuleSends(rule));
+    rule.Channel = OscRuleNumber{ "p", -1 };
+    VERIFY_IS_TRUE(RuleSends(rule));
+    rule.Number = OscRuleNumber{ "q", 0 };
+    VERIFY_IS_FALSE(RuleReceives(rule));
+}
+
+void OscTests::CustomRulesBecomeMidi()
+{
+    auto row = Preset(OscPreset::TouchOsc, 1);
+
+    OscRule bend{};
+    bend.Address = "/2/bend";
+    bend.Message = OscRuleMessage::PitchBend;
+    bend.Channel = OscRuleNumber{ {}, 3 };
+    row.Rules.push_back(bend);
+
+    OscRule program{};
+    program.Address = "/3/prog{n}";
+    program.Message = OscRuleMessage::ProgramChange;
+    program.Number = OscRuleNumber{ "n", -1 };
+    program.Low = 0;
+    program.High = 127;
+    row.Rules.push_back(program);
+
+    OscRule upsideDown{};
+    upsideDown.Address = "/xy";
+    upsideDown.Argument = 1;
+    upsideDown.Number = OscRuleNumber{ {}, 74 };
+    upsideDown.Low = 1;
+    upsideDown.High = 0;
+    row.Rules.push_back(upsideDown);
+
+    std::vector<OscRow> const rows{ row };
+
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/fader3" }.Float(0.5f)) == std::vector<uint32_t>{ Cv(0xB0, 73, 64, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/fader1" }.Float(1.0f)) == std::vector<uint32_t>{ Cv(0xB0, 71, 127, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/fader1" }.Float(-3.0f)) == std::vector<uint32_t>{ Cv(0xB0, 71, 0, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/toggle2" }.Float(1.0f)) == std::vector<uint32_t>{ Cv(0xB0, 81, 127, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/toggle2" }.Bool(false)) == std::vector<uint32_t>{ Cv(0xB0, 81, 0, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/push1" }.Float(1.0f)) == std::vector<uint32_t>{ Cv(0x90, 60, 127, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/1/push1" }.Float(0.0f)) == std::vector<uint32_t>{ Cv(0x80, 60, 0, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/2/bend" }.Float(0.5f)) == std::vector<uint32_t>{ Cv(0xE3, 0x00, 0x40, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/2/bend" }.Int(1)) == std::vector<uint32_t>{ Cv(0xE3, 0x7F, 0x7F, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/3/prog5" }.Int(127)) == std::vector<uint32_t>{ Cv(0xC0, 4, 0, 1) });
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/3/prog5" }.Int(0)).empty());
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/xy" }.Float(0.9f).Float(0.25f)) == std::vector<uint32_t>{ Cv(0xB0, 74, 95, 1) });
+
+    UmpCollector umps{};
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::NoRowMatched), static_cast<int32_t>(Receive(rows, MessageBuilder{ "/1/rotary1" }.Float(0.5f), umps).Result));
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::Unreadable), static_cast<int32_t>(Receive(rows, MessageBuilder{ "/1/fader90" }.Float(0.5f), umps).Result));
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::Unreadable), static_cast<int32_t>(Receive(rows, MessageBuilder{ "/1/fader2" }.String("x"), umps).Result));
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::Unreadable), static_cast<int32_t>(Receive(rows, MessageBuilder{ "/1/fader2" }, umps).Result));
+
+    // A pattern reaches the rules without parts.
+    VERIFY_IS_TRUE(ReceiveWords(rows, MessageBuilder{ "/2/ben?" }.Float(0.0f)) == std::vector<uint32_t>{ Cv(0xE3, 0, 0, 1) });
+
+    // A rule that only sends takes nothing.
+    auto sendOnly = row;
+    for (auto& rule : sendOnly.Rules) { rule.Direction = OscRuleDirection::Out; }
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::NoRowMatched), static_cast<int32_t>(Receive({ sendOnly }, MessageBuilder{ "/1/fader3" }.Float(0.5f), umps).Result));
+}
+
+void OscTests::CustomRulesSendOsc()
+{
+    auto row = Preset(OscPreset::TouchOsc, 1);
+
+    OscRule bend{};
+    bend.Address = "/ch{c}/bend";
+    bend.Message = OscRuleMessage::PitchBend;
+    bend.Channel = OscRuleNumber{ "c", -1 };
+    bend.Low = -1;
+    bend.High = 1;
+    row.Rules.push_back(bend);
+
+    std::vector<OscRow> const rows{ row };
+    OutboundTranslator translator{};
+
+    auto const send = [&](uint32_t word)
+        {
+            std::vector<MessageBuilder> out{};
+            translator.Translate(rows, &word, 1, out);
+            return out;
+        };
+
+    auto out = send(Cv(0xB0, 73, 127, 1));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, out.size());
+    auto copy = Reread(out[0]);
+    VERIFY_ARE_EQUAL(std::string{ "/1/fader3" }, copy.Address);
+    VERIFY_ARE_EQUAL(std::string{ "f" }, copy.TypeTags);
+    VERIFY_ARE_EQUAL(1.0, copy.Arguments[0].Real);
+
+    copy = Reread(send(Cv(0x90, 61, 127, 1))[0]);
+    VERIFY_ARE_EQUAL(std::string{ "/1/push2" }, copy.Address);
+    VERIFY_ARE_EQUAL(1.0, copy.Arguments[0].Real);
+
+    copy = Reread(send(Cv(0x80, 61, 64, 1))[0]);
+    VERIFY_ARE_EQUAL(0.0, copy.Arguments[0].Real);
+
+    copy = Reread(send(Cv(0xE4, 0x00, 0x00, 1))[0]);
+    VERIFY_ARE_EQUAL(std::string{ "/ch5/bend" }, copy.Address);
+    VERIFY_ARE_EQUAL(-1.0, copy.Arguments[0].Real);
+
+    // Nothing for a controller no rule names, for a channel the rules don't take, or for a
+    // group with no row.
+    VERIFY_IS_TRUE(send(Cv(0xB0, 7, 100, 1)).empty());
+    VERIFY_IS_TRUE(send(Cv(0xB1, 73, 100, 1)).empty());
+    VERIFY_IS_TRUE(send(Cv(0xB0, 73, 100, 2)).empty());
+
+    std::vector<MessageBuilder> sysEx{};
+    uint32_t const words[2]{ 0x31020102, 0 };
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(OutboundResult::LeftOut), static_cast<int32_t>(translator.Translate(rows, words, 2, sysEx)));
+
+    // What goes out comes back as the same MIDI.
+    for (auto const word : { Cv(0xB0, 75, 100, 1), Cv(0x90, 66, 127, 1), Cv(0xB0, 80, 127, 1) })
+    {
+        auto const back = ReceiveWords(rows, send(word)[0]);
+        VERIFY_IS_TRUE(back == std::vector<uint32_t>{ word });
+    }
+}
+
+void OscTests::CustomRulesSurviveTheFile()
+{
+    auto settings = OscConnectionFromPreset(OscPreset::TouchOsc);
+
+    OscRule odd{};
+    odd.Address = "/{p}/push{n}";
+    odd.Argument = 2;
+    odd.Direction = OscRuleDirection::In;
+    odd.Message = OscRuleMessage::PolyPressure;
+    odd.Channel = OscRuleNumber{ "p", -1 };
+    odd.Number = OscRuleNumber{ "n", 35 };
+    odd.Low = -0.5;
+    odd.High = 2.25;
+    settings.Rows[0].Rules.push_back(odd);
+
+    auto const json = OscConnectionToJson(settings);
+    auto const back = OscConnectionFromJson(json);
+
+    VERIFY_ARE_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
+    VERIFY_IS_TRUE(OscPresetOf(back.Rows[0]) == std::nullopt);
+    VERIFY_ARE_EQUAL(size_t{ 4 }, back.Rows[0].Rules.size());
+    VERIFY_IS_TRUE(OscPresetOf(OscConnectionFromPreset(OscPreset::TouchOsc).Rows[0]) == OscPreset::TouchOsc);
+
+    // Rules that can't work are dropped; what's left keeps its order.
+    auto const text = LR"({ "rows": [ { "group": 4, "root": "/ignored", "format": "custom", "rules": [
+        { "address": "/a{n}", "number": "{n}+1" },
+        { "address": "no slash" },
+        { "address": "/b", "number": "{x}*2" },
+        { "address": "/c", "low": 1, "high": 1 },
+        { "address": "/d", "message": "pitchBend", "channel": 20, "argument": 99 },
+        { "address": "/é" } ] } ] })";
+
+    auto const read = OscConnectionFromJson(json::JsonObject::Parse(text));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, read.Rows.size());
+    VERIFY_ARE_EQUAL(std::string{}, read.Rows[0].Root);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, read.Rows[0].Rules.size());
+    VERIFY_ARE_EQUAL(std::string{ "/a{n}" }, read.Rows[0].Rules[0].Address);
+    VERIFY_ARE_EQUAL(std::string{ "/d" }, read.Rows[0].Rules[1].Address);
+    VERIFY_ARE_EQUAL(int32_t{ 20 }, read.Rows[0].Rules[1].Channel.Offset);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, read.Rows[0].Rules[1].Argument);
+
+    // A channel past 15 is kept in the file but takes nothing.
+    UmpCollector umps{};
+    VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::Unreadable), static_cast<int32_t>(Receive(read.Rows, MessageBuilder{ "/d" }.Float(0.5f), umps).Result));
+}
+
+void OscTests::RulesAreSuggestedForTouchOsc()
+{
+    auto const suggest = [](MessageBuilder const& builder, std::vector<OscRow> const& rows)
+        {
+            auto const packet = MakePacket(builder);
+            MessageView view{};
+            ReadMessage(packet.data(), packet.size(), view);
+            return SuggestRule(view, rows);
+        };
+
+    // From nothing: TouchOSC's first page in three clicks, the same numbers as the preset.
+    std::vector<OscRow> rows{};
+
+    auto rule = suggest(MessageBuilder{ "/1/fader5" }.Float(0.3f), rows);
+    VERIFY_IS_TRUE(rule.has_value());
+    VERIFY_ARE_EQUAL(std::string{ "/1/fader{n}" }, rule->Address);
+    VERIFY_IS_TRUE(rule->Message == OscRuleMessage::ControlChange && rule->Number.Part == "n" && rule->Number.Offset == 70);
+    VERIFY_ARE_EQUAL(0.0, rule->Low);
+    VERIFY_ARE_EQUAL(1.0, rule->High);
+
+    OscRow custom{};
+    custom.Format = OscFormat::Custom;
+    custom.Root.clear();
+    custom.Rules.push_back(*rule);
+    rows.push_back(custom);
+
+    rule = suggest(MessageBuilder{ "/1/toggle1" }.Float(1.0f), rows);
+    VERIFY_IS_TRUE(rule.has_value() && rule->Address == "/1/toggle{n}" && rule->Message == OscRuleMessage::ControlChange && rule->Number.Offset == 79);
+    rows[0].Rules.push_back(*rule);
+
+    rule = suggest(MessageBuilder{ "/2/push3" }.Float(1.0f), rows);
+    VERIFY_IS_TRUE(rule.has_value() && rule->Address == "/2/push{n}" && rule->Message == OscRuleMessage::Note && rule->Number.Offset == 59);
+
+    // A second page of faders doesn't land on the first page's controllers.
+    rule = suggest(MessageBuilder{ "/2/fader1" }.Float(0.5f), rows);
+    VERIFY_IS_TRUE(rule.has_value() && rule->Number.Offset != 70);
+    VERIFY_IS_TRUE(rule->Number.Offset + 1 > 78 || rule->Number.Offset + 8 < 71);
+
+    // An address with no number at the end is one controller. A whole number past 1 is a MIDI value.
+    rule = suggest(MessageBuilder{ "/volume" }.Int(100), {});
+    VERIFY_IS_TRUE(rule.has_value() && rule->Address == "/volume" && rule->Number.Part.empty() && rule->Number.Offset == 71);
+    VERIFY_ARE_EQUAL(127.0, rule->High);
+
+    // The value is the first number.
+    rule = suggest(MessageBuilder{ "/label3" }.String("x").Float(0.5f), {});
+    VERIFY_IS_TRUE(rule.has_value() && rule->Argument == 1);
+
+    VERIFY_IS_FALSE(suggest(MessageBuilder{ "/text" }.String("x"), {}).has_value());
+    VERIFY_IS_FALSE(suggest(MessageBuilder{ "/1/fader*" }.Float(0.5f), {}).has_value());
 }

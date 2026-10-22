@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "OscText.h"
+#include "OscRules.h"
 #include "StringResources.h"
 
 namespace midipatchbay
@@ -21,6 +22,7 @@ namespace midipatchbay
         case OscPreset::MidiType: return resources::GetString(L"OscPresetMidiType");
         case OscPreset::OpenStageControl: return resources::GetString(L"OscPresetOpenStageControl");
         case OscPreset::OscMidiOsc: return resources::GetString(L"OscPresetOscMidiOsc");
+        case OscPreset::TouchOsc: return resources::GetString(L"OscPresetTouchOsc");
         }
 
         return {};
@@ -34,6 +36,7 @@ namespace midipatchbay
         case OscFormat::Paths: return resources::GetString(L"OscFormatPaths");
         case OscFormat::MidiType: return resources::GetString(L"OscFormatMidiType");
         case OscFormat::Arguments: return resources::GetString(L"OscFormatArguments");
+        case OscFormat::Custom: return resources::GetString(L"OscFormatCustom");
         }
 
         return {};
@@ -44,6 +47,16 @@ namespace midipatchbay
     {
         try
         {
+            // A rules row has no address of its own: it's known by its rules.
+            if (row.Format == OscFormat::Custom)
+            {
+                auto const preset = OscPresetOf(row);
+                auto const kind = preset.has_value() ? OscPresetName(*preset) : OscFormatName(row.Format);
+
+                return std::wstring{ resources::FormatString(row.Rules.size() == 1 ? L"OscRowRuleFormat" : L"OscRowRulesFormat",
+                    kind, static_cast<uint32_t>(row.Rules.size())) };
+            }
+
             auto const address = OscRowAddressText(row);
 
             // A MIDI type row's port is always its group, counted from 0, so it isn't repeated
@@ -59,6 +72,29 @@ namespace midipatchbay
         }
     }
 
+    _Use_decl_annotations_
+    std::wstring OscRuleSummary(OscRule const& rule) noexcept
+    {
+        try
+        {
+            auto const number = osc::RuleNumberText(rule.Number);
+
+            switch (rule.Message)
+            {
+            case OscRuleMessage::ControlChange: return std::wstring{ resources::FormatString(L"OscRuleSummaryController", number) };
+            case OscRuleMessage::Note: return std::wstring{ resources::FormatString(L"OscRuleSummaryNote", number) };
+            case OscRuleMessage::ProgramChange: return std::wstring{ resources::FormatString(L"OscRuleSummaryProgram", number) };
+            case OscRuleMessage::PitchBend: return std::wstring{ resources::GetString(L"OscRuleSummaryPitchBend") };
+            case OscRuleMessage::ChannelPressure: return std::wstring{ resources::GetString(L"OscRuleSummaryChannelPressure") };
+            case OscRuleMessage::PolyPressure: return std::wstring{ resources::FormatString(L"OscRuleSummaryPolyPressure", number) };
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
     _Use_decl_annotations_
     std::wstring OscNodeSubtitle(OscConnectionSettings const& settings) noexcept
     {

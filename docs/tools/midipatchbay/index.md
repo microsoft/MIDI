@@ -437,7 +437,7 @@ To add one, open the **Endpoints** tab of a patch window and drag **OSC connecti
 
 **Rows are like groups.** Each row of an OSC connection is an OSC address, like `/midi` or `/vkb_midi`, and acts like a MIDI group. Messages that arrive under that address come into the patch on that row's group, and messages connected into the row go out under its address. A connection can have up to 16 rows. **Add a row** in the details panel, or right-click the connection and choose **Add a row**.
 
-**Formats.** There's no single standard for MIDI in OSC, so each row picks one of three ways to write it. Presets set everything for the apps they're named after.
+**Formats.** There's no single standard for MIDI in OSC, so each row picks one of three ways to write it, or uses rules of its own. Presets set everything for the apps they're named after.
 
 | Preset | What the messages look like | Use it with |
 | --- | --- | --- |
@@ -446,14 +446,17 @@ To add one, open the **Endpoints** tab of a patch window and drag **OSC connecti
 | **MIDI type tag** | `/midi` with one argument of OSC's own MIDI type | TouchDesigner and other apps that read OSC's MIDI type |
 | **Open Stage Control** | `/note` with the channel, note, and velocity | Open Stage Control |
 | **OSC_MIDI_OSC** | `/noteOn` with the note and velocity, and no channel | OSC_MIDI_OSC |
+| **TouchOSC** | `/1/fader1` with a value from 0 to 1 | TouchOSC's own layouts, as they come |
 
 The **Paths** format covers every MIDI 1.0 message: `note`, `noteoff`, `polyaftertouch`, `cc`, `program`, `channelpressure`, and `pitch` under each channel, and `sysex`, `clock`, `start`, `continue`, `stop`, `songposition`, `songselect`, `tunerequest`, `timecode`, `activesensing`, and `reset` under the row's address. Each row also says whether channels count from 1 or from 0, whether numbers go out as whole numbers, decimal numbers, or 0 to 1, how pitch bend is written, and how a note off is sent. Numbers that arrive are read however they come: whole numbers, decimals, and on and off (true and false) all work.
 
 In the **MIDI type tag** format, each message also carries a port number. Ports count from 0, so the row on group 1 uses port 0, the row on group 2 uses port 1, and so on.
 
+**Custom rules.** Some apps send addresses of their own that aren't MIDI at all, like a TouchOSC fader at `/1/fader3` with a value from 0 to 1. A row with the **Custom rules** format has rules instead. Each rule turns one OSC address into one MIDI message: a control change, a note, a program change, pitch bend, or pressure, on the channel and number you pick. It works the other way too, so a MIDI message the patch sends moves the control on the app. Put a part in braces where the address has a number, like `/1/fader{n}`, and use it in the channel or number, like `{n}+70`. Then one rule covers a whole set of faders: fader 1 is controller 71, fader 2 is controller 72, and so on. Each rule also says which OSC values stand for the bottom and the top of the MIDI range, and whether it works both ways or one way only. The **TouchOSC** preset is a row with rules ready for TouchOSC's own layouts: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons play notes from middle C.
+
 **MIDI 2.0.** MIDI 2.0 messages go out as their MIDI 1.0 versions, the way the MIDI specification says to translate them. A few MIDI 2.0 messages, such as per-note controllers, have no MIDI 1.0 version, so they aren't sent. The details panel counts them.
 
-**Recently heard.** Select an OSC connection to see the last 50 messages that arrived, newest first, and whether a row took each one. If you don't know what an app sends, this shows you. When an address looks like one of the formats, **Add a row for this** adds a row that takes it.
+**Recently heard.** Select an OSC connection to see the last 50 messages that arrived, newest first, and whether a row took each one. If you don't know what an app sends, this shows you. When an address looks like one of the formats, **Add a row for this** adds a row that takes it. When it doesn't, **Add a rule for this** adds a rule, with a guess at what it should be: a control with a number at the end, like `/1/fader3`, gets a rule for the whole set, `/1/fader{n}`. Buttons become notes, toggles and switches become on/off controllers, and anything else becomes a controller, on numbers no other rule uses. Change the rule in the details panel if the guess isn't what you want.
 
 **Who can send to it.** OSC has no passwords, so anyone who can reach this PC can send to the port. By default, an OSC connection only takes messages from the computer it sends to. **Take messages from** can change that to anyone, or to a list of addresses. **Listen for** can keep it to apps on this PC only.
 

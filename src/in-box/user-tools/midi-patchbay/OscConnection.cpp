@@ -7,9 +7,11 @@
 
 #include "OscConnection.h"
 #include "OscAddress.h"
+#include "OscRules.h"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <format>
 
 namespace midipatchbay
@@ -23,11 +25,29 @@ namespace midipatchbay
             std::wstring_view Key;
         };
 
-        constexpr std::array<EnumName<OscFormat>, 3> FormatNames
+        constexpr std::array<EnumName<OscFormat>, 4> FormatNames
         { {
             { OscFormat::Paths, L"paths" },
             { OscFormat::MidiType, L"midiType" },
             { OscFormat::Arguments, L"arguments" },
+            { OscFormat::Custom, L"custom" },
+        } };
+
+        constexpr std::array<EnumName<OscRuleDirection>, 3> RuleDirectionNames
+        { {
+            { OscRuleDirection::Both, L"both" },
+            { OscRuleDirection::In, L"in" },
+            { OscRuleDirection::Out, L"out" },
+        } };
+
+        constexpr std::array<EnumName<OscRuleMessage>, 6> RuleMessageNames
+        { {
+            { OscRuleMessage::ControlChange, L"controlChange" },
+            { OscRuleMessage::Note, L"note" },
+            { OscRuleMessage::ProgramChange, L"programChange" },
+            { OscRuleMessage::PitchBend, L"pitchBend" },
+            { OscRuleMessage::ChannelPressure, L"channelPressure" },
+            { OscRuleMessage::PolyPressure, L"polyPressure" },
         } };
 
         constexpr std::array<EnumName<OscArgumentNames>, 2> ArgumentNamesNames
@@ -81,13 +101,14 @@ namespace midipatchbay
             { OscSendTiming::EarlyWithTimeTags, L"earlyWithTimeTags" },
         } };
 
-        constexpr std::array<EnumName<OscPreset>, 5> PresetNames
+        constexpr std::array<EnumName<OscPreset>, 6> PresetNames
         { {
             { OscPreset::ReaperVirtualKeyboard, L"reaperVirtualKeyboard" },
             { OscPreset::Paths, L"paths" },
             { OscPreset::MidiType, L"midiType" },
             { OscPreset::OpenStageControl, L"openStageControl" },
             { OscPreset::OscMidiOsc, L"oscMidiOsc" },
+            { OscPreset::TouchOsc, L"touchOsc" },
         } };
 
         template <typename TEnum, size_t N>
@@ -300,6 +321,23 @@ namespace midipatchbay
             return root;
         }
 
+        bool SameRuleNumber(_In_ OscRuleNumber const& first, _In_ OscRuleNumber const& second) noexcept
+        {
+            return first.Part == second.Part && first.Offset == second.Offset;
+        }
+
+        bool SameRule(_In_ OscRule const& first, _In_ OscRule const& second) noexcept
+        {
+            return first.Address == second.Address &&
+                first.Argument == second.Argument &&
+                first.Direction == second.Direction &&
+                first.Message == second.Message &&
+                SameRuleNumber(first.Channel, second.Channel) &&
+                SameRuleNumber(first.Number, second.Number) &&
+                first.Low == second.Low &&
+                first.High == second.High;
+        }
+
         bool SameRowSettings(_In_ OscRow const& first, _In_ OscRow const& second) noexcept
         {
             return first.Root == second.Root &&
@@ -311,7 +349,142 @@ namespace midipatchbay
                 first.NoteOff == second.NoteOff &&
                 first.SendSysEx == second.SendSysEx &&
                 first.SendClock == second.SendClock &&
-                first.Channel == second.Channel;
+                first.Channel == second.Channel &&
+                std::equal(first.Rules.begin(), first.Rules.end(), second.Rules.begin(), second.Rules.end(), SameRule);
+        }
+
+        // A rule as the file can hold it: a valid address, numbers in range, and a value range
+        // with two different ends. Nothing when it can't be made one.
+        std::optional<OscRule> CleanRule(_In_ OscRule rule) noexcept
+        {
+            if (!osc::IsValidRuleAddress(rule.Address) ||
+                static_cast<uint32_t>(rule.Direction) > static_cast<uint32_t>(OscRuleDirection::Out) ||
+                static_cast<uint32_t>(rule.Message) >= static_cast<uint32_t>(OscRuleMessageCount) ||
+                !std::isfinite(rule.Low) || !std::isfinite(rule.High) ||
+                std::fabs(rule.Low) > MaximumOscRuleValue || std::fabs(rule.High) > MaximumOscRuleValue ||
+                rule.Low == rule.High)
+            {
+                return std::nullopt;
+            }
+
+            rule.Argument = (std::min)(rule.Argument, MaximumOscRuleArgument);
+            return rule;
+        }
+
+        json::IJsonValue RuleNumberToJson(_In_ OscRuleNumber const& number)
+        {
+            if (number.Part.empty())
+            {
+                return json::JsonValue::CreateNumberValue(number.Offset);
+            }
+
+            return json::JsonValue::CreateStringValue(osc::RuleNumberText(number));
+        }
+
+        // A whole number, or "{n}+70" and the like. Nothing when it's neither.
+        std::optional<OscRuleNumber> ReadRuleNumber(_In_ json::JsonObject const& object, _In_ std::wstring_view key, _In_ OscRuleNumber const& fallback) noexcept
+        {
+            try
+            {
+                if (!object.HasKey(key))
+                {
+                    return fallback;
+                }
+
+                auto const value = object.GetNamedValue(key);
+
+                if (value.ValueType() == json::JsonValueType::Number)
+                {
+                    auto const number = value.GetNumber();
+
+                    if (!std::isfinite(number) || number != std::floor(number) || std::fabs(number) > 1'000'000.0)
+                    {
+                        return std::nullopt;
+                    }
+
+                    return OscRuleNumber{ {}, static_cast<int32_t>(number) };
+                }
+
+                if (value.ValueType() == json::JsonValueType::String)
+                {
+                    return osc::ParseRuleNumber(value.GetString());
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return std::nullopt;
+        }
+
+        json::JsonObject RuleToJson(_In_ OscRule const& rule)
+        {
+            json::JsonObject item{};
+
+            item.Insert(L"address", json::JsonValue::CreateStringValue(std::wstring{ rule.Address.begin(), rule.Address.end() }));
+            item.Insert(L"argument", json::JsonValue::CreateNumberValue(rule.Argument));
+            item.Insert(L"direction", json::JsonValue::CreateStringValue(KeyOf(RuleDirectionNames, rule.Direction)));
+            item.Insert(L"message", json::JsonValue::CreateStringValue(KeyOf(RuleMessageNames, rule.Message)));
+            item.Insert(L"channel", RuleNumberToJson(rule.Channel));
+            item.Insert(L"number", RuleNumberToJson(rule.Number));
+            item.Insert(L"low", json::JsonValue::CreateNumberValue(rule.Low));
+            item.Insert(L"high", json::JsonValue::CreateNumberValue(rule.High));
+
+            return item;
+        }
+
+        std::optional<OscRule> RuleFromJson(_In_ json::JsonObject const& item) noexcept
+        {
+            try
+            {
+                OscRule rule{};
+
+                auto const address = ReadString(item, L"address");
+
+                if (std::any_of(address.begin(), address.end(), [](wchar_t c) { return c >= 0x80; }))
+                {
+                    return std::nullopt;
+                }
+
+                // Checked to be ASCII above, so each character fits in one byte.
+                for (auto const c : address)
+                {
+                    rule.Address += static_cast<char>(c);
+                }
+                rule.Argument = static_cast<uint8_t>(ReadInteger(item, L"argument", 0, MaximumOscRuleArgument, 0));
+                rule.Direction = ReadEnum(item, L"direction", RuleDirectionNames, OscRuleDirection::Both);
+                rule.Message = ReadEnum(item, L"message", RuleMessageNames, OscRuleMessage::ControlChange);
+
+                auto const channel = ReadRuleNumber(item, L"channel", OscRuleNumber{});
+                auto const number = ReadRuleNumber(item, L"number", OscRuleNumber{ {}, 1 });
+
+                if (!channel.has_value() || !number.has_value())
+                {
+                    return std::nullopt;
+                }
+
+                rule.Channel = *channel;
+                rule.Number = *number;
+
+                auto const readReal = [&item](std::wstring_view key, double fallback)
+                    {
+                        if (item.HasKey(key) && item.GetNamedValue(key).ValueType() == json::JsonValueType::Number)
+                        {
+                            return item.GetNamedNumber(key);
+                        }
+
+                        return fallback;
+                    };
+
+                rule.Low = readReal(L"low", 0.0);
+                rule.High = readReal(L"high", 1.0);
+
+                return CleanRule(std::move(rule));
+            }
+            catch (...)
+            {
+                return std::nullopt;
+            }
         }
     }
 
@@ -362,6 +535,20 @@ namespace midipatchbay
             row.Format = OscFormat::Arguments;
             row.Names = OscArgumentNames::OscMidiOsc;
             row.NoteOff = OscNoteOff::OwnAddress;
+            break;
+
+        case OscPreset::TouchOsc:
+            row.Root.clear();
+            row.Format = OscFormat::Custom;
+
+            try
+            {
+                row.Rules = osc::TouchOscRules();
+            }
+            catch (...)
+            {
+            }
+
             break;
         }
 
@@ -493,6 +680,33 @@ namespace midipatchbay
                     row.Root = "/midi";
                 }
 
+                // Rules carry their own addresses. Any other format has none.
+                if (row.Format == OscFormat::Custom)
+                {
+                    row.Root.clear();
+
+                    std::vector<OscRule> rules{};
+
+                    for (auto& rule : row.Rules)
+                    {
+                        if (rules.size() >= MaximumOscRules)
+                        {
+                            break;
+                        }
+
+                        if (auto clean = CleanRule(std::move(rule)); clean.has_value())
+                        {
+                            rules.push_back(std::move(*clean));
+                        }
+                    }
+
+                    row.Rules = std::move(rules);
+                }
+                else
+                {
+                    row.Rules.clear();
+                }
+
                 row.Channel = static_cast<uint8_t>(row.Channel & 0x0F);
 
                 used |= 1u << row.Group;
@@ -588,6 +802,18 @@ namespace midipatchbay
             if (row.Format == OscFormat::Arguments)
             {
                 item.Insert(L"names", json::JsonValue::CreateStringValue(KeyOf(ArgumentNamesNames, row.Names)));
+            }
+
+            if (row.Format == OscFormat::Custom)
+            {
+                json::JsonArray rules{};
+
+                for (auto const& rule : row.Rules)
+                {
+                    rules.Append(RuleToJson(rule));
+                }
+
+                item.Insert(L"rules", rules);
             }
 
             item.Insert(L"channelsFromZero", json::JsonValue::CreateBooleanValue(row.ChannelsFromZero));
@@ -694,6 +920,27 @@ namespace midipatchbay
                     row.SendClock = ReadBoolean(item, L"sendClock", false);
                     row.Channel = static_cast<uint8_t>(ReadInteger(item, L"channel", 0, 15, 0));
 
+                    if (auto const rules = ReadArray(item, L"rules"); rules != nullptr)
+                    {
+                        for (auto const& ruleValue : rules)
+                        {
+                            if (row.Rules.size() >= MaximumOscRules)
+                            {
+                                break;
+                            }
+
+                            if (ruleValue == nullptr || ruleValue.ValueType() != json::JsonValueType::Object)
+                            {
+                                continue;
+                            }
+
+                            if (auto rule = RuleFromJson(ruleValue.GetObject()); rule.has_value())
+                            {
+                                row.Rules.push_back(std::move(*rule));
+                            }
+                        }
+                    }
+
                     settings.Rows.push_back(std::move(row));
                 }
             }
@@ -745,6 +992,19 @@ namespace midipatchbay
                     row.SendSysEx ? 1 : 0,
                     row.SendClock ? 1 : 0,
                     row.Channel);
+
+                for (auto const& rule : row.Rules)
+                {
+                    text += std::format(L"|u{}:{}:{}:{}:{}:{}:{}:{}",
+                        std::wstring{ rule.Address.begin(), rule.Address.end() },
+                        rule.Argument,
+                        static_cast<int32_t>(rule.Direction),
+                        static_cast<int32_t>(rule.Message),
+                        osc::RuleNumberText(rule.Channel),
+                        osc::RuleNumberText(rule.Number),
+                        rule.Low,
+                        rule.High);
+                }
             }
 
             return text;

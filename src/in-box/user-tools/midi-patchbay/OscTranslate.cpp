@@ -7,8 +7,10 @@
 
 #include "OscTranslate.h"
 #include "OscAddress.h"
+#include "OscRules.h"
 
 #include <algorithm>
+#include <cctype>
 #include <charconv>
 #include <cmath>
 #include <format>
@@ -931,6 +933,117 @@ namespace midipatchbay::osc
             return Emit(row, *kind, channel, number, message, next, output) ? Match::Done : Match::Unreadable;
         }
 
+        // How far up its range a rule's argument is, from 0 to 1. True is the top and false the
+        // bottom, whichever way round the range is.
+        std::optional<double> RuleUnit(_In_ OscRule const& rule, _In_ Argument const& argument) noexcept
+        {
+            if (argument.Type == type::True)
+            {
+                return 1.0;
+            }
+
+            if (argument.Type == type::False)
+            {
+                return 0.0;
+            }
+
+            double value{ 0 };
+
+            if (IsFloatType(argument.Type))
+            {
+                value = argument.Real;
+            }
+            else if (argument.Type == type::Int32 || argument.Type == type::Int64)
+            {
+                value = static_cast<double>(argument.Integer);
+            }
+            else
+            {
+                return std::nullopt;
+            }
+
+            if (!std::isfinite(value))
+            {
+                return std::nullopt;
+            }
+
+            return std::clamp((value - rule.Low) / (rule.High - rule.Low), 0.0, 1.0);
+        }
+
+        // The Custom format: the first rule whose address this is decides.
+        Match TranslateCustom(_In_ OscRow const& row, _In_ std::string_view address, _In_ MessageView const& message, _Inout_ Output& output) noexcept
+        {
+            for (auto const& rule : row.Rules)
+            {
+                RuleParts parts{};
+
+                if (rule.Direction == OscRuleDirection::Out || !MatchRuleAddress(rule.Address, address, parts))
+                {
+                    continue;
+                }
+
+                auto const channel = EvaluateRuleNumber(rule.Channel, parts);
+                auto const number = EvaluateRuleNumber(rule.Number, parts);
+                auto const usesNumber = rule.Message != OscRuleMessage::PitchBend && rule.Message != OscRuleMessage::ChannelPressure;
+
+                if (!channel.has_value() || *channel < 0 || *channel > 15 ||
+                    (usesNumber && (!number.has_value() || *number < 0 || *number > 127)) ||
+                    rule.Argument >= message.ArgumentCount)
+                {
+                    return Match::Unreadable;
+                }
+
+                auto const unit = RuleUnit(rule, message.Arguments[rule.Argument]);
+
+                if (!unit.has_value())
+                {
+                    return Match::Unreadable;
+                }
+
+                auto const value = static_cast<uint32_t>(std::llround(*unit * RuleHighest(rule.Message)));
+                auto const ch = static_cast<uint8_t>(*channel);
+                auto const n = static_cast<uint8_t>(usesNumber ? *number : 0);
+                auto const v7 = static_cast<uint8_t>((std::min)(value, 127u));
+
+                switch (rule.Message)
+                {
+                case OscRuleMessage::ControlChange:
+                    output.Midi1(row.Group, static_cast<uint8_t>(0xB0 | ch), n, v7);
+                    break;
+
+                case OscRuleMessage::Note:
+                    // The bottom of the range lets the note go.
+                    output.Midi1(row.Group, static_cast<uint8_t>((v7 == 0 ? 0x80 : 0x90) | ch), n, v7);
+                    break;
+
+                case OscRuleMessage::ProgramChange:
+                    // Like a button: the program changes when it's pressed, not when it's let go.
+                    if (value > 0)
+                    {
+                        output.Midi1(row.Group, static_cast<uint8_t>(0xC0 | ch), n, 0);
+                    }
+
+                    break;
+
+                case OscRuleMessage::PitchBend:
+                    output.Midi1(row.Group, static_cast<uint8_t>(0xE0 | ch), static_cast<uint8_t>(value & 0x7F), static_cast<uint8_t>((value >> 7) & 0x7F));
+                    break;
+
+                case OscRuleMessage::ChannelPressure:
+                    output.Midi1(row.Group, static_cast<uint8_t>(0xD0 | ch), v7, 0);
+                    break;
+
+                case OscRuleMessage::PolyPressure:
+                    output.Midi1(row.Group, static_cast<uint8_t>(0xA0 | ch), n, v7);
+                    break;
+                }
+
+                return Match::Done;
+            }
+
+            return Match::No;
+        }
+
         Match TranslateLiteral(_In_ OscRow const& row, _In_ std::string_view address, _In_ MessageView const& message, _Inout_ Output& output) noexcept
         {
             switch (row.Format)
@@ -938,6 +1051,7 @@ namespace midipatchbay::osc
             case OscFormat::Paths: return TranslatePaths(row, address, message, output);
             case OscFormat::MidiType: return TranslateMidiType(row, address, message, output);
             case OscFormat::Arguments: return TranslateArguments(row, address, message, output);
+            case OscFormat::Custom: return TranslateCustom(row, address, message, output);
             }
 
             return Match::No;
@@ -1064,6 +1178,21 @@ namespace midipatchbay::osc
 
                 break;
             }
+
+            case OscFormat::Custom:
+                // A rule with parts stands for more addresses than can be listed, so a pattern
+                // only reaches the rules without any.
+                for (auto const& rule : row.Rules)
+                {
+                    if (rule.Direction != OscRuleDirection::Out &&
+                        rule.Address.find('{') == std::string::npos &&
+                        !visit(std::string_view{ rule.Address }))
+                    {
+                        break;
+                    }
+                }
+
+                break;
             }
         }
 
@@ -1127,10 +1256,72 @@ namespace midipatchbay::osc
             return text;
         }
 
+        // The Custom format: the first rule that sends this kind of message, and whose channel and
+        // number fit it, says the address. The value goes out as a float in the rule's range.
+        void AppendCustom(_In_ OscRow const& row, _In_ Midi1Message const& midi, _Inout_ std::vector<MessageBuilder>& out)
+        {
+            auto const status = midi.Status;
+
+            if (status < 0x80 || status >= 0xF0)
+            {
+                return;
+            }
+
+            auto const channel = static_cast<int32_t>(status & 0x0F);
+            OscRuleMessage message{ OscRuleMessage::ControlChange };
+            int32_t number{ midi.Data1 };
+            uint32_t value{ midi.Data2 };
+
+            switch (status & 0xF0)
+            {
+            case 0x80: message = OscRuleMessage::Note; value = 0; break;
+            case 0x90: message = OscRuleMessage::Note; break;
+            case 0xA0: message = OscRuleMessage::PolyPressure; break;
+            case 0xB0: message = OscRuleMessage::ControlChange; break;
+            case 0xC0: message = OscRuleMessage::ProgramChange; value = 127; break;
+            case 0xD0: message = OscRuleMessage::ChannelPressure; value = midi.Data1; break;
+            default: message = OscRuleMessage::PitchBend; value = static_cast<uint32_t>(midi.Data1) | (static_cast<uint32_t>(midi.Data2) << 7); break;
+            }
+
+            auto const usesNumber = message != OscRuleMessage::PitchBend && message != OscRuleMessage::ChannelPressure;
+
+            for (auto const& rule : row.Rules)
+            {
+                if (rule.Direction == OscRuleDirection::In || rule.Message != message)
+                {
+                    continue;
+                }
+
+                RuleParts parts{};
+
+                if (!SolveRuleNumber(rule.Channel, channel, parts) || (usesNumber && !SolveRuleNumber(rule.Number, number, parts)))
+                {
+                    continue;
+                }
+
+                auto const address = BuildRuleAddress(rule.Address, parts);
+
+                if (!address.has_value())
+                {
+                    continue;
+                }
+
+                auto const unit = static_cast<double>(value) / RuleHighest(rule.Message);
+                out.emplace_back(*address).Float(static_cast<float>(rule.Low + unit * (rule.High - rule.Low)));
+                return;
+            }
+        }
+
         // One MIDI 1.0 message as the row's format says it.
         void AppendMidi1(_In_ OscRow const& row, _In_ Midi1Message const& midi, _Inout_ std::vector<MessageBuilder>& out)
         {
             auto const status = midi.Status;
+
+            if (row.Format == OscFormat::Custom)
+            {
+                AppendCustom(row, midi, out);
+                return;
+            }
 
             if (row.Format == OscFormat::MidiType)
             {
@@ -1597,7 +1788,7 @@ namespace midipatchbay::osc
             return OutboundResult::SysExNotSent;
         }
 
-        if (!row->SendSysEx)
+        if (!row->SendSysEx || row->Format == OscFormat::Custom)
         {
             return OutboundResult::LeftOut;
         }
@@ -1787,5 +1978,148 @@ namespace midipatchbay::osc
         }
 
         return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    std::optional<OscRule> SuggestRule(MessageView const& message, std::span<OscRow const> rows)
+    {
+        auto const address = message.Address;
+
+        if (HasPatternCharacters(address))
+        {
+            return std::nullopt;
+        }
+
+        // The value is the first number, true or false.
+        size_t argument{ 0 };
+
+        while (argument < message.ArgumentCount && !IsNumberType(message.Arguments[argument].Type))
+        {
+            argument++;
+        }
+
+        if (argument >= message.ArgumentCount || argument > MaximumOscRuleArgument)
+        {
+            return std::nullopt;
+        }
+
+        OscRule rule{};
+        rule.Argument = static_cast<uint8_t>(argument);
+
+        // A number at the end, as in /1/fader3, becomes a part, so one rule takes the whole set.
+        auto digits = address.size();
+
+        while (digits > 0 && address[digits - 1] >= '0' && address[digits - 1] <= '9')
+        {
+            digits--;
+        }
+
+        auto const numbered = digits < address.size() && address.size() - digits <= 6;
+
+        rule.Address = numbered ? std::string{ address.substr(0, digits) } + "{n}" : std::string{ address };
+
+        if (!IsValidRuleAddress(rule.Address))
+        {
+            return std::nullopt;
+        }
+
+        // TouchOSC's controls go from 0 to 1. Whole numbers past 1 are taken as MIDI values.
+        auto const& value = message.Arguments[argument];
+        auto const beyondOne =
+            (IsFloatType(value.Type) && std::isfinite(value.Real) && (value.Real > 1.0 || value.Real < 0.0)) ||
+            ((value.Type == type::Int32 || value.Type == type::Int64) && (value.Integer > 1 || value.Integer < 0));
+
+        rule.Low = 0.0;
+        rule.High = beyondOne ? 127.0 : 1.0;
+
+        // What the control seems to be, by its name: buttons play notes, switches are on/off
+        // controllers, and anything else, like a fader, is a controller.
+        std::string name{};
+        auto const slash = address.rfind('/', digits == 0 ? 0 : digits - 1);
+
+        for (auto const c : address.substr(slash == std::string_view::npos ? 0 : slash + 1, digits - (slash == std::string_view::npos ? 0 : slash + 1)))
+        {
+            name += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+
+        auto const has = [&name](std::initializer_list<std::string_view> words)
+            {
+                return std::any_of(words.begin(), words.end(), [&name](std::string_view word) { return name.find(word) != std::string::npos; });
+            };
+
+        int32_t first{ 71 };
+
+        if (has({ "push", "button", "pad", "key", "note", "drum" }))
+        {
+            rule.Message = OscRuleMessage::Note;
+            first = 60;
+        }
+        else if (has({ "toggle", "switch" }))
+        {
+            first = 80;
+        }
+
+        // Keep clear of the numbers other rules use for the same kind of message: a part's
+        // numbers for parts 1 to 8, or a fixed number. TouchOSC's pages have up to 8 of a kind.
+        constexpr int32_t ReservedParts = 8;
+        std::array<bool, 128> used{};
+
+        for (auto const& row : rows)
+        {
+            for (auto const& other : row.Rules)
+            {
+                auto const sameKind = (other.Message == OscRuleMessage::Note) == (rule.Message == OscRuleMessage::Note);
+
+                if (!sameKind || other.Message == OscRuleMessage::PitchBend || other.Message == OscRuleMessage::ChannelPressure)
+                {
+                    continue;
+                }
+
+                auto const fixed = other.Number.Part.empty();
+
+                for (int32_t part = fixed ? 0 : 1; part <= (fixed ? 0 : ReservedParts); part++)
+                {
+                    auto const number = other.Number.Offset + part;
+
+                    if (number >= 0 && number < 128)
+                    {
+                        used[static_cast<size_t>(number)] = true;
+                    }
+                }
+            }
+        }
+
+        // A part counts from 1, the way controls are numbered, so {n}+70 makes fader 1 controller 71.
+        auto const span = numbered ? ReservedParts : 1;
+        auto const lowest = numbered ? 1 : 0;
+
+        auto const isFree = [&used, span](int32_t start)
+            {
+                if (start < 0 || start + span > 128)
+                {
+                    return false;
+                }
+
+                for (int32_t i = start; i < start + span; i++)
+                {
+                    if (used[static_cast<size_t>(i)])
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
+        auto start = first;
+
+        for (int32_t tries = 0; tries < 128 && !isFree(start); tries++)
+        {
+            start = (start + span) % 128;
+        }
+
+        rule.Number = numbered ? OscRuleNumber{ "n", start - lowest } : OscRuleNumber{ {}, start };
+
+        return rule;
     }
 }

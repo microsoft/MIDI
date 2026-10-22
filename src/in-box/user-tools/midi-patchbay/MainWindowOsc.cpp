@@ -15,6 +15,7 @@
 #include "DialogParts.h"
 #include "OscAddress.h"
 #include "OscHub.h"
+#include "OscRules.h"
 #include "OscText.h"
 #include "PatchLibrary.h"
 #include "SpinButtons.h"
@@ -127,6 +128,7 @@ namespace winrt::midipatchbay::implementation
             case patchbay::OscPreset::MidiType: return resources::GetString(L"OscPresetMidiTypeHint");
             case patchbay::OscPreset::OpenStageControl: return resources::GetString(L"OscPresetOpenStageControlHint");
             case patchbay::OscPreset::OscMidiOsc: return resources::GetString(L"OscPresetOscMidiOscHint");
+            case patchbay::OscPreset::TouchOsc: return resources::GetString(L"OscPresetTouchOscHint");
             }
 
             return {};
@@ -423,8 +425,9 @@ namespace winrt::midipatchbay::implementation
         {
             auto updated = patchbay::OscRowFromPreset(preset, row.Group);
 
-            // A root the customer chose stays, unless the new format can't use it.
-            if (!row.Root.empty() || preset == patchbay::OscPreset::OpenStageControl || preset == patchbay::OscPreset::OscMidiOsc)
+            // A root the customer chose stays, unless the new format can't use it. Rules have none.
+            if (updated.Format != patchbay::OscFormat::Custom &&
+                (!row.Root.empty() || preset == patchbay::OscPreset::OpenStageControl || preset == patchbay::OscPreset::OscMidiOsc))
             {
                 updated.Root = preset == patchbay::OscPreset::ReaperVirtualKeyboard ? updated.Root : row.Root;
             }
@@ -475,6 +478,28 @@ namespace winrt::midipatchbay::implementation
             }
 
             return patchbay::osc::IsValidRoot(root) ? std::optional<std::string>{ root } : std::nullopt;
+        }
+
+        // The text as ASCII, with spaces at the ends left off, or nothing when it has any other
+        // characters, which OSC addresses never do.
+        std::optional<std::string> AsciiText(_In_ winrt::hstring const& text)
+        {
+            std::string ascii{};
+
+            for (auto const c : text)
+            {
+                if (c >= 0x80)
+                {
+                    return std::nullopt;
+                }
+
+                ascii += static_cast<char>(c);
+            }
+
+            auto const first = ascii.find_first_not_of(' ');
+            auto const last = ascii.find_last_not_of(' ');
+
+            return first == std::string::npos ? std::string{} : ascii.substr(first, last - first + 1);
         }
 
         std::vector<std::wstring> SplitAddresses(_In_ winrt::hstring const& text)
@@ -875,33 +900,38 @@ namespace winrt::midipatchbay::implementation
 
                     body.Children().Append(presetBox);
 
-                    // The address its messages go under.
-                    controls::TextBox root{};
-                    root.Header(winrt::box_value(resources::GetString(L"OscRootHeader")));
-                    root.PlaceholderText(resources::GetString(L"OscRootPlaceholder"));
-                    root.Text(winrt::hstring{ std::wstring{ row.Root.begin(), row.Root.end() } });
+                    auto const isCustom = row.Format == patchbay::OscFormat::Custom;
 
-                    auto rootError = Line(resources::GetString(L"OscRootInvalid"), 11, L"SystemFillColorCriticalBrush");
-                    rootError.Visibility(xaml::Visibility::Collapsed);
+                    // The address its messages go under. Rules carry their own.
+                    if (!isCustom)
+                    {
+                        controls::TextBox root{};
+                        root.Header(winrt::box_value(resources::GetString(L"OscRootHeader")));
+                        root.PlaceholderText(resources::GetString(L"OscRootPlaceholder"));
+                        root.Text(winrt::hstring{ std::wstring{ row.Root.begin(), row.Root.end() } });
 
-                    root.LostFocus([changeRow, group, root, rootError](auto&&, auto&&)
-                        {
-                            auto const value = AsciiRoot(root.Text());
+                        auto rootError = Line(resources::GetString(L"OscRootInvalid"), 11, L"SystemFillColorCriticalBrush");
+                        rootError.Visibility(xaml::Visibility::Collapsed);
 
-                            rootError.Visibility(value.has_value() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
-
-                            if (value.has_value())
+                        root.LostFocus([changeRow, group, root, rootError](auto&&, auto&&)
                             {
-                                changeRow(group, [value](patchbay::OscRow& r) { r.Root = *value; }, true);
-                            }
-                        });
+                                auto const value = AsciiRoot(root.Text());
 
-                    body.Children().Append(root);
-                    body.Children().Append(rootError);
+                                rootError.Visibility(value.has_value() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+                                if (value.has_value())
+                                {
+                                    changeRow(group, [value](patchbay::OscRow& r) { r.Root = *value; }, true);
+                                }
+                            });
+
+                        body.Children().Append(root);
+                        body.Children().Append(rootError);
+                    }
 
                     auto format = Choices(resources::GetString(L"OscFormatHeader"),
                         { patchbay::OscFormatName(patchbay::OscFormat::Paths), patchbay::OscFormatName(patchbay::OscFormat::MidiType),
-                          patchbay::OscFormatName(patchbay::OscFormat::Arguments) },
+                          patchbay::OscFormatName(patchbay::OscFormat::Arguments), patchbay::OscFormatName(patchbay::OscFormat::Custom) },
                         static_cast<int32_t>(row.Format));
 
                     format.SelectionChanged([changeRow, group, format](auto&&, auto&&)
@@ -914,6 +944,7 @@ namespace winrt::midipatchbay::implementation
                     body.Children().Append(parts::HeadingHint(resources::GetString(
                         row.Format == patchbay::OscFormat::Paths ? L"OscFormatPathsHint" :
                         row.Format == patchbay::OscFormat::MidiType ? L"OscFormatMidiTypeHint" :
+                        row.Format == patchbay::OscFormat::Custom ? L"OscFormatCustomHint" :
                         L"OscFormatArgumentsHint")));
 
                     if (row.Format == patchbay::OscFormat::Arguments)
@@ -931,8 +962,247 @@ namespace winrt::midipatchbay::implementation
                         body.Children().Append(namesBox);
                     }
 
+                    if (isCustom)
+                    {
+                        for (size_t i = 0; i < row.Rules.size(); i++)
+                        {
+                            auto const& rule = row.Rules[i];
+
+                            // Changes one rule, if it's still there.
+                            auto const changeRule = [changeRow, group, i](auto edit, bool rebuildAfter)
+                                {
+                                    changeRow(group, [i, edit](patchbay::OscRow& r)
+                                        {
+                                            if (i < r.Rules.size())
+                                            {
+                                                edit(r.Rules[i]);
+                                            }
+                                        }, rebuildAfter);
+                                };
+
+                            controls::StackPanel ruleBody{};
+                            ruleBody.Spacing(6);
+                            ruleBody.Padding(xaml::ThicknessHelper::FromLengths(12, 8, 0, 8));
+                            ruleBody.BorderThickness(xaml::ThicknessHelper::FromLengths(2, 0, 0, 0));
+                            ruleBody.BorderBrush(BrushOf(L"ControlStrokeColorDefaultBrush"));
+
+                            ruleBody.Children().Append(Line(resources::FormatString(L"OscRuleHeadingFormat", static_cast<uint32_t>(i + 1)), 13));
+
+                            controls::TextBox address{};
+                            address.Header(winrt::box_value(resources::GetString(L"OscRuleAddressHeader")));
+                            address.PlaceholderText(resources::GetString(L"OscRuleAddressPlaceholder"));
+                            address.Text(winrt::hstring{ std::wstring{ rule.Address.begin(), rule.Address.end() } });
+
+                            auto addressError = Line(resources::GetString(L"OscRuleAddressInvalid"), 11, L"SystemFillColorCriticalBrush");
+                            addressError.TextWrapping(xaml::TextWrapping::Wrap);
+                            addressError.Visibility(xaml::Visibility::Collapsed);
+
+                            address.LostFocus([changeRule, address, addressError](auto&&, auto&&)
+                                {
+                                    auto const text = AsciiText(address.Text());
+                                    auto const valid = text.has_value() && patchbay::osc::IsValidRuleAddress(*text);
+
+                                    addressError.Visibility(valid ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+                                    if (valid)
+                                    {
+                                        changeRule([value = *text](patchbay::OscRule& r) { r.Address = value; }, true);
+                                    }
+                                });
+
+                            ruleBody.Children().Append(address);
+                            ruleBody.Children().Append(addressError);
+
+                            auto message = Choices(resources::GetString(L"OscRuleMessageHeader"),
+                                { resources::GetString(L"OscRuleMessageControlChange"), resources::GetString(L"OscRuleMessageNote"),
+                                  resources::GetString(L"OscRuleMessageProgramChange"), resources::GetString(L"OscRuleMessagePitchBend"),
+                                  resources::GetString(L"OscRuleMessageChannelPressure"), resources::GetString(L"OscRuleMessagePolyPressure") },
+                                static_cast<int32_t>(rule.Message));
+
+                            message.SelectionChanged([changeRule, message](auto&&, auto&&)
+                                {
+                                    auto const value = static_cast<patchbay::OscRuleMessage>(std::clamp(message.SelectedIndex(), 0, patchbay::OscRuleMessageCount - 1));
+                                    changeRule([value](patchbay::OscRule& r) { r.Message = value; }, true);
+                                });
+
+                            auto direction = Choices(resources::GetString(L"OscRuleDirectionHeader"),
+                                { resources::GetString(L"OscRuleDirectionBoth"), resources::GetString(L"OscRuleDirectionIn"), resources::GetString(L"OscRuleDirectionOut") },
+                                static_cast<int32_t>(rule.Direction));
+
+                            direction.SelectionChanged([changeRule, direction](auto&&, auto&&)
+                                {
+                                    auto const value = static_cast<patchbay::OscRuleDirection>(std::clamp(direction.SelectedIndex(), 0, 2));
+                                    changeRule([value](patchbay::OscRule& r) { r.Direction = value; }, true);
+                                });
+
+                            ruleBody.Children().Append(TwoColumns(message, direction));
+
+                            // A number, or a part with an offset. People count channels from 1.
+                            auto const numberBox = [](winrt::hstring const& header, patchbay::OscRuleNumber const& value, int32_t shown)
+                                {
+                                    controls::TextBox box{};
+                                    box.Header(winrt::box_value(header));
+                                    box.Text(winrt::hstring{ patchbay::osc::RuleNumberText(value, shown) });
+                                    return box;
+                                };
+
+                            auto const numberError = Line(resources::GetString(L"OscRuleNumberInvalid"), 11, L"SystemFillColorCriticalBrush");
+                            numberError.TextWrapping(xaml::TextWrapping::Wrap);
+                            numberError.Visibility(xaml::Visibility::Collapsed);
+
+                            auto channel = numberBox(resources::GetString(L"OscRuleChannelHeader"), rule.Channel, 1);
+
+                            channel.LostFocus([changeRule, channel, numberError](auto&&, auto&&)
+                                {
+                                    auto value = patchbay::osc::ParseRuleNumber(channel.Text());
+                                    auto const valid = value.has_value() && (!value->Part.empty() || (value->Offset >= 1 && value->Offset <= 16));
+
+                                    numberError.Visibility(valid ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+                                    if (valid)
+                                    {
+                                        value->Offset -= 1;
+                                        changeRule([number = *value](patchbay::OscRule& r) { r.Channel = number; }, true);
+                                    }
+                                });
+
+                            auto const usesNumber = rule.Message != patchbay::OscRuleMessage::PitchBend && rule.Message != patchbay::OscRuleMessage::ChannelPressure;
+
+                            if (usesNumber)
+                            {
+                                auto number = numberBox(resources::GetString(
+                                    rule.Message == patchbay::OscRuleMessage::ControlChange ? L"OscRuleNumberController" :
+                                    rule.Message == patchbay::OscRuleMessage::ProgramChange ? L"OscRuleNumberProgram" :
+                                    L"OscRuleNumberNote"), rule.Number, 0);
+
+                                number.LostFocus([changeRule, number, numberError](auto&&, auto&&)
+                                    {
+                                        auto const value = patchbay::osc::ParseRuleNumber(number.Text());
+                                        auto const valid = value.has_value() && (!value->Part.empty() || (value->Offset >= 0 && value->Offset <= 127));
+
+                                        numberError.Visibility(valid ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+                                        if (valid)
+                                        {
+                                            changeRule([n = *value](patchbay::OscRule& r) { r.Number = n; }, true);
+                                        }
+                                    });
+
+                                ruleBody.Children().Append(TwoColumns(channel, number));
+                            }
+                            else
+                            {
+                                ruleBody.Children().Append(channel);
+                            }
+
+                            ruleBody.Children().Append(numberError);
+                            ruleBody.Children().Append(parts::HeadingHint(resources::GetString(L"OscRuleNumberHint")));
+
+                            auto const valueBox = [](winrt::hstring const& header, double value)
+                                {
+                                    auto box = parts::NumberBox(header, -patchbay::MaximumOscRuleValue, patchbay::MaximumOscRuleValue, value, 10);
+                                    box.SmallChange(0.1);
+                                    return box;
+                                };
+
+                            auto low = valueBox(resources::GetString(L"OscRuleLowHeader"), rule.Low);
+                            auto high = valueBox(resources::GetString(L"OscRuleHighHeader"), rule.High);
+
+                            // Both ends the same would be no range at all, so that change isn't kept.
+                            low.ValueChanged([changeRule](controls::NumberBox const& box, auto&&)
+                                {
+                                    auto const value = box.Value();
+
+                                    if (std::isfinite(value))
+                                    {
+                                        changeRule([value](patchbay::OscRule& r) { if (value != r.High) { r.Low = value; } }, false);
+                                    }
+                                });
+
+                            high.ValueChanged([changeRule](controls::NumberBox const& box, auto&&)
+                                {
+                                    auto const value = box.Value();
+
+                                    if (std::isfinite(value))
+                                    {
+                                        changeRule([value](patchbay::OscRule& r) { if (value != r.Low) { r.High = value; } }, false);
+                                    }
+                                });
+
+                            ruleBody.Children().Append(TwoColumns(low, high));
+                            ruleBody.Children().Append(parts::HeadingHint(resources::GetString(L"OscRuleRangeHint")));
+
+                            auto argument = parts::NumberBox(resources::GetString(L"OscRuleArgumentHeader"), 1, patchbay::MaximumOscRuleArgument + 1.0, rule.Argument + 1.0, 1);
+
+                            argument.ValueChanged([changeRule](controls::NumberBox const& box, auto&&)
+                                {
+                                    if (std::isfinite(box.Value()))
+                                    {
+                                        auto const value = static_cast<uint8_t>(std::clamp(box.Value() - 1, 0.0, static_cast<double>(patchbay::MaximumOscRuleArgument)));
+                                        changeRule([value](patchbay::OscRule& r) { r.Argument = value; }, false);
+                                    }
+                                });
+
+                            controls::Button removeRule{};
+                            removeRule.Content(winrt::box_value(resources::GetString(L"OscRuleRemove")));
+                            removeRule.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+
+                            removeRule.Click([changeRow, group, i](auto&&, auto&&)
+                                {
+                                    changeRow(group, [i](patchbay::OscRow& r)
+                                        {
+                                            if (i < r.Rules.size())
+                                            {
+                                                r.Rules.erase(r.Rules.begin() + static_cast<ptrdiff_t>(i));
+                                            }
+                                        }, true);
+                                });
+
+                            ruleBody.Children().Append(TwoColumns(argument, removeRule));
+                            midiapp::UseTouchSpinButtons({ low, high, argument });
+
+                            // Say so when a rule can't do what it's set to.
+                            if (rule.Direction != patchbay::OscRuleDirection::Out && !patchbay::osc::RuleReceives(rule))
+                            {
+                                auto warning = Line(resources::GetString(L"OscRuleCantReceive"), 11, L"SystemFillColorCautionBrush");
+                                warning.TextWrapping(xaml::TextWrapping::Wrap);
+                                ruleBody.Children().Append(warning);
+                            }
+
+                            if (rule.Direction != patchbay::OscRuleDirection::In && !patchbay::osc::RuleSends(rule))
+                            {
+                                auto warning = Line(resources::GetString(L"OscRuleCantSend"), 11, L"SystemFillColorCautionBrush");
+                                warning.TextWrapping(xaml::TextWrapping::Wrap);
+                                ruleBody.Children().Append(warning);
+                            }
+
+                            body.Children().Append(ruleBody);
+                        }
+
+                        controls::Button addRule{};
+                        addRule.Content(winrt::box_value(resources::GetString(L"OscAddRule")));
+                        addRule.IsEnabled(row.Rules.size() < patchbay::MaximumOscRules);
+
+                        addRule.Click([changeRow, group](auto&&, auto&&)
+                            {
+                                changeRow(group, [](patchbay::OscRow& r)
+                                    {
+                                        if (r.Rules.size() < patchbay::MaximumOscRules)
+                                        {
+                                            patchbay::OscRule rule{};
+                                            rule.Address = "/control{n}";
+                                            rule.Number = patchbay::OscRuleNumber{ "n", 0 };
+                                            r.Rules.push_back(rule);
+                                        }
+                                    }, true);
+                            });
+
+                        body.Children().Append(addRule);
+                    }
+
                     // The MIDI type carries channels in its status byte, so none of these apply.
-                    if (row.Format != patchbay::OscFormat::MidiType)
+                    // Rules say their own.
+                    if (row.Format != patchbay::OscFormat::MidiType && !isCustom)
                     {
                         auto channels = Choices(resources::GetString(L"OscChannelsHeader"),
                             { resources::GetString(L"OscChannelsFromOne"), resources::GetString(L"OscChannelsFromZero") },
@@ -998,21 +1268,25 @@ namespace winrt::midipatchbay::implementation
                         midiapp::UseTouchSpinButtons({ channel });
                     }
 
-                    auto sysex = parts::Check(resources::GetString(L"OscSendSysEx"), row.SendSysEx);
-                    sysex.Click([changeRow, group, sysex](auto&&, auto&&)
-                        {
-                            auto const value = Checked(sysex);
-                            changeRow(group, [value](patchbay::OscRow& r) { r.SendSysEx = value; }, false);
-                        });
-                    body.Children().Append(sysex);
+                    // Rules carry channel messages only.
+                    if (!isCustom)
+                    {
+                        auto sysex = parts::Check(resources::GetString(L"OscSendSysEx"), row.SendSysEx);
+                        sysex.Click([changeRow, group, sysex](auto&&, auto&&)
+                            {
+                                auto const value = Checked(sysex);
+                                changeRow(group, [value](patchbay::OscRow& r) { r.SendSysEx = value; }, false);
+                            });
+                        body.Children().Append(sysex);
 
-                    auto clock = parts::Check(resources::GetString(L"OscSendClock"), row.SendClock);
-                    clock.Click([changeRow, group, clock](auto&&, auto&&)
-                        {
-                            auto const value = Checked(clock);
-                            changeRow(group, [value](patchbay::OscRow& r) { r.SendClock = value; }, false);
-                        });
-                    body.Children().Append(clock);
+                        auto clock = parts::Check(resources::GetString(L"OscSendClock"), row.SendClock);
+                        clock.Click([changeRow, group, clock](auto&&, auto&&)
+                            {
+                                auto const value = Checked(clock);
+                                changeRow(group, [value](patchbay::OscRow& r) { r.SendClock = value; }, false);
+                            });
+                        body.Children().Append(clock);
+                    }
 
                     // Which group the row is. Moving it takes its links along.
                     std::vector<winrt::hstring> groupNames{};
@@ -1402,6 +1676,16 @@ namespace winrt::midipatchbay::implementation
                 signature += std::format(L"|{}|{}", heard.front().When, heard.front().Address);
             }
 
+            // A rule added from the list takes its link away.
+            size_t ruleCount{ 0 };
+
+            for (auto const& row : endpoint->Osc->Rows)
+            {
+                ruleCount += row.Rules.size();
+            }
+
+            signature += std::format(L"|r{}", ruleCount);
+
             if (signature == m_oscHeardSignature)
             {
                 return;
@@ -1418,6 +1702,7 @@ namespace winrt::midipatchbay::implementation
 
             auto weak = get_weak();
             auto const hasFreeGroup = patchbay::FreeOscGroup(*endpoint->Osc).has_value();
+            std::set<std::string> offeredRules{};
 
             for (auto const& message : heard)
             {
@@ -1472,6 +1757,69 @@ namespace winrt::midipatchbay::implementation
                         });
 
                     entry.Children().Append(add);
+                }
+
+                // An address no format takes can still have a rule. Offered once for each address,
+                // and not at all when a rule has it already.
+                if (message.Accepted && !message.Matched && message.RuleSuggestion.has_value())
+                {
+                    auto const rule = *message.RuleSuggestion;
+                    auto known = !offeredRules.insert(rule.Address).second;
+                    auto room = hasFreeGroup;
+
+                    for (auto const& row : endpoint->Osc->Rows)
+                    {
+                        if (row.Format != patchbay::OscFormat::Custom)
+                        {
+                            continue;
+                        }
+
+                        room = room || row.Rules.size() < patchbay::MaximumOscRules;
+                        known = known || std::any_of(row.Rules.begin(), row.Rules.end(), [&rule](patchbay::OscRule const& r) { return r.Address == rule.Address; });
+                    }
+
+                    if (!known && room)
+                    {
+                        controls::HyperlinkButton add{};
+                        add.Content(winrt::box_value(resources::FormatString(L"OscHeardAddRuleFormat",
+                            std::wstring{ rule.Address.begin(), rule.Address.end() }, patchbay::OscRuleSummary(rule))));
+                        add.Padding(xaml::ThicknessHelper::FromLengths(0, 2, 0, 2));
+
+                        add.Click([weak, endpointId, rule](auto&&, auto&&)
+                            {
+                                if (auto strong = weak.get())
+                                {
+                                    strong->ChangeOscRows(endpointId, [rule](patchbay::PatchDocument&, patchbay::PatchEndpoint& target)
+                                        {
+                                            // The first rules row with room, or a new one on a free group.
+                                            for (auto& row : target.Osc->Rows)
+                                            {
+                                                if (row.Format == patchbay::OscFormat::Custom && row.Rules.size() < patchbay::MaximumOscRules)
+                                                {
+                                                    row.Rules.push_back(rule);
+                                                    return;
+                                                }
+                                            }
+
+                                            auto const group = patchbay::FreeOscGroup(*target.Osc);
+
+                                            if (!group.has_value())
+                                            {
+                                                return;
+                                            }
+
+                                            patchbay::OscRow row{};
+                                            row.Group = *group;
+                                            row.Root.clear();
+                                            row.Format = patchbay::OscFormat::Custom;
+                                            row.Rules.push_back(rule);
+                                            target.Osc->Rows.push_back(std::move(row));
+                                        });
+                                }
+                            });
+
+                        entry.Children().Append(add);
+                    }
                 }
 
                 m_oscHeardPanel.Children().Append(entry);

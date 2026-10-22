@@ -42,7 +42,24 @@ To play REAPER on another PC or a Mac, send to that computer's address instead o
 
 ## Play your synths from TouchOSC
 
-TouchOSC has no MIDI over OSC of its own. Each control sends the OSC message you set up for it, so you choose messages that match a format Windows MIDI Patchbay reads. The **Paths** format is the easiest:
+TouchOSC has no MIDI over OSC of its own. Each control sends an OSC message of its own, like `/1/fader3` with a value from 0 to 1. There are two ways to use them.
+
+### Use TouchOSC's layouts as they come
+
+The quickest way, with nothing to change in TouchOSC:
+
+1. In Windows MIDI Patchbay, drag **OSC connection** onto the canvas and choose **TouchOSC**.
+2. Leave **Listen on port** at `8000`. In **Send to**, type your phone or tablet's address, with port `9000`. If its address changes from day to day, select the connection after you add it and check **Send to whoever sent to me last** instead.
+3. Select **Add**. Connect the OSC connection's **Out** to your synth's **In**, and start the patch routing.
+4. In TouchOSC, set up a connection that sends to this PC's address on port `8000` and listens on port `9000`.
+
+The TouchOSC preset is a row of rules: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons `/1/push1` and up play notes from middle C, all on channel 1. The rules work both ways, so a controller the patch sends moves the fader on your phone.
+
+For other controls, select the OSC connection and move them. **Recently heard** lists what arrives, and **Add a rule for this** adds a rule for each control, or for a whole set of them, like every fader on page 2. To change what a rule does, select the OSC connection and find the rule under **Rows**.
+
+### Or set up each control yourself
+
+You can also give each control an address that matches a format Windows MIDI Patchbay reads. The **Paths** format is the easiest:
 
 | To send | Address | Value |
 | --- | --- | --- |
@@ -50,11 +67,7 @@ TouchOSC has no MIDI over OSC of its own. Each control sends the OSC message you
 | A control change on channel 1 | `/midi/1/cc/7` | The value |
 | Pitch bend on channel 1 | `/midi/1/pitch` | The bend |
 
-In Windows MIDI Patchbay:
-
-1. Drag **OSC connection** onto the canvas and choose **Paths**.
-2. Leave **Listen on port** at `8000`. In **Send to**, type your phone or tablet's address, with port `9000`. If its address changes from day to day, select the connection after you add it and check **Send to whoever sent to me last** instead.
-3. Select **Add**. Connect the OSC connection's **Out** to your synth's **In**, and start the patch routing.
+Set up the OSC connection as above, but choose **Paths**.
 
 TouchOSC controls go from 0 to 1 unless you change them. Pick one of these, so the numbers come out right:
 

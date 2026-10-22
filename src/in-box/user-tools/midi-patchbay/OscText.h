@@ -20,6 +20,9 @@ namespace midipatchbay
     // What a row's group shows on the canvas: "/vkb_midi (REAPER)".
     std::wstring OscRowLabel(_In_ OscRow const& row) noexcept;
 
+    // What a rule makes, for people to read: "controller {n}+70", "note 60", "pitch bend".
+    std::wstring OscRuleSummary(_In_ OscRule const& rule) noexcept;
+
     // The line under the node's name: what it listens on and where it sends.
     std::wstring OscNodeSubtitle(_In_ OscConnectionSettings const& settings) noexcept;
 

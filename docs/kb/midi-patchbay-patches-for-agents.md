@@ -197,6 +197,33 @@ $problems = [Collections.Generic.List[string]]::new()
 function Test-Number($Value) { $Value -is [long] -or $Value -is [int] -or $Value -is [double] -or $Value -is [decimal] }
 function Test-Range($Value, [double]$Lowest, [double]$Highest) { $null -eq $Value -or ((Test-Number $Value) -and $Value -ge $Lowest -and $Value -le $Highest) }
 function Get-List($Value) { if ($null -eq $Value) { @() } else { @($Value) } }
+# A custom rule's address: its part names, or $null when it isn't one.
+function Get-RuleParts([string]$Address) {
+    if ($Address -cnotmatch '^/' -or $Address.Length -gt 255) { return $null }
+    $parts = [Collections.Generic.List[string]]::new(); $after = $false; $i = 0
+    while ($i -lt $Address.Length) {
+        $c = $Address[$i]
+        if ([int]$c -le 32 -or [int]$c -gt 126) { return $null }
+        if ($c -eq '{') {
+            $m = [regex]::Match($Address.Substring($i), '^\{([a-z]{1,16})\}')
+            if (-not $m.Success -or $after) { return $null }
+            $parts.Add($m.Groups[1].Value); $i += $m.Length; $after = $true; continue
+        }
+        if ('*?[],#{}'.Contains($c) -or ($after -and $c -ge '0' -and $c -le '9')) { return $null }
+        $after = $false; $i++
+    }
+    if ($parts.Count -gt 4) { return $null }
+    return , $parts
+}
+# A custom rule's channel or number: a whole number, or "{n}+70" and the like. $null when it's neither.
+function Get-RuleNumber($Value) {
+    if (Test-Number $Value) { if ($Value -ne [Math]::Floor($Value) -or [Math]::Abs($Value) -gt 1000000) { return $null }; return @{ Part = ''; Offset = [int]$Value } }
+    if ($Value -isnot [string]) { return $null }
+    $text = $Value -replace '\s', ''
+    if ($text -cmatch '^\{([a-z]{1,16})\}([+-]\d{1,7})?$') { return @{ Part = $Matches[1]; Offset = $(if ($Matches[2]) { [int]$Matches[2] } else { 0 }) } }
+    if ($text -cmatch '^[+-]?\d{1,7}$') { return @{ Part = ''; Offset = [int]$text } }
+    return $null
+}
 function Test-Keys($Object, [string[]]$Known, [string]$Where) {
     if ($Object -isnot [Management.Automation.PSCustomObject]) { return }
     $in = $Where.Substring(0, 1).ToLowerInvariant() + $Where.Substring(1)
@@ -530,18 +557,52 @@ foreach ($o in (Get-List $patch.oscConnections)) {
     $groups = [Collections.Generic.HashSet[int]]::new()
     foreach ($row in (Get-List $o.rows)) {
         $in = "A row of the OSC connection '$($o.id)'"
-        Test-Keys $row @('group', 'root', 'format', 'names', 'channelsFromZero', 'values', 'pitchBend', 'noteOff', 'sendSysEx', 'sendClock', 'channel') $in
+        Test-Keys $row @('group', 'root', 'format', 'names', 'channelsFromZero', 'values', 'pitchBend', 'noteOff', 'sendSysEx', 'sendClock', 'channel', 'rules') $in
         if (-not (Test-Number $row.group) -or $row.group -lt 0 -or $row.group -gt 15 -or $row.group -ne [Math]::Floor($row.group)) { $problems.Add("$in has no group from 0 to 15, so Windows MIDI Patchbay leaves the row out. The file counts groups from 0."); continue }
         if (-not $groups.Add([int]$row.group)) { $problems.Add("Two rows of the OSC connection '$($o.id)' are on group $($row.group). Windows MIDI Patchbay keeps only the first."); continue }
         $root = "$($row.root)"
         if ($root -cnotmatch '^(?:/[\x21-\x2E\x30-\x7E]+)*$' -or $root -match '[#*,?\[\]{}]') { $problems.Add("$in has the address '$root'. An address is empty, or starts with a slash and has no spaces, no slash at the end, and none of # * , ? [ ] { }, so Windows MIDI Patchbay leaves the row out.") }
-        Test-Choice $row.format @('paths', 'midiType', 'arguments') $in 'format'
+        Test-Choice $row.format @('paths', 'midiType', 'arguments', 'custom') $in 'format'
         Test-Choice $row.names @('openStageControl', 'oscMidiOsc') $in 'names'
         Test-Choice $row.values @('integers', 'floats', 'zeroToOne') $in 'values'
         Test-Choice $row.pitchBend @('zeroTo16383', 'centeredOnZero') $in 'pitchBend'
         Test-Choice $row.noteOff @('velocityZero', 'ownAddress') $in 'noteOff'
         if (-not (Test-Range $row.channel 0 15)) { $problems.Add("$in has a channel outside 0 to 15, so it's 0. The file counts channels from 0.") }
         if ($row.format -ceq 'midiType' -and $root -eq '') { $problems.Add("$in uses the MIDI type with no address, so Windows MIDI Patchbay uses /midi.") }
+        $rules = @(Get-List $row.rules)
+        if ($row.format -cne 'custom') {
+            if ($rules.Count -gt 0) { $problems.Add("$in has rules, but rules only work with the format 'custom', so Windows MIDI Patchbay drops them.") }
+            continue
+        }
+        if ($root -ne '') { $problems.Add("$in has the address '$root', but a 'custom' row isn't under one: each rule has its own, so it's ignored.") }
+        if ($rules.Count -eq 0) { $problems.Add("$in uses the format 'custom' with no rules, so no MIDI goes in or out of it.") }
+        if ($rules.Count -gt 64) { $problems.Add("$in has $($rules.Count) rules. Windows MIDI Patchbay keeps the first 64.") }
+        $ruleIndex = 0
+        foreach ($rule in $rules) {
+            $ruleIndex++
+            $at = "Rule $ruleIndex of a row of the OSC connection '$($o.id)'"
+            Test-Keys $rule @('address', 'argument', 'direction', 'message', 'channel', 'number', 'low', 'high') $at
+            $parts = Get-RuleParts "$($rule.address)"
+            if ($null -eq $parts) { $problems.Add("$at has the address '$($rule.address)'. A rule's address starts with a slash and has no spaces and none of # * , ? [ ], with up to 4 parts like {n} in lowercase letters, never two parts next to each other or a part right before a digit. Windows MIDI Patchbay drops the rule."); continue }
+            Test-Choice $rule.direction @('both', 'in', 'out') $at 'direction'
+            Test-Choice $rule.message @('controlChange', 'note', 'programChange', 'pitchBend', 'channelPressure', 'polyPressure') $at 'message'
+            if ($null -ne $rule.argument -and -not (Test-Range $rule.argument 0 7)) { $problems.Add("$at has an argument outside 0 to 7, so it's 0, the first argument.") }
+            $low = if ($null -eq $rule.low) { 0 } else { $rule.low }
+            $high = if ($null -eq $rule.high) { 1 } else { $rule.high }
+            if (-not (Test-Number $low) -or -not (Test-Number $high)) { $problems.Add("$at has a low or high that isn't a number, so it's 0 and 1.") }
+            elseif ($low -eq $high) { $problems.Add("$at has the same low and high, which is no range at all, so Windows MIDI Patchbay drops the rule."); continue }
+            $channel = Get-RuleNumber $(if ($null -eq $rule.channel) { 0 } else { $rule.channel })
+            $number = Get-RuleNumber $(if ($null -eq $rule.number) { 1 } else { $rule.number })
+            if ($null -eq $channel -or $null -eq $number) { $problems.Add("$at has a channel or number that's neither a whole number nor a part with an offset, like `"{n}+70`", so Windows MIDI Patchbay drops the rule."); continue }
+            $message = $rule.message ?? 'controlChange'
+            $usesNumber = $message -cnotin @('pitchBend', 'channelPressure')
+            if ($channel.Part -eq '' -and ($channel.Offset -lt 0 -or $channel.Offset -gt 15)) { $problems.Add("$at has channel $($channel.Offset), outside 0 to 15, so it takes nothing and sends nothing. The file counts channels from 0.") }
+            if ($usesNumber -and $number.Part -eq '' -and ($number.Offset -lt 0 -or $number.Offset -gt 127)) { $problems.Add("$at has number $($number.Offset), outside 0 to 127, so it takes nothing and sends nothing.") }
+            $direction = $rule.direction ?? 'both'
+            $used = @($channel.Part) + $(if ($usesNumber) { @($number.Part) } else { @() }) | Where-Object { $_ -ne '' }
+            if ($direction -cne 'out' -and @($used | Where-Object { $_ -cnotin $parts }).Count -gt 0) { $problems.Add("$at uses a part its address doesn't have, so it can't take messages.") }
+            if ($direction -cne 'in' -and @($parts | Where-Object { $_ -cnotin $used }).Count -gt 0) { $problems.Add("$at has a part in its address that neither the channel nor the number gives, so it can't send. Make it 'in', or use the part in the channel or number.") }
+        }
     }
     if ($groups.Count -eq 0) { $problems.Add("$where has no rows, so no MIDI goes in or out of it.") }
     $oscGroups[$o.id] = $groups
@@ -1188,9 +1249,10 @@ Each row:
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `group` | 0 to 15 | required | The group its messages come in on and go out from. Each row has its own. |
-| `root` | text | empty | The OSC address its messages go under, like `/midi` or `/vkb_midi`. Empty is the top level. Starts with a slash, with no spaces, no slash at the end, and none of `# * , ? [ ] { }`. |
-| `format` | `paths`, `midiType`, `arguments` | `paths` | How MIDI is written. See below. |
+| `root` | text | empty | The OSC address its messages go under, like `/midi` or `/vkb_midi`. Empty is the top level. Starts with a slash, with no spaces, no slash at the end, and none of `# * , ? [ ] { }`. Not used by `custom`. |
+| `format` | `paths`, `midiType`, `arguments`, `custom` | `paths` | How MIDI is written. See below. |
 | `names` | `openStageControl`, `oscMidiOsc` | `openStageControl` | For `arguments`: whose names to use. |
+| `rules` | list of rules | empty | For `custom`: its rules, tried in order. Up to 64. See [Custom rules](#custom-rules). |
 | `channelsFromZero` | `true`, `false` | `false` | Channels in addresses and arguments count from 0 instead of 1. |
 | `values` | `integers`, `floats`, `zeroToOne` | `integers` | How numbers go out. `zeroToOne` suits TouchOSC's controls. Numbers that come in are read however they're written. |
 | `pitchBend` | `zeroTo16383`, `centeredOnZero` | `zeroTo16383` | How pitch bend is written. |
@@ -1207,6 +1269,46 @@ The formats:
 | `midiType` | `/midi` with one argument of OSC's MIDI type. Its port is the row's `group`. SysEx goes to `<root>/sysex`. | TouchDesigner, and apps that read OSC's MIDI type |
 | `arguments` with `openStageControl` | `/note` with the channel, note, and velocity | Open Stage Control (root empty) |
 | `arguments` with `oscMidiOsc` | `/noteOn` with the note and velocity, and no channel | OSC_MIDI_OSC (root empty) |
+| `custom` | Whatever its rules say, like `/1/push1` with 1 | Apps whose controls send addresses of their own, like TouchOSC's layouts |
+
+#### Custom rules
+
+A `custom` row has rules instead of a format. Each rule turns one OSC address into one kind of MIDI message, and the MIDI back into that address. The first rule whose address matches a message that arrives takes it. Going out, the first rule whose message, channel, and number fit says the address. Rules only carry channel messages, never SysEx or clock.
+
+An address can have parts in braces where a number goes, like `/1/fader{n}`. A part stands for one or more digits, so `/1/fader{n}` takes `/1/fader1` to `/1/fader999999`. The channel and the number can use a part, plus or minus a number, like `"{n}+70"`, which makes `/1/fader3` controller 73.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `address` | text | required | Starts with a slash, with no spaces and none of `# * , ? [ ]`. Up to 4 parts, each lowercase letters in braces, like `{n}`. Two parts can't be next to each other, and a part can't be right before a digit. |
+| `argument` | 0 to 7 | 0 | Which argument carries the value, counted from 0. |
+| `direction` | `both`, `in`, `out` | `both` | `in` only turns OSC into MIDI. `out` only turns MIDI into OSC. |
+| `message` | `controlChange`, `note`, `programChange`, `pitchBend`, `channelPressure`, `polyPressure` | `controlChange` | What it makes. A `note` with the value at `low` is a note off. A `programChange` is sent when the value isn't at `low`, like a button that's pressed. |
+| `channel` | 0 to 15, or text like `"{c}-1"` | 0 | The channel, counted from 0. |
+| `number` | 0 to 127, or text like `"{n}+70"` | 1 | The controller, note, or program. `pitchBend` and `channelPressure` don't use it. |
+| `low`, `high` | numbers | 0 and 1 | The OSC values for the lowest and highest MIDI value. TouchOSC's controls go from 0 to 1. A `high` below `low` turns it upside down. They can't be the same. |
+
+Going in, the value is scaled from `low` and `high` to 0 to 127, or 0 to 16383 for pitch bend. Going out, it's scaled back and sent as a float. For `out` and `both`, every part of the address has to come from the channel or the number, or the rule can't work out the address. Rules that break these rules are dropped when the file is read.
+
+TouchOSC's stock layouts send addresses like `/1/fader1` to `/1/fader5` and `/1/toggle1` to `/1/toggle4`, each with a float from 0 to 1. This row turns them into controllers 71 to 75 and 80 to 83, and push buttons into notes from middle C, which is what the TouchOSC preset in Windows MIDI Patchbay makes:
+
+```json
+"oscConnections": [
+  {
+    "id": "phone",
+    "name": "TouchOSC",
+    "x": 60, "y": 60,
+    "receive": { "port": 8000 },
+    "send": { "host": "192.168.1.20", "port": 9000 },
+    "rows": [ { "group": 0, "format": "custom", "rules": [
+      { "address": "/1/fader{n}", "message": "controlChange", "number": "{n}+70" },
+      { "address": "/1/toggle{n}", "message": "controlChange", "number": "{n}+79" },
+      { "address": "/1/push{n}", "message": "note", "number": "{n}+59" }
+    ] } ]
+  }
+]
+```
+
+Ask the person which controls they want and what each should do. If they don't know what their app sends, tell them to select the OSC connection after the patch starts routing: **Recently heard** lists what arrives, with **Add a rule for this** for each address.
 
 A REAPER OSC connection that plays REAPER's virtual keyboard from a keyboard on the same PC:
 

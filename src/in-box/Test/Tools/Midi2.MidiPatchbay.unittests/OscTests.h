@@ -46,4 +46,9 @@ public:
     TEST_METHOD(RowsAreSuggestedFromWhatArrives);
     TEST_METHOD(OscConnectionsSurviveThePatchFile);
     TEST_METHOD(OscConnectionsRouteLikeEndpoints);
+    TEST_METHOD(RuleAddressesAndNumbersRead);
+    TEST_METHOD(CustomRulesBecomeMidi);
+    TEST_METHOD(CustomRulesSendOsc);
+    TEST_METHOD(CustomRulesSurviveTheFile);
+    TEST_METHOD(RulesAreSuggestedForTouchOsc);
 };

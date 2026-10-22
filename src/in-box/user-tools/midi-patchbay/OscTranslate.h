@@ -136,4 +136,11 @@ namespace midipatchbay::osc
 
     // A row that would take this message, when its address looks like one of the formats.
     std::optional<OscRow> SuggestRow(_In_ MessageView const& message, _In_ uint8_t group);
+
+    // A Custom rule that would take this message, for an address that isn't any format's: a
+    // number at the end of the address becomes a part, so /1/fader3 suggests /1/fader{n}. The
+    // name says what kind of message: buttons play notes from middle C, toggles and switches are
+    // controllers from 80, and anything else is a controller from 71. Numbers the rows' rules
+    // use already are skipped.
+    std::optional<OscRule> SuggestRule(_In_ MessageView const& message, _In_ std::span<OscRow const> rows);
 }

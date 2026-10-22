@@ -5419,4 +5419,141 @@
     <value>Public networks</value>
     <comment>A checkbox in the firewall bar. Its tooltip explains what a public network is.</comment>
   </data>
+  <data name="OscPresetTouchOsc" xml:space="preserve">
+    <value>TouchOSC</value>
+    <comment>The name of an OSC row preset for TouchOSC&apos;s own layouts.</comment>
+  </data>
+  <data name="OscPresetTouchOscHint" xml:space="preserve">
+    <value>Rules for TouchOSC&apos;s own layouts. Faders /1/fader1 to /1/fader5 are controllers 71 to 75, toggles /1/toggle1 to /1/toggle4 are controllers 80 to 83, and push buttons /1/push1 and up play notes from middle C. Change them, or add more, in the row&apos;s rules.</value>
+  </data>
+  <data name="OscFormatCustom" xml:space="preserve">
+    <value>Custom rules</value>
+    <comment>The name of an OSC row format where each rule maps one OSC address to one MIDI message.</comment>
+  </data>
+  <data name="OscFormatCustomHint" xml:space="preserve">
+    <value>Each rule turns one OSC address into one kind of MIDI message, and back. Put a part in braces where a number goes, like /1/fader{n}, and use it in the channel or number, like {n}+70.</value>
+  </data>
+  <data name="OscRowRuleFormat" xml:space="preserve">
+    <value>{0}, {1} rule</value>
+    <comment>A row of an OSC connection with exactly one rule. {0} is the preset or format name. {1} is 1.</comment>
+  </data>
+  <data name="OscRowRulesFormat" xml:space="preserve">
+    <value>{0}, {1} rules</value>
+    <comment>A row of an OSC connection with rules. {0} is the preset or format name. {1} is how many rules.</comment>
+  </data>
+  <data name="OscRuleHeadingFormat" xml:space="preserve">
+    <value>Rule {0}</value>
+    <comment>{0} is the rule&apos;s number, counted from 1.</comment>
+  </data>
+  <data name="OscRuleAddressHeader" xml:space="preserve">
+    <value>OSC address</value>
+  </data>
+  <data name="OscRuleAddressPlaceholder" xml:space="preserve">
+    <value>/1/fader{n}</value>
+  </data>
+  <data name="OscRuleAddressInvalid" xml:space="preserve">
+    <value>An address starts with / and has no spaces or *, ?, [, ], # or commas. Put a part in braces where a number goes, like {n}, using the letters a to z, and never two parts next to each other.</value>
+  </data>
+  <data name="OscRuleMessageHeader" xml:space="preserve">
+    <value>MIDI message</value>
+  </data>
+  <data name="OscRuleMessageControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="OscRuleMessageNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="OscRuleMessageProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="OscRuleMessagePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="OscRuleMessageChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="OscRuleMessagePolyPressure" xml:space="preserve">
+    <value>Poly pressure</value>
+  </data>
+  <data name="OscRuleDirectionHeader" xml:space="preserve">
+    <value>Works</value>
+  </data>
+  <data name="OscRuleDirectionBoth" xml:space="preserve">
+    <value>Both ways</value>
+  </data>
+  <data name="OscRuleDirectionIn" xml:space="preserve">
+    <value>OSC to MIDI only</value>
+  </data>
+  <data name="OscRuleDirectionOut" xml:space="preserve">
+    <value>MIDI to OSC only</value>
+  </data>
+  <data name="OscRuleChannelHeader" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="OscRuleNumberController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="OscRuleNumberNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="OscRuleNumberProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="OscRuleNumberHint" xml:space="preserve">
+    <value>A number, or a part of the address plus or minus a number, like {n}+70. Channels go from 1 to 16, and the rest from 0 to 127.</value>
+  </data>
+  <data name="OscRuleNumberInvalid" xml:space="preserve">
+    <value>Use a number, or a part like {n} with + or - and a number. Channels go from 1 to 16, and the rest from 0 to 127.</value>
+  </data>
+  <data name="OscRuleLowHeader" xml:space="preserve">
+    <value>OSC value at the bottom</value>
+  </data>
+  <data name="OscRuleHighHeader" xml:space="preserve">
+    <value>OSC value at the top</value>
+  </data>
+  <data name="OscRuleRangeHint" xml:space="preserve">
+    <value>TouchOSC&apos;s controls go from 0 to 1. For a note, the bottom lets the note go. A program change is sent when the value isn&apos;t at the bottom, like a button that&apos;s pressed.</value>
+  </data>
+  <data name="OscRuleArgumentHeader" xml:space="preserve">
+    <value>Argument</value>
+    <comment>The header of a number box: which of the OSC message&apos;s arguments carries the value, counted from 1.</comment>
+  </data>
+  <data name="OscRuleRemove" xml:space="preserve">
+    <value>Remove this rule</value>
+  </data>
+  <data name="OscAddRule" xml:space="preserve">
+    <value>Add a rule</value>
+  </data>
+  <data name="OscRuleCantReceive" xml:space="preserve">
+    <value>This rule can&apos;t take messages: its channel or number uses a part its address doesn&apos;t have.</value>
+  </data>
+  <data name="OscRuleCantSend" xml:space="preserve">
+    <value>This rule can&apos;t send: every part of its address has to come from the channel or the number.</value>
+  </data>
+  <data name="OscHeardAddRuleFormat" xml:space="preserve">
+    <value>Add a rule for this: {0} to {1}</value>
+    <comment>{0} is an OSC address with a part in braces, like /1/fader{n}. {1} is what it becomes, like controller {n}+70.</comment>
+  </data>
+  <data name="OscRuleSummaryController" xml:space="preserve">
+    <value>controller {0}</value>
+    <comment>{0} is a number or a part of an address with an offset, like {n}+70.</comment>
+  </data>
+  <data name="OscRuleSummaryNote" xml:space="preserve">
+    <value>note {0}</value>
+    <comment>{0} is a number or a part of an address with an offset, like {n}+59.</comment>
+  </data>
+  <data name="OscRuleSummaryProgram" xml:space="preserve">
+    <value>program {0}</value>
+    <comment>{0} is a number or a part of an address with an offset.</comment>
+  </data>
+  <data name="OscRuleSummaryPitchBend" xml:space="preserve">
+    <value>pitch bend</value>
+  </data>
+  <data name="OscRuleSummaryChannelPressure" xml:space="preserve">
+    <value>channel pressure</value>
+  </data>
+  <data name="OscRuleSummaryPolyPressure" xml:space="preserve">
+    <value>poly pressure on note {0}</value>
+    <comment>{0} is a number or a part of an address with an offset.</comment>
+  </data>
 </root>

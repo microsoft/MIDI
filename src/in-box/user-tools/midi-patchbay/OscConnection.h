@@ -43,9 +43,81 @@ namespace midipatchbay
         // Fixed names under the root, and every number an argument: <root>/note with the
         // channel, note and velocity as arguments.
         Arguments = 2,
+
+        // Rules, each one OSC address to one kind of MIDI message, for apps that send addresses
+        // of their own, like a TouchOSC fader at /1/fader1. The root isn't used.
+        Custom = 3,
     };
 
-    constexpr int32_t OscFormatCount = 3;
+    constexpr int32_t OscFormatCount = 4;
+
+    // Which way a rule works.
+    enum class OscRuleDirection : int32_t
+    {
+        Both = 0,
+
+        // OSC that arrives becomes MIDI.
+        In = 1,
+
+        // MIDI going out becomes OSC.
+        Out = 2,
+    };
+
+    enum class OscRuleMessage : int32_t
+    {
+        ControlChange = 0,
+
+        // The value is the velocity. The lowest value is a note off.
+        Note = 1,
+
+        // Sent when the value isn't the lowest, like a button that's pressed.
+        ProgramChange = 2,
+
+        PitchBend = 3,
+        ChannelPressure = 4,
+        PolyPressure = 5,
+    };
+
+    constexpr int32_t OscRuleMessageCount = 6;
+
+    // A channel or a number in a rule: a part of the address, such as the 3 in /1/fader3 when the
+    // rule says /1/fader{n}, plus or minus an offset. With no part, it's the offset alone.
+    struct OscRuleNumber
+    {
+        // Lowercase letters, as in {n}. Empty for a fixed number.
+        std::string Part{};
+
+        int32_t Offset{ 0 };
+    };
+
+    struct OscRule
+    {
+        // An OSC address with parts in braces where a number goes: "/1/fader{n}". ASCII only.
+        std::string Address{};
+
+        // Which argument carries the value, counted from 0.
+        uint8_t Argument{ 0 };
+
+        OscRuleDirection Direction{ OscRuleDirection::Both };
+        OscRuleMessage Message{ OscRuleMessage::ControlChange };
+
+        // 0 to 15 once worked out.
+        OscRuleNumber Channel{};
+
+        // The controller, note or program, 0 to 127 once worked out. Pitch bend and channel
+        // pressure don't use it.
+        OscRuleNumber Number{ {}, 1 };
+
+        // The OSC values that stand for the lowest and the highest MIDI value. High below Low
+        // turns it upside down.
+        double Low{ 0.0 };
+        double High{ 1.0 };
+    };
+
+    constexpr size_t MaximumOscRules = 64;
+    constexpr size_t MaximumOscRuleParts = 4;
+    constexpr uint8_t MaximumOscRuleArgument = 7;
+    constexpr double MaximumOscRuleValue = 1.0e9;
 
     // The names the Arguments format uses.
     enum class OscArgumentNames : int32_t
@@ -133,9 +205,13 @@ namespace midipatchbay
         MidiType = 2,
         OpenStageControl = 3,
         OscMidiOsc = 4,
+
+        // Custom rules for TouchOSC's own layouts: faders to controllers, toggles to the
+        // on/off controllers, and push buttons to notes.
+        TouchOsc = 5,
     };
 
-    constexpr int32_t OscPresetCount = 5;
+    constexpr int32_t OscPresetCount = 6;
 
     struct OscRow
     {
@@ -164,6 +240,9 @@ namespace midipatchbay
         // 0 to 15: the channel received messages come in on when they carry none. REAPER takes
         // addresses without a channel, and the OSC_MIDI_OSC names never have one.
         uint8_t Channel{ 0 };
+
+        // The Custom format's rules, in the order they're tried.
+        std::vector<OscRule> Rules{};
     };
 
     constexpr size_t MaximumOscRows = 16;

@@ -1011,6 +1011,16 @@ namespace midipatchbay
                 if (!matched)
                 {
                     heard.Suggestion = osc::SuggestRow(message, 0);
+
+                    // An address that isn't any format's can still have a rule.
+                    if (!heard.Suggestion.has_value())
+                    {
+                        auto const config = m_config.load();
+
+                        heard.RuleSuggestion = osc::SuggestRule(message, config != nullptr
+                            ? std::span<OscRow const>{ config->Settings.Rows }
+                            : std::span<OscRow const>{});
+                    }
                 }
 
                 m_heard.push_front(std::move(heard));

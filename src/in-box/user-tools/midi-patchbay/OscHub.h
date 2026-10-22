@@ -65,6 +65,9 @@ namespace midipatchbay
 
         // A row that would take it, when its address looks like one of the formats.
         std::optional<OscRow> Suggestion{};
+
+        // Otherwise, a Custom rule that would take it, like /1/fader{n} for /1/fader3.
+        std::optional<OscRule> RuleSuggestion{};
     };
 
     constexpr size_t MaximumRecentlyHeard = 50;
