@@ -147,15 +147,17 @@
         </Component>
         
 
-      <!-- midisrv only picks the transports up when it restarts -->
+      <!-- midisrv only picks the transports up when it restarts. Stopping it is done by the
+           StopMidiService custom actions below instead of here: they wait longer, ask again when
+           the first request does not take, and require a restart rather than failing the install
+           when the service will not stop. -->
       <Component Id="RestartService"
                  Bitness="always64"
                  Directory="SERVICE_INSTALLFOLDER"
                  Guid="219de177-e969-403f-8938-609c7d4ddc75">
 
         <ServiceControl Id="midisrv" Name="midisrv"
-                        Start="both"
-                        Stop="both"/>
+                        Start="both"/>
 
       </Component>
 
@@ -304,7 +306,62 @@
                     DllEntry="UnregisterTransportComServerIfOwned"
                     Return="check" />
 
+      <!-- Files in use and the MIDI service. See InstallSafetyActions.cs for why. -->
+      <SetProperty Id="MIDIRESTARTCHECKFOLDER"
+                   Value="[SERVICE_INSTALLFOLDER]"
+                   After="CostFinalize"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_WarnIfMidiRestartPending"
+                    Execute="immediate"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="WarnIfMidiRestartPending"
+                    Return="check" />
+
+      <CustomAction Id="Action_StopMidiServiceBeforeInstall"
+                    Execute="immediate"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="StopMidiServiceBeforeInstall"
+                    Return="ignore" />
+
+      <SetProperty Id="Action_StopMidiServiceDeferred"
+                   Value="TimeoutSeconds=[MIDIDEFERREDSTOPSECONDS]"
+                   Before="Action_StopMidiServiceDeferred"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_StopMidiServiceDeferred"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="StopMidiServiceDeferred"
+                    Return="ignore" />
+
+      <CustomAction Id="Action_RequireRestartIfMidiFilesPending"
+                    Execute="immediate"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="RequireRestartIfMidiFilesPending"
+                    Return="ignore" />
+
+      <UI>
+        <Error Id="25000" Message="Windows needs to restart to finish an earlier install or removal of Windows MIDI Services. Restart your PC first, then run this installer again. If you install now, some MIDI apps and transports may not work until you restart and install again.&#13;&#10;&#13;&#10;Select Cancel to stop now, or OK to install anyway." />
+        <ProgressText Action="Action_StopMidiServiceBeforeInstall" Message="Stopping the Windows MIDI Service. This can take a minute." />
+        <ProgressText Action="Action_StopMidiServiceDeferred" Message="Stopping the Windows MIDI Service. This can take a minute." />
+      </UI>
+
       <InstallExecuteSequence>
+        <Custom Action="Action_WarnIfMidiRestartPending"
+                Before="Action_StopMidiServiceBeforeInstall"
+                Condition='NOT (REMOVE="ALL")' />
+
+        <Custom Action="Action_StopMidiServiceBeforeInstall"
+                Before="InstallValidate" />
+
+        <Custom Action="Action_StopMidiServiceDeferred"
+                Before="StopServices" />
+
+        <Custom Action="Action_RequireRestartIfMidiFilesPending"
+                After="InstallFinalize" />
+
         <Custom Action="Action_TakeRegistryOwnership"
                 Before="CreateFolders"
                 Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />

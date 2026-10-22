@@ -10,4 +10,8 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- The same custom actions the Transports installer uses. -->
+    <ProjectReference Include="..\..\plugins-installer\custom-actions\customactions.csproj" />
+  </ItemGroup>
 </Project>
