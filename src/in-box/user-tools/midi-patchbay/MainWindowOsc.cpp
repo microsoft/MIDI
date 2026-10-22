@@ -1631,8 +1631,11 @@ namespace winrt::midipatchbay::implementation
 
             m_oscFirewallBar.Message(message);
 
+            // One row: what to let it in on, then the button. The longer explanations are in each
+            // box's tooltip and help text, so the bar stays short.
             controls::StackPanel choices{};
-            choices.Spacing(2);
+            choices.Orientation(controls::Orientation::Horizontal);
+            choices.Spacing(16);
             choices.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
 
             controls::CheckBox domainBox{ nullptr };
@@ -1641,15 +1644,23 @@ namespace winrt::midipatchbay::implementation
 
             auto weak = get_weak();
 
+            auto const explain = [](xaml::FrameworkElement const& element, winrt::hstring const& text)
+                {
+                    controls::ToolTipService::SetToolTip(element, winrt::box_value(text));
+                    xaml::Automation::AutomationProperties::SetHelpText(element, text);
+                };
+
             if (state.Status == firewall::FirewallStatus::Closed)
             {
-                choices.Children().Append(Line(resources::GetString(L"OscFirewallChoose"), 12));
+                auto label = Line(resources::GetString(L"OscFirewallChoose"), 14);
+                label.VerticalAlignment(xaml::VerticalAlignment::Center);
+                choices.Children().Append(label);
 
                 auto const showDomain = state.JoinedToDomain || (state.ConnectedNetworks & firewall::DomainNetworks) != 0;
 
-                auto const choice = [&](long type, wchar_t const* key)
+                auto const choice = [&](long type, wchar_t const* shortKey, wchar_t const* longKey)
                     {
-                        auto text = resources::GetString(key);
+                        auto text = resources::GetString(shortKey);
 
                         if ((state.ConnectedNetworks & type) != 0)
                         {
@@ -1659,6 +1670,16 @@ namespace winrt::midipatchbay::implementation
                         // What's blocked now starts checked, except public networks, which the
                         // customer has to choose.
                         auto box = parts::Check(text, (blockedTypes & type) != 0 && type != firewall::PublicNetworks);
+                        box.VerticalAlignment(xaml::VerticalAlignment::Center);
+
+                        auto tip = resources::GetString(longKey);
+
+                        if (type == firewall::PublicNetworks)
+                        {
+                            tip = tip + L"\n" + resources::GetString(L"OscFirewallPublicHint");
+                        }
+
+                        explain(box, tip);
                         choices.Children().Append(box);
 
                         return box;
@@ -1666,17 +1687,16 @@ namespace winrt::midipatchbay::implementation
 
                 if (showDomain)
                 {
-                    domainBox = choice(firewall::DomainNetworks, L"OscFirewallDomainNetworks");
+                    domainBox = choice(firewall::DomainNetworks, L"OscFirewallDomainShort", L"OscFirewallDomainNetworks");
                 }
 
-                privateBox = choice(firewall::PrivateNetworks, L"OscFirewallPrivateNetworks");
-                publicBox = choice(firewall::PublicNetworks, L"OscFirewallPublicNetworks");
-
-                choices.Children().Append(parts::Hint(resources::GetString(L"OscFirewallPublicHint")));
-                choices.Children().Append(parts::Hint(resources::GetString(L"OscFirewallAllowNote")));
+                privateBox = choice(firewall::PrivateNetworks, L"OscFirewallPrivateShort", L"OscFirewallPrivateNetworks");
+                publicBox = choice(firewall::PublicNetworks, L"OscFirewallPublicShort", L"OscFirewallPublicNetworks");
 
                 controls::Button allow{};
                 allow.Content(winrt::box_value(resources::GetString(L"OscFirewallAllowButton")));
+                allow.VerticalAlignment(xaml::VerticalAlignment::Center);
+                explain(allow, resources::GetString(L"OscFirewallAllowNote"));
 
                 allow.Click([weak, domainBox, privateBox, publicBox, showDomain](auto&&, auto&&)
                     {
@@ -1702,7 +1722,7 @@ namespace winrt::midipatchbay::implementation
                         strong->AllowOscThroughFirewallAsync(networks);
                     });
 
-                m_oscFirewallBar.ActionButton(allow);
+                choices.Children().Append(allow);
             }
             else
             {
@@ -1716,9 +1736,10 @@ namespace winrt::midipatchbay::implementation
                         winrt::Windows::System::Launcher::LaunchUriAsync(foundation::Uri{ L"windowsdefender://network/" });
                     });
 
-                m_oscFirewallBar.ActionButton(open);
+                choices.Children().Append(open);
             }
 
+            m_oscFirewallBar.ActionButton(nullptr);
             m_oscFirewallBar.Content(choices);
             m_oscFirewallBar.Visibility(xaml::Visibility::Visible);
             m_oscFirewallBar.IsOpen(true);
@@ -1742,9 +1763,15 @@ namespace winrt::midipatchbay::implementation
 
             m_oscFirewallBar.Message(resources::GetString(L"OscFirewallWaiting"));
 
-            if (auto const button = m_oscFirewallBar.ActionButton())
+            if (auto const panel = m_oscFirewallBar.Content().try_as<controls::Panel>())
             {
-                button.IsEnabled(false);
+                for (auto const& child : panel.Children())
+                {
+                    if (auto const control = child.try_as<controls::Control>())
+                    {
+                        control.IsEnabled(false);
+                    }
+                }
             }
 
             auto const owner = m_chrome.WindowHandle();

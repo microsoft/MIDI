@@ -5411,4 +5411,16 @@
   <data name="TileOscFirewall" xml:space="preserve">
     <value>OSC blocked by Windows Firewall</value>
   </data>
+  <data name="OscFirewallDomainShort" xml:space="preserve">
+    <value>Domain networks</value>
+    <comment>A checkbox in the firewall bar. Its tooltip explains what a domain network is.</comment>
+  </data>
+  <data name="OscFirewallPrivateShort" xml:space="preserve">
+    <value>Private networks</value>
+    <comment>A checkbox in the firewall bar. Its tooltip explains what a private network is.</comment>
+  </data>
+  <data name="OscFirewallPublicShort" xml:space="preserve">
+    <value>Public networks</value>
+    <comment>A checkbox in the firewall bar. Its tooltip explains what a public network is.</comment>
+  </data>
 </root>
