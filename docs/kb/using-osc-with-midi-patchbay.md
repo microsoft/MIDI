@@ -55,9 +55,15 @@ In Windows MIDI Patchbay:
 1. Drag **OSC connection** onto the canvas and choose **Paths**.
 2. Leave **Listen on port** at `8000`. In **Send to**, type your phone or tablet's address, with port `9000`. If its address changes from day to day, select the connection after you add it and check **Send to whoever sent to me last** instead.
 3. Select **Add**. Connect the OSC connection's **Out** to your synth's **In**, and start the patch routing.
-4. Select the row on the OSC connection, and set **Values sent as** to **0 to 1**. TouchOSC controls go from 0 to 1 unless you scale them, so this turns a fader all the way up into 127.
 
-In TouchOSC, set up a connection that sends to this PC's address on port `8000` and listens on port `9000`, then give each control the address from the table above.
+TouchOSC controls go from 0 to 1 unless you change them. Pick one of these, so the numbers come out right:
+
+- **Change each control's range** to the MIDI numbers: 0 to 127 for a control change, 0 to 16383 for pitch bend, and 0 to the velocity you want for a note button. A button sends the top of its range when you press it and the bottom when you let go, so 0 to 100 plays the note at velocity 100 and stops it when you let go.
+- **Or leave the controls at 0 to 1.** Select the row on the OSC connection, and set **Values sent as** to **0 to 1**. Then a fader all the way up is 127, and a button plays at velocity 127.
+
+In TouchOSC, set up a connection that sends to this PC's address on port `8000` and listens on port `9000`, then give each control the address from the table above. In TouchOSC Mk1, the older version, you do this in the free TouchOSC Editor on your PC: clear the **auto** box under OSC, type the address, and set the **Value Range**. Then select **Sync**, and on the phone go to **Layout**, then **Add**, and pick your PC.
+
+It works the other way too. Connect something to the OSC connection's **In**, and a TouchOSC fader with the same address, such as `/midi/1/cc/11`, moves to follow it.
 
 ## When nothing happens
 
