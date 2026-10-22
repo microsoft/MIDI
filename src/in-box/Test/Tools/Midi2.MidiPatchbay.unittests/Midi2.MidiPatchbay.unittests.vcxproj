@@ -127,6 +127,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscTime.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscTranslate.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscRules.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscStream.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchTrace.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SpinGuard.h" />
@@ -178,6 +179,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscTime.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscTranslate.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscRules.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscStream.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchTrace.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.cpp" />

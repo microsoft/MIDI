@@ -535,7 +535,7 @@ $oscGroups = @{}   # OSC connection id -> the groups it has rows on
 $oscCount = 0
 foreach ($o in (Get-List $patch.oscConnections)) {
     $where = "The OSC connection '$($o.name ?? $o.id)'"
-    Test-Keys $o @('id', 'name', 'x', 'y', 'receive', 'send', 'receivedTimeTags', 'spacingDelayMilliseconds', 'sendTiming', 'bundleTogether', 'rows') $where
+    Test-Keys $o @('id', 'name', 'x', 'y', 'transport', 'tcpFraming', 'receive', 'send', 'receivedTimeTags', 'spacingDelayMilliseconds', 'sendTiming', 'bundleTogether', 'rows') $where
     if (-not $o.id) { $problems.Add("$where has no id, so Windows MIDI Patchbay leaves it out."); continue }
     if (-not $kinds.TryAdd($o.id, 'endpoint')) { $problems.Add("The OSC connection '$($o.id)' has an id that an endpoint or another OSC connection already has, so Windows MIDI Patchbay leaves it out."); continue }
     if (++$oscCount -gt 16) { $problems.Add("$where is past the 16 OSC connections a patch can have, so Windows MIDI Patchbay leaves it out.") }
@@ -549,12 +549,21 @@ foreach ($o in (Get-List $patch.oscConnections)) {
     if (-not (Test-Range $r.messagesPerSecond 10 100000)) { $problems.Add("$where has messagesPerSecond outside 10 to 100000, so it's 5000.") }
     if ($r.acceptFrom -ceq 'list' -and (Get-List $r.acceptAddresses).Count -eq 0) { $problems.Add("$where takes messages from a list with nothing in it, so it takes them from anyone.") }
     if ($null -ne $r.advertise -and $r.advertise -isnot [bool]) { $problems.Add("$where has an advertise that isn't true or false, so it's true.") }
+    Test-Choice $o.transport @('udp', 'tcpConnect', 'tcpListen') $where 'transport'
+    Test-Choice $o.tcpFraming @('slip', 'sizeFirst') $where 'tcpFraming'
     Test-Choice $o.receivedTimeTags @('playOnArrival', 'useSenderTime', 'keepSenderSpacing') $where 'receivedTimeTags'
     Test-Choice $o.sendTiming @('atItsTime', 'earlyWithTimeTags') $where 'sendTiming'
     if (-not (Test-Range $o.spacingDelayMilliseconds 0 500)) { $problems.Add("$where has spacingDelayMilliseconds outside 0 to 500, so it's 10.") }
     $listens = (Test-Number $r.port) -and $r.port -gt 0 -and $r.port -le 65535
-    $sends = (Test-Number $s.port) -and $s.port -gt 0 -and $s.port -le 65535 -and ($s.host -or $s.toLastSender -eq $true)
-    if (-not $listens -and -not $sends) { $problems.Add("$where neither listens on a port nor has a host and port to send to, so it does nothing.") }
+    $hasPort = (Test-Number $s.port) -and $s.port -gt 0 -and $s.port -le 65535
+    $sends = $hasPort -and ($s.host -or $s.toLastSender -eq $true)
+    if ($o.transport -ceq 'tcpConnect') {
+        if (-not ($hasPort -and $s.host)) { $problems.Add("$where connects over TCP but has no host and port to connect to, so it does nothing.") }
+        if ($s.toLastSender -eq $true) { $problems.Add("$where connects over TCP, so toLastSender is ignored: replies come back on the connection.") }
+    } elseif ($o.transport -ceq 'tcpListen') {
+        if (-not $listens) { $problems.Add("$where waits for TCP connections but has no receive port, so it does nothing.") }
+        if ($r.acceptFrom -ceq 'sendHost' -or $null -eq $r.acceptFrom) { $problems.Add("$where waits for TCP connections, which have no computer to send to, so acceptFrom sendHost is read as a list with send.host in it, or as anyone when there's no host. Say anyone or list.") }
+    } elseif (-not $listens -and -not $sends) { $problems.Add("$where neither listens on a port nor has a host and port to send to, so it does nothing.") }
     $groups = [Collections.Generic.HashSet[int]]::new()
     foreach ($row in (Get-List $o.rows)) {
         $in = "A row of the OSC connection '$($o.id)'"
@@ -1231,15 +1240,17 @@ An OSC connection sends and receives MIDI as Open Sound Control (OSC) messages o
 | `id` | text | required | Unique in the patch, among endpoints, OSC connections, and steps together. |
 | `name` | text | empty | The name on the canvas. |
 | `x`, `y` | numbers | 0 | Where its top left corner sits on the canvas. |
-| `receive.port` | 0 to 65535 | 0 | The port it listens on. 0 doesn't listen. Many apps send to 8000. |
+| `transport` | `udp`, `tcpConnect`, `tcpListen` | `udp` | How it reaches the other app. Almost every app uses `udp`. `tcpConnect` connects to `send.host` and `send.port`, and messages come back on that connection. `tcpListen` waits on `receive.port` for up to 8 apps to connect, and sends to all of them. |
+| `tcpFraming` | `slip`, `sizeFirst` | `slip` | For TCP: how packets are marked. `slip` is OSC 1.1, which most apps use. `sizeFirst` is OSC 1.0. |
+| `receive.port` | 0 to 65535 | 0 | The port it listens on. 0 doesn't listen. Many apps send to 8000. Not used by `tcpConnect`. |
 | `receive.listenOn` | `everyNetwork`, `thisPc` | `everyNetwork` | `thisPc` hears apps on this PC only. |
-| `receive.acceptFrom` | `anyone`, `sendHost`, `list` | `sendHost` | Who it takes messages from. `sendHost` is the computer it sends to, or anyone when it doesn't send. |
+| `receive.acceptFrom` | `anyone`, `sendHost`, `list` | `sendHost` | Who it takes messages from. `sendHost` is the computer it sends to, or anyone when it doesn't send. With `tcpListen`, use `anyone` or `list`, and an app it doesn't take messages from is turned away when it connects. Not used by `tcpConnect`. |
 | `receive.acceptAddresses` | list of names or addresses | empty | For `list`. Up to 16. |
 | `receive.messagesPerSecond` | 10 to 100000 | 5000 | Messages a second beyond which the rest are dropped. |
 | `receive.advertise` | `true`, `false` | `true` | Lets apps that browse the network for OSC, like TouchOSC, find it by name. Only while it listens on every network and Windows Firewall lets the app in. |
 | `send.host` | text | empty | A name or an IP address. `127.0.0.1` is this PC. Empty doesn't send. |
 | `send.port` | 0 to 65535 | 0 | The port the other app listens on. Many apps listen on 9000. |
-| `send.toLastSender` | `true`, `false` | `false` | Sends to whoever sent to it last, on `send.port`. For a phone or tablet whose address changes. |
+| `send.toLastSender` | `true`, `false` | `false` | Sends to whoever sent to it last, on `send.port`. For a phone or tablet whose address changes. UDP only. |
 | `receivedTimeTags` | `playOnArrival`, `useSenderTime`, `keepSenderSpacing` | `playOnArrival` | What to do when a message says when it should play. |
 | `spacingDelayMilliseconds` | 0 to 500 | 10 | For `keepSenderSpacing`: how long to wait, so uneven network timing can be taken out. |
 | `sendTiming` | `atItsTime`, `earlyWithTimeTags` | `atItsTime` | Messages meant for later are held until their time, or sent at once saying when to play. |

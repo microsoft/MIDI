@@ -45,6 +45,9 @@ namespace midipatchbay
     {
         uint16_t Port{ 0 };
         std::wstring Label{};
+
+        // OscUdpServiceType or OscTcpServiceType.
+        std::wstring ServiceType{ OscUdpServiceType };
     };
 
     class OscDiscovery
@@ -52,9 +55,10 @@ namespace midipatchbay
     public:
         static OscDiscovery& Current() noexcept;
 
-        // What's been found so far, sorted by name, leaving out this PC's own advertisements.
-        // Starts looking the first time it's asked, so the list fills over the next few seconds.
-        std::vector<OscFoundApp> FoundApps() noexcept;
+        // What's been found so far for a service type, sorted by name, leaving out this PC's own
+        // advertisements. Starts looking the first time it's asked, so the list fills over the
+        // next few seconds.
+        std::vector<OscFoundApp> FoundApps(_In_ std::wstring const& serviceType = OscUdpServiceType) noexcept;
 
         // The ports to advertise now. Returns at once: registering takes a second or more, so a
         // thread of its own does it.
@@ -77,7 +81,8 @@ namespace midipatchbay
         mutable std::mutex m_lock{};
         std::condition_variable_any m_changed{};
 
-        std::shared_ptr<Browser> m_browser{};
+        // One for each service type looked for.
+        std::map<std::wstring, std::shared_ptr<Browser>> m_browsers{};
 
         std::vector<OscAdvertisement> m_wanted{};
         uint64_t m_wantedVersion{ 0 };

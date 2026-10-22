@@ -100,6 +100,21 @@ namespace midipatchbay
     {
         try
         {
+            // TCP goes both ways on its connections, so one place says it all.
+            if (settings.Transport == OscTransport::TcpConnect)
+            {
+                return OscConnectionSends(settings)
+                    ? std::wstring{ resources::FormatString(L"OscSubtitleTcpConnectFormat", std::format(L"{}:{}", settings.SendHost, settings.SendPort)) }
+                    : std::wstring{ resources::GetString(L"OscSubtitleNeither") };
+            }
+
+            if (settings.Transport == OscTransport::TcpListen)
+            {
+                return OscConnectionListens(settings)
+                    ? std::wstring{ resources::FormatString(L"OscSubtitleTcpListenFormat", static_cast<int32_t>(settings.ReceivePort)) }
+                    : std::wstring{ resources::GetString(L"OscSubtitleNeither") };
+            }
+
             auto const receives = OscConnectionReceives(settings);
             auto const sends = OscConnectionSends(settings);
 
@@ -140,24 +155,55 @@ namespace midipatchbay
     {
         try
         {
+            if (settings.Transport == OscTransport::TcpConnect)
+            {
+                if (!OscConnectionReceives(settings))
+                {
+                    return std::wstring{ resources::GetString(L"OscTcpConnectOff") };
+                }
+
+                auto const where = std::format(L"{}:{}", settings.SendHost, settings.SendPort);
+
+                if (!status.has_value())
+                {
+                    return std::wstring{ resources::FormatString(L"OscTcpConnectNotRoutingFormat", where) };
+                }
+
+                return status->ConnectedApps > 0 && !status->SendingTo.empty()
+                    ? std::wstring{ resources::FormatString(L"OscTcpConnectedFormat", status->SendingTo) }
+                    : std::wstring{ resources::FormatString(L"OscTcpConnectingFormat", where) };
+            }
+
             if (!OscConnectionReceives(settings))
             {
                 return std::wstring{ resources::GetString(L"OscListeningOff") };
             }
 
             auto const port = static_cast<int32_t>(settings.ReceivePort);
+            auto const tcp = settings.Transport == OscTransport::TcpListen;
 
             if (!status.has_value())
             {
-                return std::wstring{ resources::FormatString(L"OscListeningNotRoutingFormat", port) };
+                return std::wstring{ resources::FormatString(tcp ? L"OscTcpListeningNotRoutingFormat" : L"OscListeningNotRoutingFormat", port) };
             }
+
+            auto const apps = static_cast<int64_t>(status->ConnectedApps);
 
             switch (status->Listening)
             {
             case OscListenState::EveryNetwork:
-                return std::wstring{ resources::FormatString(L"OscListeningEveryNetworkFormat", port) };
+                return tcp
+                    ? std::wstring{ resources::FormatString(L"OscTcpListeningEveryNetworkFormat", port, apps) }
+                    : std::wstring{ resources::FormatString(L"OscListeningEveryNetworkFormat", port) };
 
             case OscListenState::ThisPcOnly:
+                if (tcp)
+                {
+                    return std::wstring{ resources::FormatString(status->HeldByFirewall
+                        ? L"OscTcpListeningHeldFormat"
+                        : L"OscTcpListeningThisPcFormat", port, apps) };
+                }
+
                 return std::wstring{ resources::FormatString(status->HeldByFirewall
                     ? L"OscListeningHeldFormat"
                     : L"OscListeningThisPcFormat", port) };
@@ -219,7 +265,7 @@ namespace midipatchbay
     {
         return std::any_of(patch.Endpoints.begin(), patch.Endpoints.end(), [](PatchEndpoint const& endpoint)
             {
-                return endpoint.IsOsc() && endpoint.Osc->ReceivePort != 0 && endpoint.Osc->ListenOn == OscListenOn::EveryNetwork;
+                return endpoint.IsOsc() && OscConnectionListens(*endpoint.Osc) && endpoint.Osc->ListenOn == OscListenOn::EveryNetwork;
             });
     }
 

@@ -9,6 +9,7 @@
 #include "OscHub.h"
 #include "OscDiscovery.h"
 #include "OscAddress.h"
+#include "OscStream.h"
 #include "OscTime.h"
 #include "StringResources.h"
 
@@ -61,6 +62,21 @@ namespace midipatchbay
         constexpr size_t PreferredBundleBytes = 1400;
 
         constexpr uint32_t TestNoteMilliseconds = 350;
+
+        // How long a TCP connection may take for the test note.
+        constexpr DWORD TestConnectMilliseconds = 2000;
+
+        // How often a TCP connection is tried again, and a TCP port that couldn't be opened.
+        constexpr uint64_t TcpRetryMilliseconds = 2000;
+
+        // What may wait to go to one app over TCP. Past it, what's sent doesn't go to that app,
+        // so one slow app can't hold up the rest or fill memory.
+        constexpr size_t MaximumTcpWaitingBytes = 1 << 20;
+
+        // Reads from one TCP connection each time the worker wakes, so a fast sender can't keep
+        // it from sending.
+        constexpr int TcpReadsPerWake = 16;
+        constexpr size_t TcpReadBytes = 64 * 1024;
 
         uint8_t UmpWords(_In_ uint32_t firstWord) noexcept
         {
@@ -219,50 +235,63 @@ namespace midipatchbay
             return addresses;
         }
 
-        // What has a UDP port, by its program's file name, when Windows says.
-        std::wstring PortOwner(_In_ uint16_t port)
+        // The process in a table of UDP endpoints or TCP listeners with this local port, or 0.
+        template <typename Table>
+        DWORD OwnerIn(_In_ std::vector<uint8_t> const& buffer, _In_ uint16_t port) noexcept
+        {
+            auto const table = reinterpret_cast<Table const*>(buffer.data());
+
+            for (DWORD i = 0; i < table->dwNumEntries; i++)
+            {
+                if (::ntohs(static_cast<u_short>(table->table[i].dwLocalPort)) == port)
+                {
+                    return table->table[i].dwOwningPid;
+                }
+            }
+
+            return 0;
+        }
+
+        // What has a UDP port, or is listening on a TCP one, by its program's file name, when
+        // Windows says.
+        std::wstring PortOwner(_In_ uint16_t port, _In_ bool tcp)
         {
             DWORD processId{ 0 };
 
             for (auto const family : { AF_INET, AF_INET6 })
             {
+                auto const read = [tcp, family](void* buffer, DWORD& size)
+                    {
+                        return tcp
+                            ? ::GetExtendedTcpTable(buffer, &size, FALSE, family, TCP_TABLE_OWNER_PID_LISTENER, 0)
+                            : ::GetExtendedUdpTable(buffer, &size, FALSE, family, UDP_TABLE_OWNER_PID, 0);
+                    };
+
                 DWORD size{ 0 };
 
-                if (::GetExtendedUdpTable(nullptr, &size, FALSE, family, UDP_TABLE_OWNER_PID, 0) != ERROR_INSUFFICIENT_BUFFER || size == 0)
+                if (read(nullptr, size) != ERROR_INSUFFICIENT_BUFFER || size == 0)
                 {
                     continue;
                 }
 
                 std::vector<uint8_t> buffer(size);
 
-                if (::GetExtendedUdpTable(buffer.data(), &size, FALSE, family, UDP_TABLE_OWNER_PID, 0) != NO_ERROR)
+                if (read(buffer.data(), size) != NO_ERROR)
                 {
                     continue;
                 }
 
-                if (family == AF_INET)
+                if (tcp)
                 {
-                    auto const table = reinterpret_cast<MIB_UDPTABLE_OWNER_PID const*>(buffer.data());
-
-                    for (DWORD i = 0; i < table->dwNumEntries && processId == 0; i++)
-                    {
-                        if (::ntohs(static_cast<u_short>(table->table[i].dwLocalPort)) == port)
-                        {
-                            processId = table->table[i].dwOwningPid;
-                        }
-                    }
+                    processId = family == AF_INET
+                        ? OwnerIn<MIB_TCPTABLE_OWNER_PID>(buffer, port)
+                        : OwnerIn<MIB_TCP6TABLE_OWNER_PID>(buffer, port);
                 }
                 else
                 {
-                    auto const table = reinterpret_cast<MIB_UDP6TABLE_OWNER_PID const*>(buffer.data());
-
-                    for (DWORD i = 0; i < table->dwNumEntries && processId == 0; i++)
-                    {
-                        if (::ntohs(static_cast<u_short>(table->table[i].dwLocalPort)) == port)
-                        {
-                            processId = table->table[i].dwOwningPid;
-                        }
-                    }
+                    processId = family == AF_INET
+                        ? OwnerIn<MIB_UDPTABLE_OWNER_PID>(buffer, port)
+                        : OwnerIn<MIB_UDP6TABLE_OWNER_PID>(buffer, port);
                 }
 
                 if (processId != 0)
@@ -356,9 +385,139 @@ namespace midipatchbay
             return handle;
         }
 
+        // Where a socket listens: every network, or this PC only.
+        sockaddr_storage ListenAddress(_In_ int family, _In_ bool everyNetwork, _In_ uint16_t port) noexcept
+        {
+            sockaddr_storage address{};
+
+            if (family == AF_INET6)
+            {
+                auto& v6 = reinterpret_cast<sockaddr_in6&>(address);
+                v6.sin6_family = AF_INET6;
+                v6.sin6_port = ::htons(port);
+                v6.sin6_addr = everyNetwork ? in6addr_any : in6addr_loopback;
+            }
+            else
+            {
+                auto& v4 = reinterpret_cast<sockaddr_in&>(address);
+                v4.sin_family = AF_INET;
+                v4.sin_port = ::htons(port);
+                v4.sin_addr.s_addr = ::htonl(everyNetwork ? INADDR_ANY : INADDR_LOOPBACK);
+            }
+
+            return address;
+        }
+
+        // MIDI is small and wants to go at once, not wait to be gathered into a bigger segment.
+        void SendAtOnce(_In_ SOCKET handle) noexcept
+        {
+            BOOL on{ TRUE };
+            ::setsockopt(handle, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char const*>(&on), sizeof(on));
+        }
+
+        // A TCP socket listening on a port. On every network it takes IPv4 and IPv6 alike, or IPv4
+        // alone on a PC without IPv6. error is the reason when there's none.
+        wil::unique_socket TcpListener(_In_ uint16_t port, _In_ bool everyNetwork, _Out_ int& error) noexcept
+        {
+            error = 0;
+
+            for (auto const family : { AF_INET6, AF_INET })
+            {
+                // This PC only is IPv4's 127.0.0.1, as most apps send to.
+                if (family == AF_INET6 && !everyNetwork)
+                {
+                    continue;
+                }
+
+                wil::unique_socket handle{ ::WSASocketW(family, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT) };
+
+                if (!handle)
+                {
+                    error = ::WSAGetLastError();
+                    continue;
+                }
+
+                BOOL exclusive{ TRUE };
+                ::setsockopt(handle.get(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, reinterpret_cast<char const*>(&exclusive), sizeof(exclusive));
+
+                if (family == AF_INET6)
+                {
+                    DWORD v6Only{ 0 };
+                    ::setsockopt(handle.get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char const*>(&v6Only), sizeof(v6Only));
+                }
+
+                auto const address = ListenAddress(family, everyNetwork, port);
+
+                if (::bind(handle.get(), reinterpret_cast<sockaddr const*>(&address), AddressLength(address)) == SOCKET_ERROR ||
+                    ::listen(handle.get(), SOMAXCONN) == SOCKET_ERROR)
+                {
+                    error = ::WSAGetLastError();
+
+                    // A port in use is in use either way.
+                    if (error == WSAEADDRINUSE || error == WSAEACCES)
+                    {
+                        return {};
+                    }
+
+                    continue;
+                }
+
+                return handle;
+            }
+
+            return {};
+        }
+
+        // A TCP connection, made within the time given, for the test note. Blocking once it's made.
+        wil::unique_socket ConnectTcp(_In_ sockaddr_storage const& destination, _In_ DWORD timeoutMilliseconds) noexcept
+        {
+            wil::unique_socket handle{ ::WSASocketW(destination.ss_family, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT) };
+
+            if (!handle)
+            {
+                return {};
+            }
+
+            SendAtOnce(handle.get());
+
+            u_long nonBlocking{ 1 };
+            ::ioctlsocket(handle.get(), FIONBIO, &nonBlocking);
+
+            if (::connect(handle.get(), reinterpret_cast<sockaddr const*>(&destination), AddressLength(destination)) == SOCKET_ERROR &&
+                ::WSAGetLastError() != WSAEWOULDBLOCK)
+            {
+                return {};
+            }
+
+            WSAPOLLFD poll{};
+            poll.fd = handle.get();
+            poll.events = POLLWRNORM;
+
+            if (::WSAPoll(&poll, 1, static_cast<INT>(timeoutMilliseconds)) != 1 || (poll.revents & (POLLERR | POLLHUP)) != 0)
+            {
+                return {};
+            }
+
+            nonBlocking = 0;
+            ::ioctlsocket(handle.get(), FIONBIO, &nonBlocking);
+
+            return handle;
+        }
+
+        // Sends one OSC packet, however it goes. False when it couldn't.
+        using PacketSender = std::function<bool(std::vector<uint8_t> const&)>;
+
+        PacketSender UdpSender(_In_ SOCKET handle)
+        {
+            return [handle](std::vector<uint8_t> const& packet)
+                {
+                    return ::send(handle, reinterpret_cast<char const*>(packet.data()), static_cast<int>(packet.size()), 0) != SOCKET_ERROR;
+                };
+        }
+
         // Sends what the translator made, as packets: one message each, or bundles.
         bool SendPackets(
-            _In_ SOCKET handle,
+            _In_ PacketSender const& sendPacket,
             _In_ std::vector<osc::MessageBuilder> const& messages,
             _In_ bool bundle,
             _In_ uint64_t timeTag,
@@ -370,8 +529,7 @@ namespace midipatchbay
 
                 auto const send = [&](std::vector<uint8_t> const& packet)
                     {
-                        if (packet.size() > osc::MaximumPacketBytes ||
-                            ::send(handle, reinterpret_cast<char const*>(packet.data()), static_cast<int>(packet.size()), 0) == SOCKET_ERROR)
+                        if (packet.size() > osc::MaximumPacketBytes || !sendPacket(packet))
                         {
                             ok = false;
                             return;
@@ -559,6 +717,22 @@ namespace midipatchbay
             m_portOwner = owner;
         }
 
+        OscListenState ListenState() const
+        {
+            std::scoped_lock guard{ m_statusLock };
+            return m_listening;
+        }
+
+        // Whether Windows Firewall lets the app in, so a TCP port can be opened on every network.
+        // The worker opens it again when that changes.
+        void SetNetworkAllowed(_In_ bool allowed) noexcept
+        {
+            if (m_everyNetworkAllowed.exchange(allowed) != allowed && m_wake)
+            {
+                ::SetEvent(m_wake.get());
+            }
+        }
+
         // On a port's receive thread.
         void Receive(
             _In_reads_(size) uint8_t const* packet,
@@ -574,7 +748,8 @@ namespace midipatchbay
                 return;
             }
 
-            if (!Accepts(*config, from))
+            // Connecting over TCP, it chose who's at the other end.
+            if (config->Settings.Transport != OscTransport::TcpConnect && !Accepts(*config, from))
             {
                 Reader reader{ *this, *config, from, arrival, clock, false };
                 osc::ReadPacket(packet, size, reader);
@@ -642,6 +817,8 @@ namespace midipatchbay
             status.NoRow = m_noRow;
             status.SendDropped = m_sendDropped;
             status.SendFailures = m_sendFailures;
+            status.ConnectedApps = m_connectedApps;
+            status.TurnedAway = m_turnedAway;
 
             return status;
         }
@@ -787,6 +964,27 @@ namespace midipatchbay
             uint64_t Timestamp{ 0 };
             std::array<uint32_t, 4> Words{};
             uint8_t WordCount{ 0 };
+        };
+
+        // One TCP connection: to the send host, or from an app that connected. The worker's own.
+        struct TcpStream
+        {
+            explicit TcpStream(_In_ osc::StreamFraming framing) noexcept :
+                Reader{ framing }
+            {
+            }
+
+            wil::unique_socket Socket{};
+            wil::unique_event_nothrow Event{};
+            sockaddr_storage Peer{};
+            osc::StreamReader Reader;
+
+            // Framed packets not sent yet, from OutSent on.
+            std::vector<uint8_t> Out{};
+            size_t OutSent{ 0 };
+
+            // Connecting to the send host isn't done until Windows says so.
+            bool Connected{ false };
         };
 
         // Hands what a received message became to the engine, in pieces that end on whole UMPs.
@@ -1167,16 +1365,25 @@ namespace midipatchbay
                 return next;
             }
 
-            auto const destination = Destination(config);
+            auto const tcp = settings.Transport != OscTransport::Udp;
+            std::optional<sockaddr_storage> destination{};
 
-            if (destination.has_value() && (!m_socket || !SameAddressAndPort(*destination, m_socketDestination)))
+            if (!tcp)
             {
-                m_socket = ConnectedSocket(*destination);
-                m_socketDestination = *destination;
+                destination = Destination(config);
 
-                std::scoped_lock guard{ m_statusLock };
-                m_sendingTo = m_socket ? AddressText(*destination, true) : std::wstring{};
+                if (destination.has_value() && (!m_socket || !SameAddressAndPort(*destination, m_socketDestination)))
+                {
+                    m_socket = ConnectedSocket(*destination);
+                    m_socketDestination = *destination;
+
+                    std::scoped_lock guard{ m_statusLock };
+                    m_sendingTo = m_socket ? AddressText(*destination, true) : std::wstring{};
+                }
             }
+
+            auto const canSend = tcp ? m_connectedApps > 0 : destination.has_value() && m_socket;
+            auto const sendPacket = !canSend ? PacketSender{} : tcp ? TcpSender(settings) : UdpSender(m_socket.get());
 
             auto const clock = ReadClock();
             std::vector<osc::MessageBuilder> out{};
@@ -1210,7 +1417,7 @@ namespace midipatchbay
 
                 if (!out.empty())
                 {
-                    if (!destination.has_value() || !m_socket)
+                    if (!canSend)
                     {
                         m_sendDropped += translated;
                     }
@@ -1221,7 +1428,7 @@ namespace midipatchbay
 
                         uint64_t packets{ 0 };
 
-                        if (SendPackets(m_socket.get(), out, later || settings.BundleTogether,
+                        if (SendPackets(sendPacket, out, later || settings.BundleTogether,
                             later ? osc::TimeTagFromTicks(due[start].Timestamp, clock) : osc::Immediately, packets))
                         {
                             m_midiSent += translated;
@@ -1238,7 +1445,417 @@ namespace midipatchbay
                 start = end;
             }
 
+            if (tcp)
+            {
+                FlushTcp(config);
+            }
+
             return next;
+        }
+
+        static osc::StreamFraming Framing(_In_ OscConnectionSettings const& settings) noexcept
+        {
+            return settings.TcpFraming == OscTcpFraming::SizeFirst ? osc::StreamFraming::SizeFirst : osc::StreamFraming::Slip;
+        }
+
+        // What TCP's sockets depend on. When it changes, they're closed and opened again; other
+        // changes leave apps connected.
+        static std::wstring TcpSignature(_In_ OscConnectionSettings const& settings)
+        {
+            if (settings.Transport == OscTransport::Udp)
+            {
+                return {};
+            }
+
+            auto text = std::format(L"{}:{}:{}:{}:{}:{}:{}",
+                static_cast<int32_t>(settings.Transport),
+                static_cast<int32_t>(settings.TcpFraming),
+                settings.ReceivePort,
+                static_cast<int32_t>(settings.ListenOn),
+                static_cast<int32_t>(settings.AcceptFrom),
+                settings.SendHost,
+                settings.SendPort);
+
+            for (auto const& address : settings.AcceptAddresses)
+            {
+                text += L"|" + address;
+            }
+
+            return text;
+        }
+
+        // On the worker. Adds a framed packet to what waits for each connected app.
+        PacketSender TcpSender(_In_ OscConnectionSettings const& settings)
+        {
+            auto const framing = Framing(settings);
+
+            return [this, framing](std::vector<uint8_t> const& packet)
+                {
+                    m_framed.clear();
+                    osc::AppendFramed(framing, packet, m_framed);
+
+                    auto queued = false;
+
+                    for (auto const& stream : m_tcpStreams)
+                    {
+                        if (!stream->Connected)
+                        {
+                            continue;
+                        }
+
+                        // What's gone already is let go once it's half of what's held.
+                        if (stream->OutSent > 0 && stream->OutSent * 2 >= stream->Out.size())
+                        {
+                            stream->Out.erase(stream->Out.begin(), stream->Out.begin() + static_cast<ptrdiff_t>(stream->OutSent));
+                            stream->OutSent = 0;
+                        }
+
+                        if (stream->Out.size() - stream->OutSent + m_framed.size() > MaximumTcpWaitingBytes)
+                        {
+                            continue;
+                        }
+
+                        stream->Out.insert(stream->Out.end(), m_framed.begin(), m_framed.end());
+                        queued = true;
+                    }
+
+                    return queued;
+                };
+        }
+
+        // On the worker. Closes every TCP socket.
+        void CloseTcp() noexcept
+        {
+            m_tcpStreams.clear();
+            m_tcpListener.reset();
+            m_tcpListenEvent.reset();
+            m_tcpListenerEveryNetwork = false;
+            m_tcpNextAttempt = 0;
+            m_connectedApps = 0;
+
+            try
+            {
+                std::scoped_lock guard{ m_statusLock };
+                m_sendingTo.clear();
+            }
+            catch (...)
+            {
+            }
+        }
+
+        // On the worker.
+        void UpdateTcpStatus(_In_ Config const& config)
+        {
+            uint32_t connected{ 0 };
+            std::wstring sendingTo{};
+
+            for (auto const& stream : m_tcpStreams)
+            {
+                if (stream->Connected)
+                {
+                    connected++;
+
+                    if (config.Settings.Transport == OscTransport::TcpConnect)
+                    {
+                        sendingTo = AddressText(stream->Peer, true);
+                    }
+                }
+            }
+
+            m_connectedApps = connected;
+
+            std::scoped_lock guard{ m_statusLock };
+            m_sendingTo = std::move(sendingTo);
+        }
+
+        // On the worker. Opens what the settings ask for and isn't open: the port apps connect to,
+        // or the connection to the send host.
+        void OpenTcp(_In_ Config const& config, _In_ uint64_t now, _In_ uint64_t ticksPerSecond)
+        {
+            auto const& settings = config.Settings;
+            auto const retry = now + ticksPerSecond * TcpRetryMilliseconds / 1000;
+
+            if (settings.Transport == OscTransport::TcpListen)
+            {
+                if (settings.ReceivePort == 0)
+                {
+                    SetListening(OscListenState::NotReceiving, false, 0, {});
+                    return;
+                }
+
+                auto const allowed = m_everyNetworkAllowed.load();
+                auto const everyNetwork = settings.ListenOn == OscListenOn::EveryNetwork && allowed;
+
+                if ((m_tcpListener && m_tcpListenerEveryNetwork == everyNetwork) || (!m_tcpListener && now < m_tcpNextAttempt))
+                {
+                    return;
+                }
+
+                // Apps already connected stay connected.
+                m_tcpListener.reset();
+                m_tcpListenEvent.reset();
+                m_tcpNextAttempt = retry;
+
+                int error{ 0 };
+                auto listener = TcpListener(settings.ReceivePort, everyNetwork, error);
+                wil::unique_event_nothrow event{};
+
+                if (listener)
+                {
+                    event.reset(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
+
+                    if (!event || ::WSAEventSelect(listener.get(), event.get(), FD_ACCEPT) == SOCKET_ERROR)
+                    {
+                        listener.reset();
+                    }
+                }
+
+                auto state = OscListenState::Failed;
+                std::wstring owner{};
+
+                if (listener)
+                {
+                    m_tcpListener = std::move(listener);
+                    m_tcpListenEvent = std::move(event);
+                    m_tcpListenerEveryNetwork = everyNetwork;
+                    state = everyNetwork ? OscListenState::EveryNetwork : OscListenState::ThisPcOnly;
+                }
+                else if (error == WSAEADDRINUSE || error == WSAEACCES)
+                {
+                    state = OscListenState::PortInUse;
+                    owner = PortOwner(settings.ReceivePort, true);
+                }
+
+                auto const held = settings.ListenOn == OscListenOn::EveryNetwork && !allowed && state == OscListenState::ThisPcOnly;
+                SetListening(state, held, settings.ReceivePort, owner);
+
+                return;
+            }
+
+            // Connecting: to the send host's first address, again if it changes or the
+            // connection drops.
+            if (!m_tcpStreams.empty())
+            {
+                if (m_hostAddresses.empty() || SameAddressAndPort(m_tcpStreams.front()->Peer, m_hostAddresses.front()))
+                {
+                    return;
+                }
+
+                m_tcpStreams.clear();
+                UpdateTcpStatus(config);
+            }
+
+            if (m_hostAddresses.empty() || now < m_tcpNextAttempt)
+            {
+                return;
+            }
+
+            m_tcpNextAttempt = retry;
+
+            auto const& destination = m_hostAddresses.front();
+            auto stream = std::make_unique<TcpStream>(Framing(settings));
+
+            stream->Socket.reset(::WSASocketW(destination.ss_family, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT));
+            stream->Event.reset(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
+            stream->Peer = destination;
+
+            if (!stream->Socket || !stream->Event ||
+                ::WSAEventSelect(stream->Socket.get(), stream->Event.get(), FD_CONNECT | FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR)
+            {
+                return;
+            }
+
+            SendAtOnce(stream->Socket.get());
+
+            if (::connect(stream->Socket.get(), reinterpret_cast<sockaddr const*>(&destination), AddressLength(destination)) == SOCKET_ERROR &&
+                ::WSAGetLastError() != WSAEWOULDBLOCK)
+            {
+                return;
+            }
+
+            m_tcpStreams.push_back(std::move(stream));
+        }
+
+        // On the worker, after it wakes: takes new apps, reads what arrived, sends what waits,
+        // and lets go of what the other end closed.
+        void PumpTcp(_In_ Config const& config)
+        {
+            if (m_tcpListener)
+            {
+                WSANETWORKEVENTS events{};
+
+                if (::WSAEnumNetworkEvents(m_tcpListener.get(), m_tcpListenEvent.get(), &events) == 0 &&
+                    (events.lNetworkEvents & FD_ACCEPT) != 0)
+                {
+                    Accept(config);
+                }
+            }
+
+            for (auto it = m_tcpStreams.begin(); it != m_tcpStreams.end();)
+            {
+                auto& stream = **it;
+                auto keep = true;
+
+                WSANETWORKEVENTS events{};
+
+                if (::WSAEnumNetworkEvents(stream.Socket.get(), stream.Event.get(), &events) == SOCKET_ERROR)
+                {
+                    keep = false;
+                }
+                else
+                {
+                    if ((events.lNetworkEvents & FD_CONNECT) != 0)
+                    {
+                        keep = events.iErrorCode[FD_CONNECT_BIT] == 0;
+                        stream.Connected = keep;
+                    }
+
+                    // What came before a close is read first.
+                    if (keep && (events.lNetworkEvents & (FD_READ | FD_CLOSE)) != 0)
+                    {
+                        keep = ReadTcp(stream) && (events.lNetworkEvents & FD_CLOSE) == 0;
+                    }
+
+                    if (keep && stream.Connected)
+                    {
+                        keep = SendWaiting(stream);
+                    }
+                }
+
+                it = keep ? std::next(it) : m_tcpStreams.erase(it);
+            }
+
+            UpdateTcpStatus(config);
+        }
+
+        // On the worker. Takes every app waiting to connect that's let in, up to the limit.
+        void Accept(_In_ Config const& config)
+        {
+            for (;;)
+            {
+                sockaddr_storage peer{};
+                int length{ sizeof(peer) };
+
+                wil::unique_socket accepted{ ::accept(m_tcpListener.get(), reinterpret_cast<sockaddr*>(&peer), &length) };
+
+                if (!accepted)
+                {
+                    return;
+                }
+
+                peer = Normalized(peer);
+
+                // Past the limit, or from a computer it doesn't take messages from.
+                if (m_tcpStreams.size() >= MaximumOscTcpApps || !Accepts(config, peer))
+                {
+                    m_turnedAway++;
+                    continue;
+                }
+
+                auto stream = std::make_unique<TcpStream>(Framing(config.Settings));
+                stream->Event.reset(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
+
+                // An accepted socket starts with the listener's event and events, so it gets its own.
+                if (!stream->Event || ::WSAEventSelect(accepted.get(), stream->Event.get(), FD_READ | FD_WRITE | FD_CLOSE) == SOCKET_ERROR)
+                {
+                    continue;
+                }
+
+                SendAtOnce(accepted.get());
+
+                stream->Socket = std::move(accepted);
+                stream->Peer = peer;
+                stream->Connected = true;
+
+                m_tcpStreams.push_back(std::move(stream));
+            }
+        }
+
+        // On the worker. False when the connection is closed or can't be read any further.
+        bool ReadTcp(_Inout_ TcpStream& stream)
+        {
+            if (m_tcpBuffer == nullptr)
+            {
+                m_tcpBuffer = std::make_unique<uint8_t[]>(TcpReadBytes);
+            }
+
+            for (int read = 0; read < TcpReadsPerWake; read++)
+            {
+                auto const received = ::recv(stream.Socket.get(), reinterpret_cast<char*>(m_tcpBuffer.get()), static_cast<int>(TcpReadBytes), 0);
+
+                if (received == 0)
+                {
+                    return false;
+                }
+
+                if (received == SOCKET_ERROR)
+                {
+                    return ::WSAGetLastError() == WSAEWOULDBLOCK;
+                }
+
+                // Read the clock first, as close to arrival as there is.
+                auto const clock = ReadClock();
+                auto const arrival = clock.Ticks;
+
+                auto const problem = stream.Reader.Read(
+                    std::span<uint8_t const>{ m_tcpBuffer.get(), static_cast<size_t>(received) },
+                    [&](std::span<uint8_t const> packet)
+                    {
+                        Receive(packet.data(), packet.size(), stream.Peer, arrival, clock);
+                    });
+
+                if (problem != osc::StreamProblem::None)
+                {
+                    m_unreadable++;
+
+                    if (problem == osc::StreamProblem::BadSize)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // More may be waiting: reading leaves the event set for it.
+            return true;
+        }
+
+        // On the worker. False when the connection failed.
+        static bool SendWaiting(_Inout_ TcpStream& stream) noexcept
+        {
+            while (stream.OutSent < stream.Out.size())
+            {
+                auto const chunk = (std::min)(stream.Out.size() - stream.OutSent, TcpReadBytes);
+                auto const sent = ::send(stream.Socket.get(), reinterpret_cast<char const*>(stream.Out.data() + stream.OutSent), static_cast<int>(chunk), 0);
+
+                if (sent == SOCKET_ERROR)
+                {
+                    // The rest goes when Windows says there's room.
+                    return ::WSAGetLastError() == WSAEWOULDBLOCK;
+                }
+
+                stream.OutSent += static_cast<size_t>(sent);
+            }
+
+            stream.Out.clear();
+            stream.OutSent = 0;
+
+            return true;
+        }
+
+        // On the worker, after queuing what's due.
+        void FlushTcp(_In_ Config const& config)
+        {
+            auto const before = m_tcpStreams.size();
+
+            std::erase_if(m_tcpStreams, [](std::unique_ptr<TcpStream> const& stream)
+                {
+                    return stream->Connected && !SendWaiting(*stream);
+                });
+
+            if (m_tcpStreams.size() != before)
+            {
+                UpdateTcpStatus(config);
+            }
         }
 
         void Work() noexcept
@@ -1248,6 +1865,8 @@ namespace midipatchbay
             auto const ticksPerSecond = internal::GetMidiTimestampFrequency();
             uint64_t seenVersion{ 0 };
             uint64_t nextResolve{ 0 };
+            std::wstring tcpSignature{};
+            std::vector<HANDLE> handles{};
 
             while (!m_stop)
             {
@@ -1268,6 +1887,12 @@ namespace midipatchbay
                         m_translator.Reset();
                         m_socket.reset();
                         nextResolve = 0;
+
+                        if (auto signature = TcpSignature(config->Settings); signature != tcpSignature)
+                        {
+                            tcpSignature = std::move(signature);
+                            CloseTcp();
+                        }
                     }
 
                     if (now >= nextResolve)
@@ -1277,6 +1902,13 @@ namespace midipatchbay
                         auto const failed = !config->Settings.SendHost.empty() && !m_hostResolved;
                         now = internal::GetCurrentMidiTimestamp();
                         nextResolve = now + ticksPerSecond * (failed ? ResolveAfterFailureMilliseconds : ResolveEveryMilliseconds) / 1000;
+                    }
+
+                    auto const tcp = config->Settings.Transport != OscTransport::Udp;
+
+                    if (tcp)
+                    {
+                        OpenTcp(*config, now, ticksPerSecond);
                     }
 
                     auto const next = SendDue(*config, now, ticksPerSecond);
@@ -1297,8 +1929,25 @@ namespace midipatchbay
                         ::SetWaitableTimer(m_timer.get(), &dueTime, 0, nullptr, nullptr, FALSE);
                     }
 
-                    HANDLE const handles[2]{ m_wake.get(), m_timer.get() };
-                    ::WaitForMultipleObjects(2, handles, FALSE, waitMilliseconds);
+                    // At most 2 + 1 + MaximumOscTcpApps, well under what one wait can take.
+                    handles.assign({ m_wake.get(), m_timer.get() });
+
+                    if (m_tcpListenEvent)
+                    {
+                        handles.push_back(m_tcpListenEvent.get());
+                    }
+
+                    for (auto const& stream : m_tcpStreams)
+                    {
+                        handles.push_back(stream->Event.get());
+                    }
+
+                    ::WaitForMultipleObjects(static_cast<DWORD>(handles.size()), handles.data(), FALSE, waitMilliseconds);
+
+                    if (tcp)
+                    {
+                        PumpTcp(*config);
+                    }
                 }
                 catch (...)
                 {
@@ -1308,6 +1957,7 @@ namespace midipatchbay
             }
 
             ::CancelWaitableTimer(m_timer.get());
+            CloseTcp();
         }
 
         std::wstring m_deviceId{};
@@ -1344,6 +1994,18 @@ namespace midipatchbay
         wil::unique_socket m_socket{};
         sockaddr_storage m_socketDestination{};
 
+        // TCP, also the worker's own.
+        wil::unique_socket m_tcpListener{};
+        wil::unique_event_nothrow m_tcpListenEvent{};
+        bool m_tcpListenerEveryNetwork{ false };
+        uint64_t m_tcpNextAttempt{ 0 };
+        std::vector<std::unique_ptr<TcpStream>> m_tcpStreams{};
+        std::unique_ptr<uint8_t[]> m_tcpBuffer{};
+        std::vector<uint8_t> m_framed{};
+
+        // Set by the hub.
+        std::atomic<bool> m_everyNetworkAllowed{ false };
+
         mutable std::mutex m_statusLock{};
         OscListenState m_listening{ OscListenState::NotReceiving };
         bool m_heldByFirewall{ false };
@@ -1372,6 +2034,8 @@ namespace midipatchbay
         std::atomic<uint64_t> m_noRow{ 0 };
         std::atomic<uint64_t> m_sendDropped{ 0 };
         std::atomic<uint64_t> m_sendFailures{ 0 };
+        std::atomic<uint32_t> m_connectedApps{ 0 };
+        std::atomic<uint64_t> m_turnedAway{ 0 };
     };
 }
 
@@ -1400,26 +2064,14 @@ namespace midipatchbay
 
         IgnorePortUnreachable(handle.get());
 
-        sockaddr_storage address{};
-
         if (family == AF_INET6)
         {
             // On every network, one socket takes IPv4 and IPv6 alike.
             DWORD v6Only{ everyNetwork ? 0u : 1u };
             ::setsockopt(handle.get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char const*>(&v6Only), sizeof(v6Only));
+        }
 
-            auto& v6 = reinterpret_cast<sockaddr_in6&>(address);
-            v6.sin6_family = AF_INET6;
-            v6.sin6_port = ::htons(Number);
-            v6.sin6_addr = everyNetwork ? in6addr_any : in6addr_loopback;
-        }
-        else
-        {
-            auto& v4 = reinterpret_cast<sockaddr_in&>(address);
-            v4.sin_family = AF_INET;
-            v4.sin_port = ::htons(Number);
-            v4.sin_addr.s_addr = ::htonl(everyNetwork ? INADDR_ANY : INADDR_LOOPBACK);
-        }
+        auto const address = ListenAddress(family, everyNetwork, Number);
 
         if (::bind(handle.get(), reinterpret_cast<sockaddr const*>(&address), AddressLength(address)) == SOCKET_ERROR)
         {
@@ -1482,7 +2134,7 @@ namespace midipatchbay
                 if (error == WSAEADDRINUSE || error == WSAEACCES)
                 {
                     State = OscListenState::PortInUse;
-                    Owner = PortOwner(number);
+                    Owner = PortOwner(number, false);
                 }
                 else
                 {
@@ -1649,6 +2301,7 @@ namespace midipatchbay
             };
 
             std::map<uint16_t, Wanted> wanted{};
+            auto const allowed = LetsEveryNetworkIn();
 
             for (auto const& [id, connection] : m_connections)
             {
@@ -1656,7 +2309,15 @@ namespace midipatchbay
 
                 auto const settings = connection->Settings();
 
-                if (settings.ReceivePort == 0)
+                // TCP's sockets are each connection's own, opened by its worker.
+                connection->SetNetworkAllowed(allowed);
+
+                if (settings.Transport == OscTransport::TcpListen)
+                {
+                    continue;
+                }
+
+                if (settings.Transport == OscTransport::TcpConnect || settings.ReceivePort == 0)
                 {
                     connection->SetListening(OscListenState::NotReceiving, false, 0, {});
                     continue;
@@ -1666,8 +2327,6 @@ namespace midipatchbay
                 port.EveryNetwork = port.EveryNetwork || settings.ListenOn == OscListenOn::EveryNetwork;
                 port.Listeners.push_back(connection);
             }
-
-            auto const allowed = LetsEveryNetworkIn();
 
             for (auto it = m_ports.begin(); it != m_ports.end();)
             {
@@ -1761,9 +2420,26 @@ namespace midipatchbay
                     {
                         if (connection->Settings().Advertise)
                         {
-                            wanted.push_back(OscAdvertisement{ number, OscServiceLabel(connection->Name(), computer) });
+                            wanted.push_back(OscAdvertisement{ number, OscServiceLabel(connection->Name(), computer), OscUdpServiceType });
                             break;
                         }
+                    }
+                }
+
+                // Waiting for apps over TCP. Its worker opens the port on every network soon after
+                // it's told the firewall allows it, so only a port it couldn't open is left out.
+                for (auto const& [id, connection] : m_connections)
+                {
+                    UNREFERENCED_PARAMETER(id);
+
+                    auto const settings = connection->Settings();
+                    auto const state = connection->ListenState();
+
+                    if (settings.Transport == OscTransport::TcpListen && settings.ReceivePort != 0 && settings.Advertise &&
+                        settings.ListenOn == OscListenOn::EveryNetwork &&
+                        state != OscListenState::PortInUse && state != OscListenState::Failed)
+                    {
+                        wanted.push_back(OscAdvertisement{ settings.ReceivePort, OscServiceLabel(connection->Name(), computer), OscTcpServiceType });
                     }
                 }
             }
@@ -1784,11 +2460,13 @@ namespace midipatchbay
         {
             auto const wantsEveryNetwork = std::any_of(connections.begin(), connections.end(), [](RouteOscConnection const& connection)
                 {
-                    return connection.Settings.ReceivePort != 0 && connection.Settings.ListenOn == OscListenOn::EveryNetwork;
+                    return OscConnectionListens(connection.Settings) && connection.Settings.ListenOn == OscListenOn::EveryNetwork;
                 });
 
-            // Read before the first socket opens on every network, so Windows never has to ask.
-            // Walks every rule, so not under the lock.
+            auto const tcp = ListensOverTcp(connections);
+
+            // Read before the first socket opens on every network, so Windows never has to ask,
+            // and again when TCP comes or goes. Walks every rule, so not under the lock.
             std::optional<midiapp::firewall::FirewallState> firewall{};
 
             if (wantsEveryNetwork)
@@ -1797,12 +2475,12 @@ namespace midipatchbay
 
                 {
                     std::scoped_lock guard{ m_lock };
-                    needed = !m_firewallRead;
+                    needed = !m_firewallRead || m_firewallCoversTcp != tcp;
                 }
 
                 if (needed)
                 {
-                    firewall = midiapp::firewall::QueryState(FirewallTarget());
+                    firewall = midiapp::firewall::QueryState(ReadTarget(tcp));
                 }
             }
 
@@ -1816,10 +2494,11 @@ namespace midipatchbay
 
             m_configured = connections;
 
-            if (firewall.has_value() && !m_firewallRead)
+            if (firewall.has_value())
             {
                 m_firewall = std::move(*firewall);
                 m_firewallRead = true;
+                m_firewallCoversTcp = tcp;
             }
 
             std::set<std::wstring> kept{};
@@ -1974,6 +2653,30 @@ namespace midipatchbay
         target.RuleName = std::wstring{ resources::GetString(L"OscFirewallRuleName") };
         target.RuleDescription = std::wstring{ resources::GetString(L"OscFirewallRuleDescription") };
         target.AllowSwitch = L"--allow-osc-through-firewall";
+        target.Protocols = { midiapp::firewall::UdpProtocol, midiapp::firewall::TcpProtocol };
+
+        return target;
+    }
+
+    _Use_decl_annotations_
+    bool OscHub::ListensOverTcp(std::vector<RouteOscConnection> const& connections) noexcept
+    {
+        return std::any_of(connections.begin(), connections.end(), [](RouteOscConnection const& connection)
+            {
+                return connection.Settings.Transport == OscTransport::TcpListen && OscConnectionListens(connection.Settings) &&
+                    connection.Settings.ListenOn == OscListenOn::EveryNetwork;
+            });
+    }
+
+    _Use_decl_annotations_
+    midiapp::firewall::FirewallTarget OscHub::ReadTarget(bool tcp)
+    {
+        auto target = FirewallTarget();
+
+        if (!tcp)
+        {
+            target.Protocols = { midiapp::firewall::UdpProtocol };
+        }
 
         return target;
     }
@@ -1982,8 +2685,15 @@ namespace midipatchbay
     {
         try
         {
+            bool tcp{ false };
+
+            {
+                std::scoped_lock guard{ m_lock };
+                tcp = ListensOverTcp(m_configured);
+            }
+
             // Walks every rule, so not under the lock.
-            auto state = midiapp::firewall::QueryState(FirewallTarget());
+            auto state = midiapp::firewall::QueryState(ReadTarget(tcp));
 
             std::scoped_lock guard{ m_lock };
 
@@ -1991,6 +2701,7 @@ namespace midipatchbay
 
             m_firewall = std::move(state);
             m_firewallRead = true;
+            m_firewallCoversTcp = tcp;
 
             if (before != LetsEveryNetworkIn())
             {
@@ -2029,7 +2740,7 @@ namespace midipatchbay
 
         return std::any_of(m_configured.begin(), m_configured.end(), [](RouteOscConnection const& connection)
             {
-                return connection.Settings.ReceivePort != 0 && connection.Settings.ListenOn == OscListenOn::EveryNetwork;
+                return OscConnectionListens(connection.Settings) && connection.Settings.ListenOn == OscListenOn::EveryNetwork;
             });
     }
 
@@ -2038,7 +2749,9 @@ namespace midipatchbay
     {
         try
         {
-            if (settings.SendHost.empty() || settings.SendPort == 0 || OscRowOnGroup(settings, group) == nullptr)
+            // Waiting for apps to connect, there's nobody to send to until the patch routes.
+            if (settings.Transport == OscTransport::TcpListen ||
+                settings.SendHost.empty() || settings.SendPort == 0 || OscRowOnGroup(settings, group) == nullptr)
             {
                 return false;
             }
@@ -2059,12 +2772,38 @@ namespace midipatchbay
                 return false;
             }
 
-            auto const handle = ConnectedSocket(addresses.front());
+            auto const tcp = settings.Transport == OscTransport::TcpConnect;
+            auto const handle = tcp ? ConnectTcp(addresses.front(), TestConnectMilliseconds) : ConnectedSocket(addresses.front());
 
             if (!handle)
             {
                 return false;
             }
+
+            auto const framing = settings.TcpFraming == OscTcpFraming::SizeFirst ? osc::StreamFraming::SizeFirst : osc::StreamFraming::Slip;
+
+            // Over TCP, all of it, framed. Blocking, so send only returns once it's taken.
+            PacketSender const sender = !tcp ? UdpSender(handle.get()) : PacketSender{ [&handle, framing](std::vector<uint8_t> const& packet)
+                {
+                    std::vector<uint8_t> framed{};
+                    osc::AppendFramed(framing, packet, framed);
+
+                    size_t sent{ 0 };
+
+                    while (sent < framed.size())
+                    {
+                        auto const result = ::send(handle.get(), reinterpret_cast<char const*>(framed.data() + sent), static_cast<int>(framed.size() - sent), 0);
+
+                        if (result == SOCKET_ERROR)
+                        {
+                            return false;
+                        }
+
+                        sent += static_cast<size_t>(result);
+                    }
+
+                    return true;
+                } };
 
             osc::OutboundTranslator translator{};
             uint64_t packets{ 0 };
@@ -2073,7 +2812,7 @@ namespace midipatchbay
                 {
                     std::vector<osc::MessageBuilder> out{};
                     translator.Translate(settings.Rows, &word, 1, out);
-                    return !out.empty() && SendPackets(handle.get(), out, false, osc::Immediately, packets);
+                    return !out.empty() && SendPackets(sender, out, false, osc::Immediately, packets);
                 };
 
             auto const groupBits = static_cast<uint32_t>(group & 0x0F) << 24;

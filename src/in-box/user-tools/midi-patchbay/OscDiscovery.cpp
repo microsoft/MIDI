@@ -42,7 +42,8 @@ namespace midipatchbay
         return *discovery;
     }
 
-    std::vector<OscFoundApp> OscDiscovery::FoundApps() noexcept
+    _Use_decl_annotations_
+    std::vector<OscFoundApp> OscDiscovery::FoundApps(std::wstring const& serviceType) noexcept
     {
         try
         {
@@ -58,20 +59,22 @@ namespace midipatchbay
                     return {};
                 }
 
-                if (m_browser == nullptr)
+                auto& found = m_browsers[serviceType];
+
+                if (found == nullptr)
                 {
-                    m_browser = std::make_shared<Browser>();
+                    found = std::make_shared<Browser>();
                     start = true;
                 }
 
-                browser = m_browser;
+                browser = found;
                 own = m_advertisedLabels;
             }
 
             if (start)
             {
                 // The handlers do nothing: the list is read when it's wanted.
-                auto const hr = browser->Dnssd.Start(OscUdpServiceType,
+                auto const hr = browser->Dnssd.Start(serviceType,
                     [](dnssd::MidiDnssdService const&) {},
                     [](dnssd::MidiDnssdService const&, uint32_t) {},
                     [](std::wstring const&, std::wstring const&) {});
@@ -146,7 +149,7 @@ namespace midipatchbay
                 auto const same = wanted.size() == m_wanted.size() &&
                     std::equal(wanted.begin(), wanted.end(), m_wanted.begin(), [](OscAdvertisement const& a, OscAdvertisement const& b)
                         {
-                            return a.Port == b.Port && a.Label == b.Label;
+                            return a.Port == b.Port && a.Label == b.Label && a.ServiceType == b.ServiceType;
                         });
 
                 if (same)
@@ -170,7 +173,7 @@ namespace midipatchbay
 
     void OscDiscovery::Shutdown() noexcept
     {
-        std::shared_ptr<Browser> browser{};
+        std::map<std::wstring, std::shared_ptr<Browser>> browsers{};
         std::jthread worker{};
 
         try
@@ -181,7 +184,7 @@ namespace midipatchbay
             m_wanted.clear();
             m_wantedVersion++;
 
-            browser = std::move(m_browser);
+            browsers = std::move(m_browsers);
             worker = std::move(m_worker);
         }
         catch (...)
@@ -198,9 +201,14 @@ namespace midipatchbay
             worker.join();
         }
 
-        if (browser != nullptr)
+        for (auto const& [type, browser] : browsers)
         {
-            browser->Dnssd.Stop();
+            UNREFERENCED_PARAMETER(type);
+
+            if (browser != nullptr)
+            {
+                browser->Dnssd.Stop();
+            }
         }
     }
 
@@ -231,16 +239,16 @@ namespace midipatchbay
 
         std::vector<Entry> current{};
 
-        // Repeats each new registration's announcement correctly, as the transports do. A failure
-        // costs only the repeats.
-        dnssd::MidiDnssdFollowUpAnnouncer announcer{};
-        auto announcing = false;
+        // Repeats each new registration's announcement correctly, as the transports do: one for
+        // each service type. A failure costs only the repeats.
+        std::map<std::wstring, std::unique_ptr<dnssd::MidiDnssdFollowUpAnnouncer>> announcers{};
 
-        auto const withdraw = [&announcer](Entry& entry) noexcept
+        auto const withdraw = [&announcers](Entry& entry) noexcept
             {
-                if (!entry.Registered.empty())
+                if (auto const found = announcers.find(entry.Wanted.ServiceType);
+                    !entry.Registered.empty() && found != announcers.end() && found->second != nullptr)
                 {
-                    announcer.RemoveRegistration(entry.Registered);
+                    found->second->RemoveRegistration(entry.Registered);
                 }
 
                 if (entry.Registration != nullptr)
@@ -273,7 +281,7 @@ namespace midipatchbay
                     {
                         return std::any_of(wanted.begin(), wanted.end(), [&advertisement](OscAdvertisement const& w)
                             {
-                                return w.Port == advertisement.Port && w.Label == advertisement.Label;
+                                return w.Port == advertisement.Port && w.Label == advertisement.Label && w.ServiceType == advertisement.ServiceType;
                             });
                     };
 
@@ -298,15 +306,23 @@ namespace midipatchbay
 
                     if (std::any_of(current.begin(), current.end(), [&advertisement](Entry const& e)
                         {
-                            return e.Wanted.Port == advertisement.Port && e.Wanted.Label == advertisement.Label;
+                            return e.Wanted.Port == advertisement.Port && e.Wanted.Label == advertisement.Label &&
+                                e.Wanted.ServiceType == advertisement.ServiceType;
                         }))
                     {
                         continue;
                     }
 
-                    if (!announcing)
+                    auto& announcer = announcers[advertisement.ServiceType];
+
+                    if (announcer == nullptr)
                     {
-                        announcing = SUCCEEDED(announcer.Start(OscUdpServiceType));
+                        auto started = std::make_unique<dnssd::MidiDnssdFollowUpAnnouncer>();
+
+                        if (SUCCEEDED(started->Start(advertisement.ServiceType)))
+                        {
+                            announcer = std::move(started);
+                        }
                     }
 
                     Entry entry{};
@@ -317,7 +333,7 @@ namespace midipatchbay
                     // version of these records it is.
                     auto const hr = entry.Registration->Register(
                         advertisement.Label,
-                        OscUdpServiceType,
+                        advertisement.ServiceType,
                         std::wstring{},
                         advertisement.Port,
                         { { L"txtvers", L"1" } },
@@ -328,9 +344,9 @@ namespace midipatchbay
                     {
                         entry.Registered = entry.Registration->RegisteredLabel();
 
-                        if (announcing && !entry.Registered.empty())
+                        if (announcer != nullptr && !entry.Registered.empty())
                         {
-                            announcer.AddRegistration(entry.Registered);
+                            announcer->AddRegistration(entry.Registered);
                         }
                     }
                     else if (hr != HRESULT_FROM_WIN32(ERROR_CANCELLED))
@@ -364,7 +380,15 @@ namespace midipatchbay
             withdraw(entry);
         }
 
-        announcer.Stop();
+        for (auto& [type, announcer] : announcers)
+        {
+            UNREFERENCED_PARAMETER(type);
+
+            if (announcer != nullptr)
+            {
+                announcer->Stop();
+            }
+        }
 
         try
         {

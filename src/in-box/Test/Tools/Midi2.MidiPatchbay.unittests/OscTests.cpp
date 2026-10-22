@@ -11,6 +11,7 @@
 #include "OscConnection.h"
 #include "OscPacket.h"
 #include "OscRules.h"
+#include "OscStream.h"
 #include "OscTime.h"
 #include "OscTranslate.h"
 #include "PatchSerializer.h"
@@ -1857,4 +1858,153 @@ void OscTests::AdvertisingIsSavedAndNamed()
     VERIFY_ARE_EQUAL(size_t{ 30 }, piano.size());
     VERIFY_ARE_EQUAL(size_t{ 60 }, utf8Bytes(piano));
     VERIFY_IS_TRUE(piano.back() == L'\xDFB9');
+}
+
+void OscTests::PacketsAreFramedOnAStream()
+{
+    // A packet with every byte SLIP has to escape, and a second one.
+    std::vector<uint8_t> const first{ 0x2F, 0xC0, 0x41, 0xDB, 0x00, 0xDC, 0xDD, 0xC0 };
+    std::vector<uint8_t> const second{ 0x2F, 0x6D, 0x00, 0x00 };
+
+    for (auto const framing : { osc::StreamFraming::Slip, osc::StreamFraming::SizeFirst })
+    {
+        std::vector<uint8_t> stream{};
+        osc::AppendFramed(framing, first, stream);
+        osc::AppendFramed(framing, second, stream);
+
+        if (framing == osc::StreamFraming::Slip)
+        {
+            // END, the packet with its two ENDs and one ESC escaped, END. No END inside.
+            VERIFY_ARE_EQUAL(size_t{ 2 + first.size() + 3 + 2 + second.size() }, stream.size());
+            VERIFY_ARE_EQUAL(osc::slip::End, stream.front());
+            VERIFY_ARE_EQUAL(size_t{ 4 }, static_cast<size_t>(std::count(stream.begin(), stream.end(), osc::slip::End)));
+        }
+        else
+        {
+            VERIFY_ARE_EQUAL(size_t{ 4 + first.size() + 4 + second.size() }, stream.size());
+            VERIFY_ARE_EQUAL(uint8_t{ 8 }, stream[3]);
+        }
+
+        // Read whole, and a byte at a time: the same two packets either way.
+        for (size_t step : { stream.size(), size_t{ 1 }, size_t{ 3 } })
+        {
+            osc::StreamReader reader{ framing };
+            std::vector<std::vector<uint8_t>> packets{};
+
+            for (size_t start = 0; start < stream.size(); start += step)
+            {
+                auto const length = (std::min)(step, stream.size() - start);
+                auto const problem = reader.Read(std::span<uint8_t const>{ stream.data() + start, length },
+                    [&](std::span<uint8_t const> packet) { packets.emplace_back(packet.begin(), packet.end()); });
+
+                VERIFY_IS_TRUE(problem == osc::StreamProblem::None);
+            }
+
+            VERIFY_ARE_EQUAL(size_t{ 2 }, packets.size());
+            VERIFY_IS_TRUE(packets[0] == first);
+            VERIFY_IS_TRUE(packets[1] == second);
+        }
+    }
+
+    // SLIP: noise and empty packets between ENDs are nothing, and a packet too long is dropped
+    // without losing the next one.
+    {
+        std::vector<uint8_t> stream{ osc::slip::End, osc::slip::End, osc::slip::End };
+        stream.insert(stream.end(), osc::MaximumPacketBytes + 10, uint8_t{ 0x41 });
+        osc::AppendFramed(osc::StreamFraming::Slip, second, stream);
+
+        osc::StreamReader reader{ osc::StreamFraming::Slip };
+        std::vector<std::vector<uint8_t>> packets{};
+
+        auto const problem = reader.Read(stream, [&](std::span<uint8_t const> packet) { packets.emplace_back(packet.begin(), packet.end()); });
+
+        VERIFY_IS_TRUE(problem == osc::StreamProblem::TooLong);
+        VERIFY_ARE_EQUAL(size_t{ 1 }, packets.size());
+        VERIFY_IS_TRUE(packets[0] == second);
+    }
+
+    // Size first: a size of 0, or past the largest packet, ends the stream.
+    for (std::vector<uint8_t> const bad : { std::vector<uint8_t>{ 0, 0, 0, 0 }, std::vector<uint8_t>{ 0x7F, 0xFF, 0xFF, 0xFF } })
+    {
+        osc::StreamReader reader{ osc::StreamFraming::SizeFirst };
+        auto called = false;
+
+        VERIFY_IS_TRUE(reader.Read(bad, [&](std::span<uint8_t const>) { called = true; }) == osc::StreamProblem::BadSize);
+        VERIFY_IS_FALSE(called);
+    }
+
+    // The largest packet is fine.
+    {
+        std::vector<uint8_t> big(osc::MaximumPacketBytes, uint8_t{ 0xC0 });
+        std::vector<uint8_t> stream{};
+        osc::AppendFramed(osc::StreamFraming::Slip, big, stream);
+
+        osc::StreamReader reader{ osc::StreamFraming::Slip };
+        size_t size{ 0 };
+
+        VERIFY_IS_TRUE(reader.Read(stream, [&](std::span<uint8_t const> packet) { size = packet.size(); }) == osc::StreamProblem::None);
+        VERIFY_ARE_EQUAL(osc::MaximumPacketBytes, size);
+    }
+}
+
+void OscTests::TcpSettingsSurviveTheFile()
+{
+    // UDP writes nothing new, so older patches read the same.
+    auto settings = OscConnectionFromPreset(OscPreset::Paths);
+    auto const udpText = std::wstring{ OscConnectionToJson(settings).Stringify() };
+    VERIFY_IS_TRUE(udpText.find(L"transport") == std::wstring::npos);
+    VERIFY_IS_TRUE(OscConnectionFromJson(json::JsonObject::Parse(udpText)).Transport == OscTransport::Udp);
+
+    settings.Transport = OscTransport::TcpConnect;
+    settings.TcpFraming = OscTcpFraming::SizeFirst;
+    settings.SendHost = L"ipad.local";
+    settings.SendPort = 9000;
+
+    auto const text = OscConnectionToJson(settings).Stringify();
+    auto back = OscConnectionFromJson(json::JsonObject::Parse(text));
+
+    VERIFY_IS_TRUE(back.Transport == OscTransport::TcpConnect);
+    VERIFY_IS_TRUE(back.TcpFraming == OscTcpFraming::SizeFirst);
+    VERIFY_ARE_EQUAL(OscConnectionSignature(settings), OscConnectionSignature(back));
+    VERIFY_ARE_NOT_EQUAL(OscConnectionSignature(back), OscConnectionSignature(OscConnectionFromJson(json::JsonObject::Parse(udpText))));
+
+    // Connecting receives and sends on the one connection, and listens for nobody.
+    VERIFY_IS_TRUE(OscConnectionReceives(back));
+    VERIFY_IS_TRUE(OscConnectionSends(back));
+    VERIFY_IS_FALSE(OscConnectionListens(back));
+
+    back.SendHost.clear();
+    VERIFY_IS_FALSE(OscConnectionReceives(back));
+    VERIFY_IS_FALSE(OscConnectionSends(back));
+
+    // Waiting for apps listens, and sends to whoever connects.
+    OscConnectionSettings listen{};
+    listen.Transport = OscTransport::TcpListen;
+    listen.ReceivePort = 8000;
+    VERIFY_IS_TRUE(OscConnectionListens(listen));
+    VERIFY_IS_TRUE(OscConnectionReceives(listen));
+    VERIFY_IS_TRUE(OscConnectionSends(listen));
+
+    // It has no computer it sends to, so taking messages from that computer means taking them
+    // from the one named, or from anyone when there's none.
+    listen.AcceptFrom = OscAcceptFrom::SendHost;
+    listen.SendHost = L"192.168.1.199";
+    SanitizeOscConnection(listen);
+    VERIFY_IS_TRUE(listen.AcceptFrom == OscAcceptFrom::List);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, listen.AcceptAddresses.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"192.168.1.199" }, listen.AcceptAddresses[0]);
+
+    listen.AcceptFrom = OscAcceptFrom::SendHost;
+    listen.SendHost.clear();
+    listen.AcceptAddresses.clear();
+    SanitizeOscConnection(listen);
+    VERIFY_IS_TRUE(listen.AcceptFrom == OscAcceptFrom::Anyone);
+
+    // Unknown names read as the defaults.
+    auto object = json::JsonObject::Parse(text);
+    object.SetNamedValue(L"transport", json::JsonValue::CreateStringValue(L"carrierPigeon"));
+    object.SetNamedValue(L"tcpFraming", json::JsonValue::CreateNumberValue(1));
+    auto const odd = OscConnectionFromJson(object);
+    VERIFY_IS_TRUE(odd.Transport == OscTransport::Udp);
+    VERIFY_IS_TRUE(odd.TcpFraming == OscTcpFraming::Slip);
 }

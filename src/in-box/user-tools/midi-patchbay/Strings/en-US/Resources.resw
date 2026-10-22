@@ -5576,4 +5576,96 @@
     <value>{0} ({1}, port {2})</value>
     <comment>Menu item for an OSC app found on the network. {0} is the name it advertises, {1} its host address, {2} its port number.</comment>
   </data>
+  <data name="OscTransportHeading" xml:space="preserve">
+    <value>Network</value>
+    <comment>Heading of the OSC connection&apos;s section that picks UDP or TCP.</comment>
+  </data>
+  <data name="OscTransportHeader" xml:space="preserve">
+    <value>Protocol</value>
+    <comment>Header of the choice between UDP and the two kinds of TCP connection.</comment>
+  </data>
+  <data name="OscTransportUdp" xml:space="preserve">
+    <value>UDP (most apps)</value>
+    <comment>Protocol choice: OSC over UDP, which almost every OSC app uses.</comment>
+  </data>
+  <data name="OscTransportTcpConnect" xml:space="preserve">
+    <value>TCP, connect to the other app</value>
+    <comment>Protocol choice: Windows MIDI Patchbay connects to the other app over TCP.</comment>
+  </data>
+  <data name="OscTransportTcpListen" xml:space="preserve">
+    <value>TCP, wait for apps to connect</value>
+    <comment>Protocol choice: Windows MIDI Patchbay waits for apps to connect to it over TCP.</comment>
+  </data>
+  <data name="OscTcpFramingHeader" xml:space="preserve">
+    <value>TCP framing</value>
+    <comment>Header of the choice of how OSC packets are marked in a TCP stream. Only used for TCP.</comment>
+  </data>
+  <data name="OscTcpFramingSlip" xml:space="preserve">
+    <value>SLIP (OSC 1.1)</value>
+    <comment>Framing choice: SLIP, as the OSC 1.1 paper recommends. Most apps use it. Do not translate SLIP or OSC.</comment>
+  </data>
+  <data name="OscTcpFramingSizeFirst" xml:space="preserve">
+    <value>Size first (OSC 1.0)</value>
+    <comment>Framing choice: each packet&apos;s size before it, as OSC 1.0 says. Do not translate OSC.</comment>
+  </data>
+  <data name="OscTransportUdpHint" xml:space="preserve">
+    <value>Each message travels on its own. Almost every OSC app uses UDP.</value>
+    <comment>Hint under the protocol choice when UDP is picked.</comment>
+  </data>
+  <data name="OscTransportTcpConnectHint" xml:space="preserve">
+    <value>Windows MIDI Patchbay connects to the app at the address under Sending, and messages go both ways on that connection. TCP doesn&apos;t lose messages, so it suits big SysEx. Pick the framing the other app uses. Most use SLIP.</value>
+    <comment>Hint under the protocol choice when connecting over TCP is picked.</comment>
+  </data>
+  <data name="OscTransportTcpListenHint" xml:space="preserve">
+    <value>Apps connect to this PC on the port under Receiving, and messages go both ways on each connection. Up to 8 apps can connect at once. Pick the framing the apps use. Most use SLIP.</value>
+    <comment>Hint under the protocol choice when waiting for TCP connections is picked.</comment>
+  </data>
+  <data name="OscTcpListenSendHint" xml:space="preserve">
+    <value>Sends to every app connected to it.</value>
+    <comment>Shown in the Sending section of an OSC connection that waits for apps to connect over TCP.</comment>
+  </data>
+  <data name="OscTcpConnectOff" xml:space="preserve">
+    <value>Not connecting. Set a host and port under Sending.</value>
+    <comment>Status of an OSC connection set to connect over TCP, with no host or port.</comment>
+  </data>
+  <data name="OscTcpConnectNotRoutingFormat" xml:space="preserve">
+    <value>Connects over TCP to {0} while this patch routes.</value>
+    <comment>Status when the patch isn&apos;t routing. {0} is the host and port, like 192.168.1.20:9000.</comment>
+  </data>
+  <data name="OscTcpConnectedFormat" xml:space="preserve">
+    <value>Connected over TCP to {0}.</value>
+    <comment>Status. {0} is the address and port connected to.</comment>
+  </data>
+  <data name="OscTcpConnectingFormat" xml:space="preserve">
+    <value>Trying to connect over TCP to {0}. Check that the other app is waiting for connections on that port.</value>
+    <comment>Status while the TCP connection isn&apos;t made. {0} is the host and port.</comment>
+  </data>
+  <data name="OscTcpListeningNotRoutingFormat" xml:space="preserve">
+    <value>Waits on TCP port {0} for apps to connect while this patch routes.</value>
+    <comment>Status when the patch isn&apos;t routing. {0} is the port number.</comment>
+  </data>
+  <data name="OscTcpListeningEveryNetworkFormat" xml:space="preserve">
+    <value>Waiting on TCP port {0} for apps on every network. Apps connected: {1}.</value>
+    <comment>Status. {0} is the port number, {1} how many apps are connected.</comment>
+  </data>
+  <data name="OscTcpListeningThisPcFormat" xml:space="preserve">
+    <value>Waiting on TCP port {0} for apps on this PC only. Apps connected: {1}.</value>
+    <comment>Status. {0} is the port number, {1} how many apps are connected.</comment>
+  </data>
+  <data name="OscTcpListeningHeldFormat" xml:space="preserve">
+    <value>Waiting on TCP port {0}, but only for apps on this PC until Windows Firewall lets Windows MIDI Patchbay in. Apps connected: {1}.</value>
+    <comment>Status. {0} is the port number, {1} how many apps are connected.</comment>
+  </data>
+  <data name="OscCountTurnedAwayFormat" xml:space="preserve">
+    <value>{0} TCP connections were turned away, from computers it doesn&apos;t take messages from or past 8 at once.</value>
+    <comment>Count shown for an OSC connection that waits for TCP connections. {0} is a number.</comment>
+  </data>
+  <data name="OscSubtitleTcpConnectFormat" xml:space="preserve">
+    <value>OSC · TCP with {0}</value>
+    <comment>Subtitle on the canvas for an OSC connection that connects over TCP. {0} is the host and port.</comment>
+  </data>
+  <data name="OscSubtitleTcpListenFormat" xml:space="preserve">
+    <value>OSC · TCP on port {0}</value>
+    <comment>Subtitle on the canvas for an OSC connection that waits for apps over TCP. {0} is the port number.</comment>
+  </data>
 </root>

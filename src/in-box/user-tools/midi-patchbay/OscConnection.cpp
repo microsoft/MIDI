@@ -75,6 +75,19 @@ namespace midipatchbay
             { OscNoteOff::OwnAddress, L"ownAddress" },
         } };
 
+        constexpr std::array<EnumName<OscTransport>, 3> TransportNames
+        { {
+            { OscTransport::Udp, L"udp" },
+            { OscTransport::TcpConnect, L"tcpConnect" },
+            { OscTransport::TcpListen, L"tcpListen" },
+        } };
+
+        constexpr std::array<EnumName<OscTcpFraming>, 2> TcpFramingNames
+        { {
+            { OscTcpFraming::Slip, L"slip" },
+            { OscTcpFraming::SizeFirst, L"sizeFirst" },
+        } };
+
         constexpr std::array<EnumName<OscListenOn>, 2> ListenOnNames
         { {
             { OscListenOn::EveryNetwork, L"everyNetwork" },
@@ -601,13 +614,35 @@ namespace midipatchbay
     _Use_decl_annotations_
     bool OscConnectionReceives(OscConnectionSettings const& settings) noexcept
     {
+        if (settings.Transport == OscTransport::TcpConnect)
+        {
+            return settings.SendPort != 0 && !settings.SendHost.empty();
+        }
+
         return settings.ReceivePort != 0;
     }
 
     _Use_decl_annotations_
     bool OscConnectionSends(OscConnectionSettings const& settings) noexcept
     {
-        return settings.SendPort != 0 && (!settings.SendHost.empty() || settings.SendToLastSender);
+        switch (settings.Transport)
+        {
+        case OscTransport::TcpConnect:
+            return settings.SendPort != 0 && !settings.SendHost.empty();
+
+        case OscTransport::TcpListen:
+            // To whoever connects.
+            return settings.ReceivePort != 0;
+
+        default:
+            return settings.SendPort != 0 && (!settings.SendHost.empty() || settings.SendToLastSender);
+        }
+    }
+
+    _Use_decl_annotations_
+    bool OscConnectionListens(OscConnectionSettings const& settings) noexcept
+    {
+        return settings.Transport != OscTransport::TcpConnect && settings.ReceivePort != 0;
     }
 
     _Use_decl_annotations_
@@ -732,6 +767,35 @@ namespace midipatchbay
             }
 
             settings.AcceptAddresses = std::move(accept);
+
+            if (static_cast<uint32_t>(settings.Transport) > static_cast<uint32_t>(OscTransport::TcpListen))
+            {
+                settings.Transport = OscTransport::Udp;
+            }
+
+            if (static_cast<uint32_t>(settings.TcpFraming) > static_cast<uint32_t>(OscTcpFraming::SizeFirst))
+            {
+                settings.TcpFraming = OscTcpFraming::Slip;
+            }
+
+            // Waiting for apps to connect, there's no computer it sends to: it answers whoever
+            // connected. So "the computer it sends to" becomes that computer by name, or anyone.
+            if (settings.Transport == OscTransport::TcpListen && settings.AcceptFrom == OscAcceptFrom::SendHost)
+            {
+                if (settings.SendHost.empty())
+                {
+                    settings.AcceptFrom = OscAcceptFrom::Anyone;
+                }
+                else
+                {
+                    settings.AcceptFrom = OscAcceptFrom::List;
+
+                    if (settings.AcceptAddresses.empty())
+                    {
+                        settings.AcceptAddresses.push_back(settings.SendHost);
+                    }
+                }
+            }
         }
         catch (...)
         {
@@ -748,6 +812,12 @@ namespace midipatchbay
     json::JsonObject OscConnectionToJson(OscConnectionSettings const& settings)
     {
         json::JsonObject object{};
+
+        if (settings.Transport != OscTransport::Udp)
+        {
+            object.Insert(L"transport", json::JsonValue::CreateStringValue(KeyOf(TransportNames, settings.Transport)));
+            object.Insert(L"tcpFraming", json::JsonValue::CreateStringValue(KeyOf(TcpFramingNames, settings.TcpFraming)));
+        }
 
         json::JsonObject receive{};
         receive.Insert(L"port", json::JsonValue::CreateNumberValue(settings.ReceivePort));
@@ -844,6 +914,9 @@ namespace midipatchbay
 
         try
         {
+            settings.Transport = ReadEnum(object, L"transport", TransportNames, OscTransport::Udp);
+            settings.TcpFraming = ReadEnum(object, L"tcpFraming", TcpFramingNames, OscTcpFraming::Slip);
+
             auto const receive = ReadObject(object, L"receive");
 
             settings.ReceivePort = static_cast<uint16_t>(ReadInteger(receive, L"port", 0, 65535, 0));
@@ -966,7 +1039,9 @@ namespace midipatchbay
     {
         try
         {
-            std::wstring text = std::format(L"r{}:{}:{}:{}:{}|s{}:{}:{}|t{}:{}:{}:{}",
+            std::wstring text = std::format(L"n{}:{}|r{}:{}:{}:{}:{}|s{}:{}:{}|t{}:{}:{}:{}",
+                static_cast<int32_t>(settings.Transport),
+                static_cast<int32_t>(settings.TcpFraming),
                 settings.ReceivePort,
                 settings.Advertise ? 1 : 0,
                 static_cast<int32_t>(settings.ListenOn),

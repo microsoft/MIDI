@@ -108,8 +108,43 @@ namespace winrt::midipatchbay::implementation
             return std::isfinite(value) ? static_cast<uint16_t>(std::clamp(value, 0.0, 65535.0)) : uint16_t{ 0 };
         }
 
+        std::vector<winrt::hstring> TransportNames()
+        {
+            return {
+                resources::GetString(L"OscTransportUdp"),
+                resources::GetString(L"OscTransportTcpConnect"),
+                resources::GetString(L"OscTransportTcpListen") };
+        }
+
+        std::vector<winrt::hstring> FramingNames()
+        {
+            return { resources::GetString(L"OscTcpFramingSlip"), resources::GetString(L"OscTcpFramingSizeFirst") };
+        }
+
+        winrt::hstring TransportHint(_In_ patchbay::OscTransport transport)
+        {
+            return resources::GetString(
+                transport == patchbay::OscTransport::TcpConnect ? L"OscTransportTcpConnectHint" :
+                transport == patchbay::OscTransport::TcpListen ? L"OscTransportTcpListenHint" :
+                L"OscTransportUdpHint");
+        }
+
+        patchbay::OscTransport TransportFrom(_In_ controls::ComboBox const& box) noexcept
+        {
+            return static_cast<patchbay::OscTransport>(std::clamp(box.SelectedIndex(), 0, 2));
+        }
+
+        // What an app to send to advertises: one that waits for TCP connections, or one that
+        // listens for UDP.
+        std::wstring ServiceTypeOf(_In_ patchbay::OscTransport transport)
+        {
+            return transport == patchbay::OscTransport::TcpConnect ? patchbay::OscTcpServiceType : patchbay::OscUdpServiceType;
+        }
+
         // A button listing the OSC apps found on the network. Picking one calls picked.
-        controls::DropDownButton FindOnNetwork(_In_ std::function<void(patchbay::OscFoundApp const&)> picked)
+        controls::DropDownButton FindOnNetwork(
+            _In_ std::function<std::wstring()> serviceType,
+            _In_ std::function<void(patchbay::OscFoundApp const&)> picked)
         {
             controls::DropDownButton button{};
             button.Content(winrt::box_value(resources::GetString(L"OscFindButton")));
@@ -119,14 +154,14 @@ namespace winrt::midipatchbay::implementation
             flyout.Placement(controls::Primitives::FlyoutPlacementMode::BottomEdgeAlignedLeft);
 
             // The list is read each time it opens, as apps come and go.
-            flyout.Opening([picked](winrt::Windows::Foundation::IInspectable const& sender, auto&&)
+            flyout.Opening([serviceType, picked](winrt::Windows::Foundation::IInspectable const& sender, auto&&)
                 {
                     try
                     {
                         auto const menu = sender.as<controls::MenuFlyout>();
                         menu.Items().Clear();
 
-                        auto const apps = patchbay::OscDiscovery::Current().FoundApps();
+                        auto const apps = patchbay::OscDiscovery::Current().FoundApps(serviceType());
 
                         if (apps.empty())
                         {
@@ -151,7 +186,7 @@ namespace winrt::midipatchbay::implementation
             button.Flyout(flyout);
 
             // Starts looking now, so the list has had a few seconds to fill when it's opened.
-            (void)patchbay::OscDiscovery::Current().FoundApps();
+            (void)patchbay::OscDiscovery::Current().FoundApps(serviceType());
 
             return button;
         }
@@ -304,6 +339,31 @@ namespace winrt::midipatchbay::implementation
             auto presetHint = parts::HeadingHint(PresetHint(initialPreset));
             body.Children().Append(presetHint);
 
+            // How it connects.
+            controls::Grid transportRow{};
+            transportRow.ColumnSpacing(12);
+
+            for (int i = 0; i < 2; i++)
+            {
+                controls::ColumnDefinition column{};
+                column.Width(xaml::GridLength{ 1, xaml::GridUnitType::Star });
+                transportRow.ColumnDefinitions().Append(column);
+            }
+
+            auto transportBox = Choices(resources::GetString(L"OscTransportHeader"), TransportNames(), 0);
+            controls::Grid::SetColumn(transportBox, 0);
+            transportRow.Children().Append(transportBox);
+
+            auto framingBox = Choices(resources::GetString(L"OscTcpFramingHeader"), FramingNames(), 0);
+            framingBox.IsEnabled(false);
+            controls::Grid::SetColumn(framingBox, 1);
+            transportRow.Children().Append(framingBox);
+
+            body.Children().Append(transportRow);
+
+            auto transportHint = parts::HeadingHint(TransportHint(patchbay::OscTransport::Udp));
+            body.Children().Append(transportHint);
+
             // Receiving.
             body.Children().Append(parts::Heading(resources::GetString(L"OscReceiveHeading")));
 
@@ -362,11 +422,14 @@ namespace winrt::midipatchbay::implementation
             body.Children().Append(sendRow);
             body.Children().Append(parts::HeadingHint(resources::GetString(L"OscSendHostHint")));
 
-            body.Children().Append(FindOnNetwork([hostBox, sendPort](patchbay::OscFoundApp const& app)
+            auto findButton = FindOnNetwork(
+                [transportBox]() { return ServiceTypeOf(TransportFrom(transportBox)); },
+                [hostBox, sendPort](patchbay::OscFoundApp const& app)
                 {
                     hostBox.Text(winrt::hstring{ app.Host });
                     sendPort.Value(app.Port);
-                }));
+                });
+            body.Children().Append(findButton);
 
             controls::StackPanel testRow{};
             testRow.Orientation(controls::Orientation::Horizontal);
@@ -384,11 +447,30 @@ namespace winrt::midipatchbay::implementation
 
             midiapp::UseTouchSpinButtons({ receivePort, sendPort });
 
+            // Only what the protocol uses can be changed.
+            auto const applyTransport = [=]()
+                {
+                    auto const transport = TransportFrom(transportBox);
+
+                    transportHint.Text(TransportHint(transport));
+                    framingBox.IsEnabled(transport != patchbay::OscTransport::Udp);
+                    receivePort.IsEnabled(transport != patchbay::OscTransport::TcpConnect);
+                    listenOn.IsEnabled(transport != patchbay::OscTransport::TcpConnect);
+                    hostBox.IsEnabled(transport != patchbay::OscTransport::TcpListen);
+                    sendPort.IsEnabled(transport != patchbay::OscTransport::TcpListen);
+                    findButton.IsEnabled(transport != patchbay::OscTransport::TcpListen);
+                    testButton.IsEnabled(transport != patchbay::OscTransport::TcpListen);
+                };
+
+            transportBox.SelectionChanged([applyTransport](auto&&, auto&&) { applyTransport(); });
+
             auto const readSettings = [=]()
                 {
                     auto const preset = static_cast<patchbay::OscPreset>(std::clamp(presetBox.SelectedIndex(), 0, patchbay::OscPresetCount - 1));
                     auto settings = patchbay::OscConnectionFromPreset(preset);
 
+                    settings.Transport = TransportFrom(transportBox);
+                    settings.TcpFraming = framingBox.SelectedIndex() == 1 ? patchbay::OscTcpFraming::SizeFirst : patchbay::OscTcpFraming::Slip;
                     settings.ReceivePort = PortFrom(receivePort);
                     settings.ListenOn = listenOn.SelectedIndex() == 1 ? patchbay::OscListenOn::ThisPc : patchbay::OscListenOn::EveryNetwork;
                     settings.SendHost = patchbay::SanitizeStoredString(std::wstring{ hostBox.Text() });
@@ -690,7 +772,35 @@ namespace winrt::midipatchbay::implementation
                 content.Children().Append(parts::Card(body));
             }
 
+            auto const transport = settings.Transport;
+
+            // --------------------------------------------------------------- network
+            {
+                auto section = Section(resources::GetString(L"OscTransportHeading"));
+
+                auto transportBox = Choices(resources::GetString(L"OscTransportHeader"), TransportNames(), static_cast<int32_t>(transport));
+                transportBox.SelectionChanged([change, transportBox](auto&&, auto&&)
+                    {
+                        auto const value = TransportFrom(transportBox);
+                        change([value](patchbay::OscConnectionSettings& s) { s.Transport = value; }, true);
+                    });
+
+                auto framingBox = Choices(resources::GetString(L"OscTcpFramingHeader"), FramingNames(),
+                    settings.TcpFraming == patchbay::OscTcpFraming::SizeFirst ? 1 : 0);
+                framingBox.IsEnabled(transport != patchbay::OscTransport::Udp);
+                framingBox.SelectionChanged([change, framingBox](auto&&, auto&&)
+                    {
+                        auto const value = framingBox.SelectedIndex() == 1 ? patchbay::OscTcpFraming::SizeFirst : patchbay::OscTcpFraming::Slip;
+                        change([value](patchbay::OscConnectionSettings& s) { s.TcpFraming = value; }, false);
+                    });
+
+                section.Children().Append(TwoColumns(transportBox, framingBox));
+                section.Children().Append(parts::HeadingHint(TransportHint(transport)));
+                content.Children().Append(section);
+            }
+
             // --------------------------------------------------------------- receiving
+            if (transport != patchbay::OscTransport::TcpConnect)
             {
                 auto section = Section(resources::GetString(L"OscReceiveHeading"));
 
@@ -722,12 +832,22 @@ namespace winrt::midipatchbay::implementation
                 section.Children().Append(advertise);
                 section.Children().Append(parts::HeadingHint(resources::GetString(L"OscAdvertiseHint")));
 
-                auto accept = Choices(resources::GetString(L"OscAcceptHeader"),
-                    { resources::GetString(L"OscAcceptAnyone"), resources::GetString(L"OscAcceptSendHost"), resources::GetString(L"OscAcceptList") },
-                    static_cast<int32_t>(settings.AcceptFrom));
-                accept.SelectionChanged([change, accept](auto&&, auto&&)
+                // Waiting for apps over TCP, there's no computer it sends to, so that choice isn't there.
+                auto const tcpListen = transport == patchbay::OscTransport::TcpListen;
+
+                auto accept = tcpListen
+                    ? Choices(resources::GetString(L"OscAcceptHeader"),
+                        { resources::GetString(L"OscAcceptAnyone"), resources::GetString(L"OscAcceptList") },
+                        settings.AcceptFrom == patchbay::OscAcceptFrom::List ? 1 : 0)
+                    : Choices(resources::GetString(L"OscAcceptHeader"),
+                        { resources::GetString(L"OscAcceptAnyone"), resources::GetString(L"OscAcceptSendHost"), resources::GetString(L"OscAcceptList") },
+                        static_cast<int32_t>(settings.AcceptFrom));
+                accept.SelectionChanged([change, accept, tcpListen](auto&&, auto&&)
                     {
-                        auto const value = static_cast<patchbay::OscAcceptFrom>(std::clamp(accept.SelectedIndex(), 0, 2));
+                        auto const index = accept.SelectedIndex();
+                        auto const value = tcpListen
+                            ? (index == 1 ? patchbay::OscAcceptFrom::List : patchbay::OscAcceptFrom::Anyone)
+                            : static_cast<patchbay::OscAcceptFrom>(std::clamp(index, 0, 2));
                         change([value](patchbay::OscConnectionSettings& s) { s.AcceptFrom = value; }, true);
                     });
                 section.Children().Append(accept);
@@ -770,6 +890,13 @@ namespace winrt::midipatchbay::implementation
             }
 
             // --------------------------------------------------------------- sending
+            if (transport == patchbay::OscTransport::TcpListen)
+            {
+                auto section = Section(resources::GetString(L"OscSendHeading"));
+                section.Children().Append(parts::HeadingHint(resources::GetString(L"OscTcpListenSendHint")));
+                content.Children().Append(section);
+            }
+            else
             {
                 auto section = Section(resources::GetString(L"OscSendHeading"));
 
@@ -794,7 +921,9 @@ namespace winrt::midipatchbay::implementation
                 section.Children().Append(TwoColumns(host, port));
                 section.Children().Append(parts::HeadingHint(resources::GetString(L"OscSendHostHint")));
 
-                section.Children().Append(FindOnNetwork([change](patchbay::OscFoundApp const& app)
+                section.Children().Append(FindOnNetwork(
+                    [transport]() { return ServiceTypeOf(transport); },
+                    [change](patchbay::OscFoundApp const& app)
                     {
                         auto const found = app;
                         change([found](patchbay::OscConnectionSettings& s)
@@ -804,14 +933,18 @@ namespace winrt::midipatchbay::implementation
                             }, true);
                     }));
 
-                auto lastSender = parts::Check(resources::GetString(L"OscSendToLastSender"), settings.SendToLastSender);
-                lastSender.Click([change, lastSender](auto&&, auto&&)
-                    {
-                        auto const value = Checked(lastSender);
-                        change([value](patchbay::OscConnectionSettings& s) { s.SendToLastSender = value; }, false);
-                    });
-                section.Children().Append(lastSender);
-                section.Children().Append(parts::HeadingHint(resources::GetString(L"OscSendToLastSenderHint")));
+                // Over TCP, replies come back on the connection it made.
+                if (transport == patchbay::OscTransport::Udp)
+                {
+                    auto lastSender = parts::Check(resources::GetString(L"OscSendToLastSender"), settings.SendToLastSender);
+                    lastSender.Click([change, lastSender](auto&&, auto&&)
+                        {
+                            auto const value = Checked(lastSender);
+                            change([value](patchbay::OscConnectionSettings& s) { s.SendToLastSender = value; }, false);
+                        });
+                    section.Children().Append(lastSender);
+                    section.Children().Append(parts::HeadingHint(resources::GetString(L"OscSendToLastSenderHint")));
+                }
 
                 controls::StackPanel testRow{};
                 testRow.Orientation(controls::Orientation::Horizontal);
@@ -1665,6 +1798,7 @@ namespace winrt::midipatchbay::implementation
             add(status.Unreadable, L"OscCountUnreadableFormat");
             add(status.NoRowMatched, L"OscCountNoRowMatchedFormat");
             add(status.NotAccepted, L"OscCountNotAcceptedFormat");
+            add(status.TurnedAway, L"OscCountTurnedAwayFormat");
             add(status.RateLimited, L"OscCountRateLimitedFormat");
             add(status.TooManyFromPattern, L"OscCountTooManyFormat");
             add(status.TooFarAhead, L"OscCountTooFarAheadFormat");
@@ -1713,7 +1847,7 @@ namespace winrt::midipatchbay::implementation
                     text += L'\n';
                     text += resources::FormatString(L"OscHostNotFoundFormat", endpoint->Osc->SendHost);
                 }
-                else if (!status->SendingTo.empty())
+                else if (!status->SendingTo.empty() && endpoint->Osc->Transport == patchbay::OscTransport::Udp)
                 {
                     text += L'\n';
                     text += resources::FormatString(L"OscSendingToFormat", status->SendingTo);

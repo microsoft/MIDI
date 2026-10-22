@@ -22,6 +22,9 @@
 // its timestamp, turned into OSC there, and sent when it's due, or at once in a bundle tagged with
 // its time. The same thread looks up the names the connection sends to and takes messages from.
 //
+// TCP: a connection's own sending thread also connects, accepts, reads and writes its TCP sockets,
+// so no other thread ever touches them. What arrives is read the same way as a UDP packet.
+//
 // Until Windows Firewall lets Windows MIDI Patchbay in, a connection set to listen on every
 // network listens on this PC only, so the firewall's own prompt never appears.
 
@@ -88,8 +91,14 @@ namespace midipatchbay
         // The send host's name couldn't be found.
         bool HostNotFound{ false };
 
-        // Where messages go now, like "192.168.1.20:9000". Empty until known.
+        // Where messages go now, like "192.168.1.20:9000". Empty until known. Over TCP, the app
+        // it's connected to.
         std::wstring SendingTo{};
+
+        // Over TCP: the apps connected now, and the connections turned away, for being past
+        // MaximumOscTcpApps or from a computer it doesn't take messages from.
+        uint32_t ConnectedApps{ 0 };
+        uint64_t TurnedAway{ 0 };
 
         uint64_t OscReceived{ 0 };
         uint64_t MidiReceived{ 0 };
@@ -137,7 +146,8 @@ namespace midipatchbay
         std::optional<OscConnectionStatus> Status(_In_ std::wstring const& deviceId) const noexcept;
         void ClearRecentlyHeard(_In_ std::wstring const& deviceId) noexcept;
 
-        // The rule Windows MIDI Patchbay adds for itself.
+        // The rules Windows MIDI Patchbay adds for itself: one for UDP and one for TCP, so a
+        // connection can be changed to TCP without asking again.
         static midiapp::firewall::FirewallTarget FirewallTarget();
 
         // Reads Windows Firewall again, and opens sockets on every network when it now lets the app
@@ -164,6 +174,13 @@ namespace midipatchbay
         void AdvertiseLocked() noexcept;
         bool LetsEveryNetworkIn() const noexcept;
 
+        // Whether any of them waits for TCP connections on every network. Only then does the
+        // firewall have to let TCP in too, so a UDP rule alone keeps working for UDP.
+        static bool ListensOverTcp(_In_ std::vector<RouteOscConnection> const& connections) noexcept;
+
+        // What the firewall is read for: UDP, and TCP when asked.
+        static midiapp::firewall::FirewallTarget ReadTarget(_In_ bool tcp);
+
         mutable std::mutex m_lock{};
 
         std::vector<RouteOscConnection> m_configured{};
@@ -172,6 +189,7 @@ namespace midipatchbay
 
         midiapp::firewall::FirewallState m_firewall{};
         bool m_firewallRead{ false };
+        bool m_firewallCoversTcp{ false };
 
         bool m_networkStarted{ false };
     };

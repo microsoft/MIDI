@@ -159,6 +159,28 @@ namespace midipatchbay
         OwnAddress = 1,
     };
 
+    enum class OscTransport : int32_t
+    {
+        // Each OSC packet on its own. What most apps use.
+        Udp = 0,
+
+        // TCP, connecting to the send host and port. Messages come back on the same connection.
+        TcpConnect = 1,
+
+        // TCP, waiting on the receive port for apps to connect. Sends to every app connected.
+        TcpListen = 2,
+    };
+
+    // How packets are marked in a TCP stream.
+    enum class OscTcpFraming : int32_t
+    {
+        // OSC 1.1: SLIP, as TouchOSC and most newer apps do.
+        Slip = 0,
+
+        // OSC 1.0: each packet's size first.
+        SizeFirst = 1,
+    };
+
     enum class OscListenOn : int32_t
     {
         EveryNetwork = 0,
@@ -256,9 +278,15 @@ namespace midipatchbay
     constexpr uint32_t DefaultOscSpacingDelayMilliseconds = 10;
     constexpr uint32_t MaximumOscSpacingDelayMilliseconds = 500;
 
+    // Apps connected at once to a connection that waits for them over TCP. More are turned away.
+    constexpr size_t MaximumOscTcpApps = 8;
+
     struct OscConnectionSettings
     {
-        // 0 doesn't receive.
+        OscTransport Transport{ OscTransport::Udp };
+        OscTcpFraming TcpFraming{ OscTcpFraming::Slip };
+
+        // 0 doesn't receive. Not used when connecting over TCP, which receives on the connection.
         uint16_t ReceivePort{ 0 };
 
         OscListenOn ListenOn{ OscListenOn::EveryNetwork };
@@ -306,6 +334,10 @@ namespace midipatchbay
     bool OscConnectionReceives(_In_ OscConnectionSettings const& settings) noexcept;
     bool OscConnectionSends(_In_ OscConnectionSettings const& settings) noexcept;
 
+    // Whether it waits on its receive port for others, over UDP or TCP: what Windows Firewall
+    // and the "listen on" setting are about.
+    bool OscConnectionListens(_In_ OscConnectionSettings const& settings) noexcept;
+
     // The row on this group, or null.
     OscRow const* OscRowOnGroup(_In_ OscConnectionSettings const& settings, _In_ uint8_t group) noexcept;
 
@@ -328,8 +360,9 @@ namespace midipatchbay
     // Equal for two connections that behave the same way.
     std::wstring OscConnectionSignature(_In_ OscConnectionSettings const& settings) noexcept;
 
-    // The DNS-SD service type OSC over UDP is advertised and found under.
+    // The DNS-SD service types OSC is advertised and found under.
     constexpr wchar_t OscUdpServiceType[] = L"_osc._udp.local";
+    constexpr wchar_t OscTcpServiceType[] = L"_osc._tcp.local";
 
     // The name a connection is advertised under: "TouchOSC (STUDIO-PC)". A DNS label: no
     // periods, no control characters, and at most 63 bytes of UTF-8, cut where a character

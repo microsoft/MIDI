@@ -160,6 +160,7 @@
     <ClInclude Include="OscTime.h" />
     <ClInclude Include="OscTranslate.h" />
     <ClInclude Include="OscRules.h" />
+    <ClInclude Include="OscStream.h" />
     <ClInclude Include="OscHub.h" />
     <ClInclude Include="OscDiscovery.h" />
     <ClInclude Include="OscText.h" />
@@ -279,6 +280,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="OscRules.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="OscStream.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="OscHub.cpp" />

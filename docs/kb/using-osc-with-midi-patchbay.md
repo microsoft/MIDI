@@ -44,6 +44,8 @@ To play REAPER on another PC or a Mac, send to that computer's address instead o
 
 TouchOSC has no MIDI over OSC of its own. Each control sends an OSC message of its own, like `/1/fader3` with a value from 0 to 1. There are two ways to use them.
 
+TouchOSC Mk1, the older version, uses UDP. The current TouchOSC can also use TCP. If TouchOSC connects to this PC over TCP, set the OSC connection's **Network** to **TCP, wait for apps to connect**. If TouchOSC waits for connections, pick **TCP, connect to the other app**. Use the same framing on both: OSC 1.1 is **SLIP**, and OSC 1.0 is **Size first**.
+
 ### Use TouchOSC's layouts as they come
 
 The quickest way, with nothing to change in TouchOSC:
