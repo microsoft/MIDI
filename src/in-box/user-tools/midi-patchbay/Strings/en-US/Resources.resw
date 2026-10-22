@@ -4899,10 +4899,6 @@
     <value>{0} ({1})</value>
     <comment>A row of an OSC connection on the canvas. {0} is its OSC address, like /vkb_midi. {1} is its preset or format.</comment>
   </data>
-  <data name="OscRowMidiTypeFormat" xml:space="preserve">
-    <value>{0} (MIDI type, port {1})</value>
-    <comment>A row of an OSC connection that uses OSC&apos;s MIDI type. {0} is its OSC address. {1} is the port number OSC messages carry, 0 to 15.</comment>
-  </data>
   <data name="OscLastSenderPortFormat" xml:space="preserve">
     <value>whoever sent last, port {0}</value>
     <comment>Where an OSC connection sends when set to answer whoever sent to it last. {0} is a port number.</comment>
@@ -5120,7 +5116,7 @@
     <value>The address says which channel and note or controller, and the number says how much.</value>
   </data>
   <data name="OscFormatMidiTypeHint" xml:space="preserve">
-    <value>Each MIDI message is one argument of OSC&apos;s MIDI type. Its port is the row&apos;s group, counted from 0.</value>
+    <value>Each MIDI message is one argument of OSC&apos;s MIDI type. That argument has a port number, which counts from 0, so group 1 is port 0, group 2 is port 1, and so on.</value>
   </data>
   <data name="OscFormatArgumentsHint" xml:space="preserve">
     <value>A name for each kind of message, with every number as an argument.</value>

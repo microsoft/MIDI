@@ -449,6 +449,8 @@ To add one, open the **Endpoints** tab of a patch window and drag **OSC connecti
 
 The **Paths** format covers every MIDI 1.0 message: `note`, `noteoff`, `polyaftertouch`, `cc`, `program`, `channelpressure`, and `pitch` under each channel, and `sysex`, `clock`, `start`, `continue`, `stop`, `songposition`, `songselect`, `tunerequest`, `timecode`, `activesensing`, and `reset` under the row's address. Each row also says whether channels count from 1 or from 0, whether numbers go out as whole numbers, decimal numbers, or 0 to 1, how pitch bend is written, and how a note off is sent. Numbers that arrive are read however they come: whole numbers, decimals, and on and off (true and false) all work.
 
+In the **MIDI type tag** format, each message also carries a port number. Ports count from 0, so the row on group 1 uses port 0, the row on group 2 uses port 1, and so on.
+
 **MIDI 2.0.** MIDI 2.0 messages go out as their MIDI 1.0 versions, the way the MIDI specification says to translate them. A few MIDI 2.0 messages, such as per-note controllers, have no MIDI 1.0 version, so they aren't sent. The details panel counts them.
 
 **Recently heard.** Select an OSC connection to see the last 50 messages that arrived, newest first, and whether a row took each one. If you don't know what an app sends, this shows you. When an address looks like one of the formats, **Add a row for this** adds a row that takes it.

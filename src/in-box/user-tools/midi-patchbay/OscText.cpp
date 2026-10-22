@@ -46,11 +46,8 @@ namespace midipatchbay
         {
             auto const address = OscRowAddressText(row);
 
-            if (row.Format == OscFormat::MidiType)
-            {
-                return std::wstring{ resources::FormatString(L"OscRowMidiTypeFormat", address, static_cast<int32_t>(row.Group)) };
-            }
-
+            // A MIDI type row's port is always its group, counted from 0, so it isn't repeated
+            // here next to the group, which people count from 1.
             auto const preset = OscPresetOf(row);
             auto const kind = preset.has_value() ? OscPresetName(*preset) : OscFormatName(row.Format);
 
