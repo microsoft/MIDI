@@ -2659,6 +2659,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2TransportConfigRejectionReasons.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientReconnect.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId.h"
 #include "Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval.h"
 #include "Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure.h"
 #include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
@@ -2733,6 +2734,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled(),      L"MIDI2TransportConfigRejectionReasons (return the reason a transport rejected a configuration)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled(),     L"MIDI2VirtualDeviceClientEndpointInUse (tell a virtual device when its client endpoint is in use)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceClientReconnect::IsEnabled(),         L"MIDI2VirtualDeviceClientReconnect (allow a client to reconnect to a virtual device endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled(), L"MIDI2VirtualDeviceRejectDuplicateUniqueId (refuse to create a virtual device whose unique id is already in use)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval::IsEnabled(),       L"MIDI2WinMMCleanupAfterDeviceRemoval (clean up winmm port state after a device is removed)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure::IsEnabled(),     L"MIDI2WinMMCompleteLongBufferOnFailure (return a winmm long buffer to the app when a send fails)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf::IsEnabled(),            L"MIDI2WinMMInterfaceRemovalPerf (speed up winmm handling of device interface removal)");

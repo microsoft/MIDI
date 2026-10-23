@@ -16,6 +16,8 @@
 #include <thread>
 #include <atomic>
 
+#include "Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId.h"
+
 
 namespace
 {
@@ -98,11 +100,14 @@ namespace
     // Creates a minimal virtual device and opens the device-side connection, which is what causes
     // the client-visible endpoint to be created. No user-supplied name is set: a user-supplied
     // name outranks the transport-supplied one in Name(), which would hide what the transport did.
-    bool CreateTestVirtualDevice(_In_ std::wstring const& transportSuppliedName, _Out_ TestVirtualDevice& result)
+    bool CreateTestVirtualDevice(
+        _In_ std::wstring const& transportSuppliedName,
+        _In_ std::wstring const& productInstanceId,
+        _Out_ TestVirtualDevice& result)
     {
         MidiDeclaredEndpointInfo declaredEndpointInfo{};
         declaredEndpointInfo.Name(winrt::hstring{ transportSuppliedName });
-        declaredEndpointInfo.ProductInstanceId(winrt::hstring{ MakeUniqueProductInstanceId() });
+        declaredEndpointInfo.ProductInstanceId(winrt::hstring{ productInstanceId });
         declaredEndpointInfo.SpecificationVersionMajor(1);
         declaredEndpointInfo.SpecificationVersionMinor(1);
         declaredEndpointInfo.SupportsMidi10Protocol(true);
@@ -146,6 +151,11 @@ namespace
         return !result.ClientEndpointDeviceId.empty();
     }
 
+    bool CreateTestVirtualDevice(_In_ std::wstring const& transportSuppliedName, _Out_ TestVirtualDevice& result)
+    {
+        return CreateTestVirtualDevice(transportSuppliedName, MakeUniqueProductInstanceId(), result);
+    }
+
     std::wstring GetTransportSuppliedName(_In_ winrt::hstring const& endpointDeviceId)
     {
         auto info = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceId);
@@ -179,6 +189,27 @@ namespace
     bool EndpointExists(_In_ winrt::hstring const& endpointDeviceId)
     {
         return MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceId) != nullptr;
+    }
+
+    // True when the service still knows this session, so the service that answered is the one the
+    // session was created with. A service that stopped either fails the call or comes back as a new
+    // instance that has never heard of the session. The process id isn't enough: the service keeps
+    // its old one while error reporting writes a dump.
+    bool ServiceStillHasSession(_In_ MidiSession const& session)
+    {
+        auto const sessions = MidiReporting::GetActiveSessions();
+
+        if (sessions == nullptr) return false;
+
+        for (auto const& info : sessions)
+        {
+            if (info.SessionId() == session.SessionId())
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Sends one distinctive message and waits for it to arrive at the other end.
@@ -664,6 +695,121 @@ void MidiVirtualDeviceTests::TestMultipleVirtualDevicesHaveDistinctIdentities()
     VERIFY_ARE_EQUAL(
         MidiVirtualDeviceManager::GetAssociatedClientEndpointDeviceId(second.Device.AssociationId()),
         second.ClientEndpointDeviceId);
+}
+
+
+void MidiVirtualDeviceTests::TestDuplicateUniqueIdIsRejected()
+{
+    if (!Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled())
+    {
+        LOG_OUTPUT(L"Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId is disabled. Skipping.");
+        return;
+    }
+
+    auto const uniqueId = MakeUniqueProductInstanceId();
+
+    TestVirtualDevice first{};
+    auto cleanupFirst = wil::scope_exit([&] { CleanupTestVirtualDevice(first); });
+    VERIFY_IS_TRUE(CreateTestVirtualDevice(L"Contoso Duplicate Id Test", uniqueId, first));
+
+    auto const endpointCountBefore = CountVirtualEndpoints();
+    VERIFY_IS_TRUE(ServiceStillHasSession(first.Session));
+
+    // the service compares unique ids without regard to case
+    std::wstring upperId{ uniqueId };
+    std::transform(upperId.begin(), upperId.end(), upperId.begin(), [](wchar_t c) { return (wchar_t)std::towupper(c); });
+
+    std::wstring lowerId{ uniqueId };
+    std::transform(lowerId.begin(), lowerId.end(), lowerId.begin(), [](wchar_t c) { return (wchar_t)std::towlower(c); });
+
+    for (auto const& candidate : { uniqueId, upperId, lowerId })
+    {
+        LOG_OUTPUT(L"Creating a second device with unique id %s", candidate.c_str());
+
+        MidiDeclaredEndpointInfo declaredEndpointInfo{};
+        declaredEndpointInfo.Name(L"Contoso Duplicate Id Test");
+        declaredEndpointInfo.ProductInstanceId(winrt::hstring{ candidate });
+        declaredEndpointInfo.SpecificationVersionMajor(1);
+        declaredEndpointInfo.SpecificationVersionMinor(1);
+        declaredEndpointInfo.SupportsMidi20Protocol(true);
+
+        MidiVirtualDeviceCreationConfig config(
+            L"Contoso Duplicate Id Test",
+            L"Virtual device integration test",
+            L"Windows MIDI Services Test",
+            declaredEndpointInfo);
+
+        VERIFY_IS_NULL(MidiVirtualDeviceManager::CreateVirtualDevice(config));
+
+        // a null result is also what an app sees when the service stops, so check it did not
+        VERIFY_IS_TRUE(ServiceStillHasSession(first.Session));
+    }
+
+    // nothing new was published, and the first device still works both ways
+    VERIFY_ARE_EQUAL(CountVirtualEndpoints(), endpointCountBefore);
+    VERIFY_IS_TRUE(EndpointExists(first.DeviceEndpointDeviceId));
+    VERIFY_IS_TRUE(EndpointExists(first.ClientEndpointDeviceId));
+
+    auto client = first.Session.CreateEndpointConnection(first.ClientEndpointDeviceId);
+    VERIFY_IS_NOT_NULL(client);
+    VERIFY_IS_TRUE(client.Open());
+
+    VERIFY_IS_TRUE(MessageFlows(first.DeviceConnection, client));
+    VERIFY_IS_TRUE(MessageFlows(client, first.DeviceConnection));
+
+    first.Session.DisconnectEndpointConnection(client.ConnectionId());
+}
+
+
+void MidiVirtualDeviceTests::TestDuplicateUniqueIdOfUnopenedDeviceIsRejected()
+{
+    if (!Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled())
+    {
+        LOG_OUTPUT(L"Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId is disabled. Skipping.");
+        return;
+    }
+
+    // A device that was created but never opened still holds its unique id. This is what an app
+    // that retries a failed open with the same id runs into.
+    auto const uniqueId = MakeUniqueProductInstanceId();
+
+    auto makeConfig = [&]()
+        {
+            MidiDeclaredEndpointInfo declaredEndpointInfo{};
+            declaredEndpointInfo.Name(L"Contoso Unopened Duplicate Test");
+            declaredEndpointInfo.ProductInstanceId(winrt::hstring{ uniqueId });
+            declaredEndpointInfo.SpecificationVersionMajor(1);
+            declaredEndpointInfo.SpecificationVersionMinor(1);
+            declaredEndpointInfo.SupportsMidi20Protocol(true);
+
+            return MidiVirtualDeviceCreationConfig(
+                L"Contoso Unopened Duplicate Test",
+                L"Virtual device integration test",
+                L"Windows MIDI Services Test",
+                declaredEndpointInfo);
+        };
+
+    auto session = MidiSession::Create(L"Virtual device integration tests");
+    VERIFY_IS_NOT_NULL(session);
+    auto cleanupSession = wil::scope_exit([&] { session.Close(); });
+
+    auto unopened = MidiVirtualDeviceManager::CreateVirtualDevice(makeConfig());
+    VERIFY_IS_NOT_NULL(unopened);
+
+    VERIFY_IS_TRUE(ServiceStillHasSession(session));
+
+    // a new configuration, so only the unique id is shared with the first device
+    VERIFY_IS_NULL(MidiVirtualDeviceManager::CreateVirtualDevice(makeConfig()));
+
+    // a null result is also what an app sees when the service stops, so check it did not
+    VERIFY_IS_TRUE(ServiceStillHasSession(session));
+
+    // the service is still answering, and the first device's endpoint is still there
+    VERIFY_IS_TRUE(EndpointExists(unopened.DeviceEndpointDeviceId()));
+
+    TestVirtualDevice other{};
+    auto cleanupOther = wil::scope_exit([&] { CleanupTestVirtualDevice(other); });
+    VERIFY_IS_TRUE(CreateTestVirtualDevice(L"Contoso Unopened Duplicate Test Other", other));
 }
 
 
