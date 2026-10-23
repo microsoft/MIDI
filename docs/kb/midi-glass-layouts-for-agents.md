@@ -386,8 +386,8 @@ Tell the customer how to get the file into Windows MIDI Glass, using [Where layo
 - Which device each name in the layout stands for, and how to point it at different hardware if a device shows as missing: open the layout in the editor, select **Layout…** > **Pages and devices…** > **Outputs**, and pick the device.
 - What the layout can't do that they asked for, and what you did instead.
 - Where each number came from, so they can check it against the manual.
-- That **About this layout…** on the layout's card in the library shows what the file says about who made it, and that **Pack for sharing…** on the same menu makes a file they can give to other people.
-- That they can change who made it in the editor, under **Layout…** > **About this layout…**. Once they've checked the layout works, they can set **How a person was involved** there to **A person checked what the AI made**.
+- That **Layout details…** on the layout's card in the library shows what the file says about who made it, and that **Export pack…** on the same menu makes a file they can give to other people.
+- That they can change who made it in the editor, under **Layout…** > **Layout details…**. Once they've checked the layout works, they can set **Human oversight** there to **Reviewed**.
 
 ## Where layout files go, and how to bring one in
 
@@ -395,8 +395,8 @@ Windows MIDI Glass keeps its layouts in **Documents › MIDI Layouts**, one `.mi
 
 - **The Documents folder isn't always `C:\Users\<name>\Documents`.** On many PCs it has been moved into OneDrive. In File Explorer, select **Documents** and look for **MIDI Layouts** there.
 - **To add a layout to the library,** copy its file into that folder. Windows MIDI Glass reads the folder when it starts, so if it's already open, close it and open it again to see the new layout.
-- **To try a layout without adding it,** double-click the file in File Explorer, or select **Open a file…** in the Windows MIDI Glass library. It runs in its own window from wherever the file is. The first time you double-click one, Windows asks which app to open it with: pick Windows MIDI Glass.
-- **A layout with pictures** travels as a pack, a `.midilayoutpack` file. In the library, select **…** (More options) > **Import a pack…**. Make one in Windows MIDI Glass with **Pack for sharing…** on a card's **…** menu. A pack lists every file it holds with its size and SHA-256 hash, so Windows MIDI Glass can tell if anything was changed, and it can be signed. Don't make a pack yourself: give the customer the layout file and its pictures, and ask them to put them all in the layouts folder. Windows MIDI Glass still imports the `.zip` packages that older versions made.
+- **To try a layout without adding it,** double-click the file in File Explorer, or select **Open…** in the Windows MIDI Glass library. It runs in its own window from wherever the file is. The first time you double-click one, Windows asks which app to open it with: pick Windows MIDI Glass.
+- **A layout with pictures** travels as a pack, a `.midilayoutpack` file. In the library, select **…** (More options) > **Import pack…**. Make one in Windows MIDI Glass with **Export pack…** on a card's **…** menu. A pack lists every file it holds with its size and SHA-256 hash, so Windows MIDI Glass can tell if anything was changed, and it can be signed. Don't make a pack yourself: give the customer the layout file and its pictures, and ask them to put them all in the layouts folder. Windows MIDI Glass still imports the `.zip` packages that older versions made.
 - **A signed pack** shows who published it when it's imported, as **Signed by** and the name on the publisher's code-signing certificate. A pack that isn't signed shows the author's name marked **(unverified)**, because anyone could have typed it. A signature says who published the pack. It doesn't say the layout is safe or that it works.
 - Older versions of Windows MIDI Glass named layout files `.midilayout.json`. The app still reads those, and renames them to `.midilayout` when it starts.
 - Themes live in **Documents › MIDI Layouts › Themes**. See [Where theme files live]({{ site.baseurl }}/kb/midi-glass-themes/#where-theme-files-live).
@@ -954,7 +954,7 @@ To control a DAW set up for a Mackie Control surface, give its device `"protocol
 
 ### Who made it
 
-The `provenance` block says who made the layout, with what, and from what. Windows MIDI Glass shows it in **About this layout…**, in the library and in the editor, and when someone imports a pack. The editor's page lets the customer change it. The names follow [C2PA Content Credentials](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), and `digitalSourceType` uses the [IPTC digital source type](https://cv.iptc.org/newscodes/digitalsourcetype/) terms, so the block can be carried into a C2PA manifest later.
+The `provenance` block says who made the layout, with what, and from what. Windows MIDI Glass shows it in **Layout details…**, in the library and in the editor, and when someone imports a pack. The editor's page lets the customer change it. The names follow [C2PA Content Credentials](https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html), and `digitalSourceType` uses the [IPTC digital source type](https://cv.iptc.org/newscodes/digitalsourcetype/) terms, so the block can be carried into a C2PA manifest later.
 
 ```json
 "provenance": {

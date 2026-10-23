@@ -146,7 +146,7 @@
     <value>Prompt</value>
   </data>
   <data name="AssistantGuideLink" xml:space="preserve">
-    <value>Read the guide the assistant will use</value>
+    <value>Assistant guide</value>
   </data>
   <data name="AssistantCopy" xml:space="preserve">
     <value>Copy</value>
@@ -184,10 +184,10 @@
     <value>Sort order</value>
   </data>
   <data name="SortByLastChanged" xml:space="preserve">
-    <value>Sorted by last changed</value>
+    <value>Date modified</value>
   </data>
   <data name="SortByName" xml:space="preserve">
-    <value>Sorted by name</value>
+    <value>Name</value>
   </data>
   <data name="GridViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Show patches as tiles</value>
@@ -492,7 +492,7 @@
     <value>Some devices lose data when a lot of it arrives at once, like a long SysEx transfer. If a device misses messages, choose a slower speed. A single note or knob turn is never held back.</value>
   </data>
   <data name="InspectorSkipInBetweenValues" xml:space="preserve">
-    <value>Skip in-between values to catch up</value>
+    <value>Skip intermediate values</value>
   </data>
   <data name="InspectorSkipInBetweenValuesHelp" xml:space="preserve">
     <value>When messages pile up behind this speed, some in-between steps of long control change, pressure and pitch bend moves are skipped so the device catches up. Turn this off if every message has to arrive, such as for a knob that sends how far it turned.</value>
@@ -532,7 +532,7 @@
     <value>Sends each note listed here to a different note. Notes that aren't listed go through unchanged. Play sends the new note so you can hear where it lands.</value>
   </data>
   <data name="TransformAddNoteMapping" xml:space="preserve">
-    <value>Add a note mapping</value>
+    <value>Add note mapping</value>
   </data>
   <data name="TransformNoNoteMappings" xml:space="preserve">
     <value>No notes are remapped.</value>
@@ -571,10 +571,10 @@
     <value>Unchanged</value>
   </data>
   <data name="TransformCurveLinearToCurved" xml:space="preserve">
-    <value>Linear to curved (harder to play loud)</value>
+    <value>Heavier touch</value>
   </data>
   <data name="TransformCurveCurvedToLinear" xml:space="preserve">
-    <value>Curved to linear (easier to play loud)</value>
+    <value>Lighter touch</value>
   </data>
   <data name="TransformCurveFixed" xml:space="preserve">
     <value>Fixed</value>
@@ -604,7 +604,7 @@
     <value>Picks a different sound on the destination, for an instrument whose programs are not laid out the way the music expects. These are the numbers on the wire, 0 to 127. Some instruments label the same sounds 1 to 128, so you may need to subtract one. The names are the General MIDI names for those numbers.</value>
   </data>
   <data name="TransformAddProgramMapping" xml:space="preserve">
-    <value>Add a program mapping</value>
+    <value>Add program mapping</value>
   </data>
   <data name="TransformNoProgramMappings" xml:space="preserve">
     <value>No programs are remapped.</value>
@@ -622,7 +622,7 @@
     <value>Controller 0 on MIDI 1.0, and the coarse half of the bank a MIDI 2.0 program change carries. Most instruments use this half on its own, so this is usually the only bank list you need.</value>
   </data>
   <data name="TransformAddBankMsbMapping" xml:space="preserve">
-    <value>Add a bank MSB mapping</value>
+    <value>Add bank MSB mapping</value>
   </data>
   <data name="TransformNoBankMsbMappings" xml:space="preserve">
     <value>No bank MSB values are remapped.</value>
@@ -634,7 +634,7 @@
     <value>Controller 32 on MIDI 1.0, and the fine half of the bank a MIDI 2.0 program change carries. A MIDI 2.0 program change that does not carry a bank is left alone, because there is nothing to match.</value>
   </data>
   <data name="TransformAddBankLsbMapping" xml:space="preserve">
-    <value>Add a bank LSB mapping</value>
+    <value>Add bank LSB mapping</value>
   </data>
   <data name="TransformNoBankLsbMappings" xml:space="preserve">
     <value>No bank LSB values are remapped.</value>
@@ -652,7 +652,7 @@
     <value>Moves a controller to a different number. Its value only changes if you add a rule for it under Control change values. Controllers you do not list are passed through.</value>
   </data>
   <data name="TransformAddControlMapping" xml:space="preserve">
-    <value>Add a control change mapping</value>
+    <value>Add control change mapping</value>
   </data>
   <data name="TransformNoControlMappings" xml:space="preserve">
     <value>No control change messages are remapped.</value>
@@ -689,7 +689,7 @@
     <value>Changes a controller's value on its way out. Invert flips it, for a pedal that works backwards. Input low and input high are the ends of the pedal or knob's travel, so one that stops short of either end can still cover the whole range. Output low and output high set how far it goes. Slow rise gives finer control near the bottom, and fast rise near the top. A rule applies to the controller number after the mapping above, and controllers without a rule are passed through.</value>
   </data>
   <data name="TransformAddControlValue" xml:space="preserve">
-    <value>Add a controller</value>
+    <value>Add controller</value>
   </data>
   <data name="TransformNoControlValues" xml:space="preserve">
     <value>No controller values are changed.</value>
@@ -832,7 +832,7 @@
     <value>Reserved type {0}</value>
   </data>
   <data name="VoiceNotes" xml:space="preserve">
-    <value>Note on and note off</value>
+    <value>Note on/off</value>
   </data>
   <data name="VoiceNoteOff" xml:space="preserve">
     <value>Note off</value>
@@ -949,7 +949,7 @@
     <value>"{0}" is connected now, with a different device ID.</value>
   </data>
   <data name="ReplacementUse" xml:space="preserve">
-    <value>Use this device</value>
+    <value>Use device</value>
   </data>
   <data name="GroupSameAsSource" xml:space="preserve">
     <value>Same as source</value>
@@ -1146,7 +1146,7 @@
     <value>Name</value>
   </data>
   <data name="LoopbackKeepCheck.Content" xml:space="preserve">
-    <value>Keep after Windows MIDI Patchbay closes</value>
+    <value>Persistent</value>
   </data>
   <data name="LoopbackInfoBar.Message" xml:space="preserve">
     <value>Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Windows MIDI Patchbay.</value>
@@ -1178,13 +1178,13 @@
     <value>See where messages go in this patch, one step at a time, without sending anything to a device. Steps remember from one message to the next, so a note off follows its note on. Memories start empty, and generators don't run.</value>
   </data>
   <data name="TraceFrom" xml:space="preserve">
-    <value>Comes in from</value>
+    <value>Source</value>
   </data>
   <data name="TraceGroup" xml:space="preserve">
     <value>On group</value>
   </data>
   <data name="TraceMessagesHeading" xml:space="preserve">
-    <value>Messages, in order</value>
+    <value>Messages</value>
   </data>
   <data name="TraceNoMessages" xml:space="preserve">
     <value>Add a message to trace.</value>
@@ -1218,7 +1218,7 @@
     <value>Channel pressure</value>
   </data>
   <data name="TraceKindWords" xml:space="preserve">
-    <value>Words, in hex</value>
+    <value>UMP words (hex)</value>
   </data>
   <data name="TraceChannel" xml:space="preserve">
     <value>Channel</value>
@@ -1239,13 +1239,13 @@
     <value>Value</value>
   </data>
   <data name="TraceBend" xml:space="preserve">
-    <value>Bend (8192 is the middle)</value>
+    <value>Pitch bend (center 8192)</value>
   </data>
   <data name="TracePressure" xml:space="preserve">
     <value>Pressure</value>
   </data>
   <data name="TraceMidi2" xml:space="preserve">
-    <value>Send it as a MIDI 2.0 message</value>
+    <value>MIDI 2.0</value>
   </data>
   <data name="TraceWords" xml:space="preserve">
     <value>Words</value>
@@ -1257,7 +1257,7 @@
     <value>Type one to four words of hex, such as 20903C64.</value>
   </data>
   <data name="TraceAdd" xml:space="preserve">
-    <value>Add to the list</value>
+    <value>Add</value>
   </data>
   <data name="TraceNothingToTrace" xml:space="preserve">
     <value>Connect an endpoint to something first. A trace follows messages from an endpoint into the patch.</value>
@@ -1281,7 +1281,7 @@
     <comment>{0} is the name of the step, or a list of them.</comment>
   </data>
   <data name="TraceAlsoKeptOutFormat" xml:space="preserve">
-    <value>On another way, kept out by {0}</value>
+    <value>On another output, kept out by {0}</value>
   </data>
   <data name="TraceReachesNothing" xml:space="preserve">
     <value>Doesn't reach a device</value>
@@ -1370,7 +1370,7 @@
     <value>Routing only runs while Windows MIDI Patchbay is running. Closing the window stops every patch unless you keep it in the notification area.</value>
   </data>
   <data name="UmpPrimerLink" xml:space="preserve">
-    <value>How to read and understand UMP messages</value>
+    <value>UMP primer</value>
   </data>
   <data name="SettingsSectionHeading" xml:space="preserve">
     <value>Windows MIDI Patchbay</value>
@@ -1397,7 +1397,7 @@
     <value>Feedback loop warnings</value>
   </data>
   <data name="SettingAssistant" xml:space="preserve">
-    <value>Ask an AI assistant</value>
+    <value>AI assistant</value>
   </data>
   <data name="SettingAssistantHint" xml:space="preserve">
     <value>Shows the Ask an AI assistant button. It copies a starting prompt for the AI assistant you use. Windows MIDI Patchbay doesn't send anything itself.</value>
@@ -1862,10 +1862,10 @@
     <value>Down {0} semitones</value>
   </data>
   <data name="BlockDescVelocityCurved" xml:space="preserve">
-    <value>Linear to curved</value>
+    <value>Heavier touch</value>
   </data>
   <data name="BlockDescVelocityLinear" xml:space="preserve">
-    <value>Curved to linear</value>
+    <value>Lighter touch</value>
   </data>
   <data name="BlockDescVelocityFixedFormat" xml:space="preserve">
     <value>Every note at {0}</value>
@@ -1987,7 +1987,7 @@
     <comment>The name of the switch on a patch tile. {0} is the patch name.</comment>
   </data>
   <data name="TileNoDescription" xml:space="preserve">
-    <value>No description</value>
+    <value>(No description)</value>
   </data>
   <data name="TileSizeFormat" xml:space="preserve">
     <value>Steps: {0} · Connections: {1}</value>
@@ -2195,7 +2195,7 @@
     <value>The patch had more in it than a patch can hold now, so some connections were left out. Check the original in the Earlier versions folder.</value>
   </data>
   <data name="ConversionShowButton.Content" xml:space="preserve">
-    <value>Show the original</value>
+    <value>Show original</value>
   </data>
   <data name="RouteProblemTitle" xml:space="preserve">
     <value>This patch can't route</value>
@@ -2240,10 +2240,10 @@
     <value>To group {0}</value>
   </data>
   <data name="DropAddToPatch" xml:space="preserve">
-    <value>Add to the patch</value>
+    <value>Add to patch</value>
   </data>
   <data name="DropIntoConnection" xml:space="preserve">
-    <value>Put into this connection</value>
+    <value>Insert into connection</value>
   </data>
   <data name="RemoveStepMessageFormat" xml:space="preserve">
     <value>"{0}" and its connections will be taken off this patch.</value>
@@ -2342,7 +2342,7 @@
     <comment>{0} is an endpoint or step name. {1} is a group, such as "Group 1".</comment>
   </data>
   <data name="ActionAddStepHere" xml:space="preserve">
-    <value>Add a step here</value>
+    <value>Insert step</value>
   </data>
   <data name="ActionAddStepHereHint" xml:space="preserve">
     <value>Puts a step into this connection. You can also drag one from the panel on the left and drop it on the line.</value>
@@ -2391,10 +2391,10 @@
     <value>Action</value>
   </data>
   <data name="FilterActionLetThrough" xml:space="preserve">
-    <value>Let only these through</value>
+    <value>Allow</value>
   </data>
   <data name="FilterActionKeepOut" xml:space="preserve">
-    <value>Keep these out</value>
+    <value>Block</value>
   </data>
   <data name="FilterValuesHeader" xml:space="preserve">
     <value>Selection</value>
@@ -2526,10 +2526,10 @@
     <value>Action</value>
   </data>
   <data name="MaskShowHex" xml:space="preserve">
-    <value>Show numbers in hexadecimal</value>
+    <value>Hexadecimal</value>
   </data>
   <data name="MaskAddCondition" xml:space="preserve">
-    <value>Add a condition</value>
+    <value>Add condition</value>
   </data>
   <data name="MaskNoConditions" xml:space="preserve">
     <value>Nothing to match yet. Add a condition to pick out messages.</value>
@@ -2550,7 +2550,7 @@
     <value>Bottom bit</value>
   </data>
   <data name="MaskPickField" xml:space="preserve">
-    <value>Pick a field</value>
+    <value>Field</value>
   </data>
   <data name="MaskFieldMessageType" xml:space="preserve">
     <value>Message type</value>
@@ -2583,7 +2583,7 @@
     <value>Is exactly</value>
   </data>
   <data name="MaskMatchAnyOf" xml:space="preserve">
-    <value>Is any of</value>
+    <value>Is one of</value>
   </data>
   <data name="MaskMatchBetween" xml:space="preserve">
     <value>Is between</value>
@@ -2877,10 +2877,10 @@
     <comment>{0} is a number of beats, such as "4 beats" or "1 beat".</comment>
   </data>
   <data name="GeneratorBeatsPerMinute" xml:space="preserve">
-    <value>Tempo in beats per minute</value>
+    <value>Tempo (BPM)</value>
   </data>
   <data name="GeneratorSendStartStop" xml:space="preserve">
-    <value>Send Start and Stop messages</value>
+    <value>Send Start/Stop</value>
   </data>
   <data name="GeneratorSendStartStopHint" xml:space="preserve">
     <value>Start goes out when the patch starts routing and Stop when it stops, so a sequencer or drum machine plays along with the clock.</value>
@@ -2921,7 +2921,7 @@
     <value>Write this as hours:minutes:seconds:frames. A shorter entry fills from the right, so 12 means twelve frames.</value>
   </data>
   <data name="GeneratorSendFullFrame" xml:space="preserve">
-    <value>Send a full timecode when starting and stopping</value>
+    <value>Send full frame on start/stop</value>
   </data>
   <data name="GeneratorSendFullFrameHint" xml:space="preserve">
     <value>A receiver finds its place at once, instead of waiting for the next two frames.</value>
@@ -3012,7 +3012,7 @@
     <comment>{0} is a whole number of messages per second.</comment>
   </data>
   <data name="GeneratorReturnToCenter" xml:space="preserve">
-    <value>Return to center when routing stops</value>
+    <value>Return to center on stop</value>
   </data>
   <data name="GeneratorReturnToCenterHint" xml:space="preserve">
     <value>Sends the middle of the range as it stops, so a pitch bend isn't left bent.</value>
@@ -3121,7 +3121,7 @@
     <value>More colors…</value>
   </data>
   <data name="AnnotationColorUse" xml:space="preserve">
-    <value>Use this color</value>
+    <value>Apply</value>
   </data>
   <data name="ActionEditAnnotation" xml:space="preserve">
     <value>Edit text</value>
@@ -3145,7 +3145,7 @@
     <value>None</value>
   </data>
   <data name="GeneratorLfoStartStop" xml:space="preserve">
-    <value>Start and stop with the clock</value>
+    <value>Sync to clock</value>
   </data>
   <data name="GeneratorLfoStartStopHint" xml:space="preserve">
     <value>Only when a clock is connected to the LFO's In. The LFO waits for a Start or Continue message, and a Stop message holds it until the next one, back at the middle if that's checked above. Without this, it moves with every timing clock, playing or not.</value>
@@ -3215,7 +3215,7 @@
     <comment>A short badge on the step. Keep it to about four capital letters.</comment>
   </data>
   <data name="BlockHintBranch" xml:space="preserve">
-    <value>Sends each message one of two ways, Yes or No, by testing a part of it, a tag or a memory.</value>
+    <value>Sends each message to one of two outputs, Yes or No, by testing a part of it, a tag or a memory.</value>
   </data>
   <data name="BlockNameSwitch" xml:space="preserve">
     <value>Switch</value>
@@ -3228,7 +3228,7 @@
     <comment>A short badge on the step. Keep it to about four capital letters.</comment>
   </data>
   <data name="BlockHintSwitch" xml:space="preserve">
-    <value>Sends each message one of several ways, such as a way for each channel. A message that matches none of them goes out Anything else.</value>
+    <value>Sends each message to one of several outputs, such as an output for each channel. A message that matches none of them goes out Default.</value>
   </data>
   <data name="BlockNameSetTag" xml:space="preserve">
     <value>Set tag</value>
@@ -3274,14 +3274,14 @@
   </data>
   <data name="BlockDescBranchFormat" xml:space="preserve">
     <value>{0} is {1}?</value>
-    <comment>What a Branch tests, shown above its Yes and No ways. {0} is what it tests, such as "Channel" or "Memory “Scene”". {1} is the test, such as "10", "not 10" or "100 or more".</comment>
+    <comment>What a Branch tests, shown above its Yes and No outputs. {0} is what it tests, such as "Channel" or "Memory “Scene”". {1} is the test, such as "10", "not 10" or "100 or more".</comment>
   </data>
   <data name="BlockDescSwitchNone" xml:space="preserve">
-    <value>Everything goes Anything else</value>
+    <value>Everything goes to Default</value>
   </data>
   <data name="BlockDescSwitchFormat" xml:space="preserve">
-    <value>{0} picks one of {1} ways</value>
-    <comment>{0} is what picks the way, such as "Channel". {1} is how many ways there are.</comment>
+    <value>{0} picks one of {1} outputs</value>
+    <comment>{0} is what picks the output, such as "Channel". {1} is how many outputs there are.</comment>
   </data>
   <data name="BlockDescAssignFormat" xml:space="preserve">
     <value>{0} becomes {1}</value>
@@ -3311,11 +3311,11 @@
     <value>No</value>
   </data>
   <data name="WayOtherwise" xml:space="preserve">
-    <value>Anything else</value>
+    <value>Default</value>
   </data>
   <data name="BlockWayAccessibleNameFormat" xml:space="preserve">
-    <value>{0} way out of {1}</value>
-    <comment>For screen readers. {0} is the way, such as "Yes". {1} is the step's name.</comment>
+    <value>{0} output of {1}</value>
+    <comment>For screen readers. {0} is the output, such as "Yes". {1} is the step's name.</comment>
   </data>
   <data name="MessagePartGroup" xml:space="preserve">
     <value>Group</value>
@@ -3351,14 +3351,14 @@
     <value>Pitch bend</value>
   </data>
   <data name="MessagePartBits" xml:space="preserve">
-    <value>Bits of a word</value>
+    <value>Bit field</value>
   </data>
   <data name="MessagePartBitsFormat" xml:space="preserve">
     <value>Bits {0} to {1} of word {2}</value>
     <comment>{0} is the highest bit, {1} the lowest bit, and {2} the word, counted from 1.</comment>
   </data>
   <data name="LogicTestAnything" xml:space="preserve">
-    <value>Is anything (always Yes)</value>
+    <value>Always</value>
   </data>
   <data name="LogicTestIs" xml:space="preserve">
     <value>Is</value>
@@ -3397,22 +3397,22 @@
     <value>A note</value>
   </data>
   <data name="LogicUnitValue" xml:space="preserve">
-    <value>A value, such as a velocity</value>
+    <value>Value</value>
   </data>
   <data name="MemoryActionSet" xml:space="preserve">
-    <value>Set it</value>
+    <value>Set</value>
   </data>
   <data name="MemoryActionToggle" xml:space="preserve">
-    <value>Switch it between two numbers</value>
+    <value>Toggle</value>
   </data>
   <data name="MemoryActionStepUp" xml:space="preserve">
-    <value>Step it up</value>
+    <value>Increment</value>
   </data>
   <data name="MemoryActionStepDown" xml:space="preserve">
-    <value>Step it down</value>
+    <value>Decrement</value>
   </data>
   <data name="MemoryActionClear" xml:space="preserve">
-    <value>Empty it</value>
+    <value>Clear</value>
   </data>
   <data name="UnitChannelFormat" xml:space="preserve">
     <value>Channel {0}</value>
@@ -3456,7 +3456,7 @@
     <value>in an empty list</value>
   </data>
   <data name="ConditionNothingLabel" xml:space="preserve">
-    <value>Nothing yet</value>
+    <value>(None)</value>
   </data>
   <data name="ConditionHasValue" xml:space="preserve">
     <value>not empty</value>
@@ -3480,46 +3480,46 @@
     <value>Deciding value</value>
   </data>
   <data name="LogicBranchTest" xml:space="preserve">
-    <value>Condition for Yes</value>
+    <value>Condition</value>
   </data>
   <data name="LogicSwitchCaseTest" xml:space="preserve">
     <value>Condition</value>
   </data>
   <data name="LogicSwitchWays" xml:space="preserve">
-    <value>Ways</value>
+    <value>Outputs</value>
   </data>
   <data name="LogicSwitchWayFormat" xml:space="preserve">
-    <value>Way {0}</value>
+    <value>Output {0}</value>
   </data>
   <data name="LogicSwitchRemoveWayFormat" xml:space="preserve">
-    <value>Remove way {0}</value>
+    <value>Remove output {0}</value>
   </data>
   <data name="LogicSwitchAddWay" xml:space="preserve">
-    <value>Add a way</value>
+    <value>Add output</value>
   </data>
   <data name="LogicSwitchEachChannel" xml:space="preserve">
-    <value>Add a way for each channel</value>
+    <value>Add output per channel</value>
   </data>
   <data name="LogicSwitchEachGroup" xml:space="preserve">
-    <value>Add a way for each group</value>
+    <value>Add output per group</value>
   </data>
   <data name="LogicSwitchHint" xml:space="preserve">
-    <value>A message goes out the first way it matches, from the top. A message that matches none of them goes out Anything else.</value>
+    <value>A message goes out the first output it matches, from the top. A message that matches none of them goes out Default.</value>
   </data>
   <data name="LogicBranchHint" xml:space="preserve">
-    <value>Messages that pass the test go out Yes. The rest go out No. Connect either way, or both.</value>
+    <value>Messages that pass the test go out Yes. The rest go out No. Connect either output, or both.</value>
   </data>
   <data name="LogicHoldsHeader" xml:space="preserve">
     <value>Value type</value>
   </data>
   <data name="LogicNumberKindHeader" xml:space="preserve">
-    <value>Kind of number</value>
+    <value>Number type</value>
   </data>
   <data name="LogicNumberHeader" xml:space="preserve">
     <value>Number</value>
   </data>
   <data name="LogicPartHeader" xml:space="preserve">
-    <value>Part of the message</value>
+    <value>Field</value>
   </data>
   <data name="LogicWordHeader" xml:space="preserve">
     <value>Word</value>
@@ -3546,7 +3546,7 @@
     <value>A number</value>
   </data>
   <data name="LogicSourcePart" xml:space="preserve">
-    <value>A part of the message</value>
+    <value>Message field</value>
   </data>
   <data name="LogicSourceTag" xml:space="preserve">
     <value>A tag</value>
@@ -3579,22 +3579,22 @@
     <value>Missing value</value>
   </data>
   <data name="LogicUnreadableEvery" xml:space="preserve">
-    <value>Send it every way</value>
+    <value>All outputs</value>
   </data>
   <data name="LogicUnreadableYes" xml:space="preserve">
-    <value>Send it Yes</value>
+    <value>Yes</value>
   </data>
   <data name="LogicUnreadableNo" xml:space="preserve">
-    <value>Send it No</value>
+    <value>No</value>
   </data>
   <data name="LogicUnreadableFirstWay" xml:space="preserve">
-    <value>Send it the first way</value>
+    <value>Output 1</value>
   </data>
   <data name="LogicUnreadableOtherwise" xml:space="preserve">
-    <value>Send it Anything else</value>
+    <value>Default</value>
   </data>
   <data name="LogicUnreadableKeepOut" xml:space="preserve">
-    <value>Keep it out</value>
+    <value>Block</value>
   </data>
   <data name="LogicUnreadableBranchHint" xml:space="preserve">
     <value>Such as a control change reaching a Branch that tests the note number, or a tag or memory that is empty.</value>
@@ -3606,13 +3606,13 @@
     <value>Bypass behavior</value>
   </data>
   <data name="LogicBypassEvery" xml:space="preserve">
-    <value>Send messages every way</value>
+    <value>All outputs</value>
   </data>
   <data name="LogicBypassYes" xml:space="preserve">
-    <value>Send messages Yes</value>
+    <value>Yes</value>
   </data>
   <data name="LogicBypassFirstWay" xml:space="preserve">
-    <value>Send messages the first way</value>
+    <value>Output 1</value>
   </data>
   <data name="LogicSetToHeader" xml:space="preserve">
     <value>New value</value>
@@ -3624,7 +3624,7 @@
     <value>Trigger</value>
   </data>
   <data name="LogicWhenEveryMessage" xml:space="preserve">
-    <value>Every message that gets here</value>
+    <value>Every message</value>
   </data>
   <data name="LogicActionHeader" xml:space="preserve">
     <value>Action</value>
@@ -3645,13 +3645,13 @@
     <value>Highest</value>
   </data>
   <data name="LogicStepWraps" xml:space="preserve">
-    <value>Go around past the end</value>
+    <value>Wrap</value>
   </data>
   <data name="LogicStepHint" xml:space="preserve">
     <value>Each time, the memory moves by one. An empty memory starts at the lowest going up, or the highest going down.</value>
   </data>
   <data name="LogicPassTriggers" xml:space="preserve">
-    <value>Send on the messages that change it</value>
+    <value>Pass trigger messages</value>
   </data>
   <data name="LogicSetMemoryHint" xml:space="preserve">
     <value>Later messages in this patch can use the memory, until the app closes.</value>
@@ -3663,7 +3663,7 @@
     <value>Value</value>
   </data>
   <data name="LogicKeepOutWhenEmpty" xml:space="preserve">
-    <value>Keep the message out when there's no value</value>
+    <value>Block when empty</value>
   </data>
   <data name="LogicPutValueHint" xml:space="preserve">
     <value>A value fits the part it goes into. A share stays a share, so a velocity of 50% becomes a controller value of 50%.</value>
@@ -3760,7 +3760,7 @@
     <value>An RPN or NRPN is a bank and an index. RPN 0/0 is pitch bend range, for example. Leave a bank or an index empty to match any. Everything that isn't an RPN or NRPN goes through.</value>
   </data>
   <data name="ParameterAdd" xml:space="preserve">
-    <value>Add a parameter</value>
+    <value>Add parameter</value>
   </data>
   <data name="ParameterNone" xml:space="preserve">
     <value>No parameters yet, so this step changes nothing.</value>
@@ -3775,7 +3775,7 @@
     <value>The first row that matches is used. Leave a From bank or index empty to match any, and a To bank or index empty to keep it as it came in. The value is reshaped across its whole range, 32 bits for MIDI 2.0.</value>
   </data>
   <data name="ParameterAddRow" xml:space="preserve">
-    <value>Add a change</value>
+    <value>Add row</value>
   </data>
   <data name="ParameterCurveAccessibleFormat" xml:space="preserve">
     <value>Value curve for row {0}</value>
@@ -3847,7 +3847,7 @@
     <value>How the gate is when the patch starts routing. When the same message opens and closes it, each one turns it the other way.</value>
   </data>
   <data name="GatePassTriggers" xml:space="preserve">
-    <value>Send the opening and closing messages on</value>
+    <value>Pass trigger messages</value>
   </data>
   <data name="GatePassTriggersHint" xml:space="preserve">
     <value>Checked, they always go through, even when they close the gate. Clear, they're kept out.</value>
@@ -3913,7 +3913,7 @@
     <value>A MIDI 2.0 value is compared by its top seven bits, so 64 means halfway for both. A sustain pedal is controller 64: at or above 64 is down, below 64 is up.</value>
   </data>
   <data name="GateWords" xml:space="preserve">
-    <value>Words, in hex</value>
+    <value>UMP words (hex)</value>
   </data>
   <data name="GateWordsHint" xml:space="preserve">
     <value>One to four words of eight hex digits, the way MIDI Monitor shows them. A message matches when it starts with these words. The group in the first word is ignored: use Group above.</value>
@@ -3931,13 +3931,13 @@
     <value>First free voice</value>
   </data>
   <data name="DistributorModeHighest" xml:space="preserve">
-    <value>Keep the highest notes</value>
+    <value>Highest notes</value>
   </data>
   <data name="DistributorModeLowest" xml:space="preserve">
-    <value>Keep the lowest notes</value>
+    <value>Lowest notes</value>
   </data>
   <data name="DistributorModeHint" xml:space="preserve">
-    <value>Take turns moves on to the next voice for each note. First free voice uses the first one that isn't playing. When every voice is playing, the oldest note is cut short, except with Keep the highest or Keep the lowest, which only replace a lower or a higher note.</value>
+    <value>Take turns moves on to the next voice for each note. First free voice uses the first one that isn't playing. When every voice is playing, the oldest note is cut short, except with Highest notes or Lowest notes, which only replace a lower or a higher note.</value>
   </data>
   <data name="DistributorVoicesOne" xml:space="preserve">
     <value>1 voice. Connect one synth to the Out for each voice you want.</value>
@@ -3945,14 +3945,17 @@
   <data name="DistributorVoicesFormat" xml:space="preserve">
     <value>{0} voices, one for each connection out, in the order you connected them.</value>
   </data>
+  <data name="DistributorToAllHeading" xml:space="preserve">
+    <value>Send to all voices</value>
+  </data>
   <data name="DistributorControlChangesToAll" xml:space="preserve">
-    <value>Send control changes to every voice</value>
+    <value>Control change</value>
   </data>
   <data name="DistributorChannelPressureToAll" xml:space="preserve">
-    <value>Send channel pressure to every voice</value>
+    <value>Channel pressure</value>
   </data>
   <data name="DistributorPitchBendToAll" xml:space="preserve">
-    <value>Send pitch bend to every voice</value>
+    <value>Pitch bend</value>
   </data>
   <data name="DistributorToAllHint" xml:space="preserve">
     <value>When one is clear, those messages go only to the voice that played the latest note. All notes off, program changes and everything else always go to every voice.</value>
@@ -4149,7 +4152,7 @@
     <value>MIDI-CI Discovery answers with these. Use the numbers from the device's manual if it has them.</value>
   </data>
   <data name="CiManufacturer" xml:space="preserve">
-    <value>Manufacturer ID, in hex</value>
+    <value>Manufacturer ID (hex)</value>
   </data>
   <data name="CiManufacturerHint" xml:space="preserve">
     <value>One byte or three, such as 41 or 00 20 29. 7D is for prototypes and private use.</value>
@@ -4179,13 +4182,13 @@
     <value>Options</value>
   </data>
   <data name="CiProcessInquiry" xml:space="preserve">
-    <value>Answer MIDI message reports</value>
+    <value>MIDI Message Report</value>
   </data>
   <data name="CiProcessInquiryHint" xml:space="preserve">
     <value>Tells an app which notes, controllers, programs and pitch bend have gone to the device since the patch started routing. It only knows what went through this step.</value>
   </data>
   <data name="CiPassMidiCi" xml:space="preserve">
-    <value>Send MIDI-CI on to the device too</value>
+    <value>Enable MIDI-CI pass-through</value>
   </data>
   <data name="CiPassMidiCiHint" xml:space="preserve">
     <value>Most MIDI 1.0 devices don't understand MIDI-CI, and some don't cope with system exclusive they don't know. Leave this off unless the device needs it.</value>
@@ -4197,7 +4200,7 @@
     <value>MIDI-CI file</value>
   </data>
   <data name="CiFileNamePlaceholder" xml:space="preserve">
-    <value>None</value>
+    <value>(None)</value>
   </data>
   <data name="CiFileNameNotPlain" xml:space="preserve">
     <value>Only a file name, such as Organ.midici. The file goes in the patch folder.</value>
@@ -4227,10 +4230,10 @@
     <value>The file couldn't be copied into the patch folder.</value>
   </data>
   <data name="CiFilterKeepOut" xml:space="preserve">
-    <value>Keep this MIDI-CI out</value>
+    <value>Block</value>
   </data>
   <data name="CiFilterLetThrough" xml:space="preserve">
-    <value>Let only this MIDI-CI through, and keep everything else out</value>
+    <value>Allow only</value>
   </data>
   <data name="CiFilterWhich" xml:space="preserve">
     <value>Categories</value>
@@ -4348,13 +4351,13 @@
     <value>stop</value>
   </data>
   <data name="ControllerSummaryWords" xml:space="preserve">
-    <value>a message typed in</value>
+    <value>custom message</value>
   </data>
   <data name="ControllerSummaryClock" xml:space="preserve">
     <value>timing clock</value>
   </data>
   <data name="ControllerSummaryNothing" xml:space="preserve">
-    <value>nothing</value>
+    <value>(none)</value>
   </data>
   <data name="ControllerControlA" xml:space="preserve">
     <value>A</value>
@@ -4381,10 +4384,10 @@
     <value>Menu</value>
   </data>
   <data name="ControllerControlLeftStickButton" xml:space="preserve">
-    <value>Left stick press</value>
+    <value>Left stick button</value>
   </data>
   <data name="ControllerControlRightStickButton" xml:space="preserve">
-    <value>Right stick press</value>
+    <value>Right stick button</value>
   </data>
   <data name="ControllerControlDPadUp" xml:space="preserve">
     <value>D-pad up</value>
@@ -4405,16 +4408,16 @@
     <value>Right trigger</value>
   </data>
   <data name="ControllerControlLeftStickX" xml:space="preserve">
-    <value>Left stick, left and right</value>
+    <value>Left stick X</value>
   </data>
   <data name="ControllerControlLeftStickY" xml:space="preserve">
-    <value>Left stick, up and down</value>
+    <value>Left stick Y</value>
   </data>
   <data name="ControllerControlRightStickX" xml:space="preserve">
-    <value>Right stick, left and right</value>
+    <value>Right stick X</value>
   </data>
   <data name="ControllerControlRightStickY" xml:space="preserve">
-    <value>Right stick, up and down</value>
+    <value>Right stick Y</value>
   </data>
   <data name="ControllerControlLeftStickUp" xml:space="preserve">
     <value>Left stick up</value>
@@ -4441,7 +4444,7 @@
     <value>Right stick right</value>
   </data>
   <data name="ControllerMessageNothing" xml:space="preserve">
-    <value>Nothing</value>
+    <value>(None)</value>
   </data>
   <data name="ControllerMessageNote" xml:space="preserve">
     <value>Note</value>
@@ -4477,7 +4480,7 @@
     <value>Stop</value>
   </data>
   <data name="ControllerMessageWords" xml:space="preserve">
-    <value>Message typed in</value>
+    <value>Custom message</value>
   </data>
   <data name="ControllerMessageClock" xml:space="preserve">
     <value>Timing clock</value>
@@ -4501,25 +4504,25 @@
     <value>On an Xbox Adaptive Controller, a switch in a jack works like the button the jack is named for. A switch in X1 is left stick up and one in X2 is left stick down, unless you changed them in the Xbox Accessories app.</value>
   </data>
   <data name="ControllerWhenPressed" xml:space="preserve">
-    <value>When pressed, send</value>
+    <value>On press</value>
   </data>
   <data name="ControllerWhenHeld" xml:space="preserve">
-    <value>When held, send</value>
+    <value>On hold</value>
   </data>
   <data name="ControllerToggles" xml:space="preserve">
-    <value>Switch on and off with each press</value>
+    <value>Toggle</value>
   </data>
   <data name="ControllerHoldMilliseconds" xml:space="preserve">
-    <value>Held for (ms)</value>
+    <value>Hold time (ms)</value>
   </data>
   <data name="ControllerRepeats" xml:space="preserve">
-    <value>Repeat while held</value>
+    <value>Auto-repeat</value>
   </data>
   <data name="ControllerRepeatMilliseconds" xml:space="preserve">
-    <value>Repeat every (ms)</value>
+    <value>Repeat interval (ms)</value>
   </data>
   <data name="ControllerTapOrHold" xml:space="preserve">
-    <value>Tap or hold, not both</value>
+    <value>Separate tap and hold</value>
   </data>
   <data name="ControllerTapOrHoldHint" xml:space="preserve">
     <value>A short press sends only the pressed message, and a long press sends only the held message. The pressed message waits until you let go, so it comes a little later.</value>
@@ -4531,16 +4534,16 @@
     <value>Value</value>
   </data>
   <data name="ControllerNoteOff" xml:space="preserve">
-    <value>Send a note off when you let go</value>
+    <value>Note off on release</value>
   </data>
   <data name="ControllerSendRelease" xml:space="preserve">
-    <value>Send a value when you let go</value>
+    <value>Send on release</value>
   </data>
   <data name="ControllerReleaseValue" xml:space="preserve">
-    <value>Value when you let go</value>
+    <value>Release value</value>
   </data>
   <data name="ControllerProgramStepHeader" xml:space="preserve">
-    <value>Program to send</value>
+    <value>Program</value>
   </data>
   <data name="ControllerProgramThis" xml:space="preserve">
     <value>This program</value>
@@ -4558,13 +4561,13 @@
     <value>Highest program</value>
   </data>
   <data name="ControllerWraps" xml:space="preserve">
-    <value>Go around at the ends</value>
+    <value>Wrap</value>
   </data>
   <data name="ControllerProgramShareHint" xml:space="preserve">
     <value>Every step in this patch that sends the next or previous program on the same group and channel keeps one place in the list, so one button can go up and another down.</value>
   </data>
   <data name="ControllerWordsHeader" xml:space="preserve">
-    <value>Message words (hex)</value>
+    <value>UMP words (hex)</value>
   </data>
   <data name="ControllerWordsPlaceholder" xml:space="preserve">
     <value>For example 40903C00 C8000000</value>
@@ -4588,13 +4591,13 @@
     <value>Sending</value>
   </data>
   <data name="ControllerInterval" xml:space="preserve">
-    <value>At most one message every (ms)</value>
+    <value>Minimum interval (ms)</value>
   </data>
   <data name="ControllerIntervalHint" xml:space="preserve">
     <value>0 sends every change. A bigger number sends fewer messages while the control moves. Where it stops is always sent.</value>
   </data>
   <data name="ControllerReturnToRest" xml:space="preserve">
-    <value>Send where it rests when routing stops or the controller goes away</value>
+    <value>Send rest value on stop</value>
   </data>
   <data name="ControllerConnectedFormat" xml:space="preserve">
     <value>{0} is connected.</value>
@@ -4714,7 +4717,7 @@
     <value>Remove row {0}</value>
   </data>
   <data name="ConverterAddRow" xml:space="preserve">
-    <value>Add a row</value>
+    <value>Add row</value>
   </data>
   <data name="ConverterRowsHint" xml:space="preserve">
     <value>The first row that matches a message is used. Messages no row matches go through unchanged, and a message always keeps its group.</value>
@@ -4790,7 +4793,7 @@
     <value>the NRPN with the same number</value>
   </data>
   <data name="ConverterFromHeader" xml:space="preserve">
-    <value>When it gets</value>
+    <value>Input</value>
   </data>
   <data name="ConverterAnyChannel" xml:space="preserve">
     <value>Any channel</value>
@@ -4808,10 +4811,10 @@
     <value>Highest controller</value>
   </data>
   <data name="ConverterReadAs" xml:space="preserve">
-    <value>Read it as</value>
+    <value>Interpret as</value>
   </data>
   <data name="ConverterReadAsValue" xml:space="preserve">
-    <value>A value that moves</value>
+    <value>Continuous value</value>
   </data>
   <data name="ConverterReadAsButton" xml:space="preserve">
     <value>A button</value>
@@ -4823,7 +4826,7 @@
     <value>This value and up counts as pressed, and anything below it as let go. Only a change from one to the other sends anything.</value>
   </data>
   <data name="ConverterToHeader" xml:space="preserve">
-    <value>Turn it into</value>
+    <value>Output</value>
   </data>
   <data name="ConverterSameChannel" xml:space="preserve">
     <value>Same channel</value>
@@ -4847,13 +4850,13 @@
     <value>That isn't one whole message with a group. Type as many words as its message type uses, in hexadecimal.</value>
   </data>
   <data name="ConverterReleaseHeader" xml:space="preserve">
-    <value>When you let go</value>
+    <value>On release</value>
   </data>
   <data name="ConverterReleaseNoteOff" xml:space="preserve">
-    <value>Send a note off</value>
+    <value>Note off</value>
   </data>
   <data name="ConverterReleaseValue" xml:space="preserve">
-    <value>Send a value</value>
+    <value>Value</value>
   </data>
   <data name="ConverterReleaseNothing" xml:space="preserve">
     <value>Send nothing</value>
@@ -4901,7 +4904,7 @@
     <comment>How MIDI goes under an OSC address: one argument of OSC&apos;s MIDI type.</comment>
   </data>
   <data name="OscFormatArguments" xml:space="preserve">
-    <value>Values in arguments</value>
+    <value>Arguments</value>
     <comment>How MIDI goes under an OSC address: a fixed name for each kind of message, with every number as an argument.</comment>
   </data>
   <data name="OscRowFormat" xml:space="preserve">
@@ -5021,7 +5024,7 @@
     <value>Receiving</value>
   </data>
   <data name="OscReceivePortHeader" xml:space="preserve">
-    <value>Listen on port</value>
+    <value>Receive port</value>
   </data>
   <data name="OscReceivePortHint" xml:space="preserve">
     <value>The port the other app sends to. Set it to 0 to only send. Many apps send to 8000 unless you change it.</value>
@@ -5030,22 +5033,22 @@
     <value>Listen for</value>
   </data>
   <data name="OscListenEveryNetwork" xml:space="preserve">
-    <value>Apps and devices on every network</value>
+    <value>All networks</value>
   </data>
   <data name="OscListenThisPc" xml:space="preserve">
-    <value>Apps on this PC only</value>
+    <value>This PC only</value>
   </data>
   <data name="OscAcceptHeader" xml:space="preserve">
-    <value>Take messages from</value>
+    <value>Accept from</value>
   </data>
   <data name="OscAcceptAnyone" xml:space="preserve">
     <value>Anyone</value>
   </data>
   <data name="OscAcceptSendHost" xml:space="preserve">
-    <value>Only the computer I send to</value>
+    <value>Send host only</value>
   </data>
   <data name="OscAcceptList" xml:space="preserve">
-    <value>Only these addresses</value>
+    <value>Allowed addresses</value>
   </data>
   <data name="OscAcceptAnyoneHint" xml:space="preserve">
     <value>OSC has no passwords, so anyone who can reach this PC can send to the port.</value>
@@ -5063,7 +5066,7 @@
     <value>192.168.1.20, my-ipad.local</value>
   </data>
   <data name="OscRateLimitHeader" xml:space="preserve">
-    <value>Most messages a second</value>
+    <value>Rate limit (messages/s)</value>
   </data>
   <data name="OscSendHeading" xml:space="preserve">
     <value>Sending</value>
@@ -5082,13 +5085,13 @@
     <value>Port</value>
   </data>
   <data name="OscSendToLastSender" xml:space="preserve">
-    <value>Send to whoever sent to me last</value>
+    <value>Reply to last sender</value>
   </data>
   <data name="OscSendToLastSenderHint" xml:space="preserve">
     <value>For a phone or tablet whose address changes. Messages go to the address that sent last, on the port above.</value>
   </data>
   <data name="OscTestButton" xml:space="preserve">
-    <value>Play a test note</value>
+    <value>Test note</value>
   </data>
   <data name="OscTestNeedsHost" xml:space="preserve">
     <value>Set where to send first.</value>
@@ -5151,7 +5154,7 @@
     <value>0 to 15</value>
   </data>
   <data name="OscValuesHeader" xml:space="preserve">
-    <value>Values sent as</value>
+    <value>Value range</value>
   </data>
   <data name="OscValuesIntegers" xml:space="preserve">
     <value>Whole numbers</value>
@@ -5175,13 +5178,13 @@
     <value>Note off</value>
   </data>
   <data name="OscNoteOffVelocityZero" xml:space="preserve">
-    <value>Note with velocity 0</value>
+    <value>Note on, velocity 0</value>
   </data>
   <data name="OscNoteOffOwnAddress" xml:space="preserve">
-    <value>An address of its own</value>
+    <value>Separate address</value>
   </data>
   <data name="OscChannelHeader" xml:space="preserve">
-    <value>Channel for messages without one</value>
+    <value>Default channel</value>
   </data>
   <data name="OscChannelHint" xml:space="preserve">
     <value>Messages that arrive with no channel in them come in on this channel.</value>
@@ -5190,7 +5193,7 @@
     <value>Send SysEx</value>
   </data>
   <data name="OscSendClock" xml:space="preserve">
-    <value>Send timing clock and active sensing</value>
+    <value>Send clock and active sensing</value>
   </data>
   <data name="OscGroupHeader" xml:space="preserve">
     <value>Group</value>
@@ -5199,22 +5202,22 @@
     <value>Remove row</value>
   </data>
   <data name="OscAddRow" xml:space="preserve">
-    <value>Add a row</value>
+    <value>Add row</value>
   </data>
   <data name="OscTimingHeading" xml:space="preserve">
     <value>Timing</value>
   </data>
   <data name="OscReceivedTimeTagsHeader" xml:space="preserve">
-    <value>Messages that say when to play</value>
+    <value>Incoming time tags</value>
   </data>
   <data name="OscTimeTagsPlayOnArrival" xml:space="preserve">
-    <value>Play them when they arrive</value>
+    <value>Play on arrival</value>
   </data>
   <data name="OscTimeTagsSenderTime" xml:space="preserve">
-    <value>Play them at the time they say</value>
+    <value>Play at time tag</value>
   </data>
   <data name="OscTimeTagsKeepSpacing" xml:space="preserve">
-    <value>Keep the spacing the sender gave them</value>
+    <value>Keep relative timing</value>
   </data>
   <data name="OscTimeTagsPlayOnArrivalHint" xml:space="preserve">
     <value>Works whatever time the other computer&apos;s clock says. Most apps don&apos;t say when to play anyway.</value>
@@ -5226,16 +5229,16 @@
     <value>Takes out the network&apos;s uneven timing without needing the clocks to agree, at the cost of a short delay.</value>
   </data>
   <data name="OscSpacingDelayHeader" xml:space="preserve">
-    <value>Extra delay (milliseconds)</value>
+    <value>Delay (ms)</value>
   </data>
   <data name="OscSendTimingHeader" xml:space="preserve">
-    <value>Messages meant for later</value>
+    <value>Outgoing time tags</value>
   </data>
   <data name="OscSendTimingAtItsTime" xml:space="preserve">
-    <value>Hold each one until its time</value>
+    <value>Send at scheduled time</value>
   </data>
   <data name="OscSendTimingEarly" xml:space="preserve">
-    <value>Send them now, saying when to play</value>
+    <value>Send early with time tag</value>
   </data>
   <data name="OscSendTimingAtItsTimeHint" xml:space="preserve">
     <value>MIDI Patchbay&apos;s clock and LFO steps send up to half a second ahead. This holds each message until it&apos;s due, which works with every app.</value>
@@ -5244,7 +5247,7 @@
     <value>Only for apps that play a message at the time it says, like SuperCollider. Most apps play it as soon as it arrives.</value>
   </data>
   <data name="OscBundleTogether" xml:space="preserve">
-    <value>Put messages that play together in one packet</value>
+    <value>Bundle simultaneous messages</value>
   </data>
   <data name="OscBundleTogetherHint" xml:space="preserve">
     <value>Sends them as one OSC bundle. Not every app reads bundles.</value>
@@ -5319,7 +5322,7 @@
     <value>From {0}. No row takes this address.</value>
   </data>
   <data name="OscHeardKeptOutFormat" xml:space="preserve">
-    <value>From {0}. Kept out by &quot;Take messages from&quot;.</value>
+    <value>From {0}. Kept out by "Accept from".</value>
     <comment>Keep the quoted name the same as OscAcceptHeader.</comment>
   </data>
   <data name="OscHeardAddRowFormat" xml:space="preserve">
@@ -5515,10 +5518,10 @@
     <value>Use a number, or a part like {n} with + or - and a number. Channels go from 1 to 16, and the rest from 0 to 127.</value>
   </data>
   <data name="OscRuleLowHeader" xml:space="preserve">
-    <value>OSC value at the bottom</value>
+    <value>OSC minimum</value>
   </data>
   <data name="OscRuleHighHeader" xml:space="preserve">
-    <value>OSC value at the top</value>
+    <value>OSC maximum</value>
   </data>
   <data name="OscRuleRangeHint" xml:space="preserve">
     <value>TouchOSC&apos;s controls go from 0 to 1. For a note, the bottom lets the note go. A program change is sent when the value isn&apos;t at the bottom, like a button that&apos;s pressed.</value>
@@ -5528,10 +5531,10 @@
     <comment>The header of a number box: which of the OSC message&apos;s arguments carries the value, counted from 1.</comment>
   </data>
   <data name="OscRuleRemove" xml:space="preserve">
-    <value>Remove this rule</value>
+    <value>Remove rule</value>
   </data>
   <data name="OscAddRule" xml:space="preserve">
-    <value>Add a rule</value>
+    <value>Add rule</value>
   </data>
   <data name="OscRuleCantReceive" xml:space="preserve">
     <value>This rule can&apos;t take messages: its channel or number uses a part its address doesn&apos;t have.</value>
@@ -5566,7 +5569,7 @@
     <comment>{0} is a number or a part of an address with an offset.</comment>
   </data>
   <data name="OscAdvertise" xml:space="preserve">
-    <value>Let apps on the network find this connection</value>
+    <value>Discoverable on network</value>
     <comment>Check box in the OSC connection&apos;s Receiving section. When on, the connection is advertised on the local network by DNS-SD (Zeroconf).</comment>
   </data>
   <data name="OscAdvertiseHint" xml:space="preserve">
@@ -5574,7 +5577,7 @@
     <comment>Hint under the OscAdvertise check box.</comment>
   </data>
   <data name="OscFindButton" xml:space="preserve">
-    <value>Find on the network</value>
+    <value>Browse network</value>
     <comment>Drop-down button that lists OSC apps found on the local network, to fill in the host and port to send to.</comment>
   </data>
   <data name="OscFindNone" xml:space="preserve">
@@ -5594,15 +5597,15 @@
     <comment>Header of the choice between UDP and the two kinds of TCP connection.</comment>
   </data>
   <data name="OscTransportUdp" xml:space="preserve">
-    <value>UDP (most apps)</value>
+    <value>UDP</value>
     <comment>Protocol choice: OSC over UDP, which almost every OSC app uses.</comment>
   </data>
   <data name="OscTransportTcpConnect" xml:space="preserve">
-    <value>TCP, connect to the other app</value>
+    <value>TCP client</value>
     <comment>Protocol choice: Windows MIDI Patchbay connects to the other app over TCP.</comment>
   </data>
   <data name="OscTransportTcpListen" xml:space="preserve">
-    <value>TCP, wait for apps to connect</value>
+    <value>TCP server</value>
     <comment>Protocol choice: Windows MIDI Patchbay waits for apps to connect to it over TCP.</comment>
   </data>
   <data name="OscTcpFramingHeader" xml:space="preserve">
@@ -5678,7 +5681,7 @@
     <comment>Subtitle on the canvas for an OSC connection that waits for apps over TCP. {0} is the port number.</comment>
   </data>
   <data name="OscMidi2" xml:space="preserve">
-    <value>Make MIDI 2.0 messages</value>
+    <value>MIDI 2.0 messages</value>
     <comment>Check box on an OSC connection&apos;s row. Received channel messages go into the patch as MIDI 2.0 instead of MIDI 1.0.</comment>
   </data>
   <data name="OscMidi2Hint" xml:space="preserve">
@@ -5686,7 +5689,7 @@
     <comment>Hint under the OscMidi2 check box.</comment>
   </data>
   <data name="OscShowAsDevice" xml:space="preserve">
-    <value>Show to other apps as a MIDI device</value>
+    <value>Virtual MIDI device</value>
     <comment>Check box on an OSC connection. Other apps on this PC can then open it as a MIDI device.</comment>
   </data>
   <data name="OscShowAsDeviceHint" xml:space="preserve">

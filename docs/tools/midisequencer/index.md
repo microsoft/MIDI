@@ -22,7 +22,7 @@ It doesn't record or play audio. To play sounds, it uses a synth or a device: th
 
 ![The Windows MIDI Sequencer main window with the sample sequence open, and numbered callouts on the File menu button, the transport buttons, the position and tempo display, the Launch, Snap, Capture and Panic controls, Undo and Redo, the track list, the clip launcher, the timeline, the editor, and the status bar]({{ site.baseurl }}/assets/images/midisequencer-quick-start.png)
 
-1. **The File menu** has New sequence, Open, Open recent, Save, Import and Export, and a sample sequence to look around in. It also has **Lyrics…**, **About this sequence…**, **Studio setup…**, and **Remote control and MIDI Glass…**.
+1. **The File menu** has New sequence, Open, Open recent, Save, Import and Export, and a sample sequence to look around in. It also has **Lyrics…**, **Sequence details…**, **Studio setup…**, and **Remote control…**.
 2. **The transport buttons** go to the start, play, stop, record, loop and play the metronome. Space plays and stops. To set where the loop goes, drag along the ruler above the timeline.
 3. **The position and tempo display** shows where the playhead is, in bars and in time, and the tempo and meter. Select the tempo to change it. **Internal clock** opens **Clock and sync**, where the sequence can follow another device's clock or send MIDI Time Code.
 4. **Launch** sets when a clip you launch starts playing, such as at the next bar. **Snap** sets the grid that clips and notes snap to. **Capture** makes a clip from what you just played on the armed tracks, even if you weren't recording. **Panic**, in red, stops playback and every note on every device. It's a one-time action, not a mute switch.
@@ -43,7 +43,7 @@ It doesn't record or play audio. To play sounds, it uses a synth or a device: th
 
 To play a different device, select the track's name to open **Track setup**, and pick the device there. To play an app on the same PC, such as a DAW, pick **Default App Loopback (A)**, and set the app to listen to **Default App Loopback (B)**.
 
-To look around first, select **File**, then **Open the sample sequence**.
+To look around first, select **File**, then **Open sample**.
 
 ## Tracks and devices
 
@@ -53,7 +53,7 @@ Devices show the picture and description you gave them in MIDI Settings, in the 
 
 To see what Windows MIDI Services knows about a device, select **ⓘ** next to it in **Track setup** or in **Studio setup**. That shows its groups and whether each one speaks MIDI 2.0 or MIDI 1.0, how early the sequencer sends to it, how often automation goes to it, and what in the sequence uses it. To change a device's name, picture, description, offset or automation interval, use MIDI Settings.
 
-Folders keep tracks together. Muting or soloing a folder mutes or solos everything in it. Right-click a track for more, such as **Pin to the top**, which keeps a track above everything that scrolls.
+Folders keep tracks together. Muting or soloing a folder mutes or solos everything in it. Right-click a track for more, such as **Pin**, which keeps a track above everything that scrolls.
 
 To move a track, drag it by its name. Drop it on a folder to put it inside, or between two rows to put it there. To work on several tracks at once, hold Ctrl and select each one, or hold Shift and select the last one to get every track in between. Drag any of them and they all move, in the same order.
 
@@ -65,7 +65,7 @@ To combine two tracks, right-click the one to fold in and select **Merge into**,
 
 Most synths have many sounds, such as a piano, strings or a drum kit. A track can pick one of them for you each time playback starts. Select the track's name to open **Track setup**, then select **Sound** under **Start-up messages** to open the **Patch Browser**.
 
-- Turn on **Choose this track's sound**. Then pick a sound from the list, or type its program number. Some devices also need a bank. The device's manual says which.
+- Turn on **Sound**. Then pick a sound from the list, or type its program number. Some devices also need a bank. The device's manual says which.
 - Choosing a sound sends it to the device right away, so you can hear it. **Cancel** puts the old one back.
 - The list shows only names the sequencer knows the device has. The General MIDI Synth built into Windows gets the General MIDI names, or its drum kits on channel 10. Another device gets no list until it shares its own names, since it may have other sounds at those numbers; pick its sounds by number from its manual.
 - A device that speaks MIDI-CI may share its own names for its sounds. To get them, select **Ask … for its sound names**. The sequencer asks only when you select that, and never asks a group whose **Play to** is off in **Studio setup**.
@@ -117,7 +117,7 @@ Right-click the timeline or an empty launcher slot to make any of them. The gene
 
 To move a clip, drag it to another time, another track, or another launcher slot. Hold Ctrl as you let go to place it again instead of moving it. Both spots then play the same clip, so a change to one changes both. Drag a clip from the launcher onto the timeline, or from the timeline into a launcher slot, to place it there too. Hold Shift while you drag to keep the clip on its own track, so it moves only in time, or between that track's launcher slots.
 
-To cut a clip in two, select the razor (the scissors above the tracks), then select the clip where you want the cut. The cut lands on the grid. Press Esc or select the scissors again to put the razor away. You can also right-click a clip and select **Split here**. To join clips, select one, hold Ctrl and select the others on the same track, then right-click and select **Merge selected clips**. They become one clip, with the same gaps between them.
+To cut a clip in two, select the razor (the scissors above the tracks), then select the clip where you want the cut. The cut lands on the grid. Press Esc or select the scissors again to put the razor away. You can also right-click a clip and select **Split here**. To join clips, select one, hold Ctrl and select the others on the same track, then right-click and select **Merge clips**. They become one clip, with the same gaps between them.
 
 ### Start a pattern from a template
 
@@ -128,7 +128,7 @@ Not sure where to start? **Templates**, at the top of a pattern, has starter pat
 
 Point at a template to see the tempo the style is usually played at. Using a template doesn't change your sequence's tempo.
 
-If the pattern already has steps, the sequencer asks what to do. **Replace** swaps them for the template. **Add on top** keeps your steps and adds the template's. Each drum goes on the lane that already plays it, and a drum you don't have gets a new lane. Where you both have a step, the template's step is used. Either way, **Undo** puts the pattern back the way it was.
+If the pattern already has steps, the sequencer asks what to do. **Replace** swaps them for the template. **Merge** keeps your steps and adds the template's. Each drum goes on the lane that already plays it, and a drum you don't have gets a new lane. Where you both have a step, the template's step is used. Either way, **Undo** puts the pattern back the way it was.
 
 The drum templates use the General MIDI drum notes. They sound right on the General MIDI Synth built into Windows, and on most drum machines, when the track plays on channel 10.
 
@@ -142,23 +142,23 @@ To change a number such as **Steps** or **Swing**, type it, or click in the box 
 
 A generator shows all of its settings in the editor. Select **Type** to change what kind of generator it is.
 
-- **A Euclidean rhythm** draws its rings. Each dot is a step, and the lit dots are the hits. Drag around a ring to turn it, so its hits start later. Scroll over a ring to add or take away hits. The table next to it sets each ring's note, hits (**Pulses**), steps, turn (**Rotate**), velocity and chance. **What it plays** shows two bars of the result.
+- **A Euclidean rhythm** draws its rings. Each dot is a step, and the lit dots are the hits. Drag around a ring to turn it, so its hits start later. Scroll over a ring to add or take away hits. The table next to it sets each ring's note, hits (**Pulses**), steps, turn (**Rotate**), velocity and chance. **Preview (2 bars)** shows two bars of the result.
 - **A chance melody** shows its first four passes, with new notes outlined, so you can see how much changes each time round.
 - **An arpeggiator** sets where its notes come from, the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
-- **Life** plays the Game of Life on a board with a column for each step and a row for each note of the key. Draw the first pass's cells on the board, or start with a scatter or a shape such as a glider. Each pass is the next generation: a cell with two or three neighbors lives on, and an empty cell with three is born. The edges wrap, so a glider that walks off the end of the bar comes back in at the start. Select any pass under the board to see it, and **Start from this pass** to begin there.
+- **Life** plays the Game of Life on a board with a column for each step and a row for each note of the key. Draw the first pass's cells on the board, or start with a scatter or a shape such as a glider. Each pass is the next generation: a cell with two or three neighbors lives on, and an empty cell with three is born. The edges wrap, so a glider that walks off the end of the bar comes back in at the start. Select any pass under the board to see it, and **Set as start** to begin there.
 - **Life drums** does the same with a row for each drum. Select a drum's name on the board to change it.
-- **Learn** learns which note tends to follow which (a Markov chain) from a tune, a clip you pick, or words you type, then makes up new melodies in that style, in the key you choose. **How closely it follows** sets how many notes back it remembers. The drawing shows the moves it learned, with this pass's lit. It learns only from what you give it.
+- **Learn** learns which note tends to follow which (a Markov chain) from a tune, a clip you pick, or words you type, then makes up new melodies in that style, in the key you choose. **Memory** sets how many notes back it remembers. The drawing shows the moves it learned, with this pass's lit. It learns only from what you give it.
 - **Words** spells what you type as a melody. The letters climb the scale, a space rests, a period ends on the root, a question ends on the fifth, and capitals are louder. You hear the changes as you type.
 - **Evolve** makes eight changed copies of each pass and plays the one that best fits the rules you weight, such as small steps or a motif that comes back. The drawing shows the copies and which one won, and the line under it shows the score climbing.
 - **The infinity series** plays Per Nørgård's endless melody, which contains itself: every fourth note is the whole series again. Add voices to hear it against itself at half speed.
 - **An L-system** grows a drawing from a short rule, like a plant, and the melody follows the drawing up and down. Pick a shape, or open **Rules** to write your own.
 - **Change ringing** rings bells the way bell towers do, in a new order every row, with methods such as Plain Bob and Grandsire. The drawing is the method's blue line.
 
-The melodies have a **Key and range**. Pick the key and the scale, and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Largest jump**, and **Start and end on the root**.
+The melodies have a **Key and range**. Pick the key and the scale, and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Max interval**, and **Resolve to root**.
 
-Life, Learn, Words, Evolve, the infinity series, L-systems, and change ringing also have a **Velocity** section. Its chips pick how loud each note plays. Each generator's own ideas come first, such as **By age** for Life (new cells loudest), **By surprise** for Learn, **As spoken** for Words, and **Hand and back** for change ringing. **Steady**, **On the beat**, **Swell**, and **Random** work for all of them. After Learn learns from a clip, **As learned** plays the clip's loud and soft notes. The drawing shows this pass's notes over the range they play in. Drag the top or bottom edge of the band, or drag its middle to move it, or scroll over it to move it 10%.
+Life, Learn, Words, Evolve, the infinity series, L-systems, and change ringing also have a **Velocity** section. Its chips pick how loud each note plays. Each generator's own ideas come first, such as **By age** for Life (new cells loudest), **By surprise** for Learn, **As spoken** for Words, and **Handstroke/backstroke** for change ringing. **Steady**, **On the beat**, **Swell**, and **Random** work for all of them. After Learn learns from a clip, **As learned** plays the clip's loud and soft notes. The drawing shows this pass's notes over the range they play in. Drag the top or bottom edge of the band, or drag its middle to move it, or scroll over it to move it 10%.
 
-Learn, Life, Life drums, Evolve, and change ringing can **Listen to** another clip or a whole track, even one that's a generator. Pick it from the list, and they learn from it straight away: Learn learns its melody, Life drops a pass of its notes onto the board as new cells, Evolve starts from it and gets a **Like what it hears** slider, and change ringing rings its most played notes as its bells. Turn on **Keep listening**, and each pass hears what the source played during the pass before, so it changes as the source does. A clip is heard as if both started together, and a track is heard where the listener plays. Two clips can even listen to each other, each a pass behind.
+Learn, Life, Life drums, Evolve, and change ringing can **Listen to** another clip or a whole track, even one that's a generator. Pick it from the list, and they learn from it straight away: Learn learns its melody, Life drops a pass of its notes onto the board as new cells, Evolve starts from it and gets a **Similarity** slider, and change ringing rings its most played notes as its bells. Turn on **Keep listening**, and each pass hears what the source played during the pass before, so it changes as the source does. A clip is heard as if both started together, and a track is heard where the listener plays. Two clips can even listen to each other, each a pass behind.
 
 A generator plays the same notes on every pass, unless you set **Each pass** to **Changes**. The ones that grow, learn, and spell start out changing. The **Seed** is where its chances start. The same seed always plays the same way. You can type words as the seed, such as "Midnight drive," and the same words play the same way on any PC. To hear something different, select the button next to the seed to pick a new one.
 
@@ -212,7 +212,7 @@ A sequence can have a lyrics track. Select **File**, then **Lyrics…**, and typ
 
 When you type the words, put a hyphen between the syllables of a word, like `hap-py birth-day`. A space goes between words, each line of the song goes on its own line, and a blank line goes between verses. An underscore (`_`) holds a syllable over more than one note. Each syllable goes on the next note of the track that sings. If you change words that are already placed, the ones that were there keep their times.
 
-Lyrics in a Standard MIDI File come in when you import it, including karaoke files (`.kar`). Exporting a Standard MIDI File writes them out again. While the sequence plays, the track that sings sends the words to its device as MIDI 2.0 lyric messages, if the device speaks MIDI 2.0. To use the lyrics in a music player or for subtitles, select **File**, then **Export**, then **Lyrics with times (LRC)…**.
+Lyrics in a Standard MIDI File come in when you import it, including karaoke files (`.kar`). Exporting a Standard MIDI File writes them out again. While the sequence plays, the track that sings sends the words to its device as MIDI 2.0 lyric messages, if the device speaks MIDI 2.0. To use the lyrics in a music player or for subtitles, select **File**, then **Export**, then **LRC lyrics…**.
 
 ## The clip launcher
 
@@ -230,14 +230,14 @@ For each device and group, choose whether the sequencer uses it. A group that on
 Then choose what else each group it plays to gets:
 
 - **Clock** sends MIDI clock, so the device keeps time with the sequence.
-- **Start and stop** starts, stops and continues the device with the sequence.
+- **Start/Stop** starts, stops and continues the device with the sequence.
 - **Song position** tells the device where playback starts, so it starts in the same place.
 - **Tempo** sends the tempo itself, as a MIDI 2.0 message, so the device knows a new tempo before the clock shows it. A group that speaks MIDI 1.0 can't take it, so its box is off.
 - **Offset** sends the clock a little later or earlier, to line up a device that runs slow or quick.
 
 To see what a group sends, select the eye on its row. That opens Windows MIDI Monitor on that device and group. MIDI Monitor only listens, so it sends the device nothing.
 
-These choices belong to the PC, not the sequence, so every sequence that uses a device gives it the same. To send the clock to a device no track plays to, such as a drum machine that plays its own pattern, select **Add a device**. **Other MIDI devices on this PC** lists every other device, so you can look at what any of them is, or watch what it sends.
+These choices belong to the PC, not the sequence, so every sequence that uses a device gives it the same. To send the clock to a device no track plays to, such as a drum machine that plays its own pattern, select **Add device**. **Other MIDI devices on this PC** lists every other device, so you can look at what any of them is, or watch what it sends.
 
 ### A device that stops working when an app talks to it
 
@@ -245,13 +245,13 @@ Some devices, such as some Arduino projects, stop working when an app sends them
 
 The sequencer doesn't ask a device what it is on its own. It opens only the devices the sequence uses, and sends a device nothing until you play, try a sound or move a mixer control. It asks a device for its sound names over MIDI-CI only when you select **Ask … for its sound names** in a track's **Sound**. If a device still has trouble, turn off **Play to** for its group, and the sequencer leaves it alone. It won't even ask that group for its sound names.
 
-Windows MIDI Keyboard is different. When it opens on a device, it asks the device for its sound names with MIDI-CI. The sequencer opens MIDI Keyboard from **Try this sound in MIDI Keyboard**, **Record from MIDI Keyboard** and the editor's **MIDI Keyboard** button. It won't open it on a group whose **Play to** is off, or ask that group for sound names.
+Windows MIDI Keyboard is different. When it opens on a device, it asks the device for its sound names with MIDI-CI. The sequencer opens MIDI Keyboard from **Preview in MIDI Keyboard**, **Record from MIDI Keyboard** and the editor's **MIDI Keyboard** button. It won't open it on a group whose **Play to** is off, or ask that group for sound names.
 
 ## Clock, sync and remote control
 
 **Clock and sync** opens from the clock button next to the tempo. It can follow another device's MIDI clock instead of the sequence's own tempo, and send MIDI Time Code for video and lighting gear. What each device gets of the sequence's own clock is chosen in **Studio setup**.
 
-**Remote control and MIDI Glass…** on the File menu makes a MIDI endpoint for the sequencer, called **MIDI Sequencer**. A controller, another app, or a MIDI Glass layout can send to it to play, stop, launch clips and scenes, and mute, solo or arm tracks. The sequencer sends back what's playing, so a surface can light up. That dialog can also make a [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/) layout for the sequence.
+**Remote control…** on the File menu makes a MIDI endpoint for the sequencer, called **MIDI Sequencer**. A controller, another app, or a MIDI Glass layout can send to it to play, stop, launch clips and scenes, and mute, solo or arm tracks. The sequencer sends back what's playing, so a surface can light up. That dialog can also make a [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/) layout for the sequence.
 
 ## Importing and exporting
 
@@ -267,13 +267,13 @@ Windows MIDI Keyboard is different. When it opens on a device, it asks the devic
 
 ## About this sequence
 
-**File**, then **About this sequence…**, says who made the sequence and how. It's the same information Windows MIDI Glass and Windows MIDI Patchbay save with what you make: your name, your company or group, your website, and a license. It's what you say about your work. Windows doesn't check it.
+**File**, then **Sequence details…**, says who made the sequence and how. It's the same information Windows MIDI Glass and Windows MIDI Patchbay save with what you make: your name, your company or group, your website, and a license. It's what you say about your work. Windows doesn't check it.
 
-**Copyright notice in exported files** is the notice that Standard MIDI Files, clip files and DAWproject files carry.
+**Copyright** is the notice that Standard MIDI Files, clip files and DAWproject files carry.
 
-**How the sequence was made** starts with a suggestion based on the clips. A sequence of recorded clips suggests **Played and recorded**, and a mix of kinds suggests **A mix of things played, drawn and generated**. If any part was made with generative AI, choose an option that says so.
+**Source** starts with a suggestion based on the clips. A sequence of recorded clips suggests **Recorded**, and a mix of kinds suggests **Mixed**. If any part was made with generative AI, choose an option that says so.
 
-**Where the clips came from** lists every clip and how it began: recorded, drawn, generated, or imported. An imported clip keeps the name of its file and the file's copyright notice, which matters before you share or sell music that uses someone else's work.
+**Clip sources** lists every clip and how it began: recorded, drawn, generated, or imported. An imported clip keeps the name of its file and the file's copyright notice, which matters before you share or sell music that uses someone else's work.
 
 ## Your sequence files
 

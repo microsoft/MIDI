@@ -41,7 +41,7 @@ On this page:
 ## What a patch is
 
 - A patch has **endpoints**: the devices on its canvas. A keyboard, a synth, a drum machine, or a loopback that leads to an app.
-- A patch has **steps**. Each step does one job, such as keeping out clock, letting only some notes through, or transposing. A step has one **In** and one **Out**. MIDI clock, MIDI Time Code, and the game controller steps have only an **Out**, and an LFO's **In** takes the clock it follows. A **branch** and a **switch** have one **Out** for each way a message can go.
+- A patch has **steps**. Each step does one job, such as keeping out clock, letting only some notes through, or transposing. A step has one **In** and one **Out**. MIDI clock, MIDI Time Code, and the game controller steps have only an **Out**, and an LFO's **In** takes the clock it follows. A **branch** and a **switch** have one **Out** for each of their outputs.
 - A patch has **connections**. Each one takes what comes out of an endpoint's or a step's **Out** and sends it to another endpoint's or step's **In**.
 - Messages go through the steps in the order the connections lead them. A chain of steps between a keyboard and a synth works like a cable with each step plugged in along the way.
 - When an **Out** has more than one connection, each connection gets its own copy of every message. What a step does to one copy doesn't change the others. When more than one connection goes into the same **In**, their messages are merged.
@@ -89,7 +89,7 @@ If the customer pasted a prompt from **Ask an AI assistant…** in Windows MIDI 
 | Should one kind of message become another, such as a pad's note becoming the control change a DAW listens for, or a note becoming the MIDI clock? Ask which message and channel, what it should send instead, and with what value. For a pad or a button, ask what letting go should do: send a value such as 0, send nothing, or switch on and off with each press. | That's a `messageConverter` step, with a row for each conversion. |
 | Should several one-note synths play together as one bigger synth? How should notes be shared out, and should knobs and pitch bend reach all of them? | That's a `noteDistributor` step, with one connection out to each synth, in the order they should be used. |
 | Should messages only get through at some times, such as while the sequencer plays, or while a pedal is down? | That's a `gate` step. Ask which message opens it and which closes it. |
-| Should messages go one way or another by what's in them, such as hard notes to one synth and soft notes to another, or each channel to its own synth? | That's a `branch` step for two ways, or a `switch` step for more. Ask what decides the way, and where each way goes. |
+| Should messages go one way or another by what's in them, such as hard notes to one synth and soft notes to another, or each channel to its own synth? | That's a `branch` step for two outputs, or a `switch` step for more. Ask what decides the output, and where each output goes. |
 | Should one control decide what another does, such as a footswitch or a program change that picks which synth the keyboard plays? | That's a `setMemory` step on the control's path, and a `switch` or `branch` on the keyboard's path that tests the memory. Ask which control, and what each of its settings should pick. |
 | Should a value from one message end up in later messages, such as moving the keyboard to the channel the last program change picked? | That's a `setMemory` step, and a `putValue` step that writes the memory into the messages. |
 | Should an app, such as a DAW, see a MIDI 1.0 device as a MIDI-CI device? Ask for the device's manufacturer ID, family, model, and software version from its manual, which profiles it follows, and what an app should be able to read, such as its programs. Ask which loopback the app uses, and whether it's a MIDI 2.0 loopback pair. | That's a `ciResponder` step on the path from the app to the device, with a MIDI-CI file beside the patch. See [The MIDI-CI file](#the-midi-ci-file). The answers go straight back to the loopback, so use a pair: the patch uses one side, and the app opens the other. A basic loopback sends everything the app sends back to the app, and sends the notes in a MIDI message report back through the patch to the device. |
@@ -152,8 +152,8 @@ Write the plan down as a list of paths before you write the file, such as "Keybo
 | Four one-note synths played as one four-note synth | A `noteDistributor` step fed by the keyboard, with one connection out to each synth. |
 | Notes only get through while the sequencer plays | A `gate` step with its defaults: it opens on Start and closes on Stop. Connect the sequencer's clock and the keyboard to its **In**. |
 | Notes only get through while a pedal is down | A `gate` step with `"open": { "message": "controlChange", "number": 64, "test": "atLeast", "value": 64 }, "close": { "message": "controlChange", "number": 64, "test": "below", "value": 64 }, "startsOpen": false`. |
-| Hard notes to one synth and soft notes to another, with one step | A `branch` step with `"subject": { "kind": "part", "part": "velocity" }, "test": "atLeast", "value": 50`. Connect its Yes way to one synth with `"sourceOutput": "yes"`, and its No way to the other with `"sourceOutput": "no"`. |
-| Channel 1 to one synth, channel 2 to another, and the rest to a third | A `switch` step with `"subject": { "kind": "part", "part": "channel" }, "cases": [ { "id": 1, "test": "is", "value": 0 }, { "id": 2, "test": "is", "value": 1 } ]`. Connect each way with `"sourceOutput": 1`, `"sourceOutput": 2`, and `"sourceOutput": "otherwise"`. |
+| Hard notes to one synth and soft notes to another, with one step | A `branch` step with `"subject": { "kind": "part", "part": "velocity" }, "test": "atLeast", "value": 50`. Connect its Yes output to one synth with `"sourceOutput": "yes"`, and its No output to the other with `"sourceOutput": "no"`. |
+| Channel 1 to one synth, channel 2 to another, and the rest to a third | A `switch` step with `"subject": { "kind": "part", "part": "channel" }, "cases": [ { "id": 1, "test": "is", "value": 0 }, { "id": 2, "test": "is", "value": 1 } ]`. Connect each output with `"sourceOutput": 1`, `"sourceOutput": 2`, and `"sourceOutput": "otherwise"`. |
 | A footswitch on controller 80 switches the keyboard between two synths | A `setMemory` step fed by the footswitch, with `"memory": "Synth", "everyMessage": false, "trigger": { "message": "controlChange", "number": 80, "test": "atLeast", "value": 64 }, "action": "toggle", "first": 0, "second": 1, "passTriggers": false`, with nothing connected to its Out. Then a `switch` step fed by the keyboard, with `"subject": { "kind": "memory", "name": "Synth" }, "unit": "number"` and a case for 0 and for 1. |
 | The keyboard plays on the channel the last program change picked | A `setMemory` step with `"memory": "Channel", "everyMessage": false, "trigger": { "message": "programChange" }, "source": { "kind": "part", "part": "program" }`. Then a `putValue` step with `"part": "channel", "source": { "kind": "memory", "name": "Channel" }`. Programs 0 to 15 pick channels 1 to 16, and a higher program picks channel 16. |
 | A DAW finds an older synth as a MIDI-CI device, with its program list | The DAW sends to the synth through a MIDI 2.0 loopback pair: the DAW opens one side, and the patch uses the other. A `ciResponder` step goes between the patch's side and the synth, with the synth's numbers and `"file": "Synth.midici"`. The file lists the programs as a `ProgramList` resource. |
@@ -957,13 +957,13 @@ foreach ($c in (Get-List $patch.connections)) {
     $way = $null
     if ($kinds[$c.source] -ceq 'branch') {
         $way = $c.sourceOutput ?? 'yes'
-        if ($way -cnotin 'yes', 'no') { $problems.Add("$where leaves a branch by '$way'. A branch's ways are yes and no, so Windows MIDI Patchbay leaves the connection out."); continue }
+        if ($way -cnotin 'yes', 'no') { $problems.Add("$where leaves a branch by '$way'. A branch's outputs are yes and no, so Windows MIDI Patchbay leaves the connection out."); continue }
     }
     elseif ($kinds[$c.source] -ceq 'switch') {
         $way = $c.sourceOutput ?? 'otherwise'
         if (-not ($way -ceq 'otherwise' -or ((Test-Number $way) -and $way -eq [Math]::Floor($way) -and $caseIds.ContainsKey($c.source) -and $caseIds[$c.source].Contains([int]$way)))) { $problems.Add("$where leaves a switch by '$way', which isn't otherwise or the id of one of its cases, so Windows MIDI Patchbay leaves the connection out."); continue }
     }
-    elseif ($null -ne $c.sourceOutput) { $problems.Add("$where has a sourceOutput, but only a branch or a switch has more than one way out, so it's ignored.") }
+    elseif ($null -ne $c.sourceOutput) { $problems.Add("$where has a sourceOutput, but only a branch or a switch has more than one output, so it's ignored.") }
     $from = if ($kinds[$c.source] -ceq 'endpoint') { $c.sourceGroup ?? -1 } elseif ($null -ne $way) { "way $way" } else { -1 }
     $to = if ($kinds[$c.destination] -ceq 'endpoint') { $c.destinationGroup ?? -1 } else { -1 }
     if (-not $pairs.Add("$($c.source)|$from|$($c.destination)|$to")) { $problems.Add("$where repeats another connection between the same points, so Windows MIDI Patchbay keeps only the first."); continue }
@@ -1097,7 +1097,7 @@ Tell the customer how to get the file into Windows MIDI Patchbay, using [Where p
 
 - How to start it: in the main Windows MIDI Patchbay window, turn on the switch on the patch's tile. Or open the patch and select **Start routing** on the bar across the top. To have it start every time the app starts, open the patch and turn on **Start automatically** next to the **Routing** switch.
 - That routing only runs while Windows MIDI Patchbay is running, and that its settings include **Start with Windows** and **Run in notification area**, which keep it going.
-- Which device each endpoint stands for. If one shows as missing, the name didn't match. When a connected device looks like a match, Windows MIDI Patchbay offers it: select the endpoint, then select **Use this device**. Otherwise, remove the endpoint, drag the right device onto the canvas from the **Endpoints** tab on the left, and draw its connections again.
+- Which device each endpoint stands for. If one shows as missing, the name didn't match. When a connected device looks like a match, Windows MIDI Patchbay offers it: select the endpoint, then select **Use device**. Otherwise, remove the endpoint, drag the right device onto the canvas from the **Endpoints** tab on the left, and draw its connections again.
 - That **Auto arrange**, on the toolbar of the patch window, lays the patch out again if it looks crowded.
 - What the patch can't do that they asked for, and what you did instead.
 
@@ -1387,8 +1387,8 @@ The steps are in the `blocks` list.
 | `throttle` | Message throttler | Slows messages down for a device that loses data when a lot arrives at once. |
 | `noteDistributor` | Note distributor | Plays several one-note synths as one bigger synth. Each new note goes out on one of its connections. |
 | `gate` | Gate | Lets messages through only between one message and another, such as Start and Stop. |
-| `branch` | Branch | Sends each message one of two ways, Yes or No, by testing a part of it, a tag, or a memory. |
-| `switch` | Switch | Sends each message one of several ways, by the first case it matches, or otherwise. |
+| `branch` | Branch | Sends each message to one of two outputs, Yes or No, by testing a part of it, a tag, or a memory. |
+| `switch` | Switch | Sends each message to one of several outputs, by the first case it matches, or otherwise. |
 | `setTag` | Set tag | Gives each message a value to carry through the rest of the patch. |
 | `setMemory` | Set memory | Remembers a value for the messages that come later. |
 | `putValue` | Put value | Writes a number, a tag, or a memory into one part of each message. |
@@ -1408,19 +1408,19 @@ The steps are in the `blocks` list.
 | `id` | text | made up when the file loads | Unique among the connections. |
 | `source` | an endpoint or step `id` | required | Where messages come from: its **Out**. |
 | `sourceGroup` | -1 to 15 | -1 | Only when `source` is an endpoint. The group messages come from, counted from 0. -1 is all groups. |
-| `sourceOutput` | `"yes"`, `"no"`, `"otherwise"`, or a case `id` | `"yes"` from a branch, `"otherwise"` from a switch | Only when `source` is a `branch` or a `switch`. The way out the connection leaves by. A case `id` is a number, not text. |
+| `sourceOutput` | `"yes"`, `"no"`, `"otherwise"`, or a case `id` | `"yes"` from a branch, `"otherwise"` from a switch | Only when `source` is a `branch` or a `switch`. The output the connection leaves by. A case `id` is a number, not text. |
 | `destination` | an endpoint or step `id` | required | Where messages go: its **In**. |
 | `destinationGroup` | -1 to 15 | -1 | Only when `destination` is an endpoint. The group messages go to, counted from 0. -1 keeps each message's own group. |
 | `muted` | `true`, `false` | `false` | A muted connection passes nothing. Write `false`. |
 
-A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock, MIDI Time Code, or game controller step, which has no **In**, when it goes into or out of an annotation, when its `sourceOutput` names a way its branch or switch doesn't have, or when it repeats another connection between the same two points with the same groups and way. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
+A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock, MIDI Time Code, or game controller step, which has no **In**, when it goes into or out of an annotation, when its `sourceOutput` names an output its branch or switch doesn't have, or when it repeats another connection between the same two points with the same groups and output. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
 
 ### Where things go on the canvas
 
 `x` and `y` are in pixels, from the top left corner of the canvas, with `y` going down. Windows MIDI Patchbay puts everything exactly where the file says, so lay the patch out like a picture of the plan, from left to right:
 
 - An endpoint is 280 pixels wide. With one group it's about 130 pixels high, and each extra group it shows adds 32.
-- A step is 208 pixels wide and 76 high. A branch or a switch is taller: add about 24 pixels for each way out.
+- A step is 208 pixels wide and 76 high. A branch or a switch is taller: add about 24 pixels for each output.
 - An annotation is as wide as its longest line, about half its font size for each character, and each line is a little taller than its font size. **Auto arrange** leaves annotations where they are.
 - Put sources at `x` 60, one under another. A generator or a game controller step is a source too.
 - Put each step one column to the right of the step before it. Columns 280 pixels apart, starting at `x` 400, work well. Steps that come after the same step can share a column, at least 110 pixels apart from top to bottom.
@@ -1647,7 +1647,7 @@ For example, this step keeps out volume, which is controller 7, on channel 1 fro
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `valueScale` | `percent`, `sevenBit` | | Write `percent`. Without it, the percentages below are ignored. It only changes how Windows MIDI Patchbay shows the numbers: the file always holds percentages. |
-| `velocityCurve` | 0 to 3 | 0 | 0 leaves it alone. 1 is **Linear to curved**, which makes it harder to play loud. 2 is **Curved to linear**, which makes it easier. 3 sends every note at `fixedVelocityPercent`. |
+| `velocityCurve` | 0 to 3 | 0 | 0 leaves it alone. 1 is **Heavier touch**, which makes it harder to play loud. 2 is **Lighter touch**, which makes it easier. 3 sends every note at `fixedVelocityPercent`. |
 | `fixedVelocityPercent` | 0 to 100 | 78.74 | The velocity for `velocityCurve` 3. 78.74 is 100 out of 127. |
 | `rescaleVelocity` | `true`, `false` | `false` | Fits every velocity into a range. |
 | `minimumVelocityPercent`, `maximumVelocityPercent` | 0 to 100 | 0 and 100 | That range. |
@@ -2064,7 +2064,7 @@ For example, notes that only get through while the sustain pedal is down, with t
 
 ### Branch
 
-`"type": "branch"`. Sends each message one of two ways: **Yes** when it passes the test, and **No** when it doesn't. Each connection out of a branch says which way it leaves by, with `"sourceOutput": "yes"` or `"sourceOutput": "no"`. Connect one way or both. Messages that go a way with no connection go nowhere.
+`"type": "branch"`. Sends each message to one of two outputs: **Yes** when it passes the test, and **No** when it doesn't. Each connection out of a branch says which output it leaves by, with `"sourceOutput": "yes"` or `"sourceOutput": "no"`. Connect one output or both. Messages that go out an output with no connection go nowhere.
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
@@ -2075,10 +2075,10 @@ For example, notes that only get through while the sustain pedal is down, with t
 | `lowest`, `highest` | numbers in the unit | 60 and 127 | For `between`. Both ends count. |
 | `values` | a list of up to 128 numbers in the unit | empty | For `oneOf`. |
 | `unreadable` | `everyWay`, `yes`, `no`, `keepOut` | `everyWay` | Where a message goes when there's nothing to test: the message doesn't have that part, or the tag or memory is empty. |
-| `bypass` | `everyWay`, `firstWay` | `everyWay` | Where messages go while the step is bypassed. The first way is Yes. |
+| `bypass` | `everyWay`, `firstWay` | `everyWay` | Where messages go while the step is bypassed. The first output is Yes. |
 | `valueScale` | `percent`, `sevenBit` | `sevenBit` | How Windows MIDI Patchbay shows a value on screen, as a percent or as 0 to 127. A value is a percent in the file either way. |
 
-A note off goes the way its note on went, and so do poly pressure and the MIDI 2.0 per-note messages for that note. A sustain, sostenuto, or soft pedal that's let go reaches every way it went down on. All notes off and the other channel mode messages go every way. The rest of a system exclusive message, or of another message that comes in several packets, goes the way its first packet went.
+A note off goes out the same output as its note on, and so do poly pressure and the MIDI 2.0 per-note messages for that note. A sustain, sostenuto, or soft pedal that's let go reaches every output it went down on. All notes off and the other channel mode messages go out every output. The rest of a system exclusive message, or of another message that comes in several packets, goes out the same output as its first packet.
 
 For example, notes played hard to one synth and the rest to another:
 
@@ -2091,26 +2091,26 @@ For example, notes played hard to one synth and the rest to another:
 ]
 ```
 
-A control change has no velocity, so with `unreadable` left out it goes both ways.
+A control change has no velocity, so with `unreadable` left out it goes out both outputs.
 
 ### Switch
 
-`"type": "switch"`. Sends each message one of several ways. Each **case** is a way, with an `id` and a test. A message goes out the way of the first case it matches, in the order of the list. A message that matches none of them goes out **otherwise**. Each connection out of a switch says which way it leaves by: `"sourceOutput"` is a case's `id`, as a number, or `"otherwise"`.
+`"type": "switch"`. Sends each message to one of several outputs. Each **case** is an output, with an `id` and a test. Windows MIDI Patchbay shows the cases as **Output 1**, **Output 2**, and so on. A message goes out the output of the first case it matches, in the order of the list. A message that matches none of them goes out **otherwise**, which Windows MIDI Patchbay shows as **Default**. Each connection out of a switch says which output it leaves by: `"sourceOutput"` is a case's `id`, as a number, or `"otherwise"`.
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `subject` | a part of the message, a tag, or a memory | the channel | What picks the way. |
+| `subject` | a part of the message, a tag, or a memory | the channel | What picks the output. |
 | `unit` | `number`, `channel`, `group`, `note`, `value` | the part's own | As for a branch. Write it for a tag or a memory. |
-| `cases` | a list of up to 64 cases | none | The ways, in the order they're tested. |
+| `cases` | a list of up to 64 cases | none | The outputs, in the order they're tested. |
 | `unreadable` | `everyWay`, `firstCase`, `otherwise`, `keepOut` | `everyWay` | Where a message goes when there's nothing to test. |
-| `bypass` | `everyWay`, `firstWay` | `everyWay` | Where messages go while the step is bypassed. The first way is the first case, or otherwise when there are none. |
+| `bypass` | `everyWay`, `firstWay` | `everyWay` | Where messages go while the step is bypassed. The first output is the first case, or otherwise when there are none. |
 | `valueScale` | `percent`, `sevenBit` | `sevenBit` | As for a branch. |
 
 Each case:
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `id` | 1 to 64 | the smallest free id | Names the way, for the connections that leave by it. Each case needs one of its own. When you move a case in the list, keep its `id`, so its connections stay with it. |
+| `id` | 1 to 64 | the smallest free id | Names the output, for the connections that leave by it. Each case needs one of its own. When you move a case in the list, keep its `id`, so its connections stay with it. |
 | `test` | `is`, `isNot`, `atLeast`, `below`, `between`, `oneOf`, `hasValue`, `isEmpty` | `is` | See [Tests](#tests). |
 | `value`, `lowest`, `highest`, `values` | as for a branch | as for a branch | The numbers the test uses. |
 
@@ -2182,7 +2182,7 @@ Then a switch on the keyboard's path picks the synth by the memory:
 { "id": "by-synth", "type": "switch", "name": "By synth", "x": 680, "y": 100, "settings": { "subject": { "kind": "memory", "name": "Synth" }, "unit": "number", "cases": [ { "id": 1, "test": "is", "value": 0 }, { "id": 2, "test": "is", "value": 1 } ] } }
 ```
 
-Until the footswitch is pressed once, the memory is empty, so the switch sends notes every way. Write `"unreadable": "firstCase"` to have them go to the first synth instead.
+Until the footswitch is pressed once, the memory is empty, so the switch sends notes out every output. Write `"unreadable": "firstCase"` to have them go to the first synth instead.
 
 ### Put value
 
@@ -2426,14 +2426,14 @@ In a `ProgramList`, `bankPC` is the bank MSB, the bank LSB, and the program, eac
 > - A gate keeps out its triggers with `"passTriggers": false`, and the trigger is a sustain pedal the synth also needs.
 > - A connection out of a branch or a switch has no `sourceOutput`, so it leaves a branch by Yes and a switch by otherwise.
 > - A switch connection's `sourceOutput` is the case's place in the list, or text such as `"1"`. It's the case's `id`, as a number.
-> - A switch's cases were reordered and given new ids, so their connections now go to other ways. Keep each case's `id`.
+> - A switch's cases were reordered and given new ids, so their connections now go to other outputs. Keep each case's `id`.
 > - A test on a value uses 0 to 127. A value is a percent in the file: a velocity of 100 is `78.74`.
 > - A test on a channel or a group counts from 1. Channel 1 is `0`, here as everywhere in the file.
 > - A branch or a switch on a tag or a memory has no `unit`, so its numbers are read as the wrong kind.
 > - A tag is read before the step that sets it, on another path, or after a `throttle` step. It's empty there.
 > - A tag or a memory is spelled differently where it's set and where it's read. Capital letters don't matter, but every other letter and space does.
 > - A set memory step has a `trigger` but no `"everyMessage": false`, so every message changes the memory.
-> - A memory is expected to have a value before anything has set it. Memories start empty, so a branch or a switch that tests one sends messages the `unreadable` way until it's set.
+> - A memory is expected to have a value before anything has set it. Memories start empty, so a branch or a switch that tests one sends messages where `unreadable` says until it's set.
 > - An `rpnFilter` or `rpnTransform` is put after a `messageTypeFilter` that keeps out control changes, so a MIDI 1.0 device's RPNs and NRPNs never reach it.
 > - A MIDI-CI responder is on the path from the device to the app, instead of from the app to the device. It answers the questions that pass through it, so it goes where the app's messages go.
 > - A MIDI-CI responder comes after a `throttle` step or a generator, so it has nowhere to send its answers.
