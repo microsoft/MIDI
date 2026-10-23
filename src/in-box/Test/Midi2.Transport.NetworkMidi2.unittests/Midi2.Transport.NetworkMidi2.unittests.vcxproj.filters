@@ -24,6 +24,9 @@
     <ClInclude Include="SequenceNumberTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NetworkMidiShutdownTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -33,6 +36,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SequenceNumberTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkMidiShutdownTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

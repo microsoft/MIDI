@@ -20,6 +20,12 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
+    // Drops the references to both managers. This class is a function-local static, so anything
+    // still held here is released at DLL unload, after the service has destroyed the objects the
+    // managers hold. Called from both managers' Shutdown, so it is safe to call twice. A manager
+    // calling this must hold its own reference for the rest of its Shutdown.
+    void Shutdown() noexcept;
+
     // The configuration file and the endpoint manager come up in an order this transport does not
     // control, so definitions are kept here and the endpoint manager acts on them when it can.
     void SetHostDefinition(_In_ RtpMidiHostDefinition const& definition);

@@ -307,6 +307,11 @@ CMidi2RtpMidiEndpointManager::Shutdown()
             m_winsockStarted = false;
         }
 
+        // TransportState::Shutdown releases its reference to this object
+        wil::com_ptr<CMidi2RtpMidiEndpointManager> keepAlive{ this };
+
+        TransportState::Current().Shutdown();
+
         return S_OK;
     }
     CATCH_RETURN();

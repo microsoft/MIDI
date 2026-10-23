@@ -112,10 +112,21 @@ TransportState::Shutdown()
 {
     RETURN_IF_FAILED(ShutdownHostsClientsAndConnections());
 
-    auto lock = m_stateLock.lock_exclusive();
+    // Both managers hold service objects. This class is a function-local static, so anything
+    // still held here is released at DLL unload, after the service has destroyed those objects.
+    wil::com_ptr<CMidi2NetworkMidiEndpointManager> endpointManager;
+    wil::com_ptr<CMidi2NetworkMidiConfigurationManager> configurationManager;
 
-    m_endpointManager.reset();
-    m_configurationManager.reset();
+    {
+        auto lock = m_stateLock.lock_exclusive();
+
+        endpointManager.swap(m_endpointManager);
+        configurationManager.swap(m_configurationManager);
+    }
+
+    // Released outside the lock, in case this is the last reference and a destructor runs
+    endpointManager.reset();
+    configurationManager.reset();
 
     return S_OK;
 }

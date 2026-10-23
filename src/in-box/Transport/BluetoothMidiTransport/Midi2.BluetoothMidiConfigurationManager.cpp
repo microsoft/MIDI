@@ -792,9 +792,23 @@ CMidi2BluetoothMidiConfigurationManager::ProcessEndpointCustomizations(
 
                 std::vector<DEVPROPERTY> endpointDevProperties{};
 
+                wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+                {
+                    auto lock = m_midiDeviceManagerLock.lock_shared();
+
+                    midiDeviceManager = m_midiDeviceManager;
+                }
+
+                // shut down
+                if (midiDeviceManager == nullptr)
+                {
+                    continue;
+                }
+
                 if (customProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
                 {
-                    LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+                    LOG_IF_FAILED(midiDeviceManager->UpdateEndpointProperties(
                         existingEndpointDeviceId.c_str(),
                         static_cast<ULONG>(endpointDevProperties.size()),
                         endpointDevProperties.data()));
@@ -1372,8 +1386,23 @@ CMidi2BluetoothMidiConfigurationManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // TransportState::Shutdown releases its reference to this object
+    wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> keepAlive{ this };
 
+    // Usually the endpoint manager got here first. Calling it again is harmless, and covers the
+    // service shutting the managers down in the other order.
+    TransportState::Current().Shutdown();
 
+    // Held past Shutdown, this was released at DLL unload, after the service had destroyed it
+    wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+
+        midiDeviceManager.swap(m_midiDeviceManager);
+    }
+
+    midiDeviceManager.reset();
 
     return S_OK;
 }

@@ -26,13 +26,23 @@ public:
 
     wil::com_ptr<CMidi2BluetoothMidiEndpointManager> GetEndpointManager()
     {
+        auto lock = std::scoped_lock{ m_managersLock };
+
         return m_endpointManager;
     }
 
     wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> GetConfigurationManager()
     {
+        auto lock = std::scoped_lock{ m_managersLock };
+
         return m_configurationManager;
     }
+
+    // Drops the references to both managers. Anything still held here is released at DLL unload,
+    // after the service has destroyed the objects the managers hold. Called from both managers'
+    // Shutdown, so it is safe to call twice. A manager calling this must hold its own reference
+    // for the rest of its Shutdown.
+    void Shutdown() noexcept;
 
     //std::shared_ptr<MidiNetworkDeviceTable> GetEndpointTable()
     //{
@@ -181,6 +191,7 @@ private:
     ~TransportState();
 
 
+    std::mutex m_managersLock;
     wil::com_ptr<CMidi2BluetoothMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> m_configurationManager;
 

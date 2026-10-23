@@ -28,6 +28,8 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    // Released by Shutdown, so it is read under the lock
+    wil::srwlock m_midiDeviceManagerLock;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache>() };

@@ -1053,5 +1053,12 @@ CMidi2RtpMidiConfigurationManager::Shutdown()
 
     m_midiDeviceManager.reset();
 
+    // TransportState::Shutdown releases its reference to this object
+    wil::com_ptr<CMidi2RtpMidiConfigurationManager> keepAlive{ this };
+
+    // Usually the endpoint manager got here first. Calling it again is harmless, and covers the
+    // service shutting the managers down in the other order.
+    TransportState::Current().Shutdown();
+
     return S_OK;
 }

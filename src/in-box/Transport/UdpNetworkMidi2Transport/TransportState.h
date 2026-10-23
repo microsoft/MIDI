@@ -54,11 +54,14 @@ public:
 
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> GetConfigurationManager();
 
-    // Stops everything that owns a socket or a worker thread. Deliberately leaves the endpoint
-    // and configuration managers alone: the endpoint manager calls this from its own Shutdown,
-    // and releasing our reference to it there could destroy it mid-call.
+    // Stops everything that owns a socket or a worker thread, and leaves the managers alone.
+    // Safe to call again: a second call finds nothing left to stop.
     HRESULT ShutdownHostsClientsAndConnections();
 
+    // Stops what ShutdownHostsClientsAndConnections stops, then drops this class's references to
+    // both managers. Called from both managers' Shutdown, in whichever order the service uses, so
+    // it has to be safe to call twice. A manager calling this must hold its own reference for the
+    // rest of its Shutdown, because the one released here may otherwise have been the last.
     HRESULT Shutdown();
 
     HRESULT ConstructEndpointManager();
