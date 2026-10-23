@@ -36,4 +36,7 @@
 #include "transport_defs.h"
 #include "bluetooth_transport_error_codes.h"
 
+// The worker wakeup both background threads use. Plain Win32 and wil, so it is tested on its own.
+#include "midi_ble_worker_wakeup.h"
+
 #endif //PCH_H

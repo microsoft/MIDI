@@ -28,7 +28,7 @@ TransportState::ConstructEndpointManager()
     wil::com_ptr<CMidi2BluetoothMidiEndpointManager> endpointManager;
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&endpointManager));
 
-    auto lock = std::scoped_lock{ m_managersLock };
+    auto lock = m_managersLock.lock_exclusive();
 
     // another Activate call may have won the race. Keep the one already published.
     if (m_endpointManager == nullptr)
@@ -45,7 +45,7 @@ TransportState::ConstructConfigurationManager()
     wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> configurationManager;
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiConfigurationManager>(&configurationManager));
 
-    auto lock = std::scoped_lock{ m_managersLock };
+    auto lock = m_managersLock.lock_exclusive();
 
     if (m_configurationManager == nullptr)
     {
@@ -59,11 +59,27 @@ TransportState::ConstructConfigurationManager()
 void
 TransportState::Shutdown() noexcept
 {
+    // Both own threads: every connection has a writer thread, and so does the connection attached
+    // to the peripheral. The endpoint manager has normally stopped them already, in the order its
+    // own teardown needs. Doing it again here is harmless, and means nothing with a thread is left
+    // for the static destructor at DLL unload.
+    try
+    {
+        LOG_IF_FAILED(StopPeripheral());
+    }
+    CATCH_LOG();
+
+    try
+    {
+        ShutdownAllConnections();
+    }
+    CATCH_LOG();
+
     wil::com_ptr<CMidi2BluetoothMidiEndpointManager> endpointManager;
     wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> configurationManager;
 
     {
-        auto lock = std::scoped_lock{ m_managersLock };
+        auto lock = m_managersLock.lock_exclusive();
 
         endpointManager.swap(m_endpointManager);
         configurationManager.swap(m_configurationManager);
@@ -82,9 +98,27 @@ TransportState::AddConnection(std::shared_ptr<MidiBleConnection> connection)
     RETURN_HR_IF_NULL(E_INVALIDARG, connection);
     RETURN_HR_IF(E_INVALIDARG, connection->DeviceId().empty());
 
-    auto lock = std::scoped_lock{ m_connectionsLock };
+    std::shared_ptr<MidiBleConnection> replaced{ nullptr };
 
-    m_connections.insert_or_assign(connection->DeviceId(), connection);
+    try
+    {
+        auto lock = m_connectionsLock.lock_exclusive();
+
+        auto [entry, inserted] = m_connections.try_emplace(connection->DeviceId(), connection);
+
+        if (!inserted && entry->second != connection)
+        {
+            replaced = std::exchange(entry->second, connection);
+        }
+    }
+    CATCH_RETURN();
+
+    // A connection replaced without being shut down keeps its writer thread for the life of the
+    // service. Shut down outside the lock, because it joins that thread.
+    if (replaced != nullptr)
+    {
+        LOG_IF_FAILED(replaced->Shutdown());
+    }
 
     return S_OK;
 }
@@ -93,7 +127,7 @@ TransportState::AddConnection(std::shared_ptr<MidiBleConnection> connection)
 std::shared_ptr<MidiBlePeripheral>
 TransportState::GetPeripheral()
 {
-    auto lock = std::scoped_lock{ m_peripheralLock };
+    auto lock = m_peripheralLock.lock_exclusive();
 
     return m_peripheral;
 }
@@ -108,7 +142,7 @@ TransportState::StartPeripheral(MidiBleProtocol::Protocol const protocol)
     try
     {
         {
-            auto lock = std::scoped_lock{ m_peripheralLock };
+            auto lock = m_peripheralLock.lock_exclusive();
 
             RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_peripheral != nullptr && m_peripheral->IsRunning());
         }
@@ -123,7 +157,7 @@ TransportState::StartPeripheral(MidiBleProtocol::Protocol const protocol)
         std::shared_ptr<MidiBlePeripheral> alreadyRunning{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_peripheralLock };
+            auto lock = m_peripheralLock.lock_exclusive();
 
             if (m_peripheral != nullptr && m_peripheral->IsRunning())
             {
@@ -155,7 +189,7 @@ TransportState::StopPeripheral()
     std::shared_ptr<MidiBlePeripheral> peripheral{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_peripheralLock };
+        auto lock = m_peripheralLock.lock_exclusive();
 
         peripheral = std::move(m_peripheral);
         m_peripheral = nullptr;
@@ -178,7 +212,7 @@ TransportState::RemoveConnection(winrt::hstring const& deviceId)
     std::shared_ptr<MidiBleConnection> connection{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_connectionsLock };
+        auto lock = m_connectionsLock.lock_exclusive();
 
         if (auto entry = m_connections.find(deviceId); entry != m_connections.end())
         {
@@ -203,7 +237,7 @@ TransportState::ShutdownAllConnections()
     std::vector<std::shared_ptr<MidiBleConnection>> connections;
 
     {
-        auto lock = std::scoped_lock{ m_connectionsLock };
+        auto lock = m_connectionsLock.lock_exclusive();
 
         for (auto const& entry : m_connections)
         {
@@ -224,7 +258,7 @@ _Use_decl_annotations_
 std::shared_ptr<MidiBleConnection>
 TransportState::GetConnectionByDeviceId(winrt::hstring const& deviceId)
 {
-    auto lock = std::scoped_lock{ m_connectionsLock };
+    auto lock = m_connectionsLock.lock_exclusive();
 
     if (auto entry = m_connections.find(deviceId); entry != m_connections.end())
     {
@@ -241,7 +275,7 @@ TransportState::GetConnectionByEndpointDeviceInterfaceId(std::wstring const& end
 {
     auto const normalizedId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
-    auto lock = std::scoped_lock{ m_connectionsLock };
+    auto lock = m_connectionsLock.lock_exclusive();
 
     for (auto const& entry : m_connections)
     {
@@ -258,7 +292,7 @@ TransportState::GetConnectionByEndpointDeviceInterfaceId(std::wstring const& end
 std::vector<std::shared_ptr<MidiBleConnection>>
 TransportState::GetConnections()
 {
-    auto lock = std::scoped_lock{ m_connectionsLock };
+    auto lock = m_connectionsLock.lock_exclusive();
 
     std::vector<std::shared_ptr<MidiBleConnection>> connections;
     connections.reserve(m_connections.size());
@@ -281,7 +315,7 @@ TransportState::AddConfiguredDeviceId(winrt::hstring const& deviceId)
         return;
     }
 
-    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+    auto lock = m_configuredDeviceIdsLock.lock_exclusive();
 
     if (std::find(m_configuredDeviceIds.begin(), m_configuredDeviceIds.end(), deviceId) == m_configuredDeviceIds.end())
     {
@@ -293,7 +327,7 @@ TransportState::AddConfiguredDeviceId(winrt::hstring const& deviceId)
 std::vector<winrt::hstring>
 TransportState::TakeConfiguredDeviceIds()
 {
-    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+    auto lock = m_configuredDeviceIdsLock.lock_exclusive();
 
     auto ids = std::move(m_configuredDeviceIds);
     m_configuredDeviceIds.clear();
@@ -311,7 +345,7 @@ TransportState::SetConfiguredDeviceAutoConnectDisabled(winrt::hstring const& dev
         return;
     }
 
-    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+    auto lock = m_configuredDeviceIdsLock.lock_exclusive();
 
     if (disabled)
     {
@@ -328,7 +362,7 @@ _Use_decl_annotations_
 bool
 TransportState::IsConfiguredDeviceAutoConnectDisabled(winrt::hstring const& deviceId)
 {
-    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+    auto lock = m_configuredDeviceIdsLock.lock_exclusive();
 
     return m_disabledConfiguredDeviceIds.find(deviceId) != m_disabledConfiguredDeviceIds.end();
 }
@@ -338,7 +372,7 @@ _Use_decl_annotations_
 void
 TransportState::SetConfiguredPeripheralProtocol(MidiBleProtocol::Protocol const protocol)
 {
-    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+    auto lock = m_configuredDeviceIdsLock.lock_exclusive();
 
     m_configuredPeripheralProtocol = protocol;
 }
@@ -347,7 +381,7 @@ TransportState::SetConfiguredPeripheralProtocol(MidiBleProtocol::Protocol const 
 MidiBleProtocol::Protocol
 TransportState::TakeConfiguredPeripheralProtocol()
 {
-    auto lock = std::scoped_lock{ m_configuredDeviceIdsLock };
+    auto lock = m_configuredDeviceIdsLock.lock_exclusive();
 
     auto const protocol = m_configuredPeripheralProtocol;
     m_configuredPeripheralProtocol = MidiBleProtocol::Protocol::Unknown;
@@ -394,7 +428,7 @@ TransportState::SetDeviceOfflineRetentionSeconds(winrt::hstring const& deviceId,
         return;
     }
 
-    auto lock = std::scoped_lock{ m_offlineRetentionLock };
+    auto lock = m_offlineRetentionLock.lock_exclusive();
 
     if (seconds == MidiBleProtocol::OfflineRetentionUseTransportDefault)
     {
@@ -412,7 +446,7 @@ _Use_decl_annotations_
 int32_t
 TransportState::GetDeviceOfflineRetentionSeconds(winrt::hstring const& deviceId)
 {
-    auto lock = std::scoped_lock{ m_offlineRetentionLock };
+    auto lock = m_offlineRetentionLock.lock_exclusive();
 
     if (auto entry = m_deviceOfflineRetentionSeconds.find(deviceId); entry != m_deviceOfflineRetentionSeconds.end())
     {
@@ -439,7 +473,7 @@ TransportState::GetEffectiveOfflineRetentionSeconds(winrt::hstring const& device
 std::map<winrt::hstring, int32_t>
 TransportState::GetDeviceOfflineRetentionOverrides()
 {
-    auto lock = std::scoped_lock{ m_offlineRetentionLock };
+    auto lock = m_offlineRetentionLock.lock_exclusive();
 
     return m_deviceOfflineRetentionSeconds;
 }
@@ -449,7 +483,7 @@ _Use_decl_annotations_
 void
 TransportState::SetRadioCapabilities(MidiBleProtocol::RadioCapabilities const& capabilities)
 {
-    auto lock = std::scoped_lock{ m_radioCapabilitiesLock };
+    auto lock = m_radioCapabilitiesLock.lock_exclusive();
 
     m_radioCapabilities = capabilities;
 }
@@ -458,7 +492,7 @@ TransportState::SetRadioCapabilities(MidiBleProtocol::RadioCapabilities const& c
 MidiBleProtocol::RadioCapabilities
 TransportState::GetRadioCapabilities()
 {
-    auto lock = std::scoped_lock{ m_radioCapabilitiesLock };
+    auto lock = m_radioCapabilitiesLock.lock_exclusive();
 
     return m_radioCapabilities;
 }
@@ -485,7 +519,7 @@ TransportState::SetRememberedPeripheralClients(
     std::vector<MidiBleProtocol::PeripheralClientIdentity> const& allowed,
     std::vector<MidiBleProtocol::PeripheralClientIdentity> const& denied)
 {
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     m_allowedPeripheralClients.clear();
     m_deniedPeripheralClients.clear();
@@ -519,7 +553,7 @@ _Use_decl_annotations_
 std::vector<MidiBleProtocol::PeripheralClientIdentity>
 TransportState::GetRememberedPeripheralClients(bool const allowed)
 {
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     std::vector<MidiBleProtocol::PeripheralClientIdentity> results{};
 
@@ -543,7 +577,7 @@ TransportState::EvaluatePeripheralClient(MidiBleProtocol::PendingPeripheralClien
 
     auto const key = MidiBleUtilities::NormalizeClientMatchKey(client.Address);
 
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     // The decision already made about the Central on the current link wins over everything else,
     // because it is the most recent thing a person said and it may have been "once".
@@ -588,7 +622,7 @@ _Use_decl_annotations_
 bool
 TransportState::TryGetPendingPeripheralClient(MidiBleProtocol::PendingPeripheralClient& client)
 {
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     if (!m_hasPendingPeripheralClient)
     {
@@ -604,7 +638,7 @@ TransportState::TryGetPendingPeripheralClient(MidiBleProtocol::PendingPeripheral
 void
 TransportState::ClearPendingPeripheralClient()
 {
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     m_pendingPeripheralClient = {};
     m_hasPendingPeripheralClient = false;
@@ -614,7 +648,7 @@ TransportState::ClearPendingPeripheralClient()
 void
 TransportState::ClearPeripheralClientLinkDecision()
 {
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     m_linkDecisionClientDeviceId.clear();
     m_linkDecisionApproved = false;
@@ -635,7 +669,7 @@ TransportState::ApplyPeripheralClientDecision(
 
     auto const key = MidiBleUtilities::NormalizeClientMatchKey(address);
 
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     if (!m_hasPendingPeripheralClient)
     {
@@ -708,7 +742,7 @@ TransportState::ForgetPeripheralClient(std::wstring const& address)
         return false;
     }
 
-    auto lock = std::scoped_lock{ m_peripheralClientLock };
+    auto lock = m_peripheralClientLock.lock_exclusive();
 
     auto const removed =
         m_allowedPeripheralClients.erase(key) + m_deniedPeripheralClients.erase(key);
@@ -717,185 +751,3 @@ TransportState::ForgetPeripheralClient(std::wstring const& address)
 
     return removed > 0;
 }
-
-
-
-
-//_Use_decl_annotations_
-//HRESULT 
-//TransportState::AddHost(
-//    std::shared_ptr<MidiNetworkHost> host)
-//{
-//    RETURN_HR_IF_NULL(E_INVALIDARG, host);
-//
-//    m_hosts.push_back(host);
-//
-//    return S_OK;
-//}
-
-//_Use_decl_annotations_
-//HRESULT
-//TransportState::AddPendingHostDefinition(
-//    std::shared_ptr<MidiNetworkHostDefinition> hostDefinition)
-//{
-//    RETURN_HR_IF_NULL(E_INVALIDARG, hostDefinition);
-//
-//    m_pendingHostDefinitions.push_back(hostDefinition);
-//
-//    return S_OK;
-//}
-
-//_Use_decl_annotations_
-//HRESULT
-//TransportState::AddClient(
-//    std::shared_ptr<MidiNetworkClient> client)
-//{
-//    RETURN_HR_IF_NULL(E_INVALIDARG, client);
-//
-//    m_clients.push_back(client);
-//
-//    return S_OK;
-//}
-
-
-//_Use_decl_annotations_
-//HRESULT
-//TransportState::AddPendingClientDefinition(
-//    std::shared_ptr<MidiNetworkClientDefinition> clientDefinition)
-//{
-//    RETURN_HR_IF_NULL(E_INVALIDARG, clientDefinition);
-//
-//    m_pendingClientDefinitions.push_back(clientDefinition);
-//
-//    return S_OK;
-//}
-
-
-
-//_Use_decl_annotations_
-//HRESULT
-//TransportState::AssociateMidiEndpointWithConnection(
-//    _In_ std::wstring endpointDeviceInterfaceId,
-//    _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-//    _In_ winrt::hstring const& remotePort)
-//{
-//    auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
-//
-//    // find the connection and then associate it here
-//
-//    auto connection = GetNetworkConnection(remoteHostName, remotePort);
-//
-//    if (connection != nullptr)
-//    {
-//        m_sessionConnections.insert_or_assign(cleanId, connection);
-//
-//        return S_OK;
-//    }
-//    else
-//    {
-//        return E_FAIL;
-//    }
-//
-//}
-
-//_Use_decl_annotations_
-//HRESULT
-//TransportState::DisassociateMidiEndpointFromConnection(
-//    std::wstring endpointDeviceInterfaceId)
-//{
-//    RETURN_HR_IF(E_INVALIDARG, endpointDeviceInterfaceId.empty());
-//    auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
-//    RETURN_HR_IF(E_INVALIDARG, cleanId.empty());
-//
-//    if (auto session = m_sessionConnections.find(cleanId); session != m_sessionConnections.end())
-//    {
-//        //m_sessionConnections.find(cleanId)->second.reset();
-//        m_sessionConnections.erase(cleanId);
-//    }
-//    else
-//    {
-//        RETURN_IF_FAILED(E_NOTFOUND);
-//    }
-//
-//    return S_OK;
-//}
-
-//_Use_decl_annotations_
-//std::shared_ptr<MidiNetworkConnection> 
-//TransportState::GetSessionConnection(_In_ std::wstring endpointDeviceInterfaceId)
-//{
-//    auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
-//
-//    if (auto entry = m_sessionConnections.find(cleanId); entry != m_sessionConnections.end())
-//    {
-//        return entry->second;
-//    }
-//
-//    return nullptr;
-//}
-
-
-
-
-
-//_Use_decl_annotations_
-//bool 
-//TransportState::NetworkConnectionExists(
-//    winrt::Windows::Networking::HostName const& remoteHostName, 
-//    winrt::hstring const& port)
-//{
-//    auto key = CreateNetworkConnectionMapKey(remoteHostName, port);
-//
-//    return m_networkConnections.find(key) != m_networkConnections.end();
-//}
-
-
-//_Use_decl_annotations_
-//HRESULT 
-//TransportState::RemoveNetworkConnection(
-//    winrt::Windows::Networking::HostName const& remoteHostName, 
-//    winrt::hstring const& remotePort)
-//{
-//    if (NetworkConnectionExists(remoteHostName, remotePort))
-//    {
-//        auto entry = m_networkConnections.find(CreateNetworkConnectionMapKey(remoteHostName, remotePort));
-//
-//        LOG_IF_FAILED(entry->second->Shutdown());
-//
-//        m_networkConnections.erase(CreateNetworkConnectionMapKey(remoteHostName, remotePort));
-//    }
-//
-//    return S_OK;
-//}
-
-//_Use_decl_annotations_
-//std::shared_ptr<MidiNetworkConnection> 
-//TransportState::GetNetworkConnection(
-//    winrt::Windows::Networking::HostName const& remoteHostName, 
-//    winrt::hstring const& remotePort)
-//{
-//    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
-//
-//    if (NetworkConnectionExists(remoteHostName, remotePort))
-//    {
-//        return m_networkConnections.find(key)->second;
-//    }
-//
-//    return nullptr;
-//}
-
-
-//_Use_decl_annotations_
-//HRESULT
-//TransportState::AddNetworkConnection(
-//    winrt::Windows::Networking::HostName const& remoteHostName,
-//    winrt::hstring const& remotePort, 
-//    std::shared_ptr<MidiNetworkConnection> connection
-//)
-//{
-//    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
-//
-//    m_networkConnections.insert_or_assign(key, connection);
-//
-//    return S_OK;
-//}

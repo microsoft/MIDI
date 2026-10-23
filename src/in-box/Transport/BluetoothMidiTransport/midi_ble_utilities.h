@@ -430,14 +430,6 @@ namespace MidiBleUtilities
         }
     }
 
-    inline BluetoothLEDevice GetBleDeviceFromEnumerationDeviceId(_In_ std::wstring deviceId)
-    {
-        return AwaitWithTimeout(
-            BluetoothLEDevice::FromIdAsync(winrt::to_hstring(deviceId.c_str())),
-            BleOperationTimeoutMilliseconds,
-            BluetoothLEDevice{ nullptr });
-    }
-
     // Never throws and never fails: a machine with no Bluetooth at all simply reports a radio
     // which cannot do anything, which is a state the transport runs in quite happily.
     inline MidiBleProtocol::RadioCapabilities ProbeRadioCapabilities() noexcept
@@ -868,61 +860,66 @@ namespace MidiBleUtilities
         _Inout_ WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable,
         _Inout_ std::vector<DEVPROPERTY>& properties) noexcept
     {
-        std::vector<internal::GroupTerminalBlockInternal> blocks{ };
-
-        // block numbers are 1-based, group indexes are 0-based
-        internal::GroupTerminalBlockInternal destinationBlock{ };
-        destinationBlock.Number = 1;
-        destinationBlock.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;    // MIDI Out from the user's perspective
-        destinationBlock.FirstGroupIndex = 0;
-        destinationBlock.GroupCount = 1;
-        destinationBlock.Protocol = 0x01;                                // MIDI_1_0_UP_TO_64_BITS
-        destinationBlock.Name = portName;
-        blocks.push_back(destinationBlock);
-
-        internal::GroupTerminalBlockInternal sourceBlock{ };
-        sourceBlock.Number = 2;
-        sourceBlock.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;        // MIDI In from the user's perspective
-        sourceBlock.FirstGroupIndex = 0;
-        sourceBlock.GroupCount = 1;
-        sourceBlock.Protocol = 0x01;
-        sourceBlock.Name = portName;
-        blocks.push_back(sourceBlock);
-
-        groupTerminalBlockData.clear();
-        RETURN_HR_IF(E_FAIL, !internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData));
-
-        properties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
-
-        // The port name the service ends up using comes from this table, not from the blocks, so
-        // both have to be written for the customer's name to reach WinMM.
-        RETURN_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(portName, blocks));
-
-        // A name given to an individual port outranks the endpoint name
-        if (customProperties != nullptr)
+        // noexcept, and every step here allocates
+        try
         {
-            for (auto const& source : customProperties->Midi1Sources)
+            std::vector<internal::GroupTerminalBlockInternal> blocks{ };
+
+            // block numbers are 1-based, group indexes are 0-based
+            internal::GroupTerminalBlockInternal destinationBlock{ };
+            destinationBlock.Number = 1;
+            destinationBlock.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;    // MIDI Out from the user's perspective
+            destinationBlock.FirstGroupIndex = 0;
+            destinationBlock.GroupCount = 1;
+            destinationBlock.Protocol = 0x01;                                // MIDI_1_0_UP_TO_64_BITS
+            destinationBlock.Name = portName;
+            blocks.push_back(destinationBlock);
+
+            internal::GroupTerminalBlockInternal sourceBlock{ };
+            sourceBlock.Number = 2;
+            sourceBlock.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;        // MIDI In from the user's perspective
+            sourceBlock.FirstGroupIndex = 0;
+            sourceBlock.GroupCount = 1;
+            sourceBlock.Protocol = 0x01;
+            sourceBlock.Name = portName;
+            blocks.push_back(sourceBlock);
+
+            groupTerminalBlockData.clear();
+            RETURN_HR_IF(E_FAIL, !internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData));
+
+            properties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
+
+            // The port name the service ends up using comes from this table, not from the blocks, so
+            // both have to be written for the customer's name to reach WinMM.
+            RETURN_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(portName, blocks));
+
+            // A name given to an individual port outranks the endpoint name
+            if (customProperties != nullptr)
             {
-                nameTable.UpdateSourceEntryCustomName(source.second.GroupIndex, source.second.Name);
+                for (auto const& source : customProperties->Midi1Sources)
+                {
+                    nameTable.UpdateSourceEntryCustomName(source.second.GroupIndex, source.second.Name);
+                }
+
+                for (auto const& destination : customProperties->Midi1Destinations)
+                {
+                    nameTable.UpdateDestinationEntryCustomName(destination.second.GroupIndex, destination.second.Name);
+                }
             }
 
-            for (auto const& destination : customProperties->Midi1Destinations)
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
             {
-                nameTable.UpdateDestinationEntryCustomName(destination.second.GroupIndex, destination.second.Name);
+                nameTable.SetPortNamesHaveLegacyEquivalent(false);
+
+                LOG_IF_FAILED(nameTable.RebuildNewStyleNames(std::wstring{ portName }, false));
             }
+
+            RETURN_IF_FAILED(nameTable.WriteProperties(properties));
+
+            return S_OK;
         }
-
-        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
-        {
-            nameTable.SetPortNamesHaveLegacyEquivalent(false);
-
-            LOG_IF_FAILED(nameTable.RebuildNewStyleNames(std::wstring{ portName }, false));
-        }
-
-        RETURN_IF_FAILED(nameTable.WriteProperties(properties));
-
-        return S_OK;
+        CATCH_RETURN();
     }
 }
 

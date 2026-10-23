@@ -34,11 +34,11 @@ public:
     bool IsRunning() const noexcept { return m_running.load(); }
     bool IsClientSubscribed() const;
 
-    MidiBleProtocol::Protocol Protocol() const noexcept { return m_protocol; }
+    MidiBleProtocol::Protocol Protocol() const noexcept { return m_protocol.load(); }
 
     // The name this PC advertises. Windows takes it from the computer name and the GATT service
     // provider gives an application no way to override it, so it is reported, not configured.
-    winrt::hstring AdvertisedName() const noexcept { return m_advertisedName; }
+    winrt::hstring AdvertisedName() const;
 
     // The WinRT device id of the Central which is currently subscribed, or empty. This is what
     // tells the endpoint manager whether the remote device has changed.
@@ -76,13 +76,19 @@ private:
     size_t MaxNotificationByteCount() const;
 
     gatt::GattSubscribedClient ActiveClient() const;
+    gatt::GattLocalCharacteristic Characteristic() const;
+    gatt::GattServiceProvider ServiceProvider() const;
 
+    // Stop clears these while the data path, configuration calls and Bluetooth callbacks may be
+    // reading them, so every reader copies under this lock.
+    mutable wil::srwlock m_providerLock;
     winrt::hstring m_advertisedName{ };
-    MidiBleProtocol::Protocol m_protocol{ MidiBleProtocol::Protocol::Unknown };
-
     gatt::GattServiceProvider m_serviceProvider{ nullptr };
     gatt::GattLocalCharacteristic m_characteristic{ nullptr };
 
+    std::atomic<MidiBleProtocol::Protocol> m_protocol{ MidiBleProtocol::Protocol::Unknown };
+
+    // Only Start and Stop touch these, and never at the same time
     winrt::event_token m_readRequestedToken{ };
     winrt::event_token m_writeRequestedToken{ };
     winrt::event_token m_subscribedClientsChangedToken{ };
@@ -90,17 +96,22 @@ private:
 
     // BLE MIDI permits one active connection at a time. WinRT cannot refuse a subscription, so
     // the first client to subscribe is the one served and any others are ignored.
-    mutable std::mutex m_clientLock;
+    mutable wil::srwlock m_clientLock;
     gatt::GattSubscribedClient m_activeClient{ nullptr };
     winrt::hstring m_activeClientDeviceId{ };
     uint32_t m_subscribedClientCount{ 0 };
 
-    mutable std::mutex m_connectionLock;
+    // m_running is changed under this lock as well, so a connection is never attached to a
+    // peripheral which is stopping.
+    mutable wil::srwlock m_connectionLock;
     std::shared_ptr<MidiBleConnection> m_connection{ nullptr };
+
+    // The Central the connection was attached for. Writes from any other Central are dropped.
+    winrt::hstring m_connectionClientDeviceId{ };
     MidiBleRemoteClientInfo m_remoteClientInfo{ };
     bt::BluetoothLEDevice m_remoteDevice{ nullptr };
 
-    std::mutex m_clientChangedCallbackLock;
+    wil::srwlock m_clientChangedCallbackLock;
     std::function<void()> m_clientChangedCallback{ nullptr };
 
     std::atomic<bool> m_running{ false };

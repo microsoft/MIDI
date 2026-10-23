@@ -144,6 +144,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "midi_ble_utilities.h"
 #include "midi_ble_midi1_codec.h"
+#include "midi_ble_worker_wakeup.h"
 
 class CMidi2BluetoothMidiEndpointManager;
 class CMidi2BluetoothMidiConfigurationManager;

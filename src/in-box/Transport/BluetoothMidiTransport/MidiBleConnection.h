@@ -41,10 +41,6 @@ public:
     // the bytes a remote Central wrote to our Characteristic
     void ProcessIncomingPacket(_In_reads_bytes_(byteCount) uint8_t const* const bytes, _In_ size_t const byteCount);
 
-    // the translation state is per-connection, and a Central which drops and re-subscribes is a
-    // new conversation
-    void ResetForNewRemoteClient();
-
     HRESULT Start();
     HRESULT Shutdown();
 
@@ -95,7 +91,6 @@ public:
     }
 
     bool IsDeviceConnected() const;
-    bool IsShutdown() const noexcept { return m_shutdown; }
     bool IsPeripheral() const noexcept { return m_isPeripheral; }
 
     // Bonding discards a subscription made on an unencrypted link, and the connection stays up
@@ -137,6 +132,12 @@ private:
 
     size_t MaxAttPayloadByteCount() const;
 
+    // Shutdown closes and releases the GATT objects while the config thread, the send path and
+    // Bluetooth callbacks may still be reading them, so every reader takes a copy under this lock.
+    bt::BluetoothLEDevice Device() const;
+    gatt::GattSession Session() const;
+    gatt::GattCharacteristic Characteristic() const;
+
     winrt::hstring m_deviceId{ };
     winrt::hstring m_deviceName{ };
     MidiBleProtocol::Protocol m_protocol{ MidiBleProtocol::Protocol::Unknown };
@@ -144,30 +145,38 @@ private:
     bool m_isPeripheral{ false };
     MidiBlePeripheralLink m_peripheralLink{ };
 
+    mutable wil::srwlock m_gattObjectsLock;
     gatt::GattDeviceService m_service{ nullptr };
     gatt::GattCharacteristic m_characteristic{ nullptr };
     gatt::GattSession m_session{ nullptr };
+    bt::BluetoothLEDevice m_device{ nullptr };
+
+    // Only Start and Shutdown touch these, and never at the same time
     winrt::event_token m_valueChangedToken{ };
     winrt::event_token m_sessionStatusChangedToken{ };
-
-    bt::BluetoothLEDevice m_device{ nullptr };
     winrt::event_token m_connectionStatusChangedToken{ };
     winrt::event_token m_connectionParametersChangedToken{ };
+
     std::atomic<bool> m_deviceConnected{ true };
     std::atomic<uint16_t> m_connectionIntervalUnits{ 0 };
 
-    mutable std::mutex m_identityLock;
+    mutable wil::srwlock m_identityLock;
     std::wstring m_endpointDeviceInterfaceId{ };
     std::wstring m_endpointDeviceInstanceId{ };
 
-    mutable std::mutex m_callbackLock;
+    mutable wil::srwlock m_callbackLock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{ 0 };
 
     // so the "nothing is listening" warning is written once per gap rather than per message
     std::atomic<bool> m_reportedMissingCallback{ false };
 
-    // inbound and outbound translation state is per-direction and never shared
+    // Inbound and outbound translation state is per-direction and never shared. WinRT does not
+    // promise that it never raises two value-changed or write-requested events at once, and the
+    // decoders keep state from one packet to the next, so the receive path runs under this lock.
+    // It is held across the callback into the service so packets are delivered in the order they
+    // were decoded. Nothing else takes it, so it cannot be part of a lock cycle.
+    wil::srwlock m_incomingLock;
     MidiBleMidi1::PacketDecoder m_incomingPacketDecoder{ };
     MidiBleMidi1::TimestampCorrelator m_incomingTimestampCorrelator{ };
     bytestreamToUMP m_bytestreamToUmp{ };
@@ -177,11 +186,11 @@ private:
 
     MidiBleMidi1::PacketBuilder m_outgoingPacketBuilder{ };
     umpToBytestream m_umpToBytestream{ };
-    std::mutex m_outgoingTranslationLock;
+    wil::srwlock m_outgoingTranslationLock;
 
-    std::mutex m_outgoingQueueLock;
+    wil::srwlock m_outgoingQueueLock;
     std::deque<std::vector<uint8_t>> m_outgoingPackets{ };
-    wil::slim_event_manual_reset m_outgoingPacketsAvailable;
+    MidiBleWorkerWakeup m_outgoingWakeup;
 
     // Guarded by m_outgoingQueueLock, which the writer thread holds while deciding whether to sleep.
     bool m_subscriptionRenewalPending{ false };
