@@ -1324,6 +1324,24 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // Network MIDI 2.0 only: the second sessions the host turned away recently, one per line
+        winrt::hstring RefusalsText() const noexcept { return m_refusalsText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility RefusalsVisibility() const noexcept
+        {
+            return m_refusalsText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
+        void InternalUpdateRefusals(_In_ winrt::hstring const& refusalsText) noexcept
+        {
+            if (UpdateField(m_refusalsText, refusalsText, L"RefusalsText"))
+            {
+                RaisePropertyChanged(L"RefusalsVisibility");
+            }
+        }
+
         // the empty state placeholders are computed from the collections, so they only change
         // when something is added or removed
         void InternalRaiseEmptyStateChanged() noexcept
@@ -1362,6 +1380,8 @@ namespace winrt::midinetworksetup::implementation
 
         Midi1PortLayout m_midi1Ports{};
         winrt::hstring m_midi1PortsText{};
+
+        winrt::hstring m_refusalsText{};
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> m_connections{
             winrt::single_threaded_observable_vector<midinetworksetup::HostConnectionItem>() };

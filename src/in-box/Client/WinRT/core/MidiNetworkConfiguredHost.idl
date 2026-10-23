@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiNetworkHostConnection.idl";
+import "MidiNetworkPendingRemoteClient.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
 import "MidiNetworkRemoteClientSettings.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
@@ -91,6 +92,19 @@ namespace Windows.Devices.Midi2.Transports.Network
             // For each remote client without its own settings: false when the host sends every
             // message, however far behind its speed it falls
             [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+
+            // A device has one session with this PC at a time, so the host turns away a second
+            // one. These are the remote clients it turned away recently, newest first, so an app
+            // can say why a device didn't connect. Each list is short, a device which tries again
+            // stays one entry, and entries are dropped after a few minutes. RequestTime is when
+            // the host turned it away. Only UmpEndpointName, ProductInstanceId, RemoteAddress,
+            // RequestTime and the host's own values are set.
+
+            // remote clients which were already connected to this host
+            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> RecentlyRefusedSecondConnections{ get; };
+
+            // devices this PC was already connected to as a client, through a client entry
+            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> RecentlyRefusedRemoteHosts{ get; };
         }
     };
 }

@@ -197,14 +197,38 @@ private:
         _Out_ std::wstring& customName,
         _Out_ std::wstring& customDescription);
 
-    // Spec section 12 has a device that is both a host and a client use one identity in both
-    // roles, so the devices it connects to can tell when it's already connected. True when this
-    // remote has an endpoint here in the other role and that session is still up. The same remote
-    // on two of this PC's hosts is not this case: each host is an endpoint of its own.
-    bool IsRemoteConnectedInOtherRole(
+    // A remote has one session with this PC in one direction, per host here or per remote host.
+    // True when a session which is up already covers what thisServiceRole is about to create:
+    // - ConnectedInOtherRole: this remote has an endpoint here in the other role. Spec section 12
+    //   has a device which is both a host and a client use one identity in both roles, so the
+    //   devices it connects to can tell. The same remote on two of this PC's hosts is not this
+    //   case: each host is an endpoint of its own.
+    // - AlreadyConnected: an endpoint with this instance id is up. A host here: the remote is
+    //   already connected to this host. A client here: this PC is already connected to that
+    //   remote host through another client entry.
+    // blockingEntryIdentifier is the host or client entry the session which is up belongs to.
+    bool FindBlockingSession(
         _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& instanceId,
         _In_ std::wstring const& remoteEndpointName,
-        _In_ std::wstring const& remoteProductInstanceId);
+        _In_ std::wstring const& remoteProductInstanceId,
+        _Out_ MidiNetworkSessionRefusalReason& reason,
+        _Out_ winrt::guid& blockingEntryIdentifier);
+
+    // Records why a session was declined, so Network MIDI Setup can say so: on the client entry,
+    // which then waits for the other session to end, or in the host's list of recent refusals
+    void RecordSessionRefusal(
+        _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
+        _In_ MidiNetworkSessionRefusalReason const reason,
+        _In_ winrt::guid const& blockingEntryIdentifier,
+        _In_ std::wstring const& remoteEndpointName,
+        _In_ std::wstring const& remoteProductInstanceId,
+        _In_ winrt::Windows::Networking::HostName const& remoteHostName) noexcept;
+
+    // A client entry waiting for another session with its remote host is skipped until that
+    // session has ended. True while it still has to wait.
+    bool IsClientDefinitionStillWaiting(_In_ MidiNetworkClientDefinition const& definition);
 
     // The groups an endpoint gets MIDI 1.0 ports for when the remote declares no function blocks,
     // read from the stored definitions so a later change to them reaches it. A remote client of a

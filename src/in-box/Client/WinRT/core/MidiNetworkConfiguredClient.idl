@@ -68,6 +68,17 @@ namespace Windows.Devices.Midi2.Transports.Network
         {
             // false when the client sends every message, however far behind its speed it falls
             [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+
+            // A device has one session with this PC at a time. When the remote host already has
+            // one, this entry waits: it stops trying, and connects once that session ends. One of
+            // these then says which session it waits for, and the other is an empty guid. Both
+            // are empty guids when the entry isn't waiting.
+
+            // the host here which the remote is connected to as a client
+            [noexcept] Guid WaitingForHostId{ get; };
+
+            // the other client entry through which this PC is connected to the remote host
+            [noexcept] Guid WaitingForClientId{ get; };
         }
     };
 }

@@ -30,6 +30,9 @@
     <ClInclude Include="NetworkMidiInProcessTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NetworkMidiSessionRefusalTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="NetworkMidiTestInProcess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NetworkMidiInProcessTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkMidiSessionRefusalTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NetworkMidiTestInProcess.cpp">

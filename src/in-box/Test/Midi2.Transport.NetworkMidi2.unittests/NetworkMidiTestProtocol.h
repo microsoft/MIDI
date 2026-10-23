@@ -142,6 +142,9 @@ namespace NetworkMidiTest
             _In_ InvitationCapabilities const capabilities = InvitationCapabilities::None);
 
         PacketBuilder& AddPing(_In_ uint32_t const pingId);
+        PacketBuilder& AddInvitationReplyAccepted(
+            _In_ std::string const& endpointName,
+            _In_ std::string const& productInstanceId);
         PacketBuilder& AddPingReply(_In_ uint32_t const pingId);
         PacketBuilder& AddBye(_In_ ByeReason const reason, _In_ std::string const& text = "");
         PacketBuilder& AddByeReply();

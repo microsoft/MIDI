@@ -47,6 +47,62 @@ namespace NetworkMidiTest
     }
 
 
+    _Use_decl_annotations_
+    STDMETHODIMP StandInDeviceManager::ActivateEndpoint(
+        LPCWSTR,
+        BOOL,
+        MidiFlow,
+        const PMIDIENDPOINTCOMMONPROPERTIES,
+        ULONG,
+        ULONG,
+        const DEVPROPERTY*,
+        const DEVPROPERTY*,
+        const SW_DEVICE_CREATE_INFO* createInfo,
+        LPWSTR* createdEndpointDeviceInterfaceId)
+    {
+        if (createdEndpointDeviceInterfaceId == nullptr) return E_POINTER;
+
+        *createdEndpointDeviceInterfaceId = nullptr;
+
+        if (createInfo == nullptr || createInfo->pszInstanceId == nullptr) return E_INVALIDARG;
+
+        {
+            std::scoped_lock lock{ m_activeLock };
+
+            std::wstring const id{ createInfo->pszInstanceId };
+
+            if (std::any_of(m_activeInstanceIds.begin(), m_activeInstanceIds.end(), [&id](auto const& active) { return _wcsicmp(active.c_str(), id.c_str()) == 0; }))
+            {
+                return S_FALSE;
+            }
+
+            m_activeInstanceIds.push_back(id);
+        }
+
+        *createdEndpointDeviceInterfaceId = CoTaskCopy(
+            std::wstring{ L"\\\\?\\swd#midisrv#" } + createInfo->pszInstanceId + L"#{e7cce071-3c03-423f-88d3-f1045d756eb3}");
+
+        return *createdEndpointDeviceInterfaceId == nullptr ? E_OUTOFMEMORY : S_OK;
+    }
+
+
+    _Use_decl_annotations_
+    void StandInDeviceManager::Forget(LPCWSTR const instanceId)
+    {
+        if (instanceId == nullptr) return;
+
+        std::wstring const id{ instanceId };
+
+        std::scoped_lock lock{ m_activeLock };
+
+        std::erase_if(m_activeInstanceIds, [&id](auto const& active)
+            {
+                // the transport may pass the id with or without the SWD\MIDISRV\ prefix
+                return _wcsicmp(active.c_str(), id.c_str()) == 0 ||
+                    (id.size() > active.size() && _wcsicmp(id.c_str() + (id.size() - active.size()), active.c_str()) == 0);
+            });
+    }
+
     GetClassObjectFunction LoadTransportForTest()
     {
         static GetClassObjectFunction getClassObject{ nullptr };
@@ -251,6 +307,45 @@ namespace NetworkMidiTest
     {
         Configure(
             L"{\"transportCommand\":{\"commandName\":\"disconnectClient\",\"commandArguments\":{\"entryIdentifier\":\"" + entryIdentifier + L"\"}}}");
+    }
+
+    namespace
+    {
+        std::optional<winrt::Windows::Data::Json::JsonObject> FindEntry(
+            _In_ std::optional<winrt::Windows::Data::Json::JsonObject> const& response,
+            _In_ PCWSTR const arrayKey,
+            _In_ std::wstring const& entryIdentifier)
+        {
+            if (!response.has_value()) return std::nullopt;
+
+            auto entries = response->GetNamedArray(arrayKey, nullptr);
+
+            if (entries == nullptr) return std::nullopt;
+
+            for (auto const& value : entries)
+            {
+                auto entry = value.GetObject();
+
+                if (_wcsicmp(std::wstring{ entry.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) == 0)
+                {
+                    return entry;
+                }
+            }
+
+            return std::nullopt;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::optional<winrt::Windows::Data::Json::JsonObject> InProcessTransport::FindClientEntry(std::wstring const& entryIdentifier)
+    {
+        return FindEntry(Configure(L"{\"transportCommand\":{\"commandName\":\"enumerateClients\"}}"), L"clients", entryIdentifier);
+    }
+
+    _Use_decl_annotations_
+    std::optional<winrt::Windows::Data::Json::JsonObject> InProcessTransport::FindHostEntry(std::wstring const& entryIdentifier)
+    {
+        return FindEntry(Configure(L"{\"transportCommand\":{\"commandName\":\"enumerateHosts\"}}"), L"hosts", entryIdentifier);
     }
 
 

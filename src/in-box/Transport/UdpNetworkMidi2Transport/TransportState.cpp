@@ -741,6 +741,7 @@ TransportState::MarkClientDefinitionForRetry(
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
             // An advertised host is only tried while it advertises. Nothing announces a direct one.
@@ -772,6 +773,7 @@ TransportState::MarkClientDefinitionUnanswered(winrt::guid const& clientConfigEn
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION;
             definition.UnansweredAttempts++;
 
@@ -833,6 +835,7 @@ TransportState::MarkClientDefinitionForRetryAfter(
 
             definition.State = MidiNetworkEntryState::Pending;
             definition.RetryNotBeforeTickCount = GetTickCount64() + delayMilliseconds;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
             return S_OK;
@@ -860,6 +863,7 @@ TransportState::MarkClientDefinitionFailed(
             }
 
             definition.State = MidiNetworkEntryState::Failed;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
             return S_OK;
@@ -879,6 +883,7 @@ TransportState::MarkClientDefinitionSessionOpened(winrt::guid const& clientConfi
     {
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = 0;
             definition.ConnectedAddress = definition.AttemptAddress;
             definition.UnansweredAttempts = 0;
@@ -892,6 +897,71 @@ TransportState::MarkClientDefinitionSessionOpened(winrt::guid const& clientConfi
 
 _Use_decl_annotations_
 HRESULT
+TransportState::MarkClientDefinitionWaitingForSession(
+    winrt::guid const& clientConfigEntryIdentifier,
+    winrt::guid const& blockingEntryIdentifier,
+    bool const blockingEntryIsHost,
+    std::wstring const& remoteEndpointName,
+    std::wstring const& remoteProductInstanceId)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            // Pending, so the worker looks at it again, but it is only tried once the other
+            // session has ended. That is checked on every pass, and a session ending wakes it.
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.LastErrorCode = 0;
+
+            definition.WaitingForEntryIdentifier = blockingEntryIdentifier;
+            definition.WaitingForHostSession = blockingEntryIsHost;
+            definition.WaitingRemoteEndpointName = remoteEndpointName;
+            definition.WaitingRemoteProductInstanceId = remoteProductInstanceId;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::ClearClientDefinitionWaitingForSession(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            definition.ClearWaitingForOtherSession();
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+bool
+TransportState::AnyClientDefinitionWaitingForSession()
+{
+    auto lock = m_stateLock.lock_shared();
+
+    return std::any_of(m_clientDefinitions.begin(), m_clientDefinitions.end(),
+        [](MidiNetworkClientDefinition const& definition) { return definition.IsWaitingForOtherSession(); });
+}
+_Use_decl_annotations_
+HRESULT
 TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
@@ -903,6 +973,7 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
             definition.State = MidiNetworkEntryState::Pending;
             definition.Enabled = true;
             definition.RetryNotBeforeTickCount = 0;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = 0;
 
             return S_OK;

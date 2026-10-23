@@ -1491,6 +1491,12 @@ CMidi2NetworkMidiEndpointManager::StartPendingClients(std::stop_token const& sto
             continue;
         }
 
+        // The remote already has a session with this PC another way. Tried again once that ends.
+        if (IsClientDefinitionStillWaiting(definition))
+        {
+            continue;
+        }
+
         std::vector<std::wstring> addresses{ };
         uint16_t port{ 0 };
 
@@ -2029,7 +2035,7 @@ static std::wstring FormatHash64(_In_ uint64_t const value)
 // Deliberately excludes IP address, port and role. Clients "may use a new UDP port number for
 // every Session" (spec 3.3), addresses move with DHCP, and a device connecting in both roles
 // presents identical identity in both (spec section 12). That device is refused a second session
-// by IsRemoteConnectedInOtherRole, not by the two ids matching.
+// by FindBlockingSession, not by the two ids matching.
 //
 // The readable part is the remote's name. The hash carries the identity.
 static std::wstring FormatEndpointDeviceInstanceId(
@@ -2143,36 +2149,59 @@ CMidi2NetworkMidiEndpointManager::ResolveEndpointCustomization(
 
 _Use_decl_annotations_
 bool
-CMidi2NetworkMidiEndpointManager::IsRemoteConnectedInOtherRole(
+CMidi2NetworkMidiEndpointManager::FindBlockingSession(
     MidiNetworkConnectionRole const thisServiceRole,
+    std::wstring const& instanceId,
     std::wstring const& remoteEndpointName,
-    std::wstring const& remoteProductInstanceId)
+    std::wstring const& remoteProductInstanceId,
+    MidiNetworkSessionRefusalReason& reason,
+    winrt::guid& blockingEntryIdentifier)
 {
-    std::vector<std::wstring> otherRoleEndpointDeviceIds{ };
+    reason = MidiNetworkSessionRefusalReason::None;
+    blockingEntryIdentifier = winrt::guid{};
+
+    struct Candidate
+    {
+        std::wstring EndpointDeviceId;
+        MidiNetworkSessionRefusalReason Reason;
+    };
+
+    std::vector<Candidate> candidates{ };
+
+    auto const cleanInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
 
     {
         auto lock = m_createdEndpointsLock.lock();
 
-        // Compared exactly, the way the instance ids compared when they were what caught this
         for (auto const& record : m_createdEndpoints)
         {
-            if (record.Role != thisServiceRole &&
-                std::wstring_view{ record.TransportSuppliedEndpointName } == remoteEndpointName &&
-                std::wstring_view{ record.ProductInstanceId } == remoteProductInstanceId)
+            if (record.Role != thisServiceRole)
             {
-                otherRoleEndpointDeviceIds.push_back(std::wstring{ record.EndpointDeviceId });
+                // Compared exactly, the way the instance ids compared when they were what caught this
+                if (std::wstring_view{ record.TransportSuppliedEndpointName } == remoteEndpointName &&
+                    std::wstring_view{ record.ProductInstanceId } == remoteProductInstanceId)
+                {
+                    candidates.push_back({ std::wstring{ record.EndpointDeviceId }, MidiNetworkSessionRefusalReason::ConnectedInOtherRole });
+                }
+            }
+            else if (!cleanInstanceId.empty() && std::wstring{ record.DeviceInstanceId } == cleanInstanceId)
+            {
+                candidates.push_back({ std::wstring{ record.EndpointDeviceId }, MidiNetworkSessionRefusalReason::AlreadyConnected });
             }
         }
     }
 
     // Outside the lock, because TransportState takes its own. An endpoint whose session has ended
-    // is only waiting to be removed, and doesn't stop the remote connecting the other way.
-    for (auto const& endpointDeviceId : otherRoleEndpointDeviceIds)
+    // is only waiting to be removed, and doesn't stop the remote connecting again.
+    for (auto const& candidate : candidates)
     {
-        auto const connection = TransportState::Current().GetSessionConnection(endpointDeviceId);
+        auto const connection = TransportState::Current().GetSessionConnection(candidate.EndpointDeviceId);
 
         if (connection != nullptr && connection->IsSessionActive())
         {
+            reason = candidate.Reason;
+            blockingEntryIdentifier = connection->ConfigIdentifier();
+
             return true;
         }
     }
@@ -2180,6 +2209,91 @@ CMidi2NetworkMidiEndpointManager::IsRemoteConnectedInOtherRole(
     return false;
 }
 
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::RecordSessionRefusal(
+    MidiNetworkConnectionRole const thisServiceRole,
+    std::wstring const& configIdentifier,
+    MidiNetworkSessionRefusalReason const reason,
+    winrt::guid const& blockingEntryIdentifier,
+    std::wstring const& remoteEndpointName,
+    std::wstring const& remoteProductInstanceId,
+    winrt::Windows::Networking::HostName const& remoteHostName) noexcept
+try
+{
+    if (reason == MidiNetworkSessionRefusalReason::None)
+    {
+        return;
+    }
+
+    GUID parsed{};
+
+    if (!internal::TryParseGuidString(configIdentifier, parsed))
+    {
+        return;
+    }
+
+    winrt::guid const entryIdentifier{ parsed };
+
+    if (thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+    {
+        // The other session is a host's here when the remote is connected the other way round,
+        // and another client entry's when this PC is already connected to it
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionWaitingForSession(
+            entryIdentifier,
+            blockingEntryIdentifier,
+            reason == MidiNetworkSessionRefusalReason::ConnectedInOtherRole,
+            remoteEndpointName,
+            remoteProductInstanceId));
+    }
+    else if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
+    {
+        host->RecordRefusedRemoteClient(
+            MidiNetworkRemoteClientIdentity{ remoteEndpointName, remoteProductInstanceId },
+            remoteHostName != nullptr ? std::wstring{ remoteHostName.CanonicalName() } : std::wstring{},
+            reason);
+    }
+}
+CATCH_LOG()
+
+_Use_decl_annotations_
+bool
+CMidi2NetworkMidiEndpointManager::IsClientDefinitionStillWaiting(MidiNetworkClientDefinition const& definition)
+{
+    if (!definition.IsWaitingForOtherSession())
+    {
+        return false;
+    }
+
+    MidiNetworkSessionRefusalReason reason{ MidiNetworkSessionRefusalReason::None };
+    winrt::guid blockingEntryIdentifier{};
+
+    if (FindBlockingSession(
+        MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+        BuildEndpointDeviceInstanceId(definition.WaitingRemoteEndpointName, definition.WaitingRemoteProductInstanceId),
+        definition.WaitingRemoteEndpointName,
+        definition.WaitingRemoteProductInstanceId,
+        reason,
+        blockingEntryIdentifier))
+    {
+        return true;
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"The other session with this remote has ended. Connecting the client entry which was waiting for it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(definition.EntryIdentifier, "entry identifier"),
+        TraceLoggingWideString(definition.WaitingRemoteEndpointName.c_str(), "remote endpoint name")
+    );
+
+    LOG_IF_FAILED(TransportState::Current().ClearClientDefinitionWaitingForSession(definition.EntryIdentifier));
+
+    return false;
+}
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
@@ -2246,9 +2360,13 @@ try
         BuildHostEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId, configIdentifier) :
         BuildEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId);
 
-    // The same device as a host and a client of this PC at once would be two endpoints for one
-    // device. Refused the way an instance id which is already taken is refused, below.
-    if (IsRemoteConnectedInOtherRole(thisServiceRole, endpointName, remoteEndpointProductInstanceId))
+    // A remote has one session with this PC in one direction, per host here or per remote host.
+    // A second one would be a second endpoint for one device. Checked before activation, so the
+    // reason can be recorded for Network MIDI Setup.
+    MidiNetworkSessionRefusalReason refusalReason{ MidiNetworkSessionRefusalReason::None };
+    winrt::guid blockingEntryIdentifier{};
+
+    if (FindBlockingSession(thisServiceRole, instanceId, endpointName, remoteEndpointProductInstanceId, refusalReason, blockingEntryIdentifier))
     {
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -2256,12 +2374,17 @@ try
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"This device is already connected to this PC in the other role, so a second session for it was not created.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(refusalReason == MidiNetworkSessionRefusalReason::ConnectedInOtherRole ?
+                L"This device is already connected to this PC in the other role, so a second session for it was not created." :
+                L"This device already has a session with this PC here, so a second session for it was not created.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(instanceId.c_str(), "instance id"),
             TraceLoggingWideString(endpointName.c_str(), "endpoint name"),
             TraceLoggingWideString(remoteEndpointProductInstanceId.c_str(), "product instance id"),
+            TraceLoggingGuid(blockingEntryIdentifier, "entry with the other session"),
             TraceLoggingWideString(hostName != nullptr ? hostName.CanonicalName().c_str() : L"", "remote address")
         );
+
+        RecordSessionRefusal(thisServiceRole, configIdentifier, refusalReason, blockingEntryIdentifier, endpointName, remoteEndpointProductInstanceId, hostName);
 
         RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
     }
@@ -2439,9 +2562,26 @@ try
     // S_FALSE means this instance id is already active, so nothing was created and no interface
     // id was returned. That is the same remote a second time on the same host, or a second
     // session from this PC to the same remote host. Treated as a failure here so the caller can
-    // decline the session rather than proceed with an endpoint it does not have.
+    // decline the session rather than proceed with an endpoint it does not have. The check above
+    // normally catches it first. Here the other session either started meanwhile, or has ended
+    // and its endpoint is still being removed, which is the remote reconnecting too soon.
     if (activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr)
     {
+        if (FindBlockingSession(thisServiceRole, instanceId, endpointName, remoteEndpointProductInstanceId, refusalReason, blockingEntryIdentifier))
+        {
+            RecordSessionRefusal(thisServiceRole, configIdentifier, refusalReason, blockingEntryIdentifier, endpointName, remoteEndpointProductInstanceId, hostName);
+        }
+        else if (GUID parsedEntry{}; thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsClient &&
+            internal::TryParseGuidString(configIdentifier, parsedEntry))
+        {
+            // The previous session's endpoint is still being removed. Tried again shortly,
+            // rather than left connected to nothing.
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetryAfter(
+                winrt::guid{ parsedEntry },
+                MIDI_NETWORK_CLIENT_ENDPOINT_STILL_REMOVING_RETRY_DELAY_MILLISECONDS,
+                0));
+        }
+
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_WARNING,

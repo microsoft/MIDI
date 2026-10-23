@@ -55,6 +55,31 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void InternalSetSkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkPendingRemoteClient> RecentlyRefusedSecondConnections() const noexcept
+        {
+            return m_recentlyRefusedSecondConnections.GetView();
+        }
+
+        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkPendingRemoteClient> RecentlyRefusedRemoteHosts() const noexcept
+        {
+            return m_recentlyRefusedRemoteHosts.GetView();
+        }
+
+        // In the order the service reports them, newest first
+        void InternalAddRefusal(
+            _In_ network::MidiNetworkPendingRemoteClient const& refusal,
+            _In_ bool const remoteIsAHostOfThisPc) noexcept
+        {
+            if (refusal == nullptr) return;
+
+            try
+            {
+                (remoteIsAHostOfThisPc ? m_recentlyRefusedRemoteHosts : m_recentlyRefusedSecondConnections).Append(refusal);
+            }
+            catch (...)
+            {
+            }
+        }
         winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRemoteClientSettings> RemoteClientSettings() const noexcept
         {
             return m_remoteClientSettings.GetView();
@@ -163,5 +188,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRemoteClientSettings> m_remoteClientSettings{
             winrt::single_threaded_vector<network::MidiNetworkRemoteClientSettings>() };
+
+        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkPendingRemoteClient> m_recentlyRefusedSecondConnections{
+            winrt::single_threaded_vector<network::MidiNetworkPendingRemoteClient>() };
+
+        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkPendingRemoteClient> m_recentlyRefusedRemoteHosts{
+            winrt::single_threaded_vector<network::MidiNetworkPendingRemoteClient>() };
     };
 }

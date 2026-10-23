@@ -118,6 +118,27 @@ enum MidiNetworkRemoteClientDecision
 // the path MTU is dropped outright rather than fragmented.
 #define MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES                              1400
 
+// Why a session was declined because the remote already has one with this PC. A device connects
+// to this PC in one direction at a time, and to each host or remote host once.
+enum class MidiNetworkSessionRefusalReason
+{
+    None,
+
+    // A host here: this remote is already connected to this host. A client here: this PC is
+    // already connected to that remote host through another client entry.
+    AlreadyConnected,
+
+    // The remote is already connected to this PC the other way round: a host here refuses a
+    // remote this PC is a client of, and a client here waits while the remote is a client of a
+    // host here.
+    ConnectedInOtherRole,
+};
+
+// How many refusals a host remembers, and for how long, so Network MIDI Setup can say why a
+// device didn't connect. A remote retrying refreshes its entry rather than adding another.
+#define MIDI_NETWORK_HOST_RECENT_REFUSALS_MAX                           8
+#define MIDI_NETWORK_HOST_RECENT_REFUSAL_LIFETIME_MILLISECONDS          (10 * 60 * 1000)
+
 // The spec's 1400 bytes is a "should" for senders. Received datagrams larger than that are
 // dropped whole, without a reply: no Network MIDI 2.0 device needs to send one, and a 64 KB
 // datagram of tiny commands would otherwise be thousands of replies from one packet.
@@ -160,6 +181,10 @@ enum MidiNetworkRemoteClientDecision
 // Bye 0x40, Too Many Open Sessions, means "not now". Windows also sends it while it still holds
 // this PC's previous session, which it drops after five missed pings.
 #define MIDI_NETWORK_CLIENT_BUSY_RETRY_DELAY_MILLISECONDS               10000
+
+// A client whose endpoint couldn't be created because the endpoint of its previous session with
+// the same remote host is still being removed. That takes moments.
+#define MIDI_NETWORK_CLIENT_ENDPOINT_STILL_REMOVING_RETRY_DELAY_MILLISECONDS 2000
 
 // Spec 6.16: "The Bye Command should be sent repeatedly until a Bye Reply Command is received,
 // or until a timeout occurs." Only the user-initiated disconnect path does this. Shutdown paths

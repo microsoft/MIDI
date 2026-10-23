@@ -807,6 +807,7 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     );
 
     std::wstring deviceInstanceId{ };
+    bool sessionWasActive{ false };
 
     // Disassociating below can let go of the last other reference to this connection, and the
     // rest of this function still needs it
@@ -815,7 +816,7 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     {
         auto lock = m_sessionLock.lock();
 
-        m_sessionActive = false;
+        sessionWasActive = m_sessionActive.exchange(false);
 
         deviceInstanceId.swap(m_sessionDeviceInstanceId);
 
@@ -872,6 +873,16 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
             // Removal blocks on the service, and this runs on the socket receive callback, the
             // watchdog and configuration calls, so the endpoint worker does it.
             LOG_IF_FAILED(endpointManager->RemoveEndpointForSession(deviceInstanceId));
+        }
+    }
+
+    // A client entry may be waiting for this session to end, because the remote can have only
+    // one session with this PC at a time. It is tried at once rather than at the next scan.
+    if (sessionWasActive && TransportState::Current().AnyClientDefinitionWaitingForSession())
+    {
+        if (auto endpointManager = TransportState::Current().GetEndpointManager(); endpointManager != nullptr)
+        {
+            LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
         }
     }
 

@@ -229,7 +229,21 @@ public:
     // judged on the host policy alone, as though it had never been seen.
     HRESULT ForgetRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity);
 
+    // A remote this host turned away because it already had a session with this PC. Kept for a
+    // while, so Network MIDI Setup can say why the device didn't connect.
+    void RecordRefusedRemoteClient(
+        _In_ MidiNetworkRemoteClientIdentity const& identity,
+        _In_ std::wstring const& remoteAddress,
+        _In_ MidiNetworkSessionRefusalReason const reason) noexcept;
+
+    // Newest first, without the ones which have expired
+    std::vector<MidiNetworkRecentRefusal> GetRecentRefusals() noexcept
+    {
+        return m_recentRefusals.Get(std::chrono::steady_clock::now());
+    }
+
 private:
+    MidiNetworkRecentRefusals m_recentRefusals{};
     // Set by Shutdown, under m_lifecycleLock. Start refuses from then on, so a host which a
     // configuration call is starting while another removes it can't come back to life.
     std::atomic<bool> m_shutDown{ false };

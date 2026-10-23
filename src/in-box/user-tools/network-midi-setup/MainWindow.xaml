@@ -931,6 +931,12 @@
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <!-- Network MIDI 2.0: why a device which already has a session with this PC was turned away -->
+                                                <TextBlock Text="{x:Bind RefusalsText, Mode=OneWay}"
+                                                           Visibility="{x:Bind RefusalsVisibility, Mode=OneWay}"
+                                                           TextWrapping="Wrap"
+                                                           Margin="0,4,0,0"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
                                             </StackPanel>
 
                                             <!-- The settings, under the details: each button before what it changes, well away

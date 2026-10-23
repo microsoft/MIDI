@@ -34,6 +34,8 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 | `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote host keeps asking for data again |
 | `SkipInBetweenValuesToCatchUp` | True when the connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 | `CurrentSendSpeedLimit` | How fast the connection is sending right now. It's lower than `SendSpeedLimit` while the connection has slowed down by itself, which is worth showing people |
+| `WaitingForHostId` | A device has one session with this PC at a time. When the remote host is already connected to one of this PC's hosts as a client, this is that host's `HostId`, and the entry waits: it stops trying, and connects once that session ends. An empty guid otherwise. Added in version 2 of `MidiTransportsNetworkApiContract` |
+| `WaitingForClientId` | When this PC is already connected to the remote host through another client entry, this is that entry's `ClientId`, and this entry waits for that session to end the same way. An empty guid otherwise. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 

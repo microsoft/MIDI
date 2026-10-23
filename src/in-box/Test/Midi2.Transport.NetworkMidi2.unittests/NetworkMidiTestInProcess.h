@@ -53,14 +53,16 @@ namespace NetworkMidiTest
         std::atomic<ULONG> m_references{ 1 };
     };
 
-    // Creates parent devices, and refuses to create endpoints, so a remote can be invited and held
-    // pending but never gets a session.
+    // Creates parent devices and endpoints, as far as the transport can tell, so a remote can
+    // open a real session with it.
     class StandInDeviceManager : public CountedStandIn<IMidiDeviceManager>
     {
     public:
         STDMETHODIMP ActivateVirtualParentDevice(ULONG, const DEVPROPERTY*, const SW_DEVICE_CREATE_INFO* createInfo, LPWSTR* createdDeviceId) override;
         STDMETHODIMP DeactivateVirtualParentDevice(LPCWSTR) override { return S_OK; }
 
+        // Hands back an interface id for the instance id it was given, so a session can open.
+        // Nothing is created: the transport only keeps the id.
         STDMETHODIMP ActivateEndpoint(
             LPCWSTR,
             BOOL,
@@ -70,20 +72,22 @@ namespace NetworkMidiTest
             ULONG,
             const DEVPROPERTY*,
             const DEVPROPERTY*,
-            const SW_DEVICE_CREATE_INFO*,
-            LPWSTR* createdEndpointDeviceInterfaceId) override
-        {
-            if (createdEndpointDeviceInterfaceId != nullptr) *createdEndpointDeviceInterfaceId = nullptr;
-
-            return E_NOTIMPL;
-        }
+            const SW_DEVICE_CREATE_INFO* createInfo,
+            LPWSTR* createdEndpointDeviceInterfaceId) override;
 
         STDMETHODIMP UpdateEndpointProperties(LPCWSTR, ULONG, const DEVPROPERTY*) override { return S_OK; }
         STDMETHODIMP DeleteEndpointProperties(LPCWSTR, ULONG, const DEVPROPERTY*) override { return S_OK; }
-        STDMETHODIMP DeactivateEndpoint(LPCWSTR) override { return S_OK; }
-        STDMETHODIMP RemoveEndpoint(LPCWSTR) override { return S_OK; }
+        STDMETHODIMP DeactivateEndpoint(LPCWSTR instanceId) override { Forget(instanceId); return S_OK; }
+        STDMETHODIMP RemoveEndpoint(LPCWSTR instanceId) override { Forget(instanceId); return S_OK; }
         STDMETHODIMP RebuildMidi1PortsForEndpoint(LPCWSTR) override { return S_OK; }
         STDMETHODIMP UpdateTransportConfiguration(GUID, LPCWSTR, LPWSTR*) override { return E_NOTIMPL; }
+
+    private:
+        // Like the service, an instance id which is already active is S_FALSE with no interface id
+        void Forget(_In_opt_ LPCWSTR const instanceId);
+
+        std::mutex m_activeLock;
+        std::vector<std::wstring> m_activeInstanceIds;
     };
 
     class StandInProtocolManager : public CountedStandIn<IMidiEndpointProtocolManager>
@@ -132,6 +136,10 @@ namespace NetworkMidiTest
         bool ConnectDirect(_In_ std::wstring const& entryIdentifier, _In_ std::wstring const& address, _In_ uint16_t const port);
 
         void DisconnectClient(_In_ std::wstring const& entryIdentifier);
+
+        // The entry from enumerateClients or enumerateHosts with this entry identifier
+        std::optional<winrt::Windows::Data::Json::JsonObject> FindClientEntry(_In_ std::wstring const& entryIdentifier);
+        std::optional<winrt::Windows::Data::Json::JsonObject> FindHostEntry(_In_ std::wstring const& entryIdentifier);
 
         StandInDeviceManager& DeviceManager() { return *m_deviceManager; }
 

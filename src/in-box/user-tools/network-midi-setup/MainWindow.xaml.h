@@ -499,6 +499,11 @@ namespace winrt::midinetworksetup::implementation
         // Why a Network MIDI 2.0 entry's last invitation did not open a session. Empty when it did.
         static winrt::hstring DescribeNetworkClientProblem(_In_ midi2net::MidiNetworkClientConnectErrorCode const lastErrorCode) noexcept;
 
+        // Network MIDI 2.0: which session keeps a client entry waiting, and the second sessions a
+        // host turned away recently. Empty when there's nothing to say. In MainWindowSessionRefusals.cpp.
+        static winrt::hstring DescribeNetworkClientWaiting(_In_ ServiceSnapshot const& snapshot, _In_ midi2net::MidiNetworkConfiguredClient const& client, _In_ winrt::hstring const& remoteName) noexcept;
+        static winrt::hstring DescribeNetworkHostRefusals(_In_ midi2net::MidiNetworkConfiguredHost const& host) noexcept;
+
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;
 

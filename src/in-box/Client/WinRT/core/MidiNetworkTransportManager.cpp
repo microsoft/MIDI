@@ -514,6 +514,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
 
 
+    namespace
+    {
+        foundation::DateTime PendingRequestTimeFromString(_In_ winrt::hstring const& value) noexcept;
+    }
+
     collections::IVectorView<network::MidiNetworkConfiguredHost> MidiNetworkTransportManager::GetConfiguredHosts() noexcept
     {        auto results = winrt::single_threaded_vector<network::MidiNetworkConfiguredHost>();
 
@@ -698,6 +703,35 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 }
                             }
 
+                            // an older service reports none
+                            if (auto const refusals = entryObject.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_RECENT_REFUSALS_ARRAY_KEY, nullptr); refusals != nullptr)
+                            {
+                                for (auto const& refusalEntry : refusals)
+                                {
+                                    auto refusalObject = refusalEntry.GetObject();
+
+                                    if (refusalObject == nullptr)
+                                    {
+                                        continue;
+                                    }
+
+                                    auto refusal = winrt::make_self<MidiNetworkPendingRemoteClient>();
+
+                                    refusal->InternalInitialize(
+                                        hostId,
+                                        host->ServiceInstanceName(),
+                                        host->UmpEndpointName(),
+                                        refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L""),
+                                        refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L""),
+                                        refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY, L""),
+                                        PendingRequestTimeFromString(refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_TIME_KEY, L"")));
+
+                                    host->InternalAddRefusal(
+                                        *refusal,
+                                        refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_KEY, L"") == MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE);
+                                }
+                            }
+
                             results.Append(*host);
                         }
                     }
@@ -827,6 +861,14 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
                             client->InternalSetSkipInBetweenValuesToCatchUp(
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY, true));
+
+                            // only reported while the entry waits for another session with its remote host
+                            if (winrt::guid waitingFor{}; TryParseGuid(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_ENTRY_KEY, L""), waitingFor))
+                            {
+                                client->InternalSetWaitingFor(
+                                    waitingFor,
+                                    entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_HOST_KEY, false));
+                            }
 
                             results.Append(*client);
                         }

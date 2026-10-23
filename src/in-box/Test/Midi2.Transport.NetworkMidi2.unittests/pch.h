@@ -84,5 +84,6 @@
 #include "NetworkMidiShutdownTests.h"
 #include "NetworkMidiTestInProcess.h"
 #include "NetworkMidiInProcessTests.h"
+#include "NetworkMidiSessionRefusalTests.h"
 
 #endif //PCH_H

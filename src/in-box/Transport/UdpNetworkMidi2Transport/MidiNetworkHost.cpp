@@ -255,6 +255,31 @@ MidiNetworkHost::ForgetRemoteClient(MidiNetworkRemoteClientIdentity const& ident
 
 _Use_decl_annotations_
 void
+MidiNetworkHost::RecordRefusedRemoteClient(
+    MidiNetworkRemoteClientIdentity const& identity,
+    std::wstring const& remoteAddress,
+    MidiNetworkSessionRefusalReason const reason) noexcept
+{
+    try
+    {
+        FILETIME now{};
+        GetSystemTimeAsFileTime(&now);
+
+        MidiNetworkRecentRefusal refusal{};
+        refusal.UmpEndpointName = identity.UmpEndpointName;
+        refusal.ProductInstanceId = identity.ProductInstanceId;
+        refusal.RemoteAddress = remoteAddress;
+        refusal.Reason = reason;
+        refusal.FileTime = (static_cast<uint64_t>(now.dwHighDateTime) << 32) | now.dwLowDateTime;
+        refusal.When = std::chrono::steady_clock::now();
+
+        m_recentRefusals.Add(refusal);
+    }
+    CATCH_LOG();
+}
+
+_Use_decl_annotations_
+void
 MidiNetworkHost::SetRemoteClientSettings(std::vector<MidiNetworkRemoteClientSettings> const& settings)
 {
     auto lock = m_remoteClientListsLock.lock();

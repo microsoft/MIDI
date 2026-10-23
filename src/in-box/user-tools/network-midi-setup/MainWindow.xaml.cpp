@@ -2204,6 +2204,12 @@ namespace winrt::midinetworksetup::implementation
                         break;
                     }
 
+                    // the entry isn't trying while another session with the device is up
+                    if (auto const waiting = client.IsSessionActive() ? winrt::hstring{} : DescribeNetworkClientWaiting(snapshot, client, row->DisplayName); !waiting.empty())
+                    {
+                        row->Status = waiting;
+                    }
+
                     if (client.IsSessionActive())
                     {
                         row->LatencyTicks = client.CurrentLatencyTicks();
@@ -2551,6 +2557,8 @@ namespace winrt::midinetworksetup::implementation
                         host.HasStarted() || waitingForAdapter ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),
                         host.HasStarted() || waitingForAdapter,
                         host.CreateMidi1Ports());
+
+                    self->InternalUpdateRefusals(DescribeNetworkHostRefusals(host));
 
                     ApplyHostNetworkAdapter(
                         *self,

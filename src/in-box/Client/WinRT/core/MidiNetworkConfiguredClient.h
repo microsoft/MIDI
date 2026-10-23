@@ -48,6 +48,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void InternalSetSkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        winrt::guid WaitingForHostId() const noexcept { return m_waitingForHostId; }
+        winrt::guid WaitingForClientId() const noexcept { return m_waitingForClientId; }
+
+        // The entry with the session this one waits for, and whether it is a host here or another
+        // client entry. An empty guid when it waits for nothing.
+        void InternalSetWaitingFor(_In_ winrt::guid const& entryId, _In_ bool const isHost) noexcept
+        {
+            m_waitingForHostId = isHost ? entryId : winrt::guid{};
+            m_waitingForClientId = isHost ? winrt::guid{} : entryId;
+        }
+
         void InternalSetSendSpeed(
             _In_ network::MidiNetworkSendSpeedLimit const sendSpeedLimit,
             _In_ bool const reduceSendSpeedAutomatically,
@@ -130,5 +141,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_reduceSendSpeedAutomatically{ false };
         network::MidiNetworkSendSpeedLimit m_currentSendSpeedLimit{ network::MidiNetworkSendSpeedLimit::Unlimited };
         bool m_skipInBetweenValuesToCatchUp{ true };
+
+        winrt::guid m_waitingForHostId{};
+        winrt::guid m_waitingForClientId{};
     };
 }

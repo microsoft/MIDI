@@ -112,7 +112,67 @@ public:
     // which lets that last reference go on the watchdog thread itself. The connection is then
     // destroyed on the thread it has to join, which used to end the process.
     TEST_METHOD(ConnectionReleasedOnItsOwnWatchdogThreadDoesNotEndTheProcess);
+
+    // A host's list of recent refusals stays small, keeps one entry per remote and reason, newest
+    // first, and forgets old ones. The remote's identity is unverified, so the list must not grow.
+    TEST_METHOD(RecentRefusalsAreBoundedDeduplicatedAndExpire);
 };
+
+
+void NetworkMidiConnectionLifetimeTests::RecentRefusalsAreBoundedDeduplicatedAndExpire()
+{
+    MidiNetworkRecentRefusals refusals{ 3, std::chrono::milliseconds(1000) };
+
+    auto const start = std::chrono::steady_clock::now();
+
+    auto refusal = [&start](std::wstring const& name, MidiNetworkSessionRefusalReason const reason, int const atMilliseconds)
+        {
+            MidiNetworkRecentRefusal entry{};
+            entry.UmpEndpointName = name;
+            entry.ProductInstanceId = name + L"-piid";
+            entry.Reason = reason;
+            entry.When = start + std::chrono::milliseconds(atMilliseconds);
+            return entry;
+        };
+
+    auto names = [&refusals, &start](int const atMilliseconds)
+        {
+            std::wstring result{};
+
+            for (auto const& entry : refusals.Get(start + std::chrono::milliseconds(atMilliseconds)))
+            {
+                result += (result.empty() ? L"" : L",") + entry.UmpEndpointName;
+            }
+
+            return result;
+        };
+
+    refusals.Add(refusal(L"a", MidiNetworkSessionRefusalReason::AlreadyConnected, 0));
+    refusals.Add(refusal(L"b", MidiNetworkSessionRefusalReason::AlreadyConnected, 100));
+    refusals.Add(refusal(L"c", MidiNetworkSessionRefusalReason::ConnectedInOtherRole, 200));
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"c,b,a" }, names(300), L"newest first");
+
+    // a repeat refreshes its entry rather than adding one
+    refusals.Add(refusal(L"a", MidiNetworkSessionRefusalReason::AlreadyConnected, 400));
+    VERIFY_ARE_EQUAL(std::wstring{ L"a,c,b" }, names(400), L"a repeat moves to the front");
+
+    // the same remote for the other reason is a separate entry
+    refusals.Add(refusal(L"a", MidiNetworkSessionRefusalReason::ConnectedInOtherRole, 500));
+    VERIFY_ARE_EQUAL(std::wstring{ L"a,a,c" }, names(500), L"capped at three, oldest dropped");
+
+    // a flood of new identities never holds more than the cap
+    for (int i = 0; i < 100; i++)
+    {
+        refusals.Add(refusal(L"flood" + std::to_wstring(i), MidiNetworkSessionRefusalReason::AlreadyConnected, 600));
+    }
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(3), refusals.Get(start + std::chrono::milliseconds(600)).size(), L"never more than the cap");
+
+    // all of those were added at 600 ms and live for 1000 ms
+    VERIFY_ARE_EQUAL(static_cast<size_t>(3), refusals.Get(start + std::chrono::milliseconds(1599)).size(), L"not expired yet");
+    VERIFY_ARE_EQUAL(static_cast<size_t>(0), refusals.Get(start + std::chrono::milliseconds(1600)).size(), L"expired");
+}
 
 
 void NetworkMidiConnectionLifetimeTests::ConnectionReleasedOnItsOwnWatchdogThreadDoesNotEndTheProcess()

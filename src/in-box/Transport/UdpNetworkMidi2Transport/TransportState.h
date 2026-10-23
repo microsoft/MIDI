@@ -202,6 +202,23 @@ public:
     // again". Returns S_FALSE when there is no such definition.
     HRESULT RearmClientDefinition(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
+    // The remote host accepted, and the session was then declined because the remote already
+    // has one with this PC: it is a client of the host blockingEntryIdentifier here, or this PC
+    // is connected to it through the client entry blockingEntryIdentifier. The entry waits for
+    // that session to end rather than retrying on a timer.
+    HRESULT MarkClientDefinitionWaitingForSession(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _In_ winrt::guid const& blockingEntryIdentifier,
+        _In_ bool const blockingEntryIsHost,
+        _In_ std::wstring const& remoteEndpointName,
+        _In_ std::wstring const& remoteProductInstanceId);
+
+    // The session it was waiting for has ended
+    HRESULT ClearClientDefinitionWaitingForSession(_In_ winrt::guid const& clientConfigEntryIdentifier);
+
+    // So a session ending only wakes the endpoint creator worker when something waits for it
+    bool AnyClientDefinitionWaitingForSession();
+
     // Set by the endpoint creator worker once an entry has been built, or once its definition has
     // been rejected. Every legal transition of MidiNetworkEntryState is one of these calls. A
     // client's invitation goes to remoteAddress, one of the remote's remoteAddressCount addresses.

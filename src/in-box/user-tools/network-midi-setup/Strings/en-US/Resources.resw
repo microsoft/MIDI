@@ -372,6 +372,30 @@
   <data name="NetworkRemoteHostEnded" xml:space="preserve">
     <value>The device ended the connection attempt.</value>
   </data>
+  <data name="NetworkClientWaitingForHostFormat" xml:space="preserve">
+    <value>Not connected: {0} is already connected to this PC through the host {1}. A device can connect to this PC in only one direction at a time. Windows will connect once that session ends.</value>
+    <comment>Network MIDI 2.0 client entry. {0} is the remote device's name. {1} is the name of a host on this PC.</comment>
+  </data>
+  <data name="NetworkClientWaitingForUnnamedHostFormat" xml:space="preserve">
+    <value>Not connected: {0} is already connected to a host on this PC. A device can connect to this PC in only one direction at a time. Windows will connect once that session ends.</value>
+    <comment>Network MIDI 2.0 client entry. {0} is the remote device's name.</comment>
+  </data>
+  <data name="NetworkClientWaitingForClientFormat" xml:space="preserve">
+    <value>Not connected: this PC is already connected to {0} through {1}. This PC can have only one connection to a device at a time. Windows will connect once that one ends.</value>
+    <comment>Network MIDI 2.0 client entry. {0} is the remote device's name. {1} is the name of the other entry for the same device.</comment>
+  </data>
+  <data name="NetworkClientWaitingForUnnamedClientFormat" xml:space="preserve">
+    <value>Not connected: this PC is already connected to {0} through another entry. This PC can have only one connection to a device at a time. Windows will connect once that one ends.</value>
+    <comment>Network MIDI 2.0 client entry. {0} is the remote device's name.</comment>
+  </data>
+  <data name="NetworkHostRefusedSecondConnectionFormat" xml:space="preserve">
+    <value>Refused a second connection from {0} at {1}: it's already connected to this host.</value>
+    <comment>Network MIDI 2.0 host card, one line per refusal. {0} is the device's name. {1} is the time, for example 7:17 PM.</comment>
+  </data>
+  <data name="NetworkHostRefusedRemoteHostFormat" xml:space="preserve">
+    <value>Refused {0} at {1}: this PC is already connected to it as a client.</value>
+    <comment>Network MIDI 2.0 host card, one line per refusal. {0} is the device's name. {1} is the time, for example 7:17 PM.</comment>
+  </data>
   <data name="NetworkRemoteHostRetryingFormat" xml:space="preserve">
     <value>{0} Windows will keep trying.</value>
     <comment>{0} is a sentence saying what went wrong.</comment>

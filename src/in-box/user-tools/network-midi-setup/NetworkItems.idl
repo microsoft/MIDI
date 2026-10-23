@@ -299,6 +299,10 @@ namespace midinetworksetup
         String Midi1PortsText{ get; };
         Microsoft.UI.Xaml.Visibility Midi1PortsVisibility{ get; };
 
+        // Network MIDI 2.0 only: the second sessions the host turned away recently, one per line
+        String RefusalsText{ get; };
+        Microsoft.UI.Xaml.Visibility RefusalsVisibility{ get; };
+
         Microsoft.UI.Xaml.Visibility NoConnectionsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NoKnownClientsVisibility{ get; };
         Microsoft.UI.Xaml.Visibility KnownClientsVisibility{ get; };

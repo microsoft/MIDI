@@ -1537,6 +1537,17 @@ namespace
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(definition.LastErrorCode)));
 
+        if (definition.IsWaitingForOtherSession())
+        {
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_ENTRY_KEY,
+                json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(definition.WaitingForEntryIdentifier) }));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_HOST_KEY,
+                json::JsonValue::CreateBooleanValue(definition.WaitingForHostSession));
+        }
+
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
             json::JsonValue::CreateBooleanValue(definition.CreateMidi1Ports));
@@ -1847,6 +1858,46 @@ namespace
         return connectionObject;
     }
 
+    std::wstring PendingRequestTimeToString(_In_ uint64_t const fileTime);
+
+    // The remote clients a host turned away recently because they already had a session with
+    // this PC, for enumerateHosts
+    json::JsonArray BuildRecentRefusalsArray(_In_ std::shared_ptr<MidiNetworkHost> const& host)
+    {
+        json::JsonArray refusalsArray;
+
+        for (auto const& refusal : host->GetRecentRefusals())
+        {
+            json::JsonObject refusalObject;
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                json::JsonValue::CreateStringValue(refusal.UmpEndpointName));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                json::JsonValue::CreateStringValue(refusal.ProductInstanceId));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY,
+                json::JsonValue::CreateStringValue(refusal.RemoteAddress));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_TIME_KEY,
+                json::JsonValue::CreateStringValue(PendingRequestTimeToString(refusal.FileTime)));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_KEY,
+                json::JsonValue::CreateStringValue(refusal.Reason == MidiNetworkSessionRefusalReason::ConnectedInOtherRole ?
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE :
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_ALREADY_CONNECTED));
+
+            refusalsArray.Append(refusalObject);
+        }
+
+        return refusalsArray;
+    }
+
     // One host, for enumerateHosts: what was configured, what the running host reports, and the
     // remote clients reaching it.
     json::JsonObject BuildEnumeratedHostObject(
@@ -2031,6 +2082,8 @@ namespace
 
         hostObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY, connectionsArray);
 
+        hostObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_RECENT_REFUSALS_ARRAY_KEY, BuildRecentRefusalsArray(host));
+
         return hostObject;
     }
 }
@@ -2182,7 +2235,7 @@ namespace
 
     // FILETIME to ISO 8601 UTC, with the full 100ns resolution so the value round-trips. An
     // unset time returns empty rather than a 1601 date, which would read as a real answer.
-    std::wstring PendingRequestTimeToString(uint64_t const fileTime)
+    std::wstring PendingRequestTimeToString(_In_ uint64_t const fileTime)
     {
         if (fileTime == 0)
         {
