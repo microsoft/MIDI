@@ -33,6 +33,7 @@ namespace midipatchbay
         constexpr uint8_t StatusChannelPressure = 0xD;
         constexpr uint8_t StatusPitchBend = 0xE;
 
+        constexpr uint8_t StatusTimingClock = 0xF8;
         constexpr uint8_t StatusStart = 0xFA;
         constexpr uint8_t StatusContinue = 0xFB;
         constexpr uint8_t StatusStop = 0xFC;
@@ -51,6 +52,10 @@ namespace midipatchbay
             { ConverterInput::PitchBend, L"pitchBend" },
             { ConverterInput::ChannelPressure, L"channelPressure" },
             { ConverterInput::PolyPressure, L"polyPressure" },
+            { ConverterInput::Clock, L"clock" },
+            { ConverterInput::Start, L"start" },
+            { ConverterInput::Continue, L"continue" },
+            { ConverterInput::Stop, L"stop" },
         };
 
         static_assert(std::size(Inputs) == ConverterInputCount);
@@ -232,7 +237,7 @@ namespace midipatchbay
 
             SetString(from, KeyMessage, ConverterInputKey(row.From));
 
-            if (row.FromChannel >= 0 && row.FromChannel < 16)
+            if (ConverterInputHasChannel(row.From) && row.FromChannel >= 0 && row.FromChannel < 16)
             {
                 SetNumber(from, KeyChannel, row.FromChannel);
             }
@@ -268,13 +273,16 @@ namespace midipatchbay
 
             if (IsChannelMessageKind(message.Kind))
             {
-                if (!row.SameChannel)
+                // A message with no channel of its own always has one written, and so does its format.
+                auto const keeps = ConverterInputHasChannel(row.From);
+
+                if (!row.SameChannel || !keeps)
                 {
                     SetNumber(to, KeyChannel, message.Channel & 0x0F);
                 }
 
                 // An RPN or an NRPN always goes as MIDI 2.0.
-                if (!IsParameter(message.Kind) && !row.SameProtocol)
+                if (!IsParameter(message.Kind) && (!row.SameProtocol || !keeps))
                 {
                     SetBool(to, KeyMidi1, message.Midi1Protocol);
                 }
@@ -390,7 +398,7 @@ namespace midipatchbay
 
             row.From = ConverterInputFromKey(ReadString(from, KeyMessage)).value_or(ConverterInput::Note);
 
-            if (auto const channel = ReadWhole(from, KeyChannel, 15))
+            if (auto const channel = ConverterInputHasChannel(row.From) ? ReadWhole(from, KeyChannel, 15) : std::nullopt)
             {
                 row.FromChannel = static_cast<int8_t>(*channel);
             }
@@ -503,6 +511,21 @@ namespace midipatchbay
             auto const word = words[0];
             auto const type = word >> 28;
 
+            // Clock, start, continue and stop: one word, with a group and nothing else.
+            if (type == TypeSystem)
+            {
+                in.Group = static_cast<uint8_t>((word >> 24) & 0x0F);
+
+                switch (static_cast<uint8_t>((word >> 16) & 0xFF))
+                {
+                case StatusTimingClock: in.Input = ConverterInput::Clock;      return true;
+                case StatusStart:       in.Input = ConverterInput::Start;      return true;
+                case StatusContinue:    in.Input = ConverterInput::Continue;   return true;
+                case StatusStop:        in.Input = ConverterInput::Stop;       return true;
+                default:                return false;
+                }
+            }
+
             if (type != TypeMidi1 && type != TypeMidi2)
             {
                 return false;
@@ -569,7 +592,8 @@ namespace midipatchbay
 
         bool Matches(_In_ ConverterRow const& row, _In_ Incoming const& in) noexcept
         {
-            if (row.From != in.Input || (row.FromChannel >= 0 && row.FromChannel != in.Channel))
+            if (row.From != in.Input ||
+                (ConverterInputHasChannel(in.Input) && row.FromChannel >= 0 && row.FromChannel != in.Channel))
             {
                 return false;
             }
@@ -623,10 +647,11 @@ namespace midipatchbay
         {
             auto const& to = row.To;
             auto const group = in.Group;
-            auto const channel = row.SameChannel ? in.Channel : static_cast<uint8_t>(to.Channel & 0x0F);
+            auto const keeps = ConverterInputHasChannel(in.Input);
+            auto const channel = row.SameChannel && keeps ? in.Channel : static_cast<uint8_t>(to.Channel & 0x0F);
             auto const number = row.SameNumber && ConverterInputHasNumber(in.Input) ? static_cast<uint32_t>(in.Number) : to.Number;
             auto const seven = static_cast<uint8_t>((std::min)(number, 127u));
-            auto const midi1 = row.SameProtocol ? in.Midi1 : to.Midi1Protocol;
+            auto const midi1 = row.SameProtocol && keeps ? in.Midi1 : to.Midi1Protocol;
 
             auto const value = letGo
                 ? ScaledValue(static_cast<uint32_t>(std::clamp(to.ReleaseHundredths, 0, FullScaleHundredths)), HundredthsRange)
@@ -726,6 +751,7 @@ namespace midipatchbay
             case ControllerMessageKind::Start:
             case ControllerMessageKind::Continue:
             case ControllerMessageKind::Stop:
+            case ControllerMessageKind::Clock:
             {
                 if (letGo)
                 {
@@ -734,7 +760,8 @@ namespace midipatchbay
 
                 auto const status = to.Kind == ControllerMessageKind::Start ? StatusStart
                     : to.Kind == ControllerMessageKind::Continue ? StatusContinue
-                    : StatusStop;
+                    : to.Kind == ControllerMessageKind::Stop ? StatusStop
+                    : StatusTimingClock;
 
                 out[0] = (TypeSystem << 28) | (static_cast<uint32_t>(group) << 24) | (static_cast<uint32_t>(status) << 16);
                 return 1;
@@ -792,6 +819,12 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    bool ConverterInputHasChannel(ConverterInput input) noexcept
+    {
+        return input >= ConverterInput::Note && input <= ConverterInput::PolyPressure;
+    }
+
+    _Use_decl_annotations_
     bool ConverterInputHasNumber(ConverterInput input) noexcept
     {
         return input == ConverterInput::Note || input == ConverterInput::ControlChange ||
@@ -801,7 +834,7 @@ namespace midipatchbay
     _Use_decl_annotations_
     bool ConverterInputHasValue(ConverterInput input) noexcept
     {
-        return input != ConverterInput::ProgramChange;
+        return input == ConverterInput::Note || ConverterInputIsValue(input);
     }
 
     _Use_decl_annotations_

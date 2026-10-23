@@ -440,15 +440,23 @@ namespace winrt::midipatchbay::implementation
                     }
                 });
 
-            auto channel = Choices(resources::GetString(L"GeneratorChannel"), ChannelItems(L"ConverterAnyChannel"),
-                row.FromChannel < 0 ? 0 : row.FromChannel + 1, id + L"FromChannel");
+            // Clock, start, continue and stop have no channel to look at.
+            if (patchbay::ConverterInputHasChannel(row.From))
+            {
+                auto channel = Choices(resources::GetString(L"GeneratorChannel"), ChannelItems(L"ConverterAnyChannel"),
+                    row.FromChannel < 0 ? 0 : row.FromChannel + 1, id + L"FromChannel");
 
-            OnChoice(channel, change, nullptr, index, [](patchbay::ConverterRow& r, int32_t chosen)
-                {
-                    r.FromChannel = static_cast<int8_t>(chosen <= 0 ? -1 : (std::min)(chosen - 1, 15));
-                });
+                OnChoice(channel, change, nullptr, index, [](patchbay::ConverterRow& r, int32_t chosen)
+                    {
+                        r.FromChannel = static_cast<int8_t>(chosen <= 0 ? -1 : (std::min)(chosen - 1, 15));
+                    });
 
-            host.Children().Append(Pair(kind, channel));
+                host.Children().Append(Pair(kind, channel));
+            }
+            else
+            {
+                host.Children().Append(kind);
+            }
 
             if (patchbay::ConverterInputHasNumber(row.From))
             {
@@ -513,24 +521,38 @@ namespace winrt::midipatchbay::implementation
         {
             auto const& to = row.To;
 
-            // Every kind but Nothing: a converter always sends something.
+            // Every kind but Nothing: a converter always sends something. The clock goes with start,
+            // continue and stop.
+            using Kind = patchbay::ControllerMessageKind;
+
+            static constexpr Kind order[] =
+            {
+                Kind::Note, Kind::ControlChange, Kind::ProgramChange, Kind::PitchBend, Kind::ChannelPressure,
+                Kind::PolyPressure, Kind::RegisteredController, Kind::AssignableController,
+                Kind::Clock, Kind::Start, Kind::Continue, Kind::Stop, Kind::Words,
+            };
+
+            static_assert(std::size(order) + 1 == patchbay::ControllerMessageKindCount);
+
             std::vector<winrt::hstring> kinds{};
 
-            for (size_t i = 1; i < patchbay::ControllerMessageKindCount; i++)
+            for (auto const k : order)
             {
-                kinds.push_back(patchbay::DescribeControllerMessageKind(static_cast<patchbay::ControllerMessageKind>(i)));
+                kinds.push_back(patchbay::DescribeControllerMessageKind(k));
             }
 
-            auto kind = Choices(resources::GetString(L"ConverterToHeader"), kinds, static_cast<int32_t>(to.Kind) - 1, id + L"To");
+            auto const shown = std::find(std::begin(order), std::end(order), to.Kind);
+            auto kind = Choices(resources::GetString(L"ConverterToHeader"), kinds,
+                shown == std::end(order) ? -1 : static_cast<int32_t>(shown - std::begin(order)), id + L"To");
 
             OnChoice(kind, change, refresh, index, [](patchbay::ConverterRow& r, int32_t chosen)
                 {
-                    auto const chosenKind = static_cast<patchbay::ControllerMessageKind>(chosen + 1);
-
-                    if (static_cast<size_t>(chosen) + 1 >= patchbay::ControllerMessageKindCount || r.To.Kind == chosenKind)
+                    if (static_cast<size_t>(chosen) >= std::size(order) || r.To.Kind == order[chosen])
                     {
                         return;
                     }
+
+                    auto const chosenKind = order[chosen];
 
                     // A new kind starts fresh, on the same channel and in the same format.
                     auto fresh = patchbay::ControllerMessageFor(chosenKind);
@@ -551,16 +573,26 @@ namespace winrt::midipatchbay::implementation
 
             if (channelKind)
             {
-                auto channel = Choices(resources::GetString(L"GeneratorChannel"), ChannelItems(L"ConverterSameChannel"),
-                    row.SameChannel ? 0 : static_cast<int32_t>(to.Channel & 0x0F) + 1, id + L"ToChannel");
+                // A message with no channel of its own has no channel to keep.
+                auto const keeps = patchbay::ConverterInputHasChannel(row.From);
+                auto const offset = keeps ? 1 : 0;
+                auto items = ChannelItems(L"ConverterSameChannel");
 
-                OnChoice(channel, change, nullptr, index, [](patchbay::ConverterRow& r, int32_t chosen)
+                if (!keeps)
+                {
+                    items.erase(items.begin());
+                }
+
+                auto channel = Choices(resources::GetString(L"GeneratorChannel"), items,
+                    keeps && row.SameChannel ? 0 : static_cast<int32_t>(to.Channel & 0x0F) + offset, id + L"ToChannel");
+
+                OnChoice(channel, change, nullptr, index, [offset](patchbay::ConverterRow& r, int32_t chosen)
                     {
-                        r.SameChannel = chosen <= 0;
+                        r.SameChannel = chosen < offset;
 
-                        if (chosen > 0)
+                        if (chosen >= offset)
                         {
-                            r.To.Channel = static_cast<uint8_t>((std::min)(chosen - 1, 15));
+                            r.To.Channel = static_cast<uint8_t>((std::min)(chosen - offset, 15));
                         }
                     });
 
@@ -787,15 +819,27 @@ namespace winrt::midipatchbay::implementation
                 }
                 else
                 {
-                    auto protocol = Choices(resources::GetString(L"GeneratorProtocol"),
-                        { resources::GetString(L"ConverterSameProtocol"), resources::GetString(L"GeneratorProtocolMidi2"),
-                          resources::GetString(L"GeneratorProtocolMidi1") },
-                        row.SameProtocol ? 0 : (to.Midi1Protocol ? 2 : 1), id + L"Protocol");
+                    // A message with no channel of its own has no format to keep either.
+                    auto const keeps = patchbay::ConverterInputHasChannel(row.From);
+                    auto const offset = keeps ? 1 : 0;
 
-                    OnChoice(protocol, change, nullptr, index, [](patchbay::ConverterRow& r, int32_t chosen)
+                    std::vector<winrt::hstring> formats{};
+
+                    if (keeps)
+                    {
+                        formats.push_back(resources::GetString(L"ConverterSameProtocol"));
+                    }
+
+                    formats.push_back(resources::GetString(L"GeneratorProtocolMidi2"));
+                    formats.push_back(resources::GetString(L"GeneratorProtocolMidi1"));
+
+                    auto protocol = Choices(resources::GetString(L"GeneratorProtocol"), formats,
+                        keeps && row.SameProtocol ? 0 : (to.Midi1Protocol ? 1 : 0) + offset, id + L"Protocol");
+
+                    OnChoice(protocol, change, nullptr, index, [offset](patchbay::ConverterRow& r, int32_t chosen)
                         {
-                            r.SameProtocol = chosen <= 0;
-                            r.To.Midi1Protocol = chosen == 2;
+                            r.SameProtocol = chosen < offset;
+                            r.To.Midi1Protocol = chosen == 1 + offset;
                         });
 
                     host.Children().Append(protocol);

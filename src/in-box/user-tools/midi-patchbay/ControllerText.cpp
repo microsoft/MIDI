@@ -39,7 +39,7 @@ namespace midipatchbay
             L"ControllerMessageProgramChange", L"ControllerMessagePitchBend", L"ControllerMessageChannelPressure",
             L"ControllerMessagePolyPressure", L"ControllerMessageRpn", L"ControllerMessageNrpn",
             L"ControllerMessageStart", L"ControllerMessageContinue", L"ControllerMessageStop",
-            L"ControllerMessageWords",
+            L"ControllerMessageWords", L"ControllerMessageClock",
         };
 
         static_assert(std::size(MessageKindKeys) == ControllerMessageKindCount);
@@ -220,6 +220,9 @@ namespace midipatchbay
 
             case ControllerMessageKind::Stop:
                 return resources::GetString(L"ControllerSummaryStop");
+
+            case ControllerMessageKind::Clock:
+                return resources::GetString(L"ControllerSummaryClock");
 
             case ControllerMessageKind::Words:
                 return resources::GetString(L"ControllerSummaryWords");

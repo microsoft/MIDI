@@ -30,6 +30,12 @@ public:
     TEST_METHOD(AMessageKeepsItsGroup);
     TEST_METHOD(AConverterRunsInARoutedPatch);
 
+    // ---- clock, start, continue and stop ----
+    TEST_METHOD(ANoteCanBeATimingClock);
+    TEST_METHOD(RealTimeMessagesCanBecomeOtherMessages);
+    TEST_METHOD(RealTimeRowsSurviveTheFile);
+    TEST_METHOD(OnlyAConverterSendsATimingClock);
+
     // ---- the file ----
     TEST_METHOD(ConverterSettingsSurviveTheFile);
     TEST_METHOD(BadValuesInTheFileFallBack);

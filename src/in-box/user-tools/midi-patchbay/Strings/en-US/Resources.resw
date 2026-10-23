@@ -4350,6 +4350,9 @@
   <data name="ControllerSummaryWords" xml:space="preserve">
     <value>a message typed in</value>
   </data>
+  <data name="ControllerSummaryClock" xml:space="preserve">
+    <value>timing clock</value>
+  </data>
   <data name="ControllerSummaryNothing" xml:space="preserve">
     <value>nothing</value>
   </data>
@@ -4475,6 +4478,9 @@
   </data>
   <data name="ControllerMessageWords" xml:space="preserve">
     <value>Message typed in</value>
+  </data>
+  <data name="ControllerMessageClock" xml:space="preserve">
+    <value>Timing clock</value>
   </data>
   <data name="ControllerPlayerHeader" xml:space="preserve">
     <value>Controller</value>
@@ -4853,7 +4859,7 @@
     <value>Send nothing</value>
   </data>
   <data name="ConverterNoteEndsHint" xml:space="preserve">
-    <value>A program change, or a value that moves, is never let go, so each note it plays ends right away.</value>
+    <value>A program change, a clock, start, continue or stop message, or a value that moves, is never let go, so each note it plays ends right away.</value>
   </data>
   <data name="OscFirewallRuleName" xml:space="preserve">
     <value>Windows MIDI Patchbay (OSC connections)</value>
