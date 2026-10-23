@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2LoopbackHardening
+class Feature_Servicing_MIDI2LoopbackAndClientOpenHardening
 {
 public:
     static bool IsEnabled()

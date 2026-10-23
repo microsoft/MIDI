@@ -707,12 +707,12 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     // empty config is ok in this case. We just ignore
     if (configurationJsonSection == nullptr) return S_OK;
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. The service does not serialize these
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The service does not serialize these
     // calls, so two apps can be in here at once. Each validates against the table and then
     // changes it, and an update rewrites endpoint names that a list in another call is reading.
     std::unique_lock<std::mutex> configurationLock{};
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         configurationLock = std::unique_lock<std::mutex>{ TransportState::Current().ConfigurationLock() };
     }
@@ -1094,7 +1094,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             }
                         }
 
-                        if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+                        if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
                         {
                             // Runtime creates only, like the checks above. The endpoint manager
                             // also refuses it, for the configuration file, but without a reason.

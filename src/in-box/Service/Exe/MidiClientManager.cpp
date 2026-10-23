@@ -9,13 +9,13 @@
 #include "stdafx.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
-#include "Feature_Servicing_MIDI2LoopbackHardening.h"
+#include "Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.h"
 
 #include <cfgmgr32.h>
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-// Net-new for Feature_Servicing_MIDI2LoopbackHardening. The endpoint id comes from the client.
+// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The endpoint id comes from the client.
 // For an id that Plug and Play has never had, the DeviceInformation lookups further down throw
 // from inside the client manager lock instead of returning an error. This asks Plug and Play
 // directly, which is synchronous and cannot throw. An endpoint that was removed is still known
@@ -1156,7 +1156,7 @@ CMidiClientManager::CreateMidiClient(
         RETURN_IF_FAILED(E_UNEXPECTED);
     }
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         // before the lock, so an endpoint id nobody created is refused rather than thrown on
         RETURN_IF_FAILED(CheckEndpointInterfaceIsKnown(midiDevice));

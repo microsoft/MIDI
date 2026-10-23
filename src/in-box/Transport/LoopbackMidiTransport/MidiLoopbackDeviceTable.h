@@ -190,7 +190,7 @@ public:
     }
 
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. Endpoint A is visible to apps before
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. Endpoint A is visible to apps before
     // B is created, and the pair only arrives here after both exist. An endpoint opened in that
     // moment used to be connected to nothing for as long as it stayed open. Now its registration
     // waits here and is applied when the pair is added. Checked and recorded under one lock, so the
@@ -214,7 +214,7 @@ public:
         return {};
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. For an endpoint closed, or refused,
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. For an endpoint closed, or refused,
     // before its pair was added.
     void RemovePendingRegistrations(_In_opt_ IMidiCallback* const callback)
     {
@@ -240,7 +240,7 @@ public:
         // released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. For a pair whose creation failed.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. For a pair whose creation failed.
     void DiscardPendingRegistrations(_In_ std::wstring const& associationId)
     {
         std::vector<PendingRegistration> removed{};
@@ -267,7 +267,7 @@ public:
         // released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. Replaces SetDevice. Registrations which
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. Replaces SetDevice. Registrations which
     // were waiting for this pair go into it, in the order they arrived, before anyone else can see
     // it, so a later open still replaces an earlier one exactly as it would have.
     void SetDeviceApplyingPendingRegistrations(_In_ std::wstring const& associationId, _In_ MidiLoopbackDevice const& device)
@@ -322,7 +322,7 @@ public:
 
 
 private:
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.
     struct PendingRegistration
     {
         std::wstring AssociationId{};

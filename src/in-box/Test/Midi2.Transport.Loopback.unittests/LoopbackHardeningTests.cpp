@@ -16,7 +16,7 @@
 #include <winsvc.h>
 #include <wil\resource.h>
 
-#include <Feature_Servicing_MIDI2LoopbackHardening.h>
+#include <Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.h>
 
 #include "LoopbackHardeningTests.h"
 #include "LoopbackTestSupport.h"
@@ -43,9 +43,9 @@ namespace
 
     bool HardeningTestable()
     {
-        if (!Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+        if (!Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
         {
-            Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackHardening is disabled.");
+            Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackAndClientOpenHardening is disabled.");
             return false;
         }
 

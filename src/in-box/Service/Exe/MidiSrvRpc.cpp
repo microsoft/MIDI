@@ -12,7 +12,7 @@
 #include "Feature_Servicing_MIDI2SessionNameLimit.h"
 
 #include "Feature_Servicing_MIDI2ServiceConfigJsonHardening.h"
-#include "Feature_Servicing_MIDI2LoopbackHardening.h"
+#include "Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.h"
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \
@@ -104,7 +104,7 @@ MidiSrvVerifyConnectivity(
     return sessionTracker->VerifyConnectivity();
 }
 
-// Net-new for Feature_Servicing_MIDI2LoopbackHardening. MidiSrvCreateClient is extern "C", and
+// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. MidiSrvCreateClient is extern "C", and
 // with /EHsc the compiler assumes such a function never throws, so it has no cleanup for an
 // exception passing through it. An exception from CreateMidiClient left the failure callback that
 // MidiSrvCreateClient registers on this thread linked in after its frame was gone, and the next
@@ -207,7 +207,7 @@ HRESULT MidiSrvCreateClient(
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         RETURN_IF_FAILED(CreateMidiClientWithoutEscapingExceptions(clientManager, midiDevice, sessionId, clientProcessId, clientProcessHandle, creationParams, createdClient));
     }

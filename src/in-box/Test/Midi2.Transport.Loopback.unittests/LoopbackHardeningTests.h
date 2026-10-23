@@ -10,7 +10,7 @@
 
 #include <WexTestClass.h>
 
-// Feature_Servicing_MIDI2LoopbackHardening. Every test here skips when the gate is off.
+// Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. Every test here skips when the gate is off.
 class LoopbackHardeningTests
     : public WEX::TestClass<LoopbackHardeningTests>
 {

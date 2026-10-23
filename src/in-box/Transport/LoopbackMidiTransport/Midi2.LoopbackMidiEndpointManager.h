@@ -48,7 +48,7 @@ public:
 private:
     HRESULT ProcessWorkQueue();
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackHardening.
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.
     HRESULT CreateEndpointPairHardened(
         _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
         _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB

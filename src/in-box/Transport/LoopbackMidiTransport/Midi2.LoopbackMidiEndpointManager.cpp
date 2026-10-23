@@ -61,7 +61,7 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         // A create arriving now either sees the manager uninitialized and queues before this
         // drains, or waits and then sees it initialized with the saved loopbacks already created.
@@ -262,7 +262,7 @@ CMidi2LoopbackMidiEndpointManager::UpdateSingleEndpointMutedStateProperty(
             DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
     }
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         // A feedback trip handled on a threadpool thread can arrive here after Shutdown released
         // the device manager.
@@ -568,7 +568,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
         TraceLoggingPointer(this, "this")
     );
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         return CreateEndpointPairHardened(definitionA, definitionB);
     }
@@ -638,7 +638,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
 }
 
 
-// Net-new for Feature_Servicing_MIDI2LoopbackHardening. CreateEndpointPair with three changes:
+// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. CreateEndpointPair with three changes:
 // a pair whose association id is already in the table is refused, registrations from endpoints
 // opened while the pair was being created are applied when it is added, and those waiting
 // registrations are dropped if creation fails.

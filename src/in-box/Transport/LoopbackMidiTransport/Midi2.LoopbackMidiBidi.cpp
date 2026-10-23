@@ -111,7 +111,7 @@ CMidi2LoopbackMidiBidi::Initialize(
 
     // register this endpoint as part of a loopback device
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         return RegisterWithLoopbackDevice();
     }
@@ -181,7 +181,7 @@ CMidi2LoopbackMidiBidi::Shutdown()
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
         // closed before its pair was added, so the waiting registration must not be applied later
         try
@@ -376,7 +376,7 @@ CMidi2LoopbackMidiBidi::SendToOtherSideWithLock(
 }
 
 
-// Net-new for Feature_Servicing_MIDI2LoopbackHardening. The end of Initialize, with two changes.
+// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The end of Initialize, with two changes.
 // The side is taken from the start of the instance id rather than from anywhere in the endpoint
 // id, because a B unique id can itself contain the A prefix. And an endpoint opened while its pair
 // is still being created is registered when the pair is added, instead of never.
