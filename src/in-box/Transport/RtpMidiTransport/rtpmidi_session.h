@@ -16,8 +16,10 @@
 #include "rtpmidi_journal.h"
 #include "rtpmidi_protocol.h"
 
+#include <deque>
 #include <functional>
 #include <memory>
+#include <string>
 
 namespace RtpMidi
 {
@@ -29,6 +31,17 @@ namespace RtpMidi
         uint32_t ScopeId{ 0 };
 
         bool IsSet() const { return Family != 0; }
+
+        // 127.0.0.0/8 or ::1. Windows drops these when they arrive from a network, so only a
+        // program on this PC can send from them.
+        bool IsLoopback() const
+        {
+            if (Family == 4) return Bytes[0] == 127;
+            if (Family != 6) return false;
+
+            for (size_t i = 0; i < 15; i++) if (Bytes[i] != 0) return false;
+            return Bytes[15] == 1;
+        }
 
         bool SameHost(_In_ PeerAddress const& other) const
         {
@@ -101,6 +114,20 @@ namespace RtpMidi
         uint64_t FeedbackInterval{ 10000 };
 
         uint32_t MaxRejectionsPerSecond{ 10 };
+
+        // Every invitation accepted becomes an endpoint that every MIDI app on the PC sees come and
+        // go, and one with a new name becomes a new device. So accepting is limited too, by the
+        // address it comes from and overall. A program on this PC, sending over loopback, is not.
+        uint64_t AcceptWindow{ 600000 };                // one minute
+        uint32_t MaxAcceptsPerSourcePerWindow{ 10 };
+        uint32_t MaxAcceptsPerWindow{ 40 };
+        uint64_t NameWindow{ 36000000 };                // one hour
+        uint32_t MaxNamesPerSourcePerNameWindow{ 8 };   // a Mac can run a few sessions, each with its own name
+        uint32_t MaxNewNamesPerNameWindow{ 32 };        // names never accepted before, from anywhere
+        uint32_t MaxHalfOpenPerSource{ 2 };
+
+        // A remote asks again when our answer is lost. Answering a repeat at most this often.
+        uint64_t AcceptReplyMinInterval{ 5000 };
     };
 
     enum class ParticipantState : uint8_t
@@ -195,6 +222,10 @@ namespace RtpMidi
         uint64_t Created{ 0 };
         uint64_t LastInvitationSent{ 0 };
         uint32_t InvitationAttempts{ 0 };
+
+        // answers to the remote's invitation on the current port, so a repeat is answered sparingly
+        uint64_t LastAcceptReplySent{ 0 };
+        uint32_t AcceptRepliesSent{ 0 };
 
         uint64_t LastSyncSent{ 0 };
         bool AwaitingSyncReply{ false };
@@ -309,6 +340,8 @@ namespace RtpMidi
         uint64_t RejectionsSent{ 0 };
         uint64_t RejectionsSuppressed{ 0 };
         uint64_t InvitationsHeld{ 0 };
+        uint64_t InvitationsLimited{ 0 };
+        uint64_t RepeatedAcceptsSuppressed{ 0 };
     };
 
     class Session
@@ -833,6 +866,18 @@ namespace RtpMidi
             }
         }
 
+        // Who invitations were accepted from recently, for the accept limits
+        struct AcceptSource
+        {
+            PeerAddress Host{};                                     // the port is left at 0
+            std::deque<uint64_t> Accepts;                           // within the accept window
+            std::vector<std::pair<std::string, uint64_t>> Names;    // and when each was last accepted
+            uint64_t LastSeen{ 0 };
+        };
+
+        static constexpr size_t MaxAcceptSources = 64;
+        static constexpr size_t MaxKnownNames = 256;
+
         void OnInvitation(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_ AppleMidiInvitation const& message, _In_ uint64_t now)
         {
             if (message.ProtocolVersion != AppleMidiProtocolVersion)
@@ -843,61 +888,43 @@ namespace RtpMidi
 
             if (!isControlPort)
             {
-                auto participant = FindBySsrc(message.Ssrc, from);
-
-                if (participant == nullptr || participant->WeInitiated || participant->InitiatorToken != message.InitiatorToken)
-                {
-                    Reject(false, from, message.InitiatorToken, now, "data invitation without a control invitation");
-                    return;
-                }
-
-                participant->RemoteData = from;
-                Reply(false, from, BuildInvitation(AppleMidiCommand::InvitationAccepted, message.InitiatorToken, m_config.Ssrc, m_config.LocalName));
-
-                if (participant->State == ParticipantState::AwaitingDataInvitation)
-                {
-                    participant->State = ParticipantState::Connected;
-                    participant->LastSyncActivity = now;
-                    m_host.OnParticipantChanged(*participant);
-                }
-
+                OnDataInvitation(from, message, now);
                 return;
             }
 
-            if (auto existing = FindBySsrc(message.Ssrc, from))
+            // our OK was lost and they asked again: answer again, nothing else changes
+            if (auto const waiting = FindInvitedBy(message.Ssrc, message.InitiatorToken, from, true))
             {
-                // our OK was lost and they asked again: answer again, nothing else changes
-                if (!existing->WeInitiated &&
-                    existing->State == ParticipantState::AwaitingDataInvitation &&
-                    existing->InitiatorToken == message.InitiatorToken)
-                {
-                    Reply(true, from, BuildInvitation(AppleMidiCommand::InvitationAccepted, message.InitiatorToken, m_config.Ssrc, m_config.LocalName));
-                    return;
-                }
-
-                EndParticipant(*existing, EndReason::Replaced, false, now);
+                ReplyAcceptedAgain(*waiting, true, from, message.InitiatorToken, now);
+                return;
             }
 
-            // A peer that restarted invites again with a new SSRC. Same host and same name means
-            // the old participant is dead; waiting out its sync timeout would leave two.
-            for (auto& entry : m_participants)
-            {
-                auto& stale = *entry;
-                if (stale.State == ParticipantState::Ended || stale.WeInitiated) continue;
-                if (!from.SameHost(stale.RemoteControl) || stale.RemoteName != message.Name) continue;
-
-                EndParticipant(stale, EndReason::Replaced, false, now);
-            }
-
+            // Everything that can turn the invitation away is checked before anything that exists
+            // is touched. A connection this one replaces ends only once both of its ports are
+            // answered, so a forged invitation alone ends nothing.
             if (!m_config.AcceptInvitations)
             {
                 Reject(true, from, message.InitiatorToken, now, "this session is not accepting invitations");
                 return;
             }
 
-            if (LiveCount() >= m_config.MaxParticipants)
+            if (LiveCount() - ReplaceableBy(from, message.Ssrc, message.Name) >= m_config.MaxParticipants)
             {
                 Reject(true, from, message.InitiatorToken, now, "too many participants");
+                return;
+            }
+
+            if (!from.IsLoopback() && HalfOpenFrom(from) >= m_config.Timings.MaxHalfOpenPerSource)
+            {
+                m_stats.InvitationsLimited++;
+                Reject(true, from, message.InitiatorToken, now, "too many invitations waiting for a data port from this address");
+                return;
+            }
+
+            if (auto const why = AcceptLimitReached(from, message.Name, now))
+            {
+                m_stats.InvitationsLimited++;
+                Reject(true, from, message.InitiatorToken, now, why);
                 return;
             }
 
@@ -929,14 +956,220 @@ namespace RtpMidi
             participant->RemoteData = from.WithPort(static_cast<uint16_t>(from.Port + 1));
             participant->Created = now;
             participant->LastSyncActivity = now;
+            participant->LastAcceptReplySent = now;
+            participant->AcceptRepliesSent = 1;
             participant->NextSendSequence = static_cast<uint16_t>(NextRandom32());
             participant->Encoder = CommandSectionEncoder{ m_config.MaxListBytes };
 
             auto& added = *participant;
             m_participants.push_back(std::move(participant));
 
+            RecordAccept(from, message.Name, now);
+
             Reply(true, from, BuildInvitation(AppleMidiCommand::InvitationAccepted, message.InitiatorToken, m_config.Ssrc, m_config.LocalName));
             m_host.OnParticipantChanged(added);
+        }
+
+        void OnDataInvitation(_In_ PeerAddress const& from, _In_ AppleMidiInvitation const& message, _In_ uint64_t now)
+        {
+            auto const participant = FindInvitedBy(message.Ssrc, message.InitiatorToken, from, true);
+
+            if (participant == nullptr)
+            {
+                // our OK was lost and they asked again
+                if (auto const repeat = FindInvitedBy(message.Ssrc, message.InitiatorToken, from, false))
+                {
+                    ReplyAcceptedAgain(*repeat, false, from, message.InitiatorToken, now);
+                    return;
+                }
+
+                Reject(false, from, message.InitiatorToken, now, "data invitation without a control invitation");
+                return;
+            }
+
+            participant->RemoteData = from;
+            participant->LastAcceptReplySent = now;
+            participant->AcceptRepliesSent = 1;
+
+            Reply(false, from, BuildInvitation(AppleMidiCommand::InvitationAccepted, message.InitiatorToken, m_config.Ssrc, m_config.LocalName));
+
+            // Reported down before this one is reported up, so its endpoint can go to this one
+            EndReplacedBy(*participant, now);
+
+            participant->State = ParticipantState::Connected;
+            participant->LastSyncActivity = now;
+            m_host.OnParticipantChanged(*participant);
+        }
+
+        // An invitation from a remote, to our control port, which this session accepted. With
+        // awaitingDataOnly, one still waiting for its data port invitation.
+        Participant* FindInvitedBy(_In_ uint32_t ssrc, _In_ uint32_t token, _In_ PeerAddress const& from, _In_ bool awaitingDataOnly)
+        {
+            for (auto& entry : m_participants)
+            {
+                auto& participant = *entry;
+                if (participant.State == ParticipantState::Ended || participant.WeInitiated) continue;
+                if (awaitingDataOnly && participant.State != ParticipantState::AwaitingDataInvitation) continue;
+                if (participant.RemoteSsrc != ssrc || participant.InitiatorToken != token) continue;
+                if (from.SameHost(participant.RemoteControl) || from.SameHost(participant.RemoteData)) return &participant;
+            }
+            return nullptr;
+        }
+
+        // A peer that restarted invites again with a new SSRC, and one that gave up on us invites
+        // again with the same SSRC. Same host and the same SSRC or name means the old one is dead;
+        // waiting out its sync timeout would leave two. Our own invitations are never replaced.
+        static bool Replaces(_In_ Participant const& stale, _In_ PeerAddress const& from, _In_ uint32_t ssrc, _In_ std::string const& name)
+        {
+            if (stale.State == ParticipantState::Ended || stale.WeInitiated) return false;
+            if (!from.SameHost(stale.RemoteControl) && !from.SameHost(stale.RemoteData)) return false;
+
+            return stale.RemoteSsrc == ssrc || stale.RemoteName == name;
+        }
+
+        size_t ReplaceableBy(_In_ PeerAddress const& from, _In_ uint32_t ssrc, _In_ std::string const& name) const
+        {
+            size_t count = 0;
+            for (auto const& entry : m_participants) if (Replaces(*entry, from, ssrc, name)) count++;
+            return count;
+        }
+
+        void EndReplacedBy(_In_ Participant const& newcomer, _In_ uint64_t now)
+        {
+            for (auto& entry : m_participants)
+            {
+                if (entry.get() == &newcomer) continue;
+                if (Replaces(*entry, newcomer.RemoteControl, newcomer.RemoteSsrc, newcomer.RemoteName)) EndParticipant(*entry, EndReason::Replaced, false, now);
+            }
+        }
+
+        size_t HalfOpenFrom(_In_ PeerAddress const& from) const
+        {
+            size_t count = 0;
+
+            for (auto const& entry : m_participants)
+            {
+                if (!entry->WeInitiated && entry->State == ParticipantState::AwaitingDataInvitation && from.SameHost(entry->RemoteControl)) count++;
+            }
+
+            return count;
+        }
+
+        void ReplyAcceptedAgain(_Inout_ Participant& participant, _In_ bool isControlPort, _In_ PeerAddress const& to, _In_ uint32_t token, _In_ uint64_t now)
+        {
+            auto const& timings = m_config.Timings;
+
+            if (now - participant.LastAcceptReplySent < timings.AcceptReplyMinInterval || participant.AcceptRepliesSent >= timings.InvitationMaxAttempts)
+            {
+                m_stats.RepeatedAcceptsSuppressed++;
+                return;
+            }
+
+            participant.LastAcceptReplySent = now;
+            participant.AcceptRepliesSent++;
+
+            Reply(isControlPort, to, BuildInvitation(AppleMidiCommand::InvitationAccepted, token, m_config.Ssrc, m_config.LocalName));
+        }
+
+        static void DropOlderThan(_Inout_ std::deque<uint64_t>& times, _In_ uint64_t now, _In_ uint64_t window)
+        {
+            while (!times.empty() && now - times.front() >= window) times.pop_front();
+        }
+
+        bool IsKnownName(_In_ std::string const& name) const
+        {
+            return std::find(m_knownNames.begin(), m_knownNames.end(), name) != m_knownNames.end();
+        }
+
+        AcceptSource* FindAcceptSource(_In_ PeerAddress const& from, _In_ uint64_t now)
+        {
+            auto const& timings = m_config.Timings;
+
+            for (auto& source : m_acceptSources)
+            {
+                if (!source.Host.SameHost(from)) continue;
+
+                DropOlderThan(source.Accepts, now, timings.AcceptWindow);
+                std::erase_if(source.Names, [&](auto const& entry) { return now - entry.second >= timings.NameWindow; });
+
+                return &source;
+            }
+
+            return nullptr;
+        }
+
+        // Why an invitation may not be accepted now, or null when it may
+        char const* AcceptLimitReached(_In_ PeerAddress const& from, _In_ std::string const& name, _In_ uint64_t now)
+        {
+            if (from.IsLoopback()) return nullptr;
+
+            auto const& timings = m_config.Timings;
+
+            DropOlderThan(m_recentAccepts, now, timings.AcceptWindow);
+            DropOlderThan(m_recentNewNames, now, timings.NameWindow);
+
+            if (m_recentAccepts.size() >= timings.MaxAcceptsPerWindow) return "too many invitations accepted in the last minute";
+
+            if (auto const source = FindAcceptSource(from, now))
+            {
+                if (source->Accepts.size() >= timings.MaxAcceptsPerSourcePerWindow) return "too many invitations from this address in the last minute";
+
+                bool const nameUsedHere = std::any_of(source->Names.begin(), source->Names.end(), [&](auto const& entry) { return entry.first == name; });
+
+                if (!nameUsedHere && source->Names.size() >= timings.MaxNamesPerSourcePerNameWindow) return "too many different names from this address in the last hour";
+            }
+
+            if (!IsKnownName(name) && m_recentNewNames.size() >= timings.MaxNewNamesPerNameWindow) return "too many new names in the last hour";
+
+            return nullptr;
+        }
+
+        void RecordAccept(_In_ PeerAddress const& from, _In_ std::string const& name, _In_ uint64_t now)
+        {
+            if (from.IsLoopback()) return;
+
+            m_recentAccepts.push_back(now);
+
+            // remembered most recent last, so the oldest goes first when the list is full
+            auto const known = std::find(m_knownNames.begin(), m_knownNames.end(), name);
+
+            if (known == m_knownNames.end())
+            {
+                m_recentNewNames.push_back(now);
+            }
+            else
+            {
+                m_knownNames.erase(known);
+            }
+
+            m_knownNames.push_back(name);
+            if (m_knownNames.size() > MaxKnownNames) m_knownNames.pop_front();
+
+            auto source = FindAcceptSource(from, now);
+
+            if (source == nullptr)
+            {
+                // a forged address can name a new source every time, so the list is bounded
+                if (m_acceptSources.size() >= MaxAcceptSources)
+                {
+                    auto const oldest = std::min_element(m_acceptSources.begin(), m_acceptSources.end(),
+                        [](AcceptSource const& left, AcceptSource const& right) { return left.LastSeen < right.LastSeen; });
+
+                    m_acceptSources.erase(oldest);
+                }
+
+                m_acceptSources.push_back(AcceptSource{});
+                source = &m_acceptSources.back();
+                source->Host = from.WithPort(0);
+            }
+
+            source->LastSeen = now;
+            source->Accepts.push_back(now);
+
+            auto const named = std::find_if(source->Names.begin(), source->Names.end(), [&](auto const& entry) { return entry.first == name; });
+
+            if (named == source->Names.end()) source->Names.emplace_back(name, now);
+            else named->second = now;
         }
 
         void OnAccepted(_In_ bool isControlPort, _In_ PeerAddress const& from, _In_ AppleMidiInvitation const& message, _In_ uint64_t now)
@@ -1350,5 +1583,11 @@ namespace RtpMidi
         SessionStats m_stats{};
         uint64_t m_rejectWindowStart{ 0 };
         uint32_t m_rejectionsInWindow{ 0 };
+
+        // the accept limits: when invitations were accepted, from where, and the names seen
+        std::vector<AcceptSource> m_acceptSources;
+        std::deque<uint64_t> m_recentAccepts;
+        std::deque<uint64_t> m_recentNewNames;
+        std::deque<std::string> m_knownNames;
     };
 }

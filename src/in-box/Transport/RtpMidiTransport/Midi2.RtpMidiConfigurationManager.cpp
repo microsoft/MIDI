@@ -443,6 +443,7 @@ CMidi2RtpMidiConfigurationManager::Initialize(
     GUID transportId,
     IMidiDeviceManager* midiDeviceManager,
     IMidiServiceConfigurationManager* midiServiceConfigurationManager)
+try
 {
     UNREFERENCED_PARAMETER(transportId);
     UNREFERENCED_PARAMETER(midiServiceConfigurationManager);
@@ -457,10 +458,18 @@ CMidi2RtpMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
+
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+        m_midiDeviceManager = std::move(deviceManager);
+    }
 
     return S_OK;
 }
+CATCH_RETURN();
 
 
 _Use_decl_annotations_
@@ -768,7 +777,16 @@ CMidi2RtpMidiConfigurationManager::ProcessEndpointCustomizations(json::JsonObjec
             LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, customProperties));
 
             auto endpointManager = TransportState::Current().GetEndpointManager();
-            if (endpointManager == nullptr || m_midiDeviceManager == nullptr) continue;
+            if (endpointManager == nullptr) continue;
+
+            wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+            {
+                auto lock = m_midiDeviceManagerLock.lock_shared();
+                midiDeviceManager = m_midiDeviceManager;
+            }
+
+            if (midiDeviceManager == nullptr) continue;
 
             auto const existing = endpointManager->FindMatchingInstantiatedEndpoint(*matchCriteria);
             if (existing.empty()) continue;
@@ -777,7 +795,7 @@ CMidi2RtpMidiConfigurationManager::ProcessEndpointCustomizations(json::JsonObjec
 
             if (customProperties->WriteAllProperties(properties) && !properties.empty())
             {
-                LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+                LOG_IF_FAILED(midiDeviceManager->UpdateEndpointProperties(
                     existing.c_str(),
                     static_cast<ULONG>(properties.size()),
                     properties.data()));
@@ -1041,6 +1059,7 @@ CMidi2RtpMidiConfigurationManager::ProcessCommand(json::JsonObject const& sectio
 
 HRESULT
 CMidi2RtpMidiConfigurationManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiRtpMidiTransportTelemetryProvider::Provider(),
@@ -1051,7 +1070,15 @@ CMidi2RtpMidiConfigurationManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_midiDeviceManager.reset();
+    wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+        midiDeviceManager.swap(m_midiDeviceManager);
+    }
+
+    // released outside the lock
+    midiDeviceManager.reset();
 
     // TransportState::Shutdown releases its reference to this object
     wil::com_ptr<CMidi2RtpMidiConfigurationManager> keepAlive{ this };
@@ -1062,3 +1089,4 @@ CMidi2RtpMidiConfigurationManager::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN();

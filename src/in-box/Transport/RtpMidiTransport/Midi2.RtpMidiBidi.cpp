@@ -40,7 +40,7 @@ CMidi2RtpMidiBidi::Initialize(
         RETURN_HR_IF_NULL(E_NOTFOUND, endpoint);
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
 
             m_callback = callback;
             m_endpoint = endpoint;
@@ -71,7 +71,7 @@ CMidi2RtpMidiBidi::Shutdown()
         std::shared_ptr<RtpMidiEndpoint> endpoint{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
             endpoint = m_endpoint.lock();
         }
 
@@ -84,7 +84,7 @@ CMidi2RtpMidiBidi::Shutdown()
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
 
             m_endpoint.reset();
             callback = std::move(m_callback);
@@ -115,7 +115,7 @@ CMidi2RtpMidiBidi::SendMidiMessage(
         std::shared_ptr<RtpMidiEndpoint> endpoint{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
             endpoint = m_endpoint.lock();
         }
 
@@ -143,7 +143,7 @@ CMidi2RtpMidiBidi::Callback(
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
             callback = m_callback;
         }
 

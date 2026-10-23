@@ -16,21 +16,21 @@ TransportState::Current()
 wil::com_ptr<CMidi2RtpMidiEndpointManager>
 TransportState::GetEndpointManager()
 {
-    auto lock = std::scoped_lock{ m_managersLock };
+    auto lock = m_managersLock.lock_exclusive();
     return m_endpointManager;
 }
 
 wil::com_ptr<CMidi2RtpMidiConfigurationManager>
 TransportState::GetConfigurationManager()
 {
-    auto lock = std::scoped_lock{ m_managersLock };
+    auto lock = m_managersLock.lock_exclusive();
     return m_configurationManager;
 }
 
 HRESULT
 TransportState::ConstructEndpointManager()
 {
-    auto lock = std::scoped_lock{ m_managersLock };
+    auto lock = m_managersLock.lock_exclusive();
 
     if (m_endpointManager == nullptr)
     {
@@ -43,7 +43,7 @@ TransportState::ConstructEndpointManager()
 HRESULT
 TransportState::ConstructConfigurationManager()
 {
-    auto lock = std::scoped_lock{ m_managersLock };
+    auto lock = m_managersLock.lock_exclusive();
 
     if (m_configurationManager == nullptr)
     {
@@ -60,7 +60,7 @@ TransportState::Shutdown() noexcept
     wil::com_ptr<CMidi2RtpMidiConfigurationManager> configurationManager;
 
     {
-        auto lock = std::scoped_lock{ m_managersLock };
+        auto lock = m_managersLock.lock_exclusive();
 
         endpointManager.swap(m_endpointManager);
         configurationManager.swap(m_configurationManager);
@@ -69,36 +69,38 @@ TransportState::Shutdown() noexcept
     // Released outside the lock, in case this is the last reference and a destructor runs
     endpointManager.reset();
     configurationManager.reset();
+
+    // its deferred registry write would otherwise run during DLL unload
+    m_approvals.Shutdown();
 }
 
 
+// Both steps under the definitions lock, policy first, so the worker never starts a host which has
+// no policy yet, and a removal racing a definition can't leave a host whose approvals are gone. The
+// approvals lock is only ever taken after this one.
 _Use_decl_annotations_
 void
 TransportState::SetHostDefinition(RtpMidiHostDefinition const& definition)
 {
-    {
-        auto lock = std::scoped_lock{ m_definitionsLock };
-        m_hosts.insert_or_assign(definition.EntryId, definition);
-    }
+    auto lock = m_definitionsLock.lock_exclusive();
 
-    // before the worker can start the host, so no invitation meets a host without a policy
     m_approvals.SetPolicy(definition.EntryId, definition.RemoteClientPolicy);
+    m_hosts.insert_or_assign(definition.EntryId, definition);
 }
 
 _Use_decl_annotations_
 bool
 TransportState::RemoveHostDefinition(GUID const& entryId)
 {
-    bool removed{ false };
+    auto lock = m_definitionsLock.lock_exclusive();
 
+    bool const removed = m_hosts.erase(entryId) > 0;
+
+    if (removed)
     {
-        auto lock = std::scoped_lock{ m_definitionsLock };
-        removed = m_hosts.erase(entryId) > 0;
-
-        if (removed) m_remoteClientSettings.erase(entryId);
+        m_remoteClientSettings.erase(entryId);
+        m_approvals.RemoveHost(entryId);
     }
-
-    if (removed) m_approvals.RemoveHost(entryId);
 
     return removed;
 }
@@ -107,7 +109,7 @@ _Use_decl_annotations_
 void
 TransportState::SetRemoteClientSettings(GUID const& hostId, std::vector<RtpMidiRemoteClientSettings> const& settings)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     // left over from a host which is gone
     if (m_hosts.find(hostId) == m_hosts.end()) return;
@@ -119,7 +121,7 @@ _Use_decl_annotations_
 std::vector<RtpMidiRemoteClientSettings>
 TransportState::GetRemoteClientSettings(GUID const& hostId)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     auto const it = m_remoteClientSettings.find(hostId);
 
@@ -130,7 +132,7 @@ _Use_decl_annotations_
 std::optional<RtpMidiRemoteClientSettings>
 TransportState::FindRemoteClientSettings(GUID const& hostId, std::wstring const& remoteName)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     auto const it = m_remoteClientSettings.find(hostId);
     if (it == m_remoteClientSettings.end()) return std::nullopt;
@@ -153,7 +155,7 @@ _Use_decl_annotations_
 bool
 TransportState::TryGetHostDefinition(GUID const& entryId, RtpMidiHostDefinition& definition)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     auto const it = m_hosts.find(entryId);
     if (it == m_hosts.end())
@@ -170,7 +172,7 @@ _Use_decl_annotations_
 bool
 TransportState::SetHostEnabled(GUID const& entryId, bool const enabled)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     auto const it = m_hosts.find(entryId);
     if (it == m_hosts.end()) return false;
@@ -182,7 +184,7 @@ TransportState::SetHostEnabled(GUID const& entryId, bool const enabled)
 std::vector<RtpMidiHostDefinition>
 TransportState::GetHostDefinitions()
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     std::vector<RtpMidiHostDefinition> definitions;
     for (auto const& entry : m_hosts) definitions.push_back(entry.second);
@@ -195,7 +197,7 @@ _Use_decl_annotations_
 void
 TransportState::SetClientDefinition(RtpMidiClientDefinition const& definition)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
     m_clients.insert_or_assign(definition.EntryId, definition);
 }
 
@@ -203,7 +205,7 @@ _Use_decl_annotations_
 bool
 TransportState::RemoveClientDefinition(GUID const& entryId)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
     return m_clients.erase(entryId) > 0;
 }
 
@@ -211,7 +213,7 @@ _Use_decl_annotations_
 bool
 TransportState::TryGetClientDefinition(GUID const& entryId, RtpMidiClientDefinition& definition)
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     auto const it = m_clients.find(entryId);
     if (it == m_clients.end())
@@ -227,7 +229,7 @@ TransportState::TryGetClientDefinition(GUID const& entryId, RtpMidiClientDefinit
 std::vector<RtpMidiClientDefinition>
 TransportState::GetClientDefinitions()
 {
-    auto lock = std::scoped_lock{ m_definitionsLock };
+    auto lock = m_definitionsLock.lock_exclusive();
 
     std::vector<RtpMidiClientDefinition> definitions;
     for (auto const& entry : m_clients) definitions.push_back(entry.second);

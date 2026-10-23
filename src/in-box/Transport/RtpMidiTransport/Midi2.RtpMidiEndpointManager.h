@@ -116,6 +116,10 @@ private:
 
     HRESULT CreateParentDevice();
 
+    // Stops whatever is running and lets go of the service's objects. Safe whether or not
+    // Initialize finished, and safe to call twice.
+    void StopRunning() noexcept;
+
     void WorkerLoop(_In_ std::stop_token stopToken);
     void ProcessEndpointWork();
     void ReconcileHosts(_In_ std::stop_token const& stopToken);
@@ -133,11 +137,16 @@ private:
     HRESULT CreateEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     HRESULT RemoveEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool IsInstanceIdInUse(_In_ std::wstring const& instanceId);
+    bool IsInstanceIdListedElsewhere(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
 
     // Listed before the service is asked for it, so an app opening it during activation finds it.
     // In Midi2.RtpMidiEndpointManagerKept.cpp, with the rest of the endpoint work below.
     HRESULT ActivateRtpEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint, _In_ std::wstring const& uniqueIdentifier, _In_ std::wstring const& endpointDescription);
     HRESULT RemoveRtpEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
+
+    // An endpoint the service would not remove is no longer listed, but still in the service, where
+    // it would stop the next one with its id from being made. Tried again on every worker pass.
+    void RetryFailedRemovals();
     std::shared_ptr<RtpMidiEndpoint> FindEndpointForConnection(_In_ RtpMidiConnection const* connection);
     std::shared_ptr<RtpMidiEndpoint> FindEndpointForEntry(_In_ GUID const& entryId);
 
@@ -161,6 +170,7 @@ private:
     HRESULT CreateHostKeptEndpoint(_In_ GUID const& hostId, _In_ std::wstring const& remoteName);
     bool AttachToKeptHostEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool DetachFromKeptHostEndpoint(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    void MarkHostRemoteEndpointAway(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
     void RefreshHostEndpointsKept(_In_ GUID const& hostId);
     void ReleaseHostEndpointWhenConnectionEnds(_In_ GUID const& hostId, _In_ uint32_t const connectionId);
     bool TryRemoveDetachedEndpoint(_In_ std::shared_ptr<RtpMidiEndpoint> const& endpoint);
@@ -188,7 +198,7 @@ private:
     WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
 
     // Orders starting and stopping discovery with shutdown. Its callbacks never take this lock.
-    std::mutex m_discoveryLock;
+    wil::srwlock m_discoveryLock;
     bool m_discoveryAllowed{ false };
     uint64_t m_discoveryStartedTick{ 0 };
     uint64_t m_nextDiscoveryStartTick{ 0 };
@@ -196,17 +206,27 @@ private:
     std::atomic<uint64_t> m_lastDiscoveryAnswerTick{ 0 };
 
     // Guards the runtime maps. Never held across a call into a node or the device manager.
-    std::mutex m_runtimeLock;
+    wil::srwlock m_runtimeLock;
     std::map<GUID, HostRuntime, GuidLess> m_hosts;
     std::map<GUID, ClientRuntime, GuidLess> m_clients;
 
+    // A std::mutex, because the worker waits on it with a condition variable
     std::mutex m_workLock;
     std::condition_variable m_workChanged;
     bool m_wakeRequested{ false };
     std::deque<EndpointWork> m_endpointWork;
 
-    std::mutex m_createdEndpointsLock;
+    wil::srwlock m_createdEndpointsLock;
     std::vector<std::shared_ptr<RtpMidiEndpoint>> m_createdEndpoints;
+
+    struct FailedRemoval
+    {
+        std::wstring NormalizedInstanceId;
+        uint32_t Attempts{ 0 };
+    };
+
+    // also under m_createdEndpointsLock
+    std::vector<FailedRemoval> m_endpointsToRemove;
 
     // worker thread only
     std::map<std::wstring, uint64_t> m_lastWrittenLatencyTicks;

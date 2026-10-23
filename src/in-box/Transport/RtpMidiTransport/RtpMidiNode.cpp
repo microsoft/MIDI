@@ -70,13 +70,6 @@ RtpMidiNode::SessionNow() noexcept
 
 _Use_decl_annotations_
 uint64_t
-RtpMidiNode::SessionTicksToMidiTimestamp(uint64_t const sessionTicks) noexcept
-{
-    return SessionTicksToMidiTicks(sessionTicks);
-}
-
-_Use_decl_annotations_
-uint64_t
 RtpMidiNode::SessionTicksToMidiTicks(uint64_t const sessionTicks) noexcept
 {
     auto const frequency = internal::GetMidiTimestampFrequency();
@@ -120,6 +113,18 @@ RtpMidiNode::Start(
         RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ADDRESS_ALREADY_ASSOCIATED),
             !m_ports.Bind(preferredControlPort, fallbackRanges, m_usedPortFallback));
 
+        // A start which fails partway leaves no thread receiving for a node nobody will stop
+        auto stopOnFailure = wil::scope_exit([&]() noexcept
+            {
+                {
+                    auto lock = m_engineLock.lock_exclusive();
+                    m_receiving = false;
+                }
+
+                m_running = false;
+                m_ports.Close();
+            });
+
         // Bound on every address either way. The sockets drop what arrives on other adapters.
         m_ports.LimitToInterfaces(interfaces);
 
@@ -139,8 +144,9 @@ RtpMidiNode::Start(
         }
 
         {
-            auto lock = std::scoped_lock{ m_engineLock };
+            auto lock = m_engineLock.lock_exclusive();
             m_session = std::make_unique<RtpMidi::Session>(std::move(config), *this, RandomSeed());
+            m_receiving = true;
         }
 
         std::weak_ptr<RtpMidiNode> weakThis = weak_from_this();
@@ -160,8 +166,10 @@ RtpMidiNode::Start(
             L"rtpMIDI data receive"));
 
         m_running = true;
-        m_ticker = std::jthread([this](std::stop_token stopToken) { TickLoop(stopToken); });
+        m_ticker = std::jthread([weakThis](std::stop_token stopToken) { TickThread(weakThis, stopToken); });
         SetThreadDescription(m_ticker.native_handle(), L"rtpMIDI timers");
+
+        stopOnFailure.release();
 
         TraceLoggingWrite(
             MidiRtpMidiTransportTelemetryProvider::Provider(),
@@ -223,14 +231,18 @@ CATCH_RETURN();
 void
 RtpMidiNode::Stop()
 {
-    if (!m_running.exchange(false)) return;
+    bool const wasRunning = m_running.exchange(false);
 
     try
     {
         {
-            auto lock = std::scoped_lock{ m_engineLock };
+            auto lock = m_engineLock.lock_exclusive();
 
-            if (m_session != nullptr)
+            // The sockets still receive until they close below. Nothing they hear from here on
+            // may start a connection, or it would come up after its goodbye was said.
+            m_receiving = false;
+
+            if (wasRunning && m_session != nullptr)
             {
                 auto const now = SessionNow();
                 m_session->EndAll(now);
@@ -239,7 +251,7 @@ RtpMidiNode::Stop()
         }
 
         // the goodbyes above produced the connection-down notifications, which go out now
-        DeliverPending();
+        if (wasRunning) DeliverPending();
 
         m_ticker.request_stop();
 
@@ -248,6 +260,8 @@ RtpMidiNode::Stop()
 
         if (m_ticker.joinable())
         {
+            // The timer thread can hold the last reference, and so be running this. It reads
+            // nothing of the node once its pass ends.
             if (m_ticker.get_id() != std::this_thread::get_id()) m_ticker.join();
             else m_ticker.detach();
         }
@@ -256,13 +270,20 @@ RtpMidiNode::Stop()
 
         if (m_advertised.exchange(false)) m_advertiser.Unregister();
 
+        // Every connection reported up is reported down, so none is left with an endpoint
+        std::map<uint32_t, std::shared_ptr<RtpMidiConnection>> remaining;
+
         {
-            auto lock = std::scoped_lock{ m_connectionsLock };
+            auto lock = m_connectionsLock.lock_exclusive();
+            remaining.swap(m_connections);
+        }
 
+        for (auto const& entry : remaining)
+        {
             // releases any sender still waiting for room to queue more
-            for (auto const& entry : m_connections) entry.second->ClosePacedSend();
+            entry.second->ClosePacedSend();
 
-            m_connections.clear();
+            if (m_listener != nullptr) m_listener->OnConnectionDown(entry.second, RtpMidi::EndReason::LocalRequest);
         }
     }
     CATCH_LOG();
@@ -277,7 +298,7 @@ try
     RETURN_HR_IF(E_ILLEGAL_STATE_CHANGE, !m_running.load());
 
     {
-        auto lock = std::scoped_lock{ m_engineLock };
+        auto lock = m_engineLock.lock_exclusive();
         RETURN_HR_IF_NULL(E_UNEXPECTED, m_session);
 
         m_session->Invite(remoteControl, SessionNow());
@@ -296,7 +317,7 @@ RtpMidiNode::EndConnection(uint32_t const participantId)
 try
 {
     {
-        auto lock = std::scoped_lock{ m_engineLock };
+        auto lock = m_engineLock.lock_exclusive();
         RETURN_HR_IF_NULL(E_UNEXPECTED, m_session);
 
         m_session->EndParticipant(participantId, SessionNow());
@@ -315,7 +336,7 @@ RtpMidiNode::SendMidi(uint32_t const participantId, uint8_t const* bytes, size_t
 {
     if (!m_running.load() || bytes == nullptr || count == 0) return false;
 
-    auto lock = std::scoped_lock{ m_engineLock };
+    auto lock = m_engineLock.lock_exclusive();
     if (m_session == nullptr) return false;
 
     return m_session->SendMidiTo(participantId, bytes, count, SessionNow());
@@ -355,7 +376,7 @@ RtpMidiNode::WakeForPacedSend() noexcept
 std::vector<RtpMidi::Participant>
 RtpMidiNode::Snapshot()
 {
-    auto lock = std::scoped_lock{ m_engineLock };
+    auto lock = m_engineLock.lock_exclusive();
     if (m_session == nullptr) return {};
 
     return m_session->Snapshot();
@@ -365,7 +386,7 @@ _Use_decl_annotations_
 bool
 RtpMidiNode::TrySnapshot(uint32_t const participantId, RtpMidi::Participant& snapshot)
 {
-    auto lock = std::scoped_lock{ m_engineLock };
+    auto lock = m_engineLock.lock_exclusive();
     if (m_session == nullptr) return false;
 
     return m_session->TrySnapshot(participantId, snapshot);
@@ -374,7 +395,7 @@ RtpMidiNode::TrySnapshot(uint32_t const participantId, RtpMidi::Participant& sna
 std::vector<std::shared_ptr<RtpMidiConnection>>
 RtpMidiNode::Connections()
 {
-    auto lock = std::scoped_lock{ m_connectionsLock };
+    auto lock = m_connectionsLock.lock_exclusive();
 
     std::vector<std::shared_ptr<RtpMidiConnection>> connections;
     for (auto const& entry : m_connections) connections.push_back(entry.second);
@@ -388,8 +409,8 @@ void
 RtpMidiNode::OnDatagram(bool const isControlPort, RtpMidi::PeerAddress const& from, uint8_t const* data, size_t const size)
 {
     {
-        auto lock = std::scoped_lock{ m_engineLock };
-        if (m_session == nullptr) return;
+        auto lock = m_engineLock.lock_exclusive();
+        if (m_session == nullptr || !m_receiving) return;
 
         m_session->OnDatagram(isControlPort, from, data, size, SessionNow());
     }
@@ -400,7 +421,28 @@ RtpMidiNode::OnDatagram(bool const isControlPort, RtpMidi::PeerAddress const& fr
 
 _Use_decl_annotations_
 void
-RtpMidiNode::TickLoop(std::stop_token stopToken)
+RtpMidiNode::TickThread(std::weak_ptr<RtpMidiNode> const weakThis, std::stop_token const stopToken) noexcept
+{
+    uint64_t nextEngineTick{ 0 };
+
+    while (!stopToken.stop_requested())
+    {
+        auto self = weakThis.lock();
+        if (self == nullptr) return;
+
+        // one failed pass must not stop the timers of every connection on this port pair
+        try
+        {
+            self->TickOnce(nextEngineTick);
+        }
+        CATCH_LOG();
+    }
+}
+
+
+_Use_decl_annotations_
+void
+RtpMidiNode::TickOnce(uint64_t& nextEngineTick)
 {
     HANDLE const waitHandles[]{ m_tickWakeEvent.get(), m_pacedSendTimer.get() };
 
@@ -408,46 +450,40 @@ RtpMidiNode::TickLoop(std::stop_token stopToken)
     constexpr uint64_t sessionTicksPerMillisecond{ RtpMidi::SessionClockTicksPerSecond / 1000 };
     constexpr uint64_t engineTickInterval{ MIDI_RTP_TICK_INTERVAL_MS * sessionTicksPerMillisecond };
 
-    uint64_t nextEngineTick{ 0 };
-
-    while (!stopToken.stop_requested())
+    try
     {
-        // one failed tick must not stop the timers of every connection on this port pair
-        try
+        if (SessionNow() >= nextEngineTick)
         {
-            if (SessionNow() >= nextEngineTick)
             {
-                {
-                    auto lock = std::scoped_lock{ m_engineLock };
-                    if (m_session != nullptr) m_session->Tick(SessionNow());
-                }
-
-                DeliverPending();
-
-                nextEngineTick = SessionNow() + engineTickInterval;
+                auto lock = m_engineLock.lock_exclusive();
+                if (m_session != nullptr) m_session->Tick(SessionNow());
             }
 
-            // Messages held back by a speed limit. The timer wakes this thread the moment the
-            // next of them may go, which is usually well before the next engine tick.
-            auto const pacedWait = SendPacedMidi();
+            DeliverPending();
 
-            if (pacedWait > 0) ArmPacedSendTimer(pacedWait);
+            nextEngineTick = SessionNow() + engineTickInterval;
         }
-        CATCH_LOG();
 
-        auto const now = SessionNow();
+        // Messages held back by a speed limit. The timer wakes this thread the moment the
+        // next of them may go, which is usually well before the next engine tick.
+        auto const pacedWait = SendPacedMidi();
 
-        DWORD const timeout = (now >= nextEngineTick) ? 0 :
-            static_cast<DWORD>((std::min)(
-                (nextEngineTick - now + sessionTicksPerMillisecond - 1) / sessionTicksPerMillisecond,
-                static_cast<uint64_t>(MIDI_RTP_TICK_INTERVAL_MS)));
+        if (pacedWait > 0) ArmPacedSendTimer(pacedWait);
+    }
+    CATCH_LOG();
 
-        if (WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, timeout) == WAIT_FAILED)
-        {
-            // never spin on a broken handle
-            LOG_LAST_ERROR();
-            std::this_thread::sleep_for(std::chrono::milliseconds(MIDI_RTP_TICK_INTERVAL_MS));
-        }
+    auto const now = SessionNow();
+
+    DWORD const timeout = (now >= nextEngineTick) ? 0 :
+        static_cast<DWORD>((std::min)(
+            (nextEngineTick - now + sessionTicksPerMillisecond - 1) / sessionTicksPerMillisecond,
+            static_cast<uint64_t>(MIDI_RTP_TICK_INTERVAL_MS)));
+
+    if (WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, timeout) == WAIT_FAILED)
+    {
+        // never spin on a broken handle
+        LOG_LAST_ERROR();
+        std::this_thread::sleep_for(std::chrono::milliseconds(MIDI_RTP_TICK_INTERVAL_MS));
     }
 }
 
@@ -489,7 +525,7 @@ _Use_decl_annotations_
 std::shared_ptr<RtpMidiConnection>
 RtpMidiNode::FindConnection(uint32_t const participantId)
 {
-    auto lock = std::scoped_lock{ m_connectionsLock };
+    auto lock = m_connectionsLock.lock_exclusive();
 
     auto const it = m_connections.find(participantId);
     return it == m_connections.end() ? nullptr : it->second;
@@ -501,12 +537,12 @@ RtpMidiNode::DeliverPending()
 {
     try
     {
-        auto delivery = std::scoped_lock{ m_deliveryLock };
+        auto delivery = m_deliveryLock.lock_exclusive();
 
         std::vector<PendingEvent> events;
 
         {
-            auto lock = std::scoped_lock{ m_engineLock };
+            auto lock = m_engineLock.lock_exclusive();
             events.swap(m_pending);
         }
 
@@ -516,7 +552,7 @@ RtpMidiNode::DeliverPending()
             {
                 if (auto connection = FindConnection(event.ParticipantId))
                 {
-                    connection->DeliverFromNetwork(event.Bytes, SessionTicksToMidiTimestamp(event.LocalTicks));
+                    connection->DeliverFromNetwork(event.Bytes, SessionTicksToMidiTicks(event.LocalTicks));
                 }
 
                 continue;
@@ -527,7 +563,7 @@ RtpMidiNode::DeliverPending()
                 std::shared_ptr<RtpMidiConnection> connection{ nullptr };
 
                 {
-                    auto lock = std::scoped_lock{ m_connectionsLock };
+                    auto lock = m_connectionsLock.lock_exclusive();
 
                     if (m_connections.find(event.ParticipantId) == m_connections.end())
                     {
@@ -545,7 +581,7 @@ RtpMidiNode::DeliverPending()
                 std::shared_ptr<RtpMidiConnection> connection{ nullptr };
 
                 {
-                    auto lock = std::scoped_lock{ m_connectionsLock };
+                    auto lock = m_connectionsLock.lock_exclusive();
 
                     auto const it = m_connections.find(event.ParticipantId);
                     if (it != m_connections.end())
