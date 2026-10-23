@@ -42,6 +42,12 @@ public:
     void ProcessIncomingPacket(_In_reads_bytes_(byteCount) uint8_t const* const bytes, _In_ size_t const byteCount);
 
     HRESULT Start();
+
+    // Stops everything at once and returns without waiting: sends are refused, the queue is
+    // dropped, the callback is released, and the writer's in-flight Bluetooth wait gives up within
+    // a poll slice. Lets the endpoint go away before the slower teardown in Shutdown.
+    void BeginShutdown() noexcept;
+
     HRESULT Shutdown();
 
     HRESULT ConnectMidiCallback(_In_ IMidiCallback* callback, _In_ LONGLONG context);
@@ -200,7 +206,12 @@ private:
     uint64_t m_nextSubscriptionRenewalTickCount{ 0 };
 
     std::atomic<bool> m_shutdown{ false };
+    std::atomic<bool> m_tornDown{ false };
     std::atomic<bool> m_started{ false };
+
+    // For the writer thread's Bluetooth waits, so a connection which is shutting down does not
+    // hold up its own thread join for a whole timeout.
+    bool IsShuttingDownConnection() const noexcept { return m_shutdown.load(); }
 
     std::atomic<uint64_t> m_messagesReceived{ 0 };
     std::atomic<uint64_t> m_messagesSent{ 0 };

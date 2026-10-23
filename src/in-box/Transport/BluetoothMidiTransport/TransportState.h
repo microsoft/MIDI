@@ -56,6 +56,10 @@ public:
 
     HRESULT AddConnection(_In_ std::shared_ptr<MidiBleConnection> connection);
     HRESULT RemoveConnection(_In_ winrt::hstring const& deviceId);
+
+    // Removes the connection from the table without shutting it down, so the caller decides when
+    // the slow part happens. Null when there is none.
+    std::shared_ptr<MidiBleConnection> TakeConnection(_In_ winrt::hstring const& deviceId);
     void ShutdownAllConnections();
 
     std::shared_ptr<MidiBleConnection> GetConnectionByDeviceId(_In_ winrt::hstring const& deviceId);

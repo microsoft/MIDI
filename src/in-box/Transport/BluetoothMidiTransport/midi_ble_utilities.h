@@ -14,6 +14,7 @@
 // The parts which are decided purely from a string, a number or a json value live here, so they
 // can be unit tested without the radio, the service or COM.
 #include "midi_ble_validation.h"
+#include "midi_ble_await.h"
 #include "transport_defs.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 
@@ -147,135 +148,7 @@ namespace MidiBleUtilities
     inline constexpr uint32_t BleConnectOperationTimeoutMilliseconds = MIDI_BLE_CONNECT_OPERATION_TIMEOUT_MS;
     inline constexpr uint32_t BleDataOperationTimeoutMilliseconds = MIDI_BLE_DATA_OPERATION_TIMEOUT_MS;
     inline constexpr uint32_t BleTeardownOperationTimeoutMilliseconds = MIDI_BLE_TEARDOWN_OPERATION_TIMEOUT_MS;
-    inline constexpr uint32_t AwaitPollSliceMilliseconds = MIDI_BLE_AWAIT_POLL_SLICE_MS;
-
-    // Set while the transport is tearing down. Service shutdown joins the threads which make these
-    // calls, so a wait in progress abandons rather than running to its full timeout.
-    inline std::atomic<bool> g_shuttingDown{ false };
-
-    inline bool IsShuttingDown() noexcept { return g_shuttingDown.load(std::memory_order_relaxed); }
-    inline void SetShuttingDown(_In_ bool const value) noexcept { g_shuttingDown.store(value, std::memory_order_relaxed); }
-
-    struct AwaitOutcome
-    {
-        // A wait which ran out of time and a call the system failed outright both come back empty,
-        // but only one of them means the device stopped answering.
-        bool TimedOut{ false };
-        bool Failed{ false };
-        HRESULT ErrorCode{ S_OK };
-    };
-
-    template<typename TResult>
-    inline TResult AwaitWithTimeout(
-        _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
-        _In_ uint32_t const timeoutMilliseconds,
-        _In_ TResult const onTimeout,
-        _Out_ AwaitOutcome& outcome)
-    {
-        outcome = AwaitOutcome{ };
-
-        if (operation == nullptr)
-        {
-            outcome.Failed = true;
-            outcome.ErrorCode = E_POINTER;
-
-            return onTimeout;
-        }
-
-        try
-        {
-            // Completed may only ever be assigned once on a WinRT async operation, which rules out
-            // calling wait_for in a loop: the second call throws and the wait collapses to a single
-            // slice. Signaling an event from one handler and waiting on that instead is what lets
-            // the wait be given up early without touching the operation again.
-            //
-            // Shared rather than captured by reference, because the handler can still run after
-            // this function has abandoned the operation and returned.
-            auto completed = std::make_shared<wil::slim_event_manual_reset>();
-
-            operation.Completed([completed](auto&&, auto&&) { completed->SetEvent(); });
-
-            uint32_t remaining = timeoutMilliseconds;
-
-            while (remaining > 0)
-            {
-                uint32_t const slice = remaining < AwaitPollSliceMilliseconds ? remaining : AwaitPollSliceMilliseconds;
-
-                if (completed->wait(slice))
-                {
-                    break;
-                }
-
-                remaining -= slice;
-
-                // Service shutdown joins the threads making these calls, so a wait in progress is
-                // abandoned rather than run to its full timeout.
-                if (IsShuttingDown())
-                {
-                    break;
-                }
-            }
-
-            auto const status = operation.Status();
-
-            if (status == ::winrt::Windows::Foundation::AsyncStatus::Completed)
-            {
-                return operation.GetResults();
-            }
-
-            if (status == ::winrt::Windows::Foundation::AsyncStatus::Started)
-            {
-                outcome.TimedOut = true;
-            }
-            else
-            {
-                // Error and Canceled carry the HRESULT which names the real fault. Reporting these
-                // as a timeout discards the only field a "it will not connect" report can act on.
-                outcome.Failed = true;
-                outcome.ErrorCode = operation.ErrorCode();
-            }
-
-            // Best effort. The operation keeps its own references and unwinds on its own, so
-            // abandoning it is safe even when the cancel is ignored.
-            operation.Cancel();
-        }
-        CATCH_LOG();
-
-        if (!outcome.TimedOut && !outcome.Failed)
-        {
-            outcome.Failed = true;
-        }
-
-        return onTimeout;
-    }
-
-    template<typename TResult>
-    inline TResult AwaitWithTimeout(
-        _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
-        _In_ uint32_t const timeoutMilliseconds,
-        _In_ TResult const onTimeout,
-        _Out_ bool& timedOut)
-    {
-        AwaitOutcome outcome{ };
-
-        auto result = AwaitWithTimeout(operation, timeoutMilliseconds, onTimeout, outcome);
-
-        // Existing callers use this flag to mean "did not succeed"
-        timedOut = outcome.TimedOut || outcome.Failed;
-
-        return result;
-    }
-
-    template<typename TResult>
-    inline TResult AwaitWithTimeout(
-        _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
-        _In_ uint32_t const timeoutMilliseconds,
-        _In_ TResult const onTimeout)
-    {
-        AwaitOutcome ignored{ };
-
-        return AwaitWithTimeout(operation, timeoutMilliseconds, onTimeout, ignored);
-    }
+    // AwaitWithTimeout, AwaitWithTimeoutOrAbandon and the shutdown flag are in midi_ble_await.h
 
     // Windows hands back a cached BluetoothLEDevice per address, and its DeviceInformation is a
     // snapshot taken when that object was created. One left open is handed to the next caller with

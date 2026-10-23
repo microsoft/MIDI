@@ -44,4 +44,10 @@ public:
     TEST_METHOD(TestEvictionDropsTheLongestUnheardWhenFull);
     TEST_METHOD(TestEvictionTurnsAwayWhenFullOfKeptDevices);
     TEST_METHOD(TestEvictionBoundsTheTableUnderAnAddressFlood);
+
+    // A disconnect waited for the writer's in-flight Bluetooth call to run to its full timeout
+    TEST_METHOD(TestAwaitReturnsTheResultWhenTheOperationCompletes);
+    TEST_METHOD(TestAwaitGivesUpSoonAfterShutdownStarts);
+    TEST_METHOD(TestAwaitGivesUpAtOnceWhenAlreadyShuttingDown);
+    TEST_METHOD(TestAwaitRunsToItsTimeoutWhenNotShuttingDown);
 };

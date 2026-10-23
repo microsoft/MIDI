@@ -98,6 +98,9 @@
     <ClInclude Include="midi_ble_worker_wakeup.h">
       <Filter>Header Files\Infrastructure</Filter>
     </ClInclude>
+    <ClInclude Include="midi_ble_await.h">
+      <Filter>Header Files\Infrastructure</Filter>
+    </ClInclude>
     <ClInclude Include="bluetooth_json_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>

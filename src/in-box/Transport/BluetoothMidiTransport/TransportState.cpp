@@ -209,17 +209,7 @@ _Use_decl_annotations_
 HRESULT
 TransportState::RemoveConnection(winrt::hstring const& deviceId)
 {
-    std::shared_ptr<MidiBleConnection> connection{ nullptr };
-
-    {
-        auto lock = m_connectionsLock.lock_exclusive();
-
-        if (auto entry = m_connections.find(deviceId); entry != m_connections.end())
-        {
-            connection = entry->second;
-            m_connections.erase(entry);
-        }
-    }
+    auto connection = TakeConnection(deviceId);
 
     // shutdown blocks on the writer thread and on Bluetooth, so it never runs under the lock
     if (connection != nullptr)
@@ -228,6 +218,24 @@ TransportState::RemoveConnection(winrt::hstring const& deviceId)
     }
 
     return S_OK;
+}
+
+
+_Use_decl_annotations_
+std::shared_ptr<MidiBleConnection>
+TransportState::TakeConnection(winrt::hstring const& deviceId)
+{
+    std::shared_ptr<MidiBleConnection> connection{ nullptr };
+
+    auto lock = m_connectionsLock.lock_exclusive();
+
+    if (auto entry = m_connections.find(deviceId); entry != m_connections.end())
+    {
+        connection = std::move(entry->second);
+        m_connections.erase(entry);
+    }
+
+    return connection;
 }
 
 

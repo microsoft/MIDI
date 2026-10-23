@@ -173,6 +173,50 @@ namespace
     }
 
     constexpr uint64_t StaleAfter = 60000;
+
+    // An operation which finishes only when the test says so, the way a Bluetooth call to a busy
+    // or silent device does. The test always releases it and waits for it to finish, so nothing is
+    // left running in this DLL after the test returns.
+    class HeldOperation
+    {
+    public:
+        HeldOperation() : Operation{ Run(m_release) } { }
+
+        ~HeldOperation()
+        {
+            Release();
+        }
+
+        void Release()
+        {
+            m_release->SetEvent();
+
+            auto const deadline = GetTickCount64() + JoinTimeoutMilliseconds;
+
+            while (Operation.Status() == winrt::Windows::Foundation::AsyncStatus::Started && GetTickCount64() < deadline)
+            {
+                ::Sleep(5);
+            }
+        }
+
+    private:
+        std::shared_ptr<wil::slim_event_manual_reset> m_release{ std::make_shared<wil::slim_event_manual_reset>() };
+
+        static winrt::Windows::Foundation::IAsyncOperation<int32_t> Run(std::shared_ptr<wil::slim_event_manual_reset> release)
+        {
+            co_await winrt::resume_background();
+            release->wait();
+            co_return 7;
+        }
+
+    public:
+        winrt::Windows::Foundation::IAsyncOperation<int32_t> Operation;
+    };
+
+    uint64_t MillisecondsSince(_In_ uint64_t const start)
+    {
+        return GetTickCount64() - start;
+    }
 }
 
 
@@ -550,4 +594,95 @@ void BluetoothMidiRobustnessTests::TestEvictionBoundsTheTableUnderAnAddressFlood
     // The newest address always gets in, so a real device which starts advertising during a
     // flood is still found
     VERIFY_IS_TRUE(table.contains(L"FLOOD" + std::to_wstring(FloodAddresses - 1)));
+}
+
+void BluetoothMidiRobustnessTests::TestAwaitReturnsTheResultWhenTheOperationCompletes()
+{
+    HeldOperation held;
+    held.Release();
+
+    MidiBleUtilities::AwaitOutcome outcome{ };
+
+    auto const result = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
+        held.Operation, 5000, int32_t{ -1 }, []() noexcept { return false; }, outcome);
+
+    VERIFY_ARE_EQUAL(7, result);
+    VERIFY_IS_FALSE(outcome.TimedOut);
+    VERIFY_IS_FALSE(outcome.Failed);
+    VERIFY_IS_FALSE(outcome.Abandoned);
+}
+
+
+void BluetoothMidiRobustnessTests::TestAwaitGivesUpSoonAfterShutdownStarts()
+{
+    HeldOperation held;
+    std::atomic<bool> shuttingDown{ false };
+
+    // The connection starts shutting down while its writer is waiting on Bluetooth
+    std::thread shutdown([&shuttingDown]()
+        {
+            ::Sleep(300);
+            shuttingDown = true;
+        });
+
+    auto const start = GetTickCount64();
+    MidiBleUtilities::AwaitOutcome outcome{ };
+
+    auto const result = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
+        held.Operation, 10000, int32_t{ -1 }, [&shuttingDown]() noexcept { return shuttingDown.load(); }, outcome);
+
+    auto const elapsed = MillisecondsSince(start);
+    shutdown.join();
+
+    Log::Comment(String().Format(L"Gave up after %llu ms of a 10000 ms timeout", elapsed));
+
+    VERIFY_ARE_EQUAL(-1, result);
+    VERIFY_IS_TRUE(outcome.Abandoned);
+    VERIFY_IS_TRUE(outcome.TimedOut);
+
+    // 300 ms until the shutdown, then at most one poll slice, plus slack for a busy machine
+    VERIFY_IS_LESS_THAN(elapsed, static_cast<uint64_t>(300 + MIDI_BLE_AWAIT_POLL_SLICE_MS + 1500));
+}
+
+
+void BluetoothMidiRobustnessTests::TestAwaitGivesUpAtOnceWhenAlreadyShuttingDown()
+{
+    HeldOperation held;
+
+    auto const start = GetTickCount64();
+    MidiBleUtilities::AwaitOutcome outcome{ };
+
+    auto const result = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
+        held.Operation, 5000, int32_t{ -1 }, []() noexcept { return true; }, outcome);
+
+    auto const elapsed = MillisecondsSince(start);
+
+    VERIFY_ARE_EQUAL(-1, result);
+    VERIFY_IS_TRUE(outcome.Abandoned);
+
+    // without waiting even one slice
+    VERIFY_IS_LESS_THAN(elapsed, static_cast<uint64_t>(MIDI_BLE_AWAIT_POLL_SLICE_MS));
+}
+
+
+void BluetoothMidiRobustnessTests::TestAwaitRunsToItsTimeoutWhenNotShuttingDown()
+{
+    HeldOperation held;
+
+    constexpr uint32_t Timeout = 600;
+
+    auto const start = GetTickCount64();
+    MidiBleUtilities::AwaitOutcome outcome{ };
+
+    auto const result = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
+        held.Operation, Timeout, int32_t{ -1 }, []() noexcept { return false; }, outcome);
+
+    auto const elapsed = MillisecondsSince(start);
+
+    VERIFY_ARE_EQUAL(-1, result);
+    VERIFY_IS_TRUE(outcome.TimedOut);
+    VERIFY_IS_FALSE(outcome.Abandoned);
+
+    // GetTickCount64 moves in steps of about 16 ms
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(elapsed + 32, static_cast<uint64_t>(Timeout));
 }

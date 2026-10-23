@@ -859,11 +859,13 @@ MidiBlePeripheral::NotifyPacket(std::vector<uint8_t> const& packet)
             writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
 
             // The overload which takes a client notifies only that client, which is what keeps a
-            // second Central from being fed data meant for the first.
-            auto result = MidiBleUtilities::AwaitWithTimeout(
+            // second Central from being fed data meant for the first. Stop joins the writer thread
+            // this runs on, so the wait ends as soon as the peripheral stops.
+            auto result = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
                 characteristic.NotifyValueAsync(writer.DetachBuffer(), client),
                 MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
-                gatt::GattClientNotificationResult{ nullptr });
+                gatt::GattClientNotificationResult{ nullptr },
+                [this]() noexcept { return !m_running.load(); });
 
             if (result == nullptr)
             {

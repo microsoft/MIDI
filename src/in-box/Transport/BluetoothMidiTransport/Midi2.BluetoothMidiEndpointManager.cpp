@@ -3430,7 +3430,9 @@ CMidi2BluetoothMidiEndpointManager::DisconnectDeviceInternal(winrt::hstring cons
         TraceLoggingWideString(deviceId.c_str(), "device id")
     );
 
-    auto connection = TransportState::Current().GetConnectionByDeviceId(deviceId);
+    // Out of the table first, so a connect asked for while this one is still tearing down starts
+    // a new connection instead of finding this one and doing nothing.
+    auto connection = TransportState::Current().TakeConnection(deviceId);
 
     if (connection == nullptr)
     {
@@ -3438,6 +3440,14 @@ CMidi2BluetoothMidiEndpointManager::DisconnectDeviceInternal(winrt::hstring cons
 
         return S_OK;
     }
+
+    // Refuses sends, drops the queue, releases the callback and cuts the writer's Bluetooth wait
+    // short, without waiting. The callback has to be gone before the endpoint goes, because
+    // removal re-enters synchronously through the bidi's Shutdown.
+    connection->BeginShutdown();
+
+    // It is out of the table, so nothing else will shut it down
+    auto shutdownConnection = wil::scope_exit([&]() noexcept { LOG_IF_FAILED(connection->Shutdown()); });
 
     auto const deviceInstanceId = connection->EndpointDeviceInstanceId();
 
@@ -3453,16 +3463,14 @@ CMidi2BluetoothMidiEndpointManager::DisconnectDeviceInternal(winrt::hstring cons
         std::erase_if(m_createdEndpoints, [&deviceId](CreatedEndpointRecord const& record) { return record.DeviceId == deviceId; });
     }
 
-    // the callback is released before the endpoint goes away, because removal re-enters
-    // synchronously through the bidi's Shutdown
-    LOG_IF_FAILED(connection->DisconnectMidiCallback());
-
-    LOG_IF_FAILED(TransportState::Current().RemoveConnection(deviceId));
-
+    // Removed before the Bluetooth teardown below, which can take seconds on a busy link. Apps
+    // see the device go as soon as it is asked for, not when the radio has finished.
     if (!deviceInstanceId.empty())
     {
         LOG_IF_FAILED(DeleteEndpoint(deviceInstanceId));
     }
+
+    shutdownConnection.reset();
 
     UpdateDiscoveredDeviceConnectionState(deviceId, false, MidiBleProtocol::Protocol::Unknown, L"");
 

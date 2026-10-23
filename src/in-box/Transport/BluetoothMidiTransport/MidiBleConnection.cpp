@@ -267,11 +267,13 @@ MidiBleConnection::SubscribeToNotifications(uint32_t const timeoutMilliseconds)
     {
         // The WithResult form is used only because the plain one returns a status with no ATT
         // error, and the ATT error is what distinguishes "pair me first" from "I am asleep".
-        auto descriptorResult = MidiBleUtilities::AwaitWithTimeout(
+        // Also runs on the writer thread to renew the subscription, and Shutdown joins that thread
+        auto descriptorResult = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
             characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
                 gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
             timeoutMilliseconds,
-            gatt::GattWriteResult{ nullptr });
+            gatt::GattWriteResult{ nullptr },
+            [this]() noexcept { return IsShuttingDownConnection(); });
 
         auto const descriptorStatus = descriptorResult != nullptr ?
             descriptorResult.Status() : gatt::GattCommunicationStatus::Unreachable;
@@ -300,10 +302,11 @@ MidiBleConnection::SubscribeToNotifications(uint32_t const timeoutMilliseconds)
 
         // the specified handshake: the Central reads the Characteristic after connecting and the
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
-        auto readResult = MidiBleUtilities::AwaitWithTimeout(
+        auto readResult = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
             characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
             timeoutMilliseconds,
-            gatt::GattReadResult{ nullptr });
+            gatt::GattReadResult{ nullptr },
+            [this]() noexcept { return IsShuttingDownConnection(); });
 
         // A device can allow the subscription and still demand authentication for the read
         if (readResult != nullptr &&
@@ -600,6 +603,15 @@ MidiBleConnection::RenewNotificationSubscription()
             return;
         }
 
+        // Abandoned because this connection is shutting down. Asking the endpoint manager to
+        // rebuild it would bring back a device that is being disconnected.
+        if (m_shutdown.load())
+        {
+            settle(false, 0);
+
+            return;
+        }
+
         if (attempt < MIDI_BLE_SUBSCRIPTION_RENEWAL_MAX_ATTEMPTS)
         {
             auto const delay = MidiBleUtilities::ConnectRetryIntervalMilliseconds(
@@ -652,6 +664,27 @@ MidiBleConnection::RenewNotificationSubscription()
 }
 
 
+void
+MidiBleConnection::BeginShutdown() noexcept
+{
+    // Every path which sends, receives or renews checks this, and so do the writer's waits
+    m_shutdown = true;
+
+    DisconnectMidiCallback();
+
+    // The writer's stop callback signals under the queue lock too. This covers a writer which has
+    // not registered that callback yet, and m_shutdown, which also stops it.
+    m_writerThread.request_stop();
+    m_outgoingWakeup.SignalStop(m_outgoingQueueLock);
+
+    // Nothing queued is going to be sent now, so it is dropped rather than left for the join
+    {
+        auto lock = m_outgoingQueueLock.lock_exclusive();
+        m_outgoingPackets.clear();
+    }
+}
+
+
 HRESULT
 MidiBleConnection::Shutdown()
 {
@@ -665,17 +698,13 @@ MidiBleConnection::Shutdown()
         TraceLoggingWideString(m_deviceId.c_str(), "device id")
     );
 
-    if (m_shutdown.exchange(true))
+    // A separate flag from m_shutdown, which BeginShutdown sets ahead of this
+    if (m_tornDown.exchange(true))
     {
         return S_OK;
     }
 
-    DisconnectMidiCallback();
-
-    // The writer's stop callback signals under the queue lock too. This covers a writer which has
-    // not registered that callback yet, and m_shutdown, which also stops it.
-    m_writerThread.request_stop();
-    m_outgoingWakeup.SignalStop(m_outgoingQueueLock);
+    BeginShutdown();
 
     if (m_writerThread.joinable() && m_writerThread.get_id() != std::this_thread::get_id())
     {
@@ -1681,11 +1710,22 @@ MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
             DataWriter writer;
             writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
 
-            // the Central always writes without response
-            auto status = MidiBleUtilities::AwaitWithTimeout(
+            // the Central always writes without response. Shutdown joins this thread, so the wait
+            // ends as soon as the connection starts shutting down.
+            MidiBleUtilities::AwaitOutcome outcome{ };
+
+            auto status = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
                 characteristic.WriteValueAsync(writer.DetachBuffer(), gatt::GattWriteOption::WriteWithoutResponse),
                 MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
-                gatt::GattCommunicationStatus::Unreachable);
+                gatt::GattCommunicationStatus::Unreachable,
+                [this]() noexcept { return IsShuttingDownConnection(); },
+                outcome);
+
+            // not a send error: the connection is going away, and the writer stops next
+            if (outcome.Abandoned)
+            {
+                return S_FALSE;
+            }
 
             if (status != gatt::GattCommunicationStatus::Success)
             {

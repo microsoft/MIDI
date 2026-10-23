@@ -36,7 +36,10 @@
 #include "transport_defs.h"
 #include "bluetooth_transport_error_codes.h"
 
-// The worker wakeup both background threads use. Plain Win32 and wil, so it is tested on its own.
+// The awaiter every Bluetooth call goes through, and the worker wakeup both background threads
+// use. Plain Win32, WinRT Foundation and wil, so they are tested on their own. The awaiter comes
+// first because it brings in wil/cppwinrt.h, which has to precede the other wil headers.
+#include "midi_ble_await.h"
 #include "midi_ble_worker_wakeup.h"
 
 #endif //PCH_H
