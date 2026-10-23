@@ -25,7 +25,16 @@ TransportState& TransportState::Current()
 HRESULT
 TransportState::ConstructEndpointManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&m_endpointManager));
+    wil::com_ptr<CMidi2BluetoothMidiEndpointManager> endpointManager;
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&endpointManager));
+
+    auto lock = std::scoped_lock{ m_managersLock };
+
+    // another Activate call may have won the race. Keep the one already published.
+    if (m_endpointManager == nullptr)
+    {
+        m_endpointManager = endpointManager;
+    }
 
     return S_OK;
 }
@@ -33,9 +42,36 @@ TransportState::ConstructEndpointManager()
 HRESULT
 TransportState::ConstructConfigurationManager()
 {
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiConfigurationManager>(&m_configurationManager));
+    wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> configurationManager;
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiConfigurationManager>(&configurationManager));
+
+    auto lock = std::scoped_lock{ m_managersLock };
+
+    if (m_configurationManager == nullptr)
+    {
+        m_configurationManager = configurationManager;
+    }
 
     return S_OK;
+}
+
+
+void
+TransportState::Shutdown() noexcept
+{
+    wil::com_ptr<CMidi2BluetoothMidiEndpointManager> endpointManager;
+    wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> configurationManager;
+
+    {
+        auto lock = std::scoped_lock{ m_managersLock };
+
+        endpointManager.swap(m_endpointManager);
+        configurationManager.swap(m_configurationManager);
+    }
+
+    // Released outside the lock, in case this is the last reference and a destructor runs
+    endpointManager.reset();
+    configurationManager.reset();
 }
 
 

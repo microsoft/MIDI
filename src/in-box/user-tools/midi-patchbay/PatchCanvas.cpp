@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "PatchCanvas.h"
+#include "OscText.h"
 #include "PatchLayout.h"
 #include "RoundedShape.h"
 #include "RouteGraph.h"
@@ -1119,7 +1120,7 @@ namespace midipatchbay
         NodeVisual node{};
 
         node.NodeId = endpoint.Id;
-        node.IsOffline = live == nullptr;
+        node.IsOffline = live == nullptr && !endpoint.IsOsc();
         node.Width = MinimumNodeWidth;
 
         auto const textPrimary = ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF));
@@ -1170,7 +1171,7 @@ namespace midipatchbay
         else
         {
             picture = MakeGlyph(
-                node.IsOffline ? L"\uE711" : (isLoopback ? L"\uE895" : L"\uE7F6"),
+                node.IsOffline ? L"\uE711" : (endpoint.IsOsc() ? L"\uE774" : (isLoopback ? L"\uE895" : L"\uE7F6")),
                 14,
                 node.IsOffline ? critical : accent);
         }
@@ -1197,7 +1198,11 @@ namespace midipatchbay
 
         std::wstring subtitle{};
 
-        if (live != nullptr)
+        if (endpoint.IsOsc())
+        {
+            subtitle = OscNodeSubtitle(*endpoint.Osc);
+        }
+        else if (live != nullptr)
         {
             subtitle = live->ManufacturerName;
 
@@ -1269,14 +1274,25 @@ namespace midipatchbay
             }
         }
 
-        if (groups.empty())
+        // An OSC connection's rows are its groups, however many it has.
+        if (endpoint.IsOsc())
+        {
+            groups.clear();
+
+            for (auto const& oscRow : endpoint.Osc->Rows)
+            {
+                groups.push_back(oscRow.Group);
+            }
+        }
+
+        if (groups.empty() && !endpoint.IsOsc())
         {
             groups.push_back(0);
         }
 
         // A device that declares every group would otherwise make a node taller than the window;
         // the customer opts into the rest from the node menu.
-        if (!endpoint.ShowAllGroups && groups.size() > 8)
+        if (!endpoint.ShowAllGroups && !endpoint.IsOsc() && groups.size() > 8)
         {
             groups.resize(8);
         }
@@ -1330,6 +1346,13 @@ namespace midipatchbay
                 if (live != nullptr && groupIndex != AllGroups)
                 {
                     groupName = live->GroupName(groupIndex, isOutput);
+                }
+                else if (endpoint.IsOsc() && groupIndex != AllGroups)
+                {
+                    if (auto const* oscRow = OscRowOnGroup(*endpoint.Osc, static_cast<uint8_t>(groupIndex)))
+                    {
+                        groupName = OscRowLabel(*oscRow);
+                    }
                 }
 
                 auto const groupLabel = DescribeGroupIndex(groupIndex, groupName, !isOutput);

@@ -75,6 +75,7 @@
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId.h"
 
 // TransportUtilities
 #include "wstring_util.h"

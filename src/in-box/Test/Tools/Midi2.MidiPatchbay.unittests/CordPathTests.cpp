@@ -516,6 +516,39 @@ void CordPathTests::LabelsSitOnTheirLinesClearOfEachOther()
     }
 }
 
+void CordPathTests::ALabelWithNoRoomBetweenNodesMovesOffThem()
+{
+    // An OSC connection and a step only 28 apart, as a customer had them: a line from the
+    // connection's first row up to the step's In. Halfway along, a label covered the connection's
+    // "All groups" caption.
+    Layout layout{};
+    layout.Nodes = { CordRect{ 355, 523, 640, 667 }, CordRect{ 668, 523, 840, 604 } };
+    layout.Links = { Link{ 0, 622, 1, 563 } };
+
+    auto const paths = Plan(layout);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, paths.size());
+
+    auto const& label = paths[0].LabelPoint;
+    CordRect const area{ label.X - 32, label.Y - 11, label.X + 32, label.Y + 11 };
+
+    for (auto const& node : layout.Nodes)
+    {
+        VERIFY_IS_FALSE(area.Left < node.Right && node.Left < area.Right && area.Top < node.Bottom && node.Top < area.Bottom);
+    }
+
+    // Still next to its line.
+    VERIFY_IS_TRUE(std::hypot(label.X - 654.0, label.Y - 592.5) <= 48.0);
+
+    // With room between the nodes, the label stays halfway along, as before.
+    Layout roomy{};
+    roomy.Nodes = { CordRect{ 48, 50, 300, 200 }, CordRect{ 600, 150, 880, 300 } };
+    roomy.Links = { Link{ 0, 150, 1, 250 } };
+
+    auto const usual = Plan(roomy);
+    VERIFY_ARE_EQUAL(450.0, usual[0].LabelPoint.X);
+    VERIFY_ARE_EQUAL(200.0, usual[0].LabelPoint.Y);
+}
+
 void CordPathTests::TheSameLayoutGivesTheSameLines()
 {
     for (unsigned seed = 500; seed < 520; seed++)

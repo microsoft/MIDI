@@ -47,8 +47,11 @@ namespace midipatchbay
     {
         if (auto const* endpoint = patch.FindEndpoint(nodeId))
         {
-            // All groups, plus group 1 or every group.
-            auto const rows = endpoint->ShowAllGroups ? 1 + MaximumGroupCount : 2;
+            // All groups, plus group 1 or every group. An OSC connection has a row for each of its
+            // address spaces.
+            auto const rows = endpoint->IsOsc()
+                ? 1 + static_cast<int32_t>((std::max)(endpoint->Osc->Rows.size(), size_t{ 1 }))
+                : endpoint->ShowAllGroups ? 1 + MaximumGroupCount : 2;
 
             return { EndpointWidth, EndpointFixedHeight + rows * EndpointRowHeight };
         }

@@ -328,6 +328,12 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
         &createInfo,
         &newDeviceInterfaceId));
 
+    // An instance id which is already active comes back as S_FALSE with no interface id
+    if (Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled())
+    {
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS), newDeviceInterfaceId.get());
+    }
+
 
      // we need this for removal later
     entry.CreatedShortClientInstanceId = instanceId;
@@ -449,6 +455,12 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
         nullptr,
         &createInfo,
         &newDeviceInterfaceId));
+
+    // An instance id which is already active comes back as S_FALSE with no interface id
+    if (Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled())
+    {
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS), newDeviceInterfaceId.get());
+    }
 
 
     // we need this for device removal later

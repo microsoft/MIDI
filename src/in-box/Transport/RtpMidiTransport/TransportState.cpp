@@ -53,6 +53,24 @@ TransportState::ConstructConfigurationManager()
     return S_OK;
 }
 
+void
+TransportState::Shutdown() noexcept
+{
+    wil::com_ptr<CMidi2RtpMidiEndpointManager> endpointManager;
+    wil::com_ptr<CMidi2RtpMidiConfigurationManager> configurationManager;
+
+    {
+        auto lock = std::scoped_lock{ m_managersLock };
+
+        endpointManager.swap(m_endpointManager);
+        configurationManager.swap(m_configurationManager);
+    }
+
+    // Released outside the lock, in case this is the last reference and a destructor runs
+    endpointManager.reset();
+    configurationManager.reset();
+}
+
 
 _Use_decl_annotations_
 void

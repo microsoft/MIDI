@@ -2957,14 +2957,27 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
 
             // the jthread destructor would join, which is exactly what must not happen here
             m_backgroundNegotiationThread.detach();
+
+            // The abandoned thread still uses this object and its service pointers. Leaking one
+            // reference means it never runs on freed memory, and nothing releases those pointers
+            // late, at DLL unload. The service is stopping, so the process ends soon after.
+            AddRef();
         }
     }
 
     m_initialized = false;
 
+    // TransportState::Shutdown releases its reference to this object, and the service may hold
+    // the only other one, so this one keeps it alive until the end of this function.
+    wil::com_ptr<CMidi2NetworkMidiEndpointManager> keepAlive{ this };
+
     // Hosts and clients own sockets and worker threads. Without this they survive until static
-    // destruction, which would join those threads under the loader lock.
-    LOG_IF_FAILED(TransportState::Current().ShutdownHostsClientsAndConnections());
+    // destruction, which would join those threads under the loader lock. It also drops the
+    // transport's references to both managers. Held there, they lived until DLL unload and then
+    // released service objects the service had already destroyed. This object's own service
+    // pointers are released by its destructor, which now runs when the service lets go of it, not
+    // here: a socket callback already running when its socket closed may still be using them.
+    LOG_IF_FAILED(TransportState::Current().Shutdown());
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

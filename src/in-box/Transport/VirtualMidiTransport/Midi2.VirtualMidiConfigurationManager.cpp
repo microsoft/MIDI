@@ -202,9 +202,33 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
                     if (TransportState::Current().GetEndpointTable()->IsUniqueIdInUse(deviceEntry.ShortUniqueId))
                     {
-                        responseObject.SetNamedValue(
-                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                            jsonFalse);
+                        // A second device with this id cannot be created, so stop here
+                        if (Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled())
+                        {
+                            TraceLoggingWrite(
+                                MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier is already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(deviceEntry.ShortUniqueId.c_str(), "identifier")
+                            );
+
+                            responseObject.SetNamedValue(
+                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                                jsonFalse);
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                            return internal::ConfigurationRejectionResult(HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS));
+                        }
+                        else
+                        {
+                            responseObject.SetNamedValue(
+                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                                jsonFalse);
+                        }
                     }
 
 

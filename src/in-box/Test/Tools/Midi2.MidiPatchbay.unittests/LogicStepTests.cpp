@@ -1175,7 +1175,8 @@ void LogicStepTests::AFileFromANewerVersionIsMarked()
     std::wstring newer{ text };
     auto const version = newer.find(L"\"fileVersion\":2");
     VERIFY_IS_TRUE(version != std::wstring::npos);
-    newer.replace(version, 15, L"\"fileVersion\":3");
+    // Version 3 is this version's own, for patches with OSC connections. 4 is from later.
+    newer.replace(version, 15, L"\"fileVersion\":4");
 
     auto const fromNewer = ReadPatchJson(newer, L"x");
     VERIFY_IS_TRUE(fromNewer.has_value());

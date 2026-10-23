@@ -170,7 +170,8 @@ namespace midipatchbay
         PatchDocument const* Patch{ nullptr };
 
         // Endpoint node id to endpoint device id. An endpoint that is not here now is left out,
-        // and so is everything that only leads to it.
+        // and so is everything that only leads to it. OSC connections need no entry: they are
+        // always here, under OscDeviceId.
         std::unordered_map<std::wstring, std::wstring> DeviceIds{};
     };
 
@@ -179,6 +180,18 @@ namespace midipatchbay
     {
         uint32_t Cell{ 0 };
         BlockKind Kind{ BlockKind::MessageTypeFilter };
+    };
+
+    // An OSC connection in a patch that routes. It listens and sends whether or not anything is
+    // wired to it yet, so what arrives can be seen while the patch is being set up. Roots and
+    // leaves name it by DeviceId, the way they name endpoints.
+    struct RouteOscConnection
+    {
+        // OscDeviceId of the patch's key and the node's id.
+        std::wstring DeviceId{};
+
+        std::wstring Name{};
+        OscConnectionSettings Settings{};
     };
 
     struct RouteGraph
@@ -194,6 +207,9 @@ namespace midipatchbay
         std::vector<RouteLeaf> Leaves{};
         std::vector<RouteThrottle> Throttles{};
         std::vector<RouteGenerator> Generators{};
+
+        // Every OSC connection in every patch that routes.
+        std::vector<RouteOscConnection> OscConnections{};
 
         // One for each stateful step. One for each step rather than each path, so the engine can
         // keep it when the graph changes.

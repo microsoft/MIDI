@@ -480,8 +480,20 @@ CMidi2BluetoothMidiEndpointManager::StartAdvertisementWatcher()
             // scan response, which carries no UUID and which a service UUID filter therefore drops.
             // The check moves into the handler instead.
 
-            m_advertisementReceivedToken = m_advertisementWatcher.Received({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived });
-            m_advertisementStoppedToken = m_advertisementWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementWatcherStopped });
+            // The handlers hold a reference, because revoking one does not wait for a call already
+            // running, and this object can be destroyed as soon as Shutdown returns. Shutdown
+            // revokes them, which breaks the cycle.
+            m_advertisementReceivedToken = m_advertisementWatcher.Received(
+                [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }](auto const& sender, auto const& args)
+                {
+                    self->OnAdvertisementReceived(sender, args);
+                });
+
+            m_advertisementStoppedToken = m_advertisementWatcher.Stopped(
+                [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }](auto const& sender, auto const& args)
+                {
+                    self->OnAdvertisementWatcherStopped(sender, args);
+                });
 
             m_advertisementWatcher.Start();
 
@@ -554,10 +566,30 @@ CMidi2BluetoothMidiEndpointManager::StartGattServiceWatcher()
 
             m_deviceWatcher = enumeration::DeviceInformation::CreateWatcher(query, props);
 
-            m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded });
-            m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherUpdated });
-            m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherRemoved });
-            m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherStopped });
+            // Each handler holds a reference, for the reason given in StartAdvertisementWatcher
+            m_deviceWatcherAddedToken = m_deviceWatcher.Added(
+                [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }](auto const& sender, auto const& args)
+                {
+                    self->OnDeviceWatcherAdded(sender, args);
+                });
+
+            m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated(
+                [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }](auto const& sender, auto const& args)
+                {
+                    self->OnDeviceWatcherUpdated(sender, args);
+                });
+
+            m_deviceWatcherRemovedToken = m_deviceWatcher.Removed(
+                [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }](auto const& sender, auto const& args)
+                {
+                    self->OnDeviceWatcherRemoved(sender, args);
+                });
+
+            m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped(
+                [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }](auto const& sender, auto const& args)
+                {
+                    self->OnDeviceWatcherStopped(sender, args);
+                });
 
             m_deviceWatcher.Start();
 
@@ -1430,7 +1462,13 @@ CMidi2BluetoothMidiEndpointManager::StartPeripheral(MidiBleProtocol::Protocol co
 
     // No endpoint yet. Like a Network MIDI 2.0 host, the endpoint is the remote device which
     // connected, so it is created when a Central subscribes.
-    peripheral->SetClientChangedCallback([this]() { OnPeripheralClientChanged(); });
+    // Holds a reference, because the peripheral calls a copy of this outside its lock, so clearing
+    // it does not wait for a call already running. Cleared when the peripheral stops.
+    peripheral->SetClientChangedCallback(
+        [self = wil::com_ptr<CMidi2BluetoothMidiEndpointManager>{ this }]()
+        {
+            self->OnPeripheralClientChanged();
+        });
 
     cleanupOnFailure.release();
 
@@ -3664,6 +3702,16 @@ CMidi2BluetoothMidiEndpointManager::Shutdown()
         m_pendingDisconnectRequests.clear();
         m_pendingNegotiations.clear();
     }
+
+    // TransportState::Shutdown releases its reference to this object
+    wil::com_ptr<CMidi2BluetoothMidiEndpointManager> keepAlive{ this };
+
+    // Drops the transport's references to both managers. Held there, they lived until DLL unload
+    // and then released service objects the service had already destroyed. This object's own
+    // service pointers are released by its destructor, which now runs when the service lets go of
+    // it, not here: a Bluetooth callback already running when its connection closed may still be
+    // using them.
+    TransportState::Current().Shutdown();
 
     TraceLoggingWrite(
         MidiBluetoothMidiTransportTelemetryProvider::Provider(),

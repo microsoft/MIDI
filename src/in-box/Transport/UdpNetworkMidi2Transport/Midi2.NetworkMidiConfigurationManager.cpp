@@ -1315,9 +1315,23 @@ CMidi2NetworkMidiConfigurationManager::CacheAndApplyEndpointCustomization(
 
     std::vector<DEVPROPERTY> endpointDevProperties{};
 
+    wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_shared();
+
+        midiDeviceManager = m_midiDeviceManager;
+    }
+
+    // shut down
+    if (midiDeviceManager == nullptr)
+    {
+        return;
+    }
+
     if (customProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
     {
-        LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+        LOG_IF_FAILED(midiDeviceManager->UpdateEndpointProperties(
             existingEndpointDeviceId.c_str(),
             static_cast<ULONG>(endpointDevProperties.size()),
             endpointDevProperties.data()));
@@ -3823,8 +3837,24 @@ CMidi2NetworkMidiConfigurationManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // TransportState::Shutdown releases its reference to this object
+    wil::com_ptr<CMidi2NetworkMidiConfigurationManager> keepAlive{ this };
 
+    // The endpoint manager normally gets here first, so this usually finds nothing left to stop.
+    // It still runs, so the transport's references to both managers are dropped whichever
+    // manager the service shuts down first.
+    LOG_IF_FAILED(TransportState::Current().Shutdown());
 
+    // Held past Shutdown, this was released at DLL unload, after the service had destroyed it
+    wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+
+        midiDeviceManager.swap(m_midiDeviceManager);
+    }
+
+    midiDeviceManager.reset();
 
     return S_OK;
 }

@@ -104,6 +104,7 @@ namespace midipatchbay
             { ControllerMessageKind::Continue, L"continue" },
             { ControllerMessageKind::Stop, L"stop" },
             { ControllerMessageKind::Words, L"words" },
+            { ControllerMessageKind::Clock, L"clock" },
         };
 
         static_assert(std::size(MessageKinds) == ControllerMessageKindCount);
@@ -124,6 +125,7 @@ namespace midipatchbay
         constexpr uint8_t StatusNoteOn = 0x9;
         constexpr uint8_t StatusProgramChange = 0xC;
 
+        constexpr uint8_t StatusTimingClock = 0xF8;
         constexpr uint8_t StatusStart = 0xFA;
         constexpr uint8_t StatusContinue = 0xFB;
         constexpr uint8_t StatusStop = 0xFC;
@@ -537,7 +539,14 @@ namespace midipatchbay
                 return ControllerMessageFor(fallbackKind);
             }
 
-            auto const kind = ControllerMessageKindFromKey(ReadString(item, KeyMessage)).value_or(fallbackKind);
+            auto kind = ControllerMessageKindFromKey(ReadString(item, KeyMessage)).value_or(fallbackKind);
+
+            // A button doesn't send a timing clock: only a message converter does.
+            if (static_cast<size_t>(kind) >= ControllerButtonMessageKindCount)
+            {
+                kind = fallbackKind;
+            }
+
             auto message = ControllerMessageFor(kind);
 
             message.Group = static_cast<uint8_t>(ReadWhole(item, KeyGroup, 15, 0));
@@ -1078,10 +1087,12 @@ namespace midipatchbay
         case ControllerMessageKind::Start:
         case ControllerMessageKind::Continue:
         case ControllerMessageKind::Stop:
+        case ControllerMessageKind::Clock:
         {
             auto const status = message.Kind == ControllerMessageKind::Start ? StatusStart
                 : message.Kind == ControllerMessageKind::Continue ? StatusContinue
-                : StatusStop;
+                : message.Kind == ControllerMessageKind::Stop ? StatusStop
+                : StatusTimingClock;
 
             words.On[0] = (0x1u << 28) | (static_cast<uint32_t>(group) << 24) | (static_cast<uint32_t>(status) << 16);
             words.OnCount = 1;

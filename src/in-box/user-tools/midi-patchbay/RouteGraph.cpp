@@ -929,6 +929,13 @@ namespace midipatchbay
 
                 parts.push_back(L"e " + endpoint.Id + L'=' +
                     (found == input.DeviceIds.end() ? std::wstring{} : LowerCopy(found->second)));
+
+                // A change to how an OSC connection sends or listens reopens it. Its name too,
+                // which its status shows.
+                if (endpoint.IsOsc())
+                {
+                    parts.push_back(L"o " + endpoint.Id + L' ' + OscConnectionSignature(*endpoint.Osc) + L'|' + endpoint.DisplayName);
+                }
             }
 
             for (auto const& block : patch.Blocks)
@@ -1010,7 +1017,18 @@ namespace midipatchbay
                 auto const clockTargets = graph.ClockTargets.size();
                 auto const memories = graph.Memories.size();
 
-                PatchCompiler compiler{ graph, input };
+                // OSC connections are always here, under a device id of their own.
+                RoutePatch withOsc{ input.Key, input.Patch, input.DeviceIds };
+
+                for (auto const& endpoint : input.Patch->Endpoints)
+                {
+                    if (endpoint.IsOsc())
+                    {
+                        withOsc.DeviceIds.insert_or_assign(endpoint.Id, OscDeviceId(input.Key, endpoint.Id));
+                    }
+                }
+
+                PatchCompiler compiler{ graph, withOsc };
                 RouteProblemKind problem{};
 
                 if (!compiler.Run(problem))
@@ -1033,7 +1051,16 @@ namespace midipatchbay
                     continue;
                 }
 
-                signatures.push_back(PatchSignature(input));
+                for (auto const& endpoint : input.Patch->Endpoints)
+                {
+                    if (endpoint.IsOsc())
+                    {
+                        graph.OscConnections.push_back(RouteOscConnection{
+                            withOsc.DeviceIds[endpoint.Id], endpoint.DisplayName, *endpoint.Osc });
+                    }
+                }
+
+                signatures.push_back(PatchSignature(withOsc));
             }
 
             std::sort(signatures.begin(), signatures.end());
