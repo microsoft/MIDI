@@ -877,6 +877,16 @@ namespace winrt::midipatchbay::implementation
             {
                 host.Children().Append(Hint(resources::GetString(L"ConverterNoteEndsHint")));
             }
+
+            // Clock, start, continue and stop are tiny, high-priority messages, so a converted one
+            // can't keep the timing a real clock would.
+            auto const realTimeOut = to.Kind == patchbay::ControllerMessageKind::Clock || to.Kind == patchbay::ControllerMessageKind::Start ||
+                to.Kind == patchbay::ControllerMessageKind::Continue || to.Kind == patchbay::ControllerMessageKind::Stop;
+
+            if (realTimeOut || !patchbay::ConverterInputHasChannel(row.From))
+            {
+                host.Children().Append(Hint(resources::GetString(L"ConverterRealTimeJitterHint")));
+            }
         }
     }
 

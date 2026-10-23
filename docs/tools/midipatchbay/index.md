@@ -212,6 +212,8 @@ To turn note 27 on channel 3 into control change 27 with a value of 50 on channe
 
 It works the other way too: a clock tick, Start, Continue, or Stop can become a note or a control change. These messages have no channel, number, or value to copy, so the **Same** choices aren't offered. Pick the channel, the number, the value, and the format to send.
 
+> **Note:** Converting to or from system real-time messages like Clock will likely introduce jitter due to the size and priority of the messages. It's here for convenience for when there are no other reasonable options.
+
 **Program changes.** Under **Program to send**, a row can send one program, or the next or the previous one in a range you set. Check **Go around at the ends** to start over at the other end. The step keeps one place in the range for each group and channel, and every row in the step shares it, so one footswitch can go up and another down.
 
 What the message converter can't do:

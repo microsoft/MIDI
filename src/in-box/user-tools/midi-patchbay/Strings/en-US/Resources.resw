@@ -4861,6 +4861,9 @@
   <data name="ConverterNoteEndsHint" xml:space="preserve">
     <value>A program change, a clock, start, continue or stop message, or a value that moves, is never let go, so each note it plays ends right away.</value>
   </data>
+  <data name="ConverterRealTimeJitterHint" xml:space="preserve">
+    <value>Note: Converting to or from system real-time messages like Clock will likely introduce jitter due to the size and priority of the messages. It's here for convenience for when there are no other reasonable options.</value>
+  </data>
   <data name="OscFirewallRuleName" xml:space="preserve">
     <value>Windows MIDI Patchbay (OSC connections)</value>
     <comment>The name of the rule Windows MIDI Patchbay adds, as Windows Firewall shows it. The app also finds its rule again by this name, so a changed translation leaves the old rule behind.</comment>
