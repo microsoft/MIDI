@@ -13,6 +13,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "OscText.h"
 #include "PatchLayout.h"
 #include "PatchSerializer.h"
 #include "PopupBackdrop.h"
@@ -1107,7 +1108,8 @@ namespace winrt::midipatchbay::implementation
                     continue;
                 }
 
-                if (patch->Endpoints.size() >= patchbay::MaximumEndpointsPerPatch)
+                if (patch->Endpoints.size() >= patchbay::MaximumEndpointsPerPatch ||
+                    (endpoint.IsOsc() && patch->OscConnectionCount() >= patchbay::MaximumOscConnectionsPerPatch))
                 {
                     limited = true;
                     continue;
@@ -1759,6 +1761,26 @@ namespace winrt::midipatchbay::implementation
                         shown++;
                     }
                 }
+
+                // There's always an OSC connection to add: it's made, not found.
+                auto const oscName = resources::GetString(L"PaletteOscConnection");
+
+                if (ContainsText(oscName, search) || ContainsText(L"OSC", search))
+                {
+                    addHeading(resources::GetString(L"PaletteOscHeading"), nullptr);
+                    auto oscList = addList();
+
+                    if (auto const tile = BuildEndpointTile(
+                        patchbay::OscNewConnectionTag,
+                        std::wstring{ oscName },
+                        std::wstring{ resources::GetString(L"PaletteOscConnectionDetail") },
+                        std::wstring{},
+                        false))
+                    {
+                        oscList.Items().Append(tile);
+                        shown++;
+                    }
+                }
             }
 
             if (shown == 0)
@@ -2170,6 +2192,13 @@ namespace winrt::midipatchbay::implementation
 
             if (patch == nullptr)
             {
+                return;
+            }
+
+            // An OSC connection is made, not found, so it starts with a dialog.
+            if (endpointDeviceId == patchbay::OscNewConnectionTag)
+            {
+                ShowAddOscConnectionDialogAsync(point);
                 return;
             }
 

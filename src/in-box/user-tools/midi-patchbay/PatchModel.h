@@ -33,6 +33,9 @@ namespace midipatchbay
     std::optional<LiveEndpoint> ResolveEndpoint(_In_ PatchEndpoint const& endpoint) noexcept;
     std::optional<LiveEndpoint> SuggestReplacementFor(_In_ PatchEndpoint const& endpoint) noexcept;
 
+    // A device that isn't connected now. An OSC connection, which has no device, never is.
+    bool IsEndpointMissing(_In_ PatchEndpoint const& endpoint) noexcept;
+
     // Whether two endpoints, from one patch or two, stand for one device. A file written by hand
     // can match by name and hold no device ID, so an empty ID never matches another empty one.
     bool IsSameDevice(_In_ PatchEndpoint const& left, _In_ PatchEndpoint const& right) noexcept;

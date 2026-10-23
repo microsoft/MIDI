@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "RouteEngine.h"
+#include "OscHub.h"
 #include "StringResources.h"
 #include "TextMatch.h"
 
@@ -1325,6 +1326,10 @@ namespace midipatchbay
             m_signature = graph.Signature;
             SetLastError({});
 
+            // OSC connections listen whether or not anything is wired to them yet, so what arrives
+            // shows up while the patch is being set up. Each is ready before a link can open it.
+            OscHub::Current().Configure(graph.OscConnections);
+
             if (graph.Roots.empty() && graph.Generators.empty())
             {
                 TearDownLocked();
@@ -1464,6 +1469,31 @@ namespace midipatchbay
                 }
 
                 auto const& [id, waitForSendComplete] = key;
+
+                // An OSC connection isn't the service's: the OSC hub has it ready.
+                if (IsOscDeviceId(id))
+                {
+                    auto raw = OscHub::Current().Endpoint(id);
+
+                    if (raw == nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto connection = std::make_unique<Connection>();
+                    connection->Raw = std::move(raw);
+
+                    auto hub = winrt::make_self<SourceHub>();
+
+                    if (SUCCEEDED(connection->Raw->SetMessagesReceivedCallback(hub.get())))
+                    {
+                        connection->Hub = hub;
+                    }
+
+                    m_connections.emplace(key, std::move(connection));
+                    created.push_back(key);
+                    continue;
+                }
 
                 // Settings only where a patch waits, so every other connection opens exactly as
                 // it always has
@@ -1733,6 +1763,13 @@ namespace midipatchbay
                     connection.Hub->Plan(plan->second);
                 }
 
+                // An OSC connection is already listening and sending.
+                if (connection.Endpoint == nullptr && IsOscDeviceId(key.first))
+                {
+                    connection.Opened = true;
+                    continue;
+                }
+
                 if (connection.Endpoint.Open())
                 {
                     connection.Opened = true;
@@ -1863,6 +1900,9 @@ namespace midipatchbay
         try
         {
             TearDownLocked();
+
+            // After the engine has let go of them, so nothing it runs can reach a closed one.
+            OscHub::Current().Shutdown();
 
             if (m_session != nullptr)
             {
@@ -2094,6 +2134,13 @@ namespace midipatchbay
 
             if (raw == nullptr)
             {
+                // An OSC connection that isn't routing has nothing to open here. Its own test
+                // sends through a socket of its own.
+                if (IsOscDeviceId(LowerCopy(endpointDeviceId)))
+                {
+                    return false;
+                }
+
                 if (!midi2::MidiApi::EnsureServiceAvailable())
                 {
                     return false;

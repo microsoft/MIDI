@@ -305,6 +305,7 @@ namespace winrt::midipatchbay::implementation
 
             UpdateInspectorActivity();
             UpdateStatusStrip();
+            UpdateOscFirewallBar();
 
             ServiceBar().IsOpen(!patchbay::EndpointCatalog::Current().IsServiceAvailable());
         }
@@ -473,7 +474,7 @@ namespace winrt::midipatchbay::implementation
 
             for (auto const& endpoint : patch->Endpoints)
             {
-                if (!patchbay::ResolveEndpoint(endpoint).has_value())
+                if (patchbay::IsEndpointMissing(endpoint))
                 {
                     missing.push_back(endpoint.DisplayName);
                 }

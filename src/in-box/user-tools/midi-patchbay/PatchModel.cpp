@@ -40,13 +40,30 @@ namespace midipatchbay
     _Use_decl_annotations_
     std::optional<LiveEndpoint> ResolveEndpoint(PatchEndpoint const& endpoint) noexcept
     {
+        // An OSC connection has no device behind it, so nothing a device's name matches is it.
+        if (endpoint.IsOsc())
+        {
+            return std::nullopt;
+        }
+
         return EndpointCatalog::Current().Resolve(endpoint.Match, endpoint.MatchMode, endpoint.DisplayName);
     }
 
     _Use_decl_annotations_
     std::optional<LiveEndpoint> SuggestReplacementFor(PatchEndpoint const& endpoint) noexcept
     {
+        if (endpoint.IsOsc())
+        {
+            return std::nullopt;
+        }
+
         return EndpointCatalog::Current().SuggestReplacement(endpoint.Match, endpoint.MatchMode, endpoint.DisplayName);
+    }
+
+    _Use_decl_annotations_
+    bool IsEndpointMissing(PatchEndpoint const& endpoint) noexcept
+    {
+        return !endpoint.IsOsc() && !ResolveEndpoint(endpoint).has_value();
     }
 
     namespace
@@ -64,6 +81,12 @@ namespace midipatchbay
     {
         try
         {
+            // An OSC connection is only ever itself.
+            if (left.IsOsc() || right.IsOsc())
+            {
+                return left.IsOsc() && right.IsOsc() && left.Id == right.Id;
+            }
+
             auto const liveLeft = ResolveEndpoint(left);
             auto const liveRight = ResolveEndpoint(right);
 
@@ -94,7 +117,7 @@ namespace midipatchbay
     {
         try
         {
-            if (endpointDeviceId.empty())
+            if (endpointDeviceId.empty() || endpoint.IsOsc())
             {
                 return false;
             }

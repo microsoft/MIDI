@@ -348,6 +348,33 @@ namespace winrt::midipatchbay::implementation
         // "Controller 1 is connected", for the refresh that keeps the activity current.
         winrt::hstring ControllerStatusText(_In_ std::wstring const& blockId) noexcept;
 
+        // ---- OSC connections, in MainWindowOsc.cpp ----
+        winrt::fire_and_forget ShowAddOscConnectionDialogAsync(_In_ foundation::Point point);
+        void BuildOscInspector(_In_ ::midipatchbay::PatchEndpoint const& endpoint) noexcept;
+        void BuildOscRowsAndTiming(_In_ ::midipatchbay::PatchEndpoint const& endpoint) noexcept;
+
+        // A row added, taken away or moved to another group. Links on a group that goes follow it
+        // or go with it.
+        void ChangeOscRows(
+            _In_ std::wstring const& endpointId,
+            _In_ std::function<void(::midipatchbay::PatchDocument&, ::midipatchbay::PatchEndpoint&)> const& change) noexcept;
+
+        // Kept and routed at once. False when nothing changed. A change that adds or takes away
+        // settings builds the inspector again; any other leaves it, and the focus, where it is.
+        bool ChangeOscConnection(
+            _In_ std::wstring const& endpointId,
+            _In_ std::function<void(::midipatchbay::OscConnectionSettings&)> const& change,
+            _In_ bool rebuildInspector) noexcept;
+
+        // The status, the counts and what was heard, for the refresh that keeps the activity current.
+        void UpdateOscStatus() noexcept;
+
+        // The bar that says Windows Firewall keeps other devices out, with the same choices
+        // Network MIDI Setup's Firewall page offers.
+        void UpdateOscFirewallBar() noexcept;
+        winrt::fire_and_forget AllowOscThroughFirewallAsync(_In_ long networks);
+        void RecheckOscFirewall() noexcept;
+
         // ---- tracing messages through the patch, in MainWindowTrace.cpp ----
         winrt::fire_and_forget ShowTraceDialogAsync();
 
@@ -451,6 +478,19 @@ namespace winrt::midipatchbay::implementation
         uint64_t m_controllerHidLearnToken{ 0 };
         std::wstring m_controllerLearnBlockId{};
         winrt::weak_ref<controls::StackPanel> m_controllerSettingsHost{};
+
+        // An OSC connection: its status, counts and what it heard, refreshed in place.
+        std::wstring m_oscInspectedId{};
+        controls::TextBlock m_oscStatusText{ nullptr };
+        controls::TextBlock m_oscCountsText{ nullptr };
+        controls::StackPanel m_oscHeardPanel{ nullptr };
+        std::wstring m_oscHeardSignature{};
+
+        controls::InfoBar m_oscFirewallBar{ nullptr };
+        std::wstring m_oscFirewallSignature{};
+        uint64_t m_oscFirewallCheckedAt{ 0 };
+        bool m_oscFirewallChecking{ false };
+        bool m_oscFirewallAllowing{ false };
 
         // The messages last traced, kept for the next trace, and where each one went.
         std::vector<::midipatchbay::TraceMessage> m_traceMessages{};

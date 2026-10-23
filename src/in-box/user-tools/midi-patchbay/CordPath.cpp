@@ -71,6 +71,14 @@ namespace midipatchbay
         constexpr double LabelHeight = 22.0;
         constexpr double LabelFractions[] = { 0.5, 0.3, 0.7, 0.15, 0.85 };
 
+        // A label that would cover part of a node moves to the nearest spot this close to where it
+        // was that covers nothing, looking in steps this big. A little more room than the label
+        // itself is kept clear, because a label's text can be wider than LabelWidth.
+        constexpr double LabelSearchRadius = 48.0;
+        constexpr double LabelSearchStep = 4.0;
+        constexpr double LabelClearance = 6.0;
+        constexpr int LabelAlongSamples = 24;
+
         // How far apart runs of different lines that share a way past something are drawn.
         constexpr double RunSpacing = 10.0;
         constexpr size_t MaximumSpreadRuns = 20000;
@@ -1437,6 +1445,113 @@ namespace midipatchbay
                 placed.push_back(LabelArea(paths[i].LabelPoint));
             }
         }
+
+        // Two nodes close together leave no room between them for a label, which then covers the
+        // text on a node's row. Such a label moves to the nearest spot nearby that covers no node
+        // and no other label, or stays where it is when there's none.
+        void KeepLabelsOffNodes(
+            _Inout_ std::vector<CordPath>& paths,
+            _In_ std::vector<CordRequest> const& requests,
+            _In_ std::vector<CordRect> const& nodes)
+        {
+            std::vector<CordRect> labels(paths.size());
+
+            for (size_t i = 0; i < paths.size(); i++)
+            {
+                labels[i] = LabelArea(paths[i].LabelPoint);
+            }
+
+            auto const coversNode = [&nodes](CordRect const& area)
+                {
+                    auto const grown = Grown(area, LabelClearance);
+                    return std::any_of(nodes.begin(), nodes.end(), [&grown](CordRect const& node) { return Overlaps(grown, node); });
+                };
+
+            auto const isClear = [&](CordRect const& area, size_t self)
+                {
+                    if (coversNode(area))
+                    {
+                        return false;
+                    }
+
+                    for (size_t j = 0; j < paths.size(); j++)
+                    {
+                        if (j != self && requests[j].HasLabel && Overlaps(area, labels[j]))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                };
+
+            // Spots by how far they are from where the label was, nearest first.
+            std::vector<CordPoint> offsets{};
+            auto const steps = static_cast<int>(LabelSearchRadius / LabelSearchStep);
+
+            for (int y = -steps; y <= steps; y++)
+            {
+                for (int x = -steps; x <= steps; x++)
+                {
+                    CordPoint const offset{ x * LabelSearchStep, y * LabelSearchStep };
+
+                    if (std::hypot(offset.X, offset.Y) <= LabelSearchRadius)
+                    {
+                        offsets.push_back(offset);
+                    }
+                }
+            }
+
+            std::stable_sort(offsets.begin(), offsets.end(), [](CordPoint const& a, CordPoint const& b)
+                {
+                    return std::hypot(a.X, a.Y) < std::hypot(b.X, b.Y);
+                });
+
+            for (size_t i = 0; i < paths.size(); i++)
+            {
+                // Only a node moves a label here. Labels kept apart from each other are PlaceLabels'.
+                if (!requests[i].HasLabel || !coversNode(labels[i]))
+                {
+                    continue;
+                }
+
+                // Along the line first, nearest first, and only then off it.
+                auto along = SampleCordPath(paths[i], LabelAlongSamples);
+                auto const origin = paths[i].LabelPoint;
+
+                std::stable_sort(along.begin(), along.end(), [&origin](CordPoint const& a, CordPoint const& b)
+                    {
+                        return std::hypot(a.X - origin.X, a.Y - origin.Y) < std::hypot(b.X - origin.X, b.Y - origin.Y);
+                    });
+
+                std::vector<CordPoint> spots{};
+
+                for (auto const& point : along)
+                {
+                    if (std::hypot(point.X - origin.X, point.Y - origin.Y) <= LabelSearchRadius)
+                    {
+                        spots.push_back(point);
+                    }
+                }
+
+                for (auto const& offset : offsets)
+                {
+                    spots.push_back(CordPoint{ origin.X + offset.X, origin.Y + offset.Y });
+                }
+
+                for (auto const& spot : spots)
+                {
+                    auto const area = LabelArea(spot);
+
+                    if (isClear(area, i))
+                    {
+                        paths[i].LabelPoint = spot;
+                        labels[i] = area;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -1528,6 +1643,7 @@ namespace midipatchbay
             }
 
             PlaceLabels(paths, requests);
+            KeepLabelsOffNodes(paths, requests, nodes);
 
             return paths;
         }

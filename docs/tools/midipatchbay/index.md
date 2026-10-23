@@ -429,6 +429,77 @@ Because Windows MIDI Patchbay works inside its own process, it can only route *f
 >
 > This works best for a device the app only listens to. A basic loopback sends whatever it's given straight back out, so anything the app sends to that name comes back to the app instead of reaching the device.
 
+## OSC connections
+
+Open Sound Control (OSC) is a way for music apps and devices to send each other messages over a network. Apps like REAPER, TouchOSC, TouchDesigner, and Open Stage Control use it. An **OSC connection** lets a patch send and receive MIDI as OSC messages, so an app on a phone, a tablet, another computer, or this PC can play your synths, and your keyboards can play it.
+
+For step-by-step setup with REAPER, TouchOSC, and other apps, see [Using OSC with Windows MIDI Patchbay]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/). This section explains each setting.
+
+### Adding an OSC connection
+
+To add one, open the **Endpoints** tab of a patch window and drag **OSC connection** onto the canvas, or click it. Pick a preset, the port to listen on, and where to send. **Find on the network** fills in where to send for an app that announces itself, like TouchOSC. **Play a test note** sends middle C, so you can check the other app hears it before you finish. An OSC connection sits on the canvas like a device, with an **In** and an **Out**, and you connect to it the same way.
+
+### Rows and formats
+
+Each row of an OSC connection is an OSC address, like `/midi` or `/vkb_midi`, and acts like a MIDI group. Messages that arrive under that address come into the patch on that row's group, and messages connected into the row go out under its address. A connection can have up to 16 rows. **Add a row** in the details panel, or right-click the connection and choose **Add a row**.
+
+There's no single standard for MIDI in OSC, so each row picks one of three ways to write it, or uses rules of its own. Presets set everything for the apps they're named after.
+
+| Preset | What the messages look like | Use it with |
+| --- | --- | --- |
+| **REAPER virtual keyboard** | `/vkb_midi/0/note/60` with the velocity | REAPER, to play its virtual keyboard input |
+| **Paths** | `/midi/1/note/60` with the velocity | Most apps you set up yourself, such as TouchOSC |
+| **MIDI type tag** | `/midi` with one argument of OSC's own MIDI type | TouchDesigner and other apps that read OSC's MIDI type |
+| **Open Stage Control** | `/note` with the channel, note, and velocity | Open Stage Control |
+| **OSC_MIDI_OSC** | `/noteOn` with the note and velocity, and no channel | OSC_MIDI_OSC |
+| **TouchOSC** | `/1/fader1` with a value from 0 to 1 | TouchOSC's own layouts, as they come |
+
+The **Paths** format covers every MIDI 1.0 message: `note`, `noteoff`, `polyaftertouch`, `cc`, `program`, `channelpressure`, and `pitch` under each channel, and `sysex`, `clock`, `start`, `continue`, `stop`, `songposition`, `songselect`, `tunerequest`, `timecode`, `activesensing`, and `reset` under the row's address. Each row also says whether channels count from 1 or from 0, whether numbers go out as whole numbers, decimal numbers, or 0 to 1, how pitch bend is written, and how a note off is sent. Numbers that arrive are read however they come: whole numbers, decimals, and on and off (true and false) all work.
+
+In the **MIDI type tag** format, each message also carries a port number. Ports count from 0, so the row on group 1 uses port 0, the row on group 2 uses port 1, and so on.
+
+### Custom rules
+
+Some apps send addresses of their own that aren't MIDI at all, like a TouchOSC fader at `/1/fader3` with a value from 0 to 1. A row with the **Custom rules** format has rules instead. Each rule turns one OSC address into one MIDI message: a control change, a note, a program change, pitch bend, or pressure, on the channel and number you pick. It works the other way too, so a MIDI message the patch sends moves the control on the app. Put a part in braces where the address has a number, like `/1/fader{n}`, and use it in the channel or number, like `{n}+70`. Then one rule covers a whole set of faders: fader 1 is controller 71, fader 2 is controller 72, and so on. Each rule also says which OSC values stand for the bottom and the top of the MIDI range, and whether it works both ways or one way only. The **TouchOSC** preset is a row with rules ready for TouchOSC's own layouts: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons play notes from middle C.
+
+### Recently heard
+
+Select an OSC connection to see the last 50 messages that arrived, newest first, and whether a row took each one. If you don't know what an app sends, this shows you. When an address looks like one of the formats, **Add a row for this** adds a row that takes it. When it doesn't, **Add a rule for this** adds a rule, with a guess at what it should be: a control with a number at the end, like `/1/fader3`, gets a rule for the whole set, `/1/fader{n}`. Buttons become notes, toggles and switches become on/off controllers, and anything else becomes a controller, on numbers no other rule uses. Change the rule in the details panel if the guess isn't what you want.
+
+### MIDI 2.0
+
+MIDI 2.0 messages go out as their MIDI 1.0 versions, the way the MIDI specification says to translate them. A few MIDI 2.0 messages, such as per-note controllers, have no MIDI 1.0 version, so they aren't sent. The details panel counts them. Coming in, a row can make MIDI 2.0: check **Make MIDI 2.0 messages** on the row. Then a value from 0 to 1, like a TouchOSC fader's, sets a controller with 32-bit precision instead of 128 steps, and a note's velocity with 16 bits. Whole numbers are scaled up the way the MIDI 2.0 specification says. Turn it on only when what the row connects to takes MIDI 2.0.
+
+### UDP or TCP
+
+Almost every OSC app uses UDP, where each message travels on its own. Some apps, like TouchOSC, can also use TCP, which never loses a message and keeps them in order, so it suits big SysEx. Under **Network**, pick **TCP, connect to the other app** to connect to the app at the address under **Sending**, or **TCP, wait for apps to connect** to let up to 8 apps connect to the port under **Receiving**. Messages go both ways on each connection. A connection that drops is made again every 2 seconds. Pick the **TCP framing** the other app uses: **SLIP (OSC 1.1)** for most apps, or **Size first (OSC 1.0)**.
+
+### Finding apps on the network
+
+**Find on the network**, under where to send, lists the OSC apps that announce themselves on your network. Pick one to fill in its address and port. TouchOSC on a phone shows up as the phone's name and model, followed by `(TouchOSC)`, like `iPhone [iPhone] (TouchOSC)`. Set to connect over TCP, the list shows the apps that wait for TCP connections instead.
+
+It works the other way too. Apps that look for OSC devices, like TouchOSC, list each OSC connection by its name and this PC's name, like `Patchbay OSC (STUDIO-PC)`. In TouchOSC, picking it fills in the address and port. That only happens while the connection listens on every network and Windows Firewall lets Windows MIDI Patchbay in, because before then no other device could reach it. Clear **Let apps on the network find this connection** to stop it.
+
+Some apps and some networks don't pass these announcements along. When an app isn't listed, type its address and port.
+
+### Windows Firewall
+
+Windows Firewall keeps other devices out until it lets Windows MIDI Patchbay in. Until then, an OSC connection set to listen on every network hears apps on this PC only, so Windows never has to ask about it. Apps on this PC can always reach it, and sending works either way.
+
+When that's holding a routing patch back, a bar at the top of the patch window says so, with the same choices as the Firewall page in [Network MIDI Setup]({{ site.baseurl }}/tools/midinetworksetup/). Pick the kinds of networks to allow, then select **Allow through Windows Firewall**. It asks for administrator permission and adds two rules for Windows MIDI Patchbay, one for UDP and one for TCP, so you won't be asked again if you switch a connection to TCP later. Within a few seconds, the bar goes away, the OSC connections listen on every network, and other apps can find them.
+
+### Who can send to it
+
+OSC has no passwords, so anyone who can reach this PC can send to the port. By default, an OSC connection only takes messages from the computer it sends to. **Take messages from** can change that to anyone, or to a list of addresses. **Listen for** can keep it to apps on this PC only.
+
+### Timing
+
+Messages play when they arrive. OSC can also say when a message should play, and an OSC connection can follow that instead, if both computers' clocks are set to the same time, or keep the spacing between messages the sender gave them, which takes out the network's uneven timing. Messages a patch sends ahead of time, like those from the clock and LFO steps, are held until their time and then sent.
+
+### Opening it from other apps
+
+Check **Show to other apps as a MIDI device** on an OSC connection, and while its patch routes, apps on this PC like your DAW can open it by its name, without a [loopback](#loopbacks). What arrives over OSC goes to them, and what they send goes out over OSC. Each row shows as a block of its own, named for its address, on its group. The same connection keeps the same device from one day to the next, so your DAW remembers it. The device is only there while the patch routes.
+
 ## When a device isn't there
 
 Gear gets unplugged. That's a normal state, not an error.

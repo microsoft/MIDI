@@ -105,6 +105,7 @@
     <ClInclude Include="ControllerStepTests.h" />
     <ClInclude Include="MessageConverterTests.h" />
     <ClInclude Include="HidControllerTests.h" />
+    <ClInclude Include="OscTests.h" />
     <ClInclude Include="PatchFolderMoveTests.h" />
     <ClInclude Include="SendQueueTests.h" />
     <ClInclude Include="CordPathTests.h" />
@@ -120,6 +121,13 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageConverter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\HidControllers.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscAddress.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscConnection.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscPacket.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscTime.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscTranslate.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscRules.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\OscStream.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchTrace.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SpinGuard.h" />
@@ -149,6 +157,7 @@
     <ClCompile Include="ControllerStepTests.cpp" />
     <ClCompile Include="MessageConverterTests.cpp" />
     <ClCompile Include="HidControllerTests.cpp" />
+    <ClCompile Include="OscTests.cpp" />
     <ClCompile Include="PatchFolderMoveTests.cpp" />
     <ClCompile Include="SendQueueTests.cpp" />
     <ClCompile Include="CordPathTests.cpp" />
@@ -164,6 +173,13 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageConverter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\HidControllers.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscAddress.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscConnection.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscPacket.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscTime.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscTranslate.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscRules.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\OscStream.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchTrace.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\CapabilityInquiry.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.cpp" />

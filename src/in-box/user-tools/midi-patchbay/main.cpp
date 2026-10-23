@@ -9,6 +9,7 @@
 #include "App.xaml.h"
 #include "CommandLineOptions.h"
 #include "DocumentHandoff.h"
+#include "OscHub.h"
 
 // The XAML compiler emits its own wWinMain; we supply this one so startup stays under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail with
@@ -18,6 +19,30 @@
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
+
+    // The elevated copy the OSC firewall bar starts. It changes one rule and exits without a
+    // window, so it has to stop here, before the single instance check hands it to the open one.
+    if (::midiapp::firewall::IsAllowRequest(L"--allow-osc-through-firewall"))
+    {
+        HRESULT result{ E_UNEXPECTED };
+        long networks{ 0 };
+
+        try
+        {
+            ::midiapp::firewall::TryRunAllowRequest(::midipatchbay::OscHub::FirewallTarget(), result, networks);
+        }
+        catch (...)
+        {
+            result = E_UNEXPECTED;
+        }
+
+        if (FAILED(result))
+        {
+            MIDI_PATCHBAY_LOG_WARNING(L"Unable to allow Windows MIDI Patchbay through Windows Firewall.");
+        }
+
+        return static_cast<int>(result);
+    }
 
     // One copy only. A second one would route the same saved patches a second time, and with
     // the window hidden in the notification area, launching again is the natural way to ask for

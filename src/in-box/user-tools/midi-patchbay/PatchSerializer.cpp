@@ -28,6 +28,7 @@ namespace midipatchbay
         constexpr wchar_t KeyActivateAtStartup[] = L"activateAtStartup";
         constexpr wchar_t KeyWaitForSendComplete[] = L"waitForSendComplete";
         constexpr wchar_t KeyEndpoints[] = L"endpoints";
+        constexpr wchar_t KeyOscConnections[] = L"oscConnections";
         constexpr wchar_t KeyBlocks[] = L"blocks";
         constexpr wchar_t KeyConnections[] = L"connections";
 
@@ -368,6 +369,51 @@ namespace midipatchbay
                 }
 
                 patch.Endpoints.push_back(std::move(endpoint));
+            }
+        }
+
+        // OSC connections live in an array of their own, so a version of the app that doesn't
+        // know them reads the rest of the patch and never mistakes one for a device.
+        void ReadOscConnections(_In_ json::JsonObject const& root, _Inout_ PatchDocument& patch)
+        {
+            auto const entries = ReadArray(root, KeyOscConnections);
+
+            if (entries == nullptr)
+            {
+                return;
+            }
+
+            size_t count{ 0 };
+
+            for (auto const& entry : entries)
+            {
+                if (patch.Endpoints.size() >= MaximumEndpointsPerPatch || count >= MaximumOscConnectionsPerPatch)
+                {
+                    break;
+                }
+
+                if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
+                {
+                    continue;
+                }
+
+                auto const item = entry.GetObject();
+
+                PatchEndpoint endpoint{};
+
+                endpoint.Id = ReadString(item, KeyId);
+                endpoint.DisplayName = ReadString(item, KeyName);
+                endpoint.CanvasX = ClampCoordinate(ReadNumber(item, KeyCanvasX, 0.0));
+                endpoint.CanvasY = ClampCoordinate(ReadNumber(item, KeyCanvasY, 0.0));
+                endpoint.Osc = OscConnectionFromJson(item);
+
+                if (endpoint.Id.empty() || patch.HasNode(endpoint.Id))
+                {
+                    continue;
+                }
+
+                patch.Endpoints.push_back(std::move(endpoint));
+                count++;
             }
         }
 
@@ -1029,7 +1075,7 @@ namespace midipatchbay
             auto const version = ReadNumber(root, KeyFileVersion, 1.0);
 
             patch.LoadedFileVersion = version < 2.0 ? 1 : static_cast<int32_t>((std::min)(version, 1000000.0));
-            patch.IsFromNewerVersion = patch.LoadedFileVersion > CurrentPatchFileVersion;
+            patch.IsFromNewerVersion = patch.LoadedFileVersion > NewestPatchFileVersion;
 
             ReadEndpoints(root, patch);
 
@@ -1046,6 +1092,7 @@ namespace midipatchbay
             }
             else
             {
+                ReadOscConnections(root, patch);
                 ReadBlocks(root, patch);
                 ReadConnections(root, patch);
             }
@@ -1067,7 +1114,8 @@ namespace midipatchbay
             json::JsonObject root{};
 
             root.SetNamedValue(KeyComment, json::JsonValue::CreateStringValue(CommentText));
-            root.SetNamedValue(KeyFileVersion, json::JsonValue::CreateNumberValue(CurrentPatchFileVersion));
+            root.SetNamedValue(KeyFileVersion, json::JsonValue::CreateNumberValue(
+                patch.HasOscConnections() ? OscPatchFileVersion : CurrentPatchFileVersion));
             root.SetNamedValue(KeyName, json::JsonValue::CreateStringValue(patch.Name));
             root.SetNamedValue(KeyDescription, json::JsonValue::CreateStringValue(patch.Description));
 
@@ -1082,9 +1130,23 @@ namespace midipatchbay
             root.SetNamedValue(KeyWaitForSendComplete, json::JsonValue::CreateBooleanValue(patch.WaitForSendComplete));
 
             json::JsonArray endpoints{};
+            json::JsonArray oscConnections{};
 
             for (auto const& endpoint : patch.Endpoints)
             {
+                if (endpoint.IsOsc())
+                {
+                    auto item = OscConnectionToJson(*endpoint.Osc);
+
+                    item.SetNamedValue(KeyId, json::JsonValue::CreateStringValue(endpoint.Id));
+                    item.SetNamedValue(KeyName, json::JsonValue::CreateStringValue(endpoint.DisplayName));
+                    item.SetNamedValue(KeyCanvasX, json::JsonValue::CreateNumberValue(endpoint.CanvasX));
+                    item.SetNamedValue(KeyCanvasY, json::JsonValue::CreateNumberValue(endpoint.CanvasY));
+
+                    oscConnections.Append(item);
+                    continue;
+                }
+
                 json::JsonObject item{};
 
                 item.SetNamedValue(KeyId, json::JsonValue::CreateStringValue(endpoint.Id));
@@ -1100,6 +1162,11 @@ namespace midipatchbay
             }
 
             root.SetNamedValue(KeyEndpoints, endpoints);
+
+            if (oscConnections.Size() > 0)
+            {
+                root.SetNamedValue(KeyOscConnections, oscConnections);
+            }
 
             json::JsonArray blocks{};
 
