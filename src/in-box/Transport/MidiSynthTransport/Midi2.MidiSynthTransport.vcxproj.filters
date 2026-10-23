@@ -62,8 +62,6 @@
     <ClInclude Include="Resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\RtpMidiTransport\transport_defs.h" />
-    <ClInclude Include="..\RtpMidiTransport\TransportState.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Midi2.MidiSynthTransport.def" />

@@ -19,6 +19,7 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
     LONGLONG Context,
     GUID /* SessionId */
 )
+try
 {
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -51,10 +52,16 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
 
-        m_device = TransportState::Current().GetEndpointTable()->GetDeviceById(endpointId);
-        RETURN_HR_IF_NULL(E_INVALIDARG, m_device);
+        auto table = TransportState::Current().GetEndpointTable();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, table);
 
-        RETURN_IF_FAILED(m_device->Initialize(Callback));
+        auto device = table->GetDeviceById(endpointId);
+        RETURN_HR_IF_NULL(E_INVALIDARG, device);
+
+        RETURN_IF_FAILED(device->Initialize(Callback));
+
+        auto lock = m_deviceLock.lock_exclusive();
+        m_device = std::move(device);
     }
     else
     {
@@ -85,9 +92,11 @@ CMidi2BasicLoopbackMidiBidi::Initialize(
 
     return S_OK;
 }
+CATCH_RETURN()
 
 HRESULT
 CMidi2BasicLoopbackMidiBidi::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -117,6 +126,7 @@ CMidi2BasicLoopbackMidiBidi::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()
 
 #pragma push_macro("SendMessage")
 #undef SendMessage
@@ -128,6 +138,7 @@ CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
     UINT Size,
     LONGLONG Position
 )
+try
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
@@ -150,23 +161,5 @@ CMidi2BasicLoopbackMidiBidi::SendMidiMessage(
 
     return S_OK;
 }
+CATCH_RETURN()
 #pragma pop_macro("SendMessage")
-
-_Use_decl_annotations_
-HRESULT
-CMidi2BasicLoopbackMidiBidi::Callback(
-    MessageOptionFlags /*optionFlags*/ ,
-    PVOID /*Message*/ ,
-    UINT /*Size*/ ,
-    LONGLONG /*Position*/ ,
-    LONGLONG /*Context*/
-)
-{
-
-    // we are a bidi to be compatible with the API, but because this is a MIDI 1.0-style loopback device, 
-    // there's no need to implement the callback. Instead, to save one indirection,
-    // we directly wire up to the provided callback in Initialize
-
-    return S_OK;
-}
-

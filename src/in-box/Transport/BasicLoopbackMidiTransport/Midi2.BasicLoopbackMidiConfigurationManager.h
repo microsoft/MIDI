@@ -43,9 +43,13 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject);
 
-    
+    // Copied out under the lock, because Shutdown may be letting go of it on another thread
+    wil::com_ptr_nothrow<IMidiDeviceManager> GetDeviceManager() const
+    {
+        auto lock = m_serviceLock.lock_shared();
+        return m_MidiDeviceManager;
+    }
 
+    mutable wil::srwlock m_serviceLock;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
-
-    GUID m_TransportId;   // kept for convenience
 };

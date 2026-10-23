@@ -134,21 +134,6 @@ MidiBasicLoopbackFeedback::Status MidiBasicLoopbackFeedback::GetStatus() const n
 }
 
 _Use_decl_annotations_
-bool MidiBasicLoopbackFeedback::MuteIfStillTripped(bool& isMuted) noexcept
-{
-    auto lock = m_statusLock.lock_exclusive();
-
-    if (!m_status.MutedForFeedback)
-    {
-        return false;
-    }
-
-    isMuted = true;
-
-    return true;
-}
-
-_Use_decl_annotations_
 void MidiBasicLoopbackFeedback::OnGuardEvent(
     internal::MidiFeedbackEvent const feedbackEvent,
     internal::MidiFeedbackTripInfo const& info) noexcept
@@ -218,16 +203,23 @@ void MidiBasicLoopbackFeedback::MuteAfterTrip(
             return;
         }
 
-        auto definition = device->Definition;
+        std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition{};
 
-        if (definition == nullptr)
+        // The customer may have changed the muted state after the trip, and then their choice stands
+        if (!device->Feedback->MuteIfStillTripped([&]()
+            {
+                definition = device->ChangeDefinition([](MidiBasicLoopbackDeviceDefinition& changed)
+                    {
+                        changed.IsMuted = true;
+                    });
+            }))
         {
             return;
         }
 
-        if (!device->Feedback->MuteIfStillTripped(definition->IsMuted))
+        // removed meanwhile
+        if (definition == nullptr)
         {
-            // The customer changed the muted state after the trip. Their choice stands.
             return;
         }
 

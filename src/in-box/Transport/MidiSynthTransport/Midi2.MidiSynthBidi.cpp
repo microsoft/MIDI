@@ -70,6 +70,7 @@ CATCH_RETURN()
 
 HRESULT
 CMidi2MidiSynthBidi::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -101,6 +102,7 @@ CMidi2MidiSynthBidi::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 #pragma push_macro("SendMessage")
@@ -113,6 +115,7 @@ CMidi2MidiSynthBidi::SendMidiMessage(
     UINT size,
     LONGLONG position
 )
+try
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
@@ -131,4 +134,5 @@ CMidi2MidiSynthBidi::SendMidiMessage(
 
     return S_OK;
 }
+CATCH_RETURN()
 #pragma pop_macro("SendMessage")

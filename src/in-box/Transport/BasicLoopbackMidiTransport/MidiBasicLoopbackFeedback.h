@@ -40,9 +40,22 @@ public:
 
     Status GetStatus() const noexcept;
 
-    // Sets the muted flag only if the trip is still standing, under the lock OnMutedStateChanging
-    // takes, so a customer's unmute can never be undone by a late trip.
-    bool MuteIfStillTripped(_Inout_ bool& isMuted) noexcept;
+    // Runs the mute only if the trip is still standing, under the lock OnMutedStateChanging takes,
+    // so a customer's unmute can never be undone by a late trip.
+    template <typename Mute>
+    bool MuteIfStillTripped(_In_ Mute&& mute)
+    {
+        auto lock = m_statusLock.lock_exclusive();
+
+        if (!m_status.MutedForFeedback)
+        {
+            return false;
+        }
+
+        mute();
+
+        return true;
+    }
 
     // Runs on a detached threadpool thread, never on a send.
     static void MuteAfterTrip(

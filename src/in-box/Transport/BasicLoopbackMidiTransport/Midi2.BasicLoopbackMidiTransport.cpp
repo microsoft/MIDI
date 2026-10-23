@@ -15,6 +15,7 @@ CMidi2BasicLoopbackMidiTransport::Activate(
     REFIID Riid,
     void **Interface
 )
+try
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
@@ -50,10 +51,13 @@ CMidi2BasicLoopbackMidiTransport::Activate(
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
         if (TransportState::Current().GetEndpointManager() == nullptr)
         {
-            TransportState::Current().ConstructEndpointManager();
+            RETURN_IF_FAILED(TransportState::Current().ConstructEndpointManager());
         }
 
-        RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
+        auto manager = TransportState::Current().GetEndpointManager();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, manager);
+
+        RETURN_IF_FAILED(manager->QueryInterface(Riid, Interface));
     }
     else if (__uuidof(IMidiTransportConfigurationManager) == Riid)
     {
@@ -70,10 +74,13 @@ CMidi2BasicLoopbackMidiTransport::Activate(
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
         if (TransportState::Current().GetConfigurationManager() == nullptr)
         {
-            TransportState::Current().ConstructConfigurationManager();
+            RETURN_IF_FAILED(TransportState::Current().ConstructConfigurationManager());
         }
 
-        RETURN_IF_FAILED(TransportState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
+        auto manager = TransportState::Current().GetConfigurationManager();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, manager);
+
+        RETURN_IF_FAILED(manager->QueryInterface(Riid, Interface));
     }
     else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == Riid)
     {
@@ -98,4 +105,4 @@ CMidi2BasicLoopbackMidiTransport::Activate(
 
     return S_OK;
 }
-
+CATCH_RETURN()

@@ -18,12 +18,21 @@ using namespace Microsoft::WRL::Wrappers;
 GUID TransportLayerGUID = TRANSPORT_LAYER_GUID;
 
 
+CMidi2MidiSynthEndpointManager::~CMidi2MidiSynthEndpointManager()
+{
+    // Normally already done by Shutdown. Destroying a std::thread that can still be joined ends
+    // the process, and here that would take MIDI down for the whole machine.
+    ReleaseServiceObjects();
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSynthEndpointManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
+try
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -36,6 +45,26 @@ CMidi2MidiSynthEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
+    // Held throughout, so a settings change waits until this has either finished or cleaned up
+    auto syncLock = m_syncLock.lock();
+
+    // The service never shuts down an endpoint manager whose Initialize failed. Whatever this
+    // started has to be stopped here, and the service's objects let go, or they would be released
+    // at DLL unload, after the service has destroyed them.
+    auto cleanUpOnFailure = wil::scope_exit([&]() noexcept
+    {
+        try
+        {
+            if (!EndpointDeviceInterfaceId().empty())
+            {
+                LOG_IF_FAILED(RemoveEndpoint());
+            }
+        }
+        CATCH_LOG();
+
+        ReleaseServiceObjects();
+    });
+
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
@@ -43,16 +72,23 @@ CMidi2MidiSynthEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    m_initialized = true;
-
     // The synthesizer is always present when it is switched on, so unlike a transport which
     // discovers hardware this settles its one endpoint immediately. Configuration has already been
     // applied by this point: the service initializes a transport's configuration manager and hands
     // it the saved settings before it activates the endpoint manager.
-    RETURN_IF_FAILED(SyncEndpointToSettings());
+    RETURN_IF_FAILED(SyncEndpointToSettingsLocked());
+
+    cleanUpOnFailure.release();
+
+    m_initialized = true;
+
+    // A settings change that arrived during the sync above saw m_initialized still false and
+    // skipped its own sync. Its settings are in place by now, so this one picks them up.
+    LOG_IF_FAILED(SyncEndpointToSettingsLocked());
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
@@ -63,6 +99,13 @@ CMidi2MidiSynthEndpointManager::SyncEndpointToSettings()
 
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
 
+    return SyncEndpointToSettingsLocked();
+}
+
+
+HRESULT
+CMidi2MidiSynthEndpointManager::SyncEndpointToSettingsLocked()
+{
     auto device = TransportState::Current().GetDevice();
     RETURN_HR_IF_NULL(E_UNEXPECTED, device);
 
@@ -98,6 +141,7 @@ CMidi2MidiSynthEndpointManager::RemoveEndpoint()
     RETURN_HR_IF_NULL(E_POINTER, m_midiDeviceManager);
 
     std::wstring instanceId;
+    std::wstring interfaceId;
     {
         auto lock = m_endpointLock.lock_exclusive();
 
@@ -107,6 +151,7 @@ CMidi2MidiSynthEndpointManager::RemoveEndpoint()
         }
 
         instanceId = m_endpointShortInstanceId;
+        interfaceId = m_endpointDeviceInterfaceId;
 
         // Cleared before the removal rather than after, so a status request arriving while the
         // service tears the device pipe down doesn't report an endpoint that is going away.
@@ -114,7 +159,19 @@ CMidi2MidiSynthEndpointManager::RemoveEndpoint()
         m_endpointDeviceInterfaceId.clear();
     }
 
-    RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(instanceId.c_str()));
+    auto const removeResult = m_midiDeviceManager->RemoveEndpoint(instanceId.c_str());
+
+    if (FAILED(removeResult))
+    {
+        // The endpoint is still in the service, so it's still this one's. Forgetting it would make
+        // the next switch-on ask the service for a device it already has.
+        auto lock = m_endpointLock.lock_exclusive();
+
+        m_endpointShortInstanceId = instanceId;
+        m_endpointDeviceInterfaceId = interfaceId;
+
+        RETURN_HR(removeResult);
+    }
 
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -181,7 +238,8 @@ CMidi2MidiSynthEndpointManager::CreateParentDevice()
 HRESULT
 CMidi2MidiSynthEndpointManager::CreateEndpoint()
 {
-    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+    // Initialize calls this before it sets m_initialized, so that isn't checked here. Every caller
+    // holds m_syncLock.
     RETURN_HR_IF_NULL(E_POINTER, m_midiDeviceManager);
 
     TraceLoggingWrite(
@@ -292,7 +350,7 @@ CMidi2MidiSynthEndpointManager::CreateEndpoint()
 
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
-    RETURN_IF_FAILED(m_midiDeviceManager->ActivateEndpoint(
+    auto const activateResult = m_midiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         false,                                                  // UMP-only. When false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,
@@ -302,7 +360,13 @@ CMidi2MidiSynthEndpointManager::CreateEndpoint()
         interfaceDevProperties.data(),
         nullptr,
         &createInfo,
-        &newDeviceInterfaceId));
+        &newDeviceInterfaceId);
+
+    RETURN_IF_FAILED(activateResult);
+
+    // S_FALSE means the service already has an endpoint with this instance id, and no interface id
+    // came back. Treating that as created would build a string from a null pointer.
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED), activateResult == S_FALSE || newDeviceInterfaceId.get() == nullptr);
 
     auto const endpointInterfaceId =
         internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
@@ -385,6 +449,7 @@ CMidi2MidiSynthEndpointManager::InitiateDiscoveryAndNegotiation(std::wstring con
 
 HRESULT
 CMidi2MidiSynthEndpointManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -394,23 +459,46 @@ CMidi2MidiSynthEndpointManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
+    // TransportState::Shutdown releases the static's reference to this object
+    wil::com_ptr<CMidi2MidiSynthEndpointManager> keepAlive{ this };
+
     // Waits out a settings change that is creating or removing the endpoint, and keeps any later
     // one away from the pointers released below. The service holds none of its own locks here.
     auto syncLock = m_syncLock.lock();
 
+    m_initialized = false;
+
+    // Joins the negotiation thread through ReleaseServiceObjects, then ends the device's
+    // connection. A thread still negotiating could otherwise connect again after that.
     LOG_IF_FAILED(TransportState::Current().Shutdown());
 
-    // The negotiation thread holds a reference to the protocol manager, so it has to be done with
-    // it before that pointer is released.
-    if (m_negotiationThread.joinable())
-    {
-        m_negotiationThread.join();
-    }
+    // In case the configuration manager's shutdown already took this object out of the state
+    ReleaseServiceObjects();
 
-    m_midiDeviceManager.reset();
-    m_midiProtocolManager.reset();
+    return S_OK;
+}
+CATCH_RETURN()
+
+
+void
+CMidi2MidiSynthEndpointManager::ReleaseServiceObjects() noexcept
+{
+    // The lock is a critical section, so Shutdown can come back in here through TransportState
+    auto syncLock = m_syncLock.lock();
 
     m_initialized = false;
 
-    return S_OK;
+    // The negotiation thread holds a reference to the protocol manager, so it has to be done with
+    // it before that pointer is released.
+    try
+    {
+        if (m_negotiationThread.joinable())
+        {
+            m_negotiationThread.join();
+        }
+    }
+    CATCH_LOG();
+
+    m_midiDeviceManager.reset();
+    m_midiProtocolManager.reset();
 }

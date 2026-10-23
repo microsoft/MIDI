@@ -21,7 +21,9 @@ CMidi2BasicLoopbackMidiConfigurationManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiServiceConfigurationManager* midiServiceConfigurationManagerInterface
 )
+try
 {
+    UNREFERENCED_PARAMETER(transportId);
     UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
 
 
@@ -34,12 +36,16 @@ CMidi2BasicLoopbackMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
 
-    m_TransportId = transportId;
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+
+    auto lock = m_serviceLock.lock_exclusive();
+    m_MidiDeviceManager = std::move(deviceManager);
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 
@@ -136,10 +142,10 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
         TraceLoggingBool(isMuted, "isMuted")
     );
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
+    auto table = TransportState::Current().GetEndpointTable();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, table);
 
-    // get this into the normal string format.
-    auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationId);
+    auto device = table->GetDevice(associationId);
     RETURN_HR_IF_NULL(E_NOTFOUND, device);
 
     // before the flag changes, so a trip still being handled cannot mute it again afterward
@@ -148,11 +154,19 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
         device->Feedback->OnMutedStateChanging();
     }
 
-    device->Definition->IsMuted = isMuted;
+    // The loopback may be removed on another thread at any point here. Once it has been shut
+    // down there is no definition left to change.
+    auto const definition = device->ChangeDefinition([isMuted](MidiBasicLoopbackDeviceDefinition& changed)
+        {
+            changed.IsMuted = isMuted;
+        });
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
+    RETURN_HR_IF_NULL(E_NOTFOUND, definition);
 
-    RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateEndpointMutedStateProperty(device->Definition));
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+
+    RETURN_IF_FAILED(endpointManager->UpdateEndpointMutedStateProperty(definition));
 
     return S_OK;
 }
@@ -217,10 +231,11 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandSetFeedbackProtection
 
     device->Feedback->SetEnabled(enabled);
 
-    if (device->Definition != nullptr)
-    {
-        device->Definition->FeedbackProtectionEnabled = enabled;
-    }
+    // so listEntries and anything later created from this definition agree with what runs
+    (void)device->ChangeDefinition([enabled](MidiBasicLoopbackDeviceDefinition& changed)
+        {
+            changed.FeedbackProtectionEnabled = enabled;
+        });
 
     internal::SetConfigurationResponseObjectSuccess(responseObject);
 
@@ -348,6 +363,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
 )
+try
 {
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -358,16 +374,16 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(configurationJsonSection, "json")
     );
 
-    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
+    // never leave the caller an uninitialized pointer, whatever happens below
+    if (response != nullptr)
+    {
+        *response = nullptr;
+    }
+
+    RETURN_HR_IF_NULL(E_POINTER, GetDeviceManager());
 
     // empty config is ok in this case. We just ignore
     if (configurationJsonSection == nullptr) return S_OK;
-
-    // use this to track any ids in use from this one config file update
-    std::map<std::wstring, bool> allocatedUniqueIds{};
-
-    // and the names taken by this same update
-    std::map<std::wstring, bool> allocatedNames{};
 
     // default to failure
     auto responseObject = internal::BuildConfigurationResponseObject(false);
@@ -387,7 +403,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                 TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            //internal::JsonStringifyObjectToOutParam(responseObject, &response);
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON,
+                internal::ResourceGetWString(IDS_ERROR_PARSING_JSON));
+
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             RETURN_IF_FAILED(E_INVALIDARG);
         }
@@ -651,27 +672,80 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         }
 
 
-                        // check for an identifier already in use. Failure to do this results in crashing the 
-                        // service due to issues creating the device
-                        if (allocatedUniqueIds.find(definition->EndpointUniqueIdentifier) != allocatedUniqueIds.end() ||
-                            TransportState::Current().GetEndpointTable()->IsUniqueIdentifierInUseForLoopback(definition->EndpointUniqueIdentifier))
+                        // An uninitialized endpoint manager means this is the configuration file
+                        // being loaded at startup rather than a create arriving from a caller.
+                        auto endpointManager = TransportState::Current().GetEndpointManager();
+                        bool const runtimeCreate = endpointManager != nullptr && endpointManager->IsInitialized();
+
+                        auto const table = TransportState::Current().GetEndpointTable();
+                        RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+                        // Checked and held in one step, so two creates arriving together can't
+                        // both pass and then both ask the service for the same device, which used
+                        // to take the service down. Case doesn't matter: the service's device ids
+                        // are upper case.
+                        //
+                        // Names, and unique ids that start with one another, are only enforced for
+                        // a create which arrives at runtime. A configuration file written before
+                        // those rules existed may legally hold either, and refusing it at startup
+                        // would take away loopbacks the customer already had.
+                        auto const reservation = table->Reserve(
+                            definition->AssociationId,
+                            definition->EndpointUniqueIdentifier,
+                            runtimeCreate ? definition->EndpointName : std::wstring{},
+                            runtimeCreate);
+
+                        if (reservation != MidiBasicLoopbackReservation::Reserved)
                         {
+                            uint32_t errorCode{ BASIC_LOOPBACK_ERROR_CODE_UNKNOWN_ERROR };
+                            UINT messageId{ IDS_ERROR_CREATION_FAILED };
+
+                            switch (reservation)
+                            {
+                            case MidiBasicLoopbackReservation::AssociationIdInUse:
+                                errorCode = BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID;
+                                messageId = IDS_ERROR_ASSOCIATION_ID_IN_USE;
+                                break;
+
+                            case MidiBasicLoopbackReservation::UniqueIdInUse:
+                                errorCode = BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID;
+                                messageId = IDS_ERROR_DUPLICATE_UNIQUE_ID;
+                                break;
+
+                            case MidiBasicLoopbackReservation::UniqueIdOverlaps:
+                                // the service removes endpoints by the start of their instance id, so one would take the other with it
+                                errorCode = BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID;
+                                messageId = IDS_ERROR_OVERLAPPING_UNIQUE_ID;
+                                break;
+
+                            case MidiBasicLoopbackReservation::NameInUse:
+                                errorCode = BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME;
+                                messageId = IDS_ERROR_ENDPOINT_NAME_IN_USE;
+                                break;
+
+                            default:
+                                break;
+                            }
+
                             TraceLoggingWrite(
                                 MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
                                 MIDI_TRACE_EVENT_ERROR,
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unique identifier for Loopback Definition already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
+                                TraceLoggingWideString(L"Basic loopback refused: association id, unique identifier or name already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingUInt32(static_cast<uint32_t>(reservation), "reason"),
+                                TraceLoggingWideString(associationKey.c_str(), "association key"),
+                                TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier"),
+                                TraceLoggingWideString(definition->EndpointName.c_str(), "name")
                             );
 
                             if (!processingMultipleCreates)
                             {
                                 internal::SetConfigurationResponseObjectFailWithErrorCode(
                                     responseObject,
-                                    BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
-                                    internal::ResourceGetWString(IDS_ERROR_DUPLICATE_UNIQUE_ID));
+                                    errorCode,
+                                    internal::ResourceGetWString(messageId));
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
@@ -685,94 +759,13 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                             }
                         }
 
-                        allocatedUniqueIds.emplace(definition->EndpointUniqueIdentifier, true);
-
-                        // An uninitialized endpoint manager means this is the configuration file
-                        // being loaded at startup rather than a create arriving from a caller.
-                        bool const runtimeCreate =
-                            TransportState::Current().GetEndpointManager() != nullptr &&
-                            TransportState::Current().GetEndpointManager()->IsInitialized();
-
-                        // Names are only enforced for a create which arrives at runtime. A
-                        // configuration file written before this rule existed may legally hold
-                        // two loopbacks with the same name, and refusing it at startup would
-                        // take away loopbacks the customer already had.
-                        if (runtimeCreate)
-                        {
-                            // the service removes endpoints by the start of their instance id, so one would take the other with it
-                            if (TransportState::Current().GetEndpointTable()->IsUniqueIdentifierOverlappingAnotherLoopback(definition->EndpointUniqueIdentifier))
-                            {
-                                TraceLoggingWrite(
-                                    MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_ERROR,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Unique identifier starts with another basic loopback's, or that one starts with it", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                    TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "identifier")
-                                );
-
-                                if (!processingMultipleCreates)
-                                {
-                                    internal::SetConfigurationResponseObjectFailWithErrorCode(
-                                        responseObject,
-                                        BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
-                                        internal::ResourceGetWString(IDS_ERROR_OVERLAPPING_UNIQUE_ID));
-
-                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
-
-                                    return S_FALSE;
-                                }
-                                else
-                                {
-                                    o.MoveNext();
-                                    continue;
-                                }
-                            }
-
-                            auto const cleanName = internal::ToLowerTrimmedWStringCopy(definition->EndpointName);
-
-                            if (allocatedNames.find(cleanName) != allocatedNames.end() ||
-                                TransportState::Current().GetEndpointTable()->IsEndpointNameInUse(definition->EndpointName, {}))
-                            {
-                                TraceLoggingWrite(
-                                    MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_ERROR,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Endpoint name already in use by another basic loopback", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                    TraceLoggingWideString(definition->EndpointName.c_str(), "name")
-                                );
-
-                                if (!processingMultipleCreates)
-                                {
-                                    internal::SetConfigurationResponseObjectFailWithErrorCode(
-                                        responseObject,
-                                        BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
-                                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NAME_IN_USE));
-
-                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
-
-                                    return S_FALSE;
-                                }
-                                else
-                                {
-                                    // skip this one and keep going. Don't return an error for the whole batch just because of one bad entry.
-                                    o.MoveNext();
-                                    continue;
-                                }
-                            }
-
-                            allocatedNames.emplace(cleanName, true);
-                        }
-
                         if (runtimeCreate)
                         {
                             // endpoint manager is initialized, so do the full creation so we can return the result
-                            // This happens when the SDK is used to create the endpoints
+                            // This happens when the SDK is used to create the endpoints. A failure
+                            // releases the reservation.
 
-                            if (SUCCEEDED(TransportState::Current().GetEndpointManager()->CreateEndpoint(definition)))
+                            if (SUCCEEDED(endpointManager->CreateEndpoint(definition)))
                             {
                                 TraceLoggingWrite(
                                     MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -826,13 +819,29 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                                 MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
                                 MIDI_TRACE_EVENT_INFO,
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                 TraceLoggingPointer(this, "this"),
                                 TraceLoggingWideString(associationKey.c_str(), "association key"),
                                 TraceLoggingWideString(L"Adding basic loopback entry to work queue", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            RETURN_IF_FAILED(TransportState::Current().GetEndpointWorkQueue()->CreateEndpoint(definition));
+                            auto const queueResult = TransportState::Current().GetEndpointWorkQueue()->CreateEndpoint(definition);
+
+                            if (FAILED(queueResult))
+                            {
+                                table->ReleaseReservation(definition->AssociationId);
+
+                                RETURN_IF_FAILED(queueResult);
+                            }
+
+                            // The endpoint manager may have finished initializing, and drained the
+                            // queue for the last time, after the check above. Then nothing else
+                            // would ever create this one.
+                            if (auto lateManager = TransportState::Current().GetEndpointManager();
+                                lateManager != nullptr && lateManager->IsInitialized())
+                            {
+                                LOG_IF_FAILED(lateManager->ProcessWorkQueue());
+                            }
                         }
 
                     }
@@ -939,9 +948,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                 // The association id comes from untrusted client JSON. GetDevice
                 // returns null for an unknown / already-removed id, and a device
-                // that has been shut down but not yet removed has a null
-                // Definition. Guard both before dereferencing.
-                if (device == nullptr || device->Definition == nullptr)
+                // that has been shut down but not yet removed has no definition.
+                // The definition is read once, so a removal on another thread
+                // can't take it away between the check and the use.
+                auto const definition = device == nullptr ? nullptr : device->GetDefinition();
+
+                if (definition == nullptr)
                 {
                     TraceLoggingWrite(
                         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -980,7 +992,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                     return E_FAIL;
                 }
 
-                auto removalHr = endpointManager->DeleteEndpoint(device->Definition);
+                auto removalHr = endpointManager->DeleteEndpoint(definition);
 
                 LOG_IF_FAILED(removalHr);
 
@@ -1062,10 +1074,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
 CMidi2BasicLoopbackMidiConfigurationManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -1075,12 +1089,21 @@ CMidi2BasicLoopbackMidiConfigurationManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    TransportState::Current().Shutdown();
+    // TransportState::Shutdown releases the static's reference to this object
+    wil::com_ptr<CMidi2BasicLoopbackMidiConfigurationManager> keepAlive{ this };
 
-    m_MidiDeviceManager.reset();
+    LOG_IF_FAILED(TransportState::Current().Shutdown());
+
+    // Swapped out under the lock and released outside it
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    {
+        auto lock = m_serviceLock.lock_exclusive();
+        deviceManager = std::move(m_MidiDeviceManager);
+    }
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 _Use_decl_annotations_
@@ -1096,8 +1119,11 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
         return S_FALSE;
     }
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_MidiDeviceManager);
+    auto const table = TransportState::Current().GetEndpointTable();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+    auto const deviceManager = GetDeviceManager();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, deviceManager);
 
     for (auto const& updateVal : updateArray)
     {
@@ -1125,9 +1151,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
 
         // Resolved against our own table, so a hand-edited configuration cannot aim an update
         // at an endpoint belonging to another transport.
-        auto device = TransportState::Current().GetEndpointTable()->GetDeviceById(matchCriteria->EndpointDeviceId.c_str());
+        auto device = table->GetDeviceById(matchCriteria->EndpointDeviceId.c_str());
 
-        if (device == nullptr || device->Definition == nullptr)
+        // read once: a removal on another thread can take it away at any point
+        auto const definition = device == nullptr ? nullptr : device->GetDefinition();
+
+        if (definition == nullptr)
         {
             internal::SetConfigurationResponseObjectFailWithErrorCode(
                 responseObject,
@@ -1187,10 +1216,14 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
             newName = internal::TruncateToUtf8ByteCount(newName, MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH);
         }
 
-        // The endpoint being renamed is left out, so re-saving a description without touching
-        // the name does not collide with the name the endpoint already has.
-        if (TransportState::Current().GetEndpointTable()->IsEndpointNameInUse(
-            newName, device->Definition->CreatedEndpointInterfaceId))
+        // Checked and recorded in one step, so two renames, or a rename and a create, can't both
+        // take this name. The endpoint being renamed is left out, so re-saving a description
+        // without touching the name does not collide with the name the endpoint already has.
+        std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> previous{};
+
+        auto const renameResult = table->RenameDevice(device, newName, newDescription, newImage, previous);
+
+        if (renameResult == HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS))
         {
             TraceLoggingWrite(
                 MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -1206,6 +1239,17 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
                 responseObject,
                 BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
                 internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NAME_IN_USE));
+
+            continue;
+        }
+
+        if (FAILED(renameResult) || previous == nullptr)
+        {
+            // removed meanwhile
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
 
             continue;
         }
@@ -1244,8 +1288,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
                 DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (newImage.length() + 1)), (PVOID)newImage.c_str() });
         }
 
-        auto updateHR = m_MidiDeviceManager->UpdateEndpointProperties(
-            device->Definition->CreatedEndpointInterfaceId.c_str(),
+        auto updateHR = deviceManager->UpdateEndpointProperties(
+            definition->CreatedEndpointInterfaceId.c_str(),
             (ULONG)endpointProperties.size(),
             endpointProperties.data());
 
@@ -1261,6 +1305,12 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
                 TraceLoggingHResult(updateHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
             );
 
+            // The endpoint still has its old name, so the table goes back to it. If another
+            // loopback took the old name meanwhile, the new one stays recorded rather than two
+            // loopbacks sharing a name.
+            std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> ignored{};
+            LOG_IF_FAILED(table->RenameDevice(device, previous->EndpointName, previous->EndpointDescription, previous->ImageFileName, ignored));
+
             internal::SetConfigurationResponseObjectFailWithErrorCode(
                 responseObject,
                 BASIC_LOOPBACK_ERROR_CODE_UNKNOWN_ERROR,
@@ -1268,11 +1318,6 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
 
             continue;
         }
-
-        // keep the table in step, or listEntries keeps reporting the old values
-        device->Definition->EndpointName = newName;
-        device->Definition->EndpointDescription = newDescription;
-        device->Definition->ImageFileName = newImage;
 
         internal::SetConfigurationResponseObjectSuccess(responseObject);
     }

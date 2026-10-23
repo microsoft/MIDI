@@ -11,6 +11,24 @@
 #pragma push_macro("SendMessage")
 #undef SendMessage
 
+// An audio device being opened for the synthesizer, away from its worker. Opening one can stall
+// for as long as the audio service is in trouble, and the worker is joined while the service is
+// connecting or disconnecting a client, so the worker never makes those calls itself. Shared
+// between the worker and a threadpool thread that nothing waits for.
+struct MidiSynthPendingAudioOpen
+{
+    MidiSynthSettings Settings{};
+
+    // Written by the opener before Done is set, then only read by the worker. Null when no
+    // device could be opened.
+    std::unique_ptr<MidiSynth::WasapiAudioSink> Sink{};
+
+    std::atomic<bool> Done{ false };
+
+    // When the open started, so the worker can stop holding notes for a device that isn't coming
+    uint64_t StartedTimestamp{ 0 };
+};
+
 // Hosts the synthesizer inside the service.
 //
 // Audio is held only while a client is connected, so an idle machine owns no audio device at all.
@@ -62,6 +80,10 @@ public:
     HRESULT SetDrumChannel(_In_ uint8_t channel, _In_ bool isDrumChannel) noexcept;
 
     HRESULT Shutdown() noexcept;
+
+    // Opens the default audio device the way the settings ask. Runs on a threadpool thread that
+    // nothing waits for, and touches nothing but its argument. Null when no device can be opened.
+    static std::unique_ptr<MidiSynth::WasapiAudioSink> OpenAudioSink(_In_ MidiSynthSettings const& settings) noexcept;
 
 private:
     // Replies are produced on whichever thread dispatched the message, so they are queued here and
@@ -118,8 +140,18 @@ private:
     // the life of the endpoint, so "a client is connected" cannot mean "hold the audio device".
     void PrimeDispatcher() noexcept;
 
+    // Returns S_OK when audio is running, E_PENDING while a device is being opened, S_FALSE when
+    // the synthesizer is switched off, and a failure when no device could be had. Only the worker
+    // calls it. Caller must hold m_audioLock exclusively.
     HRESULT AcquireAudio();
     void ReleaseAudio() noexcept;
+
+    // Starts opening a device on a threadpool thread. Caller must hold m_audioLock exclusively.
+    HRESULT BeginAudioOpen(_In_ MidiSynthSettings const& settings);
+
+    // Builds the engine for a device that has been opened, and starts it. Caller must hold
+    // m_audioLock exclusively.
+    HRESULT InstallAudio(_In_ MidiSynthSettings const& settings, _Inout_ std::unique_ptr<MidiSynth::WasapiAudioSink>& sink);
 
     // Drains messages through the dispatcher when no audio is running, so the endpoint still
     // answers. A channel voice message is left queued, and audio asked for, unless notes are being
@@ -187,6 +219,9 @@ private:
 
     std::unique_ptr<MidiSynth::WasapiAudioSink> m_sink;
     std::unique_ptr<MidiSynth::UmpRenderSource> m_source;
+
+    // A device being opened. Only the worker touches it, or whoever has just joined the worker.
+    std::shared_ptr<MidiSynthPendingAudioOpen> m_pendingAudioOpen{};
 
     // Set when a channel voice message arrives, which is the only thing that needs the audio
     // device. Cleared when the device is let go again after a quiet spell.
