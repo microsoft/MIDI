@@ -91,6 +91,13 @@ namespace midisequencer
         std::wstring SelectedTrackId{};
         size_t SelectedPlacement{ SIZE_MAX };
 
+        // More placements on the same track, picked with Ctrl, to merge.
+        std::vector<size_t> MorePlacements{};
+
+        // The razor's cut, where the pointer is over a clip while the razor is on, or -1.
+        std::wstring RazorTrackId{};
+        int64_t RazorTick{ -1 };
+
         // The selected launcher slot, for the keyboard.
         std::wstring SelectedSlotTrackId{};
         size_t SelectedSlot{ SIZE_MAX };

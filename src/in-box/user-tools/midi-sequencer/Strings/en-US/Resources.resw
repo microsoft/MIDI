@@ -859,6 +859,12 @@
   <data name="LauncherToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Show the clip launcher</value>
   </data>
+  <data name="RazorToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Razor: click a clip to split it</value>
+  </data>
+  <data name="RazorToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Razor: click a clip to split it there (Esc to stop)</value>
+  </data>
   <data name="MixerToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Show the MIDI Mixer</value>
   </data>
@@ -1107,6 +1113,15 @@
   <data name="MenuColor" xml:space="preserve">
     <value>Color</value>
   </data>
+  <data name="MenuCustomColor" xml:space="preserve">
+    <value>Custom color…</value>
+  </data>
+  <data name="TrackColorPickerTitleFormat" xml:space="preserve">
+    <value>Color for {0}</value>
+  </data>
+  <data name="TrackColorPickerNameFormat" xml:space="preserve">
+    <value>Color for track {0}</value>
+  </data>
   <data name="MenuMoveUp" xml:space="preserve">
     <value>Move up</value>
   </data>
@@ -1176,6 +1191,39 @@
   </data>
   <data name="MenuMakeUnique" xml:space="preserve">
     <value>Make unique</value>
+  </data>
+  <data name="MenuSplitHere" xml:space="preserve">
+    <value>Split here</value>
+  </data>
+  <data name="MenuMergeClips" xml:space="preserve">
+    <value>Merge selected clips (Ctrl+click to select)</value>
+  </data>
+  <data name="MenuMergeClipsFormat" xml:space="preserve">
+    <value>Merge {0} selected clips</value>
+  </data>
+  <data name="MenuMergeInto" xml:space="preserve">
+    <value>Merge into</value>
+  </data>
+  <data name="MergedClipName" xml:space="preserve">
+    <value>Merged</value>
+  </data>
+  <data name="SplitClipNameFormat" xml:space="preserve">
+    <value>{0} (2)</value>
+  </data>
+  <data name="MergedTrackClipNameFormat" xml:space="preserve">
+    <value>{0} + {1}</value>
+  </data>
+  <data name="MergeTrackLanesSkippedFormat" xml:space="preserve">
+    <value>Merged. {0} automation lane(s) weren't added because the destination track already has them.</value>
+  </data>
+  <data name="UndoMergeClips" xml:space="preserve">
+    <value>Merge clips</value>
+  </data>
+  <data name="UndoSplitClip" xml:space="preserve">
+    <value>Split clip</value>
+  </data>
+  <data name="UndoMergeTracks" xml:space="preserve">
+    <value>Merge tracks</value>
   </data>
   <data name="MenuDeleteClip" xml:space="preserve">
     <value>Delete</value>
@@ -1277,6 +1325,15 @@
   </data>
   <data name="EditorAutomationText.Text" xml:space="preserve">
     <value>Automation</value>
+  </data>
+  <data name="EditorGhostText.Text" xml:space="preserve">
+    <value>Other tracks</value>
+  </data>
+  <data name="EditorGhostToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show what the other unmuted tracks play here, faintly behind these notes</value>
+  </data>
+  <data name="EditorGhostToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show other tracks' notes</value>
   </data>
   <data name="EditorAutomationButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Add automation to this clip</value>

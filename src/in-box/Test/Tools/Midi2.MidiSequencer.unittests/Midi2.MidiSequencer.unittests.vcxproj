@@ -118,6 +118,7 @@
     <ClInclude Include="GeneratorListenTests.h" />
     <ClInclude Include="ThemeEngineTests.h" />
     <ClInclude Include="TimelineViewTests.h" />
+    <ClInclude Include="SequenceMergeTests.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="GeneratorListenTests.cpp" />
     <ClCompile Include="ThemeEngineTests.cpp" />
     <ClCompile Include="TimelineViewTests.cpp" />
+    <ClCompile Include="SequenceMergeTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\MessageTranslation.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PlaybackEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SessionEngineOutput.cpp" />
@@ -203,6 +205,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\Lyrics.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\LyricData.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceProvenance.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceMerge.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RecordingTake.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RemoteControl.cpp" />

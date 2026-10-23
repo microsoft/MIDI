@@ -210,6 +210,7 @@ namespace winrt::midisequencer::implementation
             m_toolbarPlates.Add(AddTrackButton(), L"button", OnStates());
             m_toolbarPlates.Add(AddFolderButton(), L"button.subtle", OnStates());
             m_toolbarPlates.Add(LauncherToggle(), L"button", OnStates());
+            m_toolbarPlates.Add(RazorToggle(), L"button", OnStates());
 
             // The clip editor's header.
             m_editorPlates.Add(EditorKindChipFrame(), L"chip");
@@ -227,7 +228,7 @@ namespace winrt::midisequencer::implementation
                 m_editorPlates.Add(button, L"button.subtle", OnStates());
             }
 
-            for (auto const& toggle : { EditorDrawToggle(), PatternKeepLengthToggle(), PatternHearToggle() })
+            for (auto const& toggle : { EditorDrawToggle(), EditorGhostToggle(), PatternKeepLengthToggle(), PatternHearToggle() })
             {
                 m_editorPlates.Add(toggle, L"button.subtle", OnStates());
             }

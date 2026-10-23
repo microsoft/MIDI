@@ -359,6 +359,12 @@ namespace winrt::midisequencer::implementation
             }
 
             case VirtualKey::Escape:
+                if (m_razor)
+                {
+                    SetRazor(false);
+                    break;
+                }
+
                 m_selectedPlacement = SIZE_MAX;
                 InvalidateArrange();
                 AnnounceKeyboardCursor(false);

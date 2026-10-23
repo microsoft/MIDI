@@ -345,6 +345,16 @@ namespace winrt::midisequencer::implementation
                 if (auto strong = weak.get()) { strong->OnLaneMoved(pinned, args); }
             });
 
+            // The razor's line goes when the mouse leaves the lanes.
+            canvas.PointerExited([weak](auto&&, auto&&)
+            {
+                if (auto strong = weak.get(); strong && strong->m_razor && !strong->m_razorTrackId.empty())
+                {
+                    strong->m_razorTrackId.clear();
+                    strong->InvalidateArrange();
+                }
+            });
+
             canvas.PointerReleased([weak, pinned](auto&&, input::PointerRoutedEventArgs const& args)
             {
                 if (auto strong = weak.get()) { strong->OnLaneReleased(pinned, args); }
@@ -554,6 +564,13 @@ namespace winrt::midisequencer::implementation
         {
             context.SelectedTrackId = m_selectedTrackId;
             context.SelectedPlacement = m_selectedPlacement;
+            context.MorePlacements = MorePlacements();
+        }
+
+        if (m_razor)
+        {
+            context.RazorTrackId = m_razorTrackId;
+            context.RazorTick = m_razorTick;
         }
 
         context.SelectedSlotTrackId = m_selectedSlotTrackId;
@@ -1968,6 +1985,8 @@ namespace winrt::midisequencer::implementation
                     if (auto s = weak.get()) { s->ToggleLanes(trackId); }
                 });
             }
+
+            AddMergeTrackMenu(menu, trackId);
         }
 
         add(res::GetString(L"MenuRename"), L"\uE8AC", [weak, trackId]() { if (auto s = weak.get()) { s->BeginRenameTrack(trackId); } });
@@ -2061,6 +2080,25 @@ namespace winrt::midisequencer::implementation
                 });
 
                 colors.Items().Append(item);
+            }
+
+            // Any color, with the picker the Appearance settings use.
+            {
+                controls::MenuFlyoutItem custom{};
+                custom.Text(res::GetString(L"MenuCustomColor"));
+
+                controls::FontIcon dot{};
+                dot.Glyph(L"\uE790");
+                custom.Icon(dot);
+
+                auto const anchorCopy = anchor;
+                custom.Click([weak, trackId, anchorCopy, point](auto&&, auto&&)
+                {
+                    if (auto s = weak.get()) { s->ShowTrackColorPicker(trackId, anchorCopy, point); }
+                });
+
+                colors.Items().Append(controls::MenuFlyoutSeparator{});
+                colors.Items().Append(custom);
             }
 
             menu.Items().Append(colors);
@@ -2449,7 +2487,21 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            if (hit.Row->Kind == seq::ArrangeRowKind::Track || hit.Row->Kind == seq::ArrangeRowKind::Folder)
+            // The razor cuts the clip under it, and does nothing else.
+            if (m_razor)
+            {
+                RazorPressed(pinned, point.Position());
+                args.Handled(true);
+                return;
+            }
+
+            // Ctrl on another clip of the selected track picks it too, to merge. It's still a copy
+            // when it's dragged, so what it does is decided when it's let go.
+            auto const control = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Control) == winrt::Windows::System::VirtualKeyModifiers::Control;
+            auto const picking = control && hit.Placement != SIZE_MAX && m_selectedPlacement != SIZE_MAX &&
+                hit.Row->Kind == seq::ArrangeRowKind::Track && hit.Row->TrackId == m_selectedTrackId;
+
+            if ((hit.Row->Kind == seq::ArrangeRowKind::Track || hit.Row->Kind == seq::ArrangeRowKind::Folder) && !picking)
             {
                 SelectTrack(hit.Row->TrackId);
             }
@@ -2468,11 +2520,14 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            m_selectedPlacement = hit.Placement;
+            if (!picking)
+            {
+                m_selectedPlacement = hit.Placement;
+            }
 
             auto const& placement = track->Timeline[hit.Placement];
 
-            if (hit.OnRightEdge)
+            if (hit.OnRightEdge && !picking)
             {
                 m_laneDrag = LaneDrag::Resize;
                 m_lanePinned = pinned;
@@ -2493,12 +2548,13 @@ namespace winrt::midisequencer::implementation
                 drag.FromPlacement = hit.Placement;
                 drag.GrabOffset = std::max<int64_t>(0, hit.Tick - placement.Tick);
                 drag.Length = placement.Length;
+                drag.ToggleOnClick = picking;
                 m_clipDrag = std::move(drag);
             }
 
             canvas.CapturePointer(args.Pointer());
 
-            if (m_editorClipId != placement.ClipId)
+            if (m_editorClipId != placement.ClipId && !picking)
             {
                 OpenClipInEditor(placement.ClipId, track->Id);
             }
@@ -2531,6 +2587,12 @@ namespace winrt::midisequencer::implementation
                     OnTagDragMoved(args);
                 }
 
+                return;
+            }
+
+            if (m_razor && !m_clipDrag.Pressed)
+            {
+                UpdateRazor(pinned, args.GetCurrentPoint(pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).Position());
                 return;
             }
 
@@ -2956,10 +3018,19 @@ namespace winrt::midisequencer::implementation
 
             if (hit.Placement != SIZE_MAX)
             {
-                SelectTrack(hit.Row->TrackId);
-                m_selectedPlacement = hit.Placement;
+                // A right click on one of several picked keeps them all picked, to merge.
+                auto const more = MorePlacements();
+                auto const picked = hit.Row->TrackId == m_selectedTrackId &&
+                    (hit.Placement == m_selectedPlacement || std::find(more.begin(), more.end(), hit.Placement) != more.end());
+
+                if (!picked)
+                {
+                    SelectTrack(hit.Row->TrackId);
+                    m_selectedPlacement = hit.Placement;
+                }
+
                 InvalidateArrange();
-                ShowPlacementMenu(hit.Row->TrackId, hit.Placement, canvas, position);
+                ShowPlacementMenu(hit.Row->TrackId, hit.Placement, canvas, position, hit.Tick);
             }
             else
             {
@@ -2972,7 +3043,7 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::ShowPlacementMenu(std::wstring const& trackId, size_t placement, xaml::UIElement const& anchor, foundation::Point point)
+    void MainWindow::ShowPlacementMenu(std::wstring const& trackId, size_t placement, xaml::UIElement const& anchor, foundation::Point point, int64_t tick)
     {
         auto const track = seq::FindTrack(m_doc, trackId);
 
@@ -3008,6 +3079,26 @@ namespace winrt::midisequencer::implementation
         add(res::GetString(L"MenuRenameClip"), L"\uE8AC", [weak, clipId]() { if (auto s = weak.get()) { s->RenameClip(clipId); } });
         add(res::GetString(L"MenuDuplicateClip"), L"\uE8C8", [weak]() { if (auto s = weak.get()) { s->DuplicateSelectedPlacement(); } });
         add(res::GetString(L"MenuMakeUnique"), L"\uE71B", [weak, trackId, placement]() { if (auto s = weak.get()) { s->MakePlacementUnique(trackId, placement); } }, uses > 1);
+
+        // Split where it was right-clicked, on the snap grid when that's still inside the clip.
+        if (tick >= 0)
+        {
+            auto const& placed = track->Timeline[placement];
+            auto const end = placed.Tick + EffectiveLength(m_doc, placed);
+            auto at = seq::SnapTick(tick, SnapGrid());
+
+            if (at <= placed.Tick || at >= end)
+            {
+                at = tick;
+            }
+
+            add(res::GetString(L"MenuSplitHere"), L"\uE8C6", [weak, trackId, placement, at]() { if (auto s = weak.get()) { s->SplitPlacementAt(trackId, placement, at); } },
+                at > placed.Tick && at < end);
+        }
+
+        auto const picked = MorePlacements().size() + 1;
+        add(picked > 1 ? res::FormatString(L"MenuMergeClipsFormat", static_cast<uint32_t>(picked)) : res::GetString(L"MenuMergeClips"), L"\uEA3C",
+            [weak]() { if (auto s = weak.get()) { s->MergeSelectedPlacements(); } }, picked > 1);
 
         menu.Items().Append(controls::MenuFlyoutSeparator{});
         add(res::GetString(L"MenuDeleteClip"), L"\uE74D", [weak]() { if (auto s = weak.get()) { s->DeleteSelectedPlacement(); } });

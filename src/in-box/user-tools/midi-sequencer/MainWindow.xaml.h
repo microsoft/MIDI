@@ -104,6 +104,7 @@ namespace winrt::midisequencer::implementation
         void OnAddTrackClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnAddFolderClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLauncherToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnRazorClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnMixerToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnMixerCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnVerticalScrollChanged(_In_ foundation::IInspectable const& sender, _In_ primitives::RangeBaseValueChangedEventArgs const& args);
@@ -123,6 +124,7 @@ namespace winrt::midisequencer::implementation
         void OnTrySoundClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnEditorDrawClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorGhostClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorAutomationClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorQuantizeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -295,6 +297,9 @@ namespace winrt::midisequencer::implementation
         void ToggleFolder(_In_ std::wstring const& trackId) noexcept;
         void ToggleTrackFlag(_In_ std::wstring const& trackId, _In_ wchar_t flag, _In_ bool value) noexcept;
         void ShowTrackMenu(_In_ std::wstring const& trackId, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+
+        // Any color for a track, with the Appearance settings' color picker (MainWindowTrackColor.cpp).
+        void ShowTrackColorPicker(_In_ std::wstring const& trackId, _In_ xaml::UIElement const& anchor, _In_ std::optional<foundation::Point> point) noexcept;
         void AddTrack(_In_ bool folder) noexcept;
         void DeleteTrack(_In_ std::wstring const& trackId) noexcept;
         void BeginRenameTrack(_In_ std::wstring const& trackId) noexcept;
@@ -328,7 +333,28 @@ namespace winrt::midisequencer::implementation
         };
 
         LaneHit HitTestLane(_In_ bool pinned, _In_ foundation::Point point) noexcept;
-        void ShowPlacementMenu(_In_ std::wstring const& trackId, _In_ size_t placement, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void ShowPlacementMenu(_In_ std::wstring const& trackId, _In_ size_t placement, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point, _In_ int64_t tick = -1);
+
+        // Merging and splitting clips and tracks (MainWindowClipEdits.cpp, SequenceMerge.h).
+        std::vector<size_t> MorePlacements() const;
+        void TogglePlacementInSelection(_In_ std::wstring const& trackId, _In_ size_t placement) noexcept;
+        void MergeSelectedPlacements() noexcept;
+        void SplitPlacementAt(_In_ std::wstring const& trackId, _In_ size_t placement, _In_ int64_t tick) noexcept;
+        void SetRazor(_In_ bool on) noexcept;
+        void UpdateRazor(_In_ bool pinned, _In_ foundation::Point point) noexcept;
+        bool RazorPressed(_In_ bool pinned, _In_ foundation::Point point) noexcept;
+        void MergeTrackInto(_In_ std::wstring const& sourceId, _In_ std::wstring const& destinationId) noexcept;
+        void AddMergeTrackMenu(_In_ controls::MenuFlyout const& menu, _In_ std::wstring const& trackId);
+
+        // Placements picked with Ctrl, besides the selected one, on the same track; they hold
+        // only while that placement is still the selected one.
+        std::vector<size_t> m_morePlacements{};
+        size_t m_moreAnchor{ SIZE_MAX };
+        std::wstring m_moreTrackId{};
+
+        bool m_razor{ false };
+        std::wstring m_razorTrackId{};
+        int64_t m_razorTick{ -1 };
         void ShowLaneMenu(_In_ seq::ArrangeRow const& row, _In_ int64_t tick, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         // The track id is a copy: making the clip rebuilds the layout a caller's id may live in.
         void CreateClipAt(_In_ std::wstring trackId, _In_ int64_t tick, _In_ std::optional<seq::PatternMode> pattern = std::nullopt, _In_ std::optional<seq::GeneratorType> generator = std::nullopt) noexcept;
@@ -476,6 +502,11 @@ namespace winrt::midisequencer::implementation
 
         // A notes clip's own automation, in lanes under the piano roll (MainWindowClipLanes.cpp).
         void DrawNotesEditor(_In_ canvas::CanvasDrawingSession const& ds, _In_ float width, _In_ float height);
+
+        // The piano roll's ghost notes (MainWindowGhostNotes.cpp): worked out again only when the
+        // sequence, the clip or where it's placed changes.
+        void UpdateGhostNotes() noexcept;
+        std::wstring m_ghostKey{};
         float NotesEditorRollHeight() const noexcept;
         bool OnClipLanesPressed(_In_ input::PointerRoutedEventArgs const& args, _In_ foundation::Point position, _In_ bool right, _In_ bool control, _In_ bool doubleClick);
         bool OnClipLanesMoved(_In_ foundation::Point position);
@@ -932,6 +963,9 @@ namespace winrt::midisequencer::implementation
 
             // Ticks from the clip's start to where it was picked up, and how long it plays.
             int64_t GrabOffset{ 0 };
+
+            // Pressed with Ctrl: let go without moving, it's added to or taken from the selection.
+            bool ToggleOnClick{ false };
             int64_t Length{ 0 };
 
             seq::ClipDragView View{};

@@ -149,6 +149,7 @@
     <ClInclude Include="GlassLayoutWriter.h" />
     <ClInclude Include="SampleSequence.h" />
     <ClInclude Include="SequenceEdits.h" />
+    <ClInclude Include="SequenceMerge.h" />
     <ClInclude Include="SequenceModel.h" />
     <ClInclude Include="SequenceGenerator.h" />
     <ClInclude Include="GeneratorKinds.h" />
@@ -255,6 +256,9 @@
     <ClCompile Include="MainWindowRecordPlayed.cpp" />
     <ClCompile Include="MainWindowLaunchState.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
+    <ClCompile Include="MainWindowClipEdits.cpp" />
+    <ClCompile Include="MainWindowGhostNotes.cpp" />
+    <ClCompile Include="MainWindowTrackColor.cpp" />
     <ClCompile Include="..\theme-engine\ThemePlates.cpp" />
     <ClCompile Include="..\theme-engine\ThemeCanvas.cpp" />
     <ClCompile Include="TimelineView.cpp">
@@ -359,6 +363,9 @@
     </ClCompile>
     <ClCompile Include="RemoteEndpoint.cpp" />
     <ClCompile Include="SampleSequence.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="SequenceMerge.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceEdits.cpp">

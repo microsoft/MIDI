@@ -135,6 +135,11 @@ namespace midisequencer
         bool AutoSave() const noexcept { return m_autoSave; }
         void AutoSave(bool value) noexcept;
 
+        // The piano roll shows the notes other unmuted tracks play at the same time, faintly,
+        // behind the clip's own.
+        bool GhostNotes() const noexcept { return m_ghostNotes; }
+        void GhostNotes(bool value) noexcept;
+
         // Pixels for one bar on the timeline, at 100% scaling.
         double BarWidth() const noexcept { return m_barWidth; }
         void BarWidth(double value) noexcept;
@@ -238,6 +243,7 @@ namespace midisequencer
         bool m_timelineOverview{ true };
         bool m_timelineBarAtTop{ false };
         bool m_autoSave{ true };
+        bool m_ghostNotes{ false };
         double m_barWidth{ DefaultBarWidth };
         uint32_t m_snapTicks{ 240 };
         uint32_t m_launchQuantizeTicks{ 3840 };
