@@ -61,6 +61,19 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
+    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    {
+        // A create arriving now either sees the manager uninitialized and queues before this
+        // drains, or waits and then sees it initialized with the saved loopbacks already created.
+        std::lock_guard<std::mutex> configurationLock{ TransportState::Current().ConfigurationLock() };
+
+        m_initialized = true;
+
+        LOG_IF_FAILED(ProcessWorkQueue());
+
+        return S_OK;
+    }
+
     m_initialized = true;
 
     // this must be the last thing we do, as it relies on everything being initialized
@@ -249,11 +262,27 @@ CMidi2LoopbackMidiEndpointManager::UpdateSingleEndpointMutedStateProperty(
             DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
     }
 
-    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
-        definition.CreatedEndpointInterfaceId.c_str(),
-        static_cast<ULONG>(interfaceDevProperties.size()),
-        interfaceDevProperties.data()
-    ));
+    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    {
+        // A feedback trip handled on a threadpool thread can arrive here after Shutdown released
+        // the device manager.
+        auto const deviceManager = m_MidiDeviceManager;
+        RETURN_HR_IF_NULL(E_UNEXPECTED, deviceManager);
+
+        RETURN_IF_FAILED(deviceManager->UpdateEndpointProperties(
+            definition.CreatedEndpointInterfaceId.c_str(),
+            static_cast<ULONG>(interfaceDevProperties.size()),
+            interfaceDevProperties.data()
+        ));
+    }
+    else
+    {
+        RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+            definition.CreatedEndpointInterfaceId.c_str(),
+            static_cast<ULONG>(interfaceDevProperties.size()),
+            interfaceDevProperties.data()
+        ));
+    }
 
     TraceLoggingWrite(
         MidiLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -539,6 +568,11 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
         TraceLoggingPointer(this, "this")
     );
 
+    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    {
+        return CreateEndpointPairHardened(definitionA, definitionB);
+    }
+
 
     if (SUCCEEDED(CreateSingleEndpoint(definitionA)))
     {
@@ -599,6 +633,99 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
 
         return E_FAIL;
     }
+
+    return S_OK;
+}
+
+
+// Net-new for Feature_Servicing_MIDI2LoopbackHardening. CreateEndpointPair with three changes:
+// a pair whose association id is already in the table is refused, registrations from endpoints
+// opened while the pair was being created are applied when it is added, and those waiting
+// registrations are dropped if creation fails.
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiEndpointManager::CreateEndpointPairHardened(
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
+)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, definitionA);
+    RETURN_HR_IF_NULL(E_INVALIDARG, definitionB);
+
+    auto const table = TransportState::Current().GetEndpointTable();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+    auto const associationId = definitionA->AssociationId;
+
+    // A second pair under the same association id would replace the first one in the table. The
+    // first pair's endpoints would stay behind with no way to remove them, and what was sent to
+    // them would reach the new pair. Runtime creates are refused before this with a reason; this
+    // also covers the configuration file, where two keys can differ only in case.
+    if (table->GetDevice(associationId) != nullptr)
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Association id already in use by another loopback. Not creating this one.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(associationId.c_str(), "association id")
+        );
+
+        return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+    }
+
+    if (FAILED(CreateSingleEndpoint(definitionA)))
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to create loopback endpoint A", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        table->DiscardPendingRegistrations(associationId);
+
+        return E_FAIL;
+    }
+
+    if (FAILED(CreateSingleEndpoint(definitionB)))
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to create loopback endpoint B. Removing A now.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        LOG_IF_FAILED(DeleteSingleEndpoint(*definitionA));
+
+        table->DiscardPendingRegistrations(associationId);
+
+        return E_FAIL;
+    }
+
+    auto device = MidiLoopbackDevice{};
+
+    device.DefinitionA = *definitionA;
+    device.DefinitionB = *definitionB;
+
+    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
+    {
+        device.IsMuted = definitionA->IsMuted;
+    }
+
+    if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+    {
+        device.Feedback = MidiLoopbackFeedback::Create(associationId, definitionA->FeedbackProtectionEnabled);
+    }
+
+    table->SetDeviceApplyingPendingRegistrations(associationId, device);
 
     return S_OK;
 }

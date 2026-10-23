@@ -77,6 +77,12 @@ private:
         _In_ MidiLoopbackDeviceDefinition const& definitionB,
         _Inout_ json::JsonObject& responseObject);
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. A second pair under an association id
+    // already in use would replace the first pair in the table and leave its endpoints behind.
+    HRESULT ValidateNewAssociationIdIsUnused(
+        _In_ MidiLoopbackDeviceDefinition const& definitionA,
+        _Inout_ json::JsonObject& responseObject);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     GUID m_TransportId;   // kept for convenience

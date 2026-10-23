@@ -53,9 +53,16 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager(); 
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackHardening. Held for a whole configuration update,
+    // and while the endpoint manager finishes initializing and creates the loopbacks queued from
+    // the configuration file, so those never run at the same time as each other.
+    std::mutex& ConfigurationLock() { return m_configurationLock; }
+
 private:
     TransportState();
     ~TransportState();
+
+    std::mutex m_configurationLock;
 
 
     wil::com_ptr<CMidi2LoopbackMidiEndpointManager> m_endpointManager{ nullptr };

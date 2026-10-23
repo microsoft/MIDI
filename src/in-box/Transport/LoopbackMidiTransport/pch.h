@@ -88,6 +88,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "Feature_Servicing_MIDI2LoopbackFeedbackProtection.h"
 #include "Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint.h"
 #include "Feature_Servicing_MIDI2LoopbackAddRemoveReliability.h"
+#include "Feature_Servicing_MIDI2LoopbackHardening.h"
 
 // TransportUtilities
 #include "wstring_util.h"
