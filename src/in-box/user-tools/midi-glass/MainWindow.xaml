@@ -150,17 +150,17 @@
                 <MenuFlyoutItem x:Uid="CardMenuShowInFolder" Text="Show in folder" Click="OnCardMenuShowInFolder">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DA;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuDetails" Text="About this layout…" Click="OnCardMenuDetails">
+                <MenuFlyoutItem x:Uid="CardMenuDetails" Text="Layout details…" Click="OnCardMenuDetails">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="CardMenuBackUp" Text="Back up now" Click="OnCardMenuBackUp">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuRestore" Text="Restore from a backup…" Click="OnCardMenuRestore">
+                <MenuFlyoutItem x:Uid="CardMenuRestore" Text="Restore…" Click="OnCardMenuRestore">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE777;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuPackage" Text="Pack for sharing…" Click="OnCardMenuPackage">
+                <MenuFlyoutItem x:Uid="CardMenuPackage" Text="Export pack…" Click="OnCardMenuPackage">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
@@ -696,7 +696,7 @@
                             Click="OnOpenFileClick">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE8B7;" FontSize="14" />
-                            <TextBlock x:Name="OpenFileLabel" x:Uid="OpenFileLabel" Text="Open a file…" FontSize="13" />
+                            <TextBlock x:Name="OpenFileLabel" x:Uid="OpenFileLabel" Text="Open…" FontSize="13" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -712,19 +712,19 @@
                         Style="{StaticResource SubtleToolbarButtonStyle}">
                     <Button.Flyout>
                         <MenuFlyout>
-                            <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import a pack…" Click="OnImportPackageClick">
+                            <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import pack…" Click="OnImportPackageClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="LibraryMenuAuthor" Text="Your info for sharing…" Click="OnAuthorInfoClick">
+                            <MenuFlyoutItem x:Uid="LibraryMenuAuthor" Text="Author profile…" Click="OnAuthorInfoClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77B;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="LibraryMenuBackupsFolder" Text="Show the backups folder" Click="OnShowBackupsFolderClick">
+                            <MenuFlyoutItem x:Uid="LibraryMenuBackupsFolder" Text="Open backups folder" Click="OnShowBackupsFolderClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DA;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
                             <ToggleMenuFlyoutItem x:Name="KeepAwakeMenuItem"
                                                   x:Uid="LibraryMenuKeepAwake"
-                                                  Text="Keep this PC awake while a layout runs"
+                                                  Text="Prevent sleep while running"
                                                   Click="OnKeepAwakeClick" />
                         </MenuFlyout>
                     </Button.Flyout>

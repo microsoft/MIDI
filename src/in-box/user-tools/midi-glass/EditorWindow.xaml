@@ -352,13 +352,13 @@
                             <FontIcon Glyph="&#xE70D;" FontSize="9" />
                         </StackPanel>                        <Button.Flyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Name="AlignLeftItem" x:Uid="ArrangeAlignLeft" Text="Align left edges" Tag="alignleft" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignCenterXItem" x:Uid="ArrangeAlignCenterX" Text="Align centers across" Tag="aligncenterx" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignRightItem" x:Uid="ArrangeAlignRight" Text="Align right edges" Tag="alignright" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignLeftItem" x:Uid="ArrangeAlignLeft" Text="Align left" Tag="alignleft" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterXItem" x:Uid="ArrangeAlignCenterX" Text="Align center" Tag="aligncenterx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignRightItem" x:Uid="ArrangeAlignRight" Text="Align right" Tag="alignright" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Name="AlignTopItem" x:Uid="ArrangeAlignTop" Text="Align top edges" Tag="aligntop" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignTopItem" x:Uid="ArrangeAlignTop" Text="Align top" Tag="aligntop" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align middle" Tag="aligncentery" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom" Tag="alignbottom" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem x:Name="SpreadAcrossItem" x:Uid="ArrangeSpreadAcross" Text="Distribute horizontally" Tag="spreadx" Click="OnArrangeClick" />
                                 <MenuFlyoutItem x:Name="SpreadDownItem" x:Uid="ArrangeSpreadDown" Text="Distribute vertically" Tag="spready" Click="OnArrangeClick" />
@@ -455,11 +455,11 @@
                                 <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <MenuFlyoutItem x:Uid="LayoutMenuAbout" Text="About this layout…" Tag="name" Click="OnLayoutSettingsClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuAbout" Text="Layout details…" Tag="name" Click="OnLayoutSettingsClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Set the keyboard order…" Click="OnSortKeyboardOrderClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Tab order…" Click="OnSortKeyboardOrderClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
@@ -890,7 +890,7 @@
                         <InfoBar.ActionButton>
                             <Button x:Name="SelectOffPageButton"
                                     x:Uid="SelectOffPageButton"
-                                    Content="Select them"
+                                    Content="Select"
                                     Click="OnSelectOffPageClick" />
                         </InfoBar.ActionButton>
                     </InfoBar>
@@ -1859,7 +1859,7 @@
 
                                         <!-- One check box per scale, built in code. -->
                                         <StackPanel x:Name="SwitchScalesPanel" Visibility="Collapsed" Margin="0,0,0,8">
-                                            <TextBlock x:Uid="SwitchScalesLabel" Text="Scales it offers" Style="{StaticResource InspectorLabelStyle}" />
+                                            <TextBlock x:Uid="SwitchScalesLabel" Text="Scales" Style="{StaticResource InspectorLabelStyle}" />
                                             <StackPanel x:Name="SwitchScaleChecks" />
                                         </StackPanel>
 
@@ -1878,7 +1878,7 @@
                                                 Click="OnAddSwitchPositionClick">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE710;" FontSize="11" />
-                                                <TextBlock x:Uid="AddSwitchPositionLabel" Text="Add a position" FontSize="11" />
+                                                <TextBlock x:Uid="AddSwitchPositionLabel" Text="Add position" FontSize="11" />
                                             </StackPanel>
                                         </Button>
 
@@ -2133,7 +2133,7 @@
                                         <!-- Every pad on a note of the key, the way a grid controller plays in key. -->
                                         <CheckBox x:Name="PadInKeyCheck"
                                                   x:Uid="PadInKeyCheck"
-                                                  Content="Only notes in the key"
+                                                  Content="In key only"
                                                   Margin="0,6,0,0"
                                                   Checked="OnPadNotesChanged"
                                                   Unchecked="OnPadNotesChanged" />
@@ -2326,7 +2326,7 @@
                                                       Unchecked="OnLearnBankToggled">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE8FD;" FontSize="11" />
-                                                <TextBlock x:Uid="LearnBankLabel" Text="Learn a bank" FontSize="11" />
+                                                <TextBlock x:Uid="LearnBankLabel" Text="Learn bank" FontSize="11" />
                                             </StackPanel>
                                         </ToggleButton>
                                     </StackPanel>
@@ -2401,7 +2401,7 @@
                                                              x:Uid="EditDevicesLink"
                                                              Padding="0"
                                                              FontSize="11"
-                                                             Content="Set up devices…"
+                                                             Content="Devices…"
                                                              Click="OnLayoutSettingsClick" />
                                         </StackPanel>
 
@@ -2578,7 +2578,7 @@
                                                     Click="OnAddDetentStopClick">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                                     <FontIcon Glyph="&#xE710;" FontSize="11" />
-                                                    <TextBlock x:Uid="AddDetentStopLabel" Text="Add a stop" FontSize="11" />
+                                                    <TextBlock x:Uid="AddDetentStopLabel" Text="Add stop" FontSize="11" />
                                                 </StackPanel>
                                             </Button>
                                         </StackPanel>
@@ -2639,7 +2639,7 @@
                                         <HyperlinkButton x:Uid="RawWordsPrimerLink"
                                                          Padding="0"
                                                          FontSize="11"
-                                                         Content="How to read and understand UMP messages"
+                                                         Content="UMP primer"
                                                          NavigateUri="https://aka.ms/MidiUMPPrimer" />
                                     </StackPanel>
 
@@ -2712,7 +2712,7 @@
                                             <HyperlinkButton x:Uid="ManySendDevicesLink"
                                                              Padding="0"
                                                              FontSize="11"
-                                                             Content="Set up devices…"
+                                                             Content="Devices…"
                                                              Click="OnLayoutSettingsClick" />
                                         </StackPanel>
 
@@ -2872,7 +2872,7 @@
                             <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                                 <StackPanel x:Name="BehaviorPanel" Margin="8,0,16,16" Spacing="4">
 
-                                    <TextBlock x:Uid="InspectorStartHeading" Text="When the layout opens" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Uid="InspectorStartHeading" Text="On open" Style="{StaticResource InspectorHeadingStyle}" />
                                     <ToggleSwitch x:Name="SendOnStartSwitch"
                                                   x:Uid="SendOnStartSwitch"
                                                   Header="Send value"
@@ -3284,7 +3284,7 @@
                             Click="OnCloseLayoutSettingsClick">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <FontIcon Glyph="&#xE72B;" FontSize="13" />
-                            <TextBlock x:Uid="LayoutSettingsBackLabel" Text="Back to the editor" />
+                            <TextBlock x:Uid="LayoutSettingsBackLabel" Text="Back to editor" />
                         </StackPanel>
                     </Button>
 
@@ -3389,7 +3389,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="11">
                                     <FontIcon Glyph="&#xE8A5;" FontSize="15" Width="16"
                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    <TextBlock x:Uid="SettingsNavNameLabel" Text="Name and description" />
+                                    <TextBlock x:Uid="SettingsNavNameLabel" Text="Details" />
                                 </StackPanel>
                             </ToggleButton>
 
@@ -3479,7 +3479,7 @@
                                             Click="OnThemeAboutClick">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE946;" FontSize="12" />
-                                            <TextBlock x:Uid="ThemeAboutLabel" Text="About this theme…" />
+                                            <TextBlock x:Uid="ThemeAboutLabel" Text="Theme details…" />
                                         </StackPanel>
                                     </Button>
                                 </Grid>
@@ -3489,7 +3489,7 @@
                                      the window loads can't rebuild a gallery that isn't there. -->
                                 <ComboBox x:Name="ThemeGroupPicker"
                                           x:Uid="ThemeGroupPicker"
-                                          Header="Group themes by"
+                                          Header="Group by"
                                           MinWidth="220"
                                           Margin="0,0,0,10"
                                           SelectionChanged="OnThemeGroupChanged" />
@@ -3567,7 +3567,7 @@
                                             Click="OnImportThemeClick">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE8B7;" FontSize="12" />
-                                            <TextBlock x:Uid="ImportThemeLabel" Text="Import a theme…" />
+                                            <TextBlock x:Uid="ImportThemeLabel" Text="Import theme…" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
