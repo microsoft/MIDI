@@ -154,8 +154,12 @@ private:
         _In_ uint32_t const remoteAddressCount);
 
     // The two halves of each EndpointCreatorWorker pass
-    void StartPendingHosts();
+    void StartPendingHosts(_In_ std::stop_token const& stopToken);
     void StartPendingClients(_In_ std::stop_token const& stopToken);
+
+    // Stops what Initialize starts. Used by Shutdown, and by Initialize when it fails part way.
+    // False when the negotiation thread had to be abandoned and may still use service objects.
+    bool StopBackgroundWork() noexcept;
 
     // Starts the search for advertised hosts while a client entry finds its host by mDNS, and
     // stops it once none does. Only EndpointCreatorWorker calls this.
@@ -280,7 +284,7 @@ private:
     wil::critical_section m_createdEndpointsLock;
     std::vector<CreatedEndpointRecord> m_createdEndpoints;
 
-    bool m_initialized{ false };
+    std::atomic<bool> m_initialized{ false };
 
     GUID m_transportId{ };
     std::wstring m_clientParentDeviceInstanceId{};

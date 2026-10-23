@@ -12,137 +12,21 @@ using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 
-extern "C" IMAGE_DOS_HEADER __ImageBase;
+using namespace NetworkMidiTest;
 
 namespace
 {
-    // Midi2NetworkMidiTransport in Midi2NetworkMidiTransport.idl
-    constexpr GUID TransportClsid{ 0xc95dcd1f, 0xcde3, 0x4c2d, { 0x91, 0x3c, 0x52, 0x8c, 0xb8, 0xa4, 0xcb, 0xe6 } };
-
-    // Counts references and nothing else. Every stand-in outlives the transport, so it never
-    // deletes itself.
-    template <typename Interface>
-    class CountedStandIn : public Interface
-    {
-    public:
-        STDMETHODIMP QueryInterface(REFIID riid, void** object) override
-        {
-            if (object == nullptr) return E_POINTER;
-
-            if (riid == __uuidof(IUnknown) || riid == __uuidof(Interface))
-            {
-                *object = static_cast<Interface*>(this);
-                AddRef();
-                return S_OK;
-            }
-
-            *object = nullptr;
-            return E_NOINTERFACE;
-        }
-
-        STDMETHODIMP_(ULONG) AddRef() override { return ++m_references; }
-        STDMETHODIMP_(ULONG) Release() override { return --m_references; }
-
-        // Includes the one the test holds
-        ULONG References() const { return m_references.load(); }
-
-    private:
-        std::atomic<ULONG> m_references{ 1 };
-    };
-
-    LPWSTR CoTaskCopy(_In_ std::wstring const& text)
-    {
-        auto const bytes = (text.size() + 1) * sizeof(wchar_t);
-        auto copy = static_cast<LPWSTR>(CoTaskMemAlloc(bytes));
-
-        if (copy != nullptr)
-        {
-            memcpy(copy, text.c_str(), bytes);
-        }
-
-        return copy;
-    }
-
-    class StandInDeviceManager : public CountedStandIn<IMidiDeviceManager>
-    {
-    public:
-        STDMETHODIMP ActivateVirtualParentDevice(ULONG, const DEVPROPERTY*, const SW_DEVICE_CREATE_INFO* createInfo, LPWSTR* createdDeviceId) override
-        {
-            if (createInfo == nullptr || createInfo->pszInstanceId == nullptr || createdDeviceId == nullptr) return E_INVALIDARG;
-
-            *createdDeviceId = CoTaskCopy(std::wstring{ L"SWD\\MIDISRV\\" } + createInfo->pszInstanceId);
-
-            return *createdDeviceId == nullptr ? E_OUTOFMEMORY : S_OK;
-        }
-
-        STDMETHODIMP DeactivateVirtualParentDevice(LPCWSTR) override { return S_OK; }
-
-        STDMETHODIMP ActivateEndpoint(
-            LPCWSTR,
-            BOOL,
-            MidiFlow,
-            const PMIDIENDPOINTCOMMONPROPERTIES,
-            ULONG,
-            ULONG,
-            const DEVPROPERTY*,
-            const DEVPROPERTY*,
-            const SW_DEVICE_CREATE_INFO*,
-            LPWSTR* createdEndpointDeviceInterfaceId) override
-        {
-            // Nothing connects in these tests, so nothing should create an endpoint
-            if (createdEndpointDeviceInterfaceId != nullptr) *createdEndpointDeviceInterfaceId = nullptr;
-
-            return E_NOTIMPL;
-        }
-
-        STDMETHODIMP UpdateEndpointProperties(LPCWSTR, ULONG, const DEVPROPERTY*) override { return S_OK; }
-        STDMETHODIMP DeleteEndpointProperties(LPCWSTR, ULONG, const DEVPROPERTY*) override { return S_OK; }
-        STDMETHODIMP DeactivateEndpoint(LPCWSTR) override { return S_OK; }
-        STDMETHODIMP RemoveEndpoint(LPCWSTR) override { return S_OK; }
-        STDMETHODIMP RebuildMidi1PortsForEndpoint(LPCWSTR) override { return S_OK; }
-        STDMETHODIMP UpdateTransportConfiguration(GUID, LPCWSTR, LPWSTR*) override { return E_NOTIMPL; }
-    };
-
-    class StandInProtocolManager : public CountedStandIn<IMidiEndpointProtocolManager>
-    {
-    public:
-        STDMETHODIMP DiscoverAndNegotiate(GUID, LPCWSTR, ENDPOINTPROTOCOLNEGOTIATIONPARAMS) override { return E_NOTIMPL; }
-        STDMETHODIMP_(BOOL) IsEnabled() override { return FALSE; }
-    };
+    constexpr GUID TransportClsid{ NetworkTransportClsid };
 }
 
 
 bool NetworkMidiShutdownTests::ClassSetup()
 {
-    // the transport sits beside this DLL in the build output, unless /p:TransportDll=<path> names one
-    std::wstring dllPath;
-    String parameter;
-
-    if (SUCCEEDED(RuntimeParameters::TryGetValue(L"TransportDll", parameter)) && !parameter.IsEmpty())
-    {
-        dllPath = static_cast<wchar_t const*>(parameter);
-    }
-    else
-    {
-        std::wstring modulePath(MAX_PATH, L'\0');
-        modulePath.resize(GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), modulePath.data(), static_cast<DWORD>(modulePath.size())));
-        dllPath = modulePath.substr(0, modulePath.find_last_of(L'\\') + 1) + L"Midi2.NetworkMidiTransport.dll";
-    }
-
-    Log::Comment(String().Format(L"Transport: %s", dllPath.c_str()));
-
-    // Never freed. The transport keeps state for the life of the process, as it does in the service.
-    auto const module = LoadLibraryExW(dllPath.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
-    VERIFY_IS_NOT_NULL(module, L"the transport DLL loads");
-
-    if (module == nullptr) return false;
-
-    m_getClassObject = reinterpret_cast<GetClassObjectFunction>(GetProcAddress(module, "DllGetClassObject"));
-    VERIFY_IS_NOT_NULL(m_getClassObject, L"the DLL exports DllGetClassObject");
+    m_getClassObject = LoadTransportForTest();
+    VERIFY_IS_NOT_NULL(m_getClassObject, L"the transport DLL loads and exports DllGetClassObject");
 
     return m_getClassObject != nullptr;
 }
-
 
 _Use_decl_annotations_
 void NetworkMidiShutdownTests::RunShutdown(bool const endpointManagerFirst)

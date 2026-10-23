@@ -258,14 +258,55 @@ MidiNetworkConnection::FollowReplySource(
 }
 
 
+MidiNetworkConnection::~MidiNetworkConnection()
+{
+    // A destructor must not throw, and std::thread::join can
+    try
+    {
+        auto threadsLock = m_workerThreadsLock.lock();
+
+        m_connectionWatcherThread.request_stop();
+        m_outboundProcessingThread.request_stop();
+
+        // wake both, so neither sleeps out its interval while this waits
+        m_connectionTimeoutEvent.SetEvent();
+        WakeSendThread();
+
+        for (auto* thread : { &m_connectionWatcherThread, &m_outboundProcessingThread })
+        {
+            if (!thread->joinable())
+            {
+                continue;
+            }
+
+            if (thread->get_id() == std::this_thread::get_id())
+            {
+                // The last reference was let go on this thread. It touches nothing of this object
+                // once its strong reference is gone, and its stop has been requested.
+                thread->detach();
+            }
+            else
+            {
+                thread->join();
+            }
+        }
+    }
+    CATCH_LOG();
+}
+
+
 _Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
+MidiNetworkConnection::ConnectionWatcherThreadWorker(
+    std::weak_ptr<MidiNetworkConnection> weakThis,
+    std::stop_token stopToken)
 {
     // if we haven't received any UDP messages in a certain amount of time,
     // send a ping to the remote
 
-    while (!m_shuttingDown && !stopToken.stop_requested())
+    // The stop token is this thread's own, so it is checked first. The destructor requests a stop
+    // before it lets this thread go, and nothing of the object may be read after that.
+    while (!stopToken.stop_requested() && !m_shuttingDown)
     {
         auto threadWaitStartTimestamp = internal::GetCurrentMidiTimestamp();
 
@@ -273,93 +314,110 @@ MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
         // reaches existing sessions within one interval instead of only new ones.
         m_connectionTimeoutEvent.wait(TransportState::Current().TransportSettings.OutboundPingInterval);
 
-        if (m_shuttingDown || stopToken.stop_requested())
+        if (stopToken.stop_requested() || m_shuttingDown)
         {
             break;
         }
 
-        // We only monitor the liveness of an established session. Pinging a remote which has
-        // never established a session would let a single spoofed datagram generate traffic
-        // toward a forged address.
-        if (!m_sessionActive)
+        // Null when the connection is being destroyed on another thread, which is waiting to
+        // join this one. Released at the end of the tick, which may destroy the connection here.
+        auto self = weakThis.lock();
+
+        if (self == nullptr)
         {
-            {
-                auto lock = m_pingTrackingLock.lock();
-                m_outgoingPingTracking.clear();
-            }
-
-            // an invitation we sent may still be unanswered
-            LOG_IF_FAILED(OnWatchdogTick());
-
-            continue;
+            break;
         }
 
-        if (m_lastIncomingValidUdpPacketTimestamp > threadWaitStartTimestamp)
-        {
-            // Traffic is flowing, so liveness is not in question. Still ping below: a Ping Reply
-            // is the only round trip we can time, and a session which is carrying MIDI would
-            // otherwise never produce a latency sample at all.
-            m_connectionTimeoutEvent.ResetEvent();
-        }
-        else
-        {
-            uint16_t consecutiveFailures{ 0 };
-
-            {
-                auto lock = m_pingTrackingLock.lock();
-
-                // check our ping entries. We want to check the last N entries and if all of them
-                // have been ignored, we will take action.
-                for (auto pingEntry = m_outgoingPingTracking.rbegin();
-                    pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
-                {
-                    if (!pingEntry->Received)
-                    {
-                        consecutiveFailures++;
-                    }
-                    else
-                    {
-                        // the first time we find one that has been received, we bail
-                        break;
-                    }
-                }
-            }
-
-            if (m_shuttingDown || stopToken.stop_requested())
-            {
-                break;
-            }
-
-            if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
-            {
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_WARNING,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Remote endpoint stopped responding to pings. Ending session.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingUInt16(consecutiveFailures, "consecutive missed pings")
-                );
-
-                LOG_IF_FAILED(EndActiveSessionDueToTimeout());
-
-                continue;
-            }
-        }
-
-        // Only a remote which has gone quiet can be disconnected for missed pings, so a remote
-        // which streams to us but never answers a Ping keeps its session exactly as before.
-        LOG_IF_FAILED(SendPing());
+        WatchdogTick(threadWaitStartTimestamp, stopToken);
     }
 
     return S_OK;
 }
 
-HRESULT
-MidiNetworkConnection::SignalHealthyConnectionAndUpdateArrivalTimestamp()
+_Use_decl_annotations_
+void
+MidiNetworkConnection::WatchdogTick(uint64_t const threadWaitStartTimestamp, std::stop_token const& stopToken)
 {
-    m_lastIncomingValidUdpPacketTimestamp = internal::GetCurrentMidiTimestamp();
+    // We only monitor the liveness of an established session. Pinging a remote which has
+    // never established a session would let a single spoofed datagram generate traffic
+    // toward a forged address.
+    if (!m_sessionActive)
+    {
+        {
+            auto lock = m_pingTrackingLock.lock();
+            m_outgoingPingTracking.clear();
+        }
+
+        // an invitation we sent may still be unanswered
+        LOG_IF_FAILED(OnWatchdogTick());
+
+        return;
+    }
+
+    if (m_lastIncomingValidUdpPacketTimestamp > threadWaitStartTimestamp)
+    {
+        // Traffic is flowing, so liveness is not in question. Still ping below: a Ping Reply
+        // is the only round trip we can time, and a session which is carrying MIDI would
+        // otherwise never produce a latency sample at all.
+        m_connectionTimeoutEvent.ResetEvent();
+    }
+    else
+    {
+        uint16_t consecutiveFailures{ 0 };
+
+        {
+            auto lock = m_pingTrackingLock.lock();
+
+            // check our ping entries. We want to check the last N entries and if all of them
+            // have been ignored, we will take action.
+            for (auto pingEntry = m_outgoingPingTracking.rbegin();
+                pingEntry != m_outgoingPingTracking.rend() && consecutiveFailures <= m_outgoingPingMaxIgnoredBeforeDisconnect; pingEntry++)
+            {
+                if (!pingEntry->Received)
+                {
+                    consecutiveFailures++;
+                }
+                else
+                {
+                    // the first time we find one that has been received, we bail
+                    break;
+                }
+            }
+        }
+
+        if (m_shuttingDown || stopToken.stop_requested())
+        {
+            return;
+        }
+
+        if (consecutiveFailures >= m_outgoingPingMaxIgnoredBeforeDisconnect)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Remote endpoint stopped responding to pings. Ending session.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt16(consecutiveFailures, "consecutive missed pings")
+            );
+
+            LOG_IF_FAILED(EndActiveSessionDueToTimeout());
+
+            return;
+        }
+    }
+
+    // Only a remote which has gone quiet can be disconnected for missed pings, so a remote
+    // which streams to us but never answers a Ping keeps its session exactly as before.
+    LOG_IF_FAILED(SendPing());
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SignalHealthyConnectionAndUpdateArrivalTimestamp(uint64_t const arrivalTimestamp)
+{
+    m_lastIncomingValidUdpPacketTimestamp = arrivalTimestamp;
 
     m_connectionTimeoutEvent.ResetEvent();
 
@@ -443,11 +501,16 @@ MidiNetworkConnection::StartConnectionWatchdogThread()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_connectionWatcherThread = std::jthread([this](std::stop_token stopToken)
+    // The thread never holds a strong reference while it waits, or a connection nobody else
+    // wants would be kept alive by its own watchdog
+    std::weak_ptr<MidiNetworkConnection> weakThis{ weak_from_this() };
+    RETURN_HR_IF_MSG(E_UNEXPECTED, weakThis.expired(), "Connection must be owned by a shared_ptr before its watchdog starts");
+
+    m_connectionWatcherThread = std::jthread([this, weakThis](std::stop_token stopToken)
         {
             try
             {
-                LOG_IF_FAILED(ConnectionWatcherThreadWorker(stopToken));
+                LOG_IF_FAILED(ConnectionWatcherThreadWorker(weakThis, stopToken));
             }
             CATCH_LOG();
         });
@@ -744,6 +807,10 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     );
 
     std::wstring deviceInstanceId{ };
+
+    // Disassociating below can let go of the last other reference to this connection, and the
+    // rest of this function still needs it
+    auto keepAlive = weak_from_this().lock();
 
     {
         auto lock = m_sessionLock.lock();
@@ -1273,17 +1340,58 @@ MidiNetworkConnection::HandleIncomingInvitationReplyPending()
 }
 
 
+thread_local MidiNetworkConnection const* MidiNetworkConnection::s_receivingConnection{ nullptr };
+thread_local MidiNetworkConnection::DatagramReplyState* MidiNetworkConnection::s_receivingDatagram{ nullptr };
+
+bool
+MidiNetworkConnection::MayReplyToRemote() noexcept
+{
+    // Not a reply to a datagram from this connection's remote
+    if (s_receivingConnection != this || s_receivingDatagram == nullptr)
+    {
+        return true;
+    }
+
+    auto& datagram = *s_receivingDatagram;
+
+    // A session means the remote went through an invitation and, where it was needed, a person's
+    // approval, so its replies are left alone. That includes the replies to the datagram which
+    // ended the session, such as the Bye Reply to its Bye.
+    if (m_sessionActive || datagram.SessionActiveAtArrival)
+    {
+        return true;
+    }
+
+    if (datagram.RepliesOutsideSession >= MIDI_NETWORK_MAX_REPLIES_PER_DATAGRAM_OUTSIDE_SESSION)
+    {
+        return false;
+    }
+
+    // One remote per connection, so a constant key is all that is needed here
+    try
+    {
+        if (!m_replyRateLimiter.ShouldSend(0))
+        {
+            return false;
+        }
+    }
+    catch (...)
+    {
+        return false;
+    }
+
+    datagram.RepliesOutsideSession++;
+
+    return true;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::SendByeSessionNotEstablished(uint8_t const commandCode)
 {
-    // One remote per connection, so a constant key is all that is needed here. Without this a
-    // peer can make us emit a refusal for every command in every datagram it sends.
-    if (!m_replyRateLimiter.ShouldSend(0))
-    {
-        return S_FALSE;
-    }
-
+    // Rate limited by MayReplyToRemote in SendToNetwork: without a session, a peer can't make us
+    // emit a refusal for every command in every datagram it sends.
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_WARNING,
@@ -1510,11 +1618,26 @@ MidiNetworkConnection::ProcessIncomingMessage(
     // parsing is serialized here. Sequence tracking and the retransmit buffer are not reentrant.
     auto incomingLock = m_incomingMessageLock.lock();
 
-    // we've received a new message, so reset our disconnect event
-    // this also sets the timestamp of the incoming
-    LOG_IF_FAILED(SignalHealthyConnectionAndUpdateArrivalTimestamp());
-
     DatagramReplyState replyState{ };
+    replyState.ArrivalTimestamp = internal::GetCurrentMidiTimestamp();
+    replyState.SessionActiveAtArrival = m_sessionActive;
+
+    // Marks every send from here down as a reply to this datagram, for MayReplyToRemote
+    auto const previousReceivingConnection = s_receivingConnection;
+    auto const previousReceivingDatagram = s_receivingDatagram;
+
+    s_receivingConnection = this;
+    s_receivingDatagram = &replyState;
+
+    auto restoreReceiving = wil::scope_exit([&]() noexcept
+        {
+            s_receivingConnection = previousReceivingConnection;
+            s_receivingDatagram = previousReceivingDatagram;
+        });
+
+    // Only a datagram carrying a command we recognize says the remote is still there. Anything
+    // else, junk included, must not keep a dead session alive or a connection from being reclaimed.
+    bool sawRecognizedCommand{ false };
 
     try
     {
@@ -1525,6 +1648,29 @@ MidiNetworkConnection::ProcessIncomingMessage(
         {
             MidiNetworkCommandPacketHeader commandHeader;
             commandHeader.HeaderWord = commandHeaderWord;
+
+            // A remote with no session can't be held to the address it claims, so one datagram
+            // from it only gets a few commands looked at. A real invitation is the only thing
+            // such a remote needs to send, and it sends it on its own.
+            if (!m_sessionActive)
+            {
+                if (replyState.CommandsOutsideSession >= MIDI_NETWORK_MAX_COMMANDS_PER_DATAGRAM_OUTSIDE_SESSION)
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Datagram from a remote with no session holds more commands than are processed. Discarding remainder.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingUInt32(replyState.CommandsOutsideSession, "commands processed")
+                    );
+
+                    break;
+                }
+
+                replyState.CommandsOutsideSession++;
+            }
 
             // Everything below this point is remote-supplied. Validating the declared payload
             // length against what actually arrived is what keeps every handler in bounds.
@@ -1549,7 +1695,10 @@ MidiNetworkConnection::ProcessIncomingMessage(
 
             uint32_t const unconsumedLengthAfterCommand = reader.UnconsumedBufferLength() - payloadLengthInBytes;
 
-            DispatchIncomingCommand(reader, commandHeader, payloadLengthInBytes, replyState);
+            if (DispatchIncomingCommand(reader, commandHeader, payloadLengthInBytes, replyState))
+            {
+                sawRecognizedCommand = true;
+            }
 
             if (reader.UnconsumedBufferLength() < unconsumedLengthAfterCommand)
             {
@@ -1613,6 +1762,12 @@ MidiNetworkConnection::ProcessIncomingMessage(
         );
     }
 
+    if (sawRecognizedCommand)
+    {
+        // resets our disconnect event, and records when the remote was last heard from
+        LOG_IF_FAILED(SignalHealthyConnectionAndUpdateArrivalTimestamp(replyState.ArrivalTimestamp));
+    }
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -1626,7 +1781,7 @@ MidiNetworkConnection::ProcessIncomingMessage(
 }
 
 _Use_decl_annotations_
-void
+bool
 MidiNetworkConnection::DispatchIncomingCommand(
     winrt::Windows::Storage::Streams::DataReader const& reader,
     MidiNetworkCommandPacketHeader const& commandHeader,
@@ -1745,8 +1900,10 @@ MidiNetworkConnection::DispatchIncomingCommand(
 
     default:
         ReplyCommandNotSupported(commandHeader);
-        break;
+        return false;
     }
+
+    return true;
 }
 
 _Use_decl_annotations_
@@ -1933,7 +2090,7 @@ MidiNetworkConnection::ReadIncomingUmpData(
 
     if (words.size() > 0)
     {
-        LOG_IF_FAILED(HandleIncomingUmpData(m_lastIncomingValidUdpPacketTimestamp, words));
+        LOG_IF_FAILED(HandleIncomingUmpData(replyState.ArrivalTimestamp, words));
     }
 }
 
@@ -2679,13 +2836,25 @@ MidiNetworkConnection::SendRequestedRetransmits(uint64_t& now, uint64_t& waitTic
                 size_t const available = static_cast<size_t>(std::distance(first, m_retransmitBuffer.end()));
                 size_t const wanted = (request.CommandCount == 0) ? available : (std::min)(static_cast<size_t>(request.CommandCount), available);
 
+                // Each command goes again at most once in this time, however often or however
+                // widely the remote asks. Without it, a remote repeating "everything from here"
+                // gets the whole buffer, up to 256 KB, every time it asks.
+                auto const repeatTicks = (internal::GetMidiTimestampFrequency() * MIDI_NETWORK_RETRANSMIT_RESEND_REPEAT_MILLISECONDS) / 1000;
+
                 // One datagram at a time, and only as much as the speed limit allows. DontFragment
                 // is set, so an oversized datagram would simply be dropped.
                 size_t budgetBytes{ MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES - sizeof(uint32_t) };
-                size_t count{ 0 };
+                size_t processed{ 0 };
+                std::vector<decltype(first)> toSend{ };
 
-                for (auto probe = first; count < wanted && probe != m_retransmitBuffer.end(); probe++)
+                for (auto probe = first; processed < wanted && probe != m_retransmitBuffer.end(); probe++)
                 {
+                    if (probe->LastResentTimestamp != 0 && now >= probe->LastResentTimestamp && now - probe->LastResentTimestamp < repeatTicks)
+                    {
+                        processed++;
+                        continue;
+                    }
+
                     size_t const cost = sizeof(uint32_t) + (probe->Words.size() * sizeof(uint32_t));
 
                     if (cost > budgetBytes)
@@ -2698,7 +2867,7 @@ MidiNetworkConnection::SendRequestedRetransmits(uint64_t& now, uint64_t& waitTic
 
                     if (allowedIn > 0)
                     {
-                        if (count == 0)
+                        if (processed == 0)
                         {
                             waitTicks = allowedIn;
                         }
@@ -2709,32 +2878,39 @@ MidiNetworkConnection::SendRequestedRetransmits(uint64_t& now, uint64_t& waitTic
                     m_sendPacer.Charge(probe->WireByteCount, now);
 
                     budgetBytes -= cost;
-                    count++;
+                    toSend.push_back(probe);
+                    processed++;
                 }
 
-                if (count > 0)
+                if (!toSend.empty())
                 {
-                    LOG_IF_FAILED(SendToNetwork([&first, count](MidiNetworkDataWriter& writer)
+                    LOG_IF_FAILED(SendToNetwork([&toSend](MidiNetworkDataWriter& writer)
                         {
-                            auto writeIterator = first;
-
-                            for (size_t i = 0; i < count; i++, writeIterator++)
+                            for (auto const& entry : toSend)
                             {
-                                RETURN_IF_FAILED(writer.WriteCommandUmpMessages(writeIterator->SequenceNumber, writeIterator->Words.data(), static_cast<uint8_t>(writeIterator->Words.size())));
+                                RETURN_IF_FAILED(writer.WriteCommandUmpMessages(entry->SequenceNumber, entry->Words.data(), static_cast<uint8_t>(entry->Words.size())));
                             }
 
                             return S_OK;
                         }));
 
-                    m_retransmitCount += static_cast<uint32_t>(count);
+                    for (auto const& entry : toSend)
+                    {
+                        entry->LastResentTimestamp = now;
+                    }
+
+                    m_retransmitCount += static_cast<uint32_t>(toSend.size());
                     sentData = true;
+                }
 
+                if (processed > 0)
+                {
                     auto last = first;
-                    std::advance(last, count - 1);
+                    std::advance(last, processed - 1);
 
-                    sentCount = count;
+                    sentCount = processed;
                     nextStart = last->SequenceNumber + 1;
-                    finished = (count >= wanted);
+                    finished = (processed >= wanted);
                 }
                 else if (waitTicks == 0)
                 {
@@ -3232,6 +3408,9 @@ MidiNetworkConnection::Shutdown()
         // TransportState cleanup, so it has to be safe to repeat.
         return S_OK;
     }
+
+    // Ending the session below can let go of the last other reference
+    auto keepAlive = weak_from_this().lock();
 
     // release a user-initiated disconnect which is mid-retry
     m_byeReplyEvent.SetEvent();

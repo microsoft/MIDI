@@ -57,7 +57,8 @@ MidiNetworkAdvertiser::Advertise(
     uint16_t const port,
     winrt::hstring const& midiEndpointName,
     winrt::hstring const& midiProductInstanceId,
-    uint32_t const interfaceIndex
+    uint32_t const interfaceIndex,
+    std::stop_token const& stopToken
 )
 {
     // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
@@ -83,7 +84,7 @@ MidiNetworkAdvertiser::Advertise(
                 { L"ProductInstanceId", std::wstring{ midiProductInstanceId } }
             },
             ::WindowsMidiServicesInternal::MidiDnssdRegistrationTimeoutMilliseconds,
-            std::stop_token{ },
+            stopToken,
             interfaceIndex);
 
         if (hr == HRESULT_FROM_WIN32(ERROR_TIMEOUT))

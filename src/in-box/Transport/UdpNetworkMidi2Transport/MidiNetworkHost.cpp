@@ -331,12 +331,24 @@ MidiNetworkHost::CreateNetworkConnection(
         conn->SetSkipInBetweenValuesToCatchUp(m_skipInBetweenValuesToCatchUp);
 
         // Another thread pool thread may have created one for this same remote while we were
-        // initializing. Whichever landed in the map first wins, and the loser is torn down.
-        auto winner = TransportState::Current().AddNetworkConnectionIfAbsent(remoteHostName, remotePort, conn);
+        // initializing. Whichever landed in the map first wins, and the loser is torn down. The
+        // connection limit is checked in the same step, so two invitations arriving together
+        // can't both squeeze past it.
+        auto winner = TransportState::Current().AddNetworkConnectionIfAbsent(
+            remoteHostName,
+            remotePort,
+            conn,
+            TransportState::Current().TransportSettings.MaxHostConnections);
 
         if (winner != conn)
         {
             LOG_IF_FAILED(conn->Shutdown());
+        }
+
+        if (winner == nullptr)
+        {
+            // full. Expected, so not logged as a failure; the caller refuses the invitation.
+            return HRESULT_FROM_WIN32(ERROR_TOO_MANY_SESS);
         }
 
         connection = winner;
@@ -417,6 +429,28 @@ MidiNetworkHost::Stop()
         LOG_IF_FAILED(advertiser->Shutdown());
     }
 
+    // Stop receiving before the connections are torn down, so no new remote is admitted while
+    // that happens. The socket stays open until the end: every connection replies through it, and
+    // each one says Bye below. Revoking does not wait for a handler already running, and one of
+    // those can still admit a connection after the snapshot below is taken. Those are caught by
+    // RemoveAllNetworkConnectionsForHost.
+    DatagramSocket socket{ nullptr };
+
+    {
+        auto lock = m_socketLock.lock();
+        std::swap(socket, m_socket);
+        m_activeNetworkAdapterId = winrt::guid{};
+    }
+
+    if (socket)
+    {
+        try
+        {
+            socket.MessageReceived(m_messageReceivedEventToken);
+        }
+        CATCH_LOG();
+    }
+
     // Two phases. Every remote is told first, because a Bye held up behind another connection's
     // endpoint teardown is a Bye the remote may never see before its own timeout.
     auto connections = TransportState::Current().GetAllNetworkConnectionsForHost(m_entryIdentifier);
@@ -431,24 +465,14 @@ MidiNetworkHost::Stop()
         LOG_IF_FAILED(connection->Shutdown());
     }
 
-    // now remove all those connections
-    RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForHost(m_entryIdentifier));
-
+    // Removes them all, and shuts down any which arrived after the snapshot above
+    LOG_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForHost(m_entryIdentifier));
 
     // unbind the port
-    DatagramSocket socket{ nullptr };
-
-    {
-        auto lock = m_socketLock.lock();
-        std::swap(socket, m_socket);
-        m_activeNetworkAdapterId = winrt::guid{};
-    }
-
     if (socket)
     {
         try
         {
-            socket.MessageReceived(m_messageReceivedEventToken);
             socket.Close();
         }
         CATCH_LOG();
@@ -472,8 +496,9 @@ MidiNetworkHost::Stop()
 }
 
 
+_Use_decl_annotations_
 HRESULT
-MidiNetworkHost::Start()
+MidiNetworkHost::Start(std::stop_token const& stopToken)
 try
 {
     TraceLoggingWrite(
@@ -486,6 +511,13 @@ try
     );
 
     auto lifecycleLock = m_lifecycleLock.lock();
+
+    // Removed, or the transport is stopping. Whoever shut it down no longer tracks it, so a
+    // socket and a registration opened now would never be closed.
+    if (m_shutDown)
+    {
+        return HRESULT_FROM_WIN32(ERROR_INVALID_STATE);
+    }
 
     // Starting a running host again used to put a second socket and a second DNS-SD registration
     // underneath it, and the first socket stayed bound.
@@ -591,7 +623,7 @@ try
 
     if (m_hostDefinition.Advertise)
     {
-        RETURN_IF_FAILED(StartAdvertising(boundPort, networkAdapterId, networkInterfaceIndex));
+        RETURN_IF_FAILED(StartAdvertising(boundPort, networkAdapterId, networkInterfaceIndex, stopToken));
     }
 
     unbindOnFailure.release();
@@ -617,6 +649,27 @@ try
 }
 CATCH_RETURN()
 
+namespace
+{
+    // Binding a local port normally finishes at once. It is bounded anyway, because it runs on
+    // the endpoint creator thread, and a service stop has to be able to join that thread.
+    void BindServiceNameWithin(
+        _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
+        _In_ winrt::hstring const& serviceName)
+    {
+        auto operation = socket.BindServiceNameAsync(serviceName);
+
+        if (operation.wait_for(std::chrono::milliseconds(MIDI_NETWORK_HOST_BIND_TIMEOUT_MILLISECONDS)) == winrt::Windows::Foundation::AsyncStatus::Started)
+        {
+            operation.Cancel();
+
+            throw winrt::hresult_error(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+        }
+
+        // rethrows a failed bind
+        operation.GetResults();
+    }
+}
 _Use_decl_annotations_
 HRESULT
 MidiNetworkHost::BindSocket(DatagramSocket const& socket, uint16_t& boundPort)
@@ -626,7 +679,7 @@ MidiNetworkHost::BindSocket(DatagramSocket const& socket, uint16_t& boundPort)
 
     try
     {
-        socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
+        BindServiceNameWithin(socket, winrt::to_hstring(m_hostDefinition.Port));
 
         boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(socket.Information().LocalPort())));
 
@@ -654,7 +707,7 @@ MidiNetworkHost::BindSocket(DatagramSocket const& socket, uint16_t& boundPort)
         {
             try
             {
-                socket.BindServiceNameAsync(L"").get();
+                BindServiceNameWithin(socket, L"");
 
                 boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(socket.Information().LocalPort())));
 
@@ -697,7 +750,8 @@ HRESULT
 MidiNetworkHost::StartAdvertising(
     uint16_t const boundPort,
     winrt::guid const& networkAdapterId,
-    uint32_t const networkInterfaceIndex)
+    uint32_t const networkInterfaceIndex,
+    std::stop_token const& stopToken)
 {
     auto advertiser = std::make_shared<MidiNetworkAdvertiser>();
 
@@ -709,7 +763,8 @@ MidiNetworkHost::StartAdvertising(
         boundPort,
         m_hostDefinition.UmpEndpointName,
         m_hostDefinition.ProductInstanceId,
-        networkInterfaceIndex
+        networkInterfaceIndex,
+        stopToken
     );
 
     RETURN_IF_FAILED(advertiseResult);
@@ -1001,6 +1056,21 @@ void MidiNetworkHost::OnMessageReceived(
             return;
         }
 
+        if (prologue == MidiNetworkPacketPrologueResult::TooLarge)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Oversized datagram dropped", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
+            );
+
+            return;
+        }
+
         if (prologue != MidiNetworkPacketPrologueResult::Ok)
         {
             return;
@@ -1009,14 +1079,15 @@ void MidiNetworkHost::OnMessageReceived(
         MidiNetworkCommandPacketHeader firstCommandHeader;
         firstCommandHeader.HeaderWord = firstCommandHeaderWord;
 
-        auto conn = TransportState::Current().GetNetworkConnection(args.RemoteAddress(), args.RemotePort());
+        // Only this host's own connections. The same remote address and port can also be a host
+        // for a client here, or a client of another host here, and those are other connections.
+        auto conn = TransportState::Current().GetNetworkConnection(m_entryIdentifier, args.RemoteAddress(), args.RemotePort());
 
         if (conn == nullptr)
         {
             conn = AdmitNewRemote(args, firstCommandHeader);
         }
         else if (IsSessionOpeningCommand(firstCommandHeader.HeaderData.CommandCode) &&
-            conn->ConfigIdentifier() == m_entryIdentifier &&
             ArrivedOnActiveNetworkAdapter(args))
         {
             // An IPv6 host has several addresses and can lose the one a remote was using
@@ -1117,40 +1188,47 @@ MidiNetworkHost::AdmitNewRemote(
     // from a new ephemeral port, so this is where growth would otherwise happen.
     LOG_IF_FAILED(TransportState::Current().ReapIdleNetworkConnections(m_entryIdentifier));
 
+    // The spec has a reason code for a full host. Staying silent leaves the client unable to tell
+    // a full host from a dead one.
+    //
+    // The limiter can still suppress this refusal, in which case the invitation goes unanswered
+    // and we are outside 6.4. That is the accepted trade documented on
+    // MidiNetworkReplyRateLimiter: an unconditional reply is an amplification vector.
+    auto refuseBecauseFull = [&]()
+        {
+            if (args.RemoteAddress() != nullptr)
+            {
+                auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
+                    std::wstring{ args.RemoteAddress().CanonicalName() },
+                    std::wstring{ args.RemotePort() });
+
+                if (m_refusalRateLimiter.ShouldSend(key))
+                {
+                    LOG_IF_FAILED(SendUnconnectedBye(
+                        args.RemoteAddress(),
+                        args.RemotePort(),
+                        args.LocalAddress(),
+                        MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions,
+                        internal::ResourceGetWString(IDS_MESSAGE_MAX_SESSIONS_REACHED)));
+                }
+            }
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Host is at its connection limit. Invitation refused.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
+            );
+        };
+
+    // A quick check before a connection and its threads are built. The insert checks again, in
+    // the same step as adding it.
     if (TransportState::Current().CountNetworkConnectionsForConfigIdentifier(m_entryIdentifier) >= TransportState::Current().TransportSettings.MaxHostConnections)
     {
-        // The spec has a reason code for precisely this. Staying silent leaves the client unable
-        // to tell a full host from a dead one.
-        //
-        // The limiter can still suppress this refusal, in which case the invitation goes
-        // unanswered and we are outside 6.4. That is the accepted trade documented on
-        // MidiNetworkReplyRateLimiter: an unconditional reply is an amplification vector.
-        if (args.RemoteAddress() != nullptr)
-        {
-            auto key = MidiNetworkReplyRateLimiter::MakeRemoteKey(
-                std::wstring{ args.RemoteAddress().CanonicalName() },
-                std::wstring{ args.RemotePort() });
-
-            if (m_refusalRateLimiter.ShouldSend(key))
-            {
-                LOG_IF_FAILED(SendUnconnectedBye(
-                    args.RemoteAddress(),
-                    args.RemotePort(),
-                    args.LocalAddress(),
-                    MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions,
-                    internal::ResourceGetWString(IDS_MESSAGE_MAX_SESSIONS_REACHED)));
-            }
-        }
-
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Host is at its connection limit. Invitation refused.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
-        );
+        refuseBecauseFull();
 
         return nullptr;
     }
@@ -1158,6 +1236,13 @@ MidiNetworkHost::AdmitNewRemote(
     std::shared_ptr<MidiNetworkConnection> connection{ nullptr };
 
     auto hr = CreateNetworkConnection(args.RemoteAddress(), args.RemotePort(), args.LocalAddress(), connection);
+
+    if (hr == HRESULT_FROM_WIN32(ERROR_TOO_MANY_SESS))
+    {
+        refuseBecauseFull();
+
+        return nullptr;
+    }
 
     if (FAILED(hr) || connection == nullptr)
     {
@@ -1200,7 +1285,7 @@ MidiNetworkHost::ReleaseConnectionIfSessionFinished(
         TraceLoggingWideString(args.RemoteAddress() != nullptr ? args.RemoteAddress().CanonicalName().c_str() : L"", "remote address")
     );
 
-    auto released = TransportState::Current().DetachNetworkConnection(args.RemoteAddress(), args.RemotePort());
+    auto released = TransportState::Current().DetachNetworkConnection(m_entryIdentifier, args.RemoteAddress(), args.RemotePort(), connection.get());
 
     if (released != nullptr)
     {
@@ -1225,6 +1310,14 @@ MidiNetworkHost::Shutdown()
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    {
+        // Under the lifecycle lock, so a Start already running finishes first and is then stopped
+        // below, and any Start after this refuses
+        auto lifecycleLock = m_lifecycleLock.lock();
+
+        m_shutDown = true;
+    }
 
     LOG_IF_FAILED(Stop());
 

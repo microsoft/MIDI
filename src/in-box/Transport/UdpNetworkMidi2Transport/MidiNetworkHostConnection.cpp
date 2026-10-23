@@ -111,7 +111,7 @@ MidiNetworkHostConnection::CompleteHostSessionAfterEndpointCreated(
         if (!m_shuttingDown && !m_hostEndpointCreationAbandoned)
         {
             // this is what the Bidi uses when it is created
-            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_remoteHostName, m_remotePort.c_str());
+            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_configIdentifier, m_remoteHostName, m_remotePort.c_str(), this);
 
             if (SUCCEEDED(hr))
             {
@@ -333,8 +333,10 @@ MidiNetworkHostConnection::DisconnectByUser()
         {
             // Only detached here. It is shut down below.
             TransportState::Current().DetachNetworkConnection(
+                m_configIdentifier,
                 remoteHostName,
-                winrt::hstring{ GetRemotePort() });
+                winrt::hstring{ GetRemotePort() },
+                this);
         }
 
         // Shutdown joins this connection's threads and can remove its endpoint, which blocks on

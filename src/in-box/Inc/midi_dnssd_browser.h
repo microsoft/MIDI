@@ -646,10 +646,24 @@ namespace WindowsMidiServicesInternal
 
             browser->m_callbacksInFlight++;
 
+            // An exception must not leave this function: it would unwind into the DNS client's
+            // thread, and the in-flight count would never come back down, so Stop would wait
+            // for it forever.
+            try
+            {
+                if (records != nullptr)
+                {
+                    browser->HandleRecords(*browse, status, records);
+                }
+            }
+            catch (...)
+            {
+                // A batch which can't be handled (out of memory, or a handler which threw) is
+                // dropped. The next answer from the device brings the same records again.
+            }
+
             if (records != nullptr)
             {
-                browser->HandleRecords(*browse, status, records);
-
                 DnsRecordListFree(records, DnsFreeRecordList);
             }
 

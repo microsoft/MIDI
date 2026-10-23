@@ -9,14 +9,17 @@
 
 #pragma once
 
+// Written by configuration calls and read by every socket, worker and watchdog thread, so each
+// value is atomic. A reader may see a mix of old and new values while an update is applied, which
+// is harmless: each one is used on its own.
 struct MidiTransportSettings
 {
-    uint32_t OutboundPingInterval{ MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT };
-    uint32_t InvitationPendingTimeout{ MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT };
-    uint16_t MaxHostConnections{ MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT };
-    uint16_t RetransmitBufferMaxCommandPacketCount{ MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT };
-    uint8_t ForwardErrorCorrectionMaxCommandPacketCount{ MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT };
-    uint32_t DirectConnectionScanInterval{ MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT };
+    std::atomic<uint32_t> OutboundPingInterval{ MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT };
+    std::atomic<uint32_t> InvitationPendingTimeout{ MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT };
+    std::atomic<uint16_t> MaxHostConnections{ MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT };
+    std::atomic<uint16_t> RetransmitBufferMaxCommandPacketCount{ MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT };
+    std::atomic<uint8_t> ForwardErrorCorrectionMaxCommandPacketCount{ MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT };
+    std::atomic<uint32_t> DirectConnectionScanInterval{ MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT };
 };
 
 
@@ -67,11 +70,9 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
-    // Lives as long as the transport, because the threadpool work it owns has to outlive any
-    // connection which asks it to signal.
+    // Lives as long as the transport. Shutdown drains its threadpool work.
     MidiNetworkNotificationSignal& NotificationSignal() { return m_notificationSignal; }
-    HRESULT AddHost(
-        _In_ std::shared_ptr<MidiNetworkHost>);
+
     std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts();
 
     // Configured host entries, whether or not a host has been built from one. Held and handed
@@ -121,8 +122,6 @@ public:
 
 
 
-    HRESULT AddClient(_In_ std::shared_ptr<MidiNetworkClient>);
-
     // Registers a client only if its definition is still pending, the same way
     // AddHostIfStillPending does for hosts. A client takes seconds to build - invitation,
     // reply, then endpoint creation - and the entry can be removed in that window. Losing
@@ -137,10 +136,12 @@ public:
     // Removes the live client AND the configured definition it was built from. enumerateClients
     // is definition-driven, so leaving the definition behind keeps reporting an entry the user
     // has already disconnected. Returns S_OK if either was found, E_NOTFOUND if neither was.
-    // removedPendingDefinition says whether an entry which never connected was taken away.
+    // removedPendingDefinition says whether an entry which never connected was taken away. The
+    // live client is handed back, not shut down: the caller must, outside the state lock.
     HRESULT RemoveClient(
         _In_ winrt::guid const& clientConfigEntryIdentifier,
-        _Out_ bool& removedPendingDefinition);
+        _Out_ bool& removedPendingDefinition,
+        _Out_ std::shared_ptr<MidiNetworkClient>& removedLiveClient);
 
     // Drops only the live client, keeping the definition. Used when reconnecting an entry: the
     // dead client object has to go, but the entry it was built from is still wanted.
@@ -215,12 +216,20 @@ public:
 
     // these two sets of functions, and their related maps, work with the same
     // connection objects, just in different states
+    //
+    // A connection belongs to the host or client entry whose socket it arrived on, so it is found
+    // by that entry's identifier as well as by the remote's address and port. One remote address
+    // and port can be a client of a host here and a host for a client here at the same time, or a
+    // client of two hosts here, and each of those is a separate connection.
 
-    // these are for when the connection is associated with a UMP endpoint
+    // these are for when the connection is associated with a UMP endpoint. Fails unless
+    // connection is the one registered for that entry and remote.
     HRESULT AssociateMidiEndpointWithConnection(
-        _In_ std::wstring endpointDeviceInterfaceId, 
+        _In_ std::wstring endpointDeviceInterfaceId,
+        _In_ winrt::guid const& configEntryIdentifier,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-        _In_ winrt::hstring const& remotePort);
+        _In_ winrt::hstring const& remotePort,
+        _In_ MidiNetworkConnection const* connection);
 
     HRESULT DisassociateMidiEndpointFromConnection(
         _In_ std::wstring endpointDeviceInterfaceId);
@@ -239,11 +248,8 @@ public:
         _In_ MidiNetworkConnection const* connection) noexcept;
 
     // these are for when the connection is first created. They also live through when they become UMP endpoints
-    bool NetworkConnectionExists(
-        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-        _In_ winrt::hstring const& remotePort);
-
     std::shared_ptr<MidiNetworkConnection> GetNetworkConnection(
+        _In_ winrt::guid const& configEntryIdentifier,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort);
 
@@ -263,26 +269,26 @@ public:
 
     HRESULT RemoveAllNetworkConnectionsForHost(_In_ winrt::guid const& hostEntryIdentifier);
 
-    HRESULT RemoveAllNetworkConnectionsForClient(_In_ winrt::guid const& clientEntryIdentifier);
-
-    HRESULT AddNetworkConnection(
-        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-        _In_ winrt::hstring const& remotePort, 
-        _In_ std::shared_ptr<MidiNetworkConnection> connection);
-
-    // Inserts only if nothing is mapped to this remote yet, and returns whichever connection
-    // ends up in the map. Datagrams from one remote can be dispatched on different thread pool
-    // threads, so a separate exists-then-add would build duplicate connections for the same peer.
+    // Inserts only if nothing is mapped to this entry and remote yet, and returns whichever
+    // connection ends up in the map. Datagrams from one remote can be dispatched on different
+    // thread pool threads, so a separate exists-then-add would build duplicate connections for the
+    // same peer. A live connection is never replaced. Returns nullptr, and inserts nothing, when
+    // the entry already has maxConnectionsForEntry connections, so the count and the insert are
+    // one decision.
     std::shared_ptr<MidiNetworkConnection> AddNetworkConnectionIfAbsent(
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort,
-        _In_ std::shared_ptr<MidiNetworkConnection> connection);
+        _In_ std::shared_ptr<MidiNetworkConnection> connection,
+        _In_ size_t const maxConnectionsForEntry = SIZE_MAX);
 
     // Removes the entry and hands the connection back WITHOUT shutting it down. Shutdown joins
-    // worker threads, which must never happen on the socket receive callback.
+    // worker threads, which must never happen on the socket receive callback. Only removes
+    // expected, when given, so a caller can't take away a newer connection for the same remote.
     std::shared_ptr<MidiNetworkConnection> DetachNetworkConnection(
+        _In_ winrt::guid const& configEntryIdentifier,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-        _In_ winrt::hstring const& remotePort);
+        _In_ winrt::hstring const& remotePort,
+        _In_opt_ MidiNetworkConnection const* expected = nullptr);
 
 
 private:
@@ -307,13 +313,17 @@ private:
     // keyed by normalized device instance id
     std::map<std::wstring, std::shared_ptr<MidiNetworkConnection>> m_endpointsBeingCreated{ };
 
-    // Map of MidiNetworkConnections and their related remote client addresses
-    // the keys for these two maps are the values created with CreateConnectionMapKey
+    // Map of MidiNetworkConnections, keyed by CreateNetworkConnectionMapKey
     std::map<std::string, std::shared_ptr<MidiNetworkConnection>> m_networkConnections{ };
 
-    inline std::string CreateNetworkConnectionMapKey(_In_ winrt::Windows::Networking::HostName const& remoteHostName, _In_ winrt::hstring const& remotePort)
+    // The owning host or client entry, then the remote address and port. Each entry has its own
+    // socket, so this is also "which socket, and which remote on it".
+    static std::string CreateNetworkConnectionMapKey(
+        _In_ winrt::guid const& configEntryIdentifier,
+        _In_ winrt::Windows::Networking::HostName const& remoteHostName,
+        _In_ winrt::hstring const& remotePort)
     {
-        return winrt::to_string(remoteHostName.CanonicalName() + L":" + remotePort);
+        return winrt::to_string(winrt::to_hstring(configEntryIdentifier) + L"|" + remoteHostName.CanonicalName() + L":" + remotePort);
     }
 
     // caller already holds m_stateLock exclusively

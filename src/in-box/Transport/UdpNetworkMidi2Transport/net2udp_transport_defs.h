@@ -118,6 +118,18 @@ enum MidiNetworkRemoteClientDecision
 // the path MTU is dropped outright rather than fragmented.
 #define MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES                              1400
 
+// The spec's 1400 bytes is a "should" for senders. Received datagrams larger than that are
+// dropped whole, without a reply: no Network MIDI 2.0 device needs to send one, and a 64 KB
+// datagram of tiny commands would otherwise be thousands of replies from one packet.
+#define MIDI_NETWORK_MAX_INCOMING_UDP_PAYLOAD_BYTES                     MIDI_NETWORK_MAX_UDP_PAYLOAD_BYTES
+
+// A remote with no established session hasn't shown it owns the address it sends from, so it
+// can't use us to aim traffic at someone else. Of one datagram from it, only this many commands
+// are looked at, and at most this many replies go back, subject to the per-connection rate
+// limiter as well (MidiNetworkRateLimiter.h). An invitation is all such a remote needs to send.
+#define MIDI_NETWORK_MAX_COMMANDS_PER_DATAGRAM_OUTSIDE_SESSION          4
+#define MIDI_NETWORK_MAX_REPLIES_PER_DATAGRAM_OUTSIDE_SESSION           1
+
 // NAK payload length counts the original command header word as well, leaving 254 words of text
 #define MIDI_MAX_NAK_MESSAGE_BYTE_COUNT                                 1016        // Spec 6.15 : (254 * sizeof(uint32_t))
 #define MIDI_MAX_BYE_MESSAGE_BYTE_COUNT                                 1020        // Spec 6.16 : (255 * sizeof(uint32_t))
@@ -189,6 +201,11 @@ enum MidiNetworkRemoteClientDecision
 // further ones are too, and the remote asks again.
 #define MIDI_NETWORK_MAX_PENDING_RETRANSMIT_REQUESTS                    16
 
+// A command the remote asked for again is not sent again for this long, however often it asks.
+// Shorter than MIDI_NETWORK_COMMAND_RETRANSMIT_INTERVAL_MS, the time this transport waits before
+// repeating a request of its own.
+#define MIDI_NETWORK_RETRANSMIT_RESEND_REPEAT_MILLISECONDS              250
+
 // A remote asking again and again for data which is gone gets one Retransmit Error for the same
 // sequence number in this time, and no more than so many a second in all
 #define MIDI_NETWORK_RETRANSMIT_ERROR_REPEAT_MILLISECONDS               250
@@ -246,6 +263,12 @@ enum class MidiNetworkEntryState
 // startup runs on the shared background worker, so one unreachable host would otherwise hold up
 // every other configured client behind it.
 #define MIDI_NETWORK_CLIENT_CONNECT_TIMEOUT_MILLISECONDS                5000
+
+// Binding a host socket to a local port. Normally immediate.
+#define MIDI_NETWORK_HOST_BIND_TIMEOUT_MILLISECONDS                     5000
+
+// Reading an endpoint's device properties on a configuration call
+#define MIDI_NETWORK_DEVICE_PROPERTY_READ_TIMEOUT_MILLISECONDS          5000
 
 // Looking up a direct entry's host name, which runs on that same worker
 #define MIDI_NETWORK_CLIENT_NAME_RESOLUTION_TIMEOUT_SECONDS             5

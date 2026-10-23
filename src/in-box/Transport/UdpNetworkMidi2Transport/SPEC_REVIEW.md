@@ -39,7 +39,7 @@ A remote that has an endpoint here in one role, with that session still up, is d
 
 A remote connected to more than one host on this PC is not that case. Each host is a UMP endpoint of its own, so each of those sessions gets an endpoint of its own, and the accepting host's entry identifier is part of the endpoint's instance id. Before that, the instance id was the same in every session with a given remote. That is what used to catch the both-roles case, and it also turned the remote away from every host after the first, with "This device is already connected to this PC".
 
-Still open: a remote that talks to two hosts here from the same address and port. Connections are found by the remote's address and port alone (`CreateNetworkConnectionMapKey`), so the second host's datagrams reach the first host's connection. A Windows client opens a socket for each connection, so it never does this, but a device which keeps one client port for every session would.
+Fixed: a remote that talks to two hosts here from the same address and port, or that is a client of a host here and a host for a client here from the same address and port. Connections used to be found by the remote's address and port alone, so the second connection replaced the first, or reached the first one's connection. A replaced connection could later end its session on its own watchdog thread, let go of its last reference there, and take the service down. Connections are now found by the host or client entry they belong to as well as the remote's address and port (`CreateNetworkConnectionMapKey`), each entry has its own socket, and a live connection is never replaced.
 
 Whether we should instead *correlate* the two connections onto one endpoint is an open design question: it requires deciding which connection wins, or multiplexing one endpoint across two. Declining is safe and diagnosable, but it is not what the spec's wording is reaching for.
 
@@ -84,9 +84,11 @@ Recorded so these are not re-investigated.
   to differ per Host instance but is unique only within a device. Address, port and role are
   deliberately excluded, and the role is published as
   `PKEY_MIDI_NetworkMidiConnectionRole` instead.
-- **Connection keying.** The host keys connections by remote address and port, per "the Host
+- **Connection keying.** Each host keys its connections by remote address and port, per "the Host
   shall uniquely identify the connection for each Client via the Client's source IP address and
-  UDP port number." Separate from, and correctly independent of, endpoint identity.
+  UDP port number." The key also holds the host's (or client's) entry identifier, so two of this
+  PC's hosts, or a host and a client, never share a connection. Separate from, and correctly
+  independent of, endpoint identity.
 - **Ports are not identity.** "Clients may use a new UDP port number for every Session with a
   Host", and clients have no mDNS presence at all.
 - **Missing identity is refused.** A remote which omits either the UMP Endpoint Name or the
@@ -157,6 +159,9 @@ Recorded so these are not re-investigated.
   instead, because starting a host and connecting a client are not the same operation and cannot
   share one endpoint-level verb. An earlier revision of this document called this a defect; it is
   not.
+- **Datagrams larger than 1400 bytes are dropped.** The spec says "UDP packets should not exceed 1400 bytes", which is a "should" for the sender and says nothing about the receiver. We drop a larger datagram whole, without a reply, because no device needs to send one and one 64 KB datagram of 4-byte commands would otherwise be about 16,000 replies.
+- **A remote without a session gets a limited answer.** Only the first 4 commands of a datagram from a remote with no established session are looked at, at most 1 reply goes back, and replies to that remote are also held to the per-connection rate limiter (one a second). A forged source address could otherwise turn each datagram into a stream of Byes, Ping Replies or NAKs aimed at someone else. This can leave a repeated invitation or a repeated Bye unanswered for up to a second, which spec 6.4 and 6.16 would otherwise require; the sender's own repeat covers it. Once a session is established, replies are not limited.
+- **A retransmitted command is not sent again for 250 ms.** A remote repeating "send everything from here" got the whole retransmit buffer each time. Each command now goes again at most once in that time, however often or widely it is asked for. That is shorter than the 1 second this transport itself waits before repeating an unanswered request.
 
 ---
 

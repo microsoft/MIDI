@@ -70,6 +70,38 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <!-- The white-box tests include the transport's headers, which use boost circular_buffer from vcpkg -->
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Platform)'=='x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+  </PropertyGroup>
+  <!-- The transport's object files, all but its DLL entry points, and what they link with, for the white-box tests -->
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+    <NetworkTransportObjectDir>$(SolutionDir)VSFiles\intermediate\Midi2.NetworkMidiTransport\$(Platform)\$(Configuration)\</NetworkTransportObjectDir>
+    <NetworkTransportObjects>
+      $(NetworkTransportObjectDir)pch.obj;
+      $(NetworkTransportObjectDir)TransportState.obj;
+      $(NetworkTransportObjectDir)MidiNetworkConnection.obj;
+      $(NetworkTransportObjectDir)MidiNetworkHostConnection.obj;
+      $(NetworkTransportObjectDir)MidiNetworkClientConnection.obj;
+      $(NetworkTransportObjectDir)MidiNetworkDataWriter.obj;
+      $(NetworkTransportObjectDir)MidiNetworkNotificationSignal.obj;
+      $(NetworkTransportObjectDir)Midi2.NetworkMidiConfigurationManager.obj;
+      $(NetworkTransportObjectDir)Midi2.NetworkMidiEndpointManager.obj;
+      $(NetworkTransportObjectDir)Midi2.NetworkMidiBidi.obj;
+      $(NetworkTransportObjectDir)Midi2.NetworkMidiPluginMetadataProvider.obj;
+      $(NetworkTransportObjectDir)midi_network_port_picker.obj;
+      $(NetworkTransportObjectDir)midi_network_adapters.obj;
+      $(NetworkTransportObjectDir)midi_network_addresses.obj;
+      $(NetworkTransportObjectDir)MidiNetworkAdvertiser.obj;
+      $(NetworkTransportObjectDir)MidiNetworkClient.obj;
+      $(NetworkTransportObjectDir)MidiNetworkHost.obj;
+      $(NetworkTransportObjectDir)Midi2.NetworkMidiTransport.obj;
+      $(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;
+    </NetworkTransportObjects>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LibraryPath>$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
@@ -143,7 +175,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;onecoreuap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;onecoreuap.lib;avrt.lib;bcrypt.lib;dnsapi.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(NetworkTransportObjects);%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
@@ -163,7 +195,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;onecoreuap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;iphlpapi.lib;onecoreuap.lib;avrt.lib;bcrypt.lib;dnsapi.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib;$(NetworkTransportObjects);%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -177,6 +209,8 @@
     <ClInclude Include="NetworkMidiClientTests.h" />
     <ClInclude Include="NetworkMidiPortCreationTests.h" />
     <ClInclude Include="NetworkMidiShutdownTests.h" />
+    <ClInclude Include="NetworkMidiInProcessTests.h" />
+    <ClInclude Include="NetworkMidiTestInProcess.h" />
     <ClInclude Include="NetworkMidiErrorTests.h" />
     <ClInclude Include="NetworkMidiMalformedTests.h" />
     <ClInclude Include="NetworkMidiSessionTests.h" />
@@ -198,6 +232,16 @@
     <ClCompile Include="NetworkMidiClientTests.cpp" />
     <ClCompile Include="NetworkMidiPortCreationTests.cpp" />
     <ClCompile Include="NetworkMidiShutdownTests.cpp" />
+    <ClCompile Include="NetworkMidiInProcessTests.cpp" />
+    <ClCompile Include="NetworkMidiTestInProcess.cpp" />
+    <!-- White-box: compiled against the transport's own headers and precompiled header, and
+         linked with its object files (see AdditionalDependencies), so not with this project's -->
+    <ClCompile Include="NetworkMidiConnectionLifetimeTests.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)VSFiles\intermediate\Midi2.NetworkMidiTransport\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Platform)'=='Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="NetworkMidiErrorTests.cpp" />
     <ClCompile Include="NetworkMidiMalformedTests.cpp" />
     <ClCompile Include="NetworkMidiSessionTests.cpp" />
@@ -219,6 +263,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)'=='x64'">
+    <!-- Builds the transport first: the white-box tests link its object files -->
+    <ProjectReference Include="..\..\Transport\UdpNetworkMidi2Transport\Midi2.NetworkMidiTransport.vcxproj">
+      <Project>{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

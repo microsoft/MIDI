@@ -15,6 +15,8 @@ CMidi2NetworkMidiTransport::Activate(
     REFIID riid,
     void **requestedInterface
 )
+// An exception must not reach the service, which calls this through COM
+try
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == requestedInterface);
 
@@ -118,4 +120,5 @@ CMidi2NetworkMidiTransport::Activate(
 
     return S_OK;
 }
+CATCH_RETURN()
 

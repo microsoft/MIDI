@@ -345,6 +345,7 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiServiceConfigurationManager* midiServiceConfigurationManager
 )
+try
 {
     UNREFERENCED_PARAMETER(transportId);
     UNREFERENCED_PARAMETER(midiServiceConfigurationManager);
@@ -360,10 +361,18 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+
+        m_midiDeviceManager = std::move(deviceManager);
+    }
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 
@@ -947,7 +956,13 @@ try
     }
 
 
-    auto client = TransportState::Current().GetClient(configEntryId);
+    // The definition goes first. Done the other way round, the creator worker could reconnect the
+    // entry while the old client was saying Bye, and the new client would then be dropped from
+    // the list below without ever being shut down, keeping its socket and its endpoint.
+    bool removedPendingDefinition{ false };
+    std::shared_ptr<MidiNetworkClient> client{ nullptr };
+
+    auto const removeHr = TransportState::Current().RemoveClient(configEntryId, removedPendingDefinition, client);
 
     // A client which never connected exists only as a definition. Disconnecting it is still a
     // real removal, so it must not be reported as "not found" - the entry is what the user sees
@@ -957,9 +972,7 @@ try
         LOG_IF_FAILED(client->DisconnectByUser());
     }
 
-    bool removedPendingDefinition{ false };
-
-    if (FAILED(TransportState::Current().RemoveClient(configEntryId, removedPendingDefinition)) && client == nullptr)
+    if (FAILED(removeHr))
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_CLIENT_NOT_FOUND, internal::ResourceGetWString(IDS_ERROR_CLIENT_NOT_FOUND));
         return S_OK;
@@ -1848,7 +1861,8 @@ namespace
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY,
-            json::JsonValue::CreateBooleanValue(host->IsEnabled()));
+            // a host only exists once its enabled entry has been started
+            json::JsonValue::CreateBooleanValue(true));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY,
@@ -3827,6 +3841,7 @@ catch (...)
 
 HRESULT
 CMidi2NetworkMidiConfigurationManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -3858,4 +3873,5 @@ CMidi2NetworkMidiConfigurationManager::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()
 

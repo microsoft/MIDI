@@ -428,7 +428,7 @@ MidiNetworkClientConnection::CompleteClientSessionAfterEndpointCreated(
         if (m_sessionActive && !m_shuttingDown)
         {
             // this is what the Bidi uses when it is created
-            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_remoteHostName, m_remotePort.c_str());
+            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_configIdentifier, m_remoteHostName, m_remotePort.c_str(), this);
 
             if (SUCCEEDED(hr))
             {

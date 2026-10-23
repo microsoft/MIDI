@@ -58,6 +58,7 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -69,6 +70,20 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
+
+    // A failure part way through stops whatever was already started and lets go of the service
+    // objects, so a failed Initialize leaves nothing running and holds nothing of the service's.
+    auto stopOnFailure = wil::scope_exit([&]() noexcept
+        {
+            // the creator thread may already have started hosts, whose callbacks use the
+            // service objects
+            if (StopBackgroundWork() && SUCCEEDED(TransportState::Current().ShutdownHostsClientsAndConnections()))
+            {
+                m_midiDeviceManager.reset();
+                m_midiProtocolManager.reset();
+            }
+        });
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
@@ -76,8 +91,6 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
 
     RETURN_IF_FAILED(CreateParentDeviceForClients());
-
-    m_initialized = true;
 
     // Before anything can start a host. The repeats work around the DNS client, as described in
     // MidiNetworkAdvertiser.cpp. A failure costs only the repeats, so the hosts still start.
@@ -138,8 +151,15 @@ CMidi2NetworkMidiEndpointManager::Initialize(
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // Only once everything above has succeeded. Nothing the threads started above do can need it
+    // sooner: a host or client has to bind, advertise or invite, and be answered, first.
+    m_initialized = true;
+
+    stopOnFailure.release();
+
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
@@ -1204,6 +1224,11 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
 
             if (FAILED(startHr))
             {
+                // Start can fail after the socket is open and its handler hooked up, or after its
+                // connection and threads exist. None of that is registered anywhere yet, so this
+                // is the only chance to close it.
+                LOG_IF_FAILED(client->Shutdown());
+
                 // so the next attempt goes to the remote's next address, if it has another
                 LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionAddressUnreachable(definition.EntryIdentifier));
             }
@@ -1285,7 +1310,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
             // Negotiation runs on its own thread. It calls into the service and can block there
             // behind a PnP notification, which used to stop this loop creating any client at all.
-            StartPendingHosts();
+            StartPendingHosts(stopToken);
             StartPendingClients(stopToken);
 
             ReconcileHostNetworkAdapters();
@@ -1321,11 +1346,19 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
     return S_OK;
 }
 
+_Use_decl_annotations_
 void
-CMidi2NetworkMidiEndpointManager::StartPendingHosts()
+CMidi2NetworkMidiEndpointManager::StartPendingHosts(std::stop_token const& stopToken)
 {
     for (auto const& definition : TransportState::Current().GetHostDefinitions())
     {
+        // A host takes up to the DNS-SD registration timeout to start, so a service stop doesn't
+        // wait for every pending host in turn
+        if (stopToken.stop_requested())
+        {
+            return;
+        }
+
         if (definition.State != MidiNetworkEntryState::Pending || !definition.IsEnabled)
         {
             continue;
@@ -1361,7 +1394,16 @@ CMidi2NetworkMidiEndpointManager::StartPendingHosts()
 
         if (!host->HasStarted())
         {
-            LOG_IF_FAILED(host->Start());
+            LOG_IF_FAILED(host->Start(stopToken));
+        }
+
+        if (stopToken.stop_requested())
+        {
+            // The service is stopping. The definition is left pending, and nothing else knows
+            // about this host yet, so it is closed here.
+            LOG_IF_FAILED(host->Shutdown());
+
+            return;
         }
 
         LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionLive(definition.EntryIdentifier));
@@ -2758,10 +2800,21 @@ try
             auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
             additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
 
-            auto deviceInfo = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+            // Bounded, because this runs on a configuration call and the device query can stall
+            // behind PnP. Timing out only costs the custom name for this refresh.
+            auto deviceInfoOperation = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
                 winrt::hstring{ endpointDeviceInterfaceId },
                 additionalProperties,
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
+
+            if (deviceInfoOperation.wait_for(std::chrono::milliseconds(MIDI_NETWORK_DEVICE_PROPERTY_READ_TIMEOUT_MILLISECONDS)) == winrt::Windows::Foundation::AsyncStatus::Started)
+            {
+                deviceInfoOperation.Cancel();
+
+                throw winrt::hresult_error(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+            }
+
+            auto deviceInfo = deviceInfoOperation.GetResults();
 
             if (deviceInfo != nullptr)
             {
@@ -2883,8 +2936,99 @@ CMidi2NetworkMidiEndpointManager::OnHostRegistrationEnding(std::wstring_view con
 }
 
 
+// Stops everything Initialize starts: the browser, the change monitor, the announcer and the
+// three worker threads. Safe to call when some or none of them were started. False when the
+// negotiation thread had to be abandoned, in which case it may still use the service pointers.
+bool
+CMidi2NetworkMidiEndpointManager::StopBackgroundWork() noexcept
+{
+    bool allThreadsExited{ true };
+
+    try
+    {
+        {
+            auto lock = m_remoteHostWatcherLock.lock();
+
+            m_remoteHostWatcherAllowed = false;
+            m_browser.Stop();
+        }
+
+        // Before the creator thread stops, so a change arriving now cannot wake a thread that is gone
+        m_networkChangeMonitor.Stop();
+
+        // Before the hosts below withdraw their registrations, so no repeat can follow a goodbye
+        m_dnssdAnnouncer.Stop();
+
+        {
+            auto lock = m_advertisedHostsLock.lock_exclusive();
+
+            m_foundAdvertisedHosts.clear();
+        }
+
+        m_backgroundEndpointCreatorThread.request_stop();
+        m_backgroundEndpointCreatorThreadWakeup.SetEvent();
+
+        if (m_backgroundEndpointCreatorThread.joinable() && m_backgroundEndpointCreatorThread.get_id() != std::this_thread::get_id())
+        {
+            m_backgroundEndpointCreatorThread.join();
+        }
+
+        // Joined after the creator, which can release a connection on its last pass. The worker's
+        // exit finishes whatever is still queued.
+        m_endpointWorkerThread.request_stop();
+        m_endpointWorkerWakeup.SetEvent();
+
+        if (m_endpointWorkerThread.joinable() && m_endpointWorkerThread.get_id() != std::this_thread::get_id())
+        {
+            m_endpointWorkerThread.join();
+        }
+
+        // Deliberately not joined. A negotiation blocked inside the service cannot be canceled from
+        // here, and waiting on it is what previously left the service unable to stop at all. Wait a
+        // short time for a clean exit, and abandon the thread if it is stuck.
+        m_backgroundNegotiationThread.request_stop();
+        m_backgroundNegotiationThreadWakeup.SetEvent();
+
+        if (m_backgroundNegotiationThread.joinable() && m_backgroundNegotiationThread.get_id() != std::this_thread::get_id())
+        {
+            if (m_negotiationThreadExitedEvent.wait(MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS))
+            {
+                m_backgroundNegotiationThread.join();
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Negotiation thread is blocked in the service. Abandoning it so shutdown can continue.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
+                // the jthread destructor would join, which is exactly what must not happen here
+                m_backgroundNegotiationThread.detach();
+
+                // The abandoned thread still uses this object and its service pointers. Leaking one
+                // reference means it never runs on freed memory, and nothing releases those pointers
+                // late, at DLL unload. The service is stopping, so the process ends soon after.
+                AddRef();
+
+                allThreadsExited = false;
+            }
+        }
+
+        m_initialized = false;
+    }
+    CATCH_LOG();
+
+    return allThreadsExited;
+}
+
+
 HRESULT
 CMidi2NetworkMidiEndpointManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -2895,77 +3039,7 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    {
-        auto lock = m_remoteHostWatcherLock.lock();
-
-        m_remoteHostWatcherAllowed = false;
-        m_browser.Stop();
-    }
-
-    // Before the creator thread stops, so a change arriving now cannot wake a thread that is gone
-    m_networkChangeMonitor.Stop();
-
-    // Before the hosts below withdraw their registrations, so no repeat can follow a goodbye
-    m_dnssdAnnouncer.Stop();
-
-    {
-        auto lock = m_advertisedHostsLock.lock_exclusive();
-
-        m_foundAdvertisedHosts.clear();
-    }
-
-    m_backgroundEndpointCreatorThread.request_stop();
-    m_backgroundEndpointCreatorThreadWakeup.SetEvent();
-
-    if (m_backgroundEndpointCreatorThread.joinable() && m_backgroundEndpointCreatorThread.get_id() != std::this_thread::get_id())
-    {
-        m_backgroundEndpointCreatorThread.join();
-    }
-
-    // Joined after the creator, which can release a connection on its last pass. The worker's
-    // exit finishes whatever is still queued.
-    m_endpointWorkerThread.request_stop();
-    m_endpointWorkerWakeup.SetEvent();
-
-    if (m_endpointWorkerThread.joinable() && m_endpointWorkerThread.get_id() != std::this_thread::get_id())
-    {
-        m_endpointWorkerThread.join();
-    }
-
-    // Deliberately not joined. A negotiation blocked inside the service cannot be canceled from
-    // here, and waiting on it is what previously left the service unable to stop at all. Wait a
-    // short time for a clean exit, and abandon the thread if it is stuck.
-    m_backgroundNegotiationThread.request_stop();
-    m_backgroundNegotiationThreadWakeup.SetEvent();
-
-    if (m_backgroundNegotiationThread.joinable() && m_backgroundNegotiationThread.get_id() != std::this_thread::get_id())
-    {
-        if (m_negotiationThreadExitedEvent.wait(MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS))
-        {
-            m_backgroundNegotiationThread.join();
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Negotiation thread is blocked in the service. Abandoning it so shutdown can continue.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            // the jthread destructor would join, which is exactly what must not happen here
-            m_backgroundNegotiationThread.detach();
-
-            // The abandoned thread still uses this object and its service pointers. Leaking one
-            // reference means it never runs on freed memory, and nothing releases those pointers
-            // late, at DLL unload. The service is stopping, so the process ends soon after.
-            AddRef();
-        }
-    }
-
-    m_initialized = false;
+    StopBackgroundWork();
 
     // TransportState::Shutdown releases its reference to this object, and the service may hold
     // the only other one, so this one keeps it alive until the end of this function.
@@ -2991,3 +3065,4 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()

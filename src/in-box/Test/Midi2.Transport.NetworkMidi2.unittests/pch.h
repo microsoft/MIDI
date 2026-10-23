@@ -82,5 +82,7 @@
 #include "NetworkMidiClientTests.h"
 #include "NetworkMidiPortCreationTests.h"
 #include "NetworkMidiShutdownTests.h"
+#include "NetworkMidiTestInProcess.h"
+#include "NetworkMidiInProcessTests.h"
 
 #endif //PCH_H
