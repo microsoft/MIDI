@@ -12,6 +12,7 @@
 #include "Feature_Servicing_MIDI2SessionNameLimit.h"
 
 #include "Feature_Servicing_MIDI2ServiceConfigJsonHardening.h"
+#include "Feature_Servicing_MIDI2LoopbackHardening.h"
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \
@@ -103,6 +104,29 @@ MidiSrvVerifyConnectivity(
     return sessionTracker->VerifyConnectivity();
 }
 
+// Net-new for Feature_Servicing_MIDI2LoopbackHardening. MidiSrvCreateClient is extern "C", and
+// with /EHsc the compiler assumes such a function never throws, so it has no cleanup for an
+// exception passing through it. An exception from CreateMidiClient left the failure callback that
+// MidiSrvCreateClient registers on this thread linked in after its frame was gone, and the next
+// failure reported on that thread crashed the service. Caught here instead, as an HRESULT.
+static HRESULT CreateMidiClientWithoutEscapingExceptions(
+    _In_ std::shared_ptr<CMidiClientManager> const& clientManager,
+    _In_z_ LPCWSTR midiDevice,
+    _In_ GUID sessionId,
+    _In_ DWORD clientProcessId,
+    _In_ wil::unique_handle& clientProcessHandle,
+    _In_ PMIDISRV_CLIENTCREATION_PARAMS creationParams,
+    _In_ PMIDISRV_CLIENT createdClient) noexcept
+{
+    try
+    {
+        RETURN_HR_IF_NULL(E_UNEXPECTED, clientManager);
+
+        return clientManager->CreateMidiClient(midiDevice, sessionId, clientProcessId, clientProcessHandle, creationParams, createdClient, false);
+    }
+    CATCH_RETURN();
+}
+
 HRESULT MidiSrvCreateClient(
     /* [in] */ handle_t bindingHandle,
     /* [string][in] */ __RPC__in_string LPCWSTR midiDevice,
@@ -182,7 +206,15 @@ HRESULT MidiSrvCreateClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(midiDevice, sessionId, clientProcessId, clientProcessHandle, creationParams, createdClient, false));
+
+    if (Feature_Servicing_MIDI2LoopbackHardening::IsEnabled())
+    {
+        RETURN_IF_FAILED(CreateMidiClientWithoutEscapingExceptions(clientManager, midiDevice, sessionId, clientProcessId, clientProcessHandle, creationParams, createdClient));
+    }
+    else
+    {
+        RETURN_IF_FAILED(clientManager->CreateMidiClient(midiDevice, sessionId, clientProcessId, clientProcessHandle, creationParams, createdClient, false));
+    }
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *client = createdClient;

@@ -43,6 +43,12 @@ public:
     // connected to nothing in the B to A direction for as long as it kept it open.
     TEST_METHOD(TestEndpointOpenedWhileItsLoopbackIsCreatedReceivesMidi);
 
+    // Opening an endpoint id that was never created made the service throw while creating the
+    // client, and the next failure on that RPC thread crashed the whole service.
+    // On a build without the fix this test takes the MIDI service down. Run it only from the
+    // elevated verify script.
+    TEST_METHOD(TestOpeningAnEndpointNobodyCreatedFailsWithoutStoppingTheService);
+
 private:
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};

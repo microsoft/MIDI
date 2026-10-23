@@ -11,6 +11,11 @@
 #include <atomic>
 #include <thread>
 
+// the service control manager, for the service's process id. wil adds its handle types for it
+// when it is included again after winsvc.h.
+#include <winsvc.h>
+#include <wil\resource.h>
+
 #include <Feature_Servicing_MIDI2LoopbackHardening.h>
 
 #include "LoopbackHardeningTests.h"
@@ -192,6 +197,35 @@ namespace
         {
             return false;
         }
+    }
+
+
+    // 0 when the service is not running. Works without elevation.
+    DWORD MidiServiceProcessId() noexcept
+    {
+        wil::unique_schandle manager{ OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT) };
+
+        if (!manager)
+        {
+            return 0;
+        }
+
+        wil::unique_schandle service{ OpenServiceW(manager.get(), L"midisrv", SERVICE_QUERY_STATUS) };
+
+        if (!service)
+        {
+            return 0;
+        }
+
+        SERVICE_STATUS_PROCESS status{ };
+        DWORD needed{ 0 };
+
+        if (!QueryServiceStatusEx(service.get(), SC_STATUS_PROCESS_INFO, reinterpret_cast<LPBYTE>(&status), sizeof(status), &needed))
+        {
+            return 0;
+        }
+
+        return status.dwCurrentState == SERVICE_RUNNING ? status.dwProcessId : 0;
     }
 
 
@@ -603,4 +637,78 @@ void LoopbackHardeningTests::TestEndpointOpenedWhileItsLoopbackIsCreatedReceives
     }
 
     VERIFY_IS_TRUE(openedInWindow, L"never managed to open endpoint A while its loopback was being created");
+}
+
+
+void LoopbackHardeningTests::TestOpeningAnEndpointNobodyCreatedFailsWithoutStoppingTheService()
+{
+    if (!HardeningTestable())
+    {
+        return;
+    }
+
+    MidiTest::MultithreadedApartment apartment{ };
+
+    // Several of each, because the crash came from the second failure on the same RPC thread.
+    constexpr uint32_t attemptsPerId{ 5 };
+
+    std::vector<std::wstring> const missingIds
+    {
+        // the right shape for a loopback endpoint, but never created
+        std::wstring{ L"\\\\?\\SWD#MIDISRV#MIDIU_LOOP_A_" } + Uppercase(TransportConfigTest::MakeUniqueIdString()) + L"#" + STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI,
+
+        // not an endpoint id at all
+        L"not an endpoint id",
+    };
+
+    auto const servicePidBefore = MidiServiceProcessId();
+    VERIFY_ARE_NOT_EQUAL(servicePidBefore, (DWORD)0, L"the MIDI service is not running");
+
+    MidiTest::ServiceSession session{ };
+    VERIFY_SUCCEEDED(session.Open(L"Loopback hardening tests"));
+
+    auto received = MidiTest::ReceivedMessages::Create();
+    VERIFY_IS_NOT_NULL(received.get());
+
+    // Collected rather than verified one by one, so on a build without the fix the run goes on to
+    // show the service going down, not only the first wrong result.
+    uint32_t wrongResults{ 0 };
+
+    for (auto const& missingId : missingIds)
+    {
+        for (uint32_t attempt = 0; attempt < attemptsPerId; attempt++)
+        {
+            wil::com_ptr_nothrow<IMidiBidirectional> connection{ };
+
+            auto const hr = session.Connect(missingId, received.get(), connection);
+
+            Log::Comment(String().Format(L"Open of '%s', attempt %u: 0x%08X", missingId.c_str(), attempt + 1, hr));
+
+            if (SUCCEEDED(hr))
+            {
+                MidiTest::CloseConnectionWithHangGuard(connection);
+            }
+
+            if (hr != HRESULT_FROM_WIN32(ERROR_NOT_FOUND))
+            {
+                wrongResults++;
+            }
+        }
+    }
+
+    // the same service process is still running, and still opens a real endpoint
+    VERIFY_ARE_EQUAL(MidiServiceProcessId(), servicePidBefore, L"the MIDI service stopped or restarted");
+    VERIFY_ARE_EQUAL(wrongResults, (uint32_t)0, L"opens which did not fail with ERROR_NOT_FOUND");
+
+    auto const associationId = TransportConfigTest::MakeGuidString();
+    auto const uniqueId = TransportConfigTest::MakeUniqueIdString().substr(0, 20);
+
+    auto cleanup = wil::scope_exit([&] { try { RemoveLoopback(associationId); } catch (...) {} });
+
+    auto const pair = CreatePair(associationId, uniqueId, uniqueId);
+    VERIFY_IS_TRUE(pair.Result.IsSuccess(), pair.Result.ResponseJson.c_str());
+
+    VerifyMidiCrossesBothWays(pair.EndpointA, pair.EndpointB);
+
+    VERIFY_ARE_EQUAL(MidiServiceProcessId(), servicePidBefore);
 }
