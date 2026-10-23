@@ -66,6 +66,10 @@ public:
     TEST_METHOD(TestMultipleVirtualDevicesHaveDistinctIdentities);
     TEST_METHOD(TestFunctionBlocksAreVisibleOnVirtualDevice);
 
+    // unique id already in use
+    TEST_METHOD(TestDuplicateUniqueIdIsRejected);
+    TEST_METHOD(TestDuplicateUniqueIdOfUnopenedDeviceIsRejected);
+
 
 private:
 
