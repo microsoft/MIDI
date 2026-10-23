@@ -1400,6 +1400,9 @@ namespace winrt::midisequencer::implementation
             m_wantsDefaultDestination = false;
             ++m_version;
 
+            // Placements may have moved, so a Ctrl selection's indexes no longer hold.
+            m_morePlacements.clear();
+
             m_renderer.InvalidateCaches();
             RebuildLayout();
             Publish();

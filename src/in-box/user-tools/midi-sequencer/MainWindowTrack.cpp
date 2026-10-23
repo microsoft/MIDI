@@ -207,6 +207,47 @@ namespace winrt::midisequencer::implementation
                 TrackSwatches().Children().Append(button);
             }
 
+            // Any other color: shown filled when the track has one of its own.
+            {
+                auto const own = std::find(swatches.begin(), swatches.end(), track->Color) == swatches.end();
+
+                controls::Button button{};
+                button.Width(20);
+                button.Height(20);
+                button.MinWidth(0);
+                button.MinHeight(0);
+                button.Padding(xaml::Thickness{ 0, 0, 0, 0 });
+                button.CornerRadius(xaml::CornerRadius{ 10, 10, 10, 10 });
+                button.BorderThickness(xaml::Thickness{ own ? 2.0 : 1.0, own ? 2.0 : 1.0, own ? 2.0 : 1.0, own ? 2.0 : 1.0 });
+                button.BorderBrush(BrushFor(own ? m_palette.Text : m_palette.StrokeStrong));
+
+                if (own)
+                {
+                    button.Background(BrushFor(seq::FromRgb(track->Color)));
+                }
+                else
+                {
+                    controls::FontIcon plus{};
+                    plus.Glyph(L"\uE710");
+                    plus.FontSize(10);
+                    button.Content(plus);
+                }
+
+                auto const name = res::GetString(L"MenuCustomColor");
+                automation::AutomationProperties::SetName(button, name);
+                controls::ToolTipService::SetToolTip(button, winrt::box_value(name));
+
+                button.Click([weak = get_weak()](foundation::IInspectable const& sender, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ShowTrackColorPicker(strong->m_inspectorTrackId, sender.as<xaml::UIElement>(), std::nullopt);
+                    }
+                });
+
+                TrackSwatches().Children().Append(button);
+            }
+
             // Recording
             FillEndpointCombo(SourceEndpointCombo(), true, track->Source.Endpoint);
             FillGroupCombo(SourceGroupCombo(), true, track->Source.Endpoint, track->Source.Group, true);

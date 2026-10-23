@@ -792,6 +792,7 @@ namespace midisequencer
 
         {
             auto layer = ds.CreateLayer(1.0f, Rect{ RollLeft(), RollTop(), std::max(0.0f, width - RollLeft()), std::max(0.0f, RollBottom() - RollTop()) });
+            DrawGhosts(ds);
             DrawNotes(ds);
 
             if (m_gesture == Gesture::Band)
@@ -879,6 +880,41 @@ namespace midisequencer
             {
                 ds.FillRectangle(x, top, 1.0f, bottom - top, color);
             }
+        }
+    }
+
+    _Use_decl_annotations_
+    void PianoRoll::DrawGhosts(canvas::CanvasDrawingSession const& ds)
+    {
+        if (m_ghosts.empty() || m_clip == nullptr)
+        {
+            return;
+        }
+
+        auto const visibleFrom = TickAtX(RollLeft());
+        auto const visibleTo = TickAtX(m_width);
+        auto const light = m_palette != nullptr && m_palette->Light;
+
+        for (auto const& ghost : m_ghosts)
+        {
+            if (static_cast<double>(ghost.Tick) > visibleTo || static_cast<double>(ghost.Tick + ghost.Length) < visibleFrom)
+            {
+                continue;
+            }
+
+            auto const x = static_cast<float>(XAtTick(static_cast<double>(ghost.Tick))) + 0.5f;
+            auto const w = std::max(3.0f, static_cast<float>(static_cast<double>(ghost.Length) * m_pixelsPerTick) - 1.0f);
+            auto const y = static_cast<float>(YAtNote(ghost.Number)) + 1.0f;
+            auto const h = std::max(3.0f, static_cast<float>(m_rowHeight) - 2.0f);
+
+            if (y > RollBottom() || y + h < RollTop())
+            {
+                continue;
+            }
+
+            // A wash with an outline in the other track's color: plainly not one of these notes.
+            ds.FillRoundedRectangle(x, y, w, h, 2.0f, 2.0f, WithAlpha(ghost.Tint, light ? 0.16 : 0.20));
+            ds.DrawRoundedRectangle(x, y, w, h, 2.0f, 2.0f, WithAlpha(ghost.Tint, light ? 0.45 : 0.50), 1.0f);
         }
     }
 

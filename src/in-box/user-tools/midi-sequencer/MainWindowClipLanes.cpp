@@ -141,6 +141,8 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::DrawNotesEditor(canvas::CanvasDrawingSession const& ds, float width, float height)
     {
+        UpdateGhostNotes();
+
         auto const clip = m_editorClipId.empty() ? nullptr : seq::FindClip(m_doc, m_editorClipId);
 
         if (!ShowsLanes(clip))

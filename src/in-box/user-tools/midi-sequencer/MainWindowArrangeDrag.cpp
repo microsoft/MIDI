@@ -1378,6 +1378,13 @@ namespace winrt::midisequencer::implementation
             InvalidateArrange();
             InvalidateLaunchers();
 
+            // Ctrl and let go without moving: picked, or unpicked, to merge.
+            if (drag.ToggleOnClick && !drag.Active && drop)
+            {
+                TogglePlacementInSelection(drag.FromTrackId, drag.FromPlacement);
+                return;
+            }
+
             if (!drop || !drag.Active || drag.View.ToTrackId.empty())
             {
                 return;

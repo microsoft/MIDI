@@ -32,6 +32,7 @@ namespace midisequencer
         constexpr wchar_t ValueTimelineScrollBar[] = L"TimelineScrollBar";
         constexpr wchar_t ValueTimelineScrollBarPlace[] = L"TimelineScrollBarPlace";
         constexpr wchar_t ValueAutoSave[] = L"AutoSave";
+        constexpr wchar_t ValueGhostNotes[] = L"GhostNotes";
         constexpr wchar_t ValueBarWidth[] = L"BarWidthTenths";
         constexpr wchar_t ValueSnapTicks[] = L"SnapTicks";
         constexpr wchar_t ValueLaunchQuantizeTicks[] = L"LaunchQuantizeTicks";
@@ -363,6 +364,7 @@ namespace midisequencer
         m_timelineOverview = ReadDword(ValueTimelineScrollBar, 0) == 0;
         m_timelineBarAtTop = ReadDword(ValueTimelineScrollBarPlace, 0) == 1;
         m_autoSave = ReadDword(ValueAutoSave, 1) != 0;
+        m_ghostNotes = ReadDword(ValueGhostNotes, 0) != 0;
 
         auto const tenths = ReadDword(ValueBarWidth, static_cast<uint32_t>(DefaultBarWidth * 10));
         m_barWidth = std::clamp(tenths / 10.0, MinimumBarWidth, MaximumBarWidth);
@@ -468,6 +470,12 @@ namespace midisequencer
     {
         m_autoSave = value;
         WriteDword(ValueAutoSave, value ? 1 : 0);
+    }
+
+    void AppSettings::GhostNotes(bool value) noexcept
+    {
+        m_ghostNotes = value;
+        WriteDword(ValueGhostNotes, value ? 1 : 0);
     }
 
     void AppSettings::BarWidth(double value) noexcept

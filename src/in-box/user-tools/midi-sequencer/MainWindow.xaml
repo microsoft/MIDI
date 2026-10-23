@@ -821,6 +821,16 @@
                     </StackPanel>
                 </Button>
 
+                <!-- The razor: a click on a clip cuts it in two there (MainWindowClipEdits.cpp). -->
+                <ToggleButton x:Name="RazorToggle"
+                              x:Uid="RazorToggle"
+                              Grid.Column="2"
+                              HorizontalAlignment="Right"
+                              Style="{StaticResource SmallToggleStyle}"
+                              Click="OnRazorClick">
+                    <FontIcon Glyph="&#xE8C6;" FontSize="12" />
+                </ToggleButton>
+
                 <ToggleButton x:Name="LauncherToggle"
                               x:Uid="LauncherToggle"
                               Grid.Column="3"
@@ -1194,6 +1204,14 @@
                                 <TextBlock x:Uid="EditorAutomationText" />
                             </StackPanel>
                         </Button>
+
+                        <!-- What the other unmuted tracks play here, faintly behind the notes (MainWindowGhostNotes.cpp). -->
+                        <ToggleButton x:Name="EditorGhostToggle" x:Uid="EditorGhostToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorGhostClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE81E;" FontSize="12" />
+                                <TextBlock x:Uid="EditorGhostText" />
+                            </StackPanel>
+                        </ToggleButton>
                     </StackPanel>
 
                     <!-- A pattern clip's settings. Shown instead of the notes tools. -->

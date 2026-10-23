@@ -55,6 +55,18 @@ namespace midisequencer
         void SetTool(_In_ RollTool tool) noexcept { m_tool = tool; }
         void SetValuesAs(_In_ ValueDisplay value) noexcept { m_valuesAs = value; }
 
+        // Notes other tracks play at the same time, from the clip's start, drawn faintly behind
+        // its own. Only to look at: they can't be picked or moved.
+        struct Ghost
+        {
+            int64_t Tick{ 0 };
+            int64_t Length{ 0 };
+            uint8_t Number{ 0 };
+            Color Tint{};
+        };
+
+        void SetGhosts(_In_ std::vector<Ghost> ghosts) { m_ghosts = std::move(ghosts); }
+
         // Where the playhead is, from the clip's start, or -1 to hide it.
         void SetPlayhead(_In_ int64_t tick) noexcept { m_playhead = tick; }
 
@@ -132,6 +144,7 @@ namespace midisequencer
         void DrawRuler(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawKeys(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawGrid(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float bottom, _In_ bool steps);
+        void DrawGhosts(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawNotes(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawVelocityLane(_In_ canvas::CanvasDrawingSession const& ds);
 
@@ -162,6 +175,7 @@ namespace midisequencer
         double m_topNote{ 72 };
 
         std::vector<Note> m_selected{};
+        std::vector<Ghost> m_ghosts{};
 
         Gesture m_gesture{ Gesture::None };
         foundation::Point m_pressPoint{};

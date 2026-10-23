@@ -765,7 +765,8 @@ namespace midisequencer
 
         for (size_t i = 0; i < track.Timeline.size(); ++i)
         {
-            auto const selected = context.SelectedTrackId == track.Id && context.SelectedPlacement == i;
+            auto const selected = context.SelectedTrackId == track.Id &&
+                (context.SelectedPlacement == i || std::find(context.MorePlacements.begin(), context.MorePlacements.end(), i) != context.MorePlacements.end());
 
             // A clip being moved stays faded where it was until it lands.
             if (drag != nullptr && !drag->Copy && drag->FromTrackId == track.Id && drag->FromPlacement == i)
@@ -789,6 +790,20 @@ namespace midisequencer
             auto layer = ds.CreateLayer(0.8f);
             DrawClipBlock(ds, track, ghost, true, false, top, height, width, context);
             layer.Close();
+        }
+
+        // Where the razor would cut: a line across the row, with a small notch at each end.
+        if (context.RazorTrackId == track.Id && context.RazorTick >= 0)
+        {
+            auto const rx = std::floor(static_cast<float>(context.View.XAtTick(context.RazorTick))) + 0.5f;
+
+            if (rx >= 0 && rx <= width)
+            {
+                auto const ink = colors.Light ? Rgba(0, 0, 0, 0.85) : Rgba(255, 255, 255, 0.9);
+                ds.DrawLine(rx, top + 2.0f, rx, top + height - 2.0f, colors.Record, 1.5f, DashedStroke(4.0f, 3.0f));
+                ds.FillRectangle(rx - 3.0f, top + 1.0f, 6.0f, 2.0f, ink);
+                ds.FillRectangle(rx - 3.0f, top + height - 3.0f, 6.0f, 2.0f, ink);
+            }
         }
 
         // A take being recorded grows from where it started to the playhead.

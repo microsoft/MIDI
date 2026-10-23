@@ -57,6 +57,10 @@ Folders keep tracks together. Muting or soloing a folder mutes or solos everythi
 
 To move a track, drag it by its name. Drop it on a folder to put it inside, or between two rows to put it there. To work on several tracks at once, hold Ctrl and select each one, or hold Shift and select the last one to get every track in between. Drag any of them and they all move, in the same order.
 
+To give a track a color that isn't in the list, select **+** after the colors in **Track setup**, or right-click the track and select **Color**, then **Custom color…**. It's the same color picker as the one for the window's color.
+
+To combine two tracks, right-click the one to fold in and select **Merge into**, then the track to keep. The track you keep keeps its device, channel, sound and color. Its clips stay as they are. Where both tracks play at the same time, what they play becomes one clip, and the same note playing twice at once becomes one longer note. Launcher slots are combined the same way, and automation lanes the kept track doesn't already have move across with everything else.
+
 ### Choose each track's sound
 
 Most synths have many sounds, such as a piano, strings or a drum kit. A track can pick one of them for you each time playback starts. Select the track's name to open **Track setup**, then select **Sound** under **Start-up messages** to open the **Patch Browser**.
@@ -105,13 +109,15 @@ If you pick a window color of your own, Tactile, Aluminum and Vellum take it int
 
 There are three kinds of clips:
 
-- **Notes clips** hold notes you draw, type, record or import. The piano roll edits them. **B** turns on drawing, and **Q** moves notes onto the grid. Hold Shift while you drag notes to move them in time without changing their pitch.
+- **Notes clips** hold notes you draw, type, record or import. The piano roll edits them. **B** turns on drawing, and **Q** moves notes onto the grid. Hold Shift while you drag notes to move them in time without changing their pitch. Select **Other tracks** to see, faintly in their own colors, the notes the other unmuted tracks are playing at the same time. Solo doesn't hide them.
 - **Pattern clips** are step sequences, for drums or for melodies. Each lane has its own number of steps, so lanes can drift against each other and come back together. Steps can have a chance, or play only on some passes. **Swing** pushes every second step later. To change the order of the lanes, drag a lane by its name. **Make notes** turns a pattern into a notes clip that plays the same thing.
 - **Generator clips** make their notes as they play. A **Euclidean rhythm** spreads hits as evenly as it can over a number of steps. A **Chance melody** picks notes from a scale. An **Arpeggiator** plays the notes you hold, or another track's notes, one after another. Eight more grow, learn, and spell their notes: **Life**, **Life drums**, **Learn**, **Words**, **Evolve**, the **Infinity series**, **L-system**, and **Change ringing**.
 
 Right-click the timeline or an empty launcher slot to make any of them. The generators are under **New generator**.
 
 To move a clip, drag it to another time, another track, or another launcher slot. Hold Ctrl as you let go to place it again instead of moving it. Both spots then play the same clip, so a change to one changes both. Drag a clip from the launcher onto the timeline, or from the timeline into a launcher slot, to place it there too. Hold Shift while you drag to keep the clip on its own track, so it moves only in time, or between that track's launcher slots.
+
+To cut a clip in two, select the razor (the scissors above the tracks), then select the clip where you want the cut. The cut lands on the grid. Press Esc or select the scissors again to put the razor away. You can also right-click a clip and select **Split here**. To join clips, select one, hold Ctrl and select the others on the same track, then right-click and select **Merge selected clips**. They become one clip, with the same gaps between them.
 
 ### Start a pattern from a template
 
