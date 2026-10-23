@@ -41,6 +41,22 @@ namespace
     // are dropped as they would be with no device at all.
     constexpr uint64_t AudioOpenPatienceMilliseconds = 3000;
 
+    // The open is stamped after the caller read the clock, so the clock can be behind the stamp.
+    // Unsigned subtraction would then wrap to a huge age and drop the very note that asked for
+    // the device.
+    bool IsAudioOpenWorthWaitingFor(
+        _In_ uint64_t const startedAt,
+        _In_ uint64_t const now,
+        _In_ uint64_t const frequency) noexcept
+    {
+        if (now <= startedAt)
+        {
+            return true;
+        }
+
+        return now - startedAt < frequency * AudioOpenPatienceMilliseconds / 1000;
+    }
+
     std::wstring SystemSoundSetPath()
     {
         wchar_t systemDirectory[MAX_PATH]{};
@@ -1239,7 +1255,10 @@ MidiSynthDevice::WorkerThread() noexcept
                     bool const worthWaitingFor =
                         opening &&
                         m_pendingAudioOpen != nullptr &&
-                        now - m_pendingAudioOpen->StartedTimestamp < frequency * AudioOpenPatienceMilliseconds / 1000;
+                        IsAudioOpenWorthWaitingFor(
+                            m_pendingAudioOpen->StartedTimestamp,
+                            internal::GetCurrentMidiTimestamp(),
+                            frequency);
 
                     // Nothing renders, so the endpoint answers discovery, MIDI-CI, identity and
                     // property exchange from here. When audio is wanted and can't be had, notes are
