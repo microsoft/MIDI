@@ -39,14 +39,25 @@ namespace midipatchbay
 
         // Pressure on one note. The number is the note.
         PolyPressure = 5,
+
+        // System real-time: no channel, no number and no value. Each is pressed each time and
+        // never lets go, like a program change.
+        Clock = 6,
+        Start = 7,
+        Continue = 8,
+        Stop = 9,
     };
 
-    constexpr size_t ConverterInputCount = 6;
+    constexpr size_t ConverterInputCount = 10;
 
     // The names a patch file uses, the same as a controller button's messages: "note",
     // "controlChange" and so on.
     std::wstring_view ConverterInputKey(_In_ ConverterInput input) noexcept;
     std::optional<ConverterInput> ConverterInputFromKey(_In_ std::wstring_view key) noexcept;
+
+    // A channel voice message. Clock, start, continue and stop have no channel, and no format to
+    // keep: what they become always says its own.
+    bool ConverterInputHasChannel(_In_ ConverterInput input) noexcept;
 
     // Carries a note, a controller or a program number.
     bool ConverterInputHasNumber(_In_ ConverterInput input) noexcept;
@@ -158,8 +169,9 @@ namespace midipatchbay
         _Out_ ConvertedMessages& converted) noexcept;
 
     // Only the parts a row uses are written. Leaving out the channel, number, value or protocol
-    // of what a message becomes keeps what the message had. Anything missing or out of range
-    // takes the default when read.
+    // of what a message becomes keeps what the message had; a row that looks for a message
+    // without them always writes them. Anything missing or out of range takes the default when
+    // read.
     void MessageConverterToJson(_In_ MessageConverterSettings const& settings, _In_ json::JsonObject const& object);
     MessageConverterSettings MessageConverterFromJson(_In_ json::JsonObject const& object) noexcept;
 

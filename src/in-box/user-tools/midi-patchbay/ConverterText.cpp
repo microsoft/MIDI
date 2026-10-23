@@ -24,6 +24,10 @@ namespace midipatchbay
             case ConverterInput::PitchBend:         return ControllerMessageKind::PitchBend;
             case ConverterInput::ChannelPressure:   return ControllerMessageKind::ChannelPressure;
             case ConverterInput::PolyPressure:      return ControllerMessageKind::PolyPressure;
+            case ConverterInput::Clock:             return ControllerMessageKind::Clock;
+            case ConverterInput::Start:             return ControllerMessageKind::Start;
+            case ConverterInput::Continue:          return ControllerMessageKind::Continue;
+            case ConverterInput::Stop:              return ControllerMessageKind::Stop;
             default:                                return ControllerMessageKind::Note;
             }
         }
@@ -31,6 +35,12 @@ namespace midipatchbay
         // "Note C3", "Notes C1 to G1", "Any CC", and the channel when the row looks at only one.
         winrt::hstring DescribeFrom(_In_ ConverterRow const& row)
         {
+            // Clock, start, continue and stop have nothing more to say.
+            if (!ConverterInputHasChannel(row.From))
+            {
+                return DescribeControllerMessageKind(KindOf(row.From));
+            }
+
             auto const lowest = (std::min)(row.Lowest, row.Highest);
             auto const highest = (std::max)(row.Lowest, row.Highest);
             auto const all = lowest == 0 && highest == 127;
@@ -108,7 +118,7 @@ namespace midipatchbay
                 text = DescribeControllerMessage(to);
             }
 
-            if (IsChannelMessageKind(to.Kind) && !row.SameChannel)
+            if (IsChannelMessageKind(to.Kind) && (!row.SameChannel || !ConverterInputHasChannel(row.From)))
             {
                 text = resources::FormatString(L"ConverterOnChannelFormat", text, static_cast<int>(to.Channel & 0x0F) + 1);
             }

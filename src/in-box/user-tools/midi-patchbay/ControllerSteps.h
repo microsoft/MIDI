@@ -159,9 +159,15 @@ namespace midipatchbay
 
         // One whole message, typed in as words.
         Words = 12,
+
+        // A timing clock tick. Only a message converter sends one.
+        Clock = 13,
     };
 
-    constexpr size_t ControllerMessageKindCount = 13;
+    constexpr size_t ControllerMessageKindCount = 14;
+
+    // What a game controller button can send: every kind before Clock.
+    constexpr size_t ControllerButtonMessageKindCount = static_cast<size_t>(ControllerMessageKind::Clock);
 
     std::wstring_view ControllerMessageKindKey(_In_ ControllerMessageKind kind) noexcept;
     std::optional<ControllerMessageKind> ControllerMessageKindFromKey(_In_ std::wstring_view key) noexcept;

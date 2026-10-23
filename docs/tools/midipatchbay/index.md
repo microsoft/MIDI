@@ -194,9 +194,9 @@ To turn note 27 on channel 3 into control change 27 with a value of 50 on channe
 3. Under **Turn it into**, pick **Control change** and **Channel 4**. Leave **Same number** checked, so note 27 becomes CC 27.
 4. Clear **Same value**, and type 50 as the value.
 
-**What it listens for.** A note, a control change, a program change, pitch bend, channel pressure, or poly pressure, on any channel or on one. For notes, controllers, and programs, a row can listen for one number or a range of them.
+**What it listens for.** A note, a control change, a program change, pitch bend, channel pressure, poly pressure, a timing clock, Start, Continue, or Stop. A channel message can be on any channel or on one. For notes, controllers, and programs, a row can listen for one number or a range of them.
 
-**What it sends.** A note, a control change, a program change, pitch bend, channel pressure, poly pressure, an RPN, an NRPN, Start, Continue, Stop, or a message typed in hex. **Same channel**, **Same number**, and **Same value** copy that part from the message that came in, so one row can turn a whole range of notes into the controllers with the same numbers. A value keeps its share of the range, so a note played at full velocity sends a controller at full value. **Message format** keeps the format the message came in with, or always sends MIDI 1.0 or MIDI 2.0. An RPN or an NRPN always goes out as MIDI 2.0, and Windows converts it for a MIDI 1.0 device.
+**What it sends.** A note, a control change, a program change, pitch bend, channel pressure, poly pressure, an RPN, an NRPN, a timing clock, Start, Continue, Stop, or a message typed in hex. **Same channel**, **Same number**, and **Same value** copy that part from the message that came in, so one row can turn a whole range of notes into the controllers with the same numbers. A value keeps its share of the range, so a note played at full velocity sends a controller at full value. **Message format** keeps the format the message came in with, or always sends MIDI 1.0 or MIDI 2.0. An RPN or an NRPN always goes out as MIDI 2.0, and Windows converts it for a MIDI 1.0 device.
 
 **Letting go.** A note off, or a MIDI 1.0 note on with velocity 0, means you let go of the pad. When a row turns a note into a note or into a value, such as a control change, pick what letting go does under **When you let go**:
 
@@ -206,13 +206,19 @@ To turn note 27 on channel 3 into control change 27 with a value of 50 on channe
 
 **A controller as a button.** A control change, pitch bend, or pressure usually moves smoothly. Under **Read it as**, pick **A button** to treat it as one. **Pressed at** and above counts as pressed, and anything below it counts as let go. Only a change from one to the other sends anything, so a sustain pedal can play a note. **Pressed at** is shown in the step's **Value format**, as 0 to 127 or as a percentage.
 
-**Something that never lets go.** A program change, or a value read as **A value that moves**, has no release. When a row turns one into a note, the note off is sent right after the note on, so no note is left sounding.
+**Something that never lets go.** A program change, a timing clock, Start, Continue, Stop, or a value read as **A value that moves**, has no release. When a row turns one into a note, the note off is sent right after the note on, so no note is left sounding.
+
+**Clock, Start, Continue, and Stop.** Some music software can't send MIDI clock, but it can play a note over and over. To turn that note into the clock, pick **Note** under **When it gets**, with its channel and number, and pick **Timing clock** under **Turn it into**. Each note on sends one clock tick, and the note off sends nothing. A device that follows MIDI clock expects 24 ticks for each quarter note, so the note has to repeat that often. Turn other notes into **Start**, **Continue**, and **Stop** the same way.
+
+It works the other way too: a clock tick, Start, Continue, or Stop can become a note or a control change. These messages have no channel, number, or value to copy, so the **Same** choices aren't offered. Pick the channel, the number, the value, and the format to send.
+
+> **Note:** Converting to or from system real-time messages like Clock will likely introduce jitter due to the size and priority of the messages. It's here for convenience for when there are no other reasonable options.
 
 **Program changes.** Under **Program to send**, a row can send one program, or the next or the previous one in a range you set. Check **Go around at the ends** to start over at the other end. The step keeps one place in the range for each group and channel, and every row in the step shares it, so one footswitch can go up and another down.
 
 What the message converter can't do:
 
-- **It can't listen for RPN, NRPN, system exclusive, or system messages** such as clock and Start.
+- **It can't listen for RPN, NRPN, system exclusive, or other system messages** such as Song Position or Active Sensing. Of the system messages, it only listens for timing clock, Start, Continue, and Stop.
 - **No math.** It copies a number or a value, or sends one you pick. It doesn't add an offset or squeeze a range. To reshape a value, add a **Control change values** step after it.
 - **A message keeps its group.** To move it to another group, add a **Group mapper**.
 

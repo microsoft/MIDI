@@ -432,7 +432,7 @@ namespace winrt::midipatchbay::implementation
         {
             std::vector<winrt::hstring> names{};
 
-            for (size_t i = 0; i < patchbay::ControllerMessageKindCount; i++)
+            for (size_t i = 0; i < patchbay::ControllerButtonMessageKindCount; i++)
             {
                 names.push_back(patchbay::DescribeControllerMessageKind(static_cast<patchbay::ControllerMessageKind>(i)));
             }
@@ -444,7 +444,7 @@ namespace winrt::midipatchbay::implementation
                 {
                     auto const index = SelectedIndexOf(sender);
 
-                    if (index < 0 || static_cast<size_t>(index) >= patchbay::ControllerMessageKindCount)
+                    if (index < 0 || static_cast<size_t>(index) >= patchbay::ControllerButtonMessageKindCount)
                     {
                         return;
                     }

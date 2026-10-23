@@ -18,6 +18,7 @@
 #include <initializer_list>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using namespace midipatchbay;
@@ -596,6 +597,306 @@ void MessageConverterTests::AConverterRunsInARoutedPatch()
     VERIFY_IS_TRUE(sink.Sent[0].second == Midi2(0, ControlChange, 3, 40, 0, 0xFFFFFFFFu));
     VERIFY_IS_TRUE(sink.Sent[1].second == Midi1(0, NoteOn, 0, 60, 100));
     VERIFY_IS_TRUE(sink.Sent[2].second == Midi2(0, ControlChange, 3, 40, 0, 0));
+}
+
+void MessageConverterTests::ANoteCanBeATimingClock()
+{
+    // For software that can't send a clock: note 60 on channel 10, played in a steady sequence,
+    // becomes the timing clock, and its note off sends nothing.
+    auto row = Row(ConverterInput::Note, 60, 60, ControllerMessageKind::Clock);
+    row.FromChannel = 9;
+
+    Converter converter{ With({ row }) };
+
+    VERIFY_IS_TRUE(Only(converter.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+    VERIFY_IS_TRUE(KeptOut(converter.Run(Midi1(0, NoteOff, 9, 60, 0))));
+    VERIFY_IS_TRUE(KeptOut(converter.Run(Midi1(0, NoteOn, 9, 60, 0))));
+
+    // Every note on is one more tick, let go or not.
+    VERIFY_IS_TRUE(Only(converter.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+    VERIFY_IS_TRUE(Only(converter.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+
+    // A MIDI 2.0 note works the same, and the clock keeps the note's group.
+    VERIFY_IS_TRUE(Only(converter.Run(Midi2(6, NoteOn, 9, 60, 0, 0x80000000u))) == System(6, 0xF8));
+    VERIFY_IS_TRUE(KeptOut(converter.Run(Midi2(6, NoteOff, 9, 60, 0, 0))));
+
+    // Other notes and channels go on as they are.
+    VERIFY_IS_FALSE(converter.Run(Midi1(0, NoteOn, 9, 61, 100)).Matched);
+    VERIFY_IS_FALSE(converter.Run(Midi1(0, NoteOn, 0, 60, 100)).Matched);
+
+    // A clock has nothing to toggle: each note on is still one tick.
+    auto toggled = row;
+    toggled.Release = ConverterRelease::Toggle;
+
+    Converter latch{ With({ toggled }) };
+
+    VERIFY_IS_TRUE(Only(latch.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+    VERIFY_IS_TRUE(KeptOut(latch.Run(Midi1(0, NoteOff, 9, 60, 0))));
+    VERIFY_IS_TRUE(Only(latch.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+
+    // Notes can start, continue and stop a sequencer too.
+    Converter transport{ With({
+        Row(ConverterInput::Note, 36, 36, ControllerMessageKind::Start),
+        Row(ConverterInput::Note, 37, 37, ControllerMessageKind::Continue),
+        Row(ConverterInput::Note, 38, 38, ControllerMessageKind::Stop) }) };
+
+    VERIFY_IS_TRUE(Only(transport.Run(Midi1(2, NoteOn, 0, 36, 100))) == System(2, 0xFA));
+    VERIFY_IS_TRUE(Only(transport.Run(Midi1(2, NoteOn, 0, 37, 100))) == System(2, 0xFB));
+    VERIFY_IS_TRUE(Only(transport.Run(Midi1(2, NoteOn, 0, 38, 100))) == System(2, 0xFC));
+    VERIFY_IS_TRUE(KeptOut(transport.Run(Midi1(2, NoteOff, 0, 38, 0))));
+
+    // As a routed patch runs it, from the software to the instrument.
+    PatchDocument patch{};
+
+    for (auto const id : { L"software", L"synth" })
+    {
+        PatchEndpoint endpoint{};
+        endpoint.Id = id;
+        endpoint.DisplayName = id;
+        patch.Endpoints.push_back(endpoint);
+    }
+
+    PatchBlock block{};
+    block.Id = L"clock";
+    block.Kind = BlockKind::MessageConverter;
+    block.Settings = DefaultBlockSettings(block.Kind);
+    block.Settings.Converter = With({ row });
+    patch.Blocks.push_back(block);
+
+    for (auto const& [id, from, to] : { std::tuple{ L"l1", L"software", L"clock" }, std::tuple{ L"l2", L"clock", L"synth" } })
+    {
+        PatchConnection connection{};
+        connection.Id = id;
+        connection.SourceId = from;
+        connection.DestinationId = to;
+        patch.Connections.push_back(connection);
+    }
+
+    RoutePatch input{};
+    input.Key = L"k";
+    input.Patch = &patch;
+
+    for (auto const& endpoint : patch.Endpoints)
+    {
+        input.DeviceIds[endpoint.Id] = L"dev-" + endpoint.Id;
+    }
+
+    auto const graph = CompileRoutes({ input });
+
+    VERIFY_IS_TRUE(graph.Problems.empty());
+
+    Sink sink{ graph };
+
+    for (auto const& message : { Midi1(0, NoteOn, 9, 60, 100), Midi1(0, NoteOff, 9, 60, 0), Midi1(0, NoteOn, 0, 62, 90),
+        Midi1(0, NoteOn, 9, 60, 100), Midi1(0, NoteOff, 9, 60, 0) })
+    {
+        for (auto const& root : graph.Roots)
+        {
+            RunRoot(graph, root, message.Words.data(), message.Count, sink);
+        }
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, sink.Sent.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"dev-synth" }, sink.Sent[0].first);
+    VERIFY_IS_TRUE(sink.Sent[0].second == System(0, 0xF8));
+    VERIFY_IS_TRUE(sink.Sent[1].second == Midi1(0, NoteOn, 0, 62, 90));
+    VERIFY_IS_TRUE(sink.Sent[2].second == System(0, 0xF8));
+}
+
+void MessageConverterTests::RealTimeMessagesCanBecomeOtherMessages()
+{
+    // Each tick plays note 60 on channel 10, which ends at once: a clock never lets go. A clock
+    // has no channel or format to keep, so what the row says is used.
+    auto clock = Row(ConverterInput::Clock, 0, 127, ControllerMessageKind::Note);
+    clock.To.Channel = 9;
+    clock.To.Midi1Protocol = true;
+    clock.To.ValueHundredths = HundredthsFromSevenBit(100);
+
+    VERIFY_IS_TRUE(clock.SameChannel && clock.SameNumber && clock.SameValue && clock.SameProtocol);
+
+    Converter ticks{ With({ clock }) };
+
+    for (int i = 0; i < 2; i++)
+    {
+        auto const played = ticks.Run(System(4, 0xF8));
+
+        VERIFY_IS_TRUE(played.Matched);
+        VERIFY_ARE_EQUAL(size_t{ 2 }, played.Sent.size());
+        VERIFY_IS_TRUE(played.Sent[0] == Midi1(4, NoteOn, 9, 60, 100));
+        VERIFY_IS_TRUE(played.Sent[1] == Midi1(4, NoteOff, 9, 60, 0));
+    }
+
+    // Left as it starts, it's a MIDI 2.0 note on channel 1.
+    Converter plain{ With({ Row(ConverterInput::Clock, 0, 127, ControllerMessageKind::Note) }) };
+
+    auto const midi2 = plain.Run(System(1, 0xF8));
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, midi2.Sent.size());
+    VERIFY_ARE_EQUAL(uint8_t{ 2 }, midi2.Sent[0].Count);
+    VERIFY_ARE_EQUAL(0x41903C00u, midi2.Sent[0].Words[0]);
+    VERIFY_IS_TRUE(midi2.Sent[1] == Midi2(1, NoteOff, 0, 60, 0, 0));
+
+    // Start, stop and continue as control changes, on the group they came in on.
+    auto start = Row(ConverterInput::Start, 0, 127, ControllerMessageKind::ControlChange);
+    start.To.Number = 20;
+    start.To.Midi1Protocol = true;
+
+    auto stop = start;
+    stop.From = ConverterInput::Stop;
+    stop.To.ValueHundredths = 0;
+
+    auto proceed = start;
+    proceed.From = ConverterInput::Continue;
+    proceed.To.Number = 21;
+
+    Converter transport{ With({ start, stop, proceed }) };
+
+    VERIFY_IS_TRUE(Only(transport.Run(System(2, 0xFA))) == Midi1(2, ControlChange, 0, 20, 127));
+    VERIFY_IS_TRUE(Only(transport.Run(System(2, 0xFC))) == Midi1(2, ControlChange, 0, 20, 0));
+    VERIFY_IS_TRUE(Only(transport.Run(System(2, 0xFB))) == Midi1(2, ControlChange, 0, 21, 127));
+    VERIFY_IS_TRUE(Only(transport.Run(System(2, 0xFA))) == Midi1(2, ControlChange, 0, 20, 127));
+
+    // Other system messages, and a clock no row looks for, go on as they are.
+    VERIFY_IS_FALSE(transport.Run(System(2, 0xF8)).Matched);
+    VERIFY_IS_FALSE(transport.Run(System(2, 0xFE)).Matched);
+    VERIFY_IS_FALSE(transport.Run(System(2, 0xFF)).Matched);
+    VERIFY_IS_FALSE(transport.Run(System(2, 0xF2, 0x10, 0x00)).Matched);
+    VERIFY_IS_FALSE(transport.Run(Midi1(2, ControlChange, 0, 20, 127)).Matched);
+
+    // A channel left on the row means nothing to a message that has none.
+    clock.FromChannel = 3;
+
+    Converter anyChannel{ With({ clock }) };
+
+    VERIFY_IS_TRUE(anyChannel.Run(System(0, 0xF8)).Matched);
+}
+
+void MessageConverterTests::RealTimeRowsSurviveTheFile()
+{
+    auto clock = Row(ConverterInput::Clock, 0, 127, ControllerMessageKind::Note);
+    clock.FromChannel = 3;
+    clock.To.Channel = 9;
+    clock.To.Midi1Protocol = true;
+
+    auto start = Row(ConverterInput::Start, 0, 127, ControllerMessageKind::ControlChange);
+    start.To.Number = 20;
+
+    auto tick = Row(ConverterInput::Note, 60, 60, ControllerMessageKind::Clock);
+    tick.FromChannel = 9;
+
+    auto stop = Row(ConverterInput::Note, 38, 38, ControllerMessageKind::Stop);
+
+    MessageConverterSettings settings{};
+    settings.Rows = { clock, start, tick, stop };
+
+    auto const object = ToJson(settings);
+    auto const back = MessageConverterFromJson(object);
+
+    VERIFY_ARE_EQUAL(settings.Rows.size(), back.Rows.size());
+    VERIFY_IS_TRUE(MessageConverterSignature(settings) == MessageConverterSignature(back));
+    VERIFY_IS_TRUE(back.Rows[0].From == ConverterInput::Clock);
+    VERIFY_IS_TRUE(back.Rows[1].From == ConverterInput::Start);
+    VERIFY_IS_TRUE(back.Rows[2].To.Kind == ControllerMessageKind::Clock);
+    VERIFY_IS_TRUE(back.Rows[3].To.Kind == ControllerMessageKind::Stop);
+
+    auto const rows = object.GetNamedArray(L"rows");
+    auto const clockFrom = rows.GetObjectAt(0).GetNamedObject(L"from");
+    auto const clockTo = rows.GetObjectAt(0).GetNamedObject(L"to");
+
+    // A clock has no channel or number to look for...
+    VERIFY_IS_TRUE(clockFrom.GetNamedString(L"message") == L"clock");
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, clockFrom.Size());
+
+    // ...and nothing to keep, so what it becomes always says its channel, number, value and format.
+    VERIFY_ARE_EQUAL(9.0, clockTo.GetNamedNumber(L"channel"));
+    VERIFY_ARE_EQUAL(60.0, clockTo.GetNamedNumber(L"number"));
+    VERIFY_IS_TRUE(clockTo.HasKey(L"velocityPercent"));
+    VERIFY_IS_TRUE(clockTo.GetNamedBoolean(L"midi1"));
+    VERIFY_IS_FALSE(clockTo.HasKey(L"release"));
+
+    auto const startTo = rows.GetObjectAt(1).GetNamedObject(L"to");
+
+    VERIFY_IS_TRUE(rows.GetObjectAt(1).GetNamedObject(L"from").GetNamedString(L"message") == L"start");
+    VERIFY_ARE_EQUAL(0.0, startTo.GetNamedNumber(L"channel"));
+    VERIFY_ARE_EQUAL(20.0, startTo.GetNamedNumber(L"number"));
+    VERIFY_IS_FALSE(startTo.GetNamedBoolean(L"midi1"));
+
+    // A clock that a note becomes has only its name: no channel, and nothing for letting go.
+    auto const tickTo = rows.GetObjectAt(2).GetNamedObject(L"to");
+
+    VERIFY_IS_TRUE(tickTo.GetNamedString(L"message") == L"clock");
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, tickTo.Size());
+    VERIFY_ARE_EQUAL(9.0, rows.GetObjectAt(2).GetNamedObject(L"from").GetNamedNumber(L"channel"));
+
+    // A file that gives a clock row a channel or a number anyway still reads, and ignores them.
+    auto const typed = MessageConverterFromJson(json::JsonObject::Parse(LR"({ "rows": [
+        { "from": { "message": "clock", "channel": 4, "number": 10 }, "to": { "message": "note", "number": 36, "channel": 9 } },
+        { "from": { "message": "continue" }, "to": { "message": "controlChange", "number": 21 } },
+        { "from": { "message": "note", "channel": 9, "number": 60 }, "to": { "message": "clock", "channel": 3, "release": "toggle" } } ] })"));
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, typed.Rows.size());
+    VERIFY_IS_TRUE(typed.Rows[0].From == ConverterInput::Clock);
+    VERIFY_ARE_EQUAL(-1, static_cast<int>(typed.Rows[0].FromChannel));
+    VERIFY_IS_TRUE(typed.Rows[1].From == ConverterInput::Continue);
+    VERIFY_IS_TRUE(typed.Rows[2].To.Kind == ControllerMessageKind::Clock);
+
+    Converter converter{ typed };
+
+    auto const played = converter.Run(System(0, 0xF8));
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, played.Sent.size());
+    VERIFY_ARE_EQUAL(0x40992400u, played.Sent[0].Words[0]);
+    VERIFY_IS_TRUE(Only(converter.Run(System(0, 0xFB))) == Midi2(0, ControlChange, 0, 21, 0, 0xFFFFFFFFu));
+    VERIFY_IS_TRUE(Only(converter.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+    VERIFY_IS_TRUE(KeptOut(converter.Run(Midi1(0, NoteOff, 9, 60, 0))));
+    VERIFY_IS_TRUE(Only(converter.Run(Midi1(0, NoteOn, 9, 60, 100))) == System(0, 0xF8));
+}
+
+void MessageConverterTests::OnlyAConverterSendsATimingClock()
+{
+    VERIFY_IS_TRUE(ControllerMessageKindFromKey(L"clock") == ControllerMessageKind::Clock);
+    VERIFY_ARE_EQUAL(ControllerMessageKindCount - 1, ControllerButtonMessageKindCount);
+
+    // A game controller button can't send one: a file that says so gets what it would by default.
+    auto const button = ControllerButtonFromJson(json::JsonObject::Parse(
+        LR"({ "pressed": { "message": "clock" }, "held": { "message": "clock" } })"));
+
+    VERIFY_IS_TRUE(button.Pressed.Kind == ControllerMessageKind::Note);
+    VERIFY_IS_TRUE(button.Held.Kind == ControllerMessageKind::Nothing);
+
+    // The words for one: a timing clock on the message's group, and nothing for letting go.
+    auto message = ControllerMessageFor(ControllerMessageKind::Clock);
+    message.Group = 7;
+
+    auto const words = BuildControllerWords(message, 0);
+
+    VERIFY_ARE_EQUAL(uint8_t{ 1 }, words.OnCount);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, words.OffCount);
+    VERIFY_ARE_EQUAL(System(7, 0xF8).Words[0], words.On[0]);
+
+    VERIFY_IS_FALSE(IsChannelMessageKind(ControllerMessageKind::Clock));
+    VERIFY_IS_FALSE(IsValueMessageKind(ControllerMessageKind::Clock));
+    VERIFY_IS_FALSE(ConverterOutputCanLetGo(ControllerMessageKind::Clock));
+    VERIFY_ARE_EQUAL(uint32_t{ 0 }, ControllerMessageNumberMaximum(ControllerMessageKind::Clock));
+
+    for (auto const input : { ConverterInput::Clock, ConverterInput::Start, ConverterInput::Continue, ConverterInput::Stop })
+    {
+        VERIFY_IS_FALSE(ConverterInputHasChannel(input));
+        VERIFY_IS_FALSE(ConverterInputHasNumber(input));
+        VERIFY_IS_FALSE(ConverterInputHasValue(input));
+        VERIFY_IS_FALSE(ConverterInputIsValue(input));
+        VERIFY_IS_TRUE(ConverterInputFromKey(ConverterInputKey(input)) == input);
+
+        auto row = DefaultConverterRow();
+        row.From = input;
+
+        VERIFY_IS_FALSE(ConverterRowCanLetGo(row));
+    }
+
+    VERIFY_IS_TRUE(ConverterInputHasChannel(ConverterInput::Note));
+    VERIFY_IS_TRUE(ConverterInputHasChannel(ConverterInput::PolyPressure));
+    VERIFY_IS_TRUE(ConverterInputHasValue(ConverterInput::Note));
+    VERIFY_IS_FALSE(ConverterInputHasValue(ConverterInput::ProgramChange));
 }
 
 void MessageConverterTests::ConverterSettingsSurviveTheFile()
