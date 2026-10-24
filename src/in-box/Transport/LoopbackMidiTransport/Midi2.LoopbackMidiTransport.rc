@@ -117,6 +117,7 @@ BEGIN
     IDS_ERROR_ENDPOINT_NAME_IN_USE      "Another loopback endpoint is already using this name."
     IDS_ERROR_INVALID_FEEDBACK_PROTECTION   "Feedback protection must be ""mute"" or ""off""."
     IDS_ERROR_OVERLAPPING_UNIQUE_ID         "Unique identifier starts with the unique identifier of another loopback endpoint on the same side, or that one starts with this one. Removing either loopback would also remove the other."
+    IDS_ERROR_ASSOCIATION_ID_IN_USE         "Another loopback is already using this association id."
 
 END
 

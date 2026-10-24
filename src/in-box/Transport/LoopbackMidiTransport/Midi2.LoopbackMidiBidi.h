@@ -40,6 +40,9 @@ private:
     // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     HRESULT SendToOtherSideWithLock(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position);
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.
+    HRESULT RegisterWithLoopbackDevice();
+
     bool m_isEndpointA = false;
 
     std::wstring m_associationId{};
