@@ -10,6 +10,7 @@
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
+#include "SysExReview.h"
 #include "App.xaml.h"
 
 #include "AppSettings.h"
@@ -424,6 +425,9 @@ namespace winrt::midiglass::implementation
                 // When it was last used, and whether it is a favorite, follow the file.
                 ::midiglass::AppSettings::Current().RenameLayouts({ { oldPath, newPath } });
 
+                // So does whether its SysEx is still waiting to be looked at.
+                glass::MoveSysExReview(oldPath, newPath);
+
                 auto const oldCard = glass::ThumbnailPathForLayout(oldPath, glass::LargeThumbnailWidth);
 
                 if (!oldCard.empty())
@@ -516,6 +520,7 @@ namespace winrt::midiglass::implementation
 
             // A new layout given this name later shouldn't arrive starred.
             ::midiglass::AppSettings::Current().FavoriteLayout(path, false);
+            glass::ForgetSysExReview(path);
 
             // The card is derived, so losing it costs nothing and leaving it behind would show a
             // layout that is gone.

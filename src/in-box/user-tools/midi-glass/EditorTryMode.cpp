@@ -23,6 +23,8 @@
 #include "StringResources.h"
 #include "MonitorFormat.h"
 #include "GlassControl.h"
+#include "SysExPrompt.h"
+#include "SysExReview.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -67,10 +69,17 @@ namespace winrt::midiglass::implementation
         if (m_player != nullptr)
         {
             m_player->UpdateDocument(m_editor.Document());
+            m_player->SetSystemExclusiveAllowed(
+                glass::CheckSysExReview(m_editor.Document(), m_filePath) == glass::SysExReview::Allowed);
             return;
         }
 
         m_player = glass::LivePlayer::Create();
+
+        // A layout from somewhere else sends no SysEx from the editor either, until the person
+        // says it may (SetTryMode asks).
+        m_player->SetSystemExclusiveAllowed(
+            glass::CheckSysExReview(m_editor.Document(), m_filePath) == glass::SysExReview::Allowed);
 
         auto weak = get_weak();
 
@@ -297,6 +306,12 @@ namespace winrt::midiglass::implementation
                 // An edit made while Try mode was off has to reach the engine before a finger
                 // does, and the player has to exist before either.
                 StartPlayerForLearning();
+
+                if (!m_player->IsSystemExclusiveAllowed())
+                {
+                    m_player->SetSystemExclusiveAllowed(::midiglass::sysexprompt::AskToAllowSysEx(
+                        m_chrome.WindowHandle(), m_editor.Document(), m_filePath));
+                }
 
                 m_player->SetOutputEnabled(true);
             }

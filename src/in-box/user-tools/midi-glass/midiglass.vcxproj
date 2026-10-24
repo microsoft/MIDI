@@ -191,6 +191,8 @@
     <ClInclude Include="document\LayoutPackage.h" />
     <ClInclude Include="document\LayoutPack.h" />
     <ClInclude Include="document\SignedItems.h" />
+    <ClInclude Include="document\SysExReview.h" />
+    <ClInclude Include="SysExPrompt.h" />
     <ClInclude Include="document\ProvenanceFields.h" />
     <ClInclude Include="document\LayoutSerializer.h" />
     <ClInclude Include="document\LayoutStore.h" />
@@ -262,6 +264,7 @@
     <ClCompile Include="MainWindowPackaging.cpp" />
     <ClCompile Include="SharingDialogs.cpp" />
     <ClCompile Include="SyncDialogs.cpp" />
+    <ClCompile Include="SysExPrompt.cpp" />
     <ClCompile Include="SyncReceiveWindow.cpp" />
     <ClCompile Include="MainWindowSync.cpp" />
     <ClCompile Include="EditorSync.cpp" />
@@ -379,6 +382,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\PairedDevices.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\SysExReview.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutPack.cpp">

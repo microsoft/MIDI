@@ -116,6 +116,7 @@
     <ClInclude Include="DeviceLinkTests.h" />
     <ClInclude Include="DeviceLinkTestKeys.h" />
     <ClInclude Include="GlassSyncTests.h" />
+    <ClInclude Include="SysExReviewTests.h" />
     <ClInclude Include="ProvenanceFieldsTests.h" />
     <ClInclude Include="ContentPackTests.h" />
     <ClInclude Include="ZipArchiveTests.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="ContentPackTests.cpp" />
     <ClCompile Include="DeviceLinkTests.cpp" />
     <ClCompile Include="GlassSyncTests.cpp" />
+    <ClCompile Include="SysExReviewTests.cpp" />
     <ClCompile Include="ZipArchiveTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
@@ -205,6 +207,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPack.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\SignedItems.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\SysExReview.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ProvenanceFields.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\MackieControl.cpp" />

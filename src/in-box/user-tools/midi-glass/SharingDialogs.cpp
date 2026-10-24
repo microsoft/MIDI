@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "SharingDialogs.h"
+#include "SysExReview.h"
 
 #include "AppProvenance.h"
 #include "AppSettings.h"
@@ -1010,6 +1011,13 @@ namespace midiglass::sharing
 
             if (result.Succeeded)
             {
+                // From a pack or another PC: its SysEx is asked about the first time it runs.
+                // Signed or not, since a signature says who made it, not that its SysEx is safe.
+                if (!isTheme)
+                {
+                    glass::MarkForSysExReview(result.Path);
+                }
+
                 if (trusted != nullptr)
                 {
                     glass::SignedItem item{};

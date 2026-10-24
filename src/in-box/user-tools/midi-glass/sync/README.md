@@ -24,7 +24,7 @@ This folder is the part with no UI and no XAML, so the unit tests compile it unc
 
 ## Invariants
 
-- What arrives is untrusted. The receiver rebuilds the pack and checks it with `midiapp::OpenContentPack`, the same check a pack file from a USB stick gets: the 512 MB cap, every size and hash against the manifest, and every signature against the manifest bytes. It then goes through the same import dialog and install as a pack file (`sharing::ImportOpenedPackAsync`). A signed pack stays signed after a sync that sent only part of it, because the signature covers the manifest.
+- What arrives is untrusted. The receiver rebuilds the pack and checks it with `midiapp::OpenContentPack`, the same check a pack file from a USB stick gets: the 512 MB cap, every size and hash against the manifest, and every signature against the manifest bytes. It then goes through the same import dialog and install as a pack file (`sharing::ImportOpenedPackAsync`). A signed pack stays signed after a sync that sent only part of it, because the signature covers the manifest. Like any layout from somewhere else, it asks before sending SysEx the first time it runs (`document\SysExReview.h`).
 - Every frame has a cap for its type, checked before anything is allocated. Every read has a timeout. The receiver takes only the files it asked for, each once, at the size the manifest lists. One connection at a time.
 - A file the receiver thinks it has is read again and hashed when the pack is rebuilt. If it changed, it counts as missing.
 - Replacing a layout asks once per Glass session, per layout, per paired sender. Unpairing that sender ends what it was allowed. A copy changed on the receiver since that sender last sent it always asks again and says so.

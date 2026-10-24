@@ -273,6 +273,15 @@ Select **…** (More options) > **Import a pack…** in the library. For a theme
 
 Windows MIDI Glass still imports the `.zip` layout packages that earlier versions made.
 
+### Layouts that send SysEx
+
+A layout can send system exclusive (SysEx) messages, and the wrong SysEx can change a device's settings, sounds or firmware, or even damage it. So the first time you run or try a layout that came from somewhere else, Windows MIDI Glass asks before it sends any SysEx, and names the devices the SysEx would go to. That covers a pack, an old `.zip` package, a layout sent from another PC, and a file you open from outside your layouts folder.
+
+- Select **Allow SysEx** if you trust whoever made the layout. It won't ask again for that layout, unless a newer copy arrives with different SysEx.
+- Select **Run without SysEx** if you're not sure. The layout still runs, and everything else it sends still goes out. It asks again the next time you run it.
+
+A layout that doesn't send SysEx never asks. Neither does one you made on this PC.
+
 ### Layouts from a newer version
 
 A layout made by a newer version of Windows MIDI Glass says **From a newer version** on its card. You can run it, and you can open it in the editor to look around and try it. Windows MIDI Glass won't save changes to it, so nothing the newer version added gets lost. That's also why **Duplicate**, **Rename…** and **Edit description…** are turned off for it. A control this version doesn't have shows as a dashed outline with its name. It doesn't respond to touch and doesn't send anything. To change the layout, update Windows MIDI Glass.

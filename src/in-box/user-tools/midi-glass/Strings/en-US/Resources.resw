@@ -6182,4 +6182,31 @@
   <data name="ReceiveGotDeltaFormat" xml:space="preserve">
     <value>Got &quot;{0}&quot; from {1}. {2} files arrived, and {3} were already here.</value>
   </data>
+  <data name="SysExPromptTitle" xml:space="preserve">
+    <value>Windows MIDI Glass</value>
+  </data>
+  <data name="SysExPromptInstructionFormat" xml:space="preserve">
+    <value>Let &quot;{0}&quot; send SysEx?</value>
+  </data>
+  <data name="SysExPromptIntro" xml:space="preserve">
+    <value>This layout came from somewhere else, such as a pack, another PC, or a file you opened. It can send system exclusive (SysEx) messages to these devices:</value>
+  </data>
+  <data name="SysExPromptWarning" xml:space="preserve">
+    <value>SysEx can change a device&apos;s settings, sounds or firmware, and the wrong SysEx can damage a device. Allow it only if you trust whoever made this layout. If you don&apos;t, the layout still runs. It just won&apos;t send SysEx.</value>
+  </data>
+  <data name="SysExPromptAllow" xml:space="preserve">
+    <value>Allow SysEx</value>
+  </data>
+  <data name="SysExPromptBlock" xml:space="preserve">
+    <value>Run without SysEx</value>
+  </data>
+  <data name="SysExPromptNoDevice" xml:space="preserve">
+    <value>(no device chosen)</value>
+  </data>
+  <data name="SysExPromptDeviceMatchFormat" xml:space="preserve">
+    <value>{0}, which looks for &quot;{1}&quot;</value>
+  </data>
+  <data name="SysExPromptMoreFormat" xml:space="preserve">
+    <value>…and {0} more</value>
+  </data>
 </root>
