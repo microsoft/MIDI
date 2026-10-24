@@ -100,7 +100,9 @@ CMidi2MidiSynthConfigurationManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiServiceConfigurationManager* midiServiceConfigurationManager
 )
+try
 {
+    UNREFERENCED_PARAMETER(transportId);
     UNREFERENCED_PARAMETER(midiServiceConfigurationManager);
 
     TraceLoggingWrite(
@@ -112,12 +114,16 @@ CMidi2MidiSynthConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
 
-    m_transportId = transportId;
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+
+    auto lock = m_serviceLock.lock_exclusive();
+    m_midiDeviceManager = std::move(deviceManager);
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 _Use_decl_annotations_
@@ -126,6 +132,7 @@ CMidi2MidiSynthConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
 )
+try
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -136,9 +143,16 @@ CMidi2MidiSynthConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(configurationJsonSection, "json")
     );
 
+    // never leave the caller an uninitialized pointer, whatever happens below
+    if (response != nullptr)
+    {
+        *response = nullptr;
+    }
+
     // an empty section is normal: the synthesizer runs on its defaults until someone changes one
     if (configurationJsonSection == nullptr) return S_OK;
 
+    // Building this allocates, so it is inside the function's try as well
     auto responseObject = internal::BuildConfigurationResponseObject(false);
 
     try
@@ -192,6 +206,7 @@ CMidi2MidiSynthConfigurationManager::UpdateConfiguration(
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 _Use_decl_annotations_
@@ -462,6 +477,7 @@ CMidi2MidiSynthConfigurationManager::AddCurrentSettingsToResponse(json::JsonObje
 
 HRESULT
 CMidi2MidiSynthConfigurationManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -471,7 +487,21 @@ CMidi2MidiSynthConfigurationManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    m_midiDeviceManager.reset();
+    // TransportState::Shutdown releases the static's reference to this object
+    wil::com_ptr<CMidi2MidiSynthConfigurationManager> keepAlive{ this };
+
+    // The service never shuts down an endpoint manager whose Initialize failed, so this is the
+    // only shutdown the transport state may get. It is idempotent, so the usual case, where the
+    // endpoint manager has already called it, costs nothing.
+    LOG_IF_FAILED(TransportState::Current().Shutdown());
+
+    // Swapped out under the lock and released outside it
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    {
+        auto lock = m_serviceLock.lock_exclusive();
+        deviceManager = std::move(m_midiDeviceManager);
+    }
 
     return S_OK;
 }
+CATCH_RETURN()

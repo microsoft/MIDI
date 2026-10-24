@@ -19,46 +19,45 @@ public:
     STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
 
-    //STDMETHOD(ApplyConfiguration(
-    //    _In_ LPCWSTR configurationJson,
-    //    _Out_ LPWSTR resultJson
-    //));
-
+    // The caller has reserved the definition's association id and unique id in the endpoint table.
+    // Success hands the reservation over to the published device; failure releases it.
     HRESULT CreateEndpoint(
         _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition
     );
 
     HRESULT DeleteEndpoint(
-        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition>
+        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition
     );
 
     HRESULT UpdateEndpointMutedStateProperty(
-        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition>
+        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition
     );
 
-    bool IsInitialized() { return m_initialized; }
+    bool IsInitialized() const noexcept { return m_initialized.load(); }
 
-private:
+    // Creates the loopbacks queued before the endpoint manager was ready. Safe to call from more
+    // than one thread at once: each queued loopback is taken by exactly one caller.
     HRESULT ProcessWorkQueue();
 
-    bool m_initialized{ false };
+private:
+    HRESULT CreateParentDevice();
 
-    void CleanupDeviceDefinition(_In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition)
+    // Copied out under the lock, because the configuration manager and feedback trips call in on
+    // their own threads while Shutdown may be letting go of it.
+    wil::com_ptr_nothrow<IMidiDeviceManager> GetDeviceManager() const
     {
-        internal::InPlaceTrim(definition->EndpointUniqueIdentifier);
-        internal::InPlaceTrim(definition->InstanceIdPrefix);
-        internal::InPlaceTrim(definition->EndpointName);
-        internal::InPlaceTrim(definition->EndpointDescription);
+        auto lock = m_serviceLock.lock_shared();
+        return m_MidiDeviceManager;
     }
 
+    // Set only once Initialize has fully succeeded, and read from other threads
+    std::atomic<bool> m_initialized{ false };
 
     GUID m_TransportTransportId{};
 
     std::wstring m_parentDeviceId{};
 
-    HRESULT CreateParentDevice();
-
+    mutable wil::srwlock m_serviceLock;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_MidiProtocolManager;
-
 };

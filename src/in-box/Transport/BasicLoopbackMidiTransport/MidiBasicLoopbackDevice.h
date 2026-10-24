@@ -18,10 +18,49 @@
 class MidiBasicLoopbackDevice
 {
 public:
-    std::shared_ptr<MidiBasicLoopbackDeviceDefinition> Definition;
+    MidiBasicLoopbackDevice(
+        _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition,
+        _In_ std::shared_ptr<MidiBasicLoopbackFeedback> feedback) :
+        Feedback{ std::move(feedback) },
+        m_definition{ std::move(definition) }
+    {
+    }
+
+    MidiBasicLoopbackDevice(_In_ MidiBasicLoopbackDevice const&) = delete;
+    MidiBasicLoopbackDevice& operator=(_In_ MidiBasicLoopbackDevice const&) = delete;
 
     // Set once, before the device is published to the table, and never changed.
-    std::shared_ptr<MidiBasicLoopbackFeedback> Feedback;
+    std::shared_ptr<MidiBasicLoopbackFeedback> const Feedback;
+
+    // A definition is never changed once the device holds it. A change makes a new one and swaps
+    // it in, so a caller can read the snapshot it got here for as long as it likes. Null once the
+    // device has been shut down.
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> GetDefinition() const noexcept
+    {
+        auto lock = m_lock.lock_shared();
+        return m_definition;
+    }
+
+    // Copies the current definition, applies the change and swaps the copy in, all under the lock,
+    // so two changes can't lose one another. Returns null, and changes nothing, once the device
+    // has been shut down. Throws only when out of memory.
+    template <typename Change>
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> ChangeDefinition(_In_ Change&& change)
+    {
+        auto lock = m_lock.lock_exclusive();
+
+        if (m_definition == nullptr)
+        {
+            return nullptr;
+        }
+
+        auto changed = std::make_shared<MidiBasicLoopbackDeviceDefinition>(*m_definition);
+        change(*changed);
+
+        m_definition = changed;
+
+        return changed;
+    }
 
 
     HRESULT Initialize(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
@@ -59,11 +98,11 @@ public:
         // lock before invoking the callback to avoid holding it across a
         // potentially long, re-entrant call into client code.
         wil::com_ptr_nothrow<IMidiCallback> callback;
-        std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition;
+        std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition;
         {
             auto lock = m_lock.lock_shared();
             callback = m_callback;
-            definition = Definition;
+            definition = m_definition;
         }
 
         if (!definition || definition->IsMuted) return S_OK;
@@ -106,7 +145,7 @@ public:
         auto lock = m_lock.lock_exclusive();
 
         m_callback = nullptr;
-        Definition.reset();
+        m_definition.reset();
 
         return S_OK;
     }
@@ -145,8 +184,11 @@ private:
         return count;
     }
 
-    wil::srwlock m_lock;
+    // Guards the callback and which definition is current. Taken after the endpoint table's lock
+    // and after a feedback object's status lock, never before either.
+    mutable wil::srwlock m_lock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> m_definition{ nullptr };
 
     std::atomic<uint64_t> m_messageCount{ 0 };
 

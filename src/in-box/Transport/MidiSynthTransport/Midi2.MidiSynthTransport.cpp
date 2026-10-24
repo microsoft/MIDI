@@ -14,6 +14,7 @@ CMidi2MidiSynthTransport::Activate(
     REFIID Riid,
     void** Interface
 )
+try
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
@@ -96,3 +97,4 @@ CMidi2MidiSynthTransport::Activate(
 
     return S_OK;
 }
+CATCH_RETURN()

@@ -29,7 +29,7 @@ private:
 
     void AddCurrentSettingsToResponse(_Inout_ json::JsonObject& responseObject);
 
+    // Nothing reads this yet. It is held, and let go in Shutdown, like every other transport's.
+    wil::srwlock m_serviceLock;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
-
-    GUID m_transportId{};
 };

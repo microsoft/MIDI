@@ -173,12 +173,16 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="MidiSynthConfigTests.h" />
+    <ClInclude Include="MidiSynthShutdownTests.h" />
+    <ClInclude Include="MidiSynthAudioReopenTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TransportConfigTestHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MidiSynthConfigTests.cpp" />
+    <ClCompile Include="MidiSynthShutdownTests.cpp" />
+    <ClCompile Include="MidiSynthAudioReopenTests.cpp" />
     <ClCompile Include="TransportConfigTestHelper.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
