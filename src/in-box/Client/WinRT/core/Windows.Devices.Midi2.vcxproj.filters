@@ -39,6 +39,9 @@
     <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkRefusedRemoteClient.cpp">
+      <Filter>SDK\Transports\Network\Host</Filter>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClCompile>
@@ -101,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="MidiNetworkPendingRemoteClient.h">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRefusedRemoteClient.h">
+      <Filter>SDK\Transports\Network\Host</Filter>
     </ClInclude>
     <ClInclude Include="MidiSystemExclusiveReceivedEventArgs.h">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
@@ -559,6 +565,9 @@
     </Midl>
     <Midl Include="MidiNetworkPendingRemoteClient.idl">
       <Filter>SDK\Transports\Network\Connection Approval</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRefusedRemoteClient.idl">
+      <Filter>SDK\Transports\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlockUIHintEnum.idl">
       <Filter>SDK\Enumeration\MIDI 2 Metadata</Filter>

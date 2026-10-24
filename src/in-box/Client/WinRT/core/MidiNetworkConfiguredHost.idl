@@ -10,7 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiNetworkHostConnection.idl";
-import "MidiNetworkPendingRemoteClient.idl";
+import "MidiNetworkRefusedRemoteClient.idl";
 import "MidiNetworkRemoteClientPolicyEnum.idl";
 import "MidiNetworkRemoteClientSettings.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
@@ -96,15 +96,13 @@ namespace Windows.Devices.Midi2.Transports.Network
             // A device has one session with this PC at a time, so the host turns away a second
             // one. These are the remote clients it turned away recently, newest first, so an app
             // can say why a device didn't connect. Each list is short, a device which tries again
-            // stays one entry, and entries are dropped after a few minutes. RequestTime is when
-            // the host turned it away. Only UmpEndpointName, ProductInstanceId, RemoteAddress,
-            // RequestTime and the host's own values are set.
+            // stays one entry, and entries are dropped after a few minutes.
 
             // remote clients which were already connected to this host
-            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> RecentlyRefusedSecondConnections{ get; };
+            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRefusedRemoteClient> RecentlyRefusedSecondConnections{ get; };
 
             // devices this PC was already connected to as a client, through a client entry
-            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> RecentlyRefusedRemoteHosts{ get; };
+            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRefusedRemoteClient> RecentlyRefusedRemoteHosts{ get; };
         }
     };
 }

@@ -90,7 +90,7 @@ namespace winrt::midinetworksetup::implementation
 
         void AppendRefusals(
             _Inout_ std::vector<std::pair<int64_t, winrt::hstring>>& lines,
-            _In_ collections::IVectorView<midi2net::MidiNetworkPendingRemoteClient> const& refusals,
+            _In_ collections::IVectorView<midi2net::MidiNetworkRefusedRemoteClient> const& refusals,
             _In_ std::wstring_view formatKey) noexcept
         {
             try
@@ -112,8 +112,8 @@ namespace winrt::midinetworksetup::implementation
                         refusal.UmpEndpointName();
 
                     lines.emplace_back(
-                        refusal.RequestTime().time_since_epoch().count(),
-                        res::FormatString(formatKey, name, RefusalTimeText(refusal.RequestTime())));
+                        refusal.RefusedTime().time_since_epoch().count(),
+                        res::FormatString(formatKey, name, RefusalTimeText(refusal.RefusedTime())));
                 }
             }
             catch (...)

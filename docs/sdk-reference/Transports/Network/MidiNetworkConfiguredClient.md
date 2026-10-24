@@ -34,13 +34,15 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 | `ReduceSendSpeedAutomatically` | True when the connection sends more slowly while the remote host keeps asking for data again |
 | `SkipInBetweenValuesToCatchUp` | True when the connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 | `CurrentSendSpeedLimit` | How fast the connection is sending right now. It's lower than `SendSpeedLimit` while the connection has slowed down by itself, which is worth showing people |
-| `WaitingForHostId` | A device has one session with this PC at a time. When the remote host is already connected to one of this PC's hosts as a client, this is that host's `HostId`, and the entry waits: it stops trying, and connects once that session ends. An empty guid otherwise. Added in version 2 of `MidiTransportsNetworkApiContract` |
-| `WaitingForClientId` | When this PC is already connected to the remote host through another client entry, this is that entry's `ClientId`, and this entry waits for that session to end the same way. An empty guid otherwise. Added in version 2 of `MidiTransportsNetworkApiContract` |
+| `WaitingForHostId` | A device has one session with this PC at a time. When the remote host is already connected to one of this PC's hosts as a client, this is that host's `HostId`, and the entry waits: it stops trying, and connects once that session ends. Equals `GuidHelper.Empty()` when not set. At most one of `WaitingForHostId` and `WaitingForClientId` is set at a time. Added in version 2 of `MidiTransportsNetworkApiContract` |
+| `WaitingForClientId` | When this PC is already connected to the remote host through another client entry, this is that entry's `ClientId`, and this entry waits for that session to end the same way. Equals `GuidHelper.Empty()` when not set. At most one of `WaitingForHostId` and `WaitingForClientId` is set at a time. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 
 Every client that's set up is reported, whether or not it's connected, so an entry that has never reached its remote host still shows up. Use `EntryState` to tell the cases apart, and `LastErrorCode` to tell the person why. When there's no session running, use the `Configured*` properties, not the `Connected*` ones.
 
 `LastErrorCode` stays set while the service keeps trying. A `Pending` entry with `NoReplyToInvitation` is a host that isn't answering and is being tried again. A `Failed` entry with `AuthenticationRequired` is a host that wants a password, which Windows doesn't support yet. Connecting the entry again clears it.
+
+To tell whether an entry is waiting for another session with the same device, check whether either `WaitingForHostId` or `WaitingForClientId` isn't `GuidHelper.Empty()`. A waiting entry is `Pending`, its `LastErrorCode` is `NoErrorInformationAvailable`, and it isn't trying to connect.
 
 `CurrentLatencyTicks` is an average that resets each time it's read. If you're graphing it, read it at a steady interval.

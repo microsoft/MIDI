@@ -42,6 +42,7 @@
 #include "MidiNetworkMidi1PortGroup.h"
 #include "MidiNetworkConfiguredClient.h"
 #include "MidiNetworkPendingRemoteClient.h"
+#include "MidiNetworkRefusedRemoteClient.h"
 
 #include "MidiNetworkRemoteClientApprovalConfig.h"
 #include "MidiNetworkRemoteClientApprovalResponse.h"
@@ -715,12 +716,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                         continue;
                                     }
 
-                                    auto refusal = winrt::make_self<MidiNetworkPendingRemoteClient>();
+                                    auto refusal = winrt::make_self<MidiNetworkRefusedRemoteClient>();
 
                                     refusal->InternalInitialize(
                                         hostId,
-                                        host->ServiceInstanceName(),
-                                        host->UmpEndpointName(),
                                         refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L""),
                                         refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L""),
                                         refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY, L""),
