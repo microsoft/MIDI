@@ -771,7 +771,7 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 | `rightSteps` | 1 to 24 | 1 | With `notes` set to `inKey`, notes of the scale from one pad to the next on its right. |
 | `rowSteps` | 0 to 24 | 3 | With `notes` set to `inKey`, notes of the scale from one pad to the one above it. 3 is a fourth in a seven-note scale. Windows MIDI Glass starts hex pads at 4, which puts the octave two rows straight up. On square pads, 0 carries each row on from the end of the row below. |
 | `noteNames` | `hidden`, `center`, `top`, `bottom`, `topLeft`, `topRight`, `bottomLeft`, `bottomRight` | `center` | Where each pad prints its note. |
-| `noteNameSize` | 0 to 64 | 0 | 0 sizes the name to the pad. |
+| `noteNameSize` | 0 to 64 | 0 | 0 sizes the name to the pad, and leaves names off pads too small to hold one. |
 | `rootColor`, `inKeyColor`, `outOfKeyColor`, `pressedColor` | `#RRGGBB` | the theme's | Leave them out to follow the theme. |
 | `glide` | `off`, `portamento`, `perNoteBend` | `off` | What a finger sliding onto the next pad does. `perNoteBend` bends the note with MIDI 2.0 per-note pitch bend. |
 | `bendRange` | 1 to 96 | 48 | Semitones either way, for `perNoteBend`. |

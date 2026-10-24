@@ -715,6 +715,29 @@ namespace glass
                 std::numeric_limits<float>::infinity(),
                 std::numeric_limits<float>::infinity() };
 
+            // Pads too small to hold a name at the automatic size get none. Names spilling onto
+            // the pads beside them are clutter nobody can read, and a big grid would pay for a
+            // thousand of them. A size the customer chose is theirs to keep.
+            if (spec.NoteNameSize <= 0.0)
+            {
+                controls::TextBlock sample{};
+
+                sample.Text(L"G\u266F-1");
+                sample.FontSize(size);
+                sample.FontFamily(media::FontFamily{ L"Segoe UI Variable Text" });
+                sample.FontWeight(winrt::Windows::UI::Text::FontWeight{ 600 });
+                sample.Measure(unbounded);
+
+                auto const room = layout.Hex ? HexNameBoxWidth : 1.0 - NoteNameInset * 2.0;
+                auto const tall = layout.Hex ? HexNameBoxHeight : 1.0 - NoteNameInset * 2.0;
+
+                if (sample.DesiredSize().Width > layout.PadWidth * room ||
+                    sample.DesiredSize().Height > layout.PadHeight * tall)
+                {
+                    return;
+                }
+            }
+
             names.Texts.assign(layout.Cells.size(), nullptr);
             names.RestInks.assign(layout.Cells.size(), nullptr);
             names.LitInks.assign(layout.Cells.size(), nullptr);

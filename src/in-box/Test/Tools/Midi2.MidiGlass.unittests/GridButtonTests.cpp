@@ -805,6 +805,53 @@ void GridButtonTests::AddingGridButtonsPutsWiredControlsUnderTheGrid()
     VERIFY_IS_TRUE(controller.AddGridButtons(grid, only, labels).empty());
 }
 
+void GridButtonTests::GridButtonsGoBelowWhatIsAlreadyThere()
+{
+    auto grid = Grid(L"grid", 0);
+    grid.X = 600;
+    grid.Y = 60;
+    grid.Width = 300;
+    grid.Height = 300;
+
+    // A switch where the row would go, sticking out under the left of the grid.
+    auto blocker = Picker(L"blocker", glass::SwitchPicks::InKeyOnly, {});
+    blocker.X = 460;
+    blocker.Y = 400;
+    blocker.Width = 176;
+
+    glass::EditorController controller{};
+    controller.Load(DocumentWith({ grid, blocker }));
+
+    glass::EditorController::GridButtonLabels labels{};
+    auto const added = controller.AddGridButtons(L"grid", {}, labels);
+
+    VERIFY_ARE_EQUAL(size_t{ 7 }, added.size());
+
+    auto const& page = controller.Document().Pages[0];
+
+    for (auto const& id : added)
+    {
+        auto const* const control = controller.Document().FindControl(id);
+
+        // On the page, a gap in from its edge, and on top of nothing else.
+        VERIFY_IS_TRUE(control->X >= 0 && control->X + control->Width <= 1280 - 12);
+        VERIFY_IS_TRUE(control->Y + control->Height <= 800);
+
+        for (auto const& other : page.Controls)
+        {
+            if (other.Id == id)
+            {
+                continue;
+            }
+
+            auto const overlaps = control->X < other.X + other.Width && other.X < control->X + control->Width &&
+                control->Y < other.Y + other.Height && other.Y < control->Y + control->Height;
+
+            VERIFY_IS_FALSE(overlaps, String().Format(L"%s overlaps %s", id.c_str(), other.Id.c_str()));
+        }
+    }
+}
+
 void GridButtonTests::PickersAddedForASecondGridTargetOnlyThatGrid()
 {
     glass::EditorController controller{};

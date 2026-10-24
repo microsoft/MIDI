@@ -50,6 +50,7 @@ public:
     // ---- the editor ----
 
     TEST_METHOD(AddingGridButtonsPutsWiredControlsUnderTheGrid);
+    TEST_METHOD(GridButtonsGoBelowWhatIsAlreadyThere);
     TEST_METHOD(PickersAddedForASecondGridTargetOnlyThatGrid);
     TEST_METHOD(TheEditorKeepsRowsWithinTheCap);
 };

@@ -3228,6 +3228,10 @@
   <data name="ReadoutNoGrids" xml:space="preserve">
     <value>(No grids)</value>
   </data>
+  <data name="ReadoutPadAccessibleFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>What a screen reader says for a readout that shows a pad grid. {0} is the readout's label, {1} what it shows, such as "D Dorian".</comment>
+  </data>
   <data name="PadAddGridButtonsButton.Content" xml:space="preserve">
     <value>Add grid buttons</value>
   </data>

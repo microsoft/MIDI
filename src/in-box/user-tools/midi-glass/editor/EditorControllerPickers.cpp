@@ -48,6 +48,9 @@ namespace glass
         constexpr double GridButtonHeight = 44.0;
         constexpr double GridWideWidth = 176.0;
 
+        // Wide enough for a key, an octave and a row offset at a size that can be read.
+        constexpr double GridReadoutWidth = 260.0;
+
         ControlMessage PadGridRow(_In_ PadGridFunction function, _In_ PadGridTargets const& targets)
         {
             ControlMessage row{};
@@ -370,7 +373,7 @@ namespace glass
 
         if (choices.Readout)
         {
-            planned.push_back({ ControlKind::Readout, GridWideWidth, PadGridFunction::OctaveUp, &labels.Readout });
+            planned.push_back({ ControlKind::Readout, GridReadoutWidth, PadGridFunction::OctaveUp, &labels.Readout });
         }
 
         if (choices.Reset)
@@ -395,9 +398,41 @@ namespace glass
 
         // Under the grid, with room above each for its label, or over it when the page ends.
         auto const below = gridY + gridHeight + PickerGap + LabelRoom;
-        auto const y = below + GridButtonHeight <= pageHeight ? below : gridY - PickerGap - GridButtonHeight;
+        auto y = below + GridButtonHeight <= pageHeight ? below : gridY - PickerGap - GridButtonHeight;
 
-        auto x = gridX;
+        // The whole row starts far enough left to stay on the page, a gap in from its edge.
+        auto rowWidth = -PickerGap;
+
+        for (auto const& plan : planned)
+        {
+            rowWidth += std::min(plan.Width, pageWidth) + PickerGap;
+        }
+
+        auto const left = std::clamp(gridX, 0.0, std::max(pageWidth - PickerGap - rowWidth, 0.0));
+
+        // Lower still while the row would land on something already on the page.
+        {
+            auto const blocked = [&](double top)
+                {
+                    return std::any_of(page->Controls.begin(), page->Controls.end(), [&](Control const& other)
+                        {
+                            return other.Kind != ControlKind::Panel &&
+                                other.X < left + rowWidth && other.X + other.Width > left &&
+                                other.Y < top + GridButtonHeight && other.Y + other.Height > top - LabelRoom;
+                        });
+                };
+
+            for (auto top = y; top + GridButtonHeight + PickerGap <= pageHeight; top += GridButtonHeight + LabelRoom + PickerGap)
+            {
+                if (!blocked(top))
+                {
+                    y = top;
+                    break;
+                }
+            }
+        }
+
+        auto x = left;
 
         for (auto const& plan : planned)
         {

@@ -155,6 +155,16 @@ namespace glass
 
                 m_readoutTexts[item] = std::move(text);
                 RefreshValueText(item);
+
+                // The text drawn is hidden from a screen reader, so the readout's name carries it.
+                if (control != nullptr && item < m_elements.size() && m_elements[item] != nullptr)
+                {
+                    auto const& name = control->Label.empty() ? control->Id : control->Label;
+
+                    m_elements[item].SurfaceName(m_readoutTexts[item].empty()
+                        ? winrt::hstring{ name }
+                        : ::midiglass::resources::FormatString(L"ReadoutPadAccessibleFormat", name, m_readoutTexts[item]));
+                }
             }
         }
         catch (...)
