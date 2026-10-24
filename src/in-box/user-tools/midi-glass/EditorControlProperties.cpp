@@ -862,6 +862,7 @@ namespace winrt::midiglass::implementation
 
         auto lowest = 128;
         auto highest = -1;
+        auto silent = 0;
 
         for (auto const& cell : layout.Cells)
         {
@@ -870,6 +871,20 @@ namespace winrt::midiglass::implementation
                 lowest = std::min(lowest, cell.Note);
                 highest = std::max(highest, cell.Note);
             }
+            else
+            {
+                ++silent;
+            }
+        }
+
+        // Those pads are drawn blank and play nothing, which looks like a fault unless it's said.
+        show(PadSilentCaption(), silent > 0);
+
+        if (silent > 0)
+        {
+            PadSilentCaption().Text(silent == 1
+                ? resources::GetString(L"PadSilentOne")
+                : resources::FormatString(L"PadSilentFormat", std::to_wstring(silent)));
         }
 
         auto const flats = keyed && glass::KeyUsesFlats(spec.KeyRoot, spec.Scale);

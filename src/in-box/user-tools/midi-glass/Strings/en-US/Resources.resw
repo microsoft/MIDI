@@ -1974,6 +1974,12 @@
   <data name="PadHighlightHeldCheck.Content" xml:space="preserve">
     <value>Highlight held notes</value>
   </data>
+  <data name="PadSilentOne" xml:space="preserve">
+    <value>1 pad is past note 127 or below 0, so it's blank and plays nothing.</value>
+  </data>
+  <data name="PadSilentFormat" xml:space="preserve">
+    <value>{0} pads are past note 127 or below 0, so they're blank and play nothing.</value>
+  </data>
   <data name="PadRowSemitonesFormat" xml:space="preserve">
     <value>{0} semitones</value>
   </data>

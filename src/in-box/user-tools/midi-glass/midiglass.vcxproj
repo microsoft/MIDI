@@ -188,6 +188,8 @@
     <ClInclude Include="document\PadGrid.h" />
     <ClInclude Include="document\PadGridChanges.h" />
     <ClInclude Include="EditorPadGridKeys.h" />
+    <ClInclude Include="EditorNoteBoxes.h" />
+    <ClInclude Include="..\midi-app-shared\NoteNames.h" />
     <ClInclude Include="document\LayoutTemplates.h" />
     <ClInclude Include="document\MackieControl.h" />
     <ClInclude Include="document\ThemeModel.h" />

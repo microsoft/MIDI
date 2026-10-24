@@ -19,6 +19,7 @@
 #include "EditorController.h"
 #include "LayoutModel.h"
 #include "LayoutSerializer.h"
+#include "NoteNames.h"
 
 #include <algorithm>
 #include <array>
@@ -927,4 +928,45 @@ void GridButtonTests::TheEditorKeepsRowsWithinTheCap()
     VERIFY_IS_TRUE(controller.SetReadout(readout, wanted));
     VERIFY_IS_FALSE(controller.SetReadout(readout, wanted));
     VERIFY_IS_FALSE(controller.SetReadout(grid, wanted));
+}
+
+// ------------------------------------------------------------------ note names
+
+void GridButtonTests::ANoteNameReadsAsItsNumber()
+{
+    auto const read = [](std::wstring_view text) { return midiapp::ParseNoteNumber(text).value_or(-99); };
+
+    // Middle C is C3, so F sharp 0 is 30.
+    VERIFY_ARE_EQUAL(60, read(L"C3"));
+    VERIFY_ARE_EQUAL(30, read(L"F#0"));
+    VERIFY_ARE_EQUAL(30, read(L"f#0"));
+    VERIFY_ARE_EQUAL(30, read(L"Gb0"));
+    VERIFY_ARE_EQUAL(30, read(L"F\u266F0"));
+    VERIFY_ARE_EQUAL(30, read(L"G\u266D0"));
+    VERIFY_ARE_EQUAL(46, read(L"Bb1"));
+    VERIFY_ARE_EQUAL(46, read(L"bb1"));
+    VERIFY_ARE_EQUAL(0, read(L"C-2"));
+    VERIFY_ARE_EQUAL(0, read(L"C\u22122"));
+    VERIFY_ARE_EQUAL(127, read(L"G8"));
+    VERIFY_ARE_EQUAL(62, read(L"C##3"));
+    VERIFY_ARE_EQUAL(48, read(L"  48 "));
+
+    // What a box shows when it's left alone reads back as the number it shows.
+    VERIFY_ARE_EQUAL(30, read(L"F\u266F0 (30)"));
+    VERIFY_ARE_EQUAL(52, read(L"E2 (52)"));
+
+    // Every note the pads name reads back as itself.
+    for (int32_t note = 0; note <= 127; ++note)
+    {
+        VERIFY_ARE_EQUAL(note, read(glass::PadNoteName(note, false)));
+        VERIFY_ARE_EQUAL(note, read(glass::PadNoteName(note, true)));
+    }
+}
+
+void GridButtonTests::ANoteThatIsNotOneReadsAsNothing()
+{
+    for (auto const text : { L"", L"   ", L"H3", L"C", L"C#", L"128", L"-1", L"G#8", L"Cb-2", L"C3x", L"3C", L"12345", L"C###3" })
+    {
+        VERIFY_IS_FALSE(midiapp::ParseNoteNumber(text).has_value(), text);
+    }
 }

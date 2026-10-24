@@ -19,6 +19,7 @@
 #include "GeneratorView.h"
 #include "SequenceGenerator.h"
 #include "StringResources.h"
+#include "NoteNames.h"
 
 #include <cwctype>
 
@@ -218,58 +219,9 @@ namespace winrt::midisequencer::implementation
                         return used > 0 && std::isfinite(number) ? std::optional<double>{ number } : std::nullopt;
                     }
 
-                    // "E2 (52)" gives its number in brackets.
-                    if (auto const open = value.find(L'('); open != std::wstring::npos)
-                    {
-                        auto const close = value.find(L')', open);
-                        value = value.substr(open + 1, close == std::wstring::npos ? std::wstring::npos : close - open - 1);
-                    }
-
-                    if (value.empty())
-                    {
-                        return std::nullopt;
-                    }
-
-                    if (std::iswdigit(value.front()))
-                    {
-                        size_t used{ 0 };
-                        auto const number = std::stoi(value, &used);
-                        return used == value.size() && number >= 0 && number <= 127 ? std::optional<double>{ number } : std::nullopt;
-                    }
-
-                    // A letter, then # or b, then the octave, which can be below zero.
-                    static constexpr std::array<int32_t, 7> Pitches{ 9, 11, 0, 2, 4, 5, 7 };
-                    auto const letter = static_cast<wchar_t>(std::towupper(value.front()));
-
-                    if (letter < L'A' || letter > L'G')
-                    {
-                        return std::nullopt;
-                    }
-
-                    auto pitch = Pitches[static_cast<size_t>(letter - L'A')];
-                    size_t at{ 1 };
-
-                    if (at < value.size() && value[at] == L'#')
-                    {
-                        ++pitch;
-                        ++at;
-                    }
-                    else if (at < value.size() && value[at] == L'b')
-                    {
-                        --pitch;
-                        ++at;
-                    }
-
-                    size_t used{ 0 };
-                    auto const octave = std::stoi(value.substr(at), &used);
-
-                    if (used != value.size() - at)
-                    {
-                        return std::nullopt;
-                    }
-
-                    auto const number = (octave + 2) * 12 + pitch;
-                    return number >= 0 && number <= 127 ? std::optional<double>{ number } : std::nullopt;
+                    // "E2 (52)", "E2", "C#3", "Bb1" or "52", read the way every tool reads a note.
+                    auto const number = midiapp::ParseNoteNumber(value);
+                    return number.has_value() ? std::optional<double>{ static_cast<double>(*number) } : std::nullopt;
                 }
                 catch (...)
                 {

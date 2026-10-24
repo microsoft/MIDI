@@ -2110,6 +2110,14 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
+                                        <!-- Shown only when some pads land past note 127 or below 0. -->
+                                        <TextBlock x:Name="PadSilentCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="Collapsed"
+                                                   Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+
                                         <!-- Square pads: where each row starts. -->
                                         <ComboBox x:Name="PadRowCombo"
                                                   x:Uid="PadRowCombo"

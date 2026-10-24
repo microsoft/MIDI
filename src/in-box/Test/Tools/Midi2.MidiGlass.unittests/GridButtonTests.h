@@ -53,4 +53,9 @@ public:
     TEST_METHOD(GridButtonsGoBelowWhatIsAlreadyThere);
     TEST_METHOD(PickersAddedForASecondGridTargetOnlyThatGrid);
     TEST_METHOD(TheEditorKeepsRowsWithinTheCap);
+
+    // ---- note names typed into a note box ----
+
+    TEST_METHOD(ANoteNameReadsAsItsNumber);
+    TEST_METHOD(ANoteThatIsNotOneReadsAsNothing);
 };
