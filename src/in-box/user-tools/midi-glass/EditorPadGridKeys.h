@@ -32,6 +32,11 @@ namespace winrt::midiglass::implementation
         L"PadFunctionPreviousScale",
         L"PadFunctionNextRowOffset",
         L"PadFunctionReset",
+        L"PadFunctionCapoUp",
+        L"PadFunctionCapoDown",
+        L"PadFunctionUpTheNeck",
+        L"PadFunctionDownTheNeck",
+        L"PadFunctionMuteStrings",
     };
 
     static_assert(std::size(PadGridFunctionKeys) == static_cast<size_t>(::glass::PadGridFunctionCount));

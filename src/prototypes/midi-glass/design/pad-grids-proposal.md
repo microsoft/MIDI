@@ -125,9 +125,32 @@ Matches existing pad labels: "Row offset", "In key only", "Root note", "Scale", 
 | Fretboard | Hammer-ons | check box |
 | Fretboard | Output | Per-note bend, Channel per string, MPE |
 | Fretboard runtime | Mute (command) | |
+| Fretboard | Visible frets | From, To (0 and 1 both start at the nut) |
+| Fretboard | Scale dots | Root note ((None) + C to B), Scale |
+| Fretboard | Expression (heading) | Bend range (semitones), Slide, Hammer-ons, Output |
+| Fretboard | Add fretboard buttons (command) | adds a Tuning picker and Capo down, Capo readout, Capo up, Down the neck, Up the neck, Mute |
+| Pad grid row | Function | adds Capo up, Capo down, Up the neck, Down the neck, Mute |
+| Switch Function (existing combo) | adds | Tuning |
+| Readout | Source | adds Capo, Tuning |
 
 ## Rounds
 
 Round 1 (now): Arrangement Rows/Columns + 1,024 cap + Highlight held notes; Pad grid message kind with Targets; Switch Function additions; Readout sources; Add grid buttons; per-grid key/scale state at run time.
 
 Round 2 (later): Fretboard control, all of section 3, strum side left or right, reorderable string list.
+
+## Round 2 as built (Oct 24 2026)
+
+Where the build differs from section 3, or where section 3 left a choice open:
+
+- Strings are listed top to bottom as drawn, so standard tuning lists the high E first and the low E sits at the bottom (Pete's decision 4). Each string has a note, and a banjo's fifth string also has the fret it starts at; there's no box for that one, only the Banjo tuning sets it.
+- Strum side Left turns the neck round, nut on the right, so the strum area is always on the body side. (None) has no strum area; Strum play mode then plays like Tap.
+- The highest fret held on a string sounds. A lower fret pressed behind it plays nothing, the way a real string works.
+- Sustain While held ends a fretted string when its finger lifts. A string strummed open has no finger, so it rings until it's played again or muted.
+- Out-of-key Mute damps the string: tapping a muted fret on a ringing string stops it.
+- A slide or a push across a string bends; the bend goes out against a fixed sensitivity rather than the bend range: 24 semitones on each string's channel (Channel per string), 48 on the manager channel (MPE, the profile's default), 48 for per-note bend. It's sent once per channel per run, before that channel's first note.
+- MPE uses the note row's channel as the manager and the channels above it as members. Windows MIDI Glass doesn't turn the profile on with MIDI-CI, so the instrument has to be set up for MPE.
+- Per-note bend output shares one channel, so two strings on the same note are one note (it starts with the first and ends with the last). Channel per string and MPE keep them apart.
+- Runtime changes (capo, frets showing, tuning, the dots' root and scale) reuse the pad grid targets, functions, pickers and readouts, and like them are never saved. Root and scale functions and pickers move a fretboard's dots when it shows a key; octave, row and in-key functions leave fretboards alone.
+- Add fretboard buttons adds all seven controls with no checklist: the tuning picker standing beside the fretboard, and the row under it.
+- Not built: chord strips, strum patterns, 12-string pairs, articulations.

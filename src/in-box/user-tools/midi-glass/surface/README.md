@@ -8,8 +8,9 @@ Painting a page, and turning a finger on it into a value.
 | `SurfaceAutomationPeer.*` | What that element owes a screen reader. |
 | `SurfaceRenderer.*` | The composition visuals drawn inside each element. |
 | `SurfacePads.cpp` | The rest of `SurfaceRenderer` for note pads and hex pads: one shape per pad, its color, its note name, and which pads are held. |
+| `SurfaceFretboard.cpp` | The same for a fretboard: the neck, frets, strings, scale dots, capo, strum area, neck strip, a dot under each finger, and which strings are sounding. |
 | `SurfaceKeyPickers.cpp` | A grid button's or a picker's change, redrawn: each pad grid it changed, every picker showing the grid it targets, and every readout showing a pad grid. |
-| `InputRouter.*` | Pointer, pen and touch to a control to a value. |
+| `InputRouter.*` | Pointer, pen and touch to a control to a value. `InputRouterStrings.cpp` is a fretboard's fingers: fretting, strumming and dragging the neck strip. |
 | `InputRules.*` | Which way a finger moves a control. Pure, and tested. |
 | `SurfaceColors.*` | What color a control ends up, given a theme. Pure, and tested. |
 

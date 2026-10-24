@@ -1,125 +1,148 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="pad-grids-common.css"><script src="pad-grids-notes.js"></script>
 <style>
 body { width: 1900px; }
-.stage { display: grid; grid-template-columns: 1440px 380px; gap: 24px; padding: 6px 28px 28px; }
-.bar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-.bar .seg > div { padding: 8px 12px; }
+.stage { display: grid; grid-template-columns: 1270px 160px 380px; gap: 16px; padding: 6px 28px 28px; align-items: start; }
 .lab { font-size: 13px; color: var(--dim); }
-#neck { position: relative; height: 560px; width: 1440px; }
-.wood { position: absolute; left: 70px; top: 0; width: 1110px; height: 440px; border-radius: 4px;
+#neck { position: relative; height: 480px; width: 1270px; }
+.wood { position: absolute; top: 0; height: 440px; border-radius: 4px;
   background: linear-gradient(180deg, #3b2618, #4a2f1d 20%, #3e2819 50%, #4b301e 80%, #36231a); box-shadow: inset 0 0 30px #0009; }
-.nut { position: absolute; top: 0; height: 440px; width: 12px; background: linear-gradient(90deg,#e9e3d2,#bfb7a2); border-radius: 2px; }
-.fret { position: absolute; top: 0; height: 440px; width: 5px; background: linear-gradient(90deg,#8d9196,#e2e6ea,#8d9196); }
-.inlay { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #d8cfbf; opacity: .55; }
-.str { position: absolute; left: 70px; width: 1370px; background: linear-gradient(180deg,#f3f3f3,#8f8f8f); box-shadow: 0 2px 2px #0007; }
-.strum { position: absolute; left: 1196px; top: 0; width: 244px; height: 440px; border-radius: 8px; background: repeating-linear-gradient(90deg,#1c1e21 0 6px,#202326 6px 12px); border: 1px solid #34383d; }
+.head { position: absolute; left: 0; top: 0; width: 60px; height: 440px; border-radius: 4px 0 0 4px; background: #24170f; }
+.nut { position: absolute; top: 0; height: 440px; width: 6px; background: linear-gradient(90deg,#e9e3d2,#bfb7a2); border-radius: 2px; }
+.fret { position: absolute; top: 0; height: 440px; width: 3px; background: linear-gradient(90deg,#8d9196,#e2e6ea,#8d9196); }
+.inlay { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #d8cfbf; opacity: .35; transform: translate(-50%,-50%); }
+.str { position: absolute; left: 0; width: 1270px; background: linear-gradient(180deg,#f3f3f3,#8f8f8f); box-shadow: 0 2px 2px #0007; }
+.str.lit { background: linear-gradient(180deg,#ffe7a3,#f2c14e); box-shadow: 0 0 8px #f2c14e88; }
+.strum { position: absolute; top: 0; height: 440px; border-radius: 8px; background: repeating-linear-gradient(90deg,#1c1e21 0 6px,#202326 6px 12px); border: 1px solid #34383d; }
 .strum .t { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 13px; color: var(--dim); }
-.tune { position: absolute; left: 0; width: 60px; height: 34px; border-radius: 6px; background: var(--btn); font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-.dot { position: absolute; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transform: translate(-50%,-50%); }
+.open { position: absolute; left: 0; width: 60px; text-align: center; font-weight: 600; font-size: 13px; color: #d9d2c6; }
+.open.lit { color: var(--held); }
+.dot { position: absolute; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transform: translate(-50%,-50%); }
 .dot.sc { background: #2b5668cc; border: 1px solid #3f7f96; color: #d7eef5; }
 .dot.rt { background: #c2583add; border: 1px solid #e07a55; color: #fff; }
-.dot.held { background: var(--held); color: #222; width: 44px; height: 44px; font-size: 13px; box-shadow: 0 0 14px #f2c14e88; }
-.fn { position: absolute; top: 446px; font-size: 12px; color: var(--dim); transform: translateX(-50%); }
-.mini { position: relative; height: 34px; width: 520px; background: #1a1c1f; border: 1px solid #34383d; border-radius: 6px; }
-.mini .win { position: absolute; top: 2px; bottom: 2px; background: #2b5668; border: 1px solid #6fb7ff; border-radius: 4px; }
-.mini i { position: absolute; top: 12px; width: 6px; height: 6px; border-radius: 50%; background: #777; }
-.callout { position: absolute; }
-.fadeL { position:absolute; left:70px; top:0; width: 0; }
+.dot.held { background: var(--held); color: #222; width: 40px; height: 40px; font-size: 12px; box-shadow: 0 0 14px #f2c14e88; }
+.strip { position: absolute; left: 0; top: 452px; height: 26px; border-radius: 7px; background: #15171a; border: 1px solid #2c3036; }
+.strip i { position: absolute; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: #777; }
+.strip .win { position: absolute; top: 2px; bottom: 2px; background: #2b566888; border: 1px solid #6fb7ff; border-radius: 5px; }
+.row { display: flex; gap: 12px; align-items: center; margin-top: 30px; }
+.row .lbl { position: absolute; top: -20px; font-size: 12px; color: var(--dim); }
+.ctl { position: relative; }
+.picker { display: flex; flex-direction: column; gap: 3px; outline: 2px dashed #6fb7ff; outline-offset: 3px; border-radius: 6px; }
+.picker > div { background: var(--btn); border-radius: 4px; padding: 5px 8px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.picker > div.on { background: var(--pick); color: #1a0f1e; }
+.notes { display: flex; gap: 14px; margin-top: 22px; }
+.notes .callout { position: static; max-width: none; flex: 1; }
+.srow { display: grid; grid-template-columns: 62px 1fr auto auto auto; gap: 4px; align-items: center; margin: 4px 0; font-size: 13px; }
+.srow .val { min-width: 0; }
+.ib { background: #2d3034; border: 1px solid #3a3e44; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+.ib.off { opacity: .35; }
 </style></head><body>
 <div class="title">35 &middot; Fretboard: a window onto a guitar neck, played with strings instead of pads</div>
-<div class="sub">Standard tuning, Visible frets 0&ndash;12 of 22. Scale dots show E minor pentatonic, and every fret plays. Fretting G on the B string and bending it up a whole step; an E minor shape held on the lower strings. The low string is at the bottom by default.</div>
+<div class="sub">Standard tuning, frets 0&ndash;12 of 22 showing, strum side Right. The low string is at the bottom. Scale dots show E minor pentatonic, and every fret plays. An E minor shape is held on the low strings, and G on the B string is being bent up a whole step. Dashed outlines are what <b>Add fretboard buttons</b> adds.</div>
 <div class="stage">
   <div>
-    <div class="bar">
-      <span class="lab">Tuning</span><div class="btn act">Standard &middot; E A D G B E &#9662;</div>
-      <span class="lab">Capo</span><div class="btn act">&minus;</div><div class="readout">0</div><div class="btn act">+</div>
-      <span class="lab">Visible frets</span><div class="mini act" id="mini" style="outline:2px dashed #6fb7ff; outline-offset:2px"></div>
-    </div>
-    <div class="bar">
-      <span class="lab">Play mode</span><div class="seg" style="width:200px; outline:2px dashed #6fb7ff; outline-offset:2px"><div class="on">Tap</div><div>Strum</div></div>
-      <span class="lab">Sustain</span><div class="seg" style="width:280px"><div>While held</div><div class="on">Until replayed</div></div>
-      <div class="btn act">Mute</div>
-    </div>
     <div id="neck"></div>
+    <div class="row" id="buttons"></div>
+    <div class="notes">
+      <div class="callout"><b>Bend:</b> push a finger across its string, up or down, and the note bends up, as far as <b>Bend range</b> (2 semitones here, so G3 reaches A3). The finger carries the string; it never jumps to the next one.</div>
+      <div class="callout"><b>Hammer-ons:</b> a higher fret on a sounding string changes the note without a new attack; lifting goes back to the fret still held. The highest fret held on a string is the one that sounds.</div>
+      <div class="callout"><b>Strum:</b> sweep across the strum area and each string plays at the fret held on it, or open, in the order the finger crosses them. Faster is louder. Strum side Left puts it on the left and turns the neck round, nut on the right.</div>
+      <div class="callout"><b>Neck strip:</b> the whole neck in miniature, under the strings. The box is the frets showing; drag it to move along the neck. <b>Up the neck</b> and <b>Down the neck</b> move it a fret.</div>
+    </div>
+  </div>
+  <div>
+    <div class="lab" style="margin-bottom:8px">Tuning</div>
+    <div class="picker" id="tunings"></div>
   </div>
   <div class="insp" style="width:380px">
     <h3>Fretboard</h3>
-    <div class="row"><span class="lbl">Tuning</span><span class="val">Standard &#9662;</span></div>
-    <div class="note">Tuning list: Standard, Drop D, Half step down, Whole step down, DADGAD, Open G, Open D, Open E, 7-string, Bass, 5-string bass, Ukulele, Baritone ukulele, Mandolin, Banjo, Custom.</div>
-    <div class="row"><span class="lbl">Strings</span><span class="tag">NEW</span></div>
-    <div id="tunelist"></div>
-    <div class="btn" style="text-align:left; margin-top:6px">&#xFF0B; Add string</div>
-    <div class="note" style="margin-top:6px">The list runs top to bottom the way the strings are drawn, so the low string is last. Each string has a Note box and Move up, Move down and Remove buttons. Changing a note makes the tuning Custom.</div>
+    <div class="row" style="margin:8px 0; display:flex; justify-content:space-between"><span class="lbl" style="position:static">Tuning</span><span class="val">Standard &#9662;</span></div>
+    <div class="row" style="margin:12px 0 4px"><span class="lbl" style="position:static; font-weight:600; color:#e8eaed">Strings</span></div>
+    <div id="stringrows"></div>
+    <div class="btn" style="text-align:left; margin-top:6px; font-size:12px; font-weight:500; display:inline-block">Add string</div>
+    <div class="note" style="margin-top:6px">The list runs top to bottom the way the strings are drawn. Changing a note makes the tuning Custom.</div>
     <div class="hr"></div>
-    <div class="row"><span class="lbl">Frets</span><span class="val">22</span></div>
-    <div class="row"><span class="lbl">Visible frets</span><span class="val">0 to 12</span></div>
-    <div class="row"><span class="lbl">Capo</span><span class="val">0</span></div>
-    <div class="row"><span class="lbl">Strum side</span><span class="val">Right &#9662;</span></div>
-    <div class="note">Strum side: Left, Right or (None). Left puts the strum zone on the left, for left-handed players.</div>
-    <div class="row"><span class="lbl">Scale dots</span><span class="val">E &nbsp; Minor pentatonic &#9662;</span></div>
-    <div class="row"><span class="lbl">Out-of-key frets</span><span class="val">Play &#9662;</span></div>
-    <div class="note">Out-of-key frets: Play, Dim or Mute.</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+      <div><div class="note">Frets</div><div class="val">22</div></div>
+      <div><div class="note">Capo</div><div class="val">0</div></div>
+    </div>
+    <div class="note" style="margin-top:10px; color:#c9cdd2">Visible frets</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+      <div><div class="note">From</div><div class="val">0</div></div>
+      <div><div class="note">To</div><div class="val">12</div></div>
+    </div>
+    <div class="note" style="margin-top:10px">Strum side</div><div class="val">Right &#9662;</div>
+    <div class="note" style="margin-top:8px">Play mode</div><div class="val">Tap &#9662;</div>
+    <div class="note" style="margin-top:4px">Touching a fret plays its string.</div>
+    <div class="note" style="margin-top:8px">Sustain</div><div class="val">Until replayed &#9662;</div>
+    <div class="note" style="margin-top:10px; color:#c9cdd2">Scale dots</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+      <div><div class="note">Root note</div><div class="val">E &#9662;</div></div>
+      <div><div class="note">Scale</div><div class="val">Minor pentatonic &#9662;</div></div>
+    </div>
+    <div class="note" style="margin-top:8px">Out-of-key frets</div><div class="val">Play &#9662;</div>
     <div class="hr"></div>
-    <h3>Expression</h3>
-    <div class="row"><span class="lbl">Bend range (semitones)</span><span class="val">2</span></div>
-    <div class="row"><span class="lbl">Slide</span><span class="val">Stepped &#9662;</span></div>
-    <div class="note">Slide: Stepped, Smooth or Off.</div>
-    <div class="row"><span class="lbl">&#9745; Hammer-ons</span></div>
-    <div class="row"><span class="lbl">Output</span><span class="val">Channel per string &#9662;</span></div>
-    <div class="note">Per-note bend (MIDI 2.0), Channel per string (channels 1&ndash;6, mono, what MIDI guitar pickups do), or MPE (the MPE profile: a manager channel plus one member channel per string).</div>
+    <h3 style="font-size:14px">Expression</h3>
+    <div class="note">Bend range (semitones)</div><div class="val">2</div>
+    <div class="note" style="margin-top:8px">Slide</div><div class="val">Stepped &#9662;</div>
+    <div class="row" style="margin:10px 0 4px"><span class="lbl" style="position:static">&#9745; Hammer-ons</span></div>
+    <div class="note" style="margin-top:8px">Output</div><div class="val">Channel per string &#9662;</div>
+    <div class="note" style="margin-top:4px">Each string plays on a channel of its own, channels 1 to 6, the way MIDI guitar pickups send. A full bend is set to 24 semitones before the first note.</div>
+    <div class="btn" style="text-align:left; margin-top:10px; font-size:12px; font-weight:500; display:inline-block">Add fretboard buttons</div>
+    <div class="note" style="margin-top:4px">Adds a tuning picker beside the fretboard and a row under it to move the capo, move along the neck and mute the strings while the layout runs. They change only this fretboard.</div>
   </div>
 </div>
 <script>
-const tuning = [40,45,50,55,59,64]; // E1 A1 D2 G2 B2 E3, lowest first
+// Top to bottom as drawn: high E first, so the low E is at the bottom.
+const strings = [64, 59, 55, 50, 45, 40];
 const neck = document.getElementById('neck');
-const L = 70, W = 1110, frets = 12, H = 440;
-// Real fret spacing, scaled so fret 12 sits at the right edge.
-const scaleLen = W * 2; const fx = n => L + scaleLen - scaleLen / Math.pow(2, n / 12);
-let h = `<div class="wood"></div><div class="nut" style="left:${L-6}px"></div>`;
-for (let f = 1; f <= frets; f++) h += `<div class="fret" style="left:${fx(f)-2}px"></div><div class="fn" style="left:${(fx(f)+fx(f-1))/2}px">${f}</div>`;
-h += `<div class="fn" style="left:${L-30}px">0</div>`;
-const mid = f => (fx(f) + fx(f-1)) / 2;
-[3,5,7,9].forEach(f => h += `<div class="inlay" style="left:${mid(f)-11}px; top:${H/2-11}px"></div>`);
-h += `<div class="inlay" style="left:${mid(12)-11}px; top:${H*0.32-11}px"></div><div class="inlay" style="left:${mid(12)-11}px; top:${H*0.68-11}px"></div>`;
-h += `<div class="strum"><div class="t">Strum here &darr;&uarr;</div></div>`;
-const sy = s => 40 + (5 - s) * ((H - 80) / 5); // s = 0 lowest string, at the bottom
-tuning.forEach((n, s) => {
-  const thick = 5 - s * 0.6;
-  h += `<div class="str" style="top:${sy(s)-thick/2}px; height:${thick}px"></div>`;
-  h += `<div class="tune" style="top:${sy(s)-17}px; outline:2px dashed #6fb7ff; outline-offset:2px;${s===0?"background:#f2c14e;color:#222":""}">${nm(n)}</div>`;
+const OPEN = 60, L = 66, R = 1010, STRUM = 1026, H = 440, frets = 12, total = 22;
+// Real fret spacing over frets 0 to 12, the way the app lays it out.
+const wf = w => 1 - Math.pow(2, -w / 12);
+const fx = w => L + (wf(w) - wf(0)) / (wf(frets) - wf(0)) * (R - L);
+const mid = f => f === 0 ? OPEN / 2 : (fx(f) + fx(f - 1)) / 2;
+const sy = s => 40 + s * ((H - 80) / (strings.length - 1));
+const sounding = new Set([5, 4, 3, 1]);
+let h = `<div class="wood" style="left:${L}px; width:${R - L}px"></div><div class="head"></div><div class="nut" style="left:${L - 3}px"></div>`;
+for (let f = 1; f <= frets; f++) h += `<div class="fret" style="left:${fx(f) - 1.5}px"></div>`;
+[3, 5, 7, 9].forEach(f => h += `<div class="inlay" style="left:${mid(f)}px; top:${H / 2}px"></div>`);
+h += `<div class="inlay" style="left:${mid(12)}px; top:${H * 0.3}px"></div><div class="inlay" style="left:${mid(12)}px; top:${H * 0.7}px"></div>`;
+h += `<div class="strum" style="left:${STRUM}px; width:${1270 - STRUM}px"><div class="t">Strum here &darr;&uarr;</div></div>`;
+strings.forEach((n, s) => {
+  const thick = Math.min(Math.max(1 + (72 - n) / 14, 1), 4.5);
+  h += `<div class="str${sounding.has(s) ? ' lit' : ''}" style="top:${sy(s) - thick / 2}px; height:${thick}px"></div>`;
+  h += `<div class="open${s === 5 ? ' lit' : ''}" style="top:${sy(s) - 20}px">${nm(n)}</div>`;
 });
-// Scale dots: E minor pentatonic (E=4).
-const held = { '0,0':1, '1,2':1, '2,2':1 }; // E minor shape: low E open, A string fret 2, D string fret 2
-const bend = [4, 8]; // B string, fret 8 = G
-for (let s = 0; s < 6; s++) for (let f = 1; f <= frets; f++) {
-  const n = tuning[s] + f; const k = `${s},${f}`;
+// Held: the open low E, B on the A string and E on the D string; G on the B string, bent.
+const held = { '5,0': 1, '4,2': 1, '3,2': 1 };
+const bend = [1, 8];
+const emPent = [4, 7, 9, 11, 2];
+for (let s = 0; s < strings.length; s++) for (let f = 0; f <= frets; f++) {
+  const n = strings[s] + f; const k = `${s},${f}`;
   if (s === bend[0] && f === bend[1]) continue;
-  if (held[k]) h += `<div class="dot held" style="left:${mid(f)}px; top:${sy(s)}px">${nm(n)}</div>`;
+  if (held[k]) { if (f > 0) h += `<div class="dot held" style="left:${mid(f)}px; top:${sy(s)}px">${nm(n)}</div>`; continue; }
+  // The open column already prints each string's name, so it gets no dot.
+  if (f === 0 || !emPent.includes(n % 12)) continue;
+  h += `<div class="dot ${n % 12 === 4 ? 'rt' : 'sc'}" style="left:${mid(f)}px; top:${sy(s)}px">${nm(n)}</div>`;
 }
-const emPent = [4,7,9,11,2];
-for (let s = 0; s < 6; s++) for (let f = 1; f <= frets; f++) {
-  const n = tuning[s] + f; const pc = n % 12; const k = `${s},${f}`;
-  if (held[k] || (s === bend[0] && f === bend[1])) continue;
-  if (!emPent.includes(pc)) continue;
-  h += `<div class="dot ${pc===4?'rt':'sc'}" style="left:${mid(f)}px; top:${sy(s)}px">${nm(n)}</div>`;
-}
-// open low E held
-
-// bent note: B string fret 8 pushed up toward the next string
-const bx = mid(8), by = sy(4) - 34;
-h += `<svg style="position:absolute;left:0;top:0" width="1440" height="440"><path d="M ${bx-22} ${sy(4)} Q ${bx} ${sy(4)} ${bx+22} ${sy(4)}" stroke="#f2c14e" stroke-width="3" fill="none"/>
-  <path d="M ${fx(7)+4} ${sy(4)} Q ${bx} ${by+6} ${fx(8)-4} ${sy(4)}" stroke="#fff" stroke-width="4" fill="none"/>
-  <line x1="${bx+38}" y1="${sy(4)-4}" x2="${bx+38}" y2="${by-6}" stroke="#f2c14e" stroke-width="3" marker-end="url(#a)"/>
+const bx = mid(8), by = sy(1) + 30;
+h += `<svg style="position:absolute;left:0;top:0" width="1270" height="440">
+  <path d="M ${fx(7) + 3} ${sy(1)} Q ${bx} ${by - 4} ${fx(8) - 3} ${sy(1)}" stroke="#ffe7a3" stroke-width="3" fill="none"/>
+  <line x1="${bx + 30}" y1="${sy(1) + 4}" x2="${bx + 30}" y2="${by + 6}" stroke="#f2c14e" stroke-width="3" marker-end="url(#a)"/>
   <defs><marker id="a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#f2c14e"/></marker></defs></svg>`;
-h += `<div class="dot held" style="left:${bx}px; top:${by}px">G3&#8599;</div>`;
-h += `<div class="callout" style="left:${bx-140}px; top:475px; max-width:420px"><b>Bend (B string, fret 8):</b> push the finger across the string and the note bends up, as far as 2 semitones (A3 here). Either direction bends up, like a real string. The open low E is held too: its tuning button lights.</div>`;
-h += `<div class="callout" style="left:1210px; top:470px; max-width:230px"><b>Strum:</b> in the Strum play mode, fretting is silent and a swipe here plays every string at its fretted note, in the order the swipe crosses them. Swipe speed sets velocity and the gap between strings.</div>`;
-neck.innerHTML = h;
-// minimap: 22 frets, 0-12 window
-const mini = document.getElementById('mini'); let mh = '';
-for (const f of [3,5,7,9,12,15,17,19,21]) mh += `<i style="left:${f/22*510+3}px"></i>`;
-mini.innerHTML = mh + `<div class="win" style="left:2px; width:${12/22*510}px"></div>`;
-// tuning list
-document.getElementById('tunelist').innerHTML = tuning.slice().reverse().map((n,i)=>`<div class="row"><span class="lbl">String ${i+1}</span><span class="val" style="min-width:70px">${nm(n)}</span><span style="display:flex;gap:4px"><span class="val" style="min-width:auto" title="Move up">&#9650;</span><span class="val" style="min-width:auto" title="Move down">&#9660;</span><span class="val" style="min-width:auto" title="Remove">&#10005;</span></span></div>`).join('');
+h += `<div class="dot held" style="left:${bx}px; top:${by}px">${nm(strings[1] + 8)}&#8600;</div>`;
+// The neck strip: all 22 frets, with frets 0 to 12 boxed.
+const sx = f => f / total * (R - 2);
+let strip = `<div class="strip" style="width:${R}px">`;
+for (const f of [3, 5, 7, 9, 12, 15, 17, 19, 21]) strip += `<i style="left:${sx(f - 0.5)}px"></i>`;
+strip += `<div class="win" style="left:${sx(0)}px; width:${sx(frets)}px"></div></div>`;
+neck.innerHTML = h + strip;
+// The row Add fretboard buttons puts under the fretboard.
+const buttons = [['Capo down', 'btn act'], ['No capo', 'readout act'], ['Capo up', 'btn act'], ['Down the neck', 'btn act'], ['Up the neck', 'btn act'], ['Mute', 'btn act']];
+document.getElementById('buttons').innerHTML = buttons.map(([t, c]) => `<div class="${c}" style="${c.startsWith('btn') ? 'width:120px' : 'width:130px; text-align:center; outline:2px dashed #6fb7ff; outline-offset:2px'}">${t}</div>`).join('');
+// The tuning picker, standing beside the fretboard.
+const tunings = ['Standard', 'Drop D', 'Half step down', 'Whole step down', 'DADGAD', 'Open G', 'Open D', 'Open E', '7-string', 'Bass', '5-string bass', 'Ukulele', 'Baritone ukulele', 'Mandolin', 'Banjo'];
+document.getElementById('tunings').innerHTML = tunings.map((t, i) => `<div class="${i === 0 ? 'on' : ''}">${t}</div>`).join('');
+// The strings list, top to bottom as drawn.
+document.getElementById('stringrows').innerHTML = strings.map((n, i) => `<div class="srow"><span class="lbl">String ${i + 1}</span><span class="val">${nm(n)} (${n})</span><span class="ib${i === 0 ? ' off' : ''}" title="Move up">&#9650;</span><span class="ib${i === strings.length - 1 ? ' off' : ''}" title="Move down">&#9660;</span><span class="ib" title="Remove">&#10005;</span></div>`).join('');
 </script>
 </body></html>

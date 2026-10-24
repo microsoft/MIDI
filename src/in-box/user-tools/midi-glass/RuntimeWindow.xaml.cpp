@@ -340,6 +340,22 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_input.FretTouched = [weak](size_t itemIndex, glass::FretTouch const& touch)
+            {
+                if (auto strong = weak.get(); strong != nullptr && strong->m_player != nullptr)
+                {
+                    strong->m_player->FretTouched(strong->m_renderer.ControlIndexOf(itemIndex), touch);
+                }
+            };
+
+        m_input.NeckMoved = [weak](size_t itemIndex, int32_t firstFret)
+            {
+                if (auto strong = weak.get(); strong != nullptr && strong->m_player != nullptr)
+                {
+                    strong->m_player->NeckMoved(strong->m_renderer.ControlIndexOf(itemIndex), firstFret);
+                }
+            };
+
         m_input.Switched = [weak](size_t itemIndex, bool isOn, double velocity)
             {
                 if (auto strong = weak.get())

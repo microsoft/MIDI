@@ -8,6 +8,7 @@
 #pragma once
 
 #include "LayoutModel.h"
+#include "Fretboard.h"
 #include "PadGrid.h"
 #include "PadGridChanges.h"
 #include "ThemeModel.h"
@@ -326,6 +327,20 @@ namespace glass
         comp::SpriteVisual PadShadow{ nullptr };
         comp::ShapeVisual PadShadowSource{ nullptr };
 
+        // ---- fretboard ----
+
+        // What it plays and where everything was drawn, which is where a finger has to land.
+        FretboardSpec FretSpec{};
+        FretboardLayout FretLayout{};
+
+        // One line per string, lit while the string sounds.
+        std::vector<comp::CompositionSpriteShape> StringShapes{};
+        std::vector<comp::CompositionBrush> StringRestBrushes{};
+        comp::CompositionBrush StringLitBrush{ nullptr };
+
+        // A dot under each finger on the neck, hidden while it is not in use.
+        std::vector<comp::CompositionSpriteShape> FingerShapes{};
+
         // ---- beat clock ----
 
         comp::CompositionEllipseGeometry SweepGeometry{ nullptr };
@@ -458,6 +473,25 @@ namespace glass
 
         // A finger went onto a pad or came off it. Counted, because two fingers can share one.
         void SetPadHeld(_In_ size_t itemIndex, _In_ int32_t cell, _In_ bool held) noexcept;
+
+        // What a fretboard plays and where it was drawn (SurfaceFretboard.cpp), for the same
+        // reason as a pad grid's.
+        FretboardSpec const& FretSpecAt(_In_ size_t itemIndex) const noexcept;
+        FretboardLayout const& FretLayoutAt(_In_ size_t itemIndex) const noexcept;
+
+        // Where each finger on a fretboard is: a dot on its string at its fret, pushed across
+        // the string as far as the finger has pushed it.
+        struct FretFingerMark
+        {
+            int32_t String{ -1 };
+            int32_t Fret{ 0 };
+            double Across{ 0.0 };
+        };
+
+        void SetFretFingers(_In_ size_t itemIndex, _In_ std::span<FretFingerMark const> marks) noexcept;
+
+        // Which strings are sounding, one bit per string.
+        void SetStringsSounding(_In_ size_t itemIndex, _In_ uint32_t sounding) noexcept;
 
         // The beat a clock generator is on, and how far through it. Drawn by the compositor
         // from two numbers rather than animated, so the picture can never disagree with the
@@ -947,6 +981,26 @@ namespace glass
         // What a pad grid's plate comes out as over the deck, which is what every color on its
         // pads is measured against.
         ThemeColor PadBackdrop(_In_ Control const& control, _In_ Theme const& theme) const noexcept;
+
+        // A fretboard: the neck, the frets, the strings, the scale dots, the strum area and the
+        // neck strip (SurfaceFretboard.cpp).
+        void LayoutFretboard(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height);
+
+        // The note each string plays open, printed in the open column.
+        void LayoutFretNames(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        // A fretboard as it plays now, with what grid buttons changed laid over it.
+        FretboardSpec FretSpecFor(_In_ Control const& control) const;
 
         void LayoutClock(
             _In_ comp::Compositor const& compositor,

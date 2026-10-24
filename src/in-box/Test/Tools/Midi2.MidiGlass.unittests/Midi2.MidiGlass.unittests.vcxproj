@@ -226,6 +226,12 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorController.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerEdits.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerPickers.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerFretboard.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\Fretboard.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\FretboardChanges.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\StringVoices.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\BindingEngineStrings.cpp" />
+    <ClCompile Include="FretboardTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\RepeatPlan.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\UndoStack.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />

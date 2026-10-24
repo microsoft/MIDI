@@ -164,6 +164,16 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->StringsSounding = [weak](uint32_t controlIndex, uint32_t sounding)
+            {
+                size_t itemIndex{ 0 };
+
+                if (auto strong = weak.get(); strong != nullptr && strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetStringsSounding(itemIndex, sounding);
+                }
+            };
+
         // One owner per running layout, and the file path is what makes it unique, so the same
         // layout opened twice shares its connections instead of doubling them.
         m_player->Start(m_document, m_dispatcher, m_ownerId);

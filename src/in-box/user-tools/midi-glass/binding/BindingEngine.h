@@ -121,6 +121,42 @@ namespace glass
     // and they are all the same trigger at most, so this is the per-control cap.
     constexpr size_t MaximumSendsPerEvent = MaximumMessagesPerControl;
 
+    // What a fretboard asks the engine for.
+    enum class StringSendKind
+    {
+        NoteOn = 0,
+        NoteOff = 1,
+
+        // Ordinary pitch bend on the string's channel, in semitones out of a sensitivity.
+        ChannelBend = 2,
+
+        // MIDI 2.0 per-note pitch bend, in semitones out of a sensitivity. MIDI 2.0 rows only.
+        PerNoteBend = 3,
+
+        // Registered controller 0, pitch bend sensitivity, in semitones. Always sent as a MIDI
+        // 2.0 registered controller; Windows makes the four control changes a MIDI 1.0 device
+        // expects.
+        BendSensitivity = 4,
+
+        // Registered controller 7, the sensitivity of per-note pitch bend. MIDI 2.0 rows only.
+        PerNoteBendSensitivity = 5,
+    };
+
+    struct StringSend
+    {
+        StringSendKind Kind{ StringSendKind::NoteOn };
+
+        // Channels up from the row's own, wrapping past 16.
+        uint8_t ChannelOffset{ 0 };
+        uint8_t Note{ 0 };
+
+        // The velocity of a note on, 0 to 1, or the semitones of a bend or a sensitivity.
+        double Value{ 0.0 };
+
+        // How many semitones a full bend reaches, for the two bends.
+        double Sensitivity{ 48.0 };
+    };
+
     // Turns a control moving into the words that leave the process.
     //
     // From a finger touching glass to a message leaving there is one frame of budget and no
@@ -202,6 +238,13 @@ namespace glass
         uint32_t EvaluatePerNoteBendRange(
             _In_ size_t controlIndex,
             _In_ double rangeSemitones,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // One thing a fretboard sends, on every row that plays notes, moved up Offset channels
+        // from the row's own so each string can have a channel of its own.
+        uint32_t EvaluateString(
+            _In_ size_t controlIndex,
+            _In_ StringSend const& send,
             _Inout_ std::span<PreparedSend> sends) const noexcept;
 
         // A system real time byte from a clock generator, to every device this control names.

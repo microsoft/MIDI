@@ -19,6 +19,7 @@
 #include "LayoutStore.h"
 #include "ControlFactory.h"
 #include "PadGrid.h"
+#include "Fretboard.h"
 #include "InputRules.h"
 
 #include <shobjidl.h>
@@ -291,6 +292,7 @@ namespace winrt::midiglass::implementation
 
             BuildKeyPickerChoices();
             BuildPadGridChoices();
+            BuildFretboardChoices();
 
             for (auto const* const key : PadNoteNamesKeys)
             {
@@ -566,6 +568,17 @@ namespace winrt::midiglass::implementation
                 RefreshPadGridPanel(control);
             }
 
+            // ---- fretboard ----
+
+            auto const fretboard = glass::IsFretboard(control.Kind);
+
+            show(FretboardPanel(), fretboard);
+
+            if (fretboard)
+            {
+                RefreshFretboardPanel(control);
+            }
+
             // ---- where it starts ----
             //
             // A toggle is on or off, so it starts one way or the other. A percentage slider for
@@ -608,7 +621,8 @@ namespace winrt::midiglass::implementation
             //
             // A pad and a button are the same control until this is on. It is what makes a pad
             // worth having its own entry in the palette. A grid of pads is pads too.
-            auto const padded = control.Kind == glass::ControlKind::Pad || glass::IsPadGrid(control.Kind);
+            auto const padded = control.Kind == glass::ControlKind::Pad || glass::IsPadGrid(control.Kind) ||
+                glass::IsFretboard(control.Kind);
 
             show(PadVelocityPanel(), padded);
 

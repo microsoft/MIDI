@@ -148,7 +148,7 @@ If the customer wants a look of their own, design a theme file as well, followin
 | Toggle | `toggle` | 96 × 40 | Press for on, press again for off. |
 | Pad | `pad` | 56 × 56 | A square button for drums and clips. |
 | Page tab | `pageTab` | 120 × 36 | Goes to another page. |
-| Switch | `switch` | 180 × 44 | Two to sixteen named positions, each sending its own message. Or a picker for the key of the pad grids. |
+| Switch | `switch` | 180 × 44 | Two to sixteen named positions, each sending its own message. Or a picker for the key of the pad grids, or for a fretboard's tuning. |
 | Knob | `knob` | 56 × 56 | |
 | Turntable | `turntable` | 160 × 160 | A platter you push. Springs back to the middle. |
 | Fader | `fader` | 40 × 180 | |
@@ -162,9 +162,10 @@ If the customer wants a look of their own, design a theme file as well, followin
 | Mono keyboard | `pianoKeyboard` | 420 × 120 | Piano keys that play one note at a time. |
 | Note pads | `notePads` | 428 × 164 | A grid of pads that each play a note, for chords. |
 | Hex pads | `hexPads` | 456 × 160 | The same, with hexagons. |
+| Fretboard | `fretboard` | 760 × 300 | A guitar neck: strings and frets, one note per string, with bends, slides, hammer-ons and strumming. |
 | Meter | `meter` | 24 × 180 | Shows a value the device sends. |
 | Lamp | `lamp` | 32 × 32 | Lights up when the device sends something. |
-| Readout | `readout` | 120 × 40 | Shows a value the device sends, or where a pad grid is. |
+| Readout | `readout` | 120 × 40 | Shows a value the device sends, where a pad grid is, or a fretboard's capo or tuning. |
 | Stopwatch | `timeDisplay` | 180 × 64 | Counts up from when the layout starts. |
 | Text | `label` | 120 × 24 | Words on the page. |
 | Image | `image` | 120 × 120 | A picture or a video. |
@@ -209,13 +210,16 @@ $layout = $text | ConvertFrom-Json
 $problems = [Collections.Generic.List[string]]::new()
 
 $themes = 'Studio Dark', 'Airy System', 'Bigwig', 'Blueprint', 'Bone', 'Cathode', 'Chicago', 'Daylight', 'Five-iSH', 'Good Form', 'Groovy', 'Groovy Dark', 'Hard Sector', 'High contrast', 'Insert Coin', 'Jove', 'Night Drive', 'Off-world Colonies', 'Soft Sector', 'Supersaw', 'Terminal Amber', 'Terminal Green', 'Tonal Dark', 'Tonal Light', 'Visor'
-$controlKinds = 'knob', 'fader', 'pad', 'button', 'toggle', 'xyPad', 'meter', 'lamp', 'readout', 'label', 'image', 'pageTab', 'panel', 'joystick', 'ribbon', 'pianoKeyboard', 'beatClock', 'timeDisplay', 'lfo', 'turntable', 'wheel', 'switch', 'steps', 'line', 'notePads', 'hexPads'
+$controlKinds = 'knob', 'fader', 'pad', 'button', 'toggle', 'xyPad', 'meter', 'lamp', 'readout', 'label', 'image', 'pageTab', 'panel', 'joystick', 'ribbon', 'pianoKeyboard', 'beatClock', 'timeDisplay', 'lfo', 'turntable', 'wheel', 'switch', 'steps', 'line', 'notePads', 'hexPads', 'fretboard'
 $messageKinds = 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController', 'systemExclusive', 'rawUmp', 'sequence', 'goToPage', 'mackieControl', 'padGrid'
 $numbered = 'note', 'controlChange', 'programChange', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController'
 $scales = 'major', 'minor', 'harmonicMinor', 'melodicMinor', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'locrian', 'majorPentatonic', 'minorPentatonic', 'blues', 'wholeTone'
-$picks = 'nothing', 'rootNote', 'scale', 'inKeyOnly', 'rowOffset', 'octave'
-$padFunctions = 'octaveUp', 'octaveDown', 'rowUp', 'rowDown', 'shiftLeft', 'shiftRight', 'semitoneUp', 'semitoneDown', 'inKeyOnlyOn', 'inKeyOnlyOff', 'inKeyOnlyToggle', 'nextRoot', 'previousRoot', 'nextScale', 'previousScale', 'nextRowOffset', 'reset'
-$gridIds = @($layout.pages | ForEach-Object { $_.controls } | Where-Object { $_.kind -cin 'notePads', 'hexPads' } | ForEach-Object { $_.id })
+$picks = 'nothing', 'rootNote', 'scale', 'inKeyOnly', 'rowOffset', 'octave', 'tuning'
+$padFunctions = 'octaveUp', 'octaveDown', 'rowUp', 'rowDown', 'shiftLeft', 'shiftRight', 'semitoneUp', 'semitoneDown', 'inKeyOnlyOn', 'inKeyOnlyOff', 'inKeyOnlyToggle', 'nextRoot', 'previousRoot', 'nextScale', 'previousScale', 'nextRowOffset', 'reset', 'capoUp', 'capoDown', 'upTheNeck', 'downTheNeck', 'muteStrings'
+$gridIds = @($layout.pages | ForEach-Object { $_.controls } | Where-Object { $_.kind -cin 'notePads', 'hexPads', 'fretboard' } | ForEach-Object { $_.id })
+$keys = 'none', 'c', 'cSharp', 'd', 'dSharp', 'e', 'f', 'fSharp', 'g', 'gSharp', 'a', 'aSharp', 'b'
+$tunings = 'standard', 'dropD', 'halfStepDown', 'wholeStepDown', 'dadgad', 'openG', 'openD', 'openE', 'sevenString', 'bass', 'fiveStringBass', 'ukulele', 'baritoneUkulele', 'mandolin', 'banjo', 'custom'
+$fretChoices = @{ strumSide = 'right', 'left', 'none'; playMode = 'tap', 'strum'; sustain = 'untilReplayed', 'whileHeld'; outOfKeyFrets = 'play', 'dim', 'mute'; slide = 'stepped', 'smooth', 'off'; output = 'channelPerString', 'perNoteBend', 'mpe'; tuning = $tunings; key = $keys }
 
 $pageWidth = $layout.pageWidth ?? 1280
 $pageHeight = $layout.pageHeight ?? 800
@@ -249,10 +253,30 @@ foreach ($page in $layout.pages) {
         elseif ($null -ne $c.switch.picks -and $c.switch.picks -cne 'nothing' -and $c.messages.Count -gt 0) { $problems.Add("$where is a picker, so its messages are never sent.") }
         foreach ($s in $c.switch.scales) { if ($s -cnotin $scales) { $problems.Add("$where offers the scale '$s', which isn't a choice, so the picker leaves it out.") } }
         if ($c.switch.picks -ceq 'scale' -and $null -ne $c.switch.scales -and @($c.switch.scales | Where-Object { $_ -cin $scales } | Select-Object -Unique).Count -lt 2) { $problems.Add("$where offers fewer than two scales, so it offers the usual seven instead.") }
-        foreach ($t in @($c.switch.targets) + @($c.readout.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid, so nothing follows it.") } }
+        foreach ($t in @($c.switch.targets) + @($c.readout.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid or a fretboard, so nothing follows it.") } }
         if ($null -ne $c.pads.arrangement -and $c.pads.arrangement -cnotin 'flow', 'rows', 'columns') { $problems.Add("$where has the arrangement '$($c.pads.arrangement)', which isn't a choice, so its pads flow.") }
         elseif ($c.pads.arrangement -cin 'rows', 'columns' -and (($c.pads.rows ?? 8) -notin 1..32 -or ($c.pads.padsPerRow ?? 8) -notin 1..64 -or ($c.pads.rows ?? 8) * ($c.pads.padsPerRow ?? 8) -gt 1024)) { $problems.Add("$where needs rows from 1 to 32 and padsPerRow from 1 to 64, and no more than 1,024 pads in all.") }
-        if ($null -ne $c.readout.source -and $c.readout.source -cnotin 'value', 'padKey', 'octave', 'rowOffset', 'padSummary') { $problems.Add("$where shows '$($c.readout.source)', which isn't a choice, so it shows its own value.") }
+        if ($null -ne $c.readout.source -and $c.readout.source -cnotin 'value', 'padKey', 'octave', 'rowOffset', 'padSummary', 'capo', 'tuning') { $problems.Add("$where shows '$($c.readout.source)', which isn't a choice, so it shows its own value.") }
+        if ($c.kind -ceq 'fretboard') {
+            $f = $c.fretboard
+            foreach ($name in $fretChoices.Keys) { $v = $f.$name; if ($null -ne $v -and $v -cnotin $fretChoices[$name]) { $problems.Add("$where has the $name '$v', which isn't a choice, so the fretboard uses its default.") } }
+            $strings = @($f.strings | Where-Object { $null -ne $_ })
+            if ($null -ne $f.strings -and ($strings.Count -lt 1 -or $strings.Count -gt 12)) { $problems.Add("$where needs one to twelve strings. With none it gets standard tuning, and with more it keeps the first twelve.") }
+            foreach ($s in $strings) { if ($s.note -isnot [ValueType] -or $s.note -notin 0..127) { $problems.Add("$where has a string whose note isn't a number from 0 to 127, so that string plays E1 (40).") } }
+            $frets = $f.frets ?? 22
+            if ($frets -notin 1..36) { $problems.Add("$where needs frets from 1 to 36, so it gets 22.") }
+            elseif (($f.firstFret ?? 0) -notin 0..($frets - 1) -or ($f.lastFret ?? 12) -notin ([Math]::Max(($f.firstFret ?? 0), 1))..$frets -or ($f.capo ?? 0) -notin 0..($frets - 1)) { $problems.Add("$where needs firstFret below frets, lastFret above firstFret and no more than frets, and capo below frets.") }
+            if (($f.bendRange ?? 2) -notin 1..12) { $problems.Add("$where needs a bendRange from 1 to 12 semitones, so it bends 2.") }
+            if ($f.playMode -ceq 'strum' -and $f.strumSide -ceq 'none') { $problems.Add("$where strums, but has no strum area, so touching a fret plays it.") }
+            $noteRows = @($c.messages | Where-Object { $_.kind -ceq 'note' })
+            if ($noteRows.Count -eq 0) { $problems.Add("$where has no note row, so its strings send nothing.") }
+            else {
+                $channel = $noteRows[0].channel ?? 0
+                $count = if ($strings.Count -gt 0) { [Math]::Min($strings.Count, 12) } else { 6 }
+                if ($f.output -ceq 'mpe' -and $channel + 1 + $count -gt 16) { $problems.Add("$where uses MPE with the manager on channel $($channel + 1), and its $count strings run past channel 16, so some strings share a channel.") }
+                elseif (($f.output ?? 'channelPerString') -ceq 'channelPerString' -and $channel + $count -gt 16) { $problems.Add("$where gives each of its $count strings a channel from channel $($channel + 1), which runs past 16, so some strings share a channel.") }
+            }
+        }
         foreach ($m in $c.messages) {
             $kind = $m.kind ?? 'controlChange'
             if ($kind -cnotin $messageKinds) { $problems.Add("$where sends '$kind', which isn't a message kind."); continue }
@@ -265,7 +289,7 @@ foreach ($page in $layout.pages) {
             if ($kind -ceq 'sequence') { if ($m.sequence -cnotin $sequences) { $problems.Add("$where runs a sequence that isn't in the layout.") }; continue }
             if ($kind -ceq 'padGrid') {
                 if ($m.function -cnotin $padFunctions) { $problems.Add("$where has the pad grid function '$($m.function)', which isn't a choice, so the row does nothing.") }
-                foreach ($t in @($m.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid.") } }
+                foreach ($t in @($m.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid or a fretboard.") } }
                 if (($m.trigger ?? 'changes') -cnotin 'turnsOn', 'turnsOff', 'touched', 'released') { $problems.Add("$where has a pad grid row on '$($m.trigger ?? 'changes')'. Use turnsOn, or it never runs.") }
                 continue
             }
@@ -422,7 +446,10 @@ Tell the customer about these before they find out on their own.
 
 - **A control can't change what another control sends.** There's no "selected articulation" that a keyboard follows, and no shift button that changes what the knobs do. A button can run a sequence that moves another control to a value, and a beat clock can take its tempo from a knob, but that's all. Use more pages, or more controls, instead.
 - **A keyboard plays one attribute.** A keyboard or a pad grid can put a MIDI 2.0 note attribute, such as an articulation, on every note it plays, but it's the same attribute on every key. For two articulations, use two keyboards, or a page for each.
-- **A picked key, a grid button's change and an octave aren't saved.** Pickers and grid buttons change pad grids only while the layout runs, and the layout opens as it was built each time. They change pad grids only, not keyboards or step sequencers. A picker or a grid button changes every pad grid unless you give it `targets`, so two grids can follow two different sets of pickers on one layout.
+- **A picked key, a grid button's change and an octave aren't saved.** Pickers and grid buttons change pad grids only while the layout runs, and the layout opens as it was built each time. They change pad grids and fretboards only, not keyboards or step sequencers. A picker or a grid button changes every pad grid and fretboard unless you give it `targets`, so two grids can follow two different sets of pickers on one layout.
+- **A fretboard is a fretboard, not a guitar.** It sends notes and bends; the instrument makes the sound. It has no chord strips, no strum patterns, no palm mutes, no harmonics, and no doubled strings for a 12-string guitar or a mandolin. Most touch screens report no pressure, so a tap plays at full strength and a strum's strength comes from how fast it sweeps. A capo, a tuning picked while the layout runs, and the frets showing go back to what was built when the layout opens.
+- **A fretboard's MPE doesn't ask the instrument.** With `output` set to `mpe`, Windows MIDI Glass sends on the manager channel and the member channels above it, but doesn't turn the MPE profile on with MIDI-CI. Set the instrument up for MPE on those channels yourself.
+- **Two strings on the same note share it with per-note bend.** With `output` set to `perNoteBend`, every string is on one channel, so the same note on two strings is one note, and bending one bends both. Use `channelPerString` or `mpe` for unison bends.
 - **Following a clock follows only its tempo.** A layout that follows incoming MIDI clock takes its speed, but doesn't line its beat up with it, and doesn't start or stop with it.
 - **Nothing shows text from a device.** A readout shows a value, or where a pad grid is, and a meter and a lamp show levels and activity. There's no track name, no patch name, and no list of messages on a running page.
 - **No MIDI-CI.** Windows MIDI Glass can't turn a profile on, or ask a device what it supports.
@@ -650,7 +677,7 @@ Each row in `messages` says when the control sends, what it sends, and where.
 | `targetPage` | a page `id` | none | For `goToPage` rows. |
 | `sequence` | a sequence `name` | none | For `sequence` rows. |
 | `function` | a Mackie Control function, or a pad grid function | none | For `mackieControl` rows, instead of `number`. For `padGrid` rows, what the row does. See [Grid buttons](#grid-buttons). |
-| `targets` | a list of pad grid `id`s | every pad grid | For `padGrid` rows, the grids the row changes. An empty list changes none. |
+| `targets` | a list of pad grid and fretboard `id`s | every pad grid and fretboard | For `padGrid` rows, the grids and fretboards the row changes. An empty list changes none. |
 
 The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `perNoteController`, `assignablePerNoteController`, `registeredController` (an RPN), `assignedController` (an NRPN), `systemExclusive`, `rawUmp`, `sequence`, `goToPage`, `mackieControl`, and `padGrid`.
 
@@ -673,6 +700,7 @@ The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `ch
 | Page tab | One `turnsOn` row of kind `goToPage`, with `targetPage` and no device. |
 | Grid button | One `turnsOn` row of kind `padGrid`, with a `function` and no device. |
 | Mono keyboard, note pads, hex pads, steps | One `changes` row of kind `note`, with no `number`. The key or the step decides the note. |
+| Fretboard | One `changes` row of kind `note`, with no `number`. The strings decide the notes. The row's `channel` is where the first string plays, or the MPE manager channel. See [Fretboard](#fretboard). |
 | Beat clock | One `changes` row of kind `rawUmp`, with no `words`. It only says where the clock goes. |
 | Meter, lamp, readout, stopwatch, text, image, group, line | No rows. Meters, lamps, and readouts listen instead. |
 
@@ -776,6 +804,33 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 | `glide` | `off`, `portamento`, `perNoteBend` | `off` | What a finger sliding onto the next pad does. `perNoteBend` bends the note with MIDI 2.0 per-note pitch bend. |
 | `bendRange` | 1 to 96 | 48 | Semitones either way, for `perNoteBend`. |
 
+**Fretboard,** in `fretboard`: {#fretboard}
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `tuning` | `standard`, `dropD`, `halfStepDown`, `wholeStepDown`, `dadgad`, `openG`, `openD`, `openE`, `sevenString`, `bass`, `fiveStringBass`, `ukulele`, `baritoneUkulele`, `mandolin`, `banjo`, `custom` | `standard` | The tuning's name. `strings` decides the notes. Windows MIDI Glass names the tuning from the strings when it reads the file, so a name that doesn't match them becomes `custom`. |
+| `strings` | 1 to 12 strings | the strings `tuning` names | Each is `{ "note": 64 }`, top to bottom as drawn. List a guitar's high E first, so the low E ends up at the bottom. `startFret` makes a short string, like a banjo's fifth, which starts at the fifth fret. |
+| `frets` | 1 to 36 | 22 | How many frets the neck has. |
+| `firstFret`, `lastFret` | 0 to `frets` | 0 and 12 | The frets that show. 0 and 1 both start at the nut. The open strings always have a column of their own beside the nut. |
+| `capo` | 0 to `frets` − 1 | 0 | The open strings play at this fret, and the frets behind it play nothing. |
+| `strumSide` | `right`, `left`, `none` | `right` | Where the strum area is. `left` is for a left-handed player: the neck turns round, with the nut on the right. |
+| `playMode` | `tap`, `strum` | `tap` | `tap` plays a string when a fret is touched. `strum` only holds the fret down, and a sweep across the strum area plays each string at its fret, or open. A strum area works in `tap` too. |
+| `sustain` | `untilReplayed`, `whileHeld` | `untilReplayed` | `untilReplayed` lets a string ring after the finger lifts, until it's played again or muted, the way a real string does. |
+| `key`, `scale` | the pad `key` and `scale` names | `none` and `major` | The scale dots: a dot on every fret in the key, the root in its own color. |
+| `outOfKeyFrets` | `play`, `dim`, `mute` | `play` | What a fret outside the key does when the fretboard has a `key`. `mute` draws it dim and plays nothing. |
+| `bendRange` | 1 to 12 | 2 | How far pushing a finger across its string bends the note, in semitones. Either way bends up. |
+| `slide` | `stepped`, `smooth`, `off` | `stepped` | What a finger sliding along a string does. `stepped` bends a semitone at each fret, `smooth` follows the finger like a fretless neck, and `off` plays a new note at each fret. |
+| `hammerOns` | `true`, `false` | `true` | Fretting higher on a string that's sounding changes the note without a new attack, and lifting goes back to the fret still held. |
+| `output` | `channelPerString`, `perNoteBend`, `mpe` | `channelPerString` | `channelPerString` puts each string on its own channel, counted up from the note row's `channel`, the way MIDI guitar pickups do, and sets a full bend to 24 semitones on each. `perNoteBend` keeps every string on the note row's channel and bends with MIDI 2.0 per-note pitch bend, so a MIDI 1.0 instrument hears no bends. `mpe` makes the note row's channel the MPE manager channel and plays each string on a member channel above it, with a full bend of 48 semitones set on the manager channel. |
+
+```json
+{ "id": "guitar", "kind": "fretboard", "label": "Guitar", "x": 40, "y": 40, "width": 760, "height": 300,
+  "fretboard": { "tuning": "dropD", "strings": [ { "note": 64 }, { "note": 59 }, { "note": 55 }, { "note": 50 }, { "note": 45 }, { "note": 38 } ], "strumSide": "right", "key": "d", "scale": "minorPentatonic" },
+  "messages": [ { "trigger": "changes", "kind": "note", "device": "Synth", "channel": 0 } ] }
+```
+
+Note numbers follow every Windows MIDI Services tool: 60 is C3, so a guitar's low E is 40, written E1.
+
 **Switch,** in `switch`: `{ "positions": [ "Saw", "Square", "Sine" ] }`, two to sixteen names, first to last. Give the switch one row per position:
 
 ```json
@@ -791,9 +846,9 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `picks` | `nothing`, `rootNote`, `scale`, `inKeyOnly`, `rowOffset`, `octave` | `nothing` | `rootNote` has twelve positions, C to B. `scale` has one for each of `scales`. `inKeyOnly` has two: Chromatic and In key. `rowOffset` has five: Continuous, Third, Fourth, Fifth, Octave. `octave` has five: −2 to +2 from where the grid was built. `rootNote`, `scale` and `inKeyOnly` only change a grid that has a `key`. |
+| `picks` | `nothing`, `rootNote`, `scale`, `inKeyOnly`, `rowOffset`, `octave`, `tuning` | `nothing` | `rootNote` has twelve positions, C to B. `scale` has one for each of `scales`. `inKeyOnly` has two: Chromatic and In key. `rowOffset` has five: Continuous, Third, Fourth, Fifth, Octave. `octave` has five: −2 to +2 from where the grid was built. `rootNote`, `scale` and `inKeyOnly` only change a grid that has a `key`; `rootNote` and `scale` also move the scale dots of a fretboard that shows a `key`. `tuning` has fifteen, the named tunings in the order [Fretboard](#fretboard) lists them, and only changes fretboards. |
 | `scales` | Two or more of the pad `scale` names | `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` | What a `scale` picker offers, first to last. |
-| `targets` | a list of pad grid `id`s | every pad grid | The grids it changes. It shows the first of them. An empty list changes none. |
+| `targets` | a list of pad grid and fretboard `id`s | every pad grid and fretboard | The grids and fretboards it changes. It shows the first of them. An empty list changes none. |
 
 Give a root picker about 30 pixels a note along it, and a scale picker about 80 a scale lying down or 30 standing up, so every name fits:
 
@@ -816,7 +871,12 @@ A button or a pad with a `padGrid` row changes pad grids while the layout runs, 
 | `nextRoot`, `previousRoot` | The key's root, a semitone up or down. Only a grid with a `key`. |
 | `nextScale`, `previousScale` | The next or previous scale, in the order the pad `scale` list gives them. Only a grid with a `key`. |
 | `nextRowOffset` | The next of Continuous, Third, Fourth, Fifth, Octave. Hex pads skip Continuous. |
-| `reset` | Puts the grid back the way it was built. |
+| `reset` | Puts the grid back the way it was built. A fretboard goes back too. |
+| `capoUp`, `capoDown` | Moves a fretboard's capo a fret. It stops short of the last fret. |
+| `upTheNeck`, `downTheNeck` | Moves the frets a fretboard shows a fret toward the body, where the notes are higher, or back toward the nut. How many show stays the same. |
+| `muteStrings` | Stops every string a fretboard is sounding. |
+
+`nextRoot`, `previousRoot`, `nextScale` and `previousScale` also move the scale dots of a fretboard that has a `key`. The other pad functions leave fretboards alone, and the fretboard functions leave pad grids alone.
 
 ```json
 { "id": "octave-up", "kind": "button", "label": "Octave up", "x": 40, "y": 360, "width": 88, "height": 44,
@@ -827,8 +887,8 @@ A button or a pad with a `padGrid` row changes pad grids while the layout runs, 
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `source` | `value`, `padKey`, `octave`, `rowOffset`, `padSummary` | `value` | `value` shows what the readout hears. The others show the key, the octave, the row offset, or all three, of the first grid in `targets`. |
-| `targets` | a list of pad grid `id`s | every pad grid | Which grid it shows. |
+| `source` | `value`, `padKey`, `octave`, `rowOffset`, `padSummary`, `capo`, `tuning` | `value` | `value` shows what the readout hears. `padKey`, `octave`, `rowOffset` and `padSummary` show the key, the octave, the row offset, or all three, of the first grid in `targets`. `capo` and `tuning` show the capo and the tuning of the first fretboard in `targets`. |
+| `targets` | a list of pad grid and fretboard `id`s | every pad grid and fretboard | Which grid or fretboard it shows. |
 
 ```json
 { "id": "where", "kind": "readout", "label": "Pad grid", "x": 500, "y": 360, "width": 176, "height": 44, "readout": { "source": "padSummary", "targets": [ "lead-pads" ] } }
@@ -1066,6 +1126,9 @@ Windows MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024
 > - A hexadecimal number is written in JSON, such as `0x40903C02` or `"40903C02"` in `words`. Only decimal numbers work.
 > - A per-note controller has its two numbers swapped. `number` is the note, and `controller` is the controller.
 > - A pad grid has `notes` set to `inKey` and `key` set to `none`, so it plays every note.
+> - A fretboard's `strings` are listed low string first, so the low string is drawn at the top. List them top to bottom as drawn: a guitar's high E first.
+> - A fretboard's note row is on a channel too high for its strings, so with `channelPerString` or `mpe` the strings run past channel 16 and share channels.
+> - A fretboard is set to `strum` with `strumSide` set to `none`, so there's nowhere to strum and touching a fret plays it.
 > - A note attribute is only on the `turnsOn` row of a pair, when the device wants it on the note off too.
 > - A control on a band sits where it covers a control on another page.
 > - A control hangs off the edge of the page, so it doesn't show.

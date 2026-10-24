@@ -16,6 +16,7 @@
 #include "PageTemplates.h"
 #include "LayoutSerializer.h"
 #include "PadGrid.h"
+#include "Fretboard.h"
 #include "StepPattern.h"
 
 #include <algorithm>
@@ -286,12 +287,19 @@ namespace glass
             }
         }
 
+        // A control turned into a fretboard gets the strings a new one does.
+        if (kind == ControlKind::Fretboard && control->Fretboard.Strings.empty())
+        {
+            control->Fretboard = NormalizedFretboard(std::move(control->Fretboard));
+        }
+
         // A control turned into a sequencer has no steps to play, which would look like a
         // sequencer that is broken. It gets the same pattern a new one does, and a note row to
-        // play it on, pointed wherever the control was already sending.
-        if (kind == ControlKind::Steps)
+        // play it on, pointed wherever the control was already sending. A fretboard needs the
+        // note row too.
+        if (kind == ControlKind::Steps || kind == ControlKind::Fretboard)
         {
-            if (control->Steps.Pattern.empty())
+            if (kind == ControlKind::Steps && control->Steps.Pattern.empty())
             {
                 FillStarterPattern(control->Steps, 48);
             }

@@ -452,6 +452,28 @@ namespace glass
             _In_ GridButtonChoices const& choices,
             _In_ GridButtonLabels const& labels);
 
+        // What the controls Add fretboard buttons puts beside a fretboard are called.
+        struct FretboardButtonLabels
+        {
+            std::wstring Tuning{};
+            std::wstring CapoDown{};
+            std::wstring Capo{};
+            std::wstring CapoUp{};
+            std::wstring DownTheNeck{};
+            std::wstring UpTheNeck{};
+            std::wstring Mute{};
+        };
+
+        // A tuning picker beside a fretboard and a row under it: capo down, a capo readout, capo
+        // up, down the neck, up the neck and mute, as one edit (EditorControllerFretboard.cpp).
+        // Each targets only this fretboard.
+        std::vector<std::wstring> AddFretboardButtons(
+            _In_ std::wstring const& fretboardId,
+            _In_ FretboardButtonLabels const& labels);
+
+        // A fretboard's tuning, strings, frets and how it plays and sends.
+        bool SetControlFretboard(_In_ std::wstring const& id, _In_ FretboardSpec const& fretboard);
+
         bool SetControlKeyboard(_In_ std::wstring const& id, _In_ KeyboardSpec const& keyboard);
         bool SetControlClock(_In_ std::wstring const& id, _In_ ClockSpec const& clock);
         bool SetControlLfo(_In_ std::wstring const& id, _In_ LfoSpec const& lfo);

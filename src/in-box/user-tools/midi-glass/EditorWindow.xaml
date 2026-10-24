@@ -2368,6 +2368,204 @@
                                                    ValueChanged="OnPadGridNumberChanged" />
                                     </StackPanel>
 
+                                    <!-- A fretboard: its tuning and strings, the frets that show, and how it plays.
+                                         Filled in and read back in EditorFretboard.cpp. -->
+                                    <StackPanel x:Name="FretboardPanel" Visibility="Collapsed">
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorFretboardHeading" Text="Fretboard" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="FretTuningCombo"
+                                                  x:Uid="FretTuningCombo"
+                                                  Header="Tuning"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnFretTuningChanged" />
+
+                                        <TextBlock x:Uid="FretStringsHeading" Text="Strings" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <!-- One row per string, top to bottom as drawn: its note, and move up,
+                                             move down and remove. Built in code. -->
+                                        <StackPanel x:Name="FretStringRows" Spacing="4" />
+
+                                        <Button x:Name="FretAddStringButton"
+                                                x:Uid="FretAddStringButton"
+                                                Content="Add string"
+                                                Margin="0,6,0,0"
+                                                FontSize="11"
+                                                Click="OnFretAddStringClick" />
+
+                                        <TextBlock x:Uid="FretStringsCaption"
+                                                   Text="The list runs top to bottom the way the strings are drawn. Changing a note makes the tuning Custom."
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,8,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="FretCountBox"
+                                                       x:Uid="FretCountBox"
+                                                       Header="Frets"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="36"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+
+                                            <NumberBox x:Name="FretCapoBox"
+                                                       x:Uid="FretCapoBox"
+                                                       Header="Capo"
+                                                       Grid.Column="1"
+                                                       Minimum="0"
+                                                       Maximum="35"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+                                        </Grid>
+
+                                        <TextBlock x:Uid="FretVisibleLabel" Text="Visible frets" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="FretFirstBox"
+                                                       x:Uid="FretFirstBox"
+                                                       Header="From"
+                                                       Grid.Column="0"
+                                                       Minimum="0"
+                                                       Maximum="35"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+
+                                            <NumberBox x:Name="FretLastBox"
+                                                       x:Uid="FretLastBox"
+                                                       Header="To"
+                                                       Grid.Column="1"
+                                                       Minimum="1"
+                                                       Maximum="36"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="FretStrumSideCombo"
+                                                  x:Uid="FretStrumSideCombo"
+                                                  Header="Strum side"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <ComboBox x:Name="FretPlayModeCombo"
+                                                  x:Uid="FretPlayModeCombo"
+                                                  Header="Play mode"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Name="FretPlayModeCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <ComboBox x:Name="FretSustainCombo"
+                                                  x:Uid="FretSustainCombo"
+                                                  Header="Sustain"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Uid="FretScaleDotsLabel" Text="Scale dots" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox x:Name="FretKeyCombo"
+                                                      x:Uid="FretKeyCombo"
+                                                      Grid.Column="0"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFretboardChoiceChanged" />
+
+                                            <ComboBox x:Name="FretScaleCombo"
+                                                      x:Uid="FretScaleCombo"
+                                                      Grid.Column="1"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFretboardChoiceChanged" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="FretOutOfKeyCombo"
+                                                  x:Uid="FretOutOfKeyCombo"
+                                                  Header="Out-of-key frets"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Uid="FretExpressionHeading" Text="Expression" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <NumberBox x:Name="FretBendBox"
+                                                   x:Uid="FretBendBox"
+                                                   Header="Bend range (semitones)"
+                                                   Minimum="1"
+                                                   Maximum="12"
+                                                   SpinButtonPlacementMode="Hidden"
+                                                   ValueChanged="OnFretboardNumberChanged" />
+
+                                        <ComboBox x:Name="FretSlideCombo"
+                                                  x:Uid="FretSlideCombo"
+                                                  Header="Slide"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <CheckBox x:Name="FretHammerOnsCheck"
+                                                  x:Uid="FretHammerOnsCheck"
+                                                  Content="Hammer-ons"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnFretboardCheckChanged"
+                                                  Unchecked="OnFretboardCheckChanged" />
+
+                                        <ComboBox x:Name="FretOutputCombo"
+                                                  x:Uid="FretOutputCombo"
+                                                  Header="Output"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Name="FretOutputCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- A tuning picker and a row of buttons that change this fretboard while the layout runs. -->
+                                        <Button x:Name="FretAddButtonsButton"
+                                                x:Uid="FretAddButtonsButton"
+                                                Content="Add fretboard buttons"
+                                                Margin="0,8,0,0"
+                                                FontSize="11"
+                                                Click="OnAddFretboardButtonsClick" />
+
+                                        <TextBlock x:Uid="FretAddButtonsCaption"
+                                                   Text="Adds a tuning picker beside the fretboard and a row under it to move the capo, move along the neck and mute the strings while the layout runs. They change only this fretboard."
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
                                     <!-- The control itself, drawn the way it will actually look,
                                          so a style or a color is judged rather than imagined. -->
                                     <Grid x:Name="PreviewHeading" Style="{StaticResource InspectorSectionRowStyle}">

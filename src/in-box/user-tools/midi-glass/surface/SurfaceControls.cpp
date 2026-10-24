@@ -77,7 +77,8 @@ namespace glass
                     : std::wstring{};
             }
 
-            if (spec.Picks == SwitchPicks::InKeyOnly || spec.Picks == SwitchPicks::RowOffset || spec.Picks == SwitchPicks::Octave)
+            if (spec.Picks == SwitchPicks::InKeyOnly || spec.Picks == SwitchPicks::RowOffset ||
+                spec.Picks == SwitchPicks::Octave || spec.Picks == SwitchPicks::Tuning)
             {
                 return PadPickerPositionName(control, position);
             }

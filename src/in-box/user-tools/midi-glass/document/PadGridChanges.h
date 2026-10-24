@@ -45,6 +45,11 @@ namespace glass
         int32_t Rows{ 0 };
         int32_t Steps{ 0 };
 
+        // A fretboard's capo, the first fret showing, and a tuning, or -1 for its own.
+        int32_t Capo{ -1 };
+        int32_t NeckFirst{ -1 };
+        int32_t Tuning{ -1 };
+
         bool operator==(PadGridState const&) const = default;
     };
 
