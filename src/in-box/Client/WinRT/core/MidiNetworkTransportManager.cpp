@@ -722,7 +722,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                         reasonText == MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_ALREADY_CONNECTED ?
                                             network::MidiNetworkRemoteClientRefusalReason::AlreadyConnectedToThisHost :
                                         reasonText == MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE ?
-                                            network::MidiNetworkRemoteClientRefusalReason::ThisPcAlreadyConnectedToRemote :
+                                            network::MidiNetworkRemoteClientRefusalReason::ThisPCAlreadyConnectedToRemote :
                                             network::MidiNetworkRemoteClientRefusalReason::Unknown;
 
                                     auto refusal = winrt::make_self<MidiNetworkRefusedRemoteClient>();

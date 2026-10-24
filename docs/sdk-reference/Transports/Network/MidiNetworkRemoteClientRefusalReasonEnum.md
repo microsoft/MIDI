@@ -16,4 +16,4 @@ Reported by `MidiNetworkRefusedRemoteClient.Reason`, in the `RecentlyRefusedRemo
 | ----- | ------------- | ----------- |
 | `Unknown` | `0` | A reason this version of the API doesn't know about |
 | `AlreadyConnectedToThisHost` | `1` | The device already has a session with this host |
-| `ThisPcAlreadyConnectedToRemote` | `2` | This PC is already connected to the device as a client, through a client entry. A device connects to this PC in only one direction at a time |
+| `ThisPCAlreadyConnectedToRemote` | `2` | This PC is already connected to the device as a client, through a client entry. A device connects to this PC in only one direction at a time |

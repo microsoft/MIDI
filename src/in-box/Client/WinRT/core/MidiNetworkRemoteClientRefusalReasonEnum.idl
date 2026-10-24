@@ -22,6 +22,6 @@ namespace Windows.Devices.Midi2.Transports.Network
         AlreadyConnectedToThisHost = 1,
 
         // this PC is already connected to the device as a client, through a client entry
-        ThisPcAlreadyConnectedToRemote = 2,
+        ThisPCAlreadyConnectedToRemote = 2,
     };
 }

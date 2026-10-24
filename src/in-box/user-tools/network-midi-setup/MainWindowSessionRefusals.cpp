@@ -95,7 +95,7 @@ namespace winrt::midinetworksetup::implementation
             case midi2net::MidiNetworkRemoteClientRefusalReason::AlreadyConnectedToThisHost:
                 return L"NetworkHostRefusedSecondConnectionFormat";
 
-            case midi2net::MidiNetworkRemoteClientRefusalReason::ThisPcAlreadyConnectedToRemote:
+            case midi2net::MidiNetworkRemoteClientRefusalReason::ThisPCAlreadyConnectedToRemote:
                 return L"NetworkHostRefusedRemoteHostFormat";
 
             default:
