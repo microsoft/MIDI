@@ -19,14 +19,20 @@ public:
     // A host started or stopped waiting for a missing network adapter. Deferred the same way.
     void SignalHostNetworkAdapterChanged() noexcept;
 
+    // Lets a write already queued finish and releases the work item, so nothing is left to run
+    // when the DLL unloads. A signal after this queues work again.
+    void Shutdown() noexcept;
+
 private:
     void Queue(_Inout_ std::atomic<uint32_t>& queued, _In_ PCWSTR const valueName) noexcept;
 
     static void BumpCounter(_In_ PCWSTR const valueName) noexcept;
 
-    ThreadpoolWork m_work{ };
-
-    // cleared by the work item before it writes, so a change during the write queues another
+    // Cleared by the work item before it writes, so a change during the write queues another.
+    // Declared before the work item, because the work runs what is left as it is destroyed.
     std::atomic<uint32_t> m_pendingApprovalWriteQueued{ 0 };
     std::atomic<uint32_t> m_hostNetworkAdapterWriteQueued{ 0 };
+
+    wil::srwlock m_workLock;
+    std::unique_ptr<ThreadpoolWork> m_work;
 };

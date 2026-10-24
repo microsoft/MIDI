@@ -132,6 +132,10 @@ CMidi2RtpMidiEndpointManager::Initialize(
         RETURN_HR_IF_NULL(E_INVALIDARG, midiEndpointProtocolManager);
         RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_initialized.load());
 
+        // A start which fails partway stops what it started and lets go of the service's objects,
+        // so nothing is left for the transport's static state to release at DLL unload
+        auto stopOnFailure = wil::scope_exit([&]() noexcept { StopRunning(); });
+
         RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
         RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
@@ -168,14 +172,12 @@ CMidi2RtpMidiEndpointManager::Initialize(
                 );
             }));
 
-        m_initialized = true;
-
         // before the service finishes starting, so an app which starts it finds them
         ReconcileKeptEndpoints();
 
         // The worker starts discovery once something needs it
         {
-            auto lock = std::scoped_lock{ m_discoveryLock };
+            auto lock = m_discoveryLock.lock_exclusive();
             m_discoveryAllowed = true;
         }
 
@@ -202,6 +204,10 @@ CMidi2RtpMidiEndpointManager::Initialize(
                 TraceLoggingWideString(L"Unable to watch for network adapter changes. Hosts limited to an adapter will follow it more slowly.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
+
+        // only once everything has started
+        m_initialized = true;
+        stopOnFailure.release();
 
         return S_OK;
     }
@@ -248,10 +254,28 @@ CMidi2RtpMidiEndpointManager::Shutdown()
             TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        if (!m_initialized.exchange(false)) return S_OK;
+        // Whether or not Initialize got anywhere. Stopping what never started does nothing.
+        m_initialized = false;
+        StopRunning();
 
+        // TransportState::Shutdown releases its reference to this object
+        wil::com_ptr<CMidi2RtpMidiEndpointManager> keepAlive{ this };
+
+        TransportState::Current().Shutdown();
+
+        return S_OK;
+    }
+    CATCH_RETURN();
+}
+
+
+void
+CMidi2RtpMidiEndpointManager::StopRunning() noexcept
+{
+    try
+    {
         {
-            auto lock = std::scoped_lock{ m_discoveryLock };
+            auto lock = m_discoveryLock.lock_exclusive();
 
             m_discoveryAllowed = false;
             m_browser.Stop();
@@ -270,7 +294,7 @@ CMidi2RtpMidiEndpointManager::Shutdown()
         std::vector<std::shared_ptr<RtpMidiNode>> nodes;
 
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             for (auto& entry : m_hosts) if (entry.second.Node != nullptr) nodes.push_back(std::move(entry.second.Node));
             for (auto& entry : m_clients) if (entry.second.Node != nullptr) nodes.push_back(std::move(entry.second.Node));
@@ -290,13 +314,19 @@ CMidi2RtpMidiEndpointManager::Shutdown()
         }
 
         {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+            auto lock = m_createdEndpointsLock.lock_exclusive();
             m_createdEndpoints.clear();
+            m_endpointsToRemove.clear();
         }
+
+        TransportState::Current().Approvals().ForgetRemoteEndpoints();
 
         m_lastWrittenLatencyTicks.clear();
         m_keptEndpointRetryTicks.clear();
         m_keptHostEndpointRetryTicks.clear();
+
+        // its deferred registry write would otherwise outlive the service's objects
+        m_notificationSignal.Shutdown();
 
         m_midiDeviceManager.reset();
         m_midiProtocolManager.reset();
@@ -306,15 +336,8 @@ CMidi2RtpMidiEndpointManager::Shutdown()
             WSACleanup();
             m_winsockStarted = false;
         }
-
-        // TransportState::Shutdown releases its reference to this object
-        wil::com_ptr<CMidi2RtpMidiEndpointManager> keepAlive{ this };
-
-        TransportState::Current().Shutdown();
-
-        return S_OK;
     }
-    CATCH_RETURN();
+    CATCH_LOG();
 }
 
 
@@ -393,7 +416,7 @@ CMidi2RtpMidiEndpointManager::UpdateDiscovery()
             std::any_of(clients.begin(), clients.end(), [](RtpMidiClientDefinition const& definition) { return definition.Enabled; });
     }
 
-    auto lock = std::scoped_lock{ m_discoveryLock };
+    auto lock = m_discoveryLock.lock_exclusive();
 
     if (!m_discoveryAllowed || needed == m_browser.IsRunning()) return;
 
@@ -427,7 +450,7 @@ CMidi2RtpMidiEndpointManager::EnsureDiscoveryForRequest()
     uint64_t started{ 0 };
 
     {
-        auto lock = std::scoped_lock{ m_discoveryLock };
+        auto lock = m_discoveryLock.lock_exclusive();
 
         if (!m_discoveryAllowed) return;
 
@@ -469,6 +492,7 @@ CMidi2RtpMidiEndpointManager::WorkerLoop(std::stop_token stopToken)
             ReconcileClients(stopToken);
             ProcessEndpointWork();
             ReconcileKeptEndpoints();
+            RetryFailedRemovals();
 
             auto const now = GetTickCount64();
 
@@ -573,7 +597,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
         bool unsettled{ false };
 
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             for (auto const& definition : definitions)
             {
@@ -598,7 +622,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
     bool waitingChanged{ false };
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         for (auto it = m_hosts.begin(); it != m_hosts.end(); )
         {
@@ -724,6 +748,23 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
         auto node = std::make_shared<RtpMidiNode>(
             RtpMidiNode::Role::Host, definition.EntryId, definition.Name, definition.SendRecoveryJournal, this);
 
+        // Stopped here unless it is kept, however this ends, so a node is never released while its
+        // threads still run
+        bool keep{ false };
+
+        auto stopUnlessKept = wil::scope_exit([&]() noexcept
+            {
+                if (keep) return;
+
+                try
+                {
+                    if (node->IsAdvertised()) m_announcer.RemoveRegistration(node->AdvertisedLabel());
+                }
+                CATCH_LOG();
+
+                node->Stop();
+            });
+
         node->SetSendSpeedLimit(definition.SendSpeedLimit);
         node->SetSkipInBetweenValuesToCatchUp(definition.SkipInBetweenValuesToCatchUp);
 
@@ -756,10 +797,8 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             if (SUCCEEDED(advertiseHr)) m_announcer.AddRegistration(node->AdvertisedLabel(), placement.NetworkAdapterId);
         }
 
-        bool keep{ false };
-
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             // the definition may have changed or gone while this one was starting
             auto const it = m_hosts.find(definition.EntryId);
@@ -792,12 +831,6 @@ CMidi2RtpMidiEndpointManager::ReconcileHosts(std::stop_token const& stopToken)
             TraceLoggingBool(placement.FallbackUsed, "network adapter fallback used"),
             TraceLoggingBool(keep, "kept")
         );
-
-        if (!keep)
-        {
-            if (node->IsAdvertised()) m_announcer.RemoveRegistration(node->AdvertisedLabel());
-            node->Stop();
-        }
     }
 }
 
@@ -821,7 +854,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
     std::vector<ClientAttempt> toAttempt;
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         for (auto it = m_clients.begin(); it != m_clients.end(); )
         {
@@ -896,7 +929,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
 
         if (address.empty() || !RtpMidiNet::TryParseAddress(address, port, target))
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             auto const it = m_clients.find(definition.EntryId);
             if (it != m_clients.end())
@@ -914,7 +947,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
         std::shared_ptr<RtpMidiNode> node{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             auto const it = m_clients.find(definition.EntryId);
             if (it == m_clients.end()) continue;
@@ -940,7 +973,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
             bool keep{ false };
 
             {
-                auto lock = std::scoped_lock{ m_runtimeLock };
+                auto lock = m_runtimeLock.lock_exclusive();
 
                 auto const it = m_clients.find(definition.EntryId);
 
@@ -968,7 +1001,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
         }
 
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             auto const it = m_clients.find(definition.EntryId);
             if (it == m_clients.end() || it->second.Node != node) continue;
@@ -999,7 +1032,7 @@ CMidi2RtpMidiEndpointManager::ReconcileClients(std::stop_token const& stopToken)
 
         if (FAILED(inviteHr))
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
 
             auto const it = m_clients.find(definition.EntryId);
             if (it != m_clients.end() && it->second.Node == node)
@@ -1084,7 +1117,7 @@ CMidi2RtpMidiEndpointManager::IsInstanceIdInUse(std::wstring const& instanceId)
 {
     auto const normalized = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
 
-    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
     return std::any_of(m_createdEndpoints.begin(), m_createdEndpoints.end(),
         [&](std::shared_ptr<RtpMidiEndpoint> const& endpoint) { return endpoint->NormalizedInstanceId() == normalized; });
@@ -1159,10 +1192,21 @@ CMidi2RtpMidiEndpointManager::CreateEndpoint(std::shared_ptr<RtpMidiConnection> 
         // follows the remote's settings while it is connected, and decided again when it leaves
         if (endpoint->IsHostRemoteEndpoint()) endpoint->SetKept(HostKeepsEndpointFor(connection->EntryId(), hostRemoteName));
 
-        // before activation, so an app which opens the endpoint meanwhile already reaches the remote
-        endpoint->Attach(connection);
+        // Before activation, so an app which opens the endpoint meanwhile already reaches the
+        // remote. A connection which ended while this waited gets nothing.
+        if (!endpoint->Attach(connection)) return S_OK;
 
-        return ActivateRtpEndpoint(endpoint, uniqueIdentifier, endpointDescription);
+        auto& approvals = TransportState::Current().Approvals();
+        auto const remoteAddress = RtpMidiNet::AddressToString(connection->RemoteControl());
+
+        // the endpoint found again by this name goes back only to an address it was used from
+        if (endpoint->IsHostRemoteEndpoint()) approvals.RemoteEndpointConnected(connection->EntryId(), hostRemoteName, remoteAddress);
+
+        auto const hr = ActivateRtpEndpoint(endpoint, uniqueIdentifier, endpointDescription);
+
+        if (FAILED(hr) && endpoint->IsHostRemoteEndpoint()) approvals.RemoteEndpointRemoved(connection->EntryId(), hostRemoteName);
+
+        return hr;
     }
     CATCH_RETURN();
 }
@@ -1183,7 +1227,8 @@ CMidi2RtpMidiEndpointManager::RemoveEndpoint(std::shared_ptr<RtpMidiConnection> 
         // its entry started keeping it after the connection ended
         if (endpoint->IsKept())
         {
-            endpoint->DetachIfCurrent(connection.get());
+            if (endpoint->DetachIfCurrent(connection.get())) MarkHostRemoteEndpointAway(endpoint);
+
             return S_OK;
         }
 
@@ -1198,7 +1243,7 @@ CMidi2RtpMidiEndpointManager::RunningNodes()
 {
     std::vector<std::shared_ptr<RtpMidiNode>> nodes;
 
-    auto lock = std::scoped_lock{ m_runtimeLock };
+    auto lock = m_runtimeLock.lock_exclusive();
 
     for (auto const& entry : m_hosts) if (entry.second.Node != nullptr) nodes.push_back(entry.second.Node);
     for (auto const& entry : m_clients) if (entry.second.Node != nullptr) nodes.push_back(entry.second.Node);
@@ -1277,7 +1322,7 @@ CMidi2RtpMidiEndpointManager::OnConnectionUp(std::shared_ptr<RtpMidiConnection> 
     {
         auto const node = connection->Node();
 
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         auto const it = m_clients.find(connection->EntryId());
         if (it != m_clients.end() && node != nullptr && it->second.Node == node)
@@ -1340,7 +1385,7 @@ CMidi2RtpMidiEndpointManager::OnInvitationEnded(RtpMidiNode const* node, RtpMidi
     if (node == nullptr) return;
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         auto const it = m_clients.find(node->EntryId());
 
@@ -1387,7 +1432,7 @@ HRESULT
 CMidi2RtpMidiEndpointManager::ReconnectClient(GUID const& entryId)
 {
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         auto const it = m_clients.find(entryId);
 
@@ -1420,7 +1465,7 @@ CMidi2RtpMidiEndpointManager::DisconnectConnection(GUID const& entryId, uint32_t
     std::shared_ptr<RtpMidiNode> node{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         if (auto const host = m_hosts.find(entryId); host != m_hosts.end()) node = host->second.Node;
         else if (auto const client = m_clients.find(entryId); client != m_clients.end()) node = client->second.Node;
@@ -1450,7 +1495,7 @@ CMidi2RtpMidiEndpointManager::EndConnectionsFromRemote(GUID const& hostId, std::
     std::shared_ptr<RtpMidiNode> node{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
         if (auto const host = m_hosts.find(hostId); host != m_hosts.end()) node = host->second.Node;
     }
 
@@ -1485,7 +1530,7 @@ CMidi2RtpMidiEndpointManager::ApplyRemoteClientSettings(GUID const& hostId)
     std::shared_ptr<RtpMidiNode> node{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
         if (auto const host = m_hosts.find(hostId); host != m_hosts.end()) node = host->second.Node;
     }
 
@@ -1509,7 +1554,7 @@ CMidi2RtpMidiEndpointManager::FindEndpointByInterfaceId(std::wstring const& endp
 {
     auto const normalized = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
-    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
     for (auto const& endpoint : m_createdEndpoints)
     {
@@ -1537,7 +1582,7 @@ CMidi2RtpMidiEndpointManager::FindMatchingInstantiatedEndpoint(WindowsMidiServic
 {
     criteria.Normalize();
 
-    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
     for (auto const& endpoint : m_createdEndpoints)
     {
@@ -1632,7 +1677,7 @@ CMidi2RtpMidiEndpointManager::BuildHostsStatusJson()
     std::vector<HostView> views;
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
 
         for (auto const& entry : m_hosts)
         {
@@ -1752,7 +1797,7 @@ CMidi2RtpMidiEndpointManager::BuildClientsStatusJson()
     std::vector<ClientView> views;
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
         for (auto const& entry : m_clients) views.push_back(ClientView{ entry.second.Definition, entry.second.Node, entry.second.State, entry.second.LastError });
     }
 

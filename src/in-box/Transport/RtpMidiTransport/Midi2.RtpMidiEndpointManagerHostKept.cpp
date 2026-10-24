@@ -78,7 +78,7 @@ _Use_decl_annotations_
 std::shared_ptr<RtpMidiEndpoint>
 CMidi2RtpMidiEndpointManager::FindHostRemoteEndpoint(GUID const& hostId, std::wstring const& remoteName)
 {
-    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
     for (auto const& endpoint : m_createdEndpoints)
     {
@@ -92,6 +92,20 @@ CMidi2RtpMidiEndpointManager::FindHostRemoteEndpoint(GUID const& hostId, std::ws
 }
 
 
+// Under the list's lock, which attaching takes too, so a remote coming back at this moment is
+// never left marked away
+_Use_decl_annotations_
+void
+CMidi2RtpMidiEndpointManager::MarkHostRemoteEndpointAway(std::shared_ptr<RtpMidiEndpoint> const& endpoint)
+{
+    if (endpoint == nullptr || !endpoint->IsHostRemoteEndpoint()) return;
+
+    auto lock = m_createdEndpointsLock.lock_exclusive();
+
+    if (endpoint->Connection() == nullptr) TransportState::Current().Approvals().RemoteEndpointAway(endpoint->EntryId(), endpoint->HostRemoteName());
+}
+
+
 // Unlisted and removed only while nothing is attached to it. Attaching happens under the same
 // lock, so a remote coming back at this moment either gets the endpoint or a new one, never one
 // being removed.
@@ -102,7 +116,7 @@ CMidi2RtpMidiEndpointManager::TryRemoveDetachedEndpoint(std::shared_ptr<RtpMidiE
     if (endpoint == nullptr) return false;
 
     {
-        auto lock = std::scoped_lock{ m_createdEndpointsLock };
+        auto lock = m_createdEndpointsLock.lock_exclusive();
 
         if (endpoint->Connection() != nullptr) return false;
 
@@ -132,25 +146,34 @@ CMidi2RtpMidiEndpointManager::CreateHostKeptEndpoint(GUID const& hostId, std::ws
 
     endpoint->SetKept(true);
 
-    return ActivateRtpEndpoint(
+    auto const hr = ActivateRtpEndpoint(
         endpoint,
         RtpMidiText::StableHash(identity),
         internal::ResourceGetWString(IDS_RTP_ENDPOINT_DESCRIPTION_HOST));
+
+    // kept for a remote which has not connected yet, so the first one to use the name gets it
+    if (SUCCEEDED(hr)) MarkHostRemoteEndpointAway(endpoint);
+
+    return hr;
 }
 
 
 // The node's delivery thread. Attached before anything else is delivered, so an app which kept the
-// endpoint open hears the remote's first message.
+// endpoint open hears the remote's first message. Only a remote at an address the endpoint was used
+// from, or one the customer approved, gets it. Any other remote using the name gets one of its own.
 _Use_decl_annotations_
 bool
 CMidi2RtpMidiEndpointManager::AttachToKeptHostEndpoint(std::shared_ptr<RtpMidiConnection> const& connection)
 {
     if (connection == nullptr || !connection->ThisPcIsHost() || connection->RemoteName().empty()) return false;
 
+    auto& approvals = TransportState::Current().Approvals();
+    auto const remoteAddress = RtpMidiNet::AddressToString(connection->RemoteControl());
+
     std::shared_ptr<RtpMidiEndpoint> attached{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_createdEndpointsLock };
+        auto lock = m_createdEndpointsLock.lock_exclusive();
 
         for (auto const& endpoint : m_createdEndpoints)
         {
@@ -160,7 +183,13 @@ CMidi2RtpMidiEndpointManager::AttachToKeptHostEndpoint(std::shared_ptr<RtpMidiCo
             // another remote sending the same name has it. This one gets an endpoint of its own.
             if (endpoint->Connection() != nullptr) return false;
 
-            endpoint->Attach(connection);
+            if (!approvals.MayTakeRemoteEndpoint(connection->EntryId(), endpoint->HostRemoteName(), remoteAddress)) return false;
+
+            // a connection which ended while this waited needs nothing more
+            if (!endpoint->Attach(connection)) return true;
+
+            approvals.RemoteEndpointConnected(connection->EntryId(), endpoint->HostRemoteName(), remoteAddress);
+
             attached = endpoint;
             break;
         }
@@ -201,7 +230,8 @@ CMidi2RtpMidiEndpointManager::DetachFromKeptHostEndpoint(std::shared_ptr<RtpMidi
 
     if (!keep) return false;
 
-    endpoint->DetachIfCurrent(connection.get());
+    // From now on a remote of this name from an address it never used is asked about first
+    if (endpoint->DetachIfCurrent(connection.get())) MarkHostRemoteEndpointAway(endpoint);
 
     TraceLoggingWrite(
         MidiRtpMidiTransportTelemetryProvider::Provider(),
@@ -226,7 +256,7 @@ CMidi2RtpMidiEndpointManager::RefreshHostEndpointsKept(GUID const& hostId)
     std::vector<std::shared_ptr<RtpMidiEndpoint>> connected;
 
     {
-        auto lock = std::scoped_lock{ m_createdEndpointsLock };
+        auto lock = m_createdEndpointsLock.lock_exclusive();
 
         for (auto const& endpoint : m_createdEndpoints)
         {
@@ -253,7 +283,7 @@ CMidi2RtpMidiEndpointManager::ReleaseHostEndpointWhenConnectionEnds(GUID const& 
     std::shared_ptr<RtpMidiNode> node{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_runtimeLock };
+        auto lock = m_runtimeLock.lock_exclusive();
         if (auto const host = m_hosts.find(hostId); host != m_hosts.end()) node = host->second.Node;
     }
 
@@ -280,7 +310,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHostKeptEndpoints(uint64_t const now)
         std::vector<std::shared_ptr<RtpMidiEndpoint>> hostEndpoints;
 
         {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+            auto lock = m_createdEndpointsLock.lock_exclusive();
 
             for (auto const& endpoint : m_createdEndpoints)
             {
@@ -320,6 +350,7 @@ CMidi2RtpMidiEndpointManager::ReconcileHostKeptEndpoints(uint64_t const now)
             if (keeps && !expired)
             {
                 endpoint->SetKept(true);
+                MarkHostRemoteEndpointAway(endpoint);
                 continue;
             }
 

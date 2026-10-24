@@ -27,7 +27,11 @@ RtpMidiNotificationSignal::Queue(std::atomic<uint32_t>& queued, PCWSTR const val
 
     try
     {
-        m_work.Submit([&queued, valueName]()
+        auto lock = m_workLock.lock_exclusive();
+
+        if (m_work == nullptr) m_work = std::make_unique<ThreadpoolWork>();
+
+        m_work->Submit([&queued, valueName]()
             {
                 queued.store(0);
                 BumpCounter(valueName);
@@ -40,6 +44,20 @@ RtpMidiNotificationSignal::Queue(std::atomic<uint32_t>& queued, PCWSTR const val
         queued.store(0);
         LOG_CAUGHT_EXCEPTION();
     }
+}
+
+void
+RtpMidiNotificationSignal::Shutdown() noexcept
+{
+    std::unique_ptr<ThreadpoolWork> work;
+
+    {
+        auto lock = m_workLock.lock_exclusive();
+        work.swap(m_work);
+    }
+
+    // waits for a write in progress and runs any still queued, outside the lock
+    work.reset();
 }
 
 _Use_decl_annotations_

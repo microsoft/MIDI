@@ -59,6 +59,7 @@ public:
     TEST_METHOD(TestUnrecognizedPolicyRequiresApproval);
     TEST_METHOD(TestApprovalCommandsCheckTheirArguments);
     TEST_METHOD(TestNamesDefaultToThisPcName);
+    TEST_METHOD(TestApprovalHoldsForTheAddressItShowed);
 
     // the send speed limit, in RtpMidiSendSpeedTests.cpp
     TEST_METHOD(TestSendSpeedLimitPacesALargeSysEx);
@@ -94,6 +95,7 @@ public:
     TEST_METHOD(TestDisconnectingARemoteHereEndsItsTimedEndpoint);
     TEST_METHOD(TestRestartedRemoteKeepsItsHostEndpoint);
     TEST_METHOD(TestHostOfflineRetentionValuesAreChecked);
+    TEST_METHOD(TestKeptHostEndpointGoesBackOnlyToItsAddress);
 
 private:
     winrt::Windows::Data::Json::JsonObject Send(std::wstring const& text, HRESULT* result = nullptr);

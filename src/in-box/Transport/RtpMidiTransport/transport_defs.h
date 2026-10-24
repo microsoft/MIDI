@@ -49,6 +49,18 @@
 #define MIDI_RTP_MAX_REMOTE_CLIENT_SETTINGS_PER_HOST            256
 #define MIDI_RTP_REMOTE_CLIENT_NAME_MAX_CHARS                   255
 
+// One address can't fill the list of remotes waiting for a decision. When the list is full, a
+// request whose remote stopped asking this long ago makes room for a new one.
+#define MIDI_RTP_MAX_PENDING_REMOTE_CLIENTS_PER_ADDRESS         2
+#define MIDI_RTP_PENDING_REMOTE_CLIENT_IDLE_MS                  30000
+
+// The addresses remembered for each remote whose endpoint a host can find again by name
+#define MIDI_RTP_MAX_REMOTE_ENDPOINT_ADDRESSES                  8
+
+// An endpoint the service would not remove is tried again on later worker passes, this many times
+#define MIDI_RTP_MAX_FAILED_ENDPOINT_REMOVALS                   256
+#define MIDI_RTP_MAX_FAILED_REMOVAL_ATTEMPTS                    10
+
 // The configuration file is written by customers and tools, so text that only this PC uses, like a
 // custom endpoint name or a remote's host name, is bounded as well. DNS host names stop at 253.
 #define MIDI_RTP_CONFIG_TEXT_MAX_CHARS                          255

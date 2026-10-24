@@ -26,55 +26,70 @@ _Use_decl_annotations_
 void
 RtpMidiEndpoint::SetInterfaceId(std::wstring const& interfaceId)
 {
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_exclusive();
 
     m_interfaceId = interfaceId;
 
-    if (m_connection != nullptr) m_connection->SetEndpointIds(m_normalizedInstanceId, m_interfaceId);
+    if (m_connection != nullptr) m_connection->SetEndpointInterfaceId(m_interfaceId);
 }
 
 std::wstring
 RtpMidiEndpoint::InterfaceId() const
 {
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_shared();
     return m_interfaceId;
 }
 
 
 _Use_decl_annotations_
-void
+bool
 RtpMidiEndpoint::Attach(std::shared_ptr<RtpMidiConnection> const& connection)
 {
-    if (connection == nullptr) return;
+    if (connection == nullptr) return false;
 
-    auto lock = std::scoped_lock{ m_lock };
-
-    if (m_connection != nullptr && m_connection != connection)
     {
-        if (m_callback != nullptr) LOG_IF_FAILED(m_connection->DisconnectMidiCallbackIfCurrent(m_callback.get()));
-        m_connection->ClearEndpointIds();
+        auto lock = m_lock.lock_exclusive();
+
+        // never in place of one still running
+        if (connection->IsClosed()) return false;
+
+        if (m_connection != nullptr && m_connection != connection)
+        {
+            if (m_callback != nullptr) LOG_IF_FAILED(m_connection->DisconnectMidiCallbackIfCurrent(m_callback.get()));
+            m_connection->ClearEndpointInterfaceId();
+        }
+
+        m_connection = connection;
+        m_disconnectedSinceTick = 0;
+        m_releaseWhenConnectionEnds = false;
+
+        m_connection->SetEndpointInterfaceId(m_interfaceId);
+
+        // so an app which kept the endpoint open hears the remote from its first message
+        if (m_callback != nullptr) LOG_IF_FAILED(m_connection->ConnectMidiCallback(m_callback.get(), m_callbackContext));
     }
 
-    m_connection = connection;
-    m_disconnectedSinceTick = 0;
-    m_releaseWhenConnectionEnds = false;
+    // A connection is closed before it is reported down. One that closed just now may already have
+    // been reported, before it was attached here, so nothing else would ever take it off.
+    if (connection->IsClosed())
+    {
+        DetachIfCurrent(connection.get());
+        return false;
+    }
 
-    m_connection->SetEndpointIds(m_normalizedInstanceId, m_interfaceId);
-
-    // so an app which kept the endpoint open hears the remote from its first message
-    if (m_callback != nullptr) LOG_IF_FAILED(m_connection->ConnectMidiCallback(m_callback.get(), m_callbackContext));
+    return true;
 }
 
 _Use_decl_annotations_
 bool
 RtpMidiEndpoint::DetachIfCurrent(RtpMidiConnection const* connection)
 {
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_exclusive();
 
     if (connection == nullptr || m_connection.get() != connection) return false;
 
     if (m_callback != nullptr) LOG_IF_FAILED(m_connection->DisconnectMidiCallbackIfCurrent(m_callback.get()));
-    m_connection->ClearEndpointIds();
+    m_connection->ClearEndpointInterfaceId();
     m_connection.reset();
 
     m_disconnectedSinceTick = GetTickCount64();
@@ -85,14 +100,14 @@ RtpMidiEndpoint::DetachIfCurrent(RtpMidiConnection const* connection)
 std::shared_ptr<RtpMidiConnection>
 RtpMidiEndpoint::Connection() const
 {
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_shared();
     return m_connection;
 }
 
 uint64_t
 RtpMidiEndpoint::DisconnectedSinceTick() const
 {
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_shared();
     return m_disconnectedSinceTick;
 }
 
@@ -103,7 +118,7 @@ RtpMidiEndpoint::ConnectMidiCallback(IMidiCallback* callback, LONGLONG const con
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_exclusive();
 
     m_callback = callback;
     m_callbackContext = context;
@@ -117,7 +132,7 @@ _Use_decl_annotations_
 HRESULT
 RtpMidiEndpoint::DisconnectMidiCallbackIfCurrent(IMidiCallback* callback)
 {
-    auto lock = std::scoped_lock{ m_lock };
+    auto lock = m_lock.lock_exclusive();
 
     // the service can open the endpoint again before the old bidi shuts down
     if (m_callback.get() != callback) return S_FALSE;
@@ -138,7 +153,7 @@ RtpMidiEndpoint::SendToNetwork(PVOID const data, UINT const length)
     std::shared_ptr<RtpMidiConnection> connection{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_lock };
+        auto lock = m_lock.lock_exclusive();
         connection = m_connection;
     }
 

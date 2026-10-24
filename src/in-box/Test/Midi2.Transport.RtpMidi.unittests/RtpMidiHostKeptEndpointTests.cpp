@@ -423,3 +423,74 @@ void RtpMidiTransportTests::TestRestartedRemoteKeepsItsHostEndpoint()
     VERIFY_SUCCEEDED(opened.Send(&toSecondLife, sizeof(toSecondLife)), L"the app sends");
     VERIFY_IS_TRUE(WaitFor([&]() { return ContainsSequence(secondLife->Received(), { 0x96, 0x40, 0x71 }); }, 3000), L"the second life receives it");
 }
+
+
+// While its remote is away, a kept endpoint goes back only to an address that remote connected
+// from. A device sending the name from anywhere else is asked about first, even on a host which
+// lets anyone in, because an app may still have the endpoint open.
+void RtpMidiTransportTests::TestKeptHostEndpointGoesBackOnlyToItsAddress()
+{
+    std::wstring const remoteName{ L"Harness Address Kept Remote" };
+
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(L"\"name\":\"Address Keeping Host\"", port);
+    Cleanup removeHost([&]() { RemoveHost(hostId); });
+
+    VERIFY_IS_TRUE(IsSuccess(Send(SettingsSection(hostId, Kept(remoteName, L"\"always\"")))), L"the remote is kept always");
+    VERIFY_IS_TRUE(WaitFor([&]() { return Live(*m_deviceManager, remoteName).size() == 1; }, 3000), L"its endpoint is made before it connects");
+
+    auto const kept = Live(*m_deviceManager, remoteName).front();
+
+    auto const pendingAddress = [&]()
+        {
+            auto const pending = FindPending(hostId, remoteName);
+            return pending == nullptr ? std::wstring{} : std::wstring{ pending.GetNamedString(L"remoteAddress", L"") };
+        };
+
+    {
+        Peer first("Harness Address Kept Remote", false);
+        VERIFY_IS_TRUE(first.Start(), L"the remote binds an IPv6 loopback port pair");
+        first.Invite(port);
+
+        VERIFY_IS_TRUE(WaitFor([&]() { return first.ConnectedCount() == 1 && KeptEndpointId(FindHost(hostId), remoteName).empty(); }, 5000),
+            L"the first remote to use the name takes the endpoint, without being asked about");
+
+        first.EndAll();
+    }
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return SameText(KeptEndpointId(FindHost(hostId), remoteName), kept.InterfaceId); }, 3000),
+        L"the endpoint is kept once it leaves");
+
+    {
+        Peer impostor("Harness Address Kept Remote", false, true);
+        VERIFY_IS_TRUE(impostor.Start(), L"another device with the name binds an IPv4 loopback port pair");
+        impostor.Invite(port);
+
+        VERIFY_IS_TRUE(WaitFor([&]() { return pendingAddress() == L"127.0.0.1"; }, 3000), L"it is asked about, showing its address");
+
+        Sleep(1500);
+        VERIFY_IS_TRUE(impostor.ConnectedCount() == 0, L"it waits");
+        VERIFY_IS_TRUE(SameText(KeptEndpointId(FindHost(hostId), remoteName), kept.InterfaceId), L"the endpoint is still kept for its remote");
+        VERIFY_IS_TRUE(Created(*m_deviceManager, remoteName) == 1, L"and nothing else was made");
+
+        VERIFY_IS_TRUE(IsSuccess(Decide(L"approveRemoteClient", hostId, remoteName, L"once")), L"approve it");
+
+        VERIFY_IS_TRUE(WaitFor([&]() { return impostor.ConnectedCount() == 1 && KeptEndpointId(FindHost(hostId), remoteName).empty(); }, 3000),
+            L"an approved address gets the kept endpoint");
+        VERIFY_IS_TRUE(Created(*m_deviceManager, remoteName) == 1, L"the same one");
+
+        impostor.EndAll();
+    }
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return SameText(KeptEndpointId(FindHost(hostId), remoteName), kept.InterfaceId); }, 3000),
+        L"kept again once it leaves");
+
+    Peer back("Harness Address Kept Remote", false);
+    VERIFY_IS_TRUE(back.Start(), L"the first remote comes back from its address");
+    back.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return back.ConnectedCount() == 1 && KeptEndpointId(FindHost(hostId), remoteName).empty(); }, 5000),
+        L"it gets its endpoint back without being asked about");
+    VERIFY_IS_TRUE(FindPending(hostId, remoteName) == nullptr, L"nobody was asked");
+    VERIFY_IS_TRUE(Created(*m_deviceManager, remoteName) == 1, L"still the one endpoint");
+}
