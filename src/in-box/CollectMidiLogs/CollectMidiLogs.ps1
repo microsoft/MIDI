@@ -64,6 +64,9 @@ if ($automatic -OR ($reproResponse.Trim().ToLower())[0] -eq 'y')
     $midisrvConfigChange = $false
     $tracingStarted = $false
 
+    # record which MIDI libraries the running in-box apps have loaded
+    WriteClientInventory -OutFolder $outDir
+
     # prompt and optionally start the time travel traces
     # before starting etw tracing, so that the potential
     # service restarts are not included in the etw logs

@@ -597,12 +597,12 @@
                             <CheckBox x:Name="CaptureMidiKsInfoCheck" x:Uid="CaptureMidiKsInfoCheck"
                                       Content="Include midiksinfo output" IsChecked="True" />
                             <CheckBox x:Name="CaptureTimeTravelCheck" x:Uid="CaptureTimeTravelCheck"
-                                      Content="Include a time travel trace of the MIDI service"
+                                      Content="Include a time travel trace of the MIDI service and any Windows MIDI Services apps that are open"
                                       IsChecked="True" />
                             <TextBlock x:Name="CaptureTimeTravelCaption" x:Uid="CaptureTimeTravelCaption"
                                        Margin="32,-4,0,0" MaxWidth="700" HorizontalAlignment="Left"
                                        Style="{StaticResource PropertyLabelStyle}" TextWrapping="Wrap"
-                                       Text="The most useful information you can send, but much larger, and it needs a reboot or a MIDI service restart afterwards." />
+                                       Text="The most useful information you can send, but much larger, and it needs a reboot or a MIDI service restart afterwards. Open the MIDI app you're having trouble with, such as Windows MIDI Monitor or midi1rtmonitor, before you start. Apps you open after that aren't included." />
                             <TextBlock x:Name="CaptureProfileText"
                                        Style="{StaticResource PropertyLabelStyle}"
                                        TextWrapping="Wrap" />
@@ -637,7 +637,7 @@
                     <InfoBar x:Name="CaptureTimeTravelInfoBar" x:Uid="CaptureTimeTravelInfoBar"
                              Grid.Row="3" Severity="Warning" IsOpen="False"
                              Title="The MIDI service will run slowly until it is restarted"
-                             Message="Time travel tracing cannot detach from a process once it has attached, so the Windows MIDI service keeps the recording overhead. MIDI still works, but with noticeably more latency. Restart Windows to clear it. Restarting only the MIDI service works as well, but every MIDI application has to be closed first, including background ones you did not start yourself." />
+                             Message="Time travel tracing cannot detach from a process once it has attached, so the Windows MIDI service keeps the recording overhead. MIDI still works, but with noticeably more latency. Restart Windows to clear it. Restarting only the MIDI service works as well, but every MIDI application has to be closed first, including background ones you did not start yourself. Any Windows MIDI Services app that was traced stays slow too, until you close it and open it again." />
 
                     <TextBox x:Name="CaptureLogBox" x:Uid="CaptureLogBox" Grid.Row="4"
                              Style="{StaticResource OutputTextBoxStyle}"
