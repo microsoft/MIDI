@@ -108,8 +108,11 @@ namespace winrt::midinetworksetup::implementation
     winrt::hstring MainWindow::DescribeNetworkClientWaiting(
         ServiceSnapshot const& snapshot,
         midi2net::MidiNetworkConfiguredClient const& client,
-        winrt::hstring const& remoteName) noexcept
+        winrt::hstring const& remoteName,
+        winrt::hstring& shortStatus) noexcept
     {
+        shortStatus = winrt::hstring{};
+
         try
         {
             auto const name = remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName;
@@ -120,10 +123,15 @@ namespace winrt::midinetworksetup::implementation
             if (client.EntryState() == midi2net::MidiNetworkClientEntryState::Failed &&
                 client.LastErrorCode() == midi2net::MidiNetworkClientConnectErrorCode::InvitationEndedByHost)
             {
+                shortStatus = res::GetString(L"NetworkClientEndedByRemoteStatus");
+
                 return client.ConfiguredDirectAddress().empty() ?
                     res::FormatString(L"NetworkClientDisconnectedByRemoteFormat", name) :
                     res::FormatString(L"NetworkClientDisconnectedByRemoteDirectFormat", name);
             }
+
+            // the warning says what it waits for
+            shortStatus = res::GetString(L"NetworkClientWaitingStatus");
 
             if (auto const hostId = client.WaitingForHostId(); hostId != winrt::guid{})
             {
@@ -247,5 +255,88 @@ namespace winrt::midinetworksetup::implementation
         }
 
         return count;
+    }
+
+    namespace
+    {
+        // the ports a host needs: RTP-MIDI takes its port and the next one, for data
+        std::vector<uint32_t> PortsUsed(_In_ uint32_t const port, _In_ bool const isRtpHost)
+        {
+            if (port == 0) return {};
+            if (isRtpHost) return { port, port + 1 };
+
+            return { port };
+        }
+
+        uint32_t PortNumber(_In_ winrt::hstring const& text) noexcept
+        {
+            auto const value = wcstoul(std::wstring{ text }.c_str(), nullptr, 10);
+
+            return value > 0 && value <= 65535 ? value : 0;
+        }
+
+        bool Overlaps(_In_ std::vector<uint32_t> const& left, _In_ std::vector<uint32_t> const& right)
+        {
+            return std::any_of(left.begin(), left.end(),
+                [&right](uint32_t const port) { return std::find(right.begin(), right.end(), port) != right.end(); });
+        }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::HostPortFallbackText(
+        ServiceSnapshot const& snapshot,
+        winrt::hstring const& actualPort,
+        winrt::hstring const& wantedPort,
+        winrt::guid const& hostId) noexcept
+    {
+        try
+        {
+            bool isRtpHost{ false };
+
+            if (snapshot.RtpConfiguredHosts != nullptr)
+            {
+                for (auto const& host : snapshot.RtpConfiguredHosts)
+                {
+                    isRtpHost = isRtpHost || (host != nullptr && host.HostId() == hostId);
+                }
+            }
+
+            auto const wanted = PortsUsed(PortNumber(wantedPort), isRtpHost);
+
+            winrt::hstring holder{};
+
+            // Another of this PC's hosts which has started on a port this one wanted
+            if (snapshot.ConfiguredHosts != nullptr)
+            {
+                for (auto const& host : snapshot.ConfiguredHosts)
+                {
+                    if (holder.empty() && host != nullptr && host.HostId() != hostId && host.HasStarted() &&
+                        Overlaps(wanted, PortsUsed(PortNumber(host.ActualPort()), false)))
+                    {
+                        holder = HostDisplayName(host);
+                    }
+                }
+            }
+
+            if (snapshot.RtpConfiguredHosts != nullptr)
+            {
+                for (auto const& host : snapshot.RtpConfiguredHosts)
+                {
+                    if (holder.empty() && host != nullptr && host.HostId() != hostId && host.HasStarted() &&
+                        Overlaps(wanted, PortsUsed(host.ActualPort(), true)))
+                    {
+                        holder = host.Name().empty() ? host.ActualServiceInstanceName() : host.Name();
+                    }
+                }
+            }
+
+            return holder.empty() ?
+                res::FormatString(L"HostStartedPortFallbackFormat", actualPort, wantedPort) :
+                res::FormatString(L"HostStartedPortFallbackOwnHostFormat", actualPort, wantedPort, holder);
+        }
+        catch (...)
+        {
+            return res::FormatString(L"HostStartedPortFallbackFormat", actualPort, wantedPort);
+        }
     }
 }

@@ -548,6 +548,18 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // Network MIDI 2.0 only: why the entry isn't trying to connect. Empty hides the warning.
+        winrt::hstring WarningText() const noexcept { return m_warningText; }
+        bool IsWarningOpen() const noexcept { return !m_warningText.empty(); }
+
+        void InternalUpdateWarning(_In_ winrt::hstring const& warningText) noexcept
+        {
+            if (UpdateField(m_warningText, warningText, L"WarningText"))
+            {
+                RaisePropertyChanged(L"IsWarningOpen");
+            }
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
         {
             return m_latency.HasSamples() ?
@@ -719,6 +731,7 @@ namespace winrt::midinetworksetup::implementation
         bool m_skipInBetweenValuesToCatchUp{ true };
 
         winrt::hstring m_midi1PortsText{};
+        winrt::hstring m_warningText{};
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -1327,18 +1340,13 @@ namespace winrt::midinetworksetup::implementation
         // Network MIDI 2.0 only: the second sessions the host turned away recently, one per line
         winrt::hstring RefusalsText() const noexcept { return m_refusalsText; }
 
-        winrt::Microsoft::UI::Xaml::Visibility RefusalsVisibility() const noexcept
-        {
-            return m_refusalsText.empty() ?
-                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
-                winrt::Microsoft::UI::Xaml::Visibility::Visible;
-        }
+        bool IsRefusalsWarningOpen() const noexcept { return !m_refusalsText.empty(); }
 
         void InternalUpdateRefusals(_In_ winrt::hstring const& refusalsText) noexcept
         {
             if (UpdateField(m_refusalsText, refusalsText, L"RefusalsText"))
             {
-                RaisePropertyChanged(L"RefusalsVisibility");
+                RaisePropertyChanged(L"IsRefusalsWarningOpen");
             }
         }
 

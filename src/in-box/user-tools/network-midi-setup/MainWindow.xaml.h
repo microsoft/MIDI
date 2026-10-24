@@ -501,7 +501,11 @@ namespace winrt::midinetworksetup::implementation
 
         // Network MIDI 2.0: why a client entry isn't trying (the device ended the session, or another
         // session with it is up), and the second sessions a host turned away recently. Empty when there's nothing to say. In MainWindowSessionRefusals.cpp.
-        static winrt::hstring DescribeNetworkClientWaiting(_In_ ServiceSnapshot const& snapshot, _In_ midi2net::MidiNetworkConfiguredClient const& client, _In_ winrt::hstring const& remoteName) noexcept;
+        static winrt::hstring DescribeNetworkClientWaiting(_In_ ServiceSnapshot const& snapshot, _In_ midi2net::MidiNetworkConfiguredClient const& client, _In_ winrt::hstring const& remoteName, _Out_ winrt::hstring& shortStatus) noexcept;
+
+        // "Started on port {0}. Port {1} was in use...", naming the host on this PC which has the
+        // port when it is one of ours (Network MIDI 2.0 or RTP-MIDI)
+        static winrt::hstring HostPortFallbackText(_In_ ServiceSnapshot const& snapshot, _In_ winrt::hstring const& actualPort, _In_ winrt::hstring const& wantedPort, _In_ winrt::guid const& hostId) noexcept;
         static winrt::hstring DescribeNetworkHostRefusals(_In_ midi2net::MidiNetworkConfiguredHost const& host) noexcept;
 
         // "No devices connected", "1 device connected" or "{0} devices connected". A Network MIDI

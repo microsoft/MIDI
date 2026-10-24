@@ -264,7 +264,9 @@
                          Title="Devices are waiting for permission"
                          Margin="16,12,16,0">
                     <InfoBar.Content>
-                        <ItemsControl x:Name="PendingInvitationsList" Margin="0,8,0,8">
+                        <!-- A banner which can't be closed has no close button column, so the buttons need
+                             their own right margin to stay off its edge -->
+                        <ItemsControl x:Name="PendingInvitationsList" Margin="0,8,16,8">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="local:PendingInvitationItem">
                                     <Grid Margin="0,0,0,10" ColumnSpacing="12"
@@ -552,6 +554,13 @@
                                                                 Click="OnDisconnectRemoteHostClick" />
                                                     </StackPanel>
                                                 </Grid>
+
+                                                <!-- Network MIDI 2.0: why the entry isn't trying, for example another session
+                                                     with the device is up. Message only, so it stays one compact row. -->
+                                                <InfoBar Severity="Warning"
+                                                         IsClosable="False"
+                                                         IsOpen="{x:Bind IsWarningOpen, Mode=OneWay}"
+                                                         Message="{x:Bind WarningText, Mode=OneWay}" />
 
                                                 <Expander x:Uid="RemoteHostDetailsExpander"
                                                           Header="Details"
@@ -931,12 +940,6 @@
                                                            TextWrapping="Wrap"
                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                <!-- Network MIDI 2.0: why a device which already has a session with this PC was turned away -->
-                                                <TextBlock Text="{x:Bind RefusalsText, Mode=OneWay}"
-                                                           Visibility="{x:Bind RefusalsVisibility, Mode=OneWay}"
-                                                           TextWrapping="Wrap"
-                                                           Margin="0,4,0,0"
-                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
                                             </StackPanel>
 
                                             <!-- The settings, under the details: each button before what it changes, well away
@@ -1026,6 +1029,12 @@
                                             </InfoBar.ActionButton>
                                         </InfoBar>
 
+                                        <!-- Network MIDI 2.0: devices turned away because they already have a session with
+                                             this PC, one line each, newest first. Message only, so it stays compact. -->
+                                        <InfoBar Severity="Warning"
+                                                 IsClosable="False"
+                                                 IsOpen="{x:Bind IsRefusalsWarningOpen, Mode=OneWay}"
+                                                 Message="{x:Bind RefusalsText, Mode=OneWay}" />
                                         <StackPanel Spacing="4">
                                             <TextBlock x:Uid="NoConnectedDevicesText"
                                                        Text="No devices are connected to this host."

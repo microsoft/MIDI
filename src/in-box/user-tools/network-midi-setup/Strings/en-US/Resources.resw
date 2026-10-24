@@ -372,7 +372,14 @@
   <data name="NetworkRemoteHostEnded" xml:space="preserve">
     <value>The device ended the connection attempt.</value>
   </data>
-  <data name="NetworkClientDisconnectedByRemoteFormat" xml:space="preserve">
+  <data name="NetworkClientWaitingStatus" xml:space="preserve">
+    <value>Waiting for another connection to end</value>
+    <comment>Network MIDI 2.0 client card status. A warning under it says which connection.</comment>
+  </data>
+  <data name="NetworkClientEndedByRemoteStatus" xml:space="preserve">
+    <value>Not connected</value>
+    <comment>Network MIDI 2.0 client card status after the device ended the session. A warning under it says why.</comment>
+  </data>  <data name="NetworkClientDisconnectedByRemoteFormat" xml:space="preserve">
     <value>Disconnected by {0}. Windows will connect again when it's back on the network, or click Try again.</value>
     <comment>Network MIDI 2.0 client entry. The remote device ended the session itself, so Windows stopped trying. {0} is the device's name.</comment>
   </data>
@@ -575,7 +582,10 @@
   <data name="HostStartedFormat" xml:space="preserve">
     <value>Started, listening on port {0}</value>
   </data>
-  <data name="HostStartedPortFallbackFormat" xml:space="preserve">
+  <data name="HostStartedPortFallbackOwnHostFormat" xml:space="preserve">
+    <value>Started on port {0}. Port {1} is used by {2}, another host on this PC.</value>
+    <comment>{0} is the port the host started on. {1} is the port it wanted. {2} is the name of the other host on this PC which has that port.</comment>
+  </data>  <data name="HostStartedPortFallbackFormat" xml:space="preserve">
     <value>Started on port {0}. Port {1} was in use by something else on this PC.</value>
   </data>
   <data name="HostStopped" xml:space="preserve">
