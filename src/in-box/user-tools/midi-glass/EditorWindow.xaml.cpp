@@ -21,6 +21,7 @@
 #include "PageTemplates.h"
 #include "PopupBackdrop.h"
 #include "SpinButtons.h"
+#include "EditorNoteBoxes.h"
 #include "resource.h"
 
 namespace resources = ::midiglass::resources;
@@ -113,6 +114,10 @@ namespace winrt::midiglass::implementation
                 MessageValueBox(), MessageSecondValueBox(), DetentStepBox(), FeedbackNumberBox(), FeedbackHoldBox(),
                 ClockBpmBox(), ClockLowestBpmBox(), ClockHighestBpmBox(), LfoUpdateBox(), StepCountBox(),
                 TurntableDegreesBox(), SendIntervalBox(), KeyboardOrderBox() });
+
+            // Note boxes take a name as well as a number: F#0, Bb1, C3.
+            UseNoteNames(PadStartNoteBox(), true);
+            UseNoteNames(LowestNoteBox(), true);
 
             auto const title = resources::FormatString(
                 L"EditorWindowTitleFormat", m_editor.Document().Name);

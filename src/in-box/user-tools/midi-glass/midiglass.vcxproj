@@ -186,6 +186,10 @@
     <ClInclude Include="document\LfoShape.h" />
     <ClInclude Include="document\StepPattern.h" />
     <ClInclude Include="document\PadGrid.h" />
+    <ClInclude Include="document\PadGridChanges.h" />
+    <ClInclude Include="EditorPadGridKeys.h" />
+    <ClInclude Include="EditorNoteBoxes.h" />
+    <ClInclude Include="..\midi-app-shared\NoteNames.h" />
     <ClInclude Include="document\LayoutTemplates.h" />
     <ClInclude Include="document\MackieControl.h" />
     <ClInclude Include="document\ThemeModel.h" />
@@ -284,6 +288,7 @@
     <ClCompile Include="EditorPanes.cpp" />
     <ClCompile Include="EditorTryMode.cpp" />
     <ClCompile Include="EditorKeyPickers.cpp" />
+    <ClCompile Include="EditorPadGrids.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
@@ -355,6 +360,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\PadGrid.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\PadGridChanges.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutTemplates.cpp">

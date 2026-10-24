@@ -31,6 +31,7 @@
 #include "StepSequencer.h"
 #include "PadVoices.h"
 #include "PadGrid.h"
+#include "PadGridChanges.h"
 
 namespace glass
 {
@@ -122,9 +123,9 @@ namespace glass
         // on the dispatcher's thread, and only while SetLearning(true) is in force.
         std::function<void(LearnedBinding const& learned)> Learned{};
 
-        // A root or scale picker picked something new. The owner redraws the pad grids and the
-        // pickers in it.
-        std::function<void(PickedKey const& picked)> KeyPicked{};
+        // Grid buttons or pickers changed pad grids. The owner redraws the pad grids, the
+        // pickers and the readouts in it.
+        std::function<void(PadGridStates const& states)> PadGridsChanged{};
 
         // ---- lifetime ----
 
@@ -241,12 +242,12 @@ namespace glass
 
         BindingEngine const& Engine() const noexcept { return m_engine; }
 
-        // What the root and scale pickers have picked since the layout opened (LivePlayerKeys.cpp).
-        // Nothing, for each, until one is touched.
-        PickedKey PickedKeyNow() const noexcept { return m_pickedKey; }
+        // What grid buttons and pickers have changed since the layout opened (LivePlayerKeys.cpp).
+        // Empty until one is touched.
+        PadGridStates const& GridStatesNow() const noexcept { return m_gridStates; }
 
-        // Back to nothing picked, which is where the editor goes on leaving Try mode.
-        void ForgetPickedKey() noexcept;
+        // Back to every grid as built, which is where the editor goes on leaving Try mode.
+        void ForgetGridChanges() noexcept;
 
     private:
         LivePlayer() = default;
@@ -262,6 +263,12 @@ namespace glass
         // A picker's new position, made into a key and announced. False when the control is not
         // a picker. A picker sends nothing either way.
         bool PickFromSwitch(_In_ uint32_t controlIndex, _In_ double value);
+
+        // A pad grid row ran. On the dispatcher's thread.
+        void ChangePadGrids(_In_ PlanAction const& action);
+
+        // The note each grid's first pad plays now, and the owner told. After any change.
+        void AnnounceGridChanges();
 
         // One already-built burst of words straight to a connection. What the sequence runner
         // calls, on the dispatcher's thread.
@@ -305,6 +312,8 @@ namespace glass
 
             // As saved, so the first pad can move with a key that is picked.
             PadGridSpec Spec{};
+            std::wstring ControlId{};
+            bool Hex{ false };
         };
 
         PadEntry* FindPadControl(_In_ uint32_t controlIndex) noexcept;
@@ -397,7 +406,7 @@ namespace glass
         std::vector<PickerEntry> m_pickerControls{};
 
         // UI thread only. Kept through an edit in Try mode, like a fader's position is.
-        PickedKey m_pickedKey{};
+        PadGridStates m_gridStates{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};

@@ -18,6 +18,7 @@
 #include "SurfaceColors.h"
 #include "HexText.h"
 #include "PadGrid.h"
+#include "EditorPadGridKeys.h"
 
 #include <format>
 
@@ -104,6 +105,7 @@ namespace winrt::midiglass::implementation
             glass::MessageKind::RawUmp,
             glass::MessageKind::Sequence,
             glass::MessageKind::GoToPage,
+            glass::MessageKind::PadGrid,
         };
 
         constexpr wchar_t const* MessageKindResourceKeys[]
@@ -111,7 +113,7 @@ namespace winrt::midiglass::implementation
             L"MessageControlChange", L"MessageNote", L"MessageProgramChange", L"MessagePitchBend",
             L"MessageChannelPressure", L"MessagePerNoteController", L"MessageAssignablePerNoteController",
             L"MessageRegisteredController", L"MessageAssignedController", L"MessageSystemExclusive", L"MessageRawUmp",
-            L"MessageSequence", L"MessageGoToPage",
+            L"MessageSequence", L"MessageGoToPage", L"MessagePadGrid",
         };
 
         static_assert(std::size(MessageKindOrder) == std::size(MessageKindResourceKeys));
@@ -567,6 +569,7 @@ namespace winrt::midiglass::implementation
             PicturePanel().Visibility(xaml::Visibility::Collapsed);
             LinePanel().Visibility(xaml::Visibility::Collapsed);
             SwitchPanel().Visibility(xaml::Visibility::Collapsed);
+            ReadoutPanel().Visibility(xaml::Visibility::Collapsed);
             KeyboardPanel().Visibility(xaml::Visibility::Collapsed);
             PadGridPanel().Visibility(xaml::Visibility::Collapsed);
         }
@@ -1259,6 +1262,17 @@ namespace winrt::midiglass::implementation
                         resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]));
                 }
 
+                // A pad grid row has no device either. It names what it does.
+                if (message.Kind == glass::MessageKind::PadGrid)
+                {
+                    auto const function = static_cast<size_t>(message.PadFunction);
+
+                    text = resources::FormatString(
+                        L"MessageRowPadGridFormat",
+                        resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
+                        resources::GetString(function < std::size(PadGridFunctionKeys) ? PadGridFunctionKeys[function] : PadGridFunctionKeys[0]));
+                }
+
                 // A Mackie Control row is its function, and a row that has none yet says so.
                 if (message.Kind == glass::MessageKind::MackieControl ||
                     RowProtocol(m_editor.Document(), message) == glass::DeviceProtocol::MackieControl)
@@ -1636,9 +1650,12 @@ namespace winrt::midiglass::implementation
             kind != glass::MessageKind::SystemExclusive &&
             kind != glass::MessageKind::RawUmp &&
             kind != glass::MessageKind::Sequence &&
-            kind != glass::MessageKind::GoToPage;
+            kind != glass::MessageKind::GoToPage &&
+            kind != glass::MessageKind::PadGrid;
 
-        auto const usesDevice = kind != glass::MessageKind::Sequence && kind != glass::MessageKind::GoToPage;
+        auto const usesDevice = kind != glass::MessageKind::Sequence &&
+            kind != glass::MessageKind::GoToPage &&
+            kind != glass::MessageKind::PadGrid;
         auto const usesGroup = usesDevice;
 
         auto const bankAndIndex = glass::HasBankAndIndex(kind);
@@ -1680,6 +1697,12 @@ namespace winrt::midiglass::implementation
         show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
         show(SequencePanel(), kind == glass::MessageKind::Sequence);
         show(TargetPagePanel(), kind == glass::MessageKind::GoToPage);
+        show(PadGridRowPanel(), kind == glass::MessageKind::PadGrid);
+
+        if (kind == glass::MessageKind::PadGrid)
+        {
+            RefreshPadGridRowFields(message);
+        }
 
         // Stops only mean something on a message that carries a position. There is nothing to
         // step through on a page change or a dump.
@@ -1795,7 +1818,7 @@ namespace winrt::midiglass::implementation
                 }
 
                 // What a button can do inside the layout does not depend on the device.
-                for (auto const kind : { glass::MessageKind::Sequence, glass::MessageKind::GoToPage })
+                for (auto const kind : { glass::MessageKind::Sequence, glass::MessageKind::GoToPage, glass::MessageKind::PadGrid })
                 {
                     KindMessageCombo().Items().Append(box_value(
                         resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, kind)])));

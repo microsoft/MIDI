@@ -88,3 +88,5 @@ MidiAppShared.EndpointChoice.g.cpp    not  EndpointChoice.g.cpp
 The projection is `<winrt/MidiAppShared.h>`; include it in the app's `pch.h` before any namespace
 alias for it. Types in the app's own root namespace keep the short generated names, so the two
 conventions sit side by side in the same project.
+
+`NoteNames.h` is header only and plain C++. `midiapp::ParseNoteNumber` reads a note typed as a number or a name, such as `52`, `E2`, `F#0`, `Bb1` or `E2 (52)`, with middle C (60) as C3. MIDI Sequencer's note boxes and Windows MIDI Glass's note boxes both use it, so a note typed in one reads the same in the other.

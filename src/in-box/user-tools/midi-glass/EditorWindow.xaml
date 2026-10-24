@@ -1838,6 +1838,30 @@
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
+                                    <!-- What a readout shows: its own value, or a pad grid while the layout runs. -->
+                                    <StackPanel x:Name="ReadoutPanel" Visibility="Collapsed">
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorReadoutHeading" Text="Readout" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="ReadoutSourceCombo"
+                                                  x:Uid="ReadoutSourceCombo"
+                                                  Header="Source"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="OnReadoutSourceChanged" />
+
+                                        <StackPanel x:Name="ReadoutTargetsPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <TextBlock x:Uid="TargetsLabel" Text="Targets" Style="{StaticResource InspectorLabelStyle}" />
+                                            <StackPanel x:Name="ReadoutTargetChecks" />
+                                        </StackPanel>
+                                    </StackPanel>
+
                                     <!-- A switch's positions, each with the name printed on it.
                                          The rows are built in code, one per position. -->
                                     <StackPanel x:Name="SwitchPanel" Visibility="Collapsed">
@@ -1868,6 +1892,12 @@
                                                    TextWrapping="Wrap"
                                                    Visibility="Collapsed"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- The pad grids a picker changes. Built in code. -->
+                                        <StackPanel x:Name="SwitchTargetsPanel" Visibility="Collapsed" Margin="0,8,0,8">
+                                            <TextBlock x:Uid="TargetsLabel" Text="Targets" Style="{StaticResource InspectorLabelStyle}" />
+                                            <StackPanel x:Name="SwitchTargetChecks" />
+                                        </StackPanel>
 
                                         <StackPanel x:Name="SwitchPositionRows" Spacing="6" />
 
@@ -1996,7 +2026,40 @@
                                             <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
                                         </Grid>
 
-                                        <Grid ColumnSpacing="6">
+                                        <!-- Flow (as many to a row as fit), or a set number of rows or columns. -->
+                                        <ComboBox x:Name="PadArrangementCombo"
+                                                  x:Uid="PadArrangementCombo"
+                                                  Header="Arrangement"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="OnPadArrangementChanged" />
+
+                                        <Grid x:Name="PadLinesGrid" ColumnSpacing="6" Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="PadLinesBox"
+                                                       x:Uid="PadLinesBox"
+                                                       Header="Rows"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="32"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+
+                                            <NumberBox x:Name="PadsPerLineBox"
+                                                       x:Uid="PadsPerLineBox"
+                                                       Header="Pads per row"
+                                                       Grid.Column="1"
+                                                       Minimum="1"
+                                                       Maximum="64"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+                                        </Grid>
+
+                                        <Grid x:Name="PadFlowGrid" ColumnSpacing="6">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="*" />
@@ -2026,6 +2089,13 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
+                                        <CheckBox x:Name="PadHighlightHeldCheck"
+                                                  x:Uid="PadHighlightHeldCheck"
+                                                  Content="Highlight held notes"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnPadNotesChanged"
+                                                  Unchecked="OnPadNotesChanged" />
+
                                         <NumberBox x:Name="PadStartNoteBox"
                                                    x:Uid="PadStartNoteBox"
                                                    Minimum="0"
@@ -2039,6 +2109,14 @@
                                                    Margin="0,6,0,0"
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Shown only when some pads land past note 127 or below 0. -->
+                                        <TextBlock x:Name="PadSilentCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="Collapsed"
+                                                   Foreground="{ThemeResource SystemFillColorCautionBrush}" />
 
                                         <!-- Square pads: where each row starts. -->
                                         <ComboBox x:Name="PadRowCombo"
@@ -2154,6 +2232,37 @@
                                                 Click="OnAddKeyPickersClick" />
 
                                         <TextBlock x:Name="PadPickersCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Buttons, a switch and a readout that change this grid while the layout runs. -->
+                                        <Button x:Name="PadAddGridButtonsButton"
+                                                x:Uid="PadAddGridButtonsButton"
+                                                Content="Add grid buttons"
+                                                Margin="0,8,0,0"
+                                                FontSize="11">
+                                            <Button.Flyout>
+                                                <Flyout x:Name="PadGridButtonsFlyout">
+                                                    <StackPanel Spacing="4" MinWidth="220">
+                                                        <CheckBox x:Name="GridButtonsOctaveCheck" x:Uid="GridButtonsOctaveCheck" Content="Octave up and down" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsRowsCheck" x:Uid="GridButtonsRowsCheck" Content="Row up and down" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsInKeyCheck" x:Uid="GridButtonsInKeyCheck" Content="In key only switch" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsReadoutCheck" x:Uid="GridButtonsReadoutCheck" Content="Readout" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsResetCheck" x:Uid="GridButtonsResetCheck" Content="Reset" IsChecked="True" />
+                                                        <Button x:Uid="GridButtonsAddButton"
+                                                                Content="Add"
+                                                                Margin="0,6,0,0"
+                                                                Style="{StaticResource AccentButtonStyle}"
+                                                                Click="OnAddGridButtonsClick" />
+                                                    </StackPanel>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+
+                                        <TextBlock x:Uid="PadGridButtonsCaption"
+                                                   Text="Adds controls under the grid that move it, switch in key only, show where it is and reset it while the layout runs. They change only this grid."
                                                    FontSize="11"
                                                    Margin="0,4,0,0"
                                                    TextWrapping="Wrap"
@@ -2681,6 +2790,22 @@
                                                   x:Uid="TargetPageCombo"
                                                   HorizontalAlignment="Stretch"
                                                   SelectionChanged="OnTargetPageChanged" />
+                                    </StackPanel>
+
+                                    <!-- A pad grid row: what it changes, and on which grids. Sends nothing. -->
+                                    <StackPanel x:Name="PadGridRowPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <ComboBox x:Name="PadGridFunctionCombo"
+                                                  x:Uid="PadGridFunctionCombo"
+                                                  Header="Function"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnPadGridFunctionChanged" />
+                                        <TextBlock x:Uid="TargetsLabel" Text="Targets" Style="{StaticResource InspectorLabelStyle}" />
+                                        <StackPanel x:Name="RowTargetChecks" />
+                                        <TextBlock x:Uid="PadGridRowCaption"
+                                                   Text="This row sends no MIDI. While the layout runs, it changes the pad grids it targets. The layout opens as it was built each time."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
                                 </StackPanel>
 

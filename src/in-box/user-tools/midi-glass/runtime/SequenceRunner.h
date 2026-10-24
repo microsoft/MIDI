@@ -50,6 +50,9 @@ namespace glass
         std::function<void(uint32_t controlIndex, double value)> SetControlValue{};
         std::function<void(uint32_t pageIndex)> GoToPage{};
 
+        // A pad grid row ran: change the grids it targets.
+        std::function<void(PlanAction const& action)> ChangePadGrid{};
+
         void Start(_In_ winrt::Microsoft::UI::Dispatching::DispatcherQueue const& dispatcher);
 
         // Stops the clock and drops everything still waiting. Safe to call twice.

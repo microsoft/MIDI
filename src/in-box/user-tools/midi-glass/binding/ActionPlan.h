@@ -38,6 +38,9 @@ namespace glass
 
         // Show another page.
         GoToPage = 3,
+
+        // Change pad grids on the layout. Sends nothing.
+        ChangePadGrid = 4,
     };
 
     struct PlanAction
@@ -58,6 +61,9 @@ namespace glass
         double TargetValue{ 0.0 };
 
         int32_t TargetPageIndex{ -1 };
+
+        PadGridFunction PadFunction{ PadGridFunction::OctaveUp };
+        PadGridTargets PadTargets{};
     };
 
     // One thing a control does when it is touched, released, turned on or turned off, beyond the

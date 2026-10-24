@@ -1,0 +1,84 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="pad-grids-common.css"><script src="pad-grids-notes.js"></script>
+<style>
+body { width: 1900px; position: relative; }
+.stage { display: grid; grid-template-columns: 200px 720px 230px 380px; gap: 22px; padding: 6px 28px 28px; align-items: start; }
+.faders { display: flex; flex-direction: column; gap: 10px; }
+.fader { height: 280px; width: 80px; border-radius: 10px; background: linear-gradient(#22252a,#17191c); border: 1px solid #3a2a24; position: relative; }
+.fader i { position: absolute; left: 14px; right: 14px; height: 6px; border-radius: 3px; }
+.vbtns { display: flex; flex-direction: column; gap: 8px; }
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.toolbar .seg > div { padding: 9px 12px; }
+.sep { width: 1px; align-self: stretch; background: #34383d; }
+#g { gap: 6px; }
+#g .p { font-size: 18px; }
+.roots .seg > div { padding: 8px 0; font-size: 14px; }
+.scales .seg { flex-direction: column; }
+.scales .seg > div { padding: 12px 6px; font-size: 15px; }
+.mark { position: absolute; background: #6fb7ff; color: #001; border-radius: 50%; width: 24px; height: 24px; text-align: center; font-size: 13px; font-weight: 700; line-height: 24px; box-shadow: 0 0 0 3px #0f1113; }
+.legend2 { font-size: 14px; line-height: 1.45; color: #cfd3d8; margin-top: 14px; }
+.legend2 div { margin-bottom: 8px; }
+</style></head><body>
+<div class="title">34 &middot; Grid buttons on the canvas: controls that change the pads instead of sending MIDI</div>
+<div class="sub">The customer's layout, with the new pieces outlined in dashed blue. Everything here is an ordinary Glass control (Button, Toggle, Switch, Readout) set to change the pads, so it can be placed, sized, themed and moved like any other control.</div>
+<div class="stage">
+  <div>
+    <div class="vbtns" style="margin-bottom:18px">
+      <div class="btn act">Octave +</div>
+      <div class="readout act" style="text-align:center; outline:2px dashed #6fb7ff; outline-offset:2px">Octave 2</div>
+      <div class="btn act">Octave &minus;</div>
+      <div style="height:10px"></div>
+      <div class="btn act">Row &#9650;</div>
+      <div class="btn act">Row &#9660;</div>
+      <div style="height:10px"></div>
+      <div class="btn act">Reset pads</div>
+    </div>
+    <div class="faders" style="flex-direction:row">
+      <div class="fader"><i style="top:150px;background:#ff6a3d"></i></div>
+      <div class="fader" style="border-color:#3a2a44"><i style="top:250px;background:#8a4fa3"></i></div>
+    </div>
+  </div>
+  <div>
+    <div class="toolbar">
+      <div class="seg act" style="outline:2px dashed #6fb7ff; outline-offset:2px; width: 200px"><div>Chromatic</div><div class="on">In key</div></div>
+      <div class="sep"></div>
+      <div class="cap" style="margin:0">Row offset</div>
+      <div class="seg" style="outline:2px dashed #6fb7ff; outline-offset:2px; width: 400px"><div>Continuous</div><div>Third</div><div class="on">Fourth</div><div>Fifth</div><div>Octave</div></div>
+    </div>
+    <div class="frame"><div id="g" class="grid"></div></div>
+    <div class="cap">Root note</div>
+    <div class="roots"><div class="seg" id="roots"></div></div>
+    <div class="readout" style="margin-top:12px; text-align:center; outline:2px dashed #6fb7ff; outline-offset:2px">C major &middot; In key &middot; Octave 2 &middot; Fourth</div>
+  </div>
+  <div class="scales">
+    <div class="cap">Scale</div>
+    <div class="seg" id="scales"></div>
+  </div>
+  <div>
+    <div class="insp" style="width:380px">
+      <h3>Button: "Octave +"</h3>
+      <div class="row"><span class="lbl">Type</span><span class="val new">Pad grid &#9662;</span></div>
+      <div class="note">A Pad grid message row sends no MIDI. It changes the pads.</div>
+      <div class="row"><span class="lbl">Function</span><span class="val new">Octave up &#9662;</span></div>
+      <div class="row"><span class="lbl">Targets</span><span class="val new">All grids &#9662;</span></div>
+      <div class="note">Function list: Octave up, Octave down, Row up, Row down, Shift left, Shift right, Semitone up, Semitone down, In key only on, In key only off, In key only toggle, Next root, Previous root, Next scale, Previous scale, Next row offset, Reset.<br><br>Targets: All grids (the default, the way pickers work today), or a list of grids by name, for a split with bass pads on one side. An empty list shows "(No grids)".</div>
+      <div class="hr"></div>
+      <h3>Toggle or Switch</h3>
+      <div class="row"><span class="lbl">Function</span><span class="val">In key only &#9662;</span></div>
+      <div class="note">Function today: Send messages, Pad root note, Pad scale. Added: <b>In key only</b> (Chromatic, In key), <b>Row offset</b> (Continuous, Third, Fourth, Fifth, Octave), <b>Octave</b> (&minus;2, &minus;1, 0, +1, +2). A Toggle set to In key only lights when the pads play only the key.</div>
+      <div class="hr"></div>
+      <h3>Readout</h3>
+      <div class="row"><span class="lbl">Source</span><span class="val new">Pad grid key &#9662;</span></div>
+      <div class="note">Source list: Value (the default), Pad grid key, Octave, Row offset, Pad grid summary. It updates as soon as anything changes the pads.</div>
+      <div class="hr"></div>
+      <h3>Note pads inspector</h3>
+      <div class="btn" style="text-align:left">&#xFF0B; Add grid buttons&hellip;</div>
+      <div class="note" style="margin-top:6px">Next to today's "Add root and scale pickers". Opens a short checklist (octave, row, In key only switch, readout, reset) and drops the chosen controls beside the grid, already pointed at it.</div>
+    </div>
+  </div>
+</div>
+<script>
+drawGrid(document.getElementById('g'), { lines: 8, along: 8, first: 48, root: 0, scale: 'major', inKey: true, right: 1, up: 3, dir: 'rows', fs: 18 });
+document.getElementById('roots').innerHTML = ['C','D♭','D','E♭','E','F','F♯','G','A♭','A','B♭','B'].map((r,i)=>`<div class="${i===0?'ong':''}">${r}</div>`).join('');
+document.getElementById('scales').innerHTML = ['Major','Minor','Harmonic minor','Melodic minor','Dorian','Phrygian','Lydian','Mixolydian','Locrian','Major pentatonic','Minor pentatonic','Blues','Whole tone'].map((r,i)=>`<div class="${i===0?'on':''}">${r}</div>`).join('');
+</script>
+</body></html>

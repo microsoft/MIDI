@@ -14,6 +14,7 @@
 #include "StringResources.h"
 #include "GlassControl.h"
 #include "PadGrid.h"
+#include "PadGridChanges.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -30,7 +31,8 @@ namespace winrt::midiglass::implementation
     void EditorWindow::BuildKeyPickerChoices()
     {
         // In the order of SwitchPicks.
-        for (auto const* const key : { L"SwitchPicksNothing", L"SwitchPicksRootNote", L"SwitchPicksScale" })
+        for (auto const* const key : { L"SwitchPicksNothing", L"SwitchPicksRootNote", L"SwitchPicksScale",
+            L"SwitchPicksInKeyOnly", L"SwitchPicksRowOffset", L"SwitchPicksOctave" })
         {
             SwitchPicksCombo().Items().Append(box_value(resources::GetString(key)));
         }
@@ -74,9 +76,21 @@ namespace winrt::midiglass::implementation
 
         if (picking)
         {
-            SwitchPicksCaption().Text(resources::GetString(
-                picks == glass::SwitchPicks::RootNote ? L"SwitchPicksRootCaption" : L"SwitchPicksScaleCaption"));
+            wchar_t const* caption = L"SwitchPicksRootCaption";
+
+            switch (picks)
+            {
+            case glass::SwitchPicks::Scale:     caption = L"SwitchPicksScaleCaption"; break;
+            case glass::SwitchPicks::InKeyOnly: caption = L"SwitchPicksInKeyOnlyCaption"; break;
+            case glass::SwitchPicks::RowOffset: caption = L"SwitchPicksRowOffsetCaption"; break;
+            case glass::SwitchPicks::Octave:    caption = L"SwitchPicksOctaveCaption"; break;
+            default: break;
+            }
+
+            SwitchPicksCaption().Text(resources::GetString(caption));
         }
+
+        RefreshSwitchTargets(control);
 
         if (picks != glass::SwitchPicks::Scale)
         {
@@ -109,8 +123,8 @@ namespace winrt::midiglass::implementation
     {
         auto const& document = m_editor.Document();
         auto const keyed = control.Pads.KeyRoot != glass::NoKey;
-        auto const both = glass::HasKeyPicker(document, glass::SwitchPicks::RootNote) &&
-            glass::HasKeyPicker(document, glass::SwitchPicks::Scale);
+        auto const both = glass::HasPickerFor(document, glass::SwitchPicks::RootNote, control.Id) &&
+            glass::HasPickerFor(document, glass::SwitchPicks::Scale, control.Id);
 
         PadAddPickersButton().IsEnabled(keyed && !both);
 
@@ -134,7 +148,7 @@ namespace winrt::midiglass::implementation
         auto const* const control = SingleSelectedControl();
         auto const index = SwitchPicksCombo().SelectedIndex();
 
-        if (control == nullptr || index < 0 || index > static_cast<int32_t>(glass::SwitchPicks::Scale))
+        if (control == nullptr || index < 0 || index > static_cast<int32_t>(glass::SwitchPicks::Octave))
         {
             return;
         }
@@ -248,7 +262,7 @@ namespace winrt::midiglass::implementation
     // ---------------------------------------------------------------- Try mode
 
     _Use_decl_annotations_
-    void EditorWindow::OnTryKeyPicked(glass::PickedKey const& picked)
+    void EditorWindow::OnTryGridsChanged(glass::PadGridStates const& states)
     {
         if (!m_tryMode)
         {
@@ -257,11 +271,11 @@ namespace winrt::midiglass::implementation
 
         try
         {
-            for (auto const& [itemIndex, value] : m_renderer.ApplyPickedKey(picked, m_editor.Document(), m_theme))
+            for (auto const& [itemIndex, value] : m_renderer.ApplyGridStates(states, m_editor.Document(), m_theme))
             {
                 if (auto element = m_renderer.ElementAt(itemIndex))
                 {
-                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(value);
+                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(std::max(value, 0.0));
                 }
             }
 
@@ -277,21 +291,19 @@ namespace winrt::midiglass::implementation
         {
             if (m_player != nullptr)
             {
-                m_player->ForgetPickedKey();
+                m_player->ForgetGridChanges();
             }
 
-            auto const picked = m_renderer.PickedKeyNow();
-
-            if (picked.Root < 0 && picked.Scale < 0)
+            if (m_renderer.GridStatesNow().empty())
             {
                 return;
             }
 
-            for (auto const& [itemIndex, value] : m_renderer.ApplyPickedKey({}, m_editor.Document(), m_theme))
+            for (auto const& [itemIndex, value] : m_renderer.ApplyGridStates({}, m_editor.Document(), m_theme))
             {
                 if (auto element = m_renderer.ElementAt(itemIndex))
                 {
-                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(value);
+                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(std::max(value, 0.0));
                 }
             }
         }

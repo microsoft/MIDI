@@ -1711,10 +1711,10 @@
     <value>Add root and scale pickers</value>
   </data>
   <data name="PadPickersCaption" xml:space="preserve">
-    <value>Adds two switches to the page. One picks the root note and one picks the scale. While the layout runs, every pad grid with a key plays in the key they pick.</value>
+    <value>Adds two switches to the page. One picks the root note and one picks the scale. While the layout runs, the pad grids they target play in the key they pick.</value>
   </data>
   <data name="PadPickersOnLayoutCaption" xml:space="preserve">
-    <value>This layout has root and scale pickers. While it runs, they change the key of every pad grid that has one.</value>
+    <value>This grid already has root and scale pickers. While the layout runs, they change its key.</value>
   </data>
   <data name="PadPickersNeedKeyCaption" xml:space="preserve">
     <value>Choose a key first. The pickers change the key of a pad grid that has one.</value>
@@ -1737,14 +1737,53 @@
   <data name="SwitchPicksScale" xml:space="preserve">
     <value>Pad scale</value>
   </data>
+  <data name="SwitchPicksInKeyOnly" xml:space="preserve">
+    <value>In key only</value>
+  </data>
+  <data name="SwitchPicksRowOffset" xml:space="preserve">
+    <value>Row offset</value>
+  </data>
+  <data name="SwitchPicksOctave" xml:space="preserve">
+    <value>Octave</value>
+  </data>
   <data name="SwitchScalesLabel.Text" xml:space="preserve">
     <value>Scales</value>
   </data>
   <data name="SwitchPicksRootCaption" xml:space="preserve">
-    <value>While the layout runs, the note picked here becomes the root of every pad grid that has a key. It sends nothing. The layout opens in its saved key each time.</value>
+    <value>While the layout runs, the note picked here becomes the root of the pad grids it targets that have a key. It sends nothing. The layout opens in its saved key each time.</value>
   </data>
   <data name="SwitchPicksScaleCaption" xml:space="preserve">
-    <value>While the layout runs, the scale picked here becomes the scale of every pad grid that has a key. It sends nothing. The layout opens in its saved key each time.</value>
+    <value>While the layout runs, the scale picked here becomes the scale of the pad grids it targets that have a key. It sends nothing. The layout opens in its saved key each time.</value>
+  </data>
+  <data name="SwitchPicksInKeyOnlyCaption" xml:space="preserve">
+    <value>While the layout runs, this switches the pad grids it targets between every note and only the notes of their key. A grid needs a key for this to change it. It sends nothing.</value>
+  </data>
+  <data name="SwitchPicksRowOffsetCaption" xml:space="preserve">
+    <value>While the layout runs, this sets how far each row of the pad grids it targets starts above the row below it. It sends nothing.</value>
+  </data>
+  <data name="SwitchPicksOctaveCaption" xml:space="preserve">
+    <value>While the layout runs, this moves the pad grids it targets up or down by whole octaves from where they were built. It sends nothing.</value>
+  </data>
+  <data name="PickerChromatic" xml:space="preserve">
+    <value>Chromatic</value>
+  </data>
+  <data name="PickerInKey" xml:space="preserve">
+    <value>In key</value>
+  </data>
+  <data name="PickerRowThird" xml:space="preserve">
+    <value>Third</value>
+  </data>
+  <data name="TargetsLabel.Text" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="TargetsAllGrids" xml:space="preserve">
+    <value>All grids</value>
+  </data>
+  <data name="TargetsUnnamedGridFormat" xml:space="preserve">
+    <value>Pad grid {0}</value>
+  </data>
+  <data name="TargetsNoGrids" xml:space="preserve">
+    <value>(No grids)</value>
   </data>
   <data name="PadRowStepsCombo.Header" xml:space="preserve">
     <value>Row offset</value>
@@ -1895,6 +1934,54 @@
   </data>
   <data name="PadKeyNone" xml:space="preserve">
     <value>(No key)</value>
+  </data>
+  <data name="PadArrangementCombo.Header" xml:space="preserve">
+    <value>Arrangement</value>
+  </data>
+  <data name="PadArrangementFlow" xml:space="preserve">
+    <value>Flow</value>
+  </data>
+  <data name="PadArrangementRows" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="PadArrangementColumns" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="PadLinesBox.Header" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="PadsPerLineBox.Header" xml:space="preserve">
+    <value>Pads per row</value>
+  </data>
+  <data name="PadRowsHeader" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="PadColumnsHeader" xml:space="preserve">
+    <value>Columns</value>
+  </data>
+  <data name="PadsPerRowHeader" xml:space="preserve">
+    <value>Pads per row</value>
+  </data>
+  <data name="PadsPerColumnHeader" xml:space="preserve">
+    <value>Pads per column</value>
+  </data>
+  <data name="PadRowsCaptionFormat" xml:space="preserve">
+    <value>{0} pads. Rows run left to right and stack from the bottom. The pads stretch to fill the control, so resizing it changes their size, not the grid. A grid can have up to 1,024 pads.</value>
+  </data>
+  <data name="PadColumnsCaptionFormat" xml:space="preserve">
+    <value>{0} pads. Columns run bottom to top and stack from the left. The pads stretch to fill the control, so resizing it changes their size, not the grid. A grid can have up to 1,024 pads.</value>
+  </data>
+  <data name="PadHighlightHeldCheck.Content" xml:space="preserve">
+    <value>Highlight held notes</value>
+  </data>
+  <data name="PadSilentOne" xml:space="preserve">
+    <value>1 pad is past note 127 or below 0, so it's blank and plays nothing.</value>
+  </data>
+  <data name="PadSilentFormat" xml:space="preserve">
+    <value>{0} pads are past note 127 or below 0, so they're blank and play nothing.</value>
+  </data>
+  <data name="PadRowSemitonesFormat" xml:space="preserve">
+    <value>{0} semitones</value>
   </data>
   <data name="PadFlowFormat" xml:space="preserve">
     <value>{0} across and {1} up. Resize the control and the pads move between rows, keeping their size.</value>
@@ -3046,6 +3133,155 @@
   </data>
   <data name="MessageGoToPage" xml:space="preserve">
     <value>Go to page</value>
+  </data>
+  <data name="MessagePadGrid" xml:space="preserve">
+    <value>Pad grid</value>
+  </data>
+  <data name="MessageRowPadGridFormat" xml:space="preserve">
+    <value>{0}  ·  {1}</value>
+    <comment>A row in a control's Sends list that changes pad grids. {0} is when it happens, such as "It turns on". {1} is what it does, such as "Octave up".</comment>
+  </data>
+  <data name="PadGridFunctionCombo.Header" xml:space="preserve">
+    <value>Function</value>
+  </data>
+  <data name="PadGridRowCaption.Text" xml:space="preserve">
+    <value>This row sends no MIDI. While the layout runs, it changes the pad grids it targets. The layout opens as it was built each time.</value>
+  </data>
+  <data name="PadFunctionOctaveUp" xml:space="preserve">
+    <value>Octave up</value>
+  </data>
+  <data name="PadFunctionOctaveDown" xml:space="preserve">
+    <value>Octave down</value>
+  </data>
+  <data name="PadFunctionRowUp" xml:space="preserve">
+    <value>Row up</value>
+  </data>
+  <data name="PadFunctionRowDown" xml:space="preserve">
+    <value>Row down</value>
+  </data>
+  <data name="PadFunctionShiftLeft" xml:space="preserve">
+    <value>Shift left</value>
+  </data>
+  <data name="PadFunctionShiftRight" xml:space="preserve">
+    <value>Shift right</value>
+  </data>
+  <data name="PadFunctionSemitoneUp" xml:space="preserve">
+    <value>Semitone up</value>
+  </data>
+  <data name="PadFunctionSemitoneDown" xml:space="preserve">
+    <value>Semitone down</value>
+  </data>
+  <data name="PadFunctionInKeyOnlyOn" xml:space="preserve">
+    <value>In key only on</value>
+  </data>
+  <data name="PadFunctionInKeyOnlyOff" xml:space="preserve">
+    <value>In key only off</value>
+  </data>
+  <data name="PadFunctionInKeyOnlyToggle" xml:space="preserve">
+    <value>In key only toggle</value>
+  </data>
+  <data name="PadFunctionNextRoot" xml:space="preserve">
+    <value>Next root</value>
+  </data>
+  <data name="PadFunctionPreviousRoot" xml:space="preserve">
+    <value>Previous root</value>
+  </data>
+  <data name="PadFunctionNextScale" xml:space="preserve">
+    <value>Next scale</value>
+  </data>
+  <data name="PadFunctionPreviousScale" xml:space="preserve">
+    <value>Previous scale</value>
+  </data>
+  <data name="PadFunctionNextRowOffset" xml:space="preserve">
+    <value>Next row offset</value>
+  </data>
+  <data name="PadFunctionReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="InspectorReadoutHeading.Text" xml:space="preserve">
+    <value>Readout</value>
+  </data>
+  <data name="ReadoutSourceCombo.Header" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="ReadoutSourceValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="ReadoutSourcePadKey" xml:space="preserve">
+    <value>Pad grid key</value>
+  </data>
+  <data name="ReadoutSourceOctave" xml:space="preserve">
+    <value>Octave</value>
+  </data>
+  <data name="ReadoutSourceRowOffset" xml:space="preserve">
+    <value>Row offset</value>
+  </data>
+  <data name="ReadoutSourcePadSummary" xml:space="preserve">
+    <value>Pad grid summary</value>
+  </data>
+  <data name="ReadoutPadKeyFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>A pad grid's key on a readout. {0} is the root note, such as "D". {1} is the scale, such as "Dorian".</comment>
+  </data>
+  <data name="ReadoutOctaveFormat" xml:space="preserve">
+    <value>Octave {0}</value>
+    <comment>How far a pad grid has moved, such as "Octave +1".</comment>
+  </data>
+  <data name="ReadoutPadSummaryFormat" xml:space="preserve">
+    <value>{0}  ·  {1}  ·  {2}</value>
+    <comment>A pad grid on a readout. {0} is the key, {1} the octave, {2} the row offset.</comment>
+  </data>
+  <data name="ReadoutNoGrids" xml:space="preserve">
+    <value>(No grids)</value>
+  </data>
+  <data name="ReadoutPadAccessibleFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>What a screen reader says for a readout that shows a pad grid. {0} is the readout's label, {1} what it shows, such as "D Dorian".</comment>
+  </data>
+  <data name="PadAddGridButtonsButton.Content" xml:space="preserve">
+    <value>Add grid buttons</value>
+  </data>
+  <data name="PadGridButtonsCaption.Text" xml:space="preserve">
+    <value>Adds controls under the grid that move it, switch in key only, show where it is and reset it while the layout runs. They change only this grid.</value>
+  </data>
+  <data name="GridButtonsOctaveCheck.Content" xml:space="preserve">
+    <value>Octave up and down</value>
+  </data>
+  <data name="GridButtonsRowsCheck.Content" xml:space="preserve">
+    <value>Row up and down</value>
+  </data>
+  <data name="GridButtonsInKeyCheck.Content" xml:space="preserve">
+    <value>In key only switch</value>
+  </data>
+  <data name="GridButtonsReadoutCheck.Content" xml:space="preserve">
+    <value>Readout</value>
+  </data>
+  <data name="GridButtonsResetCheck.Content" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="GridButtonsAddButton.Content" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="GridButtonOctaveDownLabel" xml:space="preserve">
+    <value>Octave down</value>
+  </data>
+  <data name="GridButtonOctaveUpLabel" xml:space="preserve">
+    <value>Octave up</value>
+  </data>
+  <data name="GridButtonRowDownLabel" xml:space="preserve">
+    <value>Row down</value>
+  </data>
+  <data name="GridButtonRowUpLabel" xml:space="preserve">
+    <value>Row up</value>
+  </data>
+  <data name="GridButtonInKeyOnlyLabel" xml:space="preserve">
+    <value>In key only</value>
+  </data>
+  <data name="GridButtonReadoutLabel" xml:space="preserve">
+    <value>Pad grid</value>
+  </data>
+  <data name="GridButtonResetLabel" xml:space="preserve">
+    <value>Reset</value>
   </data>
   <data name="SysExHeading.Text" xml:space="preserve">
     <value>Data</value>

@@ -5,13 +5,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-// Root and scale pickers: a switch that picks the key of every pad grid with one while the
-// layout runs. The pick lives here, so the note a screen reader's press plays moves with it.
-// Nothing picked is saved.
+// Pickers and grid buttons: switches and pad grid rows that change pad grids while the layout
+// runs. What has changed lives here, so the note a screen reader's press plays moves with it.
+// Nothing changed is saved.
 
 #include "pch.h"
 #include "LivePlayer.h"
 #include "PadGrid.h"
+#include "PadGridChanges.h"
 
 namespace glass
 {
@@ -27,43 +28,43 @@ namespace glass
         }
 
         auto const position = SwitchPositionAt(value, SwitchPositionCount(picker->Picker));
-        auto const pick = PickAt(picker->Picker, position);
 
-        auto next = m_pickedKey;
-
-        if (pick.Root >= 0)
+        if (ApplyPick(m_document, picker->Picker, position, m_gridStates))
         {
-            next.Root = pick.Root;
-        }
-
-        if (pick.Scale >= 0)
-        {
-            next.Scale = pick.Scale;
-        }
-
-        if (next.Root == m_pickedKey.Root && next.Scale == m_pickedKey.Scale)
-        {
-            return true;
-        }
-
-        m_pickedKey = next;
-
-        for (auto& pads : m_padControls)
-        {
-            pads.StartNote = FirstPadNote(WithPickedKey(pads.Spec, m_pickedKey));
-        }
-
-        if (KeyPicked)
-        {
-            KeyPicked(m_pickedKey);
+            AnnounceGridChanges();
         }
 
         return true;
     }
 
-    void LivePlayer::ForgetPickedKey() noexcept
+    _Use_decl_annotations_
+    void LivePlayer::ChangePadGrids(PlanAction const& action)
     {
-        m_pickedKey = {};
+        if (ApplyPadGridFunction(m_document, action.PadTargets, action.PadFunction, m_gridStates))
+        {
+            AnnounceGridChanges();
+        }
+    }
+
+    void LivePlayer::AnnounceGridChanges()
+    {
+        for (auto& pads : m_padControls)
+        {
+            auto const spec = WithGridState(pads.Spec, pads.Hex, StateOf(m_gridStates, pads.ControlId));
+            auto const first = PadNote(spec, pads.Hex, 0, 0, std::max(spec.PadsPerRow, 1));
+
+            pads.StartNote = first >= 0 ? first : FirstPadNote(spec);
+        }
+
+        if (PadGridsChanged)
+        {
+            PadGridsChanged(m_gridStates);
+        }
+    }
+
+    void LivePlayer::ForgetGridChanges() noexcept
+    {
+        m_gridStates.clear();
 
         for (auto& pads : m_padControls)
         {

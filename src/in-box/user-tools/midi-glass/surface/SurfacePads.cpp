@@ -142,10 +142,10 @@ namespace glass
         }
 
         // A hexagon standing on a point, in a box this wide and this tall, with every corner
-        // rounded by the same cut.
-        CompositionPath HexagonPath(_In_ float width, _In_ float height, _In_ float cornerCut)
+        // rounded by the same cut. Lying flat side up instead, for pads in columns.
+        CompositionPath HexagonPath(_In_ float width, _In_ float height, _In_ float cornerCut, _In_ bool flatTop)
         {
-            float2 const corners[6]
+            float2 const pointed[6]
             {
                 { width * 0.5f, 0.0f },
                 { width, height * 0.25f },
@@ -155,9 +155,21 @@ namespace glass
                 { 0.0f, height * 0.25f },
             };
 
+            float2 const flat[6]
+            {
+                { width * 0.25f, 0.0f },
+                { width * 0.75f, 0.0f },
+                { width, height * 0.5f },
+                { width * 0.75f, height },
+                { width * 0.25f, height },
+                { 0.0f, height * 0.5f },
+            };
+
+            auto const& corners = flatTop ? flat : pointed;
+
             // Every side of a regular hexagon is as long as the distance from its middle to a
-            // corner, which is half its height.
-            auto const side = height * 0.5f;
+            // corner, which is half its longer side.
+            auto const side = std::max(width, height) * 0.5f;
             auto const cut = side > 0.0f ? std::clamp(cornerCut / side, 0.0f, 0.45f) : 0.0f;
 
             auto const along = [](float2 const& from, float2 const& to, float amount)
@@ -304,7 +316,7 @@ namespace glass
         float height)
     {
         auto const hex = IsHexPadGrid(control.Kind);
-        auto const spec = WithPickedKey(control.Pads, m_pickedKey);
+        auto const spec = GridSpecFor(control);
 
         visual.PadLayout = LayOutPadGrid(spec, hex, width, height);
 
@@ -316,6 +328,8 @@ namespace glass
         visual.PadRestRims.assign(count, nullptr);
         visual.PadLitFills.assign(count, nullptr);
         visual.PadHeld.assign(count, 0);
+        visual.NoteHeld.fill(0);
+        visual.HighlightHeld = spec.HighlightHeld;
 
         if (count == 0)
         {
@@ -336,7 +350,8 @@ namespace glass
         {
             try
             {
-                hexPath = HexagonPath(padWidth, padHeight, padHeight * 0.5f * HexCornerFraction);
+                hexPath = HexagonPath(
+                    padWidth, padHeight, std::max(padWidth, padHeight) * 0.5f * HexCornerFraction, layout.Vertical);
             }
             catch (...)
             {
@@ -346,7 +361,7 @@ namespace glass
             }
         }
 
-        auto const corner = std::min(static_cast<float>(theme.CornerRadius), padWidth * PadCornerFraction);
+        auto const corner = std::min(static_cast<float>(theme.CornerRadius), std::min(padWidth, padHeight) * PadCornerFraction);
 
         // A shape at the origin, moved into place by the shape, so a gradient on it maps to the
         // pad rather than to the whole grid.
@@ -522,20 +537,84 @@ namespace glass
             return;
         }
 
+        auto const paint = [&](size_t at, bool lit)
+            {
+                auto const& shape = visual.PadShapes[at];
+
+                if (shape == nullptr || visual.PadLitFills[at] == nullptr)
+                {
+                    return;
+                }
+
+                shape.FillBrush(lit ? visual.PadLitFills[at] : visual.PadRestFills[at]);
+                shape.StrokeBrush(lit ? visual.PadLitRim : visual.PadRestRims[at]);
+
+                if (itemIndex < m_padNames.size())
+                {
+                    auto const& names = m_padNames[itemIndex];
+
+                    if (at < names.Texts.size() && names.Texts[at] != nullptr)
+                    {
+                        names.Texts[at].Foreground(lit ? names.LitInks[at] : names.RestInks[at]);
+                    }
+                }
+            };
+
+        auto const step = [held](uint8_t& fingers)
+            {
+                if (held)
+                {
+                    if (fingers < std::numeric_limits<uint8_t>::max())
+                    {
+                        fingers++;
+                    }
+                }
+                else if (fingers > 0)
+                {
+                    fingers--;
+                }
+            };
+
+        auto const note = index < visual.PadLayout.Cells.size() ? visual.PadLayout.Cells[index].Note : -1;
+
+        // Every pad playing the note lights with it, counted by note rather than by pad.
+        if (visual.HighlightHeld && note >= 0 && note < static_cast<int32_t>(visual.NoteHeld.size()))
+        {
+            auto& fingers = visual.NoteHeld[static_cast<size_t>(note)];
+            auto const wasLit = fingers > 0;
+
+            step(fingers);
+
+            auto const lit = fingers > 0;
+
+            try
+            {
+                for (size_t at = 0; at < visual.PadLayout.Cells.size() && at < visual.PadHeld.size(); ++at)
+                {
+                    if (visual.PadLayout.Cells[at].Note != note)
+                    {
+                        continue;
+                    }
+
+                    visual.PadHeld[at] = fingers;
+
+                    if (lit != wasLit)
+                    {
+                        paint(at, lit);
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return;
+        }
+
         auto& fingers = visual.PadHeld[index];
         auto const wasLit = fingers > 0;
 
-        if (held)
-        {
-            if (fingers < std::numeric_limits<uint8_t>::max())
-            {
-                fingers++;
-            }
-        }
-        else if (fingers > 0)
-        {
-            fingers--;
-        }
+        step(fingers);
 
         auto const lit = fingers > 0;
 
@@ -546,25 +625,7 @@ namespace glass
 
         try
         {
-            auto const& shape = visual.PadShapes[index];
-
-            if (shape == nullptr || visual.PadLitFills[index] == nullptr)
-            {
-                return;
-            }
-
-            shape.FillBrush(lit ? visual.PadLitFills[index] : visual.PadRestFills[index]);
-            shape.StrokeBrush(lit ? visual.PadLitRim : visual.PadRestRims[index]);
-
-            if (itemIndex < m_padNames.size())
-            {
-                auto const& names = m_padNames[itemIndex];
-
-                if (index < names.Texts.size() && names.Texts[index] != nullptr)
-                {
-                    names.Texts[index].Foreground(lit ? names.LitInks[index] : names.RestInks[index]);
-                }
-            }
+            paint(index, lit);
         }
         catch (...)
         {
@@ -612,7 +673,7 @@ namespace glass
 
         try
         {
-            auto const spec = WithPickedKey(control.Pads, m_pickedKey);
+            auto const spec = GridSpecFor(control);
             auto const& visual = m_visuals[itemIndex];
             auto const& layout = visual.PadLayout;
 
@@ -628,7 +689,7 @@ namespace glass
 
             auto const size = spec.NoteNameSize > 0.0
                 ? spec.NoteNameSize
-                : std::clamp(layout.PadWidth * NoteNameFraction, MinimumNoteNameSize, MaximumAutomaticNoteNameSize);
+                : std::clamp(std::min(layout.PadWidth, layout.PadHeight) * NoteNameFraction, MinimumNoteNameSize, MaximumAutomaticNoteNameSize);
 
             controls::Canvas host{};
 
@@ -653,6 +714,29 @@ namespace glass
             auto const unbounded = winrt::Windows::Foundation::Size{
                 std::numeric_limits<float>::infinity(),
                 std::numeric_limits<float>::infinity() };
+
+            // Pads too small to hold a name at the automatic size get none. Names spilling onto
+            // the pads beside them are clutter nobody can read, and a big grid would pay for a
+            // thousand of them. A size the customer chose is theirs to keep.
+            if (spec.NoteNameSize <= 0.0)
+            {
+                controls::TextBlock sample{};
+
+                sample.Text(L"G\u266F-1");
+                sample.FontSize(size);
+                sample.FontFamily(media::FontFamily{ L"Segoe UI Variable Text" });
+                sample.FontWeight(winrt::Windows::UI::Text::FontWeight{ 600 });
+                sample.Measure(unbounded);
+
+                auto const room = layout.Hex ? HexNameBoxWidth : 1.0 - NoteNameInset * 2.0;
+                auto const tall = layout.Hex ? HexNameBoxHeight : 1.0 - NoteNameInset * 2.0;
+
+                if (sample.DesiredSize().Width > layout.PadWidth * room ||
+                    sample.DesiredSize().Height > layout.PadHeight * tall)
+                {
+                    return;
+                }
+            }
 
             names.Texts.assign(layout.Cells.size(), nullptr);
             names.RestInks.assign(layout.Cells.size(), nullptr);

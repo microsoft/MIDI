@@ -249,11 +249,11 @@ namespace winrt::midiglass::implementation
                 }
             };
 
-        m_player->KeyPicked = [weak](glass::PickedKey const& picked)
+        m_player->PadGridsChanged = [weak](glass::PadGridStates const& states)
             {
                 if (auto strong = weak.get())
                 {
-                    strong->OnTryKeyPicked(picked);
+                    strong->OnTryGridsChanged(states);
                 }
             };
 

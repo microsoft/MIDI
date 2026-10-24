@@ -194,6 +194,10 @@ namespace glass
         // registered kind, whose numbers MIDI 2.0 defines.
         AssignablePerNoteController = 14,
 
+        // Changes the pad grids on the layout while it runs: an octave up, the next scale, in key
+        // only on. Sends nothing, like a page change. PadFunction says which change.
+        PadGrid = 15,
+
         // Not a kind a file can name: one this version doesn't know, kept as read and never sent.
         Unrecognized = 1000,
     };
@@ -668,17 +672,73 @@ namespace glass
     // In full with the pads, below. A scale picker names the scales it offers.
     enum class MusicalScale;
 
+    // Which pad grids a grid button, a picker or a readout works on: every grid on the layout,
+    // or the grids named here by control id. An empty list works on none.
+    struct PadGridTargets
+    {
+        bool AllGrids{ true };
+        std::vector<std::wstring> ControlIds{};
+
+        bool operator==(PadGridTargets const&) const = default;
+    };
+
+    // What a pad grid row does to its grids while the layout runs. Nothing is saved: the layout
+    // opens as it was built each time.
+    enum class PadGridFunction
+    {
+        OctaveUp = 0,
+        OctaveDown = 1,
+
+        // The whole grid moves by one row offset, the way the arrow keys on a grid controller
+        // move it.
+        RowUp = 2,
+        RowDown = 3,
+
+        // The whole grid moves by one pad along its rows.
+        ShiftLeft = 4,
+        ShiftRight = 5,
+
+        // One semitone, or with in key only on, one note of the scale.
+        SemitoneUp = 6,
+        SemitoneDown = 7,
+
+        InKeyOnlyOn = 8,
+        InKeyOnlyOff = 9,
+        InKeyOnlyToggle = 10,
+
+        NextRoot = 11,
+        PreviousRoot = 12,
+        NextScale = 13,
+        PreviousScale = 14,
+        NextRowOffset = 15,
+
+        // Back to the grid as it was built.
+        Reset = 16,
+    };
+
+    constexpr int32_t PadGridFunctionCount = 17;
+
     // What a switch picks while the layout runs, instead of sending its rows.
     enum class SwitchPicks
     {
         Nothing = 0,
 
-        // Twelve positions, C up to B. Each sets the root note of every pad grid that has a key.
+        // Twelve positions, C up to B. Each sets the root note of the pad grids it targets that
+        // have a key.
         RootNote = 1,
 
-        // One position for each scale it offers. Each sets the scale of every pad grid that has
-        // a key.
+        // One position for each scale it offers. Each sets the scale of the pad grids it targets
+        // that have a key.
         Scale = 2,
+
+        // Two positions: every note, and only the notes of the key.
+        InKeyOnly = 3,
+
+        // A row offset for each position: continuous, a third, a fourth, a fifth, an octave.
+        RowOffset = 4,
+
+        // Two octaves down to two octaves up, from where the grid was built.
+        Octave = 5,
     };
 
     // The positions of a switch, in order, by the name printed on each. The first position is
@@ -692,12 +752,46 @@ namespace glass
         SwitchPicks Picks{ SwitchPicks::Nothing };
         std::vector<MusicalScale> Scales{};
 
+        // The pad grids a picker changes and shows.
+        PadGridTargets Targets{};
+
         UnknownFields Unknown{ nullptr };
     };
 
     constexpr int32_t MinimumSwitchPositions = 2;
     constexpr int32_t MaximumSwitchPositions = 16;
     constexpr int32_t RootPickerPositions = 12;
+    constexpr int32_t InKeyPickerPositions = 2;
+    constexpr int32_t RowOffsetPickerPositions = 5;
+    constexpr int32_t OctavePickerPositions = 5;
+
+    // What a readout shows: its own value, or something about a pad grid while the layout runs.
+    enum class ReadoutSource
+    {
+        Value = 0,
+
+        // The root and scale, such as "D Dorian".
+        PadKey = 1,
+
+        // How many octaves the grid has been moved from where it was built, such as "+1".
+        Octave = 2,
+
+        RowOffset = 3,
+
+        // The key, the octave and the row offset together.
+        PadSummary = 4,
+    };
+
+    struct ReadoutSpec
+    {
+        ReadoutSource Source{ ReadoutSource::Value };
+
+        // The grid it shows: the first one these name. Every grid means the first grid on the
+        // layout.
+        PadGridTargets Targets{};
+
+        UnknownFields Unknown{ nullptr };
+    };
 
     // Which way a step sequencer walks its steps.
     enum class StepDirection
@@ -832,12 +926,43 @@ namespace glass
     // No key: every pad is the same color.
     constexpr int32_t NoKey = -1;
 
+    // How the pads are arranged in the control.
+    enum class PadArrangement
+    {
+        // As many to a row as the control's width holds, at the pad size asked for. Resizing the
+        // control moves pads between rows.
+        Flow = 0,
+
+        // A set number of rows, each with a set number of pads, stretched to fill the control.
+        // Pads run left to right and rows stack from the bottom.
+        Rows = 1,
+
+        // The same turned on its side: pads run bottom to top and columns stack from the left.
+        Columns = 2,
+    };
+
     // The pads on a note pad or hex pad control. Width and height come from the control's own
     // rectangle; this is what is drawn inside it and what each pad plays.
     struct PadGridSpec
     {
-        // How many pads there are. They flow into as many rows as the control's width needs.
+        // How many pads there are with the flow arrangement. They flow into as many rows as the
+        // control's width needs.
         int32_t PadCount{ 24 };
+
+        PadArrangement Arrangement{ PadArrangement::Flow };
+
+        // With rows or columns: how many, and how many pads in each.
+        int32_t Rows{ 8 };
+        int32_t PadsPerRow{ 8 };
+
+        // Every pad playing a note that is held lights, not only the one under the finger. A
+        // grid where rows overlap plays the same note in more than one place.
+        bool HighlightHeld{ false };
+
+        // Set only while the layout runs, by grid buttons. Never saved. How many rows the grid
+        // has moved, and how many steps along a row: semitones, or notes of the scale in key.
+        int32_t ShiftRows{ 0 };
+        int32_t ShiftSteps{ 0 };
 
         // How wide one pad is, in page units. The pads shrink to fit only when the control is
         // too small to hold them all at this size.
@@ -890,6 +1015,14 @@ namespace glass
 
     constexpr int32_t MinimumPadCount = 1;
     constexpr int32_t MaximumPadCount = 128;
+
+    // Rows or columns, and the pads in each. Never more than MaximumGridPads together: a giant
+    // touch screen can use a thousand pads, and that is enough.
+    constexpr int32_t MinimumGridRows = 1;
+    constexpr int32_t MaximumGridRows = 32;
+    constexpr int32_t MinimumPadsPerRow = 1;
+    constexpr int32_t MaximumPadsPerRow = 64;
+    constexpr int32_t MaximumGridPads = 1024;
     constexpr double MinimumPadSize = 12.0;
     constexpr double MaximumPadSize = 240.0;
     constexpr int32_t MinimumRightInterval = 1;
@@ -1071,6 +1204,10 @@ namespace glass
         std::wstring SequenceName{};
         std::wstring TargetPageId{};
 
+        // A pad grid row: what it changes, and on which grids.
+        PadGridFunction PadFunction{ PadGridFunction::OctaveUp };
+        PadGridTargets PadTargets{};
+
         // On a switch, the one position that sends this row, counted from 0, and it sends its
         // maximum. -1 is every change, the way a row on any other control works.
         int32_t Position{ -1 };
@@ -1242,6 +1379,9 @@ namespace glass
 
         // Only read when the kind is NotePads or HexPads.
         PadGridSpec Pads{};
+
+        // Only read when the kind is Readout.
+        ReadoutSpec Readout{};
 
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };

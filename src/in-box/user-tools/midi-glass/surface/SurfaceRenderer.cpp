@@ -987,9 +987,7 @@ namespace glass
         m_controlIndexes.reserve(total);
         m_kinds.reserve(total);
 
-        // Pickers show the key picked, and the first grid's key until something is.
-        auto const shownKey = ShownKey(document, m_pickedKey);
-
+        // Pickers show the grid they target as it plays now.
         for (auto const index : shown)
         {
             auto controlIndex = firstIndexes[index];
@@ -1001,7 +999,7 @@ namespace glass
                 if (IsKeyPicker(control))
                 {
                     auto const item = m_visuals.size() - 1;
-                    auto const value = PickerValue(control, shownKey);
+                    auto const value = PickerValueFor(document, control, m_gridStates);
 
                     SetValue(item, value);
                     winrt::get_self<winrt::midiglass::implementation::GlassControl>(m_elements[item])
@@ -1011,6 +1009,8 @@ namespace glass
                 controlIndex++;
             }
         }
+
+        RefreshPadReadouts(document);
     }
 
     _Use_decl_annotations_
@@ -1214,7 +1214,8 @@ namespace glass
         m_dragAxes.push_back(control.Drag);
         m_pickups.push_back(control.Pickup);
         m_keyboards.push_back(control.Keyboard);
-        m_padGrids.push_back(WithPickedKey(control.Pads, m_pickedKey));
+        m_padGrids.push_back(GridSpecFor(control));
+        m_readoutTexts.push_back({});
         m_velocityFromTouch.push_back(control.VelocityFromTouch);
         m_latches.push_back(
             control.Kind == ControlKind::Lfo ? control.Lfo.Latching :
@@ -1285,8 +1286,8 @@ namespace glass
         // number under every knob on a resting page is noise, and a number under the one being
         // held is the thing somebody is looking for.
         auto const wanted =
-            control.ShowValue != ShowValueOverride::Never &&
-            ShowsAValueReadout(control.Kind);
+            (control.ShowValue != ShowValueOverride::Never && ShowsAValueReadout(control.Kind)) ||
+            ReadsAPadGrid(control);
 
         if (!wanted)
         {
@@ -1349,6 +1350,19 @@ namespace glass
         m_valueOffsets[itemIndex] =
             height - (labelInside && !control.Label.empty() ? 34.0 : 19.0) - (lines - 1.0) * 12.0;
 
+        // A readout showing a pad grid has nothing else to show, so its words fill the middle.
+        if (ReadsAPadGrid(control))
+        {
+            auto const size = std::clamp(height * 0.36, 10.0, 20.0);
+
+            text.FontSize(size);
+            text.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+            text.TextWrapping(xaml::TextWrapping::NoWrap);
+            text.Padding(xaml::ThicknessHelper::FromLengths(6, 0, 6, 0));
+
+            m_valueOffsets[itemIndex] = (height - size * 1.35) * 0.5;
+        }
+
         controls::Canvas::SetLeft(text, control.X);
         controls::Canvas::SetTop(text, control.Y + m_valueOffsets[itemIndex]);
 
@@ -1365,6 +1379,49 @@ namespace glass
 
         try
         {
+            // A readout showing a pad grid prints it all the time: it is the whole control.
+            if (itemIndex < m_readoutTexts.size() && !m_readoutTexts[itemIndex].empty())
+            {
+                auto const& text = m_valueTexts[itemIndex];
+
+                text.Visibility(xaml::Visibility::Visible);
+                text.Text(winrt::hstring{ m_readoutTexts[itemIndex] });
+
+                // Smaller rather than cut short, down to a size that can still be read.
+                if (itemIndex < m_elements.size() && m_elements[itemIndex] != nullptr)
+                {
+                    auto const& element = m_elements[itemIndex];
+                    auto const height = std::max(element.Height(), 4.0);
+                    auto const room = std::max(element.Width() - 12.0, 4.0);
+                    auto size = std::clamp(height * 0.36, 10.0, 20.0);
+
+                    text.FontSize(size);
+
+                    // Measured on a copy: the readout's own text is held to the box's width.
+                    controls::TextBlock probe{};
+
+                    probe.Text(text.Text());
+                    probe.FontFamily(text.FontFamily());
+                    probe.FontSize(size);
+                    probe.Measure(winrt::Windows::Foundation::Size{
+                        std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() });
+
+                    auto const wide = static_cast<double>(probe.DesiredSize().Width);
+
+                    if (wide > room)
+                    {
+                        size = std::max(size * room / wide, 9.0);
+                        text.FontSize(size);
+                    }
+
+                    m_valueOffsets[itemIndex] = (height - size * 1.35) * 0.5;
+
+                    controls::Canvas::SetTop(text, controls::Canvas::GetTop(element) + m_valueOffsets[itemIndex]);
+                }
+
+                return;
+            }
+
             auto const always = m_showValues[itemIndex] == ShowValueOverride::Always;
             auto const visible = always || m_touched[itemIndex];
 
@@ -4590,7 +4647,7 @@ namespace glass
 
             if (itemIndex < m_padGrids.size())
             {
-                m_padGrids[itemIndex] = WithPickedKey(control.Pads, m_pickedKey);
+                m_padGrids[itemIndex] = GridSpecFor(control);
             }
 
             LayoutVisual(compositor, m_visuals[itemIndex], control, theme, SurfaceFor(itemIndex, control));
@@ -4660,6 +4717,7 @@ namespace glass
         m_pickups.clear();
         m_keyboards.clear();
         m_padGrids.clear();
+        m_readoutTexts.clear();
         m_velocityFromTouch.clear();
         m_latches.clear();
         m_turnDegrees.clear();
