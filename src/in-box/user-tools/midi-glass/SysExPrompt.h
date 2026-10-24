@@ -17,7 +17,8 @@
 namespace midiglass::sysexprompt
 {
     // Names the devices and asks. Blocks while it's open, so call it from the UI thread once the
-    // window is showing. True when the person allowed it, which is then remembered.
+    // window is showing. True when the person allowed it, which is then remembered. The file path
+    // only names the layout when it has no name of its own.
     bool AskToAllowSysEx(
         _In_ HWND owner,
         _In_ glass::LayoutDocument const& document,

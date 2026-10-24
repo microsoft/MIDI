@@ -1483,8 +1483,8 @@ namespace glass
         // The one switch that stops a layout whose faders sit at zero from muting a live desk.
         bool SuppressAllStartupValues{ false };
 
-        // Set when the file came from outside the layouts folder. The first run asks before
-        // sending system exclusive, because arbitrary SysEx can damage a device.
+        // Set when the file came from outside the layouts folder. Whether its system exclusive may
+        // go out doesn't depend on this: SysEx this PC hasn't seen before always asks (SysExReview.h).
         bool IsImported{ false };
 
         // Set when a newer version of the app wrote the file: a higher file version, or a kind of

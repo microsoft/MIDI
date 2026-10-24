@@ -488,7 +488,9 @@ namespace midiglass::devicesync
         target.RuleName = std::wstring{ resources::GetString(L"SyncFirewallRuleName") };
         target.RuleDescription = std::wstring{ resources::GetString(L"SyncFirewallRuleDescription") };
         target.AllowSwitch = FirewallAllowSwitch;
-        target.Protocols = { midiapp::firewall::TcpProtocol };
+        // TCP for the connection, and UDP for the network announcement (DNS-SD) that says this PC
+        // is ready, which goes out from a socket of the app's own.
+        target.Protocols = { midiapp::firewall::TcpProtocol, midiapp::firewall::UdpProtocol };
         target.RemoteAddresses = L"LocalSubnet";
 
         return target;

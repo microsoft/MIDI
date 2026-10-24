@@ -10,7 +10,6 @@
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
-#include "SysExReview.h"
 #include "App.xaml.h"
 
 #include "AppSettings.h"
@@ -1497,9 +1496,6 @@ namespace winrt::midiglass::implementation
 
             if (glass::WriteLayoutFile(read.Document, path))
             {
-                // A copy of a layout from somewhere else is still from somewhere else.
-                glass::CopySysExReview(filePath, path);
-
                 return path;
             }
         }

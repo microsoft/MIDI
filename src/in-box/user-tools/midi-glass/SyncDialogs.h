@@ -20,7 +20,7 @@ namespace midiglass::devicesync
     // The first argument of the elevated copy that adds the firewall rule for the Receive screen.
     constexpr wchar_t FirewallAllowSwitch[] = L"--allow-glass-sync-through-firewall";
 
-    // TCP, private networks, and only from the local subnet.
+    // TCP and UDP, and only from the local subnet. RequestAllow names the networks.
     midiapp::firewall::FirewallTarget FirewallTarget();
 
     // In %LOCALAPPDATA%\Microsoft\MIDI Glass, never in Documents or ProgramData.

@@ -23,11 +23,9 @@ class SysExReviewTests
     TEST_METHOD(SysExPacketsAreFoundAndTakenOut);
     TEST_METHOD(DevicesAreListedFromControlsAndSequences);
     TEST_METHOD(TheFingerprintFollowsTheSysEx);
-    TEST_METHOD(ALayoutMadeHereIsNotAsked);
-    TEST_METHOD(AMarkedLayoutAsksUntilApproved);
-    TEST_METHOD(TheSameSysExAgainIsNotAskedAgain);
+    TEST_METHOD(UnknownSysExAsksWhereverTheFileIs);
+    TEST_METHOD(TrustedSysExIsNotAskedAgain);
     TEST_METHOD(ChangedSysExIsAskedAgain);
-    TEST_METHOD(AFileFromOutsideTheFolderAsks);
-    TEST_METHOD(ALayoutWithNoSysExIsNotAsked);
-    TEST_METHOD(RenamingAndCopyingKeepTheMark);
+    TEST_METHOD(ALayoutWithNoSysExIsNeverAsked);
+    TEST_METHOD(ALostOrDamagedListAsksAgain);
 };

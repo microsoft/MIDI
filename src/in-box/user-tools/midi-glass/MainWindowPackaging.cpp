@@ -13,7 +13,6 @@
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
-#include "SysExReview.h"
 #include "App.xaml.h"
 
 #include "StringResources.h"
@@ -501,9 +500,6 @@ namespace winrt::midiglass::implementation
 
                 return;
             }
-
-            // Made somewhere else: its SysEx is asked about the first time it runs.
-            glass::MarkForSysExReview(result.Path);
 
             m_cardSignature.clear();
             RefreshLibrary();

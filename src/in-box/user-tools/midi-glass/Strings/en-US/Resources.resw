@@ -6138,10 +6138,7 @@
     <value>Windows Firewall lets paired PCs on this network reach Windows MIDI Glass.</value>
   </data>
   <data name="ReceiveFirewallBlocked" xml:space="preserve">
-    <value>Windows Firewall is keeping other PCs from reaching Windows MIDI Glass. Allow it on private networks to receive layouts. It&apos;s let in from your local network only, and it listens only while this window is open.</value>
-  </data>
-  <data name="ReceiveFirewallBlockedByRule" xml:space="preserve">
-    <value>A Windows Firewall rule or your organization&apos;s settings keep other PCs from reaching Windows MIDI Glass. Ask whoever manages this PC.</value>
+    <value>Windows Firewall doesn&apos;t let other PCs reach Windows MIDI Glass yet, so this PC isn&apos;t listening. Select Allow on private networks. That lets in PCs on your local network only, and Windows MIDI Glass listens only while this window is open.</value>
   </data>
   <data name="ReceiveNetworkUnknown" xml:space="preserve">
     <value>Couldn&apos;t tell whether Windows Firewall lets other PCs in. If a send doesn&apos;t arrive, check Windows Firewall.</value>
@@ -6208,5 +6205,20 @@
   </data>
   <data name="SysExPromptMoreFormat" xml:space="preserve">
     <value>…and {0} more</value>
+  </data>
+  <data name="ReceiveFirewallBlockAll" xml:space="preserve">
+    <value>Windows Firewall is set to block all incoming connections on this network, so other PCs can&apos;t reach this one. You can change that in Windows Security, under Firewall &amp; network protection.</value>
+  </data>
+  <data name="ReceiveFirewallBlockedByRuleFormat" xml:space="preserve">
+    <value>A Windows Firewall rule blocks Windows MIDI Glass on this network: {0}. Windows adds a rule like that when someone selects Cancel on its &quot;allow access&quot; alert. To receive layouts, turn that rule off in Windows Defender Firewall with Advanced Security, then come back here.</value>
+  </data>
+  <data name="ReceiveFirewallManaged" xml:space="preserve">
+    <value>Your organization&apos;s settings decide what Windows Firewall lets in on this PC, so Windows MIDI Glass can&apos;t add a rule here. Ask whoever manages this PC.</value>
+  </data>
+  <data name="ReceiveNotListening" xml:space="preserve">
+    <value>Not listening yet.</value>
+  </data>
+  <data name="ReceiveThisPcFormat" xml:space="preserve">
+    <value>This PC: {0}</value>
   </data>
 </root>

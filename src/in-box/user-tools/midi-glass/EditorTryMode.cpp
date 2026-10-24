@@ -64,13 +64,19 @@ namespace winrt::midiglass::implementation
 
     // The player is shared: Try mode sends through it and Learn listens through it, and both
     // need the same connections. Creating two would open the same devices twice.
+    // SysEx goes out from the editor when it's this person's own: the layout's SysEx was already
+    // trusted when it opened, or allowed since. Otherwise only once it's on the list.
+    bool EditorWindow::SysExIsAllowedHere() const noexcept
+    {
+        return m_sysExIsOwn || glass::CheckSysExReview(m_editor.Document()) == glass::SysExReview::Allowed;
+    }
+
     void EditorWindow::StartPlayerForLearning()
     {
         if (m_player != nullptr)
         {
             m_player->UpdateDocument(m_editor.Document());
-            m_player->SetSystemExclusiveAllowed(
-                glass::CheckSysExReview(m_editor.Document(), m_filePath) == glass::SysExReview::Allowed);
+            m_player->SetSystemExclusiveAllowed(SysExIsAllowedHere());
             return;
         }
 
@@ -78,8 +84,7 @@ namespace winrt::midiglass::implementation
 
         // A layout from somewhere else sends no SysEx from the editor either, until the person
         // says it may (SetTryMode asks).
-        m_player->SetSystemExclusiveAllowed(
-            glass::CheckSysExReview(m_editor.Document(), m_filePath) == glass::SysExReview::Allowed);
+        m_player->SetSystemExclusiveAllowed(SysExIsAllowedHere());
 
         auto weak = get_weak();
 
@@ -309,8 +314,13 @@ namespace winrt::midiglass::implementation
 
                 if (!m_player->IsSystemExclusiveAllowed())
                 {
-                    m_player->SetSystemExclusiveAllowed(::midiglass::sysexprompt::AskToAllowSysEx(
-                        m_chrome.WindowHandle(), m_editor.Document(), m_filePath));
+                    auto const allowed = ::midiglass::sysexprompt::AskToAllowSysEx(
+                        m_chrome.WindowHandle(), m_editor.Document(), m_filePath);
+
+                    // Allowed, the layout's SysEx is as good as written here, so what's added to it
+                    // from now on is too.
+                    m_sysExIsOwn = m_sysExIsOwn || allowed;
+                    m_player->SetSystemExclusiveAllowed(allowed);
                 }
 
                 m_player->SetOutputEnabled(true);

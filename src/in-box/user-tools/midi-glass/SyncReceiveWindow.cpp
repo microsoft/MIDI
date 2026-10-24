@@ -102,6 +102,11 @@ namespace midiglass::devicesync
             bool m_importing{ false };
             bool m_closed{ false };
 
+            // Only touched on the UI thread.
+            bool m_checking{ false };
+            bool m_starting{ false };
+            winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_recheck{ nullptr };
+
             controls::TextBlock m_status{ nullptr };
             controls::TextBlock m_thisPc{ nullptr };
             controls::TextBlock m_network{ nullptr };
@@ -198,7 +203,7 @@ namespace midiglass::devicesync
 
             panel.Children().Append(Paragraph(resources::GetString(L"ReceiveIntro"), 14.0));
 
-            m_thisPc = Paragraph(resources::GetString(L"ReceiveStarting"), 13.0, L"TextFillColorSecondaryBrush");
+            m_thisPc = Paragraph(resources::FormatString(L"ReceiveThisPcFormat", m_ownName), 13.0, L"TextFillColorSecondaryBrush");
             panel.Children().Append(m_thisPc);
 
             m_network = Paragraph(resources::GetString(L"ReceiveCheckingNetwork"), 13.0);
@@ -281,7 +286,16 @@ namespace midiglass::devicesync
 
             m_window.Activate();
 
-            StartAsync();
+            m_recheck = m_dispatcher.CreateTimer();
+            m_recheck.Interval(std::chrono::seconds{ 5 });
+            m_recheck.Tick([weak = weak_from_this()](auto&&, auto&&)
+                {
+                    if (auto const screen = weak.lock())
+                    {
+                        screen->CheckNetworkAsync();
+                    }
+                });
+
             CheckNetworkAsync();
         }
 
@@ -297,6 +311,8 @@ namespace midiglass::devicesync
         {
             auto self = shared_from_this();
             auto const bridge = m_bridge;
+
+            m_starting = true;
 
             try
             {
@@ -374,6 +390,8 @@ namespace midiglass::devicesync
 
                 co_await wil::resume_foreground(m_dispatcher);
 
+                m_starting = false;
+
                 if (m_closed)
                 {
                     // Closed while starting: stopped here instead, off the UI thread.
@@ -394,30 +412,47 @@ namespace midiglass::devicesync
                 m_status.Text(resources::GetString(L"ReceiveWaiting"));
                 m_pair.IsEnabled(!m_importing);
             }
-            MIDI_GLASS_CATCH_AND_LOG(L"Unable to start receiving layouts.")
+            catch (...)
+            {
+                m_starting = false;
+                LOG_CAUGHT_EXCEPTION_MSG("Unable to start receiving layouts.");
+            }
         }
 
+        // Listening comes after this, never before. A program that listens with no rule of its own
+        // makes Windows show its own "allow access" alert, which lets it in on public networks too,
+        // from any address. So Glass listens only once the firewall already lets it in on the
+        // private network this PC is on, and otherwise offers its own narrower rule first.
         winrt::fire_and_forget ReceiveScreen::CheckNetworkAsync()
         {
             auto self = shared_from_this();
 
             try
             {
+                if (m_checking)
+                {
+                    co_return;
+                }
+
+                m_checking = true;
+
                 co_await winrt::resume_background();
 
                 auto const state = firewall::QueryState(FirewallTarget());
 
                 co_await wil::resume_foreground(m_dispatcher);
 
+                m_checking = false;
+
                 if (m_closed)
                 {
                     co_return;
                 }
 
-                auto privateOpen = false;
-                auto privateBlocked = false;
-                auto blockedByRule = false;
                 auto anyPrivate = false;
+                auto privateOpen = false;
+                auto blockAll = false;
+                auto blockedByRule = false;
 
                 for (auto const& network : state.Networks)
                 {
@@ -428,48 +463,94 @@ namespace midiglass::devicesync
 
                     anyPrivate = true;
                     privateOpen = privateOpen || LetsIn(network.Status);
-                    privateBlocked = privateBlocked || !LetsIn(network.Status);
-                    blockedByRule = blockedByRule || network.Status == firewall::FirewallStatus::ClosedByRule ||
-                        network.Status == firewall::FirewallStatus::ClosedForAll;
+                    blockAll = blockAll || network.Status == firewall::FirewallStatus::ClosedForAll;
+                    blockedByRule = blockedByRule || network.Status == firewall::FirewallStatus::ClosedByRule;
                 }
 
                 m_allow.Visibility(xaml::Visibility::Collapsed);
                 m_networkSettings.Visibility(xaml::Visibility::Collapsed);
                 m_network.Foreground(::midiglass::sharing::ThemeBrush(L"TextFillColorPrimaryBrush"));
 
-                if (state.Status == firewall::FirewallStatus::NotConnected || (state.Networks.empty() && state.ConnectedNetworks == 0))
+                auto const caution = [this]() { m_network.Foreground(::midiglass::sharing::ThemeBrush(L"SystemFillColorCautionBrush")); };
+
+                // The firewall couldn't be read. Listening may bring up Windows' own alert, but
+                // that's better than never receiving anything.
+                auto listen = state.Status == firewall::FirewallStatus::Unknown;
+
+                if (state.Status == firewall::FirewallStatus::NotConnected)
                 {
                     m_network.Text(resources::GetString(L"ReceiveNotConnected"));
+                }
+                else if (state.Status == firewall::FirewallStatus::Unknown)
+                {
+                    m_network.Text(resources::GetString(L"ReceiveNetworkUnknown"));
                 }
                 else if (!anyPrivate)
                 {
                     // Windows keeps other PCs out on a public network, and this app doesn't ask
                     // to change that.
                     m_network.Text(resources::GetString(L"ReceivePublicNetwork"));
-                    m_network.Foreground(::midiglass::sharing::ThemeBrush(L"SystemFillColorCautionBrush"));
+                    caution();
                     m_networkSettings.Visibility(xaml::Visibility::Visible);
                 }
                 else if (privateOpen)
                 {
                     m_network.Text(resources::GetString(L"ReceiveNetworkOk"));
+                    listen = true;
                 }
-                else if (blockedByRule || state.ManagedByPolicy)
+                else if (blockAll)
                 {
-                    m_network.Text(resources::GetString(L"ReceiveFirewallBlockedByRule"));
-                    m_network.Foreground(::midiglass::sharing::ThemeBrush(L"SystemFillColorCautionBrush"));
+                    m_network.Text(resources::GetString(L"ReceiveFirewallBlockAll"));
+                    caution();
                 }
-                else if (privateBlocked)
+                else if (blockedByRule)
                 {
-                    m_network.Text(resources::GetString(L"ReceiveFirewallBlocked"));
-                    m_network.Foreground(::midiglass::sharing::ThemeBrush(L"SystemFillColorCautionBrush"));
-                    m_allow.Visibility(xaml::Visibility::Visible);
+                    std::wstring names{};
+
+                    for (auto const& name : state.BlockingRuleNames)
+                    {
+                        names += names.empty() ? L"" : L", ";
+                        names += L"\u201C" + midiapp::SanitizeProvenanceText(name, 120) + L"\u201D";
+                    }
+
+                    m_network.Text(resources::FormatString(L"ReceiveFirewallBlockedByRuleFormat", names));
+                    caution();
+                }
+                else if (state.ManagedByPolicy)
+                {
+                    m_network.Text(resources::GetString(L"ReceiveFirewallManaged"));
+                    caution();
                 }
                 else
                 {
-                    m_network.Text(resources::GetString(L"ReceiveNetworkUnknown"));
+                    m_network.Text(resources::GetString(L"ReceiveFirewallBlocked"));
+                    caution();
+                    m_allow.Visibility(xaml::Visibility::Visible);
+                }
+
+                if (listen)
+                {
+                    m_recheck.Stop();
+
+                    if (m_receiver == nullptr && !m_starting)
+                    {
+                        StartAsync();
+                    }
+                }
+                else if (m_receiver == nullptr)
+                {
+                    m_status.Text(resources::GetString(L"ReceiveNotListening"));
+
+                    // A network set to private in Settings, or a rule turned off, is picked up
+                    // without reopening the window.
+                    m_recheck.Start();
                 }
             }
-            MIDI_GLASS_CATCH_AND_LOG(L"Unable to check the network for receiving.")
+            catch (...)
+            {
+                m_checking = false;
+                LOG_CAUGHT_EXCEPTION_MSG("Unable to check the network for receiving.");
+            }
         }
 
         winrt::fire_and_forget ReceiveScreen::AllowAsync()
@@ -484,8 +565,11 @@ namespace midiglass::devicesync
 
                 co_await winrt::resume_background();
 
-                // Private networks only, and only from the local subnet (FirewallTarget).
-                auto const result = firewall::RequestAllow(owner, FirewallTarget(), firewall::PrivateNetworks);
+                // Private networks only (and a domain network the PC is on now), and only from the
+                // local subnet (FirewallTarget).
+                auto const connected = firewall::QueryState(FirewallTarget()).ConnectedNetworks;
+                auto const result = firewall::RequestAllow(owner, FirewallTarget(),
+                    firewall::PrivateNetworks | (connected & firewall::DomainNetworks));
 
                 co_await wil::resume_foreground(m_dispatcher);
 
@@ -743,6 +827,17 @@ namespace midiglass::devicesync
         void ReceiveScreen::Stop() noexcept
         {
             m_closed = true;
+
+            try
+            {
+                if (m_recheck != nullptr)
+                {
+                    m_recheck.Stop();
+                }
+            }
+            catch (...)
+            {
+            }
             m_bridge->PairingOpen = false;
 
             if (m_pending != nullptr)

@@ -7,7 +7,6 @@
 
 #include "pch.h"
 #include "App.xaml.h"
-#include "SysExReview.h"
 #include "MainWindow.xaml.h"
 #include "RuntimeWindow.xaml.h"
 #include "EditorWindow.xaml.h"
@@ -261,15 +260,8 @@ namespace winrt::midiglass::implementation
 
             // Files from the first builds end in ".json", which Explorer will not open with this
             // app. Renamed before the library reads them, and the recent list follows.
-            auto const renamed = glass::RenameLegacyFiles(
-                glass::LayoutsFolder(), glass::LegacyLayoutFileExtension, glass::LayoutFileExtension);
-
-            ::midiglass::AppSettings::Current().RenameLayouts(renamed);
-
-            for (auto const& [from, to] : renamed)
-            {
-                glass::MoveSysExReview(from, to);
-            }
+            ::midiglass::AppSettings::Current().RenameLayouts(glass::RenameLegacyFiles(
+                glass::LayoutsFolder(), glass::LegacyLayoutFileExtension, glass::LayoutFileExtension));
 
             glass::RenameLegacyFiles(
                 glass::ThemesFolder(), glass::LegacyThemeFileExtension, glass::ThemeFileExtension);

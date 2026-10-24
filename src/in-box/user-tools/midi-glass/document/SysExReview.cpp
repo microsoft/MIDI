@@ -27,25 +27,15 @@ namespace glass
     {
         namespace mjson = winrt::Windows::Data::Json;
 
-        constexpr wchar_t KeyItems[] = L"items";
-        constexpr wchar_t KeyPath[] = L"path";
-        constexpr wchar_t KeyReview[] = L"review";
-        constexpr wchar_t KeyApproved[] = L"approved";
+        constexpr wchar_t KeyTrusted[] = L"trusted";
 
-        constexpr size_t MaximumItems = 1024;
+        // Each distinct SysEx anyone on this PC wrote or allowed. Far more than a person makes.
+        constexpr size_t MaximumItems = 4096;
         constexpr uintmax_t MaximumFileBytes = 2 * 1024 * 1024;
 
         std::mutex g_lock{};
         std::wstring g_overridePath{};
 
-        struct Item
-        {
-            std::wstring Path{};
-            bool Review{ false };
-
-            // The fingerprint of the SysEx the person said yes to, or empty.
-            std::wstring Approved{};
-        };
 
         std::wstring ListPath()
         {
@@ -73,24 +63,17 @@ namespace glass
             return (folder / L"SysExReview.json").wstring();
         }
 
-        bool SamePath(_In_ std::wstring const& first, _In_ std::wstring const& second) noexcept
+        bool IsFingerprint(_In_ std::wstring const& value) noexcept
         {
-            return ::CompareStringOrdinal(first.c_str(), -1, second.c_str(), -1, TRUE) == CSTR_EQUAL;
+            return value.size() == 64 && std::all_of(value.begin(), value.end(),
+                [](wchar_t c) { return (c >= L'0' && c <= L'9') || (c >= L'a' && c <= L'f'); });
         }
 
-        std::wstring StringOf(_In_ mjson::JsonObject const& value, _In_ wchar_t const* key)
+        // The fingerprints of the SysEx this PC trusts. Empty when the list is missing or damaged,
+        // which makes everything with SysEx ask: the safe way to fail.
+        std::vector<std::wstring> LoadLocked()
         {
-            if (!value.HasKey(key) || value.GetNamedValue(key).ValueType() != mjson::JsonValueType::String)
-            {
-                return {};
-            }
-
-            return std::wstring{ value.GetNamedString(key) };
-        }
-
-        std::vector<Item> LoadLocked()
-        {
-            std::vector<Item> items{};
+            std::vector<std::wstring> items{};
 
             auto const path = ListPath();
 
@@ -118,41 +101,35 @@ namespace glass
             mjson::JsonObject root{ nullptr };
 
             if (!mjson::JsonObject::TryParse(text, root) || root == nullptr ||
-                !root.HasKey(KeyItems) || root.GetNamedValue(KeyItems).ValueType() != mjson::JsonValueType::Array)
+                !root.HasKey(KeyTrusted) || root.GetNamedValue(KeyTrusted).ValueType() != mjson::JsonValueType::Array)
             {
                 return items;
             }
 
-            for (auto const& entry : root.GetNamedArray(KeyItems))
+            for (auto const& entry : root.GetNamedArray(KeyTrusted))
             {
                 if (items.size() >= MaximumItems)
                 {
                     break;
                 }
 
-                if (entry.ValueType() != mjson::JsonValueType::Object)
+                if (entry.ValueType() != mjson::JsonValueType::String)
                 {
                     continue;
                 }
 
-                auto const value = entry.GetObject();
+                auto value = std::wstring{ entry.GetString() };
 
-                Item item{};
-                item.Path = StringOf(value, KeyPath);
-                item.Approved = StringOf(value, KeyApproved);
-                item.Review = value.HasKey(KeyReview) && value.GetNamedValue(KeyReview).ValueType() == mjson::JsonValueType::Boolean &&
-                    value.GetNamedBoolean(KeyReview);
-
-                if (!item.Path.empty() && (item.Review || !item.Approved.empty()))
+                if (IsFingerprint(value))
                 {
-                    items.push_back(std::move(item));
+                    items.push_back(std::move(value));
                 }
             }
 
             return items;
         }
 
-        bool SaveLocked(_In_ std::vector<Item> const& items) noexcept
+        bool SaveLocked(_In_ std::vector<std::wstring> const& items) noexcept
         {
             try
             {
@@ -167,21 +144,11 @@ namespace glass
 
                 for (auto const& item : items)
                 {
-                    if (!item.Review && item.Approved.empty())
-                    {
-                        continue;
-                    }
-
-                    mjson::JsonObject value{};
-                    value.SetNamedValue(KeyPath, mjson::JsonValue::CreateStringValue(item.Path));
-                    value.SetNamedValue(KeyReview, mjson::JsonValue::CreateBooleanValue(item.Review));
-                    value.SetNamedValue(KeyApproved, mjson::JsonValue::CreateStringValue(item.Approved));
-
-                    list.Append(value);
+                    list.Append(mjson::JsonValue::CreateStringValue(item));
                 }
 
                 mjson::JsonObject root{};
-                root.SetNamedValue(KeyItems, list);
+                root.SetNamedValue(KeyTrusted, list);
 
                 auto const text = std::wstring{ root.Stringify() };
                 auto const length = ::WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
@@ -231,11 +198,6 @@ namespace glass
             }
         }
 
-        Item* FindLocked(_Inout_ std::vector<Item>& items, _In_ std::wstring const& filePath)
-        {
-            auto const found = std::find_if(items.begin(), items.end(), [&filePath](Item const& item) { return SamePath(item.Path, filePath); });
-            return found == items.end() ? nullptr : &*found;
-        }
 
         // A row that sends SysEx, and the words or bytes it sends.
         bool SendsSystemExclusive(_In_ ControlMessage const& message) noexcept
@@ -420,189 +382,62 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    void MarkForSysExReview(std::wstring const& filePath) noexcept
+    SysExReview CheckSysExReview(LayoutDocument const& document) noexcept
     {
         try
         {
-            if (filePath.empty())
-            {
-                return;
-            }
+            auto const fingerprint = SystemExclusiveFingerprint(document);
 
-            std::scoped_lock guard{ g_lock };
-
-            auto items = LoadLocked();
-
-            if (auto* const item = FindLocked(items, filePath))
-            {
-                item->Review = true;
-            }
-            else
-            {
-                items.push_back(Item{ filePath, true, {} });
-
-                if (items.size() > MaximumItems)
-                {
-                    items.erase(items.begin());
-                }
-            }
-
-            SaveLocked(items);
-        }
-        catch (...)
-        {
-        }
-    }
-
-    _Use_decl_annotations_
-    void ForgetSysExReview(std::wstring const& filePath) noexcept
-    {
-        try
-        {
-            std::scoped_lock guard{ g_lock };
-
-            auto items = LoadLocked();
-
-            if (std::erase_if(items, [&filePath](Item const& item) { return SamePath(item.Path, filePath); }) > 0)
-            {
-                SaveLocked(items);
-            }
-        }
-        catch (...)
-        {
-        }
-    }
-
-    _Use_decl_annotations_
-    void MoveSysExReview(std::wstring const& fromPath, std::wstring const& toPath) noexcept
-    {
-        try
-        {
-            std::scoped_lock guard{ g_lock };
-
-            auto items = LoadLocked();
-            auto* const item = FindLocked(items, fromPath);
-
-            if (item == nullptr)
-            {
-                return;
-            }
-
-            auto moved = *item;
-            moved.Path = toPath;
-
-            std::erase_if(items, [&](Item const& i) { return SamePath(i.Path, fromPath) || SamePath(i.Path, toPath); });
-            items.push_back(std::move(moved));
-
-            SaveLocked(items);
-        }
-        catch (...)
-        {
-        }
-    }
-
-    _Use_decl_annotations_
-    void CopySysExReview(std::wstring const& fromPath, std::wstring const& toPath) noexcept
-    {
-        try
-        {
-            std::scoped_lock guard{ g_lock };
-
-            auto items = LoadLocked();
-            auto* const item = FindLocked(items, fromPath);
-
-            if (item == nullptr)
-            {
-                return;
-            }
-
-            auto copy = *item;
-            copy.Path = toPath;
-
-            std::erase_if(items, [&toPath](Item const& i) { return SamePath(i.Path, toPath); });
-            items.push_back(std::move(copy));
-
-            SaveLocked(items);
-        }
-        catch (...)
-        {
-        }
-    }
-
-    _Use_decl_annotations_
-    SysExReview CheckSysExReview(LayoutDocument const& document, std::wstring const& filePath) noexcept
-    {
-        try
-        {
-            std::scoped_lock guard{ g_lock };
-
-            auto items = LoadLocked();
-            auto* const item = filePath.empty() ? nullptr : FindLocked(items, filePath);
-
-            auto const marked = document.IsImported || (item != nullptr && item->Review);
-
-            if (!marked)
+            if (fingerprint.empty())
             {
                 return SysExReview::Allowed;
             }
 
-            auto const fingerprint = SystemExclusiveFingerprint(document);
-            auto const approved = fingerprint.empty() || (item != nullptr && item->Approved == fingerprint);
+            std::scoped_lock guard{ g_lock };
 
-            if (!approved)
-            {
-                return SysExReview::Ask;
-            }
+            auto const trusted = LoadLocked();
 
-            // Nothing to ask about, or already said yes to: the mark has done its job.
-            if (item != nullptr && item->Review)
-            {
-                item->Review = false;
-                SaveLocked(items);
-            }
-
-            return SysExReview::Allowed;
+            return std::find(trusted.begin(), trusted.end(), fingerprint) != trusted.end()
+                ? SysExReview::Allowed
+                : SysExReview::Ask;
         }
         catch (...)
         {
-            // When the list can't be read, the safe answer is to ask.
             return SysExReview::Ask;
         }
     }
 
     _Use_decl_annotations_
-    void ApproveSysEx(LayoutDocument const& document, std::wstring const& filePath) noexcept
+    void TrustSysEx(LayoutDocument const& document) noexcept
     {
         try
         {
-            if (filePath.empty())
+            auto const fingerprint = SystemExclusiveFingerprint(document);
+
+            if (fingerprint.empty())
             {
                 return;
             }
 
-            auto const fingerprint = SystemExclusiveFingerprint(document);
-
             std::scoped_lock guard{ g_lock };
 
-            auto items = LoadLocked();
+            auto trusted = LoadLocked();
 
-            if (auto* const item = FindLocked(items, filePath))
+            // Most recent last, so the oldest goes first when the list is full.
+            std::erase(trusted, fingerprint);
+            trusted.push_back(fingerprint);
+
+            if (trusted.size() > MaximumItems)
             {
-                item->Review = false;
-                item->Approved = fingerprint;
-            }
-            else
-            {
-                items.push_back(Item{ filePath, false, fingerprint });
+                trusted.erase(trusted.begin(), trusted.begin() + static_cast<ptrdiff_t>(trusted.size() - MaximumItems));
             }
 
-            SaveLocked(items);
+            SaveLocked(trusted);
         }
         catch (...)
         {
         }
     }
-
     _Use_decl_annotations_
     void UseSysExReviewFile(std::wstring const& path) noexcept
     {

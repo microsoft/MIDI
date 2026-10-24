@@ -169,7 +169,7 @@ namespace winrt::midiglass::implementation
         // A layout from somewhere else sends no SysEx until the person here says it may. It
         // starts held back, so nothing gets out while the question is open, not even from the
         // startup pass.
-        auto const askAboutSysEx = glass::CheckSysExReview(m_document, m_filePath) == glass::SysExReview::Ask;
+        auto const askAboutSysEx = glass::CheckSysExReview(m_document) == glass::SysExReview::Ask;
 
         m_player->SetSystemExclusiveAllowed(!askAboutSysEx);
 

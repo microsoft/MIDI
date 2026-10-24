@@ -11,6 +11,7 @@
 
 #include "pch.h"
 #include "EditorWindow.xaml.h"
+#include "SysExReview.h"
 #include "EditorWindow.g.cpp"
 #include "App.xaml.h"
 
@@ -51,6 +52,10 @@ namespace winrt::midiglass::implementation
 
             m_filePath = filePath;
             m_editor.Load(read.Document);
+
+            // SysEx already trusted, or none at all: whatever SysEx is written here from now on is
+            // this person's own. A layout from somewhere else stays untrusted until it's allowed.
+            m_sysExIsOwn = glass::CheckSysExReview(read.Document) == glass::SysExReview::Allowed;
 
             m_theme = glass::ResolveDocumentTheme(read.Document);
 
@@ -269,6 +274,11 @@ namespace winrt::midiglass::implementation
             if (!m_saveFailed)
             {
                 m_editor.MarkSaved();
+
+                if (m_sysExIsOwn)
+                {
+                    glass::TrustSysEx(document);
+                }
             }
 
             UpdateSavedChip();

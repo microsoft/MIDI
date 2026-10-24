@@ -13,6 +13,7 @@
 #include <windows.h>
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -57,11 +58,6 @@ namespace
         document.Sequences.push_back(sequence);
 
         return document;
-    }
-
-    std::wstring PathOf(_In_ wchar_t const* name)
-    {
-        return (g_folder / name).wstring();
     }
 }
 
@@ -177,108 +173,98 @@ void SysExReviewTests::TheFingerprintFollowsTheSysEx()
     VERIFY_IS_TRUE(glass::SystemExclusiveFingerprint(glass::LayoutDocument{}).empty());
 }
 
-void SysExReviewTests::ALayoutMadeHereIsNotAsked()
+void SysExReviewTests::UnknownSysExAsksWhereverTheFileIs()
 {
-    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx(), PathOf(L"Mine.midilayout")) == glass::SysExReview::Allowed);
-}
+    // In the layouts folder or not: a file dropped there by Explorer or OneDrive is no safer.
+    auto inside = WithSysEx();
+    inside.IsImported = false;
 
-void SysExReviewTests::AMarkedLayoutAsksUntilApproved()
-{
-    auto const path = PathOf(L"FromAPack.midilayout");
-    auto const document = WithSysEx();
+    auto outside = WithSysEx();
+    outside.IsImported = true;
 
-    glass::MarkForSysExReview(path);
-
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, path) == glass::SysExReview::Ask);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(inside) == glass::SysExReview::Ask);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(outside) == glass::SysExReview::Ask);
 
     // Running without SysEx isn't an answer: it asks again next time.
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, path) == glass::SysExReview::Ask);
-
-    glass::ApproveSysEx(document, path);
-
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, path) == glass::SysExReview::Allowed);
-
-    // Paths compare without regard to case, the way Windows does.
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, PathOf(L"FROMAPACK.midilayout")) == glass::SysExReview::Allowed);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(inside) == glass::SysExReview::Ask);
 }
 
-void SysExReviewTests::TheSameSysExAgainIsNotAskedAgain()
+void SysExReviewTests::TrustedSysExIsNotAskedAgain()
 {
-    auto const path = PathOf(L"Synced.midilayout");
-    auto document = WithSysEx();
+    glass::TrustSysEx(WithSysEx());
 
-    glass::MarkForSysExReview(path);
-    glass::ApproveSysEx(document, path);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx()) == glass::SysExReview::Allowed);
 
-    // A newer copy from the same PC, with its controls moved but the same SysEx.
-    document.Name = L"Synced, again";
-    glass::MarkForSysExReview(path);
+    // A newer copy with its controls moved and renamed, but the same SysEx.
+    auto copy = WithSysEx();
+    copy.Name = L"Borrowed, again";
+    copy.IsImported = true;
+    VERIFY_IS_TRUE(glass::CheckSysExReview(copy) == glass::SysExReview::Allowed);
 
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, path) == glass::SysExReview::Allowed);
+    // Trusting it twice keeps one entry.
+    glass::TrustSysEx(WithSysEx());
+    auto const text = [&]()
+        {
+            std::ifstream file{ g_folder / L"SysExReview.json" };
+            return std::string{ std::istreambuf_iterator<char>{ file }, std::istreambuf_iterator<char>{} };
+        }();
+
+    auto const fingerprint = glass::SystemExclusiveFingerprint(WithSysEx());
+    // Lowercase hex, so each character fits a byte.
+    std::string narrow{};
+
+    for (auto const c : fingerprint)
+    {
+        narrow += static_cast<char>(c);
+    }
+    auto const first = text.find(narrow);
+
+    VERIFY_IS_TRUE(first != std::string::npos);
+    VERIFY_IS_TRUE(text.find(narrow, first + 1) == std::string::npos);
 }
 
 void SysExReviewTests::ChangedSysExIsAskedAgain()
 {
-    auto const path = PathOf(L"Changed.midilayout");
+    glass::TrustSysEx(WithSysEx());
 
-    glass::MarkForSysExReview(path);
-    glass::ApproveSysEx(WithSysEx(), path);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx({ 0xF0, 0x00, 0x20, 0x33, 0xF7 })) == glass::SysExReview::Ask);
 
-    // A newer copy arrives with different SysEx.
-    glass::MarkForSysExReview(path);
-
-    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx({ 0xF0, 0x00, 0x20, 0x33, 0xF7 }), path) == glass::SysExReview::Ask);
+    // The same bytes sent to a different device are different SysEx.
+    auto moved = WithSysEx();
+    moved.Pages[0].Controls[0].Messages[0].DeviceName = L"Other synth";
+    VERIFY_IS_TRUE(glass::CheckSysExReview(moved) == glass::SysExReview::Ask);
 }
 
-void SysExReviewTests::AFileFromOutsideTheFolderAsks()
+void SysExReviewTests::ALayoutWithNoSysExIsNeverAsked()
 {
-    auto const path = PathOf(L"Downloads\\Borrowed.midilayout");
-
-    auto document = WithSysEx();
-    document.IsImported = true;
-
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, path) == glass::SysExReview::Ask);
-
-    glass::ApproveSysEx(document, path);
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, path) == glass::SysExReview::Allowed);
-
-    // The file was swapped for one with other SysEx.
-    auto swapped = WithSysEx({ 0xF0, 0x41, 0x10, 0xF7 });
-    swapped.IsImported = true;
-    VERIFY_IS_TRUE(glass::CheckSysExReview(swapped, path) == glass::SysExReview::Ask);
-}
-
-void SysExReviewTests::ALayoutWithNoSysExIsNotAsked()
-{
-    auto const path = PathOf(L"Faders.midilayout");
-
-    glass::MarkForSysExReview(path);
-
     glass::LayoutDocument plain{};
-    VERIFY_IS_TRUE(glass::CheckSysExReview(plain, path) == glass::SysExReview::Allowed);
+    plain.IsImported = true;
 
-    // The mark is gone, so SysEx the owner adds later is theirs.
-    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx(), path) == glass::SysExReview::Allowed);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(plain) == glass::SysExReview::Allowed);
+
+    // And trusting it writes nothing.
+    glass::TrustSysEx(plain);
+    VERIFY_IS_FALSE(std::filesystem::exists(g_folder / L"SysExReview.json"));
 }
 
-void SysExReviewTests::RenamingAndCopyingKeepTheMark()
+void SysExReviewTests::ALostOrDamagedListAsksAgain()
 {
-    auto const first = PathOf(L"First.midilayout");
-    auto const renamed = PathOf(L"Renamed.midilayout");
-    auto const copy = PathOf(L"Renamed copy.midilayout");
-    auto const document = WithSysEx();
+    glass::TrustSysEx(WithSysEx());
+    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx()) == glass::SysExReview::Allowed);
 
-    glass::MarkForSysExReview(first);
-    glass::MoveSysExReview(first, renamed);
+    auto const list = g_folder / L"SysExReview.json";
 
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, first) == glass::SysExReview::Allowed);
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, renamed) == glass::SysExReview::Ask);
+    {
+        std::ofstream file{ list, std::ios::binary | std::ios::trunc };
+        file << "{ \"trusted\": [ 12, \"not a fingerprint\" ";
+    }
 
-    glass::CopySysExReview(renamed, copy);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx()) == glass::SysExReview::Ask);
 
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, copy) == glass::SysExReview::Ask);
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, renamed) == glass::SysExReview::Ask);
+    std::filesystem::remove(list);
+    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx()) == glass::SysExReview::Ask);
 
-    glass::ForgetSysExReview(copy);
-    VERIFY_IS_TRUE(glass::CheckSysExReview(document, copy) == glass::SysExReview::Allowed);
+    // Allowing it again starts a fresh list.
+    glass::TrustSysEx(WithSysEx());
+    VERIFY_IS_TRUE(glass::CheckSysExReview(WithSysEx()) == glass::SysExReview::Allowed);
 }

@@ -636,6 +636,7 @@ namespace winrt::midiglass::implementation
 
         void MarkChanged();
         void SaveNow();
+        bool SysExIsAllowedHere() const noexcept;
         void UpdateSavedChip();
         void UpdateStatusBar();
 
@@ -1074,6 +1075,9 @@ namespace winrt::midiglass::implementation
 
         xaml::DispatcherTimer m_saveTimer{ nullptr };
         bool m_saveFailed{ false };
+
+        // Whether this layout's SysEx is the person's own here (EditorTryMode.cpp).
+        bool m_sysExIsOwn{ false };
 
         // ---- Edit and Try ----
 

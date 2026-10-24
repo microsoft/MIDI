@@ -303,7 +303,7 @@ Good to know:
 - **A layout that's running doesn't change under your hands.** If the layout is running on the receiving PC, it shows **Update ready**. Select it when you're ready, and the new copy loads. Controls go back to where the layout starts them.
 - **What arrives is checked like a pack.** Every file is checked against the list the sending PC made, and a signed layout stays signed. Nothing gets more trust than a pack file from a USB stick would.
 - **Paired PCs.** To see or remove the PCs this one is paired with, select **…** (More options) > **Paired devices…**. Each PC shows a short key, so you can check you have the right one. Removing a PC means it has to pair again.
-- **Windows Firewall.** The Receive window says whether other PCs can reach this one. If Windows Firewall blocks them, select **Allow on private networks**. That needs an administrator, and it lets in other PCs on your local network only. If your network is set to **Public**, Windows keeps other PCs out. Change it to **Private** in Windows Settings, under **Network & internet**, if it's a network you trust.
+- **Windows Firewall.** The Receive window checks Windows Firewall first, and starts listening only once Windows Firewall lets Windows MIDI Glass in. If it doesn't yet, select **Allow on private networks**. That needs an administrator, and it lets in other PCs on your local network only. If your network is set to **Public**, Windows keeps other PCs out. Change it to **Private** in Windows Settings, under **Network & internet**, if it's a network you trust. The window notices the change within a few seconds.
 - **No network?** You can still use **Pack for sharing…** and copy the pack with a USB stick or OneDrive.
 
 ## Keyboard and screen readers

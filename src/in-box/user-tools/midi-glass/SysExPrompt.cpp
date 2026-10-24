@@ -134,7 +134,7 @@ namespace midiglass::sysexprompt
                 return false;
             }
 
-            glass::ApproveSysEx(document, filePath);
+            glass::TrustSysEx(document);
             return true;
         }
         catch (...)
