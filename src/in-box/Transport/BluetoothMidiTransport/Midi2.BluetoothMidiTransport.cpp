@@ -18,104 +18,110 @@ CMidi2BluetoothMidiTransport::Activate(
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == requestedInterface);
 
-    if (__uuidof(IMidiBidirectional) == riid)
+    // The service calls this for every endpoint and manager it creates, and an exception escaping
+    // a COM method takes the whole service down
+    try
     {
-        TraceLoggingWrite(
-            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiBidirectional", MIDI_TRACE_EVENT_INTERFACE_FIELD)
-        );
-
-        wil::com_ptr_nothrow<IMidiBidirectional> midiBidi;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiBidi>(&midiBidi));
-        *requestedInterface = midiBidi.detach();
-    }
-
-
-    else if (__uuidof(IMidiEndpointManager) == riid)
-    {
-        TraceLoggingWrite(
-            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
-        );
-
-        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        auto endpointManager = TransportState::Current().GetEndpointManager();
-
-        if (endpointManager == nullptr)
+        if (__uuidof(IMidiBidirectional) == riid)
         {
-            RETURN_IF_FAILED(TransportState::Current().ConstructEndpointManager());
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"IMidiBidirectional", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            );
 
-            endpointManager = TransportState::Current().GetEndpointManager();
+            wil::com_ptr_nothrow<IMidiBidirectional> midiBidi;
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiBidi>(&midiBidi));
+            *requestedInterface = midiBidi.detach();
         }
 
-        RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
-        RETURN_IF_FAILED(endpointManager->QueryInterface(riid, requestedInterface));
-    }
 
-
-    else if (__uuidof(IMidiTransportConfigurationManager) == riid)
-    {
-        TraceLoggingWrite(
-            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
-        );
-
-        // check to see if this is the first time we're creating the configuration manager. If so, create it.
-        auto configurationManager = TransportState::Current().GetConfigurationManager();
-
-        if (configurationManager == nullptr)
+        else if (__uuidof(IMidiEndpointManager) == riid)
         {
-            RETURN_IF_FAILED(TransportState::Current().ConstructConfigurationManager());
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            );
 
-            configurationManager = TransportState::Current().GetConfigurationManager();
+            // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+            auto endpointManager = TransportState::Current().GetEndpointManager();
+
+            if (endpointManager == nullptr)
+            {
+                RETURN_IF_FAILED(TransportState::Current().ConstructEndpointManager());
+
+                endpointManager = TransportState::Current().GetEndpointManager();
+            }
+
+            RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
+            RETURN_IF_FAILED(endpointManager->QueryInterface(riid, requestedInterface));
         }
 
-        RETURN_HR_IF_NULL(E_UNEXPECTED, configurationManager);
-        RETURN_IF_FAILED(configurationManager->QueryInterface(riid, requestedInterface));
+
+        else if (__uuidof(IMidiTransportConfigurationManager) == riid)
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            );
+
+            // check to see if this is the first time we're creating the configuration manager. If so, create it.
+            auto configurationManager = TransportState::Current().GetConfigurationManager();
+
+            if (configurationManager == nullptr)
+            {
+                RETURN_IF_FAILED(TransportState::Current().ConstructConfigurationManager());
+
+                configurationManager = TransportState::Current().GetConfigurationManager();
+            }
+
+            RETURN_HR_IF_NULL(E_UNEXPECTED, configurationManager);
+            RETURN_IF_FAILED(configurationManager->QueryInterface(riid, requestedInterface));
+        }
+
+        else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == riid)
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            );
+
+            wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiPluginMetadataProvider>(&metadataProvider));
+            *requestedInterface = metadataProvider.detach();
+        }
+
+        else
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unknown Interface", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            );
+
+            return E_NOINTERFACE;
+        }
+
+        return S_OK;
     }
-
-    else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == riid)
-    {
-        TraceLoggingWrite(
-            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
-        );
-
-        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiPluginMetadataProvider>(&metadataProvider));
-        *requestedInterface = metadataProvider.detach();
-    }
-
-    else
-    {
-        TraceLoggingWrite(
-            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unknown Interface", MIDI_TRACE_EVENT_INTERFACE_FIELD)
-        );
-
-        return E_NOINTERFACE;
-    }
-
-    return S_OK;
+    CATCH_RETURN();
 }
 

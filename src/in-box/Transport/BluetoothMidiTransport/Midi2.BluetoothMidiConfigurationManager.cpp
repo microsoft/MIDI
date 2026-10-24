@@ -684,10 +684,22 @@ CMidi2BluetoothMidiConfigurationManager::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
+    try
+    {
+        RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
 
-    return S_OK;
+        wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+        RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+
+        {
+            auto lock = m_midiDeviceManagerLock.lock_exclusive();
+
+            m_midiDeviceManager = std::move(deviceManager);
+        }
+
+        return S_OK;
+    }
+    CATCH_RETURN();
 }
 
 
@@ -1386,24 +1398,28 @@ CMidi2BluetoothMidiConfigurationManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // TransportState::Shutdown releases its reference to this object
-    wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> keepAlive{ this };
-
-    // Usually the endpoint manager got here first. Calling it again is harmless, and covers the
-    // service shutting the managers down in the other order.
-    TransportState::Current().Shutdown();
-
-    // Held past Shutdown, this was released at DLL unload, after the service had destroyed it
-    wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
-
+    try
     {
-        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+        // TransportState::Shutdown releases its reference to this object
+        wil::com_ptr<CMidi2BluetoothMidiConfigurationManager> keepAlive{ this };
 
-        midiDeviceManager.swap(m_midiDeviceManager);
+        // Usually the endpoint manager got here first. Calling it again is harmless, and covers the
+        // service shutting the managers down in the other order.
+        TransportState::Current().Shutdown();
+
+        // Held past Shutdown, this was released at DLL unload, after the service had destroyed it
+        wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager;
+
+        {
+            auto lock = m_midiDeviceManagerLock.lock_exclusive();
+
+            midiDeviceManager.swap(m_midiDeviceManager);
+        }
+
+        midiDeviceManager.reset();
+
+        return S_OK;
     }
-
-    midiDeviceManager.reset();
-
-    return S_OK;
+    CATCH_RETURN();
 }
 

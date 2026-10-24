@@ -71,7 +71,7 @@ MidiBlePeripheral::Start(MidiBleProtocol::Protocol const protocol)
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"BLE MIDI peripheral published", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(m_advertisedName.c_str(), "advertised name"),
+        TraceLoggingWideString(AdvertisedName().c_str(), "advertised name"),
         TraceLoggingUInt8(static_cast<uint8_t>(protocol), "protocol")
     );
 
@@ -83,7 +83,7 @@ _Use_decl_annotations_
 void
 MidiBlePeripheral::SetClientChangedCallback(std::function<void()> callback)
 {
-    auto lock = std::scoped_lock{ m_clientChangedCallbackLock };
+    auto lock = m_clientChangedCallbackLock.lock_exclusive();
 
     m_clientChangedCallback = std::move(callback);
 }
@@ -144,14 +144,39 @@ MidiBlePeripheral::AttachConnection(
         RETURN_IF_FAILED(newConnection->InitializeAsPeripheral(
             MIDI_BLE_PERIPHERAL_DEVICE_ID,
             remoteDeviceName,
-            m_protocol,
+            m_protocol.load(),
             link));
 
         RETURN_IF_FAILED(newConnection->Start());
 
+        std::shared_ptr<MidiBleConnection> replacedConnection{ nullptr };
+        bool attached{ false };
+
         {
-            auto lock = std::scoped_lock{ m_connectionLock };
-            m_connection = newConnection;
+            auto lock = m_connectionLock.lock_exclusive();
+
+            // Checked again under the lock Stop takes to clear m_running, so a connection is never
+            // left attached to a peripheral which has already detached everything.
+            if (m_running.load())
+            {
+                replacedConnection = std::exchange(m_connection, newConnection);
+                m_connectionClientDeviceId = remoteDeviceId;
+                attached = true;
+            }
+        }
+
+        // Shut down outside the lock, because it joins a thread. Replacing one without shutting it
+        // down would leave its writer thread running for the life of the service.
+        if (replacedConnection != nullptr && replacedConnection != newConnection)
+        {
+            LOG_IF_FAILED(replacedConnection->Shutdown());
+        }
+
+        if (!attached)
+        {
+            LOG_IF_FAILED(newConnection->Shutdown());
+
+            RETURN_HR(E_UNEXPECTED);
         }
 
         connection = newConnection;
@@ -169,10 +194,11 @@ MidiBlePeripheral::DetachConnection()
     bt::BluetoothLEDevice device{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_connectionLock };
+        auto lock = m_connectionLock.lock_exclusive();
 
         connection = std::move(m_connection);
         m_connection = nullptr;
+        m_connectionClientDeviceId = L"";
         m_remoteClientInfo = {};
         device = std::move(m_remoteDevice);
         m_remoteDevice = nullptr;
@@ -193,7 +219,7 @@ _Use_decl_annotations_
 void
 MidiBlePeripheral::SetRemoteClientInfo(MidiBleRemoteClientInfo const& info)
 {
-    auto lock = std::scoped_lock{ m_connectionLock };
+    auto lock = m_connectionLock.lock_exclusive();
 
     m_remoteClientInfo = info;
 }
@@ -202,7 +228,7 @@ MidiBlePeripheral::SetRemoteClientInfo(MidiBleRemoteClientInfo const& info)
 MidiBleRemoteClientInfo
 MidiBlePeripheral::RemoteClientInfo() const
 {
-    auto lock = std::scoped_lock{ m_connectionLock };
+    auto lock = m_connectionLock.lock_exclusive();
 
     return m_remoteClientInfo;
 }
@@ -215,7 +241,7 @@ MidiBlePeripheral::SetRemoteDevice(bt::BluetoothLEDevice const& device)
     bt::BluetoothLEDevice previous{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_connectionLock };
+        auto lock = m_connectionLock.lock_exclusive();
 
         previous = std::move(m_remoteDevice);
         m_remoteDevice = device;
@@ -232,7 +258,7 @@ MidiBlePeripheral::ConnectionIntervalUnits() const
     bt::BluetoothLEDevice device{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_connectionLock };
+        auto lock = m_connectionLock.lock_exclusive();
         device = m_remoteDevice;
     }
 
@@ -286,8 +312,13 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                 RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE));
             }
 
-            m_serviceProvider = providerResult.ServiceProvider();
-            RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceProvider);
+            auto serviceProvider = providerResult.ServiceProvider();
+            RETURN_HR_IF_NULL(E_UNEXPECTED, serviceProvider);
+
+            {
+                auto lock = m_providerLock.lock_exclusive();
+                m_serviceProvider = serviceProvider;
+            }
 
             gatt::GattLocalCharacteristicParameters parameters{};
 
@@ -310,7 +341,7 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                 winrt::guid{ MidiBleProtocol::Midi1DataIoCharacteristicUuid };
 
             auto characteristicResult = MidiBleUtilities::AwaitWithTimeout(
-                m_serviceProvider.Service().CreateCharacteristicAsync(characteristicUuid, parameters),
+                serviceProvider.Service().CreateCharacteristicAsync(characteristicUuid, parameters),
                 MidiBleUtilities::BleOperationTimeoutMilliseconds,
                 gatt::GattLocalCharacteristicResult{ nullptr });
 
@@ -331,10 +362,15 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                 RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE));
             }
 
-            m_characteristic = characteristicResult.Characteristic();
-            RETURN_HR_IF_NULL(E_UNEXPECTED, m_characteristic);
+            auto characteristic = characteristicResult.Characteristic();
+            RETURN_HR_IF_NULL(E_UNEXPECTED, characteristic);
 
-            m_readRequestedToken = m_characteristic.ReadRequested(
+            {
+                auto lock = m_providerLock.lock_exclusive();
+                m_characteristic = characteristic;
+            }
+
+            m_readRequestedToken = characteristic.ReadRequested(
                 [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, gatt::GattReadRequestedEventArgs const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -343,7 +379,7 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                     }
                 });
 
-            m_writeRequestedToken = m_characteristic.WriteRequested(
+            m_writeRequestedToken = characteristic.WriteRequested(
                 [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, gatt::GattWriteRequestedEventArgs const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -352,7 +388,7 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                     }
                 });
 
-            m_subscribedClientsChangedToken = m_characteristic.SubscribedClientsChanged(
+            m_subscribedClientsChangedToken = characteristic.SubscribedClientsChanged(
                 [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, foundation::IInspectable const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -361,7 +397,7 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                     }
                 });
 
-            m_advertisementStatusChangedToken = m_serviceProvider.AdvertisementStatusChanged(
+            m_advertisementStatusChangedToken = serviceProvider.AdvertisementStatusChanged(
                 [weakThis = weak_from_this()](gatt::GattServiceProvider const& sender, gatt::GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -370,7 +406,12 @@ MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protoco
                     }
                 });
 
-            m_advertisedName = MidiBleUtilities::GetLocalBluetoothName();
+            auto advertisedName = MidiBleUtilities::GetLocalBluetoothName();
+
+            {
+                auto lock = m_providerLock.lock_exclusive();
+                m_advertisedName = std::move(advertisedName);
+            }
         }
         CATCH_RETURN();
 
@@ -385,6 +426,9 @@ MidiBlePeripheral::StartAdvertising()
 {
     try
     {
+        auto const serviceProvider = ServiceProvider();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, serviceProvider);
+
         gatt::GattServiceProviderAdvertisingParameters parameters{};
 
         // Both are required: a Central has to be able to find us and then connect to us. The MIDI
@@ -393,7 +437,7 @@ MidiBlePeripheral::StartAdvertising()
         parameters.IsConnectable(true);
         parameters.IsDiscoverable(true);
 
-        m_serviceProvider.StartAdvertising(parameters);
+        serviceProvider.StartAdvertising(parameters);
     }
     CATCH_RETURN();
 
@@ -413,75 +457,115 @@ MidiBlePeripheral::Stop()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_running = false;
+    {
+        // AttachConnection checks this under the same lock before it attaches anything
+        auto lock = m_connectionLock.lock_exclusive();
+        m_running = false;
+    }
 
     LOG_IF_FAILED(DetachConnection());
 
+    // Taken out under the lock, so the data path and configuration calls either hold their own
+    // reference already or find nothing. The teardown below works on these copies.
+    gatt::GattLocalCharacteristic characteristic{ nullptr };
+    gatt::GattServiceProvider serviceProvider{ nullptr };
+
+    {
+        auto lock = m_providerLock.lock_exclusive();
+
+        characteristic = std::exchange(m_characteristic, nullptr);
+        serviceProvider = std::exchange(m_serviceProvider, nullptr);
+        m_advertisedName = L"";
+    }
+
     try
     {
-        if (m_characteristic != nullptr)
+        if (characteristic != nullptr)
         {
             if (m_readRequestedToken)
             {
-                m_characteristic.ReadRequested(m_readRequestedToken);
+                characteristic.ReadRequested(m_readRequestedToken);
                 m_readRequestedToken = {};
             }
 
             if (m_writeRequestedToken)
             {
-                m_characteristic.WriteRequested(m_writeRequestedToken);
+                characteristic.WriteRequested(m_writeRequestedToken);
                 m_writeRequestedToken = {};
             }
 
             if (m_subscribedClientsChangedToken)
             {
-                m_characteristic.SubscribedClientsChanged(m_subscribedClientsChangedToken);
+                characteristic.SubscribedClientsChanged(m_subscribedClientsChangedToken);
                 m_subscribedClientsChangedToken = {};
             }
         }
 
-        if (m_serviceProvider != nullptr)
+        if (serviceProvider != nullptr)
         {
             if (m_advertisementStatusChangedToken)
             {
-                m_serviceProvider.AdvertisementStatusChanged(m_advertisementStatusChangedToken);
+                serviceProvider.AdvertisementStatusChanged(m_advertisementStatusChangedToken);
                 m_advertisementStatusChangedToken = {};
             }
 
-            if (m_serviceProvider.AdvertisementStatus() == gatt::GattServiceProviderAdvertisementStatus::Started)
+            if (serviceProvider.AdvertisementStatus() == gatt::GattServiceProviderAdvertisementStatus::Started)
             {
-                m_serviceProvider.StopAdvertising();
+                serviceProvider.StopAdvertising();
             }
         }
     }
     CATCH_LOG();
 
-    m_characteristic = nullptr;
-    m_serviceProvider = nullptr;
-
     {
-        auto lock = std::scoped_lock{ m_clientLock };
+        auto lock = m_clientLock.lock_exclusive();
         m_activeClient = nullptr;
         m_activeClientDeviceId = L"";
         m_subscribedClientCount = 0;
     }
 
     {
-        auto lock = std::scoped_lock{ m_clientChangedCallbackLock };
+        auto lock = m_clientChangedCallbackLock.lock_exclusive();
         m_clientChangedCallback = nullptr;
     }
 
     m_protocol = MidiBleProtocol::Protocol::Unknown;
-    m_advertisedName = L"";
 
     return S_OK;
 }
 
 
 winrt::hstring
+MidiBlePeripheral::AdvertisedName() const
+{
+    auto lock = m_providerLock.lock_shared();
+
+    return m_advertisedName;
+}
+
+
+gatt::GattLocalCharacteristic
+MidiBlePeripheral::Characteristic() const
+{
+    auto lock = m_providerLock.lock_shared();
+
+    return m_characteristic;
+}
+
+
+gatt::GattServiceProvider
+MidiBlePeripheral::ServiceProvider() const
+{
+    auto lock = m_providerLock.lock_shared();
+
+    return m_serviceProvider;
+}
+
+
+winrt::hstring
 MidiBlePeripheral::ActiveClientDeviceId() const
 {
-    auto lock = std::scoped_lock{ m_clientLock };
+    auto lock = m_clientLock.lock_exclusive();
 
     return m_activeClientDeviceId;
 }
@@ -490,7 +574,7 @@ MidiBlePeripheral::ActiveClientDeviceId() const
 std::shared_ptr<MidiBleConnection>
 MidiBlePeripheral::Connection() const
 {
-    auto lock = std::scoped_lock{ m_connectionLock };
+    auto lock = m_connectionLock.lock_exclusive();
 
     return m_connection;
 }
@@ -499,7 +583,7 @@ MidiBlePeripheral::Connection() const
 bool
 MidiBlePeripheral::IsClientSubscribed() const
 {
-    auto lock = std::scoped_lock{ m_clientLock };
+    auto lock = m_clientLock.lock_exclusive();
 
     return m_activeClient != nullptr;
 }
@@ -508,7 +592,7 @@ MidiBlePeripheral::IsClientSubscribed() const
 uint32_t
 MidiBlePeripheral::SubscribedClientCount() const
 {
-    auto lock = std::scoped_lock{ m_clientLock };
+    auto lock = m_clientLock.lock_exclusive();
 
     return m_subscribedClientCount;
 }
@@ -517,7 +601,7 @@ MidiBlePeripheral::SubscribedClientCount() const
 gatt::GattSubscribedClient
 MidiBlePeripheral::ActiveClient() const
 {
-    auto lock = std::scoped_lock{ m_clientLock };
+    auto lock = m_clientLock.lock_exclusive();
 
     return m_activeClient;
 }
@@ -573,21 +657,67 @@ MidiBlePeripheral::OnWriteRequested(
 
         if (request != nullptr)
         {
-            auto bytes = ReadRequestBytes(request.Value());
+            winrt::hstring writerDeviceId{ };
 
-            if (!bytes.empty())
+            if (auto const session = args.Session())
             {
-                if (auto connection = Connection())
+                if (auto const bluetoothDeviceId = session.DeviceId())
+                {
+                    writerDeviceId = bluetoothDeviceId.Id();
+                }
+            }
+
+            std::shared_ptr<MidiBleConnection> connection{ nullptr };
+            winrt::hstring attachedClientDeviceId{ };
+
+            {
+                auto lock = m_connectionLock.lock_shared();
+
+                connection = m_connection;
+                attachedClientDeviceId = m_connectionClientDeviceId;
+            }
+
+            // Any Central in range can write to a published characteristic. Only the one this
+            // connection was approved and attached for may feed its endpoint.
+            bool const accepted =
+                connection != nullptr &&
+                MidiBleUtilities::IsWriteFromAttachedPeripheralClient(writerDeviceId, attachedClientDeviceId);
+
+            if (accepted)
+            {
+                auto bytes = ReadRequestBytes(request.Value());
+
+                if (!bytes.empty())
                 {
                     connection->ProcessIncomingPacket(bytes.data(), bytes.size());
                 }
             }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_VERBOSE,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Dropped a write from a Central which has no approved connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(writerDeviceId.c_str(), "writer device id"),
+                    TraceLoggingWideString(attachedClientDeviceId.c_str(), "attached client device id")
+                );
+            }
 
             // MIDI data is written without response, but a Central which asks for one has to be
-            // answered or it will stop writing.
+            // answered or it will stop writing. One which is not approved is told so.
             if (request.Option() == gatt::GattWriteOption::WriteWithResponse)
             {
-                request.Respond();
+                if (accepted)
+                {
+                    request.Respond();
+                }
+                else
+                {
+                    request.RespondWithProtocolError(gatt::GattProtocolError::InsufficientAuthorization());
+                }
             }
         }
     }
@@ -611,7 +741,7 @@ MidiBlePeripheral::OnSubscribedClientsChanged(
     {
         auto clients = sender.SubscribedClients();
 
-        auto lock = std::scoped_lock{ m_clientLock };
+        auto lock = m_clientLock.lock_exclusive();
 
         m_subscribedClientCount = clients != nullptr ? clients.Size() : 0;
 
@@ -670,7 +800,7 @@ MidiBlePeripheral::OnSubscribedClientsChanged(
     std::function<void()> callback{ nullptr };
 
     {
-        auto lock = std::scoped_lock{ m_clientChangedCallbackLock };
+        auto lock = m_clientChangedCallbackLock.lock_exclusive();
         callback = m_clientChangedCallback;
     }
 
@@ -711,7 +841,7 @@ MidiBlePeripheral::NotifyPacket(std::vector<uint8_t> const& packet)
     {
         RETURN_HR_IF(S_FALSE, packet.empty());
 
-        auto characteristic = m_characteristic;
+        auto characteristic = Characteristic();
         RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
         auto client = ActiveClient();
@@ -729,11 +859,13 @@ MidiBlePeripheral::NotifyPacket(std::vector<uint8_t> const& packet)
             writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
 
             // The overload which takes a client notifies only that client, which is what keeps a
-            // second Central from being fed data meant for the first.
-            auto result = MidiBleUtilities::AwaitWithTimeout(
+            // second Central from being fed data meant for the first. Stop joins the writer thread
+            // this runs on, so the wait ends as soon as the peripheral stops.
+            auto result = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
                 characteristic.NotifyValueAsync(writer.DetachBuffer(), client),
                 MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
-                gatt::GattClientNotificationResult{ nullptr });
+                gatt::GattClientNotificationResult{ nullptr },
+                [this]() noexcept { return !m_running.load(); });
 
             if (result == nullptr)
             {

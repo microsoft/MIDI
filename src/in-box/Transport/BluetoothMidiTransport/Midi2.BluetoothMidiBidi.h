@@ -23,7 +23,7 @@ public:
 
 private:
     // The service can close the endpoint on one thread while a message arrives on another
-    std::mutex m_lock;
+    wil::srwlock m_lock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     LONGLONG m_context{ 0 };
 

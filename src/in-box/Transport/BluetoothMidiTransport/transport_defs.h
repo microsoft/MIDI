@@ -102,6 +102,16 @@
 #define MIDI_BLE_NAME_RESOLUTION_RETRY_INTERVAL_MS                      2000
 #define MIDI_BLE_NAME_RESOLUTION_MAX_ATTEMPTS                           3
 
+// Every advertisement which carries the MIDI service adds a device, and a radio can advertise from
+// a new random address as often as it likes. Far more than any room full of MIDI gear, and small
+// enough that a full table costs little. A device which is wanted, connected or paired is never
+// dropped to make room.
+#define MIDI_BLE_MAX_DISCOVERED_DEVICES                                 256
+
+// Each name lookup can take a full Bluetooth timeout on the one worker thread, so only this many
+// wait at a time. A device turned away here is asked about again when it next advertises.
+#define MIDI_BLE_MAX_PENDING_NAME_RESOLUTIONS                           16
+
 #define TRANSPORT_PARENT_ID                                             L"MIDIU_BLEMIDI_TRANSPORT"
 
 // A remote Central connected to this PC while it is published as a BLE MIDI Peripheral. The

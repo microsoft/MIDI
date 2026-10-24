@@ -99,9 +99,30 @@ private:
     HRESULT OnDeviceWatcherAdded(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformation const& args);
     HRESULT OnDeviceWatcherUpdated(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformationUpdate const& args);
     HRESULT OnDeviceWatcherRemoved(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformationUpdate const& args);
-    HRESULT OnDeviceWatcherStopped(_In_ enumeration::DeviceWatcher const&, _In_ foundation::IInspectable const&);
 
     HRESULT EndpointCreatorWorker(_In_ std::stop_token stopToken);
+
+    // Writing the property calls into the service, so only the background worker does it.
+    void WriteCalculatedLatency(
+        _In_ std::wstring const& endpointDeviceInterfaceId,
+        _In_ uint16_t const connectionIntervalUnits);
+
+    // Copies taken under a lock, because a failed Initialize releases them while a configuration
+    // call may already hold this object.
+    wil::com_ptr_nothrow<IMidiDeviceManager> DeviceManager();
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> ProtocolManager();
+
+    // Stops whatever Initialize had started and releases the service pointers, so a transport which
+    // failed to start leaves nothing running and nothing in the TransportState static.
+    void UndoFailedInitialize() noexcept;
+
+    // Devices which must never be dropped from the discovered table to make room: wanted, being
+    // connected, queued, or holding a connection. Taken before the discovery lock, because the
+    // two locks are never held together.
+    std::set<winrt::hstring> GetDiscoveredDeviceIdsToKeep();
+
+    // Drops what the worker still holds for devices removed from the discovered table.
+    void ForgetEvictedDevices(_In_ std::vector<winrt::hstring> const& deviceIds);
 
     HRESULT ConnectDeviceInternal(_In_ winrt::hstring const& deviceId);
     HRESULT ConnectDeviceCore(_In_ winrt::hstring const& deviceId, _Out_ winrt::hstring& failureDetail, _Out_ uint32_t& errorCode);
@@ -167,10 +188,10 @@ private:
     winrt::event_token m_deviceWatcherAddedToken;
     winrt::event_token m_deviceWatcherUpdatedToken;
     winrt::event_token m_deviceWatcherRemovedToken;
-    winrt::event_token m_deviceWatcherStoppedToken;
 
+    // Capped at MIDI_BLE_MAX_DISCOVERED_DEVICES. See GetDiscoveredDeviceIdsToKeep.
     std::map<winrt::hstring, MidiBleProtocol::DiscoveredDevice> m_discoveredDevices;
-    std::mutex m_discoveredDevicesLock;
+    wil::srwlock m_discoveredDevicesLock;
 
     struct CreatedEndpointRecord
     {
@@ -181,12 +202,12 @@ private:
     };
 
     std::vector<CreatedEndpointRecord> m_createdEndpoints;
-    std::mutex m_createdEndpointsLock;
+    wil::srwlock m_createdEndpointsLock;
 
     // Releasing the request withdraws the connection interval preference, so one is held per
     // connected device for as long as that connection lasts.
     std::map<winrt::hstring, bt::BluetoothLEPreferredConnectionParametersRequest> m_connectionParameterRequests{ };
-    std::mutex m_connectionParameterRequestsLock;
+    wil::srwlock m_connectionParameterRequestsLock;
 
     // Written by the background worker through ProcessPeripheralClientChange and by whichever
     // thread a configuration update arrives on through StopPeripheral, so it is not worker-only.
@@ -199,7 +220,7 @@ private:
     std::wstring m_peripheralEndpointInstanceId{ };
 
     // Never held across a callout, so it cannot take part in a lock cycle.
-    std::mutex m_peripheralClientStateLock;
+    wil::srwlock m_peripheralClientStateLock;
 
     bool m_peripheralClientChangePending{ false };
     // Connecting opens a GATT session and creates a device node, so it never runs on a caller's
@@ -213,8 +234,12 @@ private:
     std::deque<std::wstring> m_pendingNegotiations;
 
     // Devices whose advertisement carried no name. Resolving one needs an async call, so it
-    // cannot happen on the advertisement callback.
+    // cannot happen on the advertisement callback. Bounded by MaxPendingNameResolutions, and the
+    // worker takes one per pass.
     std::deque<winrt::hstring> m_pendingNameResolutions;
+
+    // Latest connection interval per endpoint, waiting for the worker to write it.
+    std::map<std::wstring, uint16_t> m_pendingLatencyUpdates;
 
     struct NameResolutionAttempts
     {
@@ -223,6 +248,7 @@ private:
         bool GaveUp{ false };
     };
 
+    // An entry exists only for a device in the discovered table, and goes when the device does.
     std::map<winrt::hstring, NameResolutionAttempts> m_nameResolutionAttempts;
 
     // A device is only offered to the user once it can be identified by name. Set of ids for
@@ -246,17 +272,21 @@ private:
     // exists only while a connection is present but offline.
     std::map<winrt::hstring, uint64_t> m_connectionDropTimestamp;
 
-    std::mutex m_pendingRequestsLock;
+    wil::srwlock m_pendingRequestsLock;
 
-    bool m_initialized{ false };
+    // Read on configuration calls as well as the worker
+    std::atomic<bool> m_initialized{ false };
 
     GUID m_transportId{ };
     std::wstring m_parentDeviceId{ };
 
+    // Kept until the destructor after a normal Shutdown, because a Bluetooth callback already
+    // running may still be using them. Only a failed Initialize releases them early.
+    wil::srwlock m_servicePointersLock;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
-    wil::slim_event_manual_reset m_backgroundEndpointCreatorThreadWakeup;
+    MidiBleWorkerWakeup m_backgroundEndpointCreatorThreadWakeup;
 
     // jthread members are declared last so they are destroyed first
     std::jthread m_backgroundEndpointCreatorThread;
