@@ -163,6 +163,9 @@
                 <MenuFlyoutItem x:Uid="CardMenuPackage" Text="Pack for sharing…" Click="OnCardMenuPackage">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
+                <MenuFlyoutItem x:Uid="CardMenuSendToDevice" Text="Send to device…" Click="OnCardMenuSendToDevice">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE895;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="CardMenuDelete" Text="Delete" Click="OnCardMenuDelete"
                                 Foreground="{ThemeResource SystemFillColorCriticalBrush}">
@@ -714,6 +717,12 @@
                         <MenuFlyout>
                             <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import a pack…" Click="OnImportPackageClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="LibraryMenuReceive" Text="Receive from another PC…" Click="OnReceiveFromDeviceClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE896;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="LibraryMenuPairedDevices" Text="Paired devices…" Click="OnPairedDevicesClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE703;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem x:Uid="LibraryMenuAuthor" Text="Your info for sharing…" Click="OnAuthorInfoClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77B;" /></MenuFlyoutItem.Icon>

@@ -277,6 +277,26 @@ Windows MIDI Glass still imports the `.zip` layout packages that earlier version
 
 A layout made by a newer version of Windows MIDI Glass says **From a newer version** on its card. You can run it, and you can open it in the editor to look around and try it. Windows MIDI Glass won't save changes to it, so nothing the newer version added gets lost. That's also why **Duplicate**, **Rename…** and **Edit description…** are turned off for it. A control this version doesn't have shows as a dashed outline with its name. It doesn't respond to touch and doesn't send anything. To change the layout, update Windows MIDI Glass.
 
+## Send a layout to another PC
+
+You can design a layout on one PC and play it on another, like a Surface or another tablet. Both PCs need Windows MIDI Glass, and both need to be on the same home or studio network.
+
+1. On the PC that will get the layout, select **…** (More options) > **Receive from another PC…** in the library. Keep that window open. Windows MIDI Glass listens for other PCs only while it's open.
+2. The first time only, select **Pair with another PC…** in that Receive window, so the two PCs can pair.
+3. On the PC with the layout, select **Sync to device…** in the editor, or select **Send to device…** on the layout's card in the library. Pick the other PC from the list. The first time, both PCs show a 6-digit code. Check that the codes match, and select **They match** on both. If they don't match, select **They don't match**. That can mean the wrong PC, or someone on the network trying to listen in.
+4. The receiving PC shows what's in the layout and asks before it adds it, or before it replaces a copy it already has.
+
+After that, **Sync to** *PC name* in the editor saves the layout and sends it to the same PC in one step. Only what changed is sent: the layout itself, plus any pictures, videos or theme the other PC doesn't have yet. So after the first send, a sync is fast even for a layout with video.
+
+Good to know:
+
+- **The receiving PC asks once.** The first time a PC sends a layout, the receiving PC asks. Later syncs of that layout from that PC go straight in until Windows MIDI Glass closes. If you changed the layout on the receiving PC since the last sync, it asks again, so you don't lose your changes. You can keep both copies.
+- **A layout that's running doesn't change under your hands.** If the layout is running on the receiving PC, it shows **Update ready**. Select it when you're ready, and the new copy loads. Controls go back to where the layout starts them.
+- **What arrives is checked like a pack.** Every file is checked against the list the sending PC made, and a signed layout stays signed. Nothing gets more trust than a pack file from a USB stick would.
+- **Paired PCs.** To see or remove the PCs this one is paired with, select **…** (More options) > **Paired devices…**. Each PC shows a short key, so you can check you have the right one. Removing a PC means it has to pair again.
+- **Windows Firewall.** The Receive window says whether other PCs can reach this one. If Windows Firewall blocks them, select **Allow on private networks**. That needs an administrator, and it lets in other PCs on your local network only. If your network is set to **Public**, Windows keeps other PCs out. Change it to **Private** in Windows Settings, under **Network & internet**, if it's a network you trust.
+- **No network?** You can still use **Pack for sharing…** and copy the pack with a USB stick or OneDrive.
+
 ## Keyboard and screen readers
 
 On a running layout, the Tab key moves from control to control, and a screen reader reads each control's name. The **keyboard order** decides the order Tab moves through the controls, and the order a screen reader reads them.

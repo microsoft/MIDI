@@ -140,6 +140,12 @@ namespace winrt::midiglass::implementation
         void OnShowBackupsFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnKeepAwakeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // ---- sending layouts to another PC and receiving them (MainWindowSync.cpp) ----
+
+        void OnCardMenuSendToDevice(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnReceiveFromDeviceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPairedDevicesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
     private:
         void OnWindowClosed(
             foundation::IInspectable const& sender,

@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared;$(ProjectDir)document;$(ProjectDir)thumbnail;$(ProjectDir)binding;$(ProjectDir)runtime;$(ProjectDir)surface;$(ProjectDir)editor</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared;$(ProjectDir)document;$(ProjectDir)sync;$(ProjectDir)thumbnail;$(ProjectDir)binding;$(ProjectDir)runtime;$(ProjectDir)surface;$(ProjectDir)editor</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
@@ -130,6 +130,18 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="AppProvenance.h" />
     <ClInclude Include="SharingDialogs.h" />
+    <ClInclude Include="SyncDialogs.h" />
+    <ClInclude Include="sync\SyncFileIndex.h" />
+    <ClInclude Include="sync\SyncMemory.h" />
+    <ClInclude Include="sync\SyncPack.h" />
+    <ClInclude Include="sync\SyncProtocol.h" />
+    <ClInclude Include="..\midi-app-shared\AppFirewall.h" />
+    <ClInclude Include="..\midi-app-shared\DeviceLinkChannel.h" />
+    <ClInclude Include="..\midi-app-shared\DeviceLinkDiscovery.h" />
+    <ClInclude Include="..\midi-app-shared\DeviceLinkFrames.h" />
+    <ClInclude Include="..\midi-app-shared\DeviceLinkIdentity.h" />
+    <ClInclude Include="..\midi-app-shared\DeviceLinkPairing.h" />
+    <ClInclude Include="..\midi-app-shared\PairedDevices.h" />
     <ClInclude Include="ProvenanceForm.h" />
     <ClInclude Include="..\midi-app-shared\FontCatalog.h" />
     <ClInclude Include="..\midi-app-shared\FontNames.h" />
@@ -249,6 +261,12 @@
     <ClCompile Include="MainWindowLibrary.cpp" />
     <ClCompile Include="MainWindowPackaging.cpp" />
     <ClCompile Include="SharingDialogs.cpp" />
+    <ClCompile Include="SyncDialogs.cpp" />
+    <ClCompile Include="SyncReceiveWindow.cpp" />
+    <ClCompile Include="MainWindowSync.cpp" />
+    <ClCompile Include="EditorSync.cpp" />
+    <ClCompile Include="RuntimeWindowUpdate.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppFirewall.cpp" />
     <ClCompile Include="ProvenanceForm.cpp" />
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="RuntimeWindow.xaml.cpp">
@@ -328,6 +346,39 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutPackage.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_adapters.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sync\SyncFileIndex.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sync\SyncMemory.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sync\SyncPack.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="sync\SyncProtocol.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\DeviceLinkChannel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\DeviceLinkDiscovery.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\DeviceLinkFrames.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\DeviceLinkIdentity.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\DeviceLinkPairing.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\PairedDevices.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutPack.cpp">

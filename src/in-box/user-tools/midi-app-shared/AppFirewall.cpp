@@ -471,13 +471,20 @@ namespace midiapp::firewall
 
         // Ports are ones a host can choose, so each rule lets in one protocol on any port and
         // nothing else.
-        HRESULT ApplyRuleSettings(_In_ INetFwRule* const rule, _In_ BSTR const application, _In_ long const networks, _In_ long const protocol) noexcept
+        HRESULT ApplyRuleSettings(_In_ INetFwRule* const rule, _In_ BSTR const application, _In_ long const networks, _In_ long const protocol, _In_ std::wstring const& remoteAddresses) noexcept
         {
             RETURN_IF_FAILED(rule->put_ApplicationName(application));
             RETURN_IF_FAILED(rule->put_Protocol(protocol));
             RETURN_IF_FAILED(rule->put_Direction(NET_FW_RULE_DIR_IN));
             RETURN_IF_FAILED(rule->put_Action(NET_FW_ACTION_ALLOW));
             RETURN_IF_FAILED(rule->put_Profiles(networks));
+
+            if (!remoteAddresses.empty())
+            {
+                auto const addresses = wil::make_bstr_nothrow(remoteAddresses.c_str());
+                RETURN_IF_NULL_ALLOC(addresses);
+                RETURN_IF_FAILED(rule->put_RemoteAddresses(addresses.get()));
+            }
             RETURN_IF_FAILED(rule->put_Enabled(VARIANT_TRUE));
 
             return S_OK;
@@ -544,7 +551,7 @@ namespace midiapp::firewall
                         }
                     }
 
-                    RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks, protocols[index]));
+                    RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks, protocols[index], target.RemoteAddresses));
                     covered[index] = true;
                 }
 
@@ -566,7 +573,7 @@ namespace midiapp::firewall
                     // No group: Allowed apps would then list only the group's name, with no path
                     RETURN_IF_FAILED(rule->put_Name(name.get()));
                     RETURN_IF_FAILED(rule->put_Description(description.get()));
-                    RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks, protocols[index]));
+                    RETURN_IF_FAILED(ApplyRuleSettings(rule.get(), application.get(), networks, protocols[index], target.RemoteAddresses));
                     RETURN_IF_FAILED(rules->Add(rule.get()));
                 }
 

@@ -5927,4 +5927,259 @@
   <data name="StepUnrecognized" xml:space="preserve">
     <value>A step that needs a newer version of Windows MIDI Glass</value>
   </data>
+  <data name="CardMenuSendToDevice.Text" xml:space="preserve">
+    <value>Send to device…</value>
+  </data>
+  <data name="LibraryMenuReceive.Text" xml:space="preserve">
+    <value>Receive from another PC…</value>
+  </data>
+  <data name="LibraryMenuPairedDevices.Text" xml:space="preserve">
+    <value>Paired devices…</value>
+  </data>
+  <data name="EditorSyncToDeviceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Save this layout, then send it to another PC running Windows MIDI Glass</value>
+  </data>
+  <data name="EditorSyncToDeviceLabel.Text" xml:space="preserve">
+    <value>Sync to device…</value>
+  </data>
+  <data name="EditorSyncToDevice" xml:space="preserve">
+    <value>Sync to device…</value>
+  </data>
+  <data name="EditorSyncToNamedFormat" xml:space="preserve">
+    <value>Sync to {0}</value>
+  </data>
+  <data name="UpdateReadyButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Update ready. Load the newer copy of this layout</value>
+  </data>
+  <data name="UpdateReadyButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>A newer copy of this layout came from another PC. Select to load it. Controls go back to where the layout starts them.</value>
+  </data>
+  <data name="UpdateReadyLabel.Text" xml:space="preserve">
+    <value>Update ready</value>
+  </data>
+  <data name="ToolbarUpdateReady.Text" xml:space="preserve">
+    <value>Load the update</value>
+  </data>
+  <data name="CornerUpdateReady.Text" xml:space="preserve">
+    <value>Load the update</value>
+  </data>
+  <data name="SyncImportFromFormat" xml:space="preserve">
+    <value>Sent from {0}, a PC paired with this one.</value>
+  </data>
+  <data name="SyncImportChangedHereFormat" xml:space="preserve">
+    <value>The copy on this PC was changed since {0} last sent it. Replacing it loses those changes. Keep both if you&apos;re not sure.</value>
+  </data>
+  <data name="SyncFirewallRuleName" xml:space="preserve">
+    <value>Windows MIDI Glass (receive layouts)</value>
+  </data>
+  <data name="SyncFirewallRuleDescription" xml:space="preserve">
+    <value>Lets PCs on your local network that are paired with this one send layouts to Windows MIDI Glass while its Receive screen is open.</value>
+  </data>
+  <data name="SyncFailedTitle" xml:space="preserve">
+    <value>Couldn&apos;t send it</value>
+  </data>
+  <data name="SyncSentTitle" xml:space="preserve">
+    <value>Sent</value>
+  </data>
+  <data name="SyncNoKeyBody" xml:space="preserve">
+    <value>Windows couldn&apos;t make the key this PC uses to prove who it is to other PCs, so nothing was sent.</value>
+  </data>
+  <data name="SyncPickTitle" xml:space="preserve">
+    <value>Send to device</value>
+  </data>
+  <data name="SyncPickIntroFormat" xml:space="preserve">
+    <value>Choose the PC to send &quot;{0}&quot; to. It shows up here while Windows MIDI Glass is open on it with its Receive screen showing.</value>
+  </data>
+  <data name="SyncPickListName" xml:space="preserve">
+    <value>PCs ready to receive</value>
+  </data>
+  <data name="SyncPickLooking" xml:space="preserve">
+    <value>Looking for PCs on this network… On the other PC, open Windows MIDI Glass and choose More, then Receive from another PC.</value>
+  </data>
+  <data name="SyncPickPairedFormat" xml:space="preserve">
+    <value>Paired · key {0}</value>
+  </data>
+  <data name="SyncPickNotPaired" xml:space="preserve">
+    <value>Not paired yet. You&apos;ll compare a code on both PCs first.</value>
+  </data>
+  <data name="SyncPickSend" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="SyncSendingTitle" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="SyncSendingFormat" xml:space="preserve">
+    <value>Sending &quot;{0}&quot; to {1}…</value>
+  </data>
+  <data name="SyncSentFormat" xml:space="preserve">
+    <value>&quot;{0}&quot; is on {1} now. {2} files were sent.</value>
+  </data>
+  <data name="SyncSentDeltaFormat" xml:space="preserve">
+    <value>&quot;{0}&quot; is on {1} now. {2} files were sent. {1} already had the other {3}, so they weren&apos;t sent again.</value>
+  </data>
+  <data name="SyncCouldNotConnectFormat" xml:space="preserve">
+    <value>Couldn&apos;t reach {0}. Make sure its Receive screen is open, both PCs are on the same network, and Windows Firewall lets Windows MIDI Glass in on {0}.</value>
+  </data>
+  <data name="SyncWrongKeyFormat" xml:space="preserve">
+    <value>The PC that answered isn&apos;t the {0} this PC paired with, so nothing was sent. If {0} was reset, remove it under Paired devices and pair again.</value>
+  </data>
+  <data name="SyncNotPairedFormat" xml:space="preserve">
+    <value>{0} doesn&apos;t know this PC anymore, so nothing was sent. Remove {0} under Paired devices, then send again to pair.</value>
+  </data>
+  <data name="SyncRefusedFormat" xml:space="preserve">
+    <value>{0} didn&apos;t take it. It may be busy with another PC, or running a different version of Windows MIDI Glass.</value>
+  </data>
+  <data name="SyncReceiverProblemFormat" xml:space="preserve">
+    <value>{0} couldn&apos;t use what was sent. {1}</value>
+  </data>
+  <data name="SyncFailedFormat" xml:space="preserve">
+    <value>The connection to {0} ended before the layout was sent. Try again.</value>
+  </data>
+  <data name="SyncPairTitleFormat" xml:space="preserve">
+    <value>Pair with {0}</value>
+  </data>
+  <data name="SyncPairConnectingFormat" xml:space="preserve">
+    <value>Connecting to {0}…</value>
+  </data>
+  <data name="SyncPairFailedTitle" xml:space="preserve">
+    <value>Not paired</value>
+  </data>
+  <data name="SyncPairNotOpenFormat" xml:space="preserve">
+    <value>{0} isn&apos;t ready to pair. On {0}, select Pair with another PC on the Receive screen, then try again.</value>
+  </data>
+  <data name="SyncPairFailedBody" xml:space="preserve">
+    <value>Pairing didn&apos;t finish, and nothing was saved on either PC. Try again.</value>
+  </data>
+  <data name="SyncPairDeclinedBody" xml:space="preserve">
+    <value>The codes didn&apos;t match on one of the PCs, so nothing was saved. If you&apos;re sure you picked the right PC, try again. Codes that don&apos;t match can mean someone else on the network is trying to listen in.</value>
+  </data>
+  <data name="SyncPairCompareFormat" xml:space="preserve">
+    <value>Check that {0} shows this same code.</value>
+  </data>
+  <data name="SyncPairCodeNameFormat" xml:space="preserve">
+    <value>Pairing code {0}</value>
+  </data>
+  <data name="SyncPairWhy" xml:space="preserve">
+    <value>Comparing the code makes sure these two PCs are talking to each other and nothing in between. You only do this once for each PC.</value>
+  </data>
+  <data name="SyncPairMatch" xml:space="preserve">
+    <value>They match</value>
+  </data>
+  <data name="SyncPairNoMatch" xml:space="preserve">
+    <value>They don&apos;t match</value>
+  </data>
+  <data name="SyncPairWaitingFormat" xml:space="preserve">
+    <value>Waiting for the person at {0} to compare the code…</value>
+  </data>
+  <data name="SyncThisPcFormat" xml:space="preserve">
+    <value>This PC: {0} · key {1}</value>
+  </data>
+  <data name="PairedTitle" xml:space="preserve">
+    <value>Paired devices</value>
+  </data>
+  <data name="PairedIntro" xml:space="preserve">
+    <value>These PCs can send layouts to this one while its Receive screen is open, and this PC can send to them. Remove a PC you don&apos;t use anymore, or don&apos;t trust.</value>
+  </data>
+  <data name="PairedNone" xml:space="preserve">
+    <value>No PCs are paired with this one yet. Pairing happens the first time you send a layout to a PC.</value>
+  </data>
+  <data name="PairedUnnamed" xml:space="preserve">
+    <value>Unnamed PC</value>
+  </data>
+  <data name="PairedKeyFormat" xml:space="preserve">
+    <value>Key {0}</value>
+  </data>
+  <data name="PairedDetailFormat" xml:space="preserve">
+    <value>Key {0} · last used {1}</value>
+  </data>
+  <data name="PairedRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="PairedRemoveNameFormat" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+  <data name="ReceiveTitle" xml:space="preserve">
+    <value>Receive from another PC</value>
+  </data>
+  <data name="ReceiveIntro" xml:space="preserve">
+    <value>While this window is open, PCs paired with this one can send layouts here. On the other PC, choose Sync to device in the editor, or Send to device on a layout&apos;s card. When you close this window, this PC stops listening.</value>
+  </data>
+  <data name="ReceiveStarting" xml:space="preserve">
+    <value>Getting ready…</value>
+  </data>
+  <data name="ReceiveCheckingNetwork" xml:space="preserve">
+    <value>Checking the network…</value>
+  </data>
+  <data name="ReceiveAllowFirewall" xml:space="preserve">
+    <value>Allow on private networks</value>
+  </data>
+  <data name="ReceiveNetworkSettings" xml:space="preserve">
+    <value>Open network settings</value>
+  </data>
+  <data name="ReceivePair" xml:space="preserve">
+    <value>Pair with another PC…</value>
+  </data>
+  <data name="ReceiveLogHeading" xml:space="preserve">
+    <value>What arrived</value>
+  </data>
+  <data name="ReceiveWaiting" xml:space="preserve">
+    <value>Ready. Waiting for a layout.</value>
+  </data>
+  <data name="ReceiveCouldNotListen" xml:space="preserve">
+    <value>This PC couldn&apos;t start listening for other PCs. Close this window and try again.</value>
+  </data>
+  <data name="ReceiveNotConnected" xml:space="preserve">
+    <value>This PC isn&apos;t connected to a network, so other PCs can&apos;t reach it.</value>
+  </data>
+  <data name="ReceivePublicNetwork" xml:space="preserve">
+    <value>This PC&apos;s network is set to Public. Windows keeps other PCs from reaching it there. To receive layouts, set this network to Private in Windows Settings, under Network and internet.</value>
+  </data>
+  <data name="ReceiveNetworkOk" xml:space="preserve">
+    <value>Windows Firewall lets paired PCs on this network reach Windows MIDI Glass.</value>
+  </data>
+  <data name="ReceiveFirewallBlocked" xml:space="preserve">
+    <value>Windows Firewall is keeping other PCs from reaching Windows MIDI Glass. Allow it on private networks to receive layouts. It&apos;s let in from your local network only, and it listens only while this window is open.</value>
+  </data>
+  <data name="ReceiveFirewallBlockedByRule" xml:space="preserve">
+    <value>A Windows Firewall rule or your organization&apos;s settings keep other PCs from reaching Windows MIDI Glass. Ask whoever manages this PC.</value>
+  </data>
+  <data name="ReceiveNetworkUnknown" xml:space="preserve">
+    <value>Couldn&apos;t tell whether Windows Firewall lets other PCs in. If a send doesn&apos;t arrive, check Windows Firewall.</value>
+  </data>
+  <data name="ReceiveAllowFailed" xml:space="preserve">
+    <value>Windows Firewall wasn&apos;t changed.</value>
+  </data>
+  <data name="ReceivePairTitle" xml:space="preserve">
+    <value>Pair with another PC</value>
+  </data>
+  <data name="ReceivePairWaitingName" xml:space="preserve">
+    <value>Waiting for the other PC</value>
+  </data>
+  <data name="ReceivePairWaitingFormat" xml:space="preserve">
+    <value>On the other PC, choose Sync to device or Send to device, and pick {0}. Keep this open until both PCs show a code.</value>
+  </data>
+  <data name="ReceivePairedFormat" xml:space="preserve">
+    <value>Paired with {0}.</value>
+  </data>
+  <data name="ReceiveNotPairedFormat" xml:space="preserve">
+    <value>Didn&apos;t pair with {0}. Nothing was saved.</value>
+  </data>
+  <data name="ReceiveReceivingFormat" xml:space="preserve">
+    <value>Receiving &quot;{0}&quot; from {1}…</value>
+  </data>
+  <data name="ReceiveCheckingFormat" xml:space="preserve">
+    <value>Checking &quot;{0}&quot; from {1}…</value>
+  </data>
+  <data name="ReceiveFailedFormat" xml:space="preserve">
+    <value>&quot;{0}&quot; from {1} didn&apos;t arrive in one piece, so it wasn&apos;t used.</value>
+  </data>
+  <data name="ReceiveDeclinedFormat" xml:space="preserve">
+    <value>&quot;{0}&quot; from {1} wasn&apos;t added.</value>
+  </data>
+  <data name="ReceiveGotFormat" xml:space="preserve">
+    <value>Got &quot;{0}&quot; from {1}. {2} files arrived.</value>
+  </data>
+  <data name="ReceiveGotDeltaFormat" xml:space="preserve">
+    <value>Got &quot;{0}&quot; from {1}. {2} files arrived, and {3} were already here.</value>
+  </data>
 </root>

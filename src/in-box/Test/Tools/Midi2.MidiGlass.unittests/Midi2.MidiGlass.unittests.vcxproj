@@ -69,7 +69,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-glass\document;$(ProjectDir)..\..\..\user-tools\midi-glass\thumbnail;$(ProjectDir)..\..\..\user-tools\midi-glass\binding;$(ProjectDir)..\..\..\user-tools\midi-glass\runtime;$(ProjectDir)..\..\..\user-tools\midi-glass\surface;$(ProjectDir)..\..\..\user-tools\midi-glass\editor;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-glass\document;$(ProjectDir)..\..\..\user-tools\midi-glass\thumbnail;$(ProjectDir)..\..\..\user-tools\midi-glass\binding;$(ProjectDir)..\..\..\user-tools\midi-glass\runtime;$(ProjectDir)..\..\..\user-tools\midi-glass\surface;$(ProjectDir)..\..\..\user-tools\midi-glass\editor;$(ProjectDir)..\..\..\user-tools\midi-glass\sync;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -113,6 +113,9 @@
     <ClInclude Include="EditorControllerTests.h" />
     <ClInclude Include="MackieControlTests.h" />
     <ClInclude Include="ProvenanceTests.h" />
+    <ClInclude Include="DeviceLinkTests.h" />
+    <ClInclude Include="DeviceLinkTestKeys.h" />
+    <ClInclude Include="GlassSyncTests.h" />
     <ClInclude Include="ProvenanceFieldsTests.h" />
     <ClInclude Include="ContentPackTests.h" />
     <ClInclude Include="ZipArchiveTests.h" />
@@ -185,6 +188,8 @@
     <ClCompile Include="ProvenanceTests.cpp" />
     <ClCompile Include="ProvenanceFieldsTests.cpp" />
     <ClCompile Include="ContentPackTests.cpp" />
+    <ClCompile Include="DeviceLinkTests.cpp" />
+    <ClCompile Include="GlassSyncTests.cpp" />
     <ClCompile Include="ZipArchiveTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
@@ -231,6 +236,15 @@
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\Deflate.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ZipArchive.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentPack.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\DeviceLinkFrames.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\DeviceLinkIdentity.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\DeviceLinkChannel.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\DeviceLinkPairing.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\PairedDevices.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\sync\SyncFileIndex.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\sync\SyncPack.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\sync\SyncMemory.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\sync\SyncProtocol.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
