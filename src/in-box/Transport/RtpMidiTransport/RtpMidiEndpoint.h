@@ -45,7 +45,9 @@ public:
     void SetKept(_In_ bool const kept) noexcept { m_kept = kept; }
     bool IsKept() const noexcept { return m_kept.load(); }
 
-    void Attach(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
+    // Hands it a connection. False, and nothing attached, when that connection has already ended,
+    // which a snapshot of a node's connections taken a moment ago can include.
+    bool Attach(_In_ std::shared_ptr<RtpMidiConnection> const& connection);
     bool DetachIfCurrent(_In_ RtpMidiConnection const* connection);
     std::shared_ptr<RtpMidiConnection> Connection() const;
 
@@ -67,7 +69,7 @@ private:
     std::atomic<bool> m_releaseWhenConnectionEnds{ false };
 
     // Never held across a send. The connection's own locks are taken inside it, never the reverse.
-    mutable std::mutex m_lock;
+    mutable wil::srwlock m_lock;
     std::wstring m_interfaceId;
     std::shared_ptr<RtpMidiConnection> m_connection;
     uint64_t m_disconnectedSinceTick{ 0 };

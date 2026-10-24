@@ -24,6 +24,8 @@ private:
     void ProcessEndpointCustomizationRemovals(_In_ json::JsonObject const& removeSection);
     void ProcessCommand(_In_ json::JsonObject const& section, _Inout_ json::JsonObject& responseObject);
 
+    // Shutdown swaps it out under the lock, and everything else copies it under the lock first
+    wil::srwlock m_midiDeviceManagerLock;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{

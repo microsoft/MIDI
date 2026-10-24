@@ -67,7 +67,11 @@ A host with `RemoteClientPolicy` set to `RequireApproval` doesn't let in a remot
 
 Call `GetPendingRemoteClients()` every few seconds to find the remotes that are waiting, and decide about each one with `ApproveOrDenyRemoteClientConnectRequestAsync`. An approved remote gets in the next time it asks. A remote that already gave up stays in the list for two minutes after it last asked, so a decision made in that time still counts when it tries again. The service doesn't send a notification, so checking every few seconds is the only way to know.
 
-A remote is known by the name it sends, ignoring uppercase and lowercase differences. RTP-MIDI carries nothing else that stays the same from one connection to the next. There's no authentication, and a device can send any name it likes. So approval keeps out devices nobody expected, but it can't stop a device that sends a name you've already allowed.
+A remote is known by the name it sends, ignoring uppercase and lowercase differences. RTP-MIDI carries nothing else that stays the same from one connection to the next. There's no authentication, and a device can send any name it likes. So approval keeps out devices nobody expected, but it can't stop a device that sends a name you've already allowed for good with `Always`.
+
+A decision about one request, made with `Once` or `UntilRestart`, only counts for the address shown in that request. The request keeps the address the device first asked from, even if another device asks with the same name. If a device with that name asks from a different address, it's listed as a new request with its own address. An `UntilRestart` decision made before the device ever asked counts for the first address it asks from.
+
+A host only lets in so many new connections a minute, from one address and overall, and only so many different names from one address an hour. That stops a device that keeps connecting and leaving, or that makes up a new name every time, from making endpoints and MIDI 1.0 ports appear and disappear in every app. A device past a limit is refused, and gets in again once the time is up. Devices on this PC, connecting through loopback, aren't limited.
 
 **Stopping a host for a while**
 
