@@ -666,6 +666,12 @@ namespace glass
             return;
         }
 
+        if (IsFretboard(control.Kind))
+        {
+            LayoutFretNames(itemIndex, control, theme);
+            return;
+        }
+
         if (!IsPadGrid(control.Kind) || control.Pads.NoteNames == PadNoteNames::Hidden || m_host == nullptr)
         {
             return;

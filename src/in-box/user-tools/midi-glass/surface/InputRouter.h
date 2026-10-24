@@ -9,6 +9,7 @@
 
 #include "SurfaceRenderer.h"
 #include "InputRules.h"
+#include "StringVoices.h"
 
 namespace glass
 {
@@ -64,6 +65,12 @@ namespace glass
         // A finger landed on a pad grid, moved on it, or came off it. Unlike every other control,
         // a pad grid takes a finger per pad, because a chord is several fingers on one control.
         std::function<void(size_t itemIndex, PadTouch const& touch)> PadTouched{};
+
+        // A finger on a fretboard's strings or a strum across them (InputRouterStrings.cpp).
+        std::function<void(size_t itemIndex, FretTouch const& touch)> FretTouched{};
+
+        // A finger dragged a fretboard's neck strip, so the frets showing start at this fret.
+        std::function<void(size_t itemIndex, int32_t firstFret)> NeckMoved{};
 
         // Where the nearest stop is, or the position unchanged. The engine owns the stops; the
         // surface only has to put the finger on one.
@@ -174,6 +181,33 @@ namespace glass
 
             std::array<PadFinger, MaximumPadFingers> PadFingers{};
             size_t PadFingerCount{ 0 };
+
+            // A fretboard: what it plays, where it was drawn, and what each finger on it is
+            // doing. Copies for the same reason as the pad grid's.
+            bool PlaysStrings{ false };
+            FretboardSpec FretSpec{};
+            FretboardLayout FretLayout{};
+
+            struct FretFinger
+            {
+                uint32_t PointerId{ 0 };
+                FretRegion Region{ FretRegion::None };
+
+                // A finger fretting: its string and fret, and where it landed across the string.
+                int32_t String{ -1 };
+                int32_t Fret{ 0 };
+                double StartY{ 0.0 };
+                double Across{ 0.0 };
+
+                // A finger strumming: where it was last, and when, in microseconds.
+                double LastY{ 0.0 };
+                uint64_t LastTime{ 0 };
+
+                // A finger on the neck strip: the first fret it last asked for.
+                int32_t NeckFirst{ -1 };
+            };
+
+            std::array<FretFinger, MaximumPadFingers> FretFingers{};
         };
 
         void OnPressed(_In_ size_t index, _In_ xaml::Input::PointerRoutedEventArgs const& args);
@@ -203,6 +237,15 @@ namespace glass
         void PressPad(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
         void MovePad(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
         void ReleasePad(_In_ Binding& binding, _In_ uint32_t pointerId);
+
+        // The same for a fretboard: a finger fretting a string, sweeping the strum area, or
+        // dragging the neck strip.
+        void PressFret(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void MoveFret(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void ReleaseFret(_In_ Binding& binding, _In_ uint32_t pointerId);
+
+        // Where the fingers fretting a fretboard are drawn.
+        void ShowFretFingers(_In_ Binding const& binding) noexcept;
 
         // An image control sends nothing. A press on its video's bar scrubs, and a press
         // anywhere else stops or starts the video, if the layout asked for either.

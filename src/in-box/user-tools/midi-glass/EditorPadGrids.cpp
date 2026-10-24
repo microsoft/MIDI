@@ -15,6 +15,7 @@
 #include "StringResources.h"
 #include "PadGrid.h"
 #include "PadGridChanges.h"
+#include "Fretboard.h"
 #include "EditorPadGridKeys.h"
 
 namespace resources = ::midiglass::resources;
@@ -42,6 +43,8 @@ namespace winrt::midiglass::implementation
             L"ReadoutSourceOctave",
             L"ReadoutSourceRowOffset",
             L"ReadoutSourcePadSummary",
+            L"ReadoutSourceCapo",
+            L"ReadoutSourceTuning",
         };
 
         bool IsChecked(_In_ controls::CheckBox const& check)
@@ -176,7 +179,7 @@ namespace winrt::midiglass::implementation
         {
             for (auto const& control : page.Controls)
             {
-                if (!glass::IsPadGrid(control.Kind) || control.Id.empty())
+                if (!(glass::IsPadGrid(control.Kind) || glass::IsFretboard(control.Kind)) || control.Id.empty())
                 {
                     continue;
                 }

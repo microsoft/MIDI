@@ -32,7 +32,7 @@ namespace winrt::midiglass::implementation
     {
         // In the order of SwitchPicks.
         for (auto const* const key : { L"SwitchPicksNothing", L"SwitchPicksRootNote", L"SwitchPicksScale",
-            L"SwitchPicksInKeyOnly", L"SwitchPicksRowOffset", L"SwitchPicksOctave" })
+            L"SwitchPicksInKeyOnly", L"SwitchPicksRowOffset", L"SwitchPicksOctave", L"SwitchPicksTuning" })
         {
             SwitchPicksCombo().Items().Append(box_value(resources::GetString(key)));
         }
@@ -84,6 +84,7 @@ namespace winrt::midiglass::implementation
             case glass::SwitchPicks::InKeyOnly: caption = L"SwitchPicksInKeyOnlyCaption"; break;
             case glass::SwitchPicks::RowOffset: caption = L"SwitchPicksRowOffsetCaption"; break;
             case glass::SwitchPicks::Octave:    caption = L"SwitchPicksOctaveCaption"; break;
+            case glass::SwitchPicks::Tuning:    caption = L"SwitchPicksTuningCaption"; break;
             default: break;
             }
 
@@ -148,7 +149,7 @@ namespace winrt::midiglass::implementation
         auto const* const control = SingleSelectedControl();
         auto const index = SwitchPicksCombo().SelectedIndex();
 
-        if (control == nullptr || index < 0 || index > static_cast<int32_t>(glass::SwitchPicks::Octave))
+        if (control == nullptr || index < 0 || index > static_cast<int32_t>(glass::SwitchPicks::Tuning))
         {
             return;
         }

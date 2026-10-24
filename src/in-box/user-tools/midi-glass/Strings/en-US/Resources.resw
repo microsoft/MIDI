@@ -1746,6 +1746,225 @@
   <data name="SwitchPicksOctave" xml:space="preserve">
     <value>Octave</value>
   </data>
+  <data name="SwitchPicksTuning" xml:space="preserve">
+    <value>Tuning</value>
+  </data>
+  <data name="SwitchPicksTuningCaption" xml:space="preserve">
+    <value>While the layout runs, this sets the tuning of the fretboards it targets. It sends nothing.</value>
+  </data>
+  <data name="PaletteFretboard" xml:space="preserve">
+    <value>Fretboard</value>
+  </data>
+  <data name="InspectorFretboardHeading.Text" xml:space="preserve">
+    <value>Fretboard</value>
+  </data>
+  <data name="FretTuningCombo.Header" xml:space="preserve">
+    <value>Tuning</value>
+  </data>
+  <data name="FretStringsHeading.Text" xml:space="preserve">
+    <value>Strings</value>
+  </data>
+  <data name="FretAddStringButton.Content" xml:space="preserve">
+    <value>Add string</value>
+  </data>
+  <data name="FretStringsCaption.Text" xml:space="preserve">
+    <value>The list runs top to bottom the way the strings are drawn. Changing a note makes the tuning Custom.</value>
+  </data>
+  <data name="FretCountBox.Header" xml:space="preserve">
+    <value>Frets</value>
+  </data>
+  <data name="FretCapoBox.Header" xml:space="preserve">
+    <value>Capo</value>
+  </data>
+  <data name="FretVisibleLabel.Text" xml:space="preserve">
+    <value>Visible frets</value>
+  </data>
+  <data name="FretFirstBox.Header" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="FretLastBox.Header" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="FretStrumSideCombo.Header" xml:space="preserve">
+    <value>Strum side</value>
+  </data>
+  <data name="FretPlayModeCombo.Header" xml:space="preserve">
+    <value>Play mode</value>
+  </data>
+  <data name="FretSustainCombo.Header" xml:space="preserve">
+    <value>Sustain</value>
+  </data>
+  <data name="FretScaleDotsLabel.Text" xml:space="preserve">
+    <value>Scale dots</value>
+  </data>
+  <data name="FretKeyCombo.Header" xml:space="preserve">
+    <value>Root note</value>
+  </data>
+  <data name="FretScaleCombo.Header" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="FretOutOfKeyCombo.Header" xml:space="preserve">
+    <value>Out-of-key frets</value>
+  </data>
+  <data name="FretExpressionHeading.Text" xml:space="preserve">
+    <value>Expression</value>
+  </data>
+  <data name="FretBendBox.Header" xml:space="preserve">
+    <value>Bend range (semitones)</value>
+  </data>
+  <data name="FretSlideCombo.Header" xml:space="preserve">
+    <value>Slide</value>
+  </data>
+  <data name="FretHammerOnsCheck.Content" xml:space="preserve">
+    <value>Hammer-ons</value>
+  </data>
+  <data name="FretOutputCombo.Header" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="FretAddButtonsButton.Content" xml:space="preserve">
+    <value>Add fretboard buttons</value>
+  </data>
+  <data name="FretStrumLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="FretStrumRight" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="FretStrumNone" xml:space="preserve">
+    <value>(None)</value>
+  </data>
+  <data name="FretPlayTap" xml:space="preserve">
+    <value>Tap</value>
+  </data>
+  <data name="FretPlayStrum" xml:space="preserve">
+    <value>Strum</value>
+  </data>
+  <data name="FretPlayTapCaption" xml:space="preserve">
+    <value>Touching a fret plays its string.</value>
+  </data>
+  <data name="FretPlayStrumCaption" xml:space="preserve">
+    <value>Touching a fret only holds it down. Sweep across the strum area to play each string at the fret held on it, or open.</value>
+  </data>
+  <data name="FretPlayStrumNoSideCaption" xml:space="preserve">
+    <value>Strum needs a strum side. With (None), touching a fret plays it.</value>
+  </data>
+  <data name="FretSustainWhileHeld" xml:space="preserve">
+    <value>While held</value>
+  </data>
+  <data name="FretSustainUntilReplayed" xml:space="preserve">
+    <value>Until replayed</value>
+  </data>
+  <data name="FretDotsNone" xml:space="preserve">
+    <value>(None)</value>
+  </data>
+  <data name="FretOutOfKeyPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="FretOutOfKeyDim" xml:space="preserve">
+    <value>Dim</value>
+  </data>
+  <data name="FretOutOfKeyMute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="FretSlideStepped" xml:space="preserve">
+    <value>Stepped</value>
+  </data>
+  <data name="FretSlideSmooth" xml:space="preserve">
+    <value>Smooth</value>
+  </data>
+  <data name="FretSlideOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="FretOutputPerNoteBend" xml:space="preserve">
+    <value>Per-note bend</value>
+  </data>
+  <data name="FretOutputChannelPerString" xml:space="preserve">
+    <value>Channel per string</value>
+  </data>
+  <data name="FretOutputMpe" xml:space="preserve">
+    <value>MPE</value>
+  </data>
+  <data name="FretOutputPerNoteCaption" xml:space="preserve">
+    <value>Every string plays on the note row's channel and bends with MIDI 2.0 per-note pitch bend. A MIDI 1.0 instrument hears no bends, and two strings on the same note play as one note.</value>
+  </data>
+  <data name="FretOutputChannelCaptionFormat" xml:space="preserve">
+    <value>Each string plays on a channel of its own, channels {0} to {1}, the way MIDI guitar pickups send. A full bend is set to 24 semitones before the first note.</value>
+  </data>
+  <data name="FretOutputMpeCaptionFormat" xml:space="preserve">
+    <value>Channel {0} is the MPE manager channel and the strings play on channels {1} to {2}. Set the instrument up for MPE on those channels. A full bend is set to 48 semitones on the manager channel.</value>
+  </data>
+  <data name="FretChannelsWrapCaption" xml:space="preserve">
+    <value>There are more strings than channels after the note row's channel, so some strings share a channel.</value>
+  </data>
+  <data name="FretStringFormat" xml:space="preserve">
+    <value>String {0}</value>
+  </data>
+  <data name="FretStringNoteNameFormat" xml:space="preserve">
+    <value>Note of string {0}</value>
+  </data>
+  <data name="FretMoveUpName" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="FretMoveDownName" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="FretRemoveStringName" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="FretShortStringFormat" xml:space="preserve">
+    <value>Starts at fret {0}</value>
+  </data>
+  <data name="FretAddButtonsCaption.Text" xml:space="preserve">
+    <value>Adds a tuning picker beside the fretboard and a row under it to move the capo, move along the neck and mute the strings while the layout runs. They change only this fretboard.</value>
+  </data>
+  <data name="FretTuningStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="FretTuningDropD" xml:space="preserve">
+    <value>Drop D</value>
+  </data>
+  <data name="FretTuningHalfStepDown" xml:space="preserve">
+    <value>Half step down</value>
+  </data>
+  <data name="FretTuningWholeStepDown" xml:space="preserve">
+    <value>Whole step down</value>
+  </data>
+  <data name="FretTuningDadgad" xml:space="preserve">
+    <value>DADGAD</value>
+  </data>
+  <data name="FretTuningOpenG" xml:space="preserve">
+    <value>Open G</value>
+  </data>
+  <data name="FretTuningOpenD" xml:space="preserve">
+    <value>Open D</value>
+  </data>
+  <data name="FretTuningOpenE" xml:space="preserve">
+    <value>Open E</value>
+  </data>
+  <data name="FretTuningSevenString" xml:space="preserve">
+    <value>7-string</value>
+  </data>
+  <data name="FretTuningBass" xml:space="preserve">
+    <value>Bass</value>
+  </data>
+  <data name="FretTuningFiveStringBass" xml:space="preserve">
+    <value>5-string bass</value>
+  </data>
+  <data name="FretTuningUkulele" xml:space="preserve">
+    <value>Ukulele</value>
+  </data>
+  <data name="FretTuningBaritoneUkulele" xml:space="preserve">
+    <value>Baritone ukulele</value>
+  </data>
+  <data name="FretTuningMandolin" xml:space="preserve">
+    <value>Mandolin</value>
+  </data>
+  <data name="FretTuningBanjo" xml:space="preserve">
+    <value>Banjo</value>
+  </data>
+  <data name="FretTuningCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
   <data name="SwitchScalesLabel.Text" xml:space="preserve">
     <value>Scales</value>
   </data>
@@ -3198,6 +3417,21 @@
   <data name="PadFunctionReset" xml:space="preserve">
     <value>Reset</value>
   </data>
+  <data name="PadFunctionCapoUp" xml:space="preserve">
+    <value>Capo up</value>
+  </data>
+  <data name="PadFunctionCapoDown" xml:space="preserve">
+    <value>Capo down</value>
+  </data>
+  <data name="PadFunctionUpTheNeck" xml:space="preserve">
+    <value>Up the neck</value>
+  </data>
+  <data name="PadFunctionDownTheNeck" xml:space="preserve">
+    <value>Down the neck</value>
+  </data>
+  <data name="PadFunctionMuteStrings" xml:space="preserve">
+    <value>Mute</value>
+  </data>
   <data name="InspectorReadoutHeading.Text" xml:space="preserve">
     <value>Readout</value>
   </data>
@@ -3233,6 +3467,22 @@
   </data>
   <data name="ReadoutNoGrids" xml:space="preserve">
     <value>(No grids)</value>
+  </data>
+  <data name="ReadoutNoFretboards" xml:space="preserve">
+    <value>(No fretboards)</value>
+  </data>
+  <data name="ReadoutNoCapo" xml:space="preserve">
+    <value>No capo</value>
+  </data>
+  <data name="ReadoutCapoFormat" xml:space="preserve">
+    <value>Capo {0}</value>
+    <comment>Which fret a fretboard's capo is on, such as "Capo 2".</comment>
+  </data>
+  <data name="ReadoutSourceCapo" xml:space="preserve">
+    <value>Capo</value>
+  </data>
+  <data name="ReadoutSourceTuning" xml:space="preserve">
+    <value>Tuning</value>
   </data>
   <data name="ReadoutPadAccessibleFormat" xml:space="preserve">
     <value>{0}: {1}</value>

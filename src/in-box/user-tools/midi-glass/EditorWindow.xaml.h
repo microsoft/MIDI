@@ -361,6 +361,14 @@ namespace winrt::midiglass::implementation
         void OnReadoutSourceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnAddGridButtonsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
+        // A fretboard's section (EditorFretboard.cpp).
+        void OnFretTuningChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnFretboardChoiceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnFretboardNumberChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnFretboardCheckChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnFretAddStringClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAddFretboardButtonsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         void OnSpringTargetChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnDragAxisChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
@@ -577,6 +585,16 @@ namespace winrt::midiglass::implementation
         void RefreshSwitchTargets(_In_ glass::Control const& control);
         void RefreshReadoutPanel(_In_ glass::Control const& control);
         void RefreshPadGridRowFields(_In_ glass::ControlMessage const& message);
+
+        // A fretboard's section of the inspector (EditorFretboard.cpp).
+        void BuildFretboardChoices();
+        void RefreshFretboardPanel(_In_ glass::Control const& control);
+
+        // Every box in the section read back into the selected fretboard, as one edit.
+        void ApplyFretboardEdit();
+
+        // One change made to a copy of the selected fretboard's settings, applied as one edit.
+        void EditFretboard(_In_ std::function<void(glass::FretboardSpec&)> const& change);
 
         // One check box for every grid, and one for all of them. Apply is called with what the
         // boxes now say each time one changes.

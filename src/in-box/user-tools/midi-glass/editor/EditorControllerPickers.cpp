@@ -13,6 +13,7 @@
 #include "ControlFactory.h"
 #include "PadGrid.h"
 #include "PadGridChanges.h"
+#include "Fretboard.h"
 
 #include <algorithm>
 
@@ -257,7 +258,7 @@ namespace glass
             {
                 auto const* const control = document.FindControl(id);
 
-                if (control != nullptr && IsPadGrid(control->Kind) &&
+                if (control != nullptr && (IsPadGrid(control->Kind) || IsFretboard(control->Kind)) &&
                     std::find(clean.ControlIds.begin(), clean.ControlIds.end(), id) == clean.ControlIds.end())
                 {
                     clean.ControlIds.push_back(id);
@@ -302,7 +303,7 @@ namespace glass
         }
 
         auto const source = static_cast<int32_t>(readout.Source);
-        auto const wantedSource = source >= 0 && source <= static_cast<int32_t>(ReadoutSource::PadSummary)
+        auto const wantedSource = source >= 0 && source <= static_cast<int32_t>(ReadoutSource::Tuning)
             ? readout.Source
             : ReadoutSource::Value;
 

@@ -8,6 +8,7 @@
 // Deliberately free of pch.h and XAML, so the unit tests compile it unchanged.
 
 #include "ControlFactory.h"
+#include "Fretboard.h"
 #include "PageTemplates.h"
 #include "PadGrid.h"
 #include "StepPattern.h"
@@ -99,6 +100,10 @@ namespace glass
                 { PaletteArtShape::PadGrid, 26, 14, 1, 0.00, 0.00 } },
             { ControlKind::HexPads, L"PaletteHexPads", L"PaletteGroupKeys", L'\uF0E2',
                 { PaletteArtShape::HexGrid, 26, 17, 0, 0.00, 0.00 } },
+
+            // Strings lying across, which is what a fretboard is at a glance.
+            { ControlKind::Fretboard, L"PaletteFretboard", L"PaletteGroupKeys", L'\uEC4F',
+                { PaletteArtShape::HorizontalBars, 26, 14, 0, 0.80, 0.00 } },
 
             // ---- Feedback and text ----
             { ControlKind::Meter,   L"PaletteMeter",   L"PaletteGroupDisplay", L'\uE9D9',
@@ -346,6 +351,14 @@ namespace glass
             control.Ticks.Show = false;
         }
 
+        // A guitar in standard tuning, low string at the bottom, strummed on the right.
+        if (kind == ControlKind::Fretboard)
+        {
+            control.Fretboard = NormalizedFretboard(FretboardSpec{});
+            control.Ticks.Show = false;
+            control.LabelPlaced = LabelPlacementOverride::None;
+        }
+
         if (!SendsAnything(kind))
         {
             return control;
@@ -381,6 +394,7 @@ namespace glass
         case ControlKind::PianoKeyboard:
         case ControlKind::NotePads:
         case ControlKind::HexPads:
+        case ControlKind::Fretboard:
         case ControlKind::Steps:
         {
             message.Trigger = MessageTrigger::Changes;

@@ -48,6 +48,7 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::PianoKeyboard,
             glass::ControlKind::NotePads,
             glass::ControlKind::HexPads,
+            glass::ControlKind::Fretboard,
             glass::ControlKind::BeatClock,
             glass::ControlKind::Lfo,
             glass::ControlKind::Steps,
@@ -66,7 +67,7 @@ namespace winrt::midiglass::implementation
         {
             L"PaletteKnob", L"PaletteTurntable", L"PaletteFader", L"PaletteWheel", L"PalettePad", L"PaletteButton",
             L"PaletteToggle", L"PaletteSwitch", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
-            L"PaletteKeyboard", L"PaletteNotePads", L"PaletteHexPads", L"PaletteBeatClock",
+            L"PaletteKeyboard", L"PaletteNotePads", L"PaletteHexPads", L"PaletteFretboard", L"PaletteBeatClock",
             L"PaletteLfo",
             L"PaletteSteps",
             L"PaletteTimeDisplay",
@@ -572,6 +573,7 @@ namespace winrt::midiglass::implementation
             ReadoutPanel().Visibility(xaml::Visibility::Collapsed);
             KeyboardPanel().Visibility(xaml::Visibility::Collapsed);
             PadGridPanel().Visibility(xaml::Visibility::Collapsed);
+            FretboardPanel().Visibility(xaml::Visibility::Collapsed);
         }
     }
 

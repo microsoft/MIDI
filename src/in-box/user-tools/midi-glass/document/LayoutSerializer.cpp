@@ -9,6 +9,7 @@
 
 #include "LayoutSerializer.h"
 #include "JsonText.h"
+#include "Fretboard.h"
 #include "MackieControl.h"
 #include "PadGrid.h"
 #include "ThemeStore.h"
@@ -171,6 +172,21 @@ namespace glass
         constexpr wchar_t KeyRows[] = L"rows";
         constexpr wchar_t KeyPadsPerRow[] = L"padsPerRow";
         constexpr wchar_t KeyHighlightHeld[] = L"highlightHeld";
+        constexpr wchar_t KeyFretboard[] = L"fretboard";
+        constexpr wchar_t KeyTuning[] = L"tuning";
+        constexpr wchar_t KeyStrings[] = L"strings";
+        constexpr wchar_t KeyStartFret[] = L"startFret";
+        constexpr wchar_t KeyFrets[] = L"frets";
+        constexpr wchar_t KeyFirstFret[] = L"firstFret";
+        constexpr wchar_t KeyLastFret[] = L"lastFret";
+        constexpr wchar_t KeyCapo[] = L"capo";
+        constexpr wchar_t KeyStrumSide[] = L"strumSide";
+        constexpr wchar_t KeyPlayMode[] = L"playMode";
+        constexpr wchar_t KeySustain[] = L"sustain";
+        constexpr wchar_t KeyOutOfKeyFrets[] = L"outOfKeyFrets";
+        constexpr wchar_t KeySlide[] = L"slide";
+        constexpr wchar_t KeyHammerOns[] = L"hammerOns";
+        constexpr wchar_t KeyOutput[] = L"output";
         constexpr wchar_t KeyTargets[] = L"targets";
         constexpr wchar_t KeyReadout[] = L"readout";
         constexpr wchar_t KeySource[] = L"source";
@@ -275,6 +291,7 @@ namespace glass
             { ControlKind::Line, L"line" },
             { ControlKind::NotePads, L"notePads" },
             { ControlKind::HexPads, L"hexPads" },
+            { ControlKind::Fretboard, L"fretboard" },
 
             // Read only. An encoder was a knob under another name, so the writer, which takes
             // the first name a kind has, writes it back as a knob.
@@ -350,6 +367,7 @@ namespace glass
             { SwitchPicks::InKeyOnly, L"inKeyOnly" },
             { SwitchPicks::RowOffset, L"rowOffset" },
             { SwitchPicks::Octave, L"octave" },
+            { SwitchPicks::Tuning, L"tuning" },
         };
 
         constexpr EnumName<PadArrangement> PadArrangementNames[]
@@ -378,6 +396,11 @@ namespace glass
             { PadGridFunction::PreviousScale, L"previousScale" },
             { PadGridFunction::NextRowOffset, L"nextRowOffset" },
             { PadGridFunction::Reset, L"reset" },
+            { PadGridFunction::CapoUp, L"capoUp" },
+            { PadGridFunction::CapoDown, L"capoDown" },
+            { PadGridFunction::UpTheNeck, L"upTheNeck" },
+            { PadGridFunction::DownTheNeck, L"downTheNeck" },
+            { PadGridFunction::MuteStrings, L"muteStrings" },
         };
 
         constexpr EnumName<ReadoutSource> ReadoutSourceNames[]
@@ -387,6 +410,68 @@ namespace glass
             { ReadoutSource::Octave, L"octave" },
             { ReadoutSource::RowOffset, L"rowOffset" },
             { ReadoutSource::PadSummary, L"padSummary" },
+            { ReadoutSource::Capo, L"capo" },
+            { ReadoutSource::Tuning, L"tuning" },
+        };
+
+        constexpr EnumName<FretTuning> FretTuningNames[]
+        {
+            { FretTuning::Standard, L"standard" },
+            { FretTuning::DropD, L"dropD" },
+            { FretTuning::HalfStepDown, L"halfStepDown" },
+            { FretTuning::WholeStepDown, L"wholeStepDown" },
+            { FretTuning::Dadgad, L"dadgad" },
+            { FretTuning::OpenG, L"openG" },
+            { FretTuning::OpenD, L"openD" },
+            { FretTuning::OpenE, L"openE" },
+            { FretTuning::SevenString, L"sevenString" },
+            { FretTuning::Bass, L"bass" },
+            { FretTuning::FiveStringBass, L"fiveStringBass" },
+            { FretTuning::Ukulele, L"ukulele" },
+            { FretTuning::BaritoneUkulele, L"baritoneUkulele" },
+            { FretTuning::Mandolin, L"mandolin" },
+            { FretTuning::Banjo, L"banjo" },
+            { FretTuning::Custom, L"custom" },
+        };
+
+        constexpr EnumName<StrumSide> StrumSideNames[]
+        {
+            { StrumSide::Right, L"right" },
+            { StrumSide::Left, L"left" },
+            { StrumSide::None, L"none" },
+        };
+
+        constexpr EnumName<FretPlayMode> FretPlayModeNames[]
+        {
+            { FretPlayMode::Tap, L"tap" },
+            { FretPlayMode::Strum, L"strum" },
+        };
+
+        constexpr EnumName<FretSustain> FretSustainNames[]
+        {
+            { FretSustain::UntilReplayed, L"untilReplayed" },
+            { FretSustain::WhileHeld, L"whileHeld" },
+        };
+
+        constexpr EnumName<OutOfKeyFrets> OutOfKeyFretsNames[]
+        {
+            { OutOfKeyFrets::Play, L"play" },
+            { OutOfKeyFrets::Dim, L"dim" },
+            { OutOfKeyFrets::Mute, L"mute" },
+        };
+
+        constexpr EnumName<FretSlide> FretSlideNames[]
+        {
+            { FretSlide::Stepped, L"stepped" },
+            { FretSlide::Smooth, L"smooth" },
+            { FretSlide::Off, L"off" },
+        };
+
+        constexpr EnumName<FretOutput> FretOutputNames[]
+        {
+            { FretOutput::ChannelPerString, L"channelPerString" },
+            { FretOutput::PerNoteBend, L"perNoteBend" },
+            { FretOutput::Mpe, L"mpe" },
         };
 
         constexpr EnumName<LineEnds> LineEndsNames[]
@@ -1504,6 +1589,69 @@ namespace glass
             return pads;
         }
 
+        FretboardSpec ReadFretboard(_In_ mjson::JsonObject const& object)
+        {
+            FretboardSpec spec{};
+
+            auto const nested = ReadObject(object, KeyFretboard);
+
+            if (nested == nullptr)
+            {
+                return spec;
+            }
+
+            spec.Tuning = ValueOf(FretTuningNames, ReadString(nested, KeyTuning), FretTuning::Standard);
+            spec.Frets = ReadInt(nested, KeyFrets, 22, MinimumFrets, MaximumFrets);
+
+            if (auto const strings = ReadArray(nested, KeyStrings))
+            {
+                for (uint32_t i = 0;
+                    i < strings.Size() && spec.Strings.size() < static_cast<size_t>(MaximumFretStrings);
+                    ++i)
+                {
+                    auto const value = strings.GetAt(i);
+
+                    if (value == nullptr || value.ValueType() != mjson::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const entry = value.GetObject();
+
+                    FretString string{};
+
+                    string.Note = ReadInt(entry, KeyNote, 40, 0, 127);
+                    string.StartFret = ReadInt(entry, KeyStartFret, 0, 0, MaximumFrets);
+                    string.Unknown = CaptureUnknown(entry, { KeyNote, KeyStartFret });
+
+                    spec.Strings.push_back(std::move(string));
+                }
+            }
+
+            spec.FirstFret = ReadInt(nested, KeyFirstFret, 0, 0, MaximumFrets);
+            spec.LastFret = ReadInt(nested, KeyLastFret, 12, 0, MaximumFrets);
+            spec.Capo = ReadInt(nested, KeyCapo, 0, 0, MaximumFrets);
+            spec.Strum = ValueOf(StrumSideNames, ReadString(nested, KeyStrumSide), StrumSide::Right);
+            spec.Play = ValueOf(FretPlayModeNames, ReadString(nested, KeyPlayMode), FretPlayMode::Tap);
+            spec.Sustain = ValueOf(FretSustainNames, ReadString(nested, KeySustain), FretSustain::UntilReplayed);
+            spec.KeyRoot = ValueOf(KeyRootNames, ReadString(nested, KeyMusicalKey), NoKey);
+            spec.Scale = ValueOf(ScaleNames, ReadString(nested, KeyScale), MusicalScale::Major);
+            spec.OutOfKey = ValueOf(OutOfKeyFretsNames, ReadString(nested, KeyOutOfKeyFrets), OutOfKeyFrets::Play);
+            spec.BendRangeSemitones = ReadInt(nested, KeyBendRange, 2, MinimumFretBendSemitones, MaximumFretBendSemitones);
+            spec.Slide = ValueOf(FretSlideNames, ReadString(nested, KeySlide), FretSlide::Stepped);
+            spec.HammerOns = ReadBool(nested, KeyHammerOns, true);
+            spec.Output = ValueOf(FretOutputNames, ReadString(nested, KeyOutput), FretOutput::ChannelPerString);
+
+            spec.Unknown = CaptureUnknown(nested,
+                { KeyTuning, KeyStrings, KeyFrets, KeyFirstFret, KeyLastFret, KeyCapo, KeyStrumSide,
+                  KeyPlayMode, KeySustain, KeyMusicalKey, KeyScale, KeyOutOfKeyFrets, KeyBendRange,
+                  KeySlide, KeyHammerOns, KeyOutput });
+
+            // A file from a stranger can't ask for frets past the end of the neck, and a file
+            // with no strings gets the strings its tuning names.
+            return NormalizedFretboard(std::move(spec));
+        }
+
         ReadoutSpec ReadReadout(_In_ mjson::JsonObject const& object) noexcept
         {
             ReadoutSpec readout{};
@@ -1621,6 +1769,14 @@ namespace glass
             control.Switch = ReadSwitch(object);
             control.Steps = ReadSteps(object);
             control.Pads = ReadPads(object);
+            control.Fretboard = ReadFretboard(object);
+
+            // A fretboard always has strings, even one a file wrote without any.
+            if (control.Kind == ControlKind::Fretboard && control.Fretboard.Strings.empty())
+            {
+                control.Fretboard = NormalizedFretboard(std::move(control.Fretboard));
+            }
+
             control.Readout = ReadReadout(object);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
@@ -1652,7 +1808,7 @@ namespace glass
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyLightsFromCenter, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
-                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyReadout, KeyDefaultValueY, KeyVelocityFromTouch,
+                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyFretboard, KeyReadout, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -2531,6 +2687,47 @@ namespace glass
                 }
 
                 WriteUnknown(writer, pads.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::Fretboard || control.Fretboard.Unknown != nullptr)
+            {
+                auto const& fretboard = control.Fretboard;
+
+                writer.BeginObject(KeyFretboard);
+                writer.Write(KeyTuning, NameOf(FretTuningNames, fretboard.Tuning));
+                writer.BeginArray(KeyStrings);
+
+                for (auto const& string : fretboard.Strings)
+                {
+                    writer.BeginObject();
+                    writer.Write(KeyNote, static_cast<int64_t>(string.Note));
+
+                    if (string.StartFret != 0)
+                    {
+                        writer.Write(KeyStartFret, static_cast<int64_t>(string.StartFret));
+                    }
+
+                    WriteUnknown(writer, string.Unknown);
+                    writer.EndObject();
+                }
+
+                writer.EndArray();
+                writer.Write(KeyFrets, static_cast<int64_t>(fretboard.Frets));
+                writer.Write(KeyFirstFret, static_cast<int64_t>(fretboard.FirstFret));
+                writer.Write(KeyLastFret, static_cast<int64_t>(fretboard.LastFret));
+                writer.Write(KeyCapo, static_cast<int64_t>(fretboard.Capo));
+                writer.Write(KeyStrumSide, NameOf(StrumSideNames, fretboard.Strum));
+                writer.Write(KeyPlayMode, NameOf(FretPlayModeNames, fretboard.Play));
+                writer.Write(KeySustain, NameOf(FretSustainNames, fretboard.Sustain));
+                writer.Write(KeyMusicalKey, NameOf(KeyRootNames, fretboard.KeyRoot));
+                writer.Write(KeyScale, NameOf(ScaleNames, fretboard.Scale));
+                writer.Write(KeyOutOfKeyFrets, NameOf(OutOfKeyFretsNames, fretboard.OutOfKey));
+                writer.Write(KeyBendRange, static_cast<int64_t>(fretboard.BendRangeSemitones));
+                writer.Write(KeySlide, NameOf(FretSlideNames, fretboard.Slide));
+                writer.Write(KeyHammerOns, fretboard.HammerOns);
+                writer.Write(KeyOutput, NameOf(FretOutputNames, fretboard.Output));
+                WriteUnknown(writer, fretboard.Unknown);
                 writer.EndObject();
             }
 

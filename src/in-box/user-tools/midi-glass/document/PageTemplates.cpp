@@ -77,6 +77,10 @@ namespace glass
             // second row sits half a pad to the right.
             case ControlKind::HexPads: return { 456, 160 };
 
+            // Twelve frets and six strings, each string tall enough for a finger to hold and
+            // push across, with the strum area beside them and the neck strip below.
+            case ControlKind::Fretboard: return { 760, 300 };
+
             // Only ever read from a file, never placed new.
             case ControlKind::Placeholder: return { 56, 56 };
             }

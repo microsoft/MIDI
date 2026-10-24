@@ -13,6 +13,7 @@
 #include "SurfaceRenderer.h"
 #include "PadGrid.h"
 #include "PadGridChanges.h"
+#include "FretboardChanges.h"
 #include "StringResources.h"
 
 namespace glass
@@ -85,6 +86,10 @@ namespace glass
         case SwitchPicks::Octave:
             return SignedNumberText(static_cast<int32_t>(position) - OctavePickerReach);
 
+        case SwitchPicks::Tuning:
+            return std::wstring{ ::midiglass::resources::GetString(
+                TuningNameResourceKey(TuningAtPosition(static_cast<int32_t>(position)))) };
+
         default:
             return {};
         }
@@ -96,6 +101,26 @@ namespace glass
         if (!ReadsAPadGrid(readout))
         {
             return {};
+        }
+
+        // A capo or a tuning reads a fretboard rather than a pad grid.
+        if (readout.Readout.Source == ReadoutSource::Capo || readout.Readout.Source == ReadoutSource::Tuning)
+        {
+            auto const fretboard = ReadFretboard(document, readout.Readout.Targets, states);
+
+            if (!fretboard.HasFretboard)
+            {
+                return std::wstring{ ::midiglass::resources::GetString(L"ReadoutNoFretboards") };
+            }
+
+            if (readout.Readout.Source == ReadoutSource::Capo)
+            {
+                return fretboard.Capo == 0
+                    ? std::wstring{ ::midiglass::resources::GetString(L"ReadoutNoCapo") }
+                    : std::wstring{ ::midiglass::resources::FormatString(L"ReadoutCapoFormat", fretboard.Capo) };
+            }
+
+            return std::wstring{ ::midiglass::resources::GetString(TuningNameResourceKey(fretboard.Tuning)) };
         }
 
         auto const reading = ReadPadGrid(document, readout.Readout.Targets, states);
@@ -192,7 +217,18 @@ namespace glass
             }
 
             // The grid's own spec goes in. The changes are laid over it as it is drawn.
-            if (IsPadGrid(control->Kind))
+            if (IsFretboard(control->Kind))
+            {
+                auto const now = FretSpecFor(*control);
+                auto const& drawn = FretSpecAt(item);
+
+                if (now.Strings != drawn.Strings || now.Capo != drawn.Capo || now.FirstFret != drawn.FirstFret ||
+                    now.LastFret != drawn.LastFret || now.KeyRoot != drawn.KeyRoot || now.Scale != drawn.Scale)
+                {
+                    ResizeItem(item, *control, theme);
+                }
+            }
+            else if (IsPadGrid(control->Kind))
             {
                 auto const now = GridSpecFor(*control);
                 auto const& drawn = PadGridAt(item);

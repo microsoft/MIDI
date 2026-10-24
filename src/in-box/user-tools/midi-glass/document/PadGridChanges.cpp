@@ -8,6 +8,7 @@
 // Deliberately free of pch.h and XAML, like the rest of the document layer.
 
 #include "PadGridChanges.h"
+#include "FretboardChanges.h"
 
 #include <algorithm>
 #include <iterator>
@@ -265,6 +266,35 @@ namespace glass
         {
             for (auto const& control : page.Controls)
             {
+                // A fretboard has a capo and a neck rather than octaves and rows.
+                if (IsFretboard(control.Kind) && !control.Id.empty() && TargetsGrid(targets, control.Id))
+                {
+                    if (!ReachesFretboards(function))
+                    {
+                        continue;
+                    }
+
+                    auto const before = StateOf(states, control.Id);
+                    auto const after = ChangedFretState(control.Fretboard, before, function);
+
+                    if (after == before)
+                    {
+                        continue;
+                    }
+
+                    if (after == PadGridState{})
+                    {
+                        states.erase(control.Id);
+                    }
+                    else
+                    {
+                        states[control.Id] = after;
+                    }
+
+                    changed = true;
+                    continue;
+                }
+
                 if (!IsGridWithId(control) || !TargetsGrid(targets, control.Id))
                 {
                     continue;
@@ -310,6 +340,35 @@ namespace glass
         {
             for (auto const& control : page.Controls)
             {
+                // A fretboard takes a root and a scale for its dots, and a tuning.
+                if (IsFretboard(control.Kind) && !control.Id.empty() && TargetsGrid(picker.Switch.Targets, control.Id))
+                {
+                    auto const before = StateOf(states, control.Id);
+                    auto after = before;
+                    auto const hasKey = HasFretKey(control.Fretboard);
+
+                    if (picks == SwitchPicks::RootNote && hasKey && IsRoot(pick.Root))
+                    {
+                        after.Root = pick.Root;
+                    }
+                    else if (picks == SwitchPicks::Scale && hasKey && IsOffered(pick.Scale))
+                    {
+                        after.Scale = pick.Scale;
+                    }
+                    else if (picks == SwitchPicks::Tuning)
+                    {
+                        after.Tuning = static_cast<int32_t>(TuningAtPosition(position));
+                    }
+
+                    if (after != before)
+                    {
+                        states[control.Id] = after;
+                        changed = true;
+                    }
+
+                    continue;
+                }
+
                 if (!IsGridWithId(control) || !TargetsGrid(picker.Switch.Targets, control.Id))
                 {
                     continue;
@@ -409,6 +468,38 @@ namespace glass
 
         auto const picks = picker.Switch.Picks;
         auto const needsKey = picks == SwitchPicks::RootNote || picks == SwitchPicks::Scale || picks == SwitchPicks::InKeyOnly;
+
+        // A tuning picker, and a root or scale picker that targets only fretboards, show a
+        // fretboard.
+        if (picks == SwitchPicks::Tuning ||
+            ((picks == SwitchPicks::RootNote || picks == SwitchPicks::Scale) &&
+                ShownGrid(document, picker.Switch.Targets, true) == nullptr))
+        {
+            auto const* const fretboard = ShownFretboard(document, picker.Switch.Targets, picks != SwitchPicks::Tuning);
+
+            if (fretboard == nullptr)
+            {
+                return -1;
+            }
+
+            try
+            {
+                auto const spec = WithFretState(fretboard->Fretboard, StateOf(states, fretboard->Id));
+
+                if (picks == SwitchPicks::Tuning)
+                {
+                    auto const tuning = MatchingTuning(spec.Strings);
+
+                    return tuning == FretTuning::Custom ? -1 : static_cast<int32_t>(tuning);
+                }
+
+                return PickerPosition(picker, { spec.KeyRoot, static_cast<int32_t>(spec.Scale) });
+            }
+            catch (...)
+            {
+                return -1;
+            }
+        }
 
         auto const* const grid = ShownGrid(document, picker.Switch.Targets, needsKey);
 

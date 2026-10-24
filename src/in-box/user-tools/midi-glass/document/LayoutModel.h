@@ -153,6 +153,11 @@ namespace glass
         // while it runs. Pressed, it starts or stops, the way an LFO does.
         Steps = 26,
 
+        // A window onto the neck of a guitar, a bass, a ukulele or anything else with frets.
+        // Each string plays one note at a time, the way a real string does, and bends when the
+        // finger pushes across it.
+        Fretboard = 27,
+
         // Not a kind a file can name: a control of a kind this version doesn't know, kept as read.
         Placeholder = 1000,
     };
@@ -714,9 +719,20 @@ namespace glass
 
         // Back to the grid as it was built.
         Reset = 16,
+
+        // Fretboards. The capo moves one fret, and the frets showing move one fret along the
+        // neck: up the neck is toward the body, where the notes are higher.
+        CapoUp = 17,
+        CapoDown = 18,
+        UpTheNeck = 19,
+        DownTheNeck = 20,
+
+        // Every string a fretboard is sounding stops, the way a palm across the strings stops
+        // them.
+        MuteStrings = 21,
     };
 
-    constexpr int32_t PadGridFunctionCount = 17;
+    constexpr int32_t PadGridFunctionCount = 22;
 
     // What a switch picks while the layout runs, instead of sending its rows.
     enum class SwitchPicks
@@ -739,6 +755,10 @@ namespace glass
 
         // Two octaves down to two octaves up, from where the grid was built.
         Octave = 5,
+
+        // One position for each tuning a fretboard can be in, in the order the inspector lists
+        // them. Each sets the tuning of the fretboards it targets.
+        Tuning = 6,
     };
 
     // The positions of a switch, in order, by the name printed on each. The first position is
@@ -780,6 +800,10 @@ namespace glass
 
         // The key, the octave and the row offset together.
         PadSummary = 4,
+
+        // A fretboard's capo, such as "Capo 2", and its tuning, such as "Drop D".
+        Capo = 5,
+        Tuning = 6,
     };
 
     struct ReadoutSpec
@@ -1031,6 +1055,166 @@ namespace glass
     constexpr double MaximumPadNoteNameSize = 64.0;
     constexpr int32_t MinimumBendRangeSemitones = 1;
     constexpr int32_t MaximumBendRangeSemitones = 96;
+
+    // ---- fretboards ----
+
+    // The tunings a fretboard knows by name, in the order the inspector lists them. Custom is
+    // any other set of strings, and is what editing one string makes it.
+    enum class FretTuning
+    {
+        Standard = 0,
+        DropD = 1,
+        HalfStepDown = 2,
+        WholeStepDown = 3,
+        Dadgad = 4,
+        OpenG = 5,
+        OpenD = 6,
+        OpenE = 7,
+        SevenString = 8,
+        Bass = 9,
+        FiveStringBass = 10,
+        Ukulele = 11,
+        BaritoneUkulele = 12,
+        Mandolin = 13,
+        Banjo = 14,
+        Custom = 15,
+    };
+
+    // The named tunings, which is also how many positions a tuning picker has.
+    constexpr int32_t FretTuningPresetCount = 15;
+
+    // One string. The list runs top to bottom the way the strings are drawn.
+    struct FretString
+    {
+        // The note it plays open, with no finger on it and no capo.
+        int32_t Note{ 40 };
+
+        // Where a short string starts, like the fifth string of a banjo, which begins at the
+        // fifth fret. Zero for a string that runs the whole neck.
+        int32_t StartFret{ 0 };
+
+        UnknownFields Unknown{ nullptr };
+
+        bool operator==(FretString const& other) const noexcept
+        {
+            return Note == other.Note && StartFret == other.StartFret;
+        }
+    };
+
+    // Which side the strum area is on. On the right for a right-handed player, the side the
+    // body of a guitar is on; on the left for a left-handed player, and then the neck is drawn
+    // the other way round, with the nut on the right.
+    enum class StrumSide
+    {
+        None = 0,
+        Left = 1,
+        Right = 2,
+    };
+
+    // What touching a fret does.
+    enum class FretPlayMode
+    {
+        // Touching a fret plays the string at that fret.
+        Tap = 0,
+
+        // Touching a fret only holds it down. Sweeping across the strum area plays each string
+        // at the fret held on it, or open.
+        Strum = 1,
+    };
+
+    // How long a string keeps sounding.
+    enum class FretSustain
+    {
+        // Until the finger on it comes off.
+        WhileHeld = 0,
+
+        // Until it is played again or muted, the way a real string keeps ringing.
+        UntilReplayed = 1,
+    };
+
+    // What a fret whose note is not in the key does, when the fretboard shows a key.
+    enum class OutOfKeyFrets
+    {
+        Play = 0,
+        Dim = 1,
+
+        // Drawn dim, and plays nothing.
+        Mute = 2,
+    };
+
+    // What a finger sliding along a string does.
+    enum class FretSlide
+    {
+        // The note bends a semitone at each fret it crosses, with no new attack.
+        Stepped = 0,
+
+        // The note bends smoothly with the finger, as on a fretless neck.
+        Smooth = 1,
+
+        // Each fret the finger reaches plays a new note.
+        Off = 2,
+    };
+
+    // How the strings reach the instrument.
+    enum class FretOutput
+    {
+        // Every string on the note row's channel, bending with MIDI 2.0 per-note pitch bend.
+        PerNoteBend = 0,
+
+        // Each string on a channel of its own, counted up from the note row's channel, bending
+        // with ordinary pitch bend. What MIDI guitar pickups send.
+        ChannelPerString = 1,
+
+        // The MPE profile: the note row's channel is the manager channel, and each string plays
+        // on a member channel above it.
+        Mpe = 2,
+    };
+
+    struct FretboardSpec
+    {
+        FretTuning Tuning{ FretTuning::Standard };
+
+        // Top to bottom as drawn. Standard tuning puts the high string at the top and the low
+        // string at the bottom.
+        std::vector<FretString> Strings{};
+
+        // How many frets the neck has, and which of them show. Fret 0 is the open string,
+        // which always has its own column beside the nut.
+        int32_t Frets{ 22 };
+        int32_t FirstFret{ 0 };
+        int32_t LastFret{ 12 };
+
+        int32_t Capo{ 0 };
+
+        StrumSide Strum{ StrumSide::Right };
+        FretPlayMode Play{ FretPlayMode::Tap };
+        FretSustain Sustain{ FretSustain::UntilReplayed };
+
+        // The key the dots show, or NoKey for no dots.
+        int32_t KeyRoot{ NoKey };
+        MusicalScale Scale{ MusicalScale::Major };
+        OutOfKeyFrets OutOfKey{ OutOfKeyFrets::Play };
+
+        // How far a finger pushing across a string bends it, in semitones.
+        int32_t BendRangeSemitones{ 2 };
+
+        FretSlide Slide{ FretSlide::Stepped };
+
+        // A finger fretting higher on a string that is sounding changes its note without a new
+        // attack, and lifting it goes back to the fret still held.
+        bool HammerOns{ true };
+
+        FretOutput Output{ FretOutput::ChannelPerString };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumFretStrings = 1;
+    constexpr int32_t MaximumFretStrings = 12;
+    constexpr int32_t MinimumFrets = 1;
+    constexpr int32_t MaximumFrets = 36;
+    constexpr int32_t MinimumFretBendSemitones = 1;
+    constexpr int32_t MaximumFretBendSemitones = 12;
 
     // What lights a lamp or moves a meter. A meter following one controller is the ordinary
     // case; a lamp is more often "is anything coming from this device at all".
@@ -1379,6 +1563,9 @@ namespace glass
 
         // Only read when the kind is NotePads or HexPads.
         PadGridSpec Pads{};
+
+        // Only read when the kind is Fretboard.
+        FretboardSpec Fretboard{};
 
         // Only read when the kind is Readout.
         ReadoutSpec Readout{};

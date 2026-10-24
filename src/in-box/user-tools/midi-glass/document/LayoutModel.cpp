@@ -343,6 +343,7 @@ namespace glass
         case SwitchPicks::InKeyOnly: count = InKeyPickerPositions; break;
         case SwitchPicks::RowOffset: count = RowOffsetPickerPositions; break;
         case SwitchPicks::Octave:    count = OctavePickerPositions; break;
+        case SwitchPicks::Tuning:    count = FretTuningPresetCount; break;
         default: break;
         }
 

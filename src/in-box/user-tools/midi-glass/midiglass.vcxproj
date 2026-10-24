@@ -187,6 +187,8 @@
     <ClInclude Include="document\StepPattern.h" />
     <ClInclude Include="document\PadGrid.h" />
     <ClInclude Include="document\PadGridChanges.h" />
+    <ClInclude Include="document\Fretboard.h" />
+    <ClInclude Include="document\FretboardChanges.h" />
     <ClInclude Include="EditorPadGridKeys.h" />
     <ClInclude Include="EditorNoteBoxes.h" />
     <ClInclude Include="..\midi-app-shared\NoteNames.h" />
@@ -222,6 +224,7 @@
     <ClInclude Include="binding\ValueThrottle.h" />
     <ClInclude Include="binding\ClockTempo.h" />
     <ClInclude Include="binding\PadVoices.h" />
+    <ClInclude Include="binding\StringVoices.h" />
     <ClInclude Include="editor\ArrangeOps.h" />
     <ClInclude Include="editor\ControlFactory.h" />
     <ClInclude Include="editor\EditGeometry.h" />
@@ -365,6 +368,12 @@
     <ClCompile Include="document\PadGridChanges.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="document\Fretboard.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\FretboardChanges.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="document\LayoutTemplates.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -399,6 +408,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\PadVoices.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\StringVoices.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\BindingEngineStrings.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\MonitorFormat.cpp">
@@ -437,6 +452,9 @@
     <ClCompile Include="editor\EditorControllerPickers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="editor\EditorControllerFretboard.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="editor\RepeatPlan.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -450,6 +468,10 @@
     <ClCompile Include="surface\DeckBrush.cpp" />
     <ClCompile Include="runtime\LivePlayer.cpp" />
     <ClCompile Include="runtime\LivePlayerKeys.cpp" />
+    <ClCompile Include="runtime\LivePlayerStrings.cpp" />
+    <ClCompile Include="surface\InputRouterStrings.cpp" />
+    <ClCompile Include="surface\SurfaceFretboard.cpp" />
+    <ClCompile Include="EditorFretboard.cpp" />
     <ClCompile Include="runtime\SequenceRunner.cpp" />
     <ClCompile Include="runtime\OutputRouter.cpp" />
     <ClCompile Include="surface\GlassControl.cpp" />

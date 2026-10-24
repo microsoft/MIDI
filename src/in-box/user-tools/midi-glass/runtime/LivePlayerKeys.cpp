@@ -40,6 +40,13 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::ChangePadGrids(PlanAction const& action)
     {
+        // A mute changes nothing about the fretboards; it stops what they are sounding.
+        if (action.PadFunction == PadGridFunction::MuteStrings)
+        {
+            MuteFretboards(action.PadTargets);
+            return;
+        }
+
         if (ApplyPadGridFunction(m_document, action.PadTargets, action.PadFunction, m_gridStates))
         {
             AnnounceGridChanges();
@@ -48,6 +55,8 @@ namespace glass
 
     void LivePlayer::AnnounceGridChanges()
     {
+        ConfigureFretboards();
+
         for (auto& pads : m_padControls)
         {
             auto const spec = WithGridState(pads.Spec, pads.Hex, StateOf(m_gridStates, pads.ControlId));
@@ -65,6 +74,14 @@ namespace glass
     void LivePlayer::ForgetGridChanges() noexcept
     {
         m_gridStates.clear();
+
+        try
+        {
+            ConfigureFretboards();
+        }
+        catch (...)
+        {
+        }
 
         for (auto& pads : m_padControls)
         {

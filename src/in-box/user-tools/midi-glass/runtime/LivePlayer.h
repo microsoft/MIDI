@@ -30,6 +30,7 @@
 #include "LfoGenerator.h"
 #include "StepSequencer.h"
 #include "PadVoices.h"
+#include "StringVoices.h"
 #include "PadGrid.h"
 #include "PadGridChanges.h"
 
@@ -127,6 +128,10 @@ namespace glass
         // pickers and the readouts in it.
         std::function<void(PadGridStates const& states)> PadGridsChanged{};
 
+        // Which strings of a fretboard are sounding changed, one bit per string. The owner lights
+        // them.
+        std::function<void(uint32_t controlIndex, uint32_t soundingStrings)> StringsSounding{};
+
         // ---- lifetime ----
 
         // ownerId separates one player's connections from another's inside the process-wide
@@ -188,6 +193,13 @@ namespace glass
             _In_ double pitch);
 
         void PadReleased(_In_ uint32_t controlIndex, _In_ uint32_t touch);
+
+        // A finger on a fretboard (LivePlayerStrings.cpp): landing on a string, moving on it,
+        // lifting, or a strum crossing a string.
+        void FretTouched(_In_ uint32_t controlIndex, _In_ FretTouch const& touch);
+
+        // A finger dragged a fretboard's neck strip, so the frets showing start at this fret.
+        void NeckMoved(_In_ uint32_t controlIndex, _In_ int32_t firstFret);
 
         void Switched(_In_ uint32_t controlIndex, _In_ bool isOn);
 
@@ -395,6 +407,35 @@ namespace glass
         StepsEntry* FindStepControl(_In_ uint32_t controlIndex) noexcept;
 
         std::vector<PadEntry> m_padControls{};
+
+        // Each fretboard, what it was built as, and which string is sounding what.
+        struct FretEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            std::wstring ControlId{};
+            FretboardSpec Spec{};
+            StringVoices Voices{};
+
+            // The channels already told how far a bend reaches, one bit per channel offset, so
+            // the instrument is told once a run rather than before every note.
+            uint32_t ToldSensitivity{ 0 };
+        };
+
+        std::vector<FretEntry> m_fretControls{};
+
+        FretEntry* FindFretControl(_In_ uint32_t controlIndex) noexcept;
+
+        // What one event on a fretboard came to, sent, and the owner told which strings sound.
+        void SendStringActions(_Inout_ FretEntry& entry, _In_ std::span<StringAction const> actions) noexcept;
+
+        // Every fretboard set up again from what it was built as and what grid buttons changed.
+        void ConfigureFretboards();
+
+        // Every string on every fretboard stopped and every finger forgotten.
+        void ReleaseAllFretboards() noexcept;
+
+        // A mute row ran: the fretboards it targets stop every string.
+        void MuteFretboards(_In_ PadGridTargets const& targets) noexcept;
 
         // The root and scale pickers, with only what picking needs: the kind and the switch.
         struct PickerEntry

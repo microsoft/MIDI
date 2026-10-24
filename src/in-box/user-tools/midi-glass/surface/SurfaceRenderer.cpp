@@ -457,6 +457,7 @@ namespace glass
             case ControlKind::PianoKeyboard:
             case ControlKind::NotePads:
             case ControlKind::HexPads:
+            case ControlKind::Fretboard:
             case ControlKind::BeatClock:
             case ControlKind::TimeDisplay:
             case ControlKind::Lfo:
@@ -551,6 +552,7 @@ namespace glass
             case ControlKind::PianoKeyboard:
             case ControlKind::NotePads:
             case ControlKind::HexPads:
+            case ControlKind::Fretboard:
                 return projected::SurfaceControlRole::Button;
 
             case ControlKind::Toggle:
@@ -1894,7 +1896,7 @@ namespace glass
 
         // The pads on a grid are what a finger plays. The grid's own plate is only what they sit
         // on, and it never reacts.
-        auto const isPadGrid = IsPadGrid(control.Kind);
+        auto const isPadGrid = IsPadGrid(control.Kind) || IsFretboard(control.Kind);
         auto const vertical = IsTallControl(control.Kind, control.Width, control.Height);
         auto const themed = style == ControlStyleOverride::UseTheme || style == ControlStyleOverride::Plate;
 
@@ -2985,6 +2987,10 @@ namespace glass
             case ControlKind::NotePads:
             case ControlKind::HexPads:
                 LayoutPads(compositor, visual, control, colors, theme, width, height);
+                break;
+
+            case ControlKind::Fretboard:
+                LayoutFretboard(compositor, visual, control, colors, theme, width, height);
                 break;
 
             case ControlKind::BeatClock:
