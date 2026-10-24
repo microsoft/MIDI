@@ -19,6 +19,20 @@ void MidiNetworkNotificationSignal::SignalHostNetworkAdapterChanged() noexcept
     Queue(m_hostNetworkAdapterWriteQueued, MIDI_NOTIFICATION_NETWORK_HOST_ADAPTER_VALUE);
 }
 
+void MidiNetworkNotificationSignal::Shutdown() noexcept
+{
+    std::unique_ptr<ThreadpoolWork> work{ };
+
+    {
+        auto lock = m_workLock.lock();
+        work.swap(m_work);
+    }
+
+    // Outside the lock. The destructor waits for a callback which is running and runs any still
+    // queued, and neither takes the lock.
+    work.reset();
+}
+
 _Use_decl_annotations_
 void MidiNetworkNotificationSignal::Queue(std::atomic<uint32_t>& queued, PCWSTR const valueName) noexcept
 {
@@ -30,7 +44,14 @@ void MidiNetworkNotificationSignal::Queue(std::atomic<uint32_t>& queued, PCWSTR 
 
     try
     {
-        m_work.Submit([&queued, valueName]()
+        auto lock = m_workLock.lock();
+
+        if (m_work == nullptr)
+        {
+            m_work = std::make_unique<ThreadpoolWork>();
+        }
+
+        m_work->Submit([&queued, valueName]()
             {
                 // Cleared first. A change arriving during the write queues a fresh one, which is
                 // what keeps the last change from being lost.

@@ -98,6 +98,9 @@ enum class MidiNetworkPacketPrologueResult
 
     // not a Network MIDI 2.0 datagram at all
     UnrecognizedHeader,
+
+    // larger than any Network MIDI 2.0 device sends. See MIDI_NETWORK_MAX_INCOMING_UDP_PAYLOAD_BYTES.
+    TooLarge,
 };
 
 // The first two words of every datagram: the UDP payload header, then the first command header.
@@ -113,6 +116,11 @@ inline MidiNetworkPacketPrologueResult ReadNetworkPacketPrologue(
     if (reader == nullptr || reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
     {
         return MidiNetworkPacketPrologueResult::TooSmall;
+    }
+
+    if (reader.UnconsumedBufferLength() > MIDI_NETWORK_MAX_INCOMING_UDP_PAYLOAD_BYTES)
+    {
+        return MidiNetworkPacketPrologueResult::TooLarge;
     }
 
     if (reader.ReadUInt32() != MIDI_UDP_PAYLOAD_HEADER)

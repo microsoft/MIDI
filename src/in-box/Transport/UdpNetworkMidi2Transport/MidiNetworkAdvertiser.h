@@ -17,14 +17,16 @@ public:
 
     // An empty host name is this PC's .local name, and a zero interface index is every adapter.
     // S_FALSE when the DNS client was still working on it at the timeout: the host is advertised
-    // once the DNS client finishes, and Shutdown withdraws it either way.
+    // once the DNS client finishes, and Shutdown withdraws it either way. Gives up with
+    // ERROR_CANCELLED when stopToken is signaled first.
     HRESULT Advertise(
         _In_ winrt::hstring const& serviceInstanceNameWithoutSuffix,
         _In_ winrt::hstring const& hostName,
         _In_ uint16_t const port,
         _In_ winrt::hstring const& midiEndpointName,
         _In_ winrt::hstring const& midiProductInstanceId,
-        _In_ uint32_t const interfaceIndex
+        _In_ uint32_t const interfaceIndex,
+        _In_ std::stop_token const& stopToken
     );
 
     // Withdraws the registration, which sends the goodbye

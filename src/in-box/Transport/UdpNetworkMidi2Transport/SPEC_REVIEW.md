@@ -31,15 +31,19 @@ Current behavior fails closed:
 
 The capabilities byte is correctly a bitmap (spec Table 11: D0 = supports Invitation with Authentication, D1 = supports Invitation with User Authentication), but we advertise `Capabilities_None` because we support neither.
 
+### 1.1a A host which ends the session on purpose is not invited straight back
+
+Spec 6.16 gives Bye reasons for "User terminated session" (0x01) and "Power Down" (0x02). A client entry whose remote host ends an established session with either one stops, with `LastErrorCode` `InvitationEndedByHost` and entry state `Failed`. Inviting it again at once undid what the person at the other end had just done. The entry is invited again when the app connects it again (Try again in Network MIDI Setup) or, for a host found through mDNS, when the host stops advertising and then advertises again. Re-announcements of a service which never left don't count. A host which says it is powering down has left, so its advertisement is forgotten at once and its next announcement counts, even if its goodbye was lost. Every other Bye reason, and a host which stops answering, reconnects as before.
+
 ### 1.2 A device connected in both roles is declined rather than correlated
 
 > "Devices which act as both a Host and as a Client and which represent the same UMP Endpoint shall use the same Endpoint Name and Product Instance Id in both roles... By using the same Endpoint Name and Product Instance Id, other Hosts and Clients can better recognize Devices which may already be connected."
 
-A remote that has an endpoint here in one role, with that session still up, is declined a second session in the other role with a Bye (`TooManyOpenSessions` from the host side, `InvitationCanceled` from the client side) plus a clear log. `IsRemoteConnectedInOtherRole` makes the check, and matches the remote's UMP Endpoint Name and Product Instance Id exactly. Related to [#750](https://github.com/microsoft/MIDI/issues/750).
+A remote that has an endpoint here in one role, with that session still up, is declined a second session in the other role with a Bye (`TooManyOpenSessions` from the host side, `InvitationCanceled` from the client side) plus a clear log. `FindBlockingSession` makes the check, and matches the remote's UMP Endpoint Name and Product Instance Id exactly. The same check declines a second session from a remote already connected to that host, and a second client entry to a remote host this PC is already connected to. Each refusal is reported: a host keeps a short list of recent refusals, and a client entry records which session it is waiting for, stops retrying, and connects once that session ends. Network MIDI Setup shows both. A refused connection is released at once rather than left for the idle reaper, so it is never listed or counted as a connected device, and a device's refusal is forgotten once it has a session with that host. Related to [#750](https://github.com/microsoft/MIDI/issues/750).
 
 A remote connected to more than one host on this PC is not that case. Each host is a UMP endpoint of its own, so each of those sessions gets an endpoint of its own, and the accepting host's entry identifier is part of the endpoint's instance id. Before that, the instance id was the same in every session with a given remote. That is what used to catch the both-roles case, and it also turned the remote away from every host after the first, with "This device is already connected to this PC".
 
-Still open: a remote that talks to two hosts here from the same address and port. Connections are found by the remote's address and port alone (`CreateNetworkConnectionMapKey`), so the second host's datagrams reach the first host's connection. A Windows client opens a socket for each connection, so it never does this, but a device which keeps one client port for every session would.
+Fixed: a remote that talks to two hosts here from the same address and port, or that is a client of a host here and a host for a client here from the same address and port. Connections used to be found by the remote's address and port alone, so the second connection replaced the first, or reached the first one's connection. A replaced connection could later end its session on its own watchdog thread, let go of its last reference there, and take the service down. Connections are now found by the host or client entry they belong to as well as the remote's address and port (`CreateNetworkConnectionMapKey`), each entry has its own socket, and a live connection is never replaced.
 
 Whether we should instead *correlate* the two connections onto one endpoint is an open design question: it requires deciding which connection wins, or multiplexing one endpoint across two. Declining is safe and diagnosable, but it is not what the spec's wording is reaching for.
 
@@ -84,9 +88,11 @@ Recorded so these are not re-investigated.
   to differ per Host instance but is unique only within a device. Address, port and role are
   deliberately excluded, and the role is published as
   `PKEY_MIDI_NetworkMidiConnectionRole` instead.
-- **Connection keying.** The host keys connections by remote address and port, per "the Host
+- **Connection keying.** Each host keys its connections by remote address and port, per "the Host
   shall uniquely identify the connection for each Client via the Client's source IP address and
-  UDP port number." Separate from, and correctly independent of, endpoint identity.
+  UDP port number." The key also holds the host's (or client's) entry identifier, so two of this
+  PC's hosts, or a host and a client, never share a connection. Separate from, and correctly
+  independent of, endpoint identity.
 - **Ports are not identity.** "Clients may use a new UDP port number for every Session with a
   Host", and clients have no mDNS presence at all.
 - **Missing identity is refused.** A remote which omits either the UMP Endpoint Name or the
@@ -157,6 +163,9 @@ Recorded so these are not re-investigated.
   instead, because starting a host and connecting a client are not the same operation and cannot
   share one endpoint-level verb. An earlier revision of this document called this a defect; it is
   not.
+- **Datagrams larger than 1400 bytes are dropped.** The spec says "UDP packets should not exceed 1400 bytes", which is a "should" for the sender and says nothing about the receiver. We drop a larger datagram whole, without a reply, because no device needs to send one and one 64 KB datagram of 4-byte commands would otherwise be about 16,000 replies.
+- **A remote without a session gets a limited answer.** Only the first 4 commands of a datagram from a remote with no established session are looked at, at most 1 reply goes back, and replies to that remote are also held to the per-connection rate limiter (one a second). A forged source address could otherwise turn each datagram into a stream of Byes, Ping Replies or NAKs aimed at someone else. This can leave a repeated invitation or a repeated Bye unanswered for up to a second, which spec 6.4 and 6.16 would otherwise require; the sender's own repeat covers it. Once a session is established, replies are not limited.
+- **A retransmitted command is not sent again for 250 ms.** A remote repeating "send everything from here" got the whole retransmit buffer each time. Each command now goes again at most once in that time, however often or widely it is asked for. That is shorter than the 1 second this transport itself waits before repeating an unanswered request.
 
 ---
 

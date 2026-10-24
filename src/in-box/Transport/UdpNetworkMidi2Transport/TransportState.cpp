@@ -41,6 +41,7 @@ TransportState::GetConfigurationManager()
 
 HRESULT
 TransportState::ShutdownHostsClientsAndConnections()
+try
 {
     std::vector<std::shared_ptr<MidiNetworkHost>> hosts{ };
     std::vector<std::shared_ptr<MidiNetworkClient>> clients{ };
@@ -74,6 +75,7 @@ TransportState::ShutdownHostsClientsAndConnections()
     }
 
     std::vector<std::shared_ptr<MidiNetworkConnection>> connections{ };
+    std::map<std::wstring, std::shared_ptr<MidiNetworkConnection>> sessionConnections{ };
 
     {
         auto lock = m_stateLock.lock_exclusive();
@@ -84,8 +86,22 @@ TransportState::ShutdownHostsClientsAndConnections()
         }
 
         m_networkConnections.clear();
-        m_sessionConnections.clear();
+
+        // Released after the lock, in case one of these is the last reference
+        sessionConnections.swap(m_sessionConnections);
     }
+
+    // A session can outlive its entry in the connection map, so these are shut down too
+    for (auto const& [id, connection] : sessionConnections)
+    {
+        if (connection != nullptr &&
+            std::find(connections.begin(), connections.end(), connection) == connections.end())
+        {
+            connections.push_back(connection);
+        }
+    }
+
+    sessionConnections.clear();
 
     for (auto const& connection : connections)
     {
@@ -105,10 +121,12 @@ TransportState::ShutdownHostsClientsAndConnections()
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
 TransportState::Shutdown()
+try
 {
     RETURN_IF_FAILED(ShutdownHostsClientsAndConnections());
 
@@ -128,8 +146,13 @@ TransportState::Shutdown()
     endpointManager.reset();
     configurationManager.reset();
 
+    // Its threadpool work otherwise drains in the static destructor, at DLL unload. Every host
+    // and connection which could signal has been shut down above.
+    m_notificationSignal.Shutdown();
+
     return S_OK;
 }
+CATCH_RETURN()
 
 
 // The machine-wide identity every host and this PC's client identity are built from. Derived
@@ -215,20 +238,6 @@ TransportState::ConstructConfigurationManager()
 
 
 
-
-_Use_decl_annotations_
-HRESULT 
-TransportState::AddHost(
-    std::shared_ptr<MidiNetworkHost> host)
-{
-    RETURN_HR_IF_NULL(E_INVALIDARG, host);
-
-    auto lock = m_stateLock.lock_exclusive();
-
-    m_hosts.push_back(host);
-
-    return S_OK;
-}
 
 std::vector<std::shared_ptr<MidiNetworkHost>>
 TransportState::GetHosts()
@@ -583,20 +592,6 @@ TransportState::AddHostDefinition(
     return S_OK;
 }
 
-_Use_decl_annotations_
-HRESULT
-TransportState::AddClient(
-    std::shared_ptr<MidiNetworkClient> client)
-{
-    RETURN_HR_IF_NULL(E_INVALIDARG, client);
-
-    auto lock = m_stateLock.lock_exclusive();
-
-    m_clients.push_back(client);
-
-    return S_OK;
-}
-
 // The mirror of AddHostIfStillPending. Both the add and RemoveClient take the state lock
 // exclusively, so a client can no longer be registered after the entry it belongs to has gone.
 _Use_decl_annotations_
@@ -632,21 +627,26 @@ TransportState::AddClientIfStillPending(
 
 _Use_decl_annotations_
 HRESULT 
-TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier, bool& removedPendingDefinition)
+TransportState::RemoveClient(
+    winrt::guid const& clientConfigEntryIdentifier,
+    bool& removedPendingDefinition,
+    std::shared_ptr<MidiNetworkClient>& removedLiveClient)
 {
     removedPendingDefinition = false;
+    removedLiveClient = nullptr;
 
     auto lock = m_stateLock.lock_exclusive();
 
-    bool removedLiveClient{ false };
+    bool removedLiveClientFlag{ false };
 
     for (auto it = m_clients.begin(); it != m_clients.end(); it++)
     {
         if ((*it)->EntryIdentifier() == clientConfigEntryIdentifier)
         {
+            removedLiveClient = *it;
             m_clients.erase(it);
 
-            removedLiveClient = true;
+            removedLiveClientFlag = true;
 
             break;
         }
@@ -665,7 +665,7 @@ TransportState::RemoveClient(winrt::guid const& clientConfigEntryIdentifier, boo
 
     removedPendingDefinition = m_clientDefinitions.size() != before;
 
-    return (removedLiveClient || removedPendingDefinition) ? S_OK : E_NOTFOUND;
+    return (removedLiveClientFlag || removedPendingDefinition) ? S_OK : E_NOTFOUND;
 }
 
 _Use_decl_annotations_
@@ -716,6 +716,8 @@ TransportState::MarkClientDefinitionForReconnect(winrt::guid const& clientConfig
 
             definition.State = MidiNetworkEntryState::Pending;
 
+            definition.EndedByRemote = false;
+
             return S_OK;
         }
     }
@@ -741,6 +743,9 @@ TransportState::MarkClientDefinitionForRetry(
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+
+            definition.EndedByRemote = false;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
             // An advertised host is only tried while it advertises. Nothing announces a direct one.
@@ -772,6 +777,9 @@ TransportState::MarkClientDefinitionUnanswered(winrt::guid const& clientConfigEn
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+
+            definition.EndedByRemote = false;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION;
             definition.UnansweredAttempts++;
 
@@ -832,7 +840,10 @@ TransportState::MarkClientDefinitionForRetryAfter(
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+
+            definition.EndedByRemote = false;
             definition.RetryNotBeforeTickCount = GetTickCount64() + delayMilliseconds;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
             return S_OK;
@@ -860,6 +871,9 @@ TransportState::MarkClientDefinitionFailed(
             }
 
             definition.State = MidiNetworkEntryState::Failed;
+
+            definition.EndedByRemote = false;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
             return S_OK;
@@ -879,6 +893,7 @@ TransportState::MarkClientDefinitionSessionOpened(winrt::guid const& clientConfi
     {
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = 0;
             definition.ConnectedAddress = definition.AttemptAddress;
             definition.UnansweredAttempts = 0;
@@ -892,6 +907,136 @@ TransportState::MarkClientDefinitionSessionOpened(winrt::guid const& clientConfi
 
 _Use_decl_annotations_
 HRESULT
+TransportState::MarkClientDefinitionWaitingForSession(
+    winrt::guid const& clientConfigEntryIdentifier,
+    winrt::guid const& blockingEntryIdentifier,
+    bool const blockingEntryIsHost,
+    std::wstring const& remoteEndpointName,
+    std::wstring const& remoteProductInstanceId)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            // Pending, so the worker looks at it again, but it is only tried once the other
+            // session has ended. That is checked on every pass, and a session ending wakes it.
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.EndedByRemote = false;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.LastErrorCode = 0;
+
+            definition.WaitingForEntryIdentifier = blockingEntryIdentifier;
+            definition.WaitingForHostSession = blockingEntryIsHost;
+            definition.WaitingRemoteEndpointName = remoteEndpointName;
+            definition.WaitingRemoteProductInstanceId = remoteProductInstanceId;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::ClearClientDefinitionWaitingForSession(winrt::guid const& clientConfigEntryIdentifier)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            definition.ClearWaitingForOtherSession();
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+bool
+TransportState::AnyClientDefinitionWaitingForSession()
+{
+    auto lock = m_stateLock.lock_shared();
+
+    return std::any_of(m_clientDefinitions.begin(), m_clientDefinitions.end(),
+        [](MidiNetworkClientDefinition const& definition) { return definition.IsWaitingForOtherSession(); });
+}
+_Use_decl_annotations_
+HRESULT
+TransportState::MarkClientDefinitionEndedByRemote(
+    winrt::guid const& clientConfigEntryIdentifier,
+    uint32_t const errorCode)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            definition.State = MidiNetworkEntryState::Failed;
+            definition.EndedByRemote = true;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.ClearWaitingForOtherSession();
+            definition.LastErrorCode = errorCode;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+uint32_t
+TransportState::RearmClientDefinitionsEndedByRemote(std::function<bool(MidiNetworkClientDefinition const&)> const& isAdvertisedAgain)
+{
+    uint32_t count{ 0 };
+
+    try
+    {
+        auto lock = m_stateLock.lock_exclusive();
+
+        for (auto& definition : m_clientDefinitions)
+        {
+            if (definition.State != MidiNetworkEntryState::Failed ||
+                !definition.EndedByRemote ||
+                !definition.Enabled ||
+                definition.IsDirectConnection() ||
+                !isAdvertisedAgain(definition))
+            {
+                continue;
+            }
+
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.EndedByRemote = false;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.LastErrorCode = 0;
+
+            count++;
+        }
+    }
+    CATCH_LOG();
+
+    return count;
+}
+
+_Use_decl_annotations_
+HRESULT
 TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
@@ -901,8 +1046,10 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
             definition.State = MidiNetworkEntryState::Pending;
+            definition.EndedByRemote = false;
             definition.Enabled = true;
             definition.RetryNotBeforeTickCount = 0;
+            definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = 0;
 
             return S_OK;
@@ -926,6 +1073,7 @@ TransportState::MarkClientDefinitionLive(
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
             definition.State = MidiNetworkEntryState::Live;
+            definition.EndedByRemote = false;
             definition.AttemptAddress = remoteAddress;
             definition.AttemptAddressCount = remoteAddressCount;
 
@@ -979,14 +1127,19 @@ TransportState::MarkHostDefinitionFailed(winrt::guid const& hostConfigEntryIdent
 _Use_decl_annotations_
 HRESULT
 TransportState::AssociateMidiEndpointWithConnection(
-    _In_ std::wstring endpointDeviceInterfaceId,
-    _In_ winrt::Windows::Networking::HostName const& remoteHostName,
-    _In_ winrt::hstring const& remotePort)
+    std::wstring endpointDeviceInterfaceId,
+    winrt::guid const& configEntryIdentifier,
+    winrt::Windows::Networking::HostName const& remoteHostName,
+    winrt::hstring const& remotePort,
+    MidiNetworkConnection const* connection)
 {
+    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
+    RETURN_HR_IF_NULL(E_INVALIDARG, remoteHostName);
+
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
     RETURN_HR_IF(E_INVALIDARG, cleanId.empty());
 
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
+    auto key = CreateNetworkConnectionMapKey(configEntryIdentifier, remoteHostName, remotePort);
 
     auto lock = m_stateLock.lock_exclusive();
 
@@ -994,6 +1147,10 @@ TransportState::AssociateMidiEndpointWithConnection(
     auto entry = m_networkConnections.find(key);
 
     RETURN_HR_IF(E_FAIL, entry == m_networkConnections.end());
+
+    // A connection which has been detached, and replaced by a newer one for the same remote, must
+    // not claim the newer one's endpoint
+    RETURN_HR_IF(E_FAIL, entry->second.get() != connection);
 
     m_sessionConnections.insert_or_assign(cleanId, entry->second);
 
@@ -1009,12 +1166,25 @@ TransportState::DisassociateMidiEndpointFromConnection(
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
     RETURN_HR_IF(E_INVALIDARG, cleanId.empty());
 
-    auto lock = m_stateLock.lock_exclusive();
+    std::shared_ptr<MidiNetworkConnection> released{ nullptr };
 
-    if (m_sessionConnections.erase(cleanId) == 0)
     {
-        RETURN_IF_FAILED(E_NOTFOUND);
+        auto lock = m_stateLock.lock_exclusive();
+
+        auto entry = m_sessionConnections.find(cleanId);
+
+        if (entry == m_sessionConnections.end())
+        {
+            RETURN_IF_FAILED(E_NOTFOUND);
+        }
+
+        // This can be the last reference. It is let go outside the lock, because destroying a
+        // connection joins its threads, and they take this lock.
+        released = std::move(entry->second);
+        m_sessionConnections.erase(entry);
     }
+
+    released.reset();
 
     return S_OK;
 }
@@ -1088,31 +1258,29 @@ TransportState::UnregisterEndpointBeingCreated(
 
 
 _Use_decl_annotations_
-bool 
-TransportState::NetworkConnectionExists(
-    winrt::Windows::Networking::HostName const& remoteHostName, 
-    winrt::hstring const& port)
-{
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, port);
-
-    auto lock = m_stateLock.lock_shared();
-
-    return m_networkConnections.find(key) != m_networkConnections.end();
-}
-
-
-_Use_decl_annotations_
 std::shared_ptr<MidiNetworkConnection>
 TransportState::DetachNetworkConnection(
+    winrt::guid const& configEntryIdentifier,
     winrt::Windows::Networking::HostName const& remoteHostName,
-    winrt::hstring const& remotePort)
+    winrt::hstring const& remotePort,
+    MidiNetworkConnection const* expected)
 {
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
+    if (remoteHostName == nullptr)
+    {
+        return nullptr;
+    }
+
+    auto key = CreateNetworkConnectionMapKey(configEntryIdentifier, remoteHostName, remotePort);
 
     auto lock = m_stateLock.lock_exclusive();
 
     if (auto entry = m_networkConnections.find(key); entry != m_networkConnections.end())
     {
+        if (expected != nullptr && entry->second.get() != expected)
+        {
+            return nullptr;
+        }
+
         auto connection = entry->second;
 
         m_networkConnections.erase(entry);
@@ -1126,10 +1294,16 @@ TransportState::DetachNetworkConnection(
 _Use_decl_annotations_
 std::shared_ptr<MidiNetworkConnection> 
 TransportState::GetNetworkConnection(
+    winrt::guid const& configEntryIdentifier,
     winrt::Windows::Networking::HostName const& remoteHostName, 
     winrt::hstring const& remotePort)
 {
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
+    if (remoteHostName == nullptr)
+    {
+        return nullptr;
+    }
+
+    auto key = CreateNetworkConnectionMapKey(configEntryIdentifier, remoteHostName, remotePort);
 
     auto lock = m_stateLock.lock_shared();
 
@@ -1296,42 +1470,21 @@ _Use_decl_annotations_
 HRESULT 
 TransportState::RemoveAllNetworkConnectionsForHost(winrt::guid const& hostEntryConfigIdentifier)
 {
-    auto lock = m_stateLock.lock_exclusive();
+    std::vector<std::shared_ptr<MidiNetworkConnection>> removed;
 
-    // the caller has already shut these down. This is just housekeeping.
-    DetachNetworkConnectionsForConfigIdentifier(hostEntryConfigIdentifier);
+    {
+        auto lock = m_stateLock.lock_exclusive();
 
-    return S_OK;
-}
+        removed = DetachNetworkConnectionsForConfigIdentifier(hostEntryConfigIdentifier);
+    }
 
-_Use_decl_annotations_
-HRESULT
-TransportState::RemoveAllNetworkConnectionsForClient(winrt::guid const& clientEntryConfigIdentifier)
-{
-    auto lock = m_stateLock.lock_exclusive();
-
-    // the caller has already shut these down. This is just housekeeping.
-    DetachNetworkConnectionsForConfigIdentifier(clientEntryConfigIdentifier);
-
-    return S_OK;
-}
-
-
-_Use_decl_annotations_
-HRESULT
-TransportState::AddNetworkConnection(
-    winrt::Windows::Networking::HostName const& remoteHostName,
-    winrt::hstring const& remotePort, 
-    std::shared_ptr<MidiNetworkConnection> connection
-)
-{
-    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
-
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
-
-    auto lock = m_stateLock.lock_exclusive();
-
-    m_networkConnections.insert_or_assign(key, connection);
+    // The caller has shut down the ones it knew about, and Shutdown does nothing the second time.
+    // Anything admitted after the caller looked is shut down here, and outside the lock, because
+    // Shutdown joins threads which take it.
+    for (auto const& connection : removed)
+    {
+        LOG_IF_FAILED(connection->Shutdown());
+    }
 
     return S_OK;
 }
@@ -1341,19 +1494,44 @@ std::shared_ptr<MidiNetworkConnection>
 TransportState::AddNetworkConnectionIfAbsent(
     winrt::Windows::Networking::HostName const& remoteHostName,
     winrt::hstring const& remotePort,
-    std::shared_ptr<MidiNetworkConnection> connection
+    std::shared_ptr<MidiNetworkConnection> connection,
+    size_t const maxConnectionsForEntry
 )
 {
-    if (connection == nullptr)
+    if (connection == nullptr || remoteHostName == nullptr)
     {
         return nullptr;
     }
 
-    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
+    auto const configEntryIdentifier = connection->ConfigIdentifier();
+    auto key = CreateNetworkConnectionMapKey(configEntryIdentifier, remoteHostName, remotePort);
 
     auto lock = m_stateLock.lock_exclusive();
 
-    auto result = m_networkConnections.emplace(key, connection);
+    if (auto existing = m_networkConnections.find(key); existing != m_networkConnections.end())
+    {
+        return existing->second;
+    }
+
+    if (maxConnectionsForEntry != SIZE_MAX)
+    {
+        size_t count{ 0 };
+
+        for (auto const& entry : m_networkConnections)
+        {
+            if (entry.second->ConfigIdentifier() == configEntryIdentifier)
+            {
+                count++;
+            }
+        }
+
+        if (count >= maxConnectionsForEntry)
+        {
+            return nullptr;
+        }
+    }
+
+    auto result = m_networkConnections.emplace(std::move(key), connection);
 
     return result.first->second;
 }

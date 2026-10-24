@@ -58,6 +58,7 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -69,6 +70,20 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
+
+    // A failure part way through stops whatever was already started and lets go of the service
+    // objects, so a failed Initialize leaves nothing running and holds nothing of the service's.
+    auto stopOnFailure = wil::scope_exit([&]() noexcept
+        {
+            // the creator thread may already have started hosts, whose callbacks use the
+            // service objects
+            if (StopBackgroundWork() && SUCCEEDED(TransportState::Current().ShutdownHostsClientsAndConnections()))
+            {
+                m_midiDeviceManager.reset();
+                m_midiProtocolManager.reset();
+            }
+        });
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
@@ -76,8 +91,6 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
 
     RETURN_IF_FAILED(CreateParentDeviceForClients());
-
-    m_initialized = true;
 
     // Before anything can start a host. The repeats work around the DNS client, as described in
     // MidiNetworkAdvertiser.cpp. A failure costs only the repeats, so the hosts still start.
@@ -138,8 +151,15 @@ CMidi2NetworkMidiEndpointManager::Initialize(
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // Only once everything above has succeeded. Nothing the threads started above do can need it
+    // sooner: a host or client has to bind, advertise or invite, and be answered, first.
+    m_initialized = true;
+
+    stopOnFailure.release();
+
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
@@ -350,6 +370,38 @@ CMidi2NetworkMidiEndpointManager::OnAdvertisedHostAdded(::WindowsMidiServicesInt
         m_foundAdvertisedHosts.insert_or_assign(service.DeviceId(), service);
     }
 
+    // Added is raised once each time a service appears, never for the re-announcements of one
+    // which is still there. An entry the host ended its session with is brought back by this.
+    try
+    {
+        decltype(m_foundAdvertisedHosts) justThisHost{ };
+        justThisHost.insert_or_assign(service.DeviceId(), service);
+
+        auto const rearmed = TransportState::Current().RearmClientDefinitionsEndedByRemote(
+            [&justThisHost](MidiNetworkClientDefinition const& definition)
+            {
+                ::WindowsMidiServicesInternal::MidiDnssdService unused{ };
+
+                return TryFindAdvertisedHost(justThisHost, definition.MatchId, unused) ||
+                    TryFindAdvertisedHost(justThisHost, definition.MatchProductInstanceId, unused) ||
+                    TryFindAdvertisedHost(justThisHost, definition.MatchUmpEndpointName, unused);
+            });
+
+        if (rearmed > 0)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"A host which ended its session advertised again. Connecting again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt32(rearmed, "entries")
+            );
+        }
+    }
+    CATCH_LOG();
+
     WakeupBackgroundEndpointCreatorThread();
 }
 
@@ -385,6 +437,52 @@ CMidi2NetworkMidiEndpointManager::OnAdvertisedHostRemoved(std::wstring const& fu
     m_foundAdvertisedHosts.erase(deviceId);
 }
 
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::ForgetAdvertisedHostForClient(winrt::guid const& clientEntryIdentifier) noexcept
+try
+{
+    auto const definition = TransportState::Current().GetClientDefinition(clientEntryIdentifier);
+
+    if (!definition.has_value() || definition->IsDirectConnection())
+    {
+        return;
+    }
+
+    ::WindowsMidiServicesInternal::MidiDnssdService advertisedHost{ };
+    bool found{ false };
+
+    {
+        auto lock = m_advertisedHostsLock.lock_exclusive();
+
+        found = TryFindAdvertisedHost(m_foundAdvertisedHosts, definition->MatchId, advertisedHost) ||
+            TryFindAdvertisedHost(m_foundAdvertisedHosts, definition->MatchProductInstanceId, advertisedHost) ||
+            TryFindAdvertisedHost(m_foundAdvertisedHosts, definition->MatchUmpEndpointName, advertisedHost);
+
+        if (found)
+        {
+            m_foundAdvertisedHosts.erase(advertisedHost.DeviceId());
+        }
+    }
+
+    // outside the lock above: the browser raises its events with its own lock released, into
+    // handlers which take that one
+    if (found)
+    {
+        m_browser.ForgetService(advertisedHost.FullName);
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Host is powering down. Forgot its advertisement until it announces itself again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(advertisedHost.FullName.c_str(), "full name")
+        );
+    }
+}
+CATCH_LOG()
 HRESULT
 CMidi2NetworkMidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
 {
@@ -1204,6 +1302,11 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
 
             if (FAILED(startHr))
             {
+                // Start can fail after the socket is open and its handler hooked up, or after its
+                // connection and threads exist. None of that is registered anywhere yet, so this
+                // is the only chance to close it.
+                LOG_IF_FAILED(client->Shutdown());
+
                 // so the next attempt goes to the remote's next address, if it has another
                 LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionAddressUnreachable(definition.EntryIdentifier));
             }
@@ -1285,7 +1388,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
             // Negotiation runs on its own thread. It calls into the service and can block there
             // behind a PnP notification, which used to stop this loop creating any client at all.
-            StartPendingHosts();
+            StartPendingHosts(stopToken);
             StartPendingClients(stopToken);
 
             ReconcileHostNetworkAdapters();
@@ -1321,11 +1424,19 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
     return S_OK;
 }
 
+_Use_decl_annotations_
 void
-CMidi2NetworkMidiEndpointManager::StartPendingHosts()
+CMidi2NetworkMidiEndpointManager::StartPendingHosts(std::stop_token const& stopToken)
 {
     for (auto const& definition : TransportState::Current().GetHostDefinitions())
     {
+        // A host takes up to the DNS-SD registration timeout to start, so a service stop doesn't
+        // wait for every pending host in turn
+        if (stopToken.stop_requested())
+        {
+            return;
+        }
+
         if (definition.State != MidiNetworkEntryState::Pending || !definition.IsEnabled)
         {
             continue;
@@ -1361,7 +1472,16 @@ CMidi2NetworkMidiEndpointManager::StartPendingHosts()
 
         if (!host->HasStarted())
         {
-            LOG_IF_FAILED(host->Start());
+            LOG_IF_FAILED(host->Start(stopToken));
+        }
+
+        if (stopToken.stop_requested())
+        {
+            // The service is stopping. The definition is left pending, and nothing else knows
+            // about this host yet, so it is closed here.
+            LOG_IF_FAILED(host->Shutdown());
+
+            return;
         }
 
         LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionLive(definition.EntryIdentifier));
@@ -1445,6 +1565,12 @@ CMidi2NetworkMidiEndpointManager::StartPendingClients(std::stop_token const& sto
 
         // a host which said it was busy is given time
         if (GetTickCount64() < definition.RetryNotBeforeTickCount)
+        {
+            continue;
+        }
+
+        // The remote already has a session with this PC another way. Tried again once that ends.
+        if (IsClientDefinitionStillWaiting(definition))
         {
             continue;
         }
@@ -1987,7 +2113,7 @@ static std::wstring FormatHash64(_In_ uint64_t const value)
 // Deliberately excludes IP address, port and role. Clients "may use a new UDP port number for
 // every Session" (spec 3.3), addresses move with DHCP, and a device connecting in both roles
 // presents identical identity in both (spec section 12). That device is refused a second session
-// by IsRemoteConnectedInOtherRole, not by the two ids matching.
+// by FindBlockingSession, not by the two ids matching.
 //
 // The readable part is the remote's name. The hash carries the identity.
 static std::wstring FormatEndpointDeviceInstanceId(
@@ -2101,36 +2227,59 @@ CMidi2NetworkMidiEndpointManager::ResolveEndpointCustomization(
 
 _Use_decl_annotations_
 bool
-CMidi2NetworkMidiEndpointManager::IsRemoteConnectedInOtherRole(
+CMidi2NetworkMidiEndpointManager::FindBlockingSession(
     MidiNetworkConnectionRole const thisServiceRole,
+    std::wstring const& instanceId,
     std::wstring const& remoteEndpointName,
-    std::wstring const& remoteProductInstanceId)
+    std::wstring const& remoteProductInstanceId,
+    MidiNetworkSessionRefusalReason& reason,
+    winrt::guid& blockingEntryIdentifier)
 {
-    std::vector<std::wstring> otherRoleEndpointDeviceIds{ };
+    reason = MidiNetworkSessionRefusalReason::None;
+    blockingEntryIdentifier = winrt::guid{};
+
+    struct Candidate
+    {
+        std::wstring EndpointDeviceId;
+        MidiNetworkSessionRefusalReason Reason;
+    };
+
+    std::vector<Candidate> candidates{ };
+
+    auto const cleanInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
 
     {
         auto lock = m_createdEndpointsLock.lock();
 
-        // Compared exactly, the way the instance ids compared when they were what caught this
         for (auto const& record : m_createdEndpoints)
         {
-            if (record.Role != thisServiceRole &&
-                std::wstring_view{ record.TransportSuppliedEndpointName } == remoteEndpointName &&
-                std::wstring_view{ record.ProductInstanceId } == remoteProductInstanceId)
+            if (record.Role != thisServiceRole)
             {
-                otherRoleEndpointDeviceIds.push_back(std::wstring{ record.EndpointDeviceId });
+                // Compared exactly, the way the instance ids compared when they were what caught this
+                if (std::wstring_view{ record.TransportSuppliedEndpointName } == remoteEndpointName &&
+                    std::wstring_view{ record.ProductInstanceId } == remoteProductInstanceId)
+                {
+                    candidates.push_back({ std::wstring{ record.EndpointDeviceId }, MidiNetworkSessionRefusalReason::ConnectedInOtherRole });
+                }
+            }
+            else if (!cleanInstanceId.empty() && std::wstring{ record.DeviceInstanceId } == cleanInstanceId)
+            {
+                candidates.push_back({ std::wstring{ record.EndpointDeviceId }, MidiNetworkSessionRefusalReason::AlreadyConnected });
             }
         }
     }
 
     // Outside the lock, because TransportState takes its own. An endpoint whose session has ended
-    // is only waiting to be removed, and doesn't stop the remote connecting the other way.
-    for (auto const& endpointDeviceId : otherRoleEndpointDeviceIds)
+    // is only waiting to be removed, and doesn't stop the remote connecting again.
+    for (auto const& candidate : candidates)
     {
-        auto const connection = TransportState::Current().GetSessionConnection(endpointDeviceId);
+        auto const connection = TransportState::Current().GetSessionConnection(candidate.EndpointDeviceId);
 
         if (connection != nullptr && connection->IsSessionActive())
         {
+            reason = candidate.Reason;
+            blockingEntryIdentifier = connection->ConfigIdentifier();
+
             return true;
         }
     }
@@ -2138,6 +2287,91 @@ CMidi2NetworkMidiEndpointManager::IsRemoteConnectedInOtherRole(
     return false;
 }
 
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::RecordSessionRefusal(
+    MidiNetworkConnectionRole const thisServiceRole,
+    std::wstring const& configIdentifier,
+    MidiNetworkSessionRefusalReason const reason,
+    winrt::guid const& blockingEntryIdentifier,
+    std::wstring const& remoteEndpointName,
+    std::wstring const& remoteProductInstanceId,
+    winrt::Windows::Networking::HostName const& remoteHostName) noexcept
+try
+{
+    if (reason == MidiNetworkSessionRefusalReason::None)
+    {
+        return;
+    }
+
+    GUID parsed{};
+
+    if (!internal::TryParseGuidString(configIdentifier, parsed))
+    {
+        return;
+    }
+
+    winrt::guid const entryIdentifier{ parsed };
+
+    if (thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+    {
+        // The other session is a host's here when the remote is connected the other way round,
+        // and another client entry's when this PC is already connected to it
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionWaitingForSession(
+            entryIdentifier,
+            blockingEntryIdentifier,
+            reason == MidiNetworkSessionRefusalReason::ConnectedInOtherRole,
+            remoteEndpointName,
+            remoteProductInstanceId));
+    }
+    else if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
+    {
+        host->RecordRefusedRemoteClient(
+            MidiNetworkRemoteClientIdentity{ remoteEndpointName, remoteProductInstanceId },
+            remoteHostName != nullptr ? std::wstring{ remoteHostName.CanonicalName() } : std::wstring{},
+            reason);
+    }
+}
+CATCH_LOG()
+
+_Use_decl_annotations_
+bool
+CMidi2NetworkMidiEndpointManager::IsClientDefinitionStillWaiting(MidiNetworkClientDefinition const& definition)
+{
+    if (!definition.IsWaitingForOtherSession())
+    {
+        return false;
+    }
+
+    MidiNetworkSessionRefusalReason reason{ MidiNetworkSessionRefusalReason::None };
+    winrt::guid blockingEntryIdentifier{};
+
+    if (FindBlockingSession(
+        MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+        BuildEndpointDeviceInstanceId(definition.WaitingRemoteEndpointName, definition.WaitingRemoteProductInstanceId),
+        definition.WaitingRemoteEndpointName,
+        definition.WaitingRemoteProductInstanceId,
+        reason,
+        blockingEntryIdentifier))
+    {
+        return true;
+    }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"The other session with this remote has ended. Connecting the client entry which was waiting for it.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(definition.EntryIdentifier, "entry identifier"),
+        TraceLoggingWideString(definition.WaitingRemoteEndpointName.c_str(), "remote endpoint name")
+    );
+
+    LOG_IF_FAILED(TransportState::Current().ClearClientDefinitionWaitingForSession(definition.EntryIdentifier));
+
+    return false;
+}
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
@@ -2204,9 +2438,13 @@ try
         BuildHostEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId, configIdentifier) :
         BuildEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId);
 
-    // The same device as a host and a client of this PC at once would be two endpoints for one
-    // device. Refused the way an instance id which is already taken is refused, below.
-    if (IsRemoteConnectedInOtherRole(thisServiceRole, endpointName, remoteEndpointProductInstanceId))
+    // A remote has one session with this PC in one direction, per host here or per remote host.
+    // A second one would be a second endpoint for one device. Checked before activation, so the
+    // reason can be recorded for Network MIDI Setup.
+    MidiNetworkSessionRefusalReason refusalReason{ MidiNetworkSessionRefusalReason::None };
+    winrt::guid blockingEntryIdentifier{};
+
+    if (FindBlockingSession(thisServiceRole, instanceId, endpointName, remoteEndpointProductInstanceId, refusalReason, blockingEntryIdentifier))
     {
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -2214,12 +2452,17 @@ try
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"This device is already connected to this PC in the other role, so a second session for it was not created.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(refusalReason == MidiNetworkSessionRefusalReason::ConnectedInOtherRole ?
+                L"This device is already connected to this PC in the other role, so a second session for it was not created." :
+                L"This device already has a session with this PC here, so a second session for it was not created.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(instanceId.c_str(), "instance id"),
             TraceLoggingWideString(endpointName.c_str(), "endpoint name"),
             TraceLoggingWideString(remoteEndpointProductInstanceId.c_str(), "product instance id"),
+            TraceLoggingGuid(blockingEntryIdentifier, "entry with the other session"),
             TraceLoggingWideString(hostName != nullptr ? hostName.CanonicalName().c_str() : L"", "remote address")
         );
+
+        RecordSessionRefusal(thisServiceRole, configIdentifier, refusalReason, blockingEntryIdentifier, endpointName, remoteEndpointProductInstanceId, hostName);
 
         RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
     }
@@ -2397,9 +2640,26 @@ try
     // S_FALSE means this instance id is already active, so nothing was created and no interface
     // id was returned. That is the same remote a second time on the same host, or a second
     // session from this PC to the same remote host. Treated as a failure here so the caller can
-    // decline the session rather than proceed with an endpoint it does not have.
+    // decline the session rather than proceed with an endpoint it does not have. The check above
+    // normally catches it first. Here the other session either started meanwhile, or has ended
+    // and its endpoint is still being removed, which is the remote reconnecting too soon.
     if (activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr)
     {
+        if (FindBlockingSession(thisServiceRole, instanceId, endpointName, remoteEndpointProductInstanceId, refusalReason, blockingEntryIdentifier))
+        {
+            RecordSessionRefusal(thisServiceRole, configIdentifier, refusalReason, blockingEntryIdentifier, endpointName, remoteEndpointProductInstanceId, hostName);
+        }
+        else if (GUID parsedEntry{}; thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsClient &&
+            internal::TryParseGuidString(configIdentifier, parsedEntry))
+        {
+            // The previous session's endpoint is still being removed. Tried again shortly,
+            // rather than left connected to nothing.
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionForRetryAfter(
+                winrt::guid{ parsedEntry },
+                MIDI_NETWORK_CLIENT_ENDPOINT_STILL_REMOVING_RETRY_DELAY_MILLISECONDS,
+                0));
+        }
+
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_WARNING,
@@ -2758,10 +3018,21 @@ try
             auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
             additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
 
-            auto deviceInfo = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+            // Bounded, because this runs on a configuration call and the device query can stall
+            // behind PnP. Timing out only costs the custom name for this refresh.
+            auto deviceInfoOperation = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
                 winrt::hstring{ endpointDeviceInterfaceId },
                 additionalProperties,
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
+
+            if (deviceInfoOperation.wait_for(std::chrono::milliseconds(MIDI_NETWORK_DEVICE_PROPERTY_READ_TIMEOUT_MILLISECONDS)) == winrt::Windows::Foundation::AsyncStatus::Started)
+            {
+                deviceInfoOperation.Cancel();
+
+                throw winrt::hresult_error(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+            }
+
+            auto deviceInfo = deviceInfoOperation.GetResults();
 
             if (deviceInfo != nullptr)
             {
@@ -2883,8 +3154,99 @@ CMidi2NetworkMidiEndpointManager::OnHostRegistrationEnding(std::wstring_view con
 }
 
 
+// Stops everything Initialize starts: the browser, the change monitor, the announcer and the
+// three worker threads. Safe to call when some or none of them were started. False when the
+// negotiation thread had to be abandoned, in which case it may still use the service pointers.
+bool
+CMidi2NetworkMidiEndpointManager::StopBackgroundWork() noexcept
+{
+    bool allThreadsExited{ true };
+
+    try
+    {
+        {
+            auto lock = m_remoteHostWatcherLock.lock();
+
+            m_remoteHostWatcherAllowed = false;
+            m_browser.Stop();
+        }
+
+        // Before the creator thread stops, so a change arriving now cannot wake a thread that is gone
+        m_networkChangeMonitor.Stop();
+
+        // Before the hosts below withdraw their registrations, so no repeat can follow a goodbye
+        m_dnssdAnnouncer.Stop();
+
+        {
+            auto lock = m_advertisedHostsLock.lock_exclusive();
+
+            m_foundAdvertisedHosts.clear();
+        }
+
+        m_backgroundEndpointCreatorThread.request_stop();
+        m_backgroundEndpointCreatorThreadWakeup.SetEvent();
+
+        if (m_backgroundEndpointCreatorThread.joinable() && m_backgroundEndpointCreatorThread.get_id() != std::this_thread::get_id())
+        {
+            m_backgroundEndpointCreatorThread.join();
+        }
+
+        // Joined after the creator, which can release a connection on its last pass. The worker's
+        // exit finishes whatever is still queued.
+        m_endpointWorkerThread.request_stop();
+        m_endpointWorkerWakeup.SetEvent();
+
+        if (m_endpointWorkerThread.joinable() && m_endpointWorkerThread.get_id() != std::this_thread::get_id())
+        {
+            m_endpointWorkerThread.join();
+        }
+
+        // Deliberately not joined. A negotiation blocked inside the service cannot be canceled from
+        // here, and waiting on it is what previously left the service unable to stop at all. Wait a
+        // short time for a clean exit, and abandon the thread if it is stuck.
+        m_backgroundNegotiationThread.request_stop();
+        m_backgroundNegotiationThreadWakeup.SetEvent();
+
+        if (m_backgroundNegotiationThread.joinable() && m_backgroundNegotiationThread.get_id() != std::this_thread::get_id())
+        {
+            if (m_negotiationThreadExitedEvent.wait(MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS))
+            {
+                m_backgroundNegotiationThread.join();
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Negotiation thread is blocked in the service. Abandoning it so shutdown can continue.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
+                // the jthread destructor would join, which is exactly what must not happen here
+                m_backgroundNegotiationThread.detach();
+
+                // The abandoned thread still uses this object and its service pointers. Leaking one
+                // reference means it never runs on freed memory, and nothing releases those pointers
+                // late, at DLL unload. The service is stopping, so the process ends soon after.
+                AddRef();
+
+                allThreadsExited = false;
+            }
+        }
+
+        m_initialized = false;
+    }
+    CATCH_LOG();
+
+    return allThreadsExited;
+}
+
+
 HRESULT
 CMidi2NetworkMidiEndpointManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -2895,77 +3257,7 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    {
-        auto lock = m_remoteHostWatcherLock.lock();
-
-        m_remoteHostWatcherAllowed = false;
-        m_browser.Stop();
-    }
-
-    // Before the creator thread stops, so a change arriving now cannot wake a thread that is gone
-    m_networkChangeMonitor.Stop();
-
-    // Before the hosts below withdraw their registrations, so no repeat can follow a goodbye
-    m_dnssdAnnouncer.Stop();
-
-    {
-        auto lock = m_advertisedHostsLock.lock_exclusive();
-
-        m_foundAdvertisedHosts.clear();
-    }
-
-    m_backgroundEndpointCreatorThread.request_stop();
-    m_backgroundEndpointCreatorThreadWakeup.SetEvent();
-
-    if (m_backgroundEndpointCreatorThread.joinable() && m_backgroundEndpointCreatorThread.get_id() != std::this_thread::get_id())
-    {
-        m_backgroundEndpointCreatorThread.join();
-    }
-
-    // Joined after the creator, which can release a connection on its last pass. The worker's
-    // exit finishes whatever is still queued.
-    m_endpointWorkerThread.request_stop();
-    m_endpointWorkerWakeup.SetEvent();
-
-    if (m_endpointWorkerThread.joinable() && m_endpointWorkerThread.get_id() != std::this_thread::get_id())
-    {
-        m_endpointWorkerThread.join();
-    }
-
-    // Deliberately not joined. A negotiation blocked inside the service cannot be canceled from
-    // here, and waiting on it is what previously left the service unable to stop at all. Wait a
-    // short time for a clean exit, and abandon the thread if it is stuck.
-    m_backgroundNegotiationThread.request_stop();
-    m_backgroundNegotiationThreadWakeup.SetEvent();
-
-    if (m_backgroundNegotiationThread.joinable() && m_backgroundNegotiationThread.get_id() != std::this_thread::get_id())
-    {
-        if (m_negotiationThreadExitedEvent.wait(MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS))
-        {
-            m_backgroundNegotiationThread.join();
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Negotiation thread is blocked in the service. Abandoning it so shutdown can continue.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            // the jthread destructor would join, which is exactly what must not happen here
-            m_backgroundNegotiationThread.detach();
-
-            // The abandoned thread still uses this object and its service pointers. Leaking one
-            // reference means it never runs on freed memory, and nothing releases those pointers
-            // late, at DLL unload. The service is stopping, so the process ends soon after.
-            AddRef();
-        }
-    }
-
-    m_initialized = false;
+    StopBackgroundWork();
 
     // TransportState::Shutdown releases its reference to this object, and the service may hold
     // the only other one, so this one keeps it alive until the end of this function.
@@ -2991,3 +3283,4 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()

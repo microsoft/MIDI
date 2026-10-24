@@ -187,6 +187,9 @@
     <ClCompile Include="MainWindowOfflineRetention.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MainWindowSessionRefusals.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MainWindowPortGroups.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>

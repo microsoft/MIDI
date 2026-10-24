@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiNetworkRemoteClientRefusalReasonEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // A remote client a host turned away because the device already has a session with this PC.
+    // Only the API creates these, in MidiNetworkConfiguredHost.RecentlyRefusedRemoteClients.
+    [contract(MidiTransportsNetworkApiContract, 2)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRefusedRemoteClient", UUID_IMidiNetworkRefusedRemoteClient)]
+    runtimeclass MidiNetworkRefusedRemoteClient
+    {
+        // the host which turned the remote client away
+        [noexcept] Guid HostId{ get; };
+
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
+        [noexcept] String RemoteAddress{ get; };
+
+        // when the host last turned it away
+        [noexcept] Windows.Foundation.DateTime RefusedTime{ get; };
+
+        // why, the last time the host turned it away
+        [noexcept] MidiNetworkRemoteClientRefusalReason Reason{ get; };
+    }
+}

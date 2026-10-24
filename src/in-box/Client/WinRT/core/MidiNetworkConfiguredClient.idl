@@ -68,6 +68,19 @@ namespace Windows.Devices.Midi2.Transports.Network
         {
             // false when the client sends every message, however far behind its speed it falls
             [noexcept] Boolean SkipInBetweenValuesToCatchUp{ get; };
+
+            // A device has one session with this PC at a time. When the remote host already has
+            // one, this entry waits: it stops trying, and connects once that session ends. At most
+            // one of these is set at a time, and it says which session the entry waits for. A value
+            // which isn't set equals Windows.Foundation.GuidHelper.Empty(). The entry is waiting
+            // when either one isn't GuidHelper.Empty().
+
+            // the host here which the remote is connected to as a client. GuidHelper.Empty() when not set.
+            [noexcept] Guid WaitingForHostId{ get; };
+
+            // the other client entry through which this PC is connected to the remote host.
+            // GuidHelper.Empty() when not set.
+            [noexcept] Guid WaitingForClientId{ get; };
         }
     };
 }

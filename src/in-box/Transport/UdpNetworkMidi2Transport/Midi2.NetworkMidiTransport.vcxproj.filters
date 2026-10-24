@@ -117,6 +117,9 @@
     <ClInclude Include="MidiNetworkMessages.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MidiNetworkRecentRefusals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="TransportState.h">
       <Filter>Header Files</Filter>
     </ClInclude>

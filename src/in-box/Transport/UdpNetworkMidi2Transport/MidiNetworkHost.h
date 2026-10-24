@@ -135,10 +135,13 @@ class MidiNetworkHost : public std::enable_shared_from_this<MidiNetworkHost>
 public:
     HRESULT Initialize(_In_ MidiNetworkHostDefinition const& hostDefinition);
 
-    // Does nothing when the host is already running
-    HRESULT Start();
+    // Does nothing when the host is already running. Gives up early, and fails, when stopToken is
+    // signaled while it waits for its DNS-SD registration. Fails once the host has been shut
+    // down: a shut-down host is never started again.
+    HRESULT Start(_In_ std::stop_token const& stopToken = std::stop_token{ });
     HRESULT Stop();
 
+    // Stops the host for good
     HRESULT Shutdown();
 
     bool HasStarted() { return m_started; }
@@ -173,8 +176,6 @@ public:
     // What this host is actually called on the network. The configured name when it is not
     // advertising, because then there is nothing on the wire to disagree with.
     winrt::hstring ActualServiceInstanceName();
-
-    bool IsEnabled() { return m_enabled; }
 
     // Fixed once the host is initialized, so it is safe to read without copying the definition
     winrt::guid EntryIdentifier() const noexcept { return m_entryIdentifier; }
@@ -219,8 +220,6 @@ public:
     // What should happen to an invitation from this client, given the policy and the lists.
     MidiNetworkRemoteClientDecision EvaluateRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity);
 
-    MidiNetworkRemoteClientPolicy GetRemoteClientPolicy() const { return m_hostDefinition.RemoteClientPolicy; }
-
     // A user decision arriving through the configuration manager. Persisting it is the caller's
     // job; these take effect immediately either way.
     HRESULT AddRemoteClientToAllowList(_In_ MidiNetworkRemoteClientIdentity const& identity);
@@ -230,8 +229,31 @@ public:
     // judged on the host policy alone, as though it had never been seen.
     HRESULT ForgetRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity);
 
+    // A remote this host turned away because it already had a session with this PC. Kept for a
+    // while, so Network MIDI Setup can say why the device didn't connect.
+    void RecordRefusedRemoteClient(
+        _In_ MidiNetworkRemoteClientIdentity const& identity,
+        _In_ std::wstring const& remoteAddress,
+        _In_ MidiNetworkSessionRefusalReason const reason) noexcept;
+
+    // The remote has a session with this host now. Its refusal is history, and shown next to the
+    // live connection it reads as if the host were still turning it away.
+    void ForgetRefusedRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity) noexcept
+    {
+        m_recentRefusals.Remove(identity.UmpEndpointName, identity.ProductInstanceId);
+    }
+
+    // Newest first, without the ones which have expired
+    std::vector<MidiNetworkRecentRefusal> GetRecentRefusals() noexcept
+    {
+        return m_recentRefusals.Get(std::chrono::steady_clock::now());
+    }
+
 private:
-    bool m_enabled{ true };
+    MidiNetworkRecentRefusals m_recentRefusals{};
+    // Set by Shutdown, under m_lifecycleLock. Start refuses from then on, so a host which a
+    // configuration call is starting while another removes it can't come back to life.
+    std::atomic<bool> m_shutDown{ false };
     std::atomic<bool> m_portFallbackUsed{ false };
     std::atomic<bool> m_networkAdapterFallbackUsed{ false };
     std::atomic<bool> m_waitingForNetworkAdapter{ false };
@@ -297,7 +319,8 @@ private:
     HRESULT StartAdvertising(
         _In_ uint16_t const boundPort,
         _In_ winrt::guid const& networkAdapterId,
-        _In_ uint32_t const networkInterfaceIndex);
+        _In_ uint32_t const networkInterfaceIndex,
+        _In_ std::stop_token const& stopToken);
 
     // Where Start should run the host. False, with waiting set, when it has to wait for its
     // adapter. A null adapter id and a zero interface index mean every adapter.

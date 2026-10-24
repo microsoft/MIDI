@@ -149,6 +149,7 @@ struct MidiNetworkHostDefinition;
 
 #include "MidiNetworkCredentials.h"
 #include "MidiNetworkRateLimiter.h"
+#include "MidiNetworkRecentRefusals.h"
 #include "MidiNetworkDataWriter.h"
 #include "MidiNetworkInvitationState.h"
 #include "MidiNetworkConnection.h"

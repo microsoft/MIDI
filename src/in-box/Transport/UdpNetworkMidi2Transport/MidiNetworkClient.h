@@ -19,6 +19,29 @@ struct MidiNetworkClientDefinition
     // NETWORK_ERROR_CODE_* saying why the last invitation did not open a session, or 0
     uint32_t LastErrorCode{ 0 };
 
+    // Set when the last session was declined because the remote already has one with this PC:
+    // it is a client of a host here, or connected through another client entry. The entry then
+    // waits for that session to end instead of retrying on a timer, and is tried once it has.
+    // The remote's identity is what tells when that is.
+    winrt::guid WaitingForEntryIdentifier{};
+    bool WaitingForHostSession{ false };
+    std::wstring WaitingRemoteEndpointName{};
+    std::wstring WaitingRemoteProductInstanceId{};
+
+    bool IsWaitingForOtherSession() const noexcept { return WaitingForEntryIdentifier != winrt::guid{}; }
+
+    // Failed because the remote host ended the session (user terminated or power down). Only then
+    // does the host advertising again bring the entry back.
+    bool EndedByRemote{ false };
+
+    void ClearWaitingForOtherSession() noexcept
+    {
+        WaitingForEntryIdentifier = winrt::guid{};
+        WaitingForHostSession = false;
+        WaitingRemoteEndpointName.clear();
+        WaitingRemoteProductInstanceId.clear();
+    }
+
     // A remote can have several addresses. They are tried in turn: the one the last session
     // opened on first, then the others in the order Windows prefers. See midi_network_addresses.h.
     winrt::hstring AttemptAddress{};        // where the last invitation went

@@ -30,7 +30,6 @@ public:
     HRESULT WriteCommandBye(_In_ MidiNetworkCommandByeReason reason, _In_ std::wstring textMessage);
     HRESULT WriteCommandByeReply();
 
-    HRESULT WriteCommandSessionReset();
     HRESULT WriteCommandSessionResetReply();
 
     HRESULT WriteCommandRetransmitRequest(_In_ MidiSequenceNumber sequenceNumber, _In_ uint16_t numberOfUmpCommands);
@@ -42,8 +41,6 @@ public:
     HRESULT WriteCommandInvitationReplyPending(_In_ std::wstring hostUmpEndpointName, _In_ std::wstring hostProductInstanceId);
 
     // The four authentication commands would be written here. See MidiNetworkCredentials.h.
-
-    HRESULT WriteCommandUmpMessages(_In_ MidiSequenceNumber sequenceNumber, _In_ std::vector<uint32_t> words);
 
     HRESULT WriteCommandUmpMessages(
         _In_ MidiSequenceNumber sequenceNumber,

@@ -119,6 +119,28 @@ namespace NetworkMidiTest
         return *this;
     }
 
+    // Spec 6.7: Command Specific Data 1 is the name length in words, and the payload is the name
+    // followed by the product instance id, as for an invitation
+    _Use_decl_annotations_
+    PacketBuilder& PacketBuilder::AddInvitationReplyAccepted(
+        std::string const& endpointName,
+        std::string const& productInstanceId)
+    {
+        auto nameWords = PaddedWordCount(endpointName.size());
+        auto productWords = PaddedWordCount(productInstanceId.size());
+
+        AddCommandHeader(
+            CommandCode::InvitationReplyAccepted,
+            static_cast<uint8_t>(nameWords + productWords),
+            nameWords,
+            static_cast<uint8_t>(0));
+
+        AddPaddedString(endpointName);
+        AddPaddedString(productInstanceId);
+
+        return *this;
+    }
+
     PacketBuilder& PacketBuilder::AddPing(uint32_t const pingId)
     {
         AddCommandHeader(CommandCode::Ping, 1, static_cast<uint16_t>(0));

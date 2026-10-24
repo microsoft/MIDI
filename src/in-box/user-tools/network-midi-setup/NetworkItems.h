@@ -548,6 +548,18 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // Network MIDI 2.0 only: why the entry isn't trying to connect. Empty hides the warning.
+        winrt::hstring WarningText() const noexcept { return m_warningText; }
+        bool IsWarningOpen() const noexcept { return !m_warningText.empty(); }
+
+        void InternalUpdateWarning(_In_ winrt::hstring const& warningText) noexcept
+        {
+            if (UpdateField(m_warningText, warningText, L"WarningText"))
+            {
+                RaisePropertyChanged(L"IsWarningOpen");
+            }
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
         {
             return m_latency.HasSamples() ?
@@ -719,6 +731,7 @@ namespace winrt::midinetworksetup::implementation
         bool m_skipInBetweenValuesToCatchUp{ true };
 
         winrt::hstring m_midi1PortsText{};
+        winrt::hstring m_warningText{};
 
         MIDI_NETSETUP_OBSERVABLE_ITEM()
     };
@@ -1324,6 +1337,19 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // Network MIDI 2.0 only: the second sessions the host turned away recently, one per line
+        winrt::hstring RefusalsText() const noexcept { return m_refusalsText; }
+
+        bool IsRefusalsWarningOpen() const noexcept { return !m_refusalsText.empty(); }
+
+        void InternalUpdateRefusals(_In_ winrt::hstring const& refusalsText) noexcept
+        {
+            if (UpdateField(m_refusalsText, refusalsText, L"RefusalsText"))
+            {
+                RaisePropertyChanged(L"IsRefusalsWarningOpen");
+            }
+        }
+
         // the empty state placeholders are computed from the collections, so they only change
         // when something is added or removed
         void InternalRaiseEmptyStateChanged() noexcept
@@ -1362,6 +1388,8 @@ namespace winrt::midinetworksetup::implementation
 
         Midi1PortLayout m_midi1Ports{};
         winrt::hstring m_midi1PortsText{};
+
+        winrt::hstring m_refusalsText{};
 
         winrt::Windows::Foundation::Collections::IObservableVector<midinetworksetup::HostConnectionItem> m_connections{
             winrt::single_threaded_observable_vector<midinetworksetup::HostConnectionItem>() };
