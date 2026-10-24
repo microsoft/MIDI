@@ -987,9 +987,7 @@ namespace glass
         m_controlIndexes.reserve(total);
         m_kinds.reserve(total);
 
-        // Pickers show the key picked, and the first grid's key until something is.
-        auto const shownKey = ShownKey(document, m_pickedKey);
-
+        // Pickers show the grid they target as it plays now.
         for (auto const index : shown)
         {
             auto controlIndex = firstIndexes[index];
@@ -1001,7 +999,7 @@ namespace glass
                 if (IsKeyPicker(control))
                 {
                     auto const item = m_visuals.size() - 1;
-                    auto const value = PickerValue(control, shownKey);
+                    auto const value = PickerValueFor(document, control, m_gridStates);
 
                     SetValue(item, value);
                     winrt::get_self<winrt::midiglass::implementation::GlassControl>(m_elements[item])
@@ -1011,6 +1009,8 @@ namespace glass
                 controlIndex++;
             }
         }
+
+        RefreshPadReadouts(document);
     }
 
     _Use_decl_annotations_
@@ -1214,7 +1214,8 @@ namespace glass
         m_dragAxes.push_back(control.Drag);
         m_pickups.push_back(control.Pickup);
         m_keyboards.push_back(control.Keyboard);
-        m_padGrids.push_back(WithPickedKey(control.Pads, m_pickedKey));
+        m_padGrids.push_back(GridSpecFor(control));
+        m_readoutTexts.push_back({});
         m_velocityFromTouch.push_back(control.VelocityFromTouch);
         m_latches.push_back(
             control.Kind == ControlKind::Lfo ? control.Lfo.Latching :
@@ -1365,6 +1366,14 @@ namespace glass
 
         try
         {
+            // A readout showing a pad grid prints it all the time: it is the whole control.
+            if (itemIndex < m_readoutTexts.size() && !m_readoutTexts[itemIndex].empty())
+            {
+                m_valueTexts[itemIndex].Visibility(xaml::Visibility::Visible);
+                m_valueTexts[itemIndex].Text(winrt::hstring{ m_readoutTexts[itemIndex] });
+                return;
+            }
+
             auto const always = m_showValues[itemIndex] == ShowValueOverride::Always;
             auto const visible = always || m_touched[itemIndex];
 
@@ -4590,7 +4599,7 @@ namespace glass
 
             if (itemIndex < m_padGrids.size())
             {
-                m_padGrids[itemIndex] = WithPickedKey(control.Pads, m_pickedKey);
+                m_padGrids[itemIndex] = GridSpecFor(control);
             }
 
             LayoutVisual(compositor, m_visuals[itemIndex], control, theme, SurfaceFor(itemIndex, control));
@@ -4660,6 +4669,7 @@ namespace glass
         m_pickups.clear();
         m_keyboards.clear();
         m_padGrids.clear();
+        m_readoutTexts.clear();
         m_velocityFromTouch.clear();
         m_latches.clear();
         m_turnDegrees.clear();

@@ -125,6 +125,14 @@ namespace glass
                 }
             };
 
+        m_runner->ChangePadGrid = [weak](PlanAction const& action)
+            {
+                if (auto strong = weak.lock())
+                {
+                    strong->ChangePadGrids(action);
+                }
+            };
+
         m_runner->Start(dispatcher);
 
         m_clocks = ClockGenerator::Create();
@@ -448,7 +456,9 @@ namespace glass
 
                     entry.ControlIndex = static_cast<uint32_t>(index);
                     entry.Spec = control.Pads;
-                    entry.StartNote = FirstPadNote(WithPickedKey(control.Pads, m_pickedKey));
+                    entry.ControlId = control.Id;
+                    entry.Hex = IsHexPadGrid(control.Kind);
+                    entry.StartNote = FirstPadNote(control.Pads);
                     entry.BendRange = std::clamp(
                         control.Pads.BendRangeSemitones, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
                     entry.Voices.Configure(control.Pads.Glide, entry.BendRange);
@@ -469,6 +479,15 @@ namespace glass
 
                 index++;
             }
+        }
+
+        // A grid changed by a button before an edit in Try mode stays changed.
+        for (auto& pads : m_padControls)
+        {
+            auto const spec = WithGridState(pads.Spec, pads.Hex, StateOf(m_gridStates, pads.ControlId));
+            auto const first = PadNote(spec, pads.Hex, 0, 0, std::max(spec.PadsPerRow, 1));
+
+            pads.StartNote = first >= 0 ? first : FirstPadNote(spec);
         }
 
         for (auto& clock : m_clockControls)

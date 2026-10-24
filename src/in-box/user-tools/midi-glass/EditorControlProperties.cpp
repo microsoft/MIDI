@@ -290,6 +290,7 @@ namespace winrt::midiglass::implementation
             }
 
             BuildKeyPickerChoices();
+            BuildPadGridChoices();
 
             for (auto const* const key : PadNoteNamesKeys)
             {
@@ -519,6 +520,15 @@ namespace winrt::midiglass::implementation
             {
                 RefreshSwitchPositions(control);
                 RefreshKeyPickerPanel(control);
+            }
+
+            // ---- readout ----
+
+            show(ReadoutPanel(), control.Kind == glass::ControlKind::Readout);
+
+            if (control.Kind == glass::ControlKind::Readout)
+            {
+                RefreshReadoutPanel(control);
             }
 
             // ---- keys ----
@@ -870,6 +880,7 @@ namespace winrt::midiglass::implementation
             : resources::GetString(L"PadRangeNone"));
 
         RefreshPadGridPickers(control);
+        RefreshPadArrangement(control);
     }
 
     // Every knob and fader on the layout, so a clock can be told where to get its tempo.

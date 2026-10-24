@@ -156,11 +156,11 @@ namespace winrt::midiglass::implementation
                 }
             };
 
-        m_player->KeyPicked = [weak](glass::PickedKey const& picked)
+        m_player->PadGridsChanged = [weak](glass::PadGridStates const& states)
             {
                 if (auto strong = weak.get())
                 {
-                    strong->OnKeyPicked(picked);
+                    strong->OnPadGridsChanged(states);
                 }
             };
 
@@ -409,7 +409,7 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void RuntimeWindow::OnKeyPicked(glass::PickedKey const& picked)
+    void RuntimeWindow::OnPadGridsChanged(glass::PadGridStates const& states)
     {
         if (m_closing)
         {
@@ -418,13 +418,13 @@ namespace winrt::midiglass::implementation
 
         try
         {
-            // Every grid on the page plays the new key at once, and every picker on it says so.
-            // A grid on another page picks it up when that page is built.
-            for (auto const& [itemIndex, value] : m_renderer.ApplyPickedKey(picked, m_document, m_theme))
+            // Every grid on the page that changed plays its new notes at once, and every picker
+            // and readout on it says so. A grid on another page picks it up when that page is built.
+            for (auto const& [itemIndex, value] : m_renderer.ApplyGridStates(states, m_document, m_theme))
             {
                 if (auto element = m_renderer.ElementAt(itemIndex))
                 {
-                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(value);
+                    winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(std::max(value, 0.0));
                 }
             }
 

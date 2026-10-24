@@ -1068,7 +1068,7 @@ namespace glass
             touch.Touch = pointerId;
             touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
             touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
-            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x, y);
 
             PadTouched(binding.ItemIndex, touch);
         }
@@ -1143,7 +1143,7 @@ namespace glass
             touch.Touch = pointerId;
             touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
             touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
-            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x, y);
 
             PadTouched(binding.ItemIndex, touch);
         }

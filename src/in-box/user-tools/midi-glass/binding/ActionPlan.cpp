@@ -496,6 +496,17 @@ namespace glass
                 break;
             }
 
+            case MessageKind::PadGrid:
+            {
+                PlanAction action{};
+                action.Kind = ActionKind::ChangePadGrid;
+                action.PadFunction = message.PadFunction;
+                action.PadTargets = message.PadTargets;
+
+                actions.push_back(std::move(action));
+                break;
+            }
+
             default:
                 // A channel voice message leaves in the pointer handler, with no clock in the
                 // way. Putting it here as well would send it twice.

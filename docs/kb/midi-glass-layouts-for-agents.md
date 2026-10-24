@@ -164,7 +164,7 @@ If the customer wants a look of their own, design a theme file as well, followin
 | Hex pads | `hexPads` | 456 × 160 | The same, with hexagons. |
 | Meter | `meter` | 24 × 180 | Shows a value the device sends. |
 | Lamp | `lamp` | 32 × 32 | Lights up when the device sends something. |
-| Readout | `readout` | 120 × 40 | Shows a value the device sends. |
+| Readout | `readout` | 120 × 40 | Shows a value the device sends, or where a pad grid is. |
 | Stopwatch | `timeDisplay` | 180 × 64 | Counts up from when the layout starts. |
 | Text | `label` | 120 × 24 | Words on the page. |
 | Image | `image` | 120 × 120 | A picture or a video. |
@@ -210,9 +210,12 @@ $problems = [Collections.Generic.List[string]]::new()
 
 $themes = 'Studio Dark', 'Airy System', 'Bigwig', 'Blueprint', 'Bone', 'Cathode', 'Chicago', 'Daylight', 'Five-iSH', 'Good Form', 'Groovy', 'Groovy Dark', 'Hard Sector', 'High contrast', 'Insert Coin', 'Jove', 'Night Drive', 'Off-world Colonies', 'Soft Sector', 'Supersaw', 'Terminal Amber', 'Terminal Green', 'Tonal Dark', 'Tonal Light', 'Visor'
 $controlKinds = 'knob', 'fader', 'pad', 'button', 'toggle', 'xyPad', 'meter', 'lamp', 'readout', 'label', 'image', 'pageTab', 'panel', 'joystick', 'ribbon', 'pianoKeyboard', 'beatClock', 'timeDisplay', 'lfo', 'turntable', 'wheel', 'switch', 'steps', 'line', 'notePads', 'hexPads'
-$messageKinds = 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController', 'systemExclusive', 'rawUmp', 'sequence', 'goToPage', 'mackieControl'
+$messageKinds = 'note', 'controlChange', 'programChange', 'pitchBend', 'channelPressure', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController', 'systemExclusive', 'rawUmp', 'sequence', 'goToPage', 'mackieControl', 'padGrid'
 $numbered = 'note', 'controlChange', 'programChange', 'perNoteController', 'assignablePerNoteController', 'registeredController', 'assignedController'
 $scales = 'major', 'minor', 'harmonicMinor', 'melodicMinor', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'locrian', 'majorPentatonic', 'minorPentatonic', 'blues', 'wholeTone'
+$picks = 'nothing', 'rootNote', 'scale', 'inKeyOnly', 'rowOffset', 'octave'
+$padFunctions = 'octaveUp', 'octaveDown', 'rowUp', 'rowDown', 'shiftLeft', 'shiftRight', 'semitoneUp', 'semitoneDown', 'inKeyOnlyOn', 'inKeyOnlyOff', 'inKeyOnlyToggle', 'nextRoot', 'previousRoot', 'nextScale', 'previousScale', 'nextRowOffset', 'reset'
+$gridIds = @($layout.pages | ForEach-Object { $_.controls } | Where-Object { $_.kind -cin 'notePads', 'hexPads' } | ForEach-Object { $_.id })
 
 $pageWidth = $layout.pageWidth ?? 1280
 $pageHeight = $layout.pageHeight ?? 800
@@ -242,10 +245,14 @@ foreach ($page in $layout.pages) {
         if ($slot -lt -1 -or $slot -gt 6 -or ($slot -eq -1 -and -not $c.literalColor)) { $problems.Add("$where needs a hueSlot from 0 to 6, or -1 with a literalColor.") }
         if ($null -ne $c.pads.notes -and $c.pads.notes -cnotin 'chromatic', 'inKey') { $problems.Add("$where has the pad notes '$($c.pads.notes)', which isn't a choice, so the pads play every note.") }
         elseif ($c.pads.notes -ceq 'inKey' -and $c.pads.key -ceq 'none') { $problems.Add("$where plays only the notes in the key, but has no key, so it plays every note.") }
-        if ($null -ne $c.switch.picks -and $c.switch.picks -cnotin 'nothing', 'rootNote', 'scale') { $problems.Add("$where picks '$($c.switch.picks)', which isn't a choice, so it's a switch that sends.") }
-        elseif ($c.switch.picks -cin 'rootNote', 'scale' -and $c.messages.Count -gt 0) { $problems.Add("$where picks the key, so its messages are never sent.") }
+        if ($null -ne $c.switch.picks -and $c.switch.picks -cnotin $picks) { $problems.Add("$where picks '$($c.switch.picks)', which isn't a choice, so it's a switch that sends.") }
+        elseif ($null -ne $c.switch.picks -and $c.switch.picks -cne 'nothing' -and $c.messages.Count -gt 0) { $problems.Add("$where is a picker, so its messages are never sent.") }
         foreach ($s in $c.switch.scales) { if ($s -cnotin $scales) { $problems.Add("$where offers the scale '$s', which isn't a choice, so the picker leaves it out.") } }
         if ($c.switch.picks -ceq 'scale' -and $null -ne $c.switch.scales -and @($c.switch.scales | Where-Object { $_ -cin $scales } | Select-Object -Unique).Count -lt 2) { $problems.Add("$where offers fewer than two scales, so it offers the usual seven instead.") }
+        foreach ($t in @($c.switch.targets) + @($c.readout.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid, so nothing follows it.") } }
+        if ($null -ne $c.pads.arrangement -and $c.pads.arrangement -cnotin 'flow', 'rows', 'columns') { $problems.Add("$where has the arrangement '$($c.pads.arrangement)', which isn't a choice, so its pads flow.") }
+        elseif ($c.pads.arrangement -cin 'rows', 'columns' -and (($c.pads.rows ?? 8) -notin 1..32 -or ($c.pads.padsPerRow ?? 8) -notin 1..64 -or ($c.pads.rows ?? 8) * ($c.pads.padsPerRow ?? 8) -gt 1024)) { $problems.Add("$where needs rows from 1 to 32 and padsPerRow from 1 to 64, and no more than 1,024 pads in all.") }
+        if ($null -ne $c.readout.source -and $c.readout.source -cnotin 'value', 'padKey', 'octave', 'rowOffset', 'padSummary') { $problems.Add("$where shows '$($c.readout.source)', which isn't a choice, so it shows its own value.") }
         foreach ($m in $c.messages) {
             $kind = $m.kind ?? 'controlChange'
             if ($kind -cnotin $messageKinds) { $problems.Add("$where sends '$kind', which isn't a message kind."); continue }
@@ -256,6 +263,12 @@ foreach ($page in $layout.pages) {
                 continue
             }
             if ($kind -ceq 'sequence') { if ($m.sequence -cnotin $sequences) { $problems.Add("$where runs a sequence that isn't in the layout.") }; continue }
+            if ($kind -ceq 'padGrid') {
+                if ($m.function -cnotin $padFunctions) { $problems.Add("$where has the pad grid function '$($m.function)', which isn't a choice, so the row does nothing.") }
+                foreach ($t in @($m.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid.") } }
+                if (($m.trigger ?? 'changes') -cnotin 'turnsOn', 'turnsOff', 'touched', 'released') { $problems.Add("$where has a pad grid row on '$($m.trigger ?? 'changes')'. Use turnsOn, or it never runs.") }
+                continue
+            }
             if (-not $m.device) { $problems.Add("$where has a row with no device, so the row sends nothing.") }
             elseif ($m.device -cnotin $devices) { $problems.Add("$where sends to '$($m.device)', which isn't in devices.") }
             if (($m.group ?? 0) -notin -1..15 -or ($m.channel ?? 0) -notin 0..15) { $problems.Add("$where has a group or a channel outside 0 to 15. The file counts from 0.") }
@@ -409,9 +422,9 @@ Tell the customer about these before they find out on their own.
 
 - **A control can't change what another control sends.** There's no "selected articulation" that a keyboard follows, and no shift button that changes what the knobs do. A button can run a sequence that moves another control to a value, and a beat clock can take its tempo from a knob, but that's all. Use more pages, or more controls, instead.
 - **A keyboard plays one attribute.** A keyboard or a pad grid can put a MIDI 2.0 note attribute, such as an articulation, on every note it plays, but it's the same attribute on every key. For two articulations, use two keyboards, or a page for each.
-- **Every pad grid plays in the same picked key.** Root and scale pickers change the key of every pad grid that has one, all together. Two grids can't follow two different pickers, and a picked key isn't saved, so the layout opens in its saved key each time. Pickers change pad grids only, not keyboards or step sequencers. For two keys at once, make a layout for each grid, each with its own pickers, and have the customer run both side by side. The same layout can't run twice: running it again only brings its window to the front.
+- **A picked key, a grid button's change and an octave aren't saved.** Pickers and grid buttons change pad grids only while the layout runs, and the layout opens as it was built each time. They change pad grids only, not keyboards or step sequencers. A picker or a grid button changes every pad grid unless you give it `targets`, so two grids can follow two different sets of pickers on one layout.
 - **Following a clock follows only its tempo.** A layout that follows incoming MIDI clock takes its speed, but doesn't line its beat up with it, and doesn't start or stop with it.
-- **Nothing shows text from a device.** A readout shows a value, and a meter and a lamp show levels and activity. There's no track name, no patch name, and no list of messages on a running page.
+- **Nothing shows text from a device.** A readout shows a value, or where a pad grid is, and a meter and a lamp show levels and activity. There's no track name, no patch name, and no list of messages on a running page.
 - **No MIDI-CI.** Windows MIDI Glass can't turn a profile on, or ask a device what it supports.
 - **No logic.** No conditions, no variables, and no scripts.
 - **Mackie Control is partial.** Windows MIDI Glass doesn't speak HUI, doesn't answer the handshake some DAWs use to find a surface, and doesn't show the DAW's meters, V-Pot rings, or display text.
@@ -636,9 +649,10 @@ Each row in `messages` says when the control sends, what it sends, and where.
 | `words` | one to four numbers | none | For `rawUmp` rows. See [Raw messages](#raw-messages). |
 | `targetPage` | a page `id` | none | For `goToPage` rows. |
 | `sequence` | a sequence `name` | none | For `sequence` rows. |
-| `function` | a Mackie Control function | none | For `mackieControl` rows, instead of `number`. |
+| `function` | a Mackie Control function, or a pad grid function | none | For `mackieControl` rows, instead of `number`. For `padGrid` rows, what the row does. See [Grid buttons](#grid-buttons). |
+| `targets` | a list of pad grid `id`s | every pad grid | For `padGrid` rows, the grids the row changes. An empty list changes none. |
 
-The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `perNoteController`, `assignablePerNoteController`, `registeredController` (an RPN), `assignedController` (an NRPN), `systemExclusive`, `rawUmp`, `sequence`, `goToPage`, and `mackieControl`.
+The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `channelPressure`, `perNoteController`, `assignablePerNoteController`, `registeredController` (an RPN), `assignedController` (an NRPN), `systemExclusive`, `rawUmp`, `sequence`, `goToPage`, `mackieControl`, and `padGrid`.
 
 **When each trigger sends:**
 
@@ -657,6 +671,7 @@ The message kinds are `note`, `controlChange`, `programChange`, `pitchBend`, `ch
 | XY pad, joystick | Two `changes` rows, one with `axis` `x` and one with `axis` `y`. |
 | Switch | One `changes` row for each position, each with its `position` and a `maximum`. |
 | Page tab | One `turnsOn` row of kind `goToPage`, with `targetPage` and no device. |
+| Grid button | One `turnsOn` row of kind `padGrid`, with a `function` and no device. |
 | Mono keyboard, note pads, hex pads, steps | One `changes` row of kind `note`, with no `number`. The key or the step decides the note. |
 | Beat clock | One `changes` row of kind `rawUmp`, with no `words`. It only says where the clock goes. |
 | Meter, lamp, readout, stopwatch, text, image, group, line | No rows. Meters, lamps, and readouts listen instead. |
@@ -741,7 +756,11 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `padCount` | 1 to 128 | 24 | How many pads. They flow into rows to fill the control's width. |
+| `padCount` | 1 to 128 | 24 | How many pads, with the `flow` arrangement. They flow into rows to fill the control's width. |
+| `arrangement` | `flow`, `rows`, `columns` | `flow` | `flow` fits as many pads to a row as the control is wide. `rows` and `columns` give a set grid of `rows` × `padsPerRow` pads that stretch to fill the control. In `columns`, pads run bottom to top and columns stack from the left, and hex pads lie flat side up. |
+| `rows` | 1 to 32 | 8 | With `rows` or `columns`, how many rows or columns. |
+| `padsPerRow` | 1 to 64 | 8 | With `rows` or `columns`, pads in each row or column. `rows` × `padsPerRow` is never more than 1,024: Windows MIDI Glass lowers `rows` to fit. |
+| `highlightHeld` | `true`, `false` | `false` | Lights every pad playing a held note, not only the one under the finger. Turn it on when rows overlap, so the same note is on more than one pad. |
 | `padSize` | 12 to 240 | 48 | One pad's width, in page pixels. |
 | `startNote` | 0 to 127 | 48 | The note of the bottom left pad. With `notes` set to `inKey`, only its octave counts: the bottom left pad plays the key's root in that octave. |
 | `rightInterval` | 1 to 24 | 1 | Semitones from one pad to the next on its right. |
@@ -768,18 +787,51 @@ A control with a `feedback` block moves or lights up when a device sends somethi
 ]
 ```
 
-**Root and scale pickers** are switches with `picks` set. A picker sends nothing, so give it no messages and leave `positions` empty. While the layout runs, the note or the scale picked becomes the key of every pad grid that has one. The layout opens in its saved key each time.
+**Pickers** are switches with `picks` set. A picker sends nothing, so give it no messages and leave `positions` empty. While the layout runs, what's picked changes the pad grids in `targets`, or every pad grid when there's no `targets`. The layout opens as it was built each time.
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
-| `picks` | `nothing`, `rootNote`, `scale` | `nothing` | `rootNote` has twelve positions, C to B. `scale` has one for each of `scales`. |
+| `picks` | `nothing`, `rootNote`, `scale`, `inKeyOnly`, `rowOffset`, `octave` | `nothing` | `rootNote` has twelve positions, C to B. `scale` has one for each of `scales`. `inKeyOnly` has two: Chromatic and In key. `rowOffset` has five: Continuous, Third, Fourth, Fifth, Octave. `octave` has five: −2 to +2 from where the grid was built. `rootNote`, `scale` and `inKeyOnly` only change a grid that has a `key`. |
 | `scales` | Two or more of the pad `scale` names | `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian` | What a `scale` picker offers, first to last. |
+| `targets` | a list of pad grid `id`s | every pad grid | The grids it changes. It shows the first of them. An empty list changes none. |
 
 Give a root picker about 30 pixels a note along it, and a scale picker about 80 a scale lying down or 30 standing up, so every name fits:
 
 ```json
 { "id": "root-picker", "kind": "switch", "label": "Root note", "x": 40, "y": 40, "width": 376, "height": 44, "switch": { "positions": [], "picks": "rootNote" } },
 { "id": "scale-picker", "kind": "switch", "label": "Scale", "x": 480, "y": 96, "width": 128, "height": 226, "switch": { "positions": [], "picks": "scale", "scales": [ "major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "locrian" ] } }
+```
+
+### Grid buttons {#grid-buttons}
+
+A button or a pad with a `padGrid` row changes pad grids while the layout runs, instead of sending MIDI. Give it a `turnsOn` row with no device. The row's `function` says what it does, and `targets` says which grids; leave `targets` out for every pad grid on the layout. A change that would push the bottom left pad off the note range isn't made.
+
+| `function` | What it does |
+| --- | --- |
+| `octaveUp`, `octaveDown` | Moves the grid by an octave. |
+| `rowUp`, `rowDown` | Moves the grid by one row offset, the way the arrow keys on a grid controller do. |
+| `shiftLeft`, `shiftRight` | Moves the grid by one pad along its rows. |
+| `semitoneUp`, `semitoneDown` | Moves the grid by a semitone, or by one note of the scale when it plays in key only. |
+| `inKeyOnlyOn`, `inKeyOnlyOff`, `inKeyOnlyToggle` | Switches between every note and only the notes of the key. Only a grid with a `key`. |
+| `nextRoot`, `previousRoot` | The key's root, a semitone up or down. Only a grid with a `key`. |
+| `nextScale`, `previousScale` | The next or previous scale, in the order the pad `scale` list gives them. Only a grid with a `key`. |
+| `nextRowOffset` | The next of Continuous, Third, Fourth, Fifth, Octave. Hex pads skip Continuous. |
+| `reset` | Puts the grid back the way it was built. |
+
+```json
+{ "id": "octave-up", "kind": "button", "label": "Octave up", "x": 40, "y": 360, "width": 88, "height": 44,
+  "messages": [ { "trigger": "turnsOn", "kind": "padGrid", "function": "octaveUp", "targets": [ "lead-pads" ] } ] }
+```
+
+**Readout,** in `readout`: a readout can show where a pad grid is, instead of a value it hears.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `source` | `value`, `padKey`, `octave`, `rowOffset`, `padSummary` | `value` | `value` shows what the readout hears. The others show the key, the octave, the row offset, or all three, of the first grid in `targets`. |
+| `targets` | a list of pad grid `id`s | every pad grid | Which grid it shows. |
+
+```json
+{ "id": "where", "kind": "readout", "label": "Pad grid", "x": 500, "y": 360, "width": 176, "height": 44, "readout": { "source": "padSummary", "targets": [ "lead-pads" ] } }
 ```
 
 **Steps,** in `sequencer`:

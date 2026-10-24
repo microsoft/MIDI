@@ -418,6 +418,40 @@ namespace glass
             _In_ std::wstring const& rootLabel,
             _In_ std::wstring const& scaleLabel);
 
+        // The pad grids a picker changes and shows. Ids that are not pad grids are left out.
+        bool SetSwitchTargets(_In_ std::wstring const& id, _In_ PadGridTargets const& targets);
+
+        // What a readout shows, and from which grid.
+        bool SetReadout(_In_ std::wstring const& id, _In_ ReadoutSpec const& readout);
+
+        // Which grid buttons to put beside a grid, and what they are called.
+        struct GridButtonChoices
+        {
+            bool Octave{ true };
+            bool Rows{ true };
+            bool InKeyOnly{ true };
+            bool Readout{ true };
+            bool Reset{ true };
+        };
+
+        struct GridButtonLabels
+        {
+            std::wstring OctaveDown{};
+            std::wstring OctaveUp{};
+            std::wstring RowDown{};
+            std::wstring RowUp{};
+            std::wstring InKeyOnly{};
+            std::wstring Readout{};
+            std::wstring Reset{};
+        };
+
+        // Buttons, a switch and a readout that change and show this grid, in a row under it, as
+        // one edit (EditorControllerPickers.cpp). Each targets only this grid.
+        std::vector<std::wstring> AddGridButtons(
+            _In_ std::wstring const& gridId,
+            _In_ GridButtonChoices const& choices,
+            _In_ GridButtonLabels const& labels);
+
         bool SetControlKeyboard(_In_ std::wstring const& id, _In_ KeyboardSpec const& keyboard);
         bool SetControlClock(_In_ std::wstring const& id, _In_ ClockSpec const& clock);
         bool SetControlLfo(_In_ std::wstring const& id, _In_ LfoSpec const& lfo);

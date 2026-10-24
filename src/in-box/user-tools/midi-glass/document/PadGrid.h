@@ -31,7 +31,8 @@ namespace glass
         double CenterX{ 0.0 };
         double CenterY{ 0.0 };
 
-        // Row 0 is the bottom row, and column 0 the left end of its row.
+        // Row 0 is the bottom row, and column 0 the left end of its row. With the columns
+        // arrangement a row is a column: row 0 is the left column and column 0 its bottom pad.
         int32_t Row{ 0 };
         int32_t Column{ 0 };
 
@@ -57,18 +58,29 @@ namespace glass
         int32_t Columns{ 0 };
         int32_t Rows{ 0 };
 
+        // Set for the columns arrangement: pads run bottom to top, so along a row means up the
+        // screen, and Pitch is measured that way. Hexagons then lie flat side up.
+        bool Vertical{ false };
+
         // In the order they flow: along the bottom row from the left, then the row above it.
         std::vector<PadCell> Cells{};
     };
 
-    // Lays the pads out in a control of this size. As many to a row as the width holds at the
-    // size asked for; when the rows that makes do not fit the height, every pad shrinks rather
-    // than any of them being left off.
+    // Lays the pads out in a control of this size. With the flow arrangement, as many to a row as
+    // the width holds at the size asked for; when the rows that makes do not fit the height,
+    // every pad shrinks rather than any of them being left off. With rows or columns, the pads
+    // stretch to fill the control, so resizing it changes their size and never the grid's shape.
     PadGridLayout LayOutPadGrid(
         _In_ PadGridSpec const& spec,
         _In_ bool hex,
         _In_ double width,
         _In_ double height);
+
+    // How many pads the grid has: the pad count, or rows times pads per row.
+    int32_t PadCountOf(_In_ PadGridSpec const& spec) noexcept;
+
+    // Rows that fit with this many pads per row, under the most pads a grid may have.
+    int32_t RowsAllowed(_In_ int32_t rows, _In_ int32_t padsPerRow) noexcept;
 
     // The largest pad that fits this many columns and rows in a control of this size, or zero
     // when not even a tiny one does.
@@ -112,6 +124,13 @@ namespace glass
         _In_ PadGridLayout const& layout,
         _In_ int32_t cell,
         _In_ double x) noexcept;
+
+    // The same for any arrangement. With columns a row runs up the screen, so y decides.
+    double PitchAtPoint(
+        _In_ PadGridLayout const& layout,
+        _In_ int32_t cell,
+        _In_ double x,
+        _In_ double y) noexcept;
 
     enum class PadRole
     {

@@ -294,7 +294,7 @@ namespace glass
             // above has moved one step to the left along that diagonal.
             auto const along = column - row / 2;
 
-            steps = along * right + row * up;
+            steps = along * right + (row + spec.ShiftRows) * up;
         }
         else
         {
@@ -302,12 +302,154 @@ namespace glass
             // in order and nothing appears twice.
             auto const rowStep = up > 0 ? up : std::max(columns, 1) * right;
 
-            steps = column * right + row * rowStep;
+            steps = column * right + (row + spec.ShiftRows) * rowStep;
         }
+
+        // Grid buttons move the whole grid while the layout runs.
+        steps += spec.ShiftSteps;
 
         auto const note = FirstPadNote(spec) + (inKey ? SemitonesAtScaleStep(spec.Scale, steps) : steps);
 
         return note >= 0 && note <= 127 ? note : -1;
+    }
+
+    _Use_decl_annotations_
+    int32_t RowsAllowed(int32_t rows, int32_t padsPerRow) noexcept
+    {
+        auto const perRow = std::clamp(padsPerRow, MinimumPadsPerRow, MaximumPadsPerRow);
+
+        return std::clamp(rows, MinimumGridRows, std::max(std::min(MaximumGridRows, MaximumGridPads / perRow), MinimumGridRows));
+    }
+
+    _Use_decl_annotations_
+    int32_t PadCountOf(PadGridSpec const& spec) noexcept
+    {
+        if (spec.Arrangement == PadArrangement::Flow)
+        {
+            return std::clamp(spec.PadCount, MinimumPadCount, MaximumPadCount);
+        }
+
+        auto const perRow = std::clamp(spec.PadsPerRow, MinimumPadsPerRow, MaximumPadsPerRow);
+
+        return RowsAllowed(spec.Rows, perRow) * perRow;
+    }
+
+    namespace
+    {
+        // Rows or columns: a set number of lines with a set number of pads in each, stretched to
+        // fill the control. Worked out as rows, with "across" along a row and "up" from one row
+        // to the next, then turned on its side for columns.
+        PadGridLayout LayOutFixedGrid(
+            _In_ PadGridSpec const& spec,
+            _In_ bool hex,
+            _In_ double width,
+            _In_ double height)
+        {
+            PadGridLayout layout{};
+
+            layout.Hex = hex;
+            layout.Vertical = spec.Arrangement == PadArrangement::Columns;
+
+            auto const along = std::clamp(spec.PadsPerRow, MinimumPadsPerRow, MaximumPadsPerRow);
+            auto const lines = RowsAllowed(spec.Rows, along);
+
+            auto const across = layout.Vertical ? height : width;
+            auto const up = layout.Vertical ? width : height;
+
+            // Each pad as a center in row space, x from the left and y from the top.
+            std::vector<std::pair<double, double>> centers{};
+            centers.reserve(static_cast<size_t>(along) * static_cast<size_t>(lines));
+
+            double padAlong{ 0.0 };
+            double padUp{ 0.0 };
+
+            if (hex)
+            {
+                // A hexagon can't stretch without stopping being one, so it grows as large as
+                // fits and the block sits in the middle.
+                auto pad = LargestFit(true, along, lines, std::max(across, up), across, up);
+
+                if (pad <= 0.0)
+                {
+                    pad = SmallestDrawnPad;
+                }
+
+                auto const gap = GapFor(pad);
+
+                layout.Gap = gap;
+                layout.Pitch = pad + gap;
+                layout.RowPitch = layout.Pitch * Sqrt3 * 0.5;
+
+                padAlong = pad;
+                padUp = HexHeightFor(pad);
+
+                auto const blockWidth = WidthNeeded(true, along, lines, pad) - gap * 2.0;
+                auto const blockHeight = HeightNeeded(true, lines, pad) - gap * 2.0;
+
+                auto const left = (across - blockWidth) * 0.5;
+                auto const bottom = (up + blockHeight) * 0.5;
+
+                for (int32_t row = 0; row < lines; ++row)
+                {
+                    auto const shift = (row % 2) == 1 ? layout.Pitch * 0.5 : 0.0;
+
+                    for (int32_t column = 0; column < along; ++column)
+                    {
+                        centers.emplace_back(
+                            left + shift + column * layout.Pitch + pad * 0.5,
+                            bottom - padUp * 0.5 - row * layout.RowPitch);
+                    }
+                }
+            }
+            else
+            {
+                auto const gap = GapFor(std::min(across / along, up / lines) / (1.0 + GapFraction));
+
+                padAlong = std::max((across - (along + 1) * gap) / along, SmallestDrawnPad);
+                padUp = std::max((up - (lines + 1) * gap) / lines, SmallestDrawnPad);
+
+                layout.Gap = gap;
+                layout.Pitch = padAlong + gap;
+                layout.RowPitch = padUp + gap;
+
+                for (int32_t row = 0; row < lines; ++row)
+                {
+                    for (int32_t column = 0; column < along; ++column)
+                    {
+                        centers.emplace_back(
+                            gap + column * layout.Pitch + padAlong * 0.5,
+                            up - (gap + row * layout.RowPitch + padUp * 0.5));
+                    }
+                }
+            }
+
+            layout.Columns = along;
+            layout.Rows = lines;
+            layout.PadWidth = layout.Vertical ? padUp : padAlong;
+            layout.PadHeight = layout.Vertical ? padAlong : padUp;
+
+            layout.Cells.reserve(centers.size());
+
+            for (size_t index = 0; index < centers.size(); ++index)
+            {
+                PadCell cell{};
+
+                cell.Row = static_cast<int32_t>(index) / along;
+                cell.Column = static_cast<int32_t>(index) % along;
+
+                auto const [x, y] = centers[index];
+
+                // On its side: the distance up from the bottom of a row becomes the distance in
+                // from the left, and the distance along a row becomes the distance up.
+                cell.CenterX = layout.Vertical ? up - y : x;
+                cell.CenterY = layout.Vertical ? across - x : y;
+                cell.Note = PadNote(spec, hex, cell.Row, cell.Column, along);
+
+                layout.Cells.push_back(cell);
+            }
+
+            return layout;
+        }
     }
 
     _Use_decl_annotations_
@@ -320,6 +462,11 @@ namespace glass
         if (!std::isfinite(width) || !std::isfinite(height) || width <= 0.0 || height <= 0.0)
         {
             return layout;
+        }
+
+        if (spec.Arrangement != PadArrangement::Flow)
+        {
+            return LayOutFixedGrid(spec, hex, width, height);
         }
 
         auto const count = std::clamp(spec.PadCount, MinimumPadCount, MaximumPadCount);
@@ -434,7 +581,6 @@ namespace glass
         // Nearest is only half the question. Out past the last pad in a short row, the nearest
         // pad is a long way off, and a touch there has not landed on it.
         auto const& cell = layout.Cells[static_cast<size_t>(nearest)];
-        auto const half = layout.Pitch * 0.5;
 
         if (layout.Hex)
         {
@@ -443,11 +589,26 @@ namespace glass
             return nearestDistance <= (layout.Pitch / Sqrt3) * (layout.Pitch / Sqrt3) ? nearest : -1;
         }
 
-        return std::abs(x - cell.CenterX) <= half && std::abs(y - cell.CenterY) <= half ? nearest : -1;
+        // Stretched pads are wider than they are tall, or the other way round, so each way has
+        // its own reach.
+        auto const halfWidth = (layout.PadWidth + layout.Gap) * 0.5;
+        auto const halfHeight = (layout.PadHeight + layout.Gap) * 0.5;
+
+        return std::abs(x - cell.CenterX) <= halfWidth && std::abs(y - cell.CenterY) <= halfHeight ? nearest : -1;
     }
 
     _Use_decl_annotations_
     double PitchAtPoint(PadGridLayout const& layout, int32_t cell, double x) noexcept
+    {
+        auto const y = cell >= 0 && static_cast<size_t>(cell) < layout.Cells.size()
+            ? layout.Cells[static_cast<size_t>(cell)].CenterY
+            : 0.0;
+
+        return PitchAtPoint(layout, cell, x, y);
+    }
+
+    _Use_decl_annotations_
+    double PitchAtPoint(PadGridLayout const& layout, int32_t cell, double x, double y) noexcept
     {
         if (cell < 0 || static_cast<size_t>(cell) >= layout.Cells.size() || layout.Pitch <= 0.0)
         {
@@ -462,7 +623,10 @@ namespace glass
             return 0.0;
         }
 
-        auto offset = std::isfinite(x) ? (x - here.CenterX) / layout.Pitch : 0.0;
+        // Along the row: to the right, or up the screen for a column.
+        auto const distance = layout.Vertical ? here.CenterY - y : x - here.CenterX;
+
+        auto offset = std::isfinite(distance) ? distance / layout.Pitch : 0.0;
 
         offset = std::clamp(offset, -0.5, 0.5);
 

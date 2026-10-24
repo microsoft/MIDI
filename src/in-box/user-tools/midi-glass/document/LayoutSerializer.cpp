@@ -167,6 +167,13 @@ namespace glass
         constexpr wchar_t KeyPadNotes[] = L"notes";
         constexpr wchar_t KeyRightSteps[] = L"rightSteps";
         constexpr wchar_t KeyRowSteps[] = L"rowSteps";
+        constexpr wchar_t KeyArrangement[] = L"arrangement";
+        constexpr wchar_t KeyRows[] = L"rows";
+        constexpr wchar_t KeyPadsPerRow[] = L"padsPerRow";
+        constexpr wchar_t KeyHighlightHeld[] = L"highlightHeld";
+        constexpr wchar_t KeyTargets[] = L"targets";
+        constexpr wchar_t KeyReadout[] = L"readout";
+        constexpr wchar_t KeySource[] = L"source";
         constexpr wchar_t KeyTempoControl[] = L"tempoControl";
         constexpr wchar_t KeyLowestBeatsPerMinute[] = L"lowestBeatsPerMinute";
         constexpr wchar_t KeyHighestBeatsPerMinute[] = L"highestBeatsPerMinute";
@@ -340,6 +347,46 @@ namespace glass
             { SwitchPicks::Nothing, L"nothing" },
             { SwitchPicks::RootNote, L"rootNote" },
             { SwitchPicks::Scale, L"scale" },
+            { SwitchPicks::InKeyOnly, L"inKeyOnly" },
+            { SwitchPicks::RowOffset, L"rowOffset" },
+            { SwitchPicks::Octave, L"octave" },
+        };
+
+        constexpr EnumName<PadArrangement> PadArrangementNames[]
+        {
+            { PadArrangement::Flow, L"flow" },
+            { PadArrangement::Rows, L"rows" },
+            { PadArrangement::Columns, L"columns" },
+        };
+
+        constexpr EnumName<PadGridFunction> PadGridFunctionNames[]
+        {
+            { PadGridFunction::OctaveUp, L"octaveUp" },
+            { PadGridFunction::OctaveDown, L"octaveDown" },
+            { PadGridFunction::RowUp, L"rowUp" },
+            { PadGridFunction::RowDown, L"rowDown" },
+            { PadGridFunction::ShiftLeft, L"shiftLeft" },
+            { PadGridFunction::ShiftRight, L"shiftRight" },
+            { PadGridFunction::SemitoneUp, L"semitoneUp" },
+            { PadGridFunction::SemitoneDown, L"semitoneDown" },
+            { PadGridFunction::InKeyOnlyOn, L"inKeyOnlyOn" },
+            { PadGridFunction::InKeyOnlyOff, L"inKeyOnlyOff" },
+            { PadGridFunction::InKeyOnlyToggle, L"inKeyOnlyToggle" },
+            { PadGridFunction::NextRoot, L"nextRoot" },
+            { PadGridFunction::PreviousRoot, L"previousRoot" },
+            { PadGridFunction::NextScale, L"nextScale" },
+            { PadGridFunction::PreviousScale, L"previousScale" },
+            { PadGridFunction::NextRowOffset, L"nextRowOffset" },
+            { PadGridFunction::Reset, L"reset" },
+        };
+
+        constexpr EnumName<ReadoutSource> ReadoutSourceNames[]
+        {
+            { ReadoutSource::Value, L"value" },
+            { ReadoutSource::PadKey, L"padKey" },
+            { ReadoutSource::Octave, L"octave" },
+            { ReadoutSource::RowOffset, L"rowOffset" },
+            { ReadoutSource::PadSummary, L"padSummary" },
         };
 
         constexpr EnumName<LineEnds> LineEndsNames[]
@@ -425,6 +472,7 @@ namespace glass
             { MessageKind::GoToPage, L"goToPage" },
             { MessageKind::MackieControl, L"mackieControl" },
             { MessageKind::AssignablePerNoteController, L"assignablePerNoteController" },
+            { MessageKind::PadGrid, L"padGrid" },
         };
 
         constexpr EnumName<DeviceProtocol> DeviceProtocolNames[]
@@ -925,6 +973,40 @@ namespace glass
 
     namespace
     {
+        // No key means every grid. A list, even an empty one, means only the grids it names.
+        PadGridTargets ReadTargets(_In_ mjson::JsonObject const& object) noexcept
+        {
+            PadGridTargets targets{};
+
+            auto const list = ReadArray(object, KeyTargets);
+
+            if (list == nullptr)
+            {
+                return targets;
+            }
+
+            targets.AllGrids = false;
+
+            for (uint32_t i = 0; i < list.Size() && targets.ControlIds.size() < MaximumControlsPerPage; ++i)
+            {
+                auto const value = list.GetAt(i);
+
+                if (value == nullptr || value.ValueType() != mjson::JsonValueType::String)
+                {
+                    continue;
+                }
+
+                std::wstring id{ value.GetString() };
+
+                if (!id.empty() && std::find(targets.ControlIds.begin(), targets.ControlIds.end(), id) == targets.ControlIds.end())
+                {
+                    targets.ControlIds.push_back(std::move(id));
+                }
+            }
+
+            return targets;
+        }
+
         ControlMessage ReadMessage(_In_ mjson::JsonObject const& object) noexcept
         {
             ControlMessage message{};
@@ -1003,6 +1085,32 @@ namespace glass
                           RetiredTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition, KeyFunction,
                           KeyController, KeyAttributeType, KeyAttributeData });
                 }
+            }
+
+            // A change this build cannot make is kept as it came, and the row does nothing.
+            if (message.Kind == MessageKind::PadGrid)
+            {
+                auto const function = ReadString(object, KeyFunction);
+
+                if (!HasName(PadGridFunctionNames, function))
+                {
+                    t_readUnknownKind = true;
+
+                    ControlMessage unknown{};
+                    unknown.Trigger = message.Trigger;
+                    unknown.Kind = MessageKind::Unrecognized;
+                    unknown.Original = object;
+
+                    return unknown;
+                }
+
+                message.PadFunction = ValueOf(PadGridFunctionNames, function, PadGridFunction::OctaveUp);
+                message.PadTargets = ReadTargets(object);
+                message.Unknown = CaptureUnknown(object,
+                    { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
+                      KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
+                      RetiredTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition, KeyFunction,
+                      KeyController, KeyAttributeType, KeyAttributeData, KeyTargets });
             }
 
             return message;
@@ -1290,7 +1398,9 @@ namespace glass
                 spec.Scales = DefaultPickerScales();
             }
 
-            spec.Unknown = CaptureUnknown(nested, { KeyPositions, KeyPicks, KeyScales });
+            spec.Targets = ReadTargets(nested);
+
+            spec.Unknown = CaptureUnknown(nested, { KeyPositions, KeyPicks, KeyScales, KeyTargets });
 
             return spec;
         }
@@ -1376,14 +1486,40 @@ namespace glass
             pads.Glide = ValueOf(GlideNames, ReadString(nested, KeyGlide), PadGlide::Off);
             pads.BendRangeSemitones = ReadInt(
                 nested, KeyBendRange, 48, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
+            pads.Arrangement = ValueOf(PadArrangementNames, ReadString(nested, KeyArrangement), PadArrangement::Flow);
+            pads.Rows = ReadInt(nested, KeyRows, 8, MinimumGridRows, MaximumGridRows);
+            pads.PadsPerRow = ReadInt(nested, KeyPadsPerRow, 8, MinimumPadsPerRow, MaximumPadsPerRow);
+
+            // A grid from a stranger's file can't ask for more pads than any grid may have.
+            pads.Rows = std::min(pads.Rows, std::max(MaximumGridPads / pads.PadsPerRow, MinimumGridRows));
+
+            pads.HighlightHeld = ReadBool(nested, KeyHighlightHeld, false);
 
             pads.Unknown = CaptureUnknown(nested,
                 { KeyPadCount, KeyPadSize, KeyStartNote, KeyRightInterval, KeyRowInterval,
                   KeyMusicalKey, KeyScale, KeyPadNotes, KeyRightSteps, KeyRowSteps, KeyNoteNames,
                   KeyNoteNameSize, KeyRootColor, KeyInKeyColor, KeyOutOfKeyColor, KeyPressedColor,
-                  KeyGlide, KeyBendRange });
+                  KeyGlide, KeyBendRange, KeyArrangement, KeyRows, KeyPadsPerRow, KeyHighlightHeld });
 
             return pads;
+        }
+
+        ReadoutSpec ReadReadout(_In_ mjson::JsonObject const& object) noexcept
+        {
+            ReadoutSpec readout{};
+
+            auto const nested = ReadObject(object, KeyReadout);
+
+            if (nested == nullptr)
+            {
+                return readout;
+            }
+
+            readout.Source = ValueOf(ReadoutSourceNames, ReadString(nested, KeySource), ReadoutSource::Value);
+            readout.Targets = ReadTargets(nested);
+            readout.Unknown = CaptureUnknown(nested, { KeySource, KeyTargets });
+
+            return readout;
         }
 
         // Only what drawing it takes is read. It sends nothing, and its object is written back as is.
@@ -1485,6 +1621,7 @@ namespace glass
             control.Switch = ReadSwitch(object);
             control.Steps = ReadSteps(object);
             control.Pads = ReadPads(object);
+            control.Readout = ReadReadout(object);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
             control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
@@ -1515,7 +1652,7 @@ namespace glass
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyLightsFromCenter, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
-                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyDefaultValueY, KeyVelocityFromTouch,
+                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyReadout, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -1947,6 +2084,24 @@ namespace glass
 
     namespace
     {
+        // Every grid is the default and stays out of the file.
+        void WriteTargets(_Inout_ JsonTextWriter& writer, _In_ PadGridTargets const& targets) noexcept
+        {
+            if (targets.AllGrids)
+            {
+                return;
+            }
+
+            writer.BeginArray(KeyTargets);
+
+            for (auto const& id : targets.ControlIds)
+            {
+                writer.WriteArrayString(id);
+            }
+
+            writer.EndArray();
+        }
+
         void WriteMessage(_Inout_ JsonTextWriter& writer, _In_ ControlMessage const& message) noexcept
         {
             if (message.Kind == MessageKind::Unrecognized)
@@ -1969,6 +2124,11 @@ namespace glass
                 {
                     writer.Write(KeyFunction, MackieFunctionFileName(message.Number));
                 }
+            }
+            else if (message.Kind == MessageKind::PadGrid)
+            {
+                writer.Write(KeyFunction, NameOf(PadGridFunctionNames, message.PadFunction));
+                WriteTargets(writer, message.PadTargets);
             }
             else
             {
@@ -2297,6 +2457,7 @@ namespace glass
                     writer.EndArray();
                 }
 
+                WriteTargets(writer, control.Switch.Targets);
                 WriteUnknown(writer, control.Switch.Unknown);
                 writer.EndObject();
             }
@@ -2354,7 +2515,33 @@ namespace glass
                 writer.Write(KeyPressedColor, pads.PressedColor);
                 writer.Write(KeyGlide, NameOf(GlideNames, pads.Glide));
                 writer.Write(KeyBendRange, static_cast<int64_t>(pads.BendRangeSemitones));
+
+                // Only written when they say something, so an older build reads a flowing grid
+                // exactly as it always did.
+                if (pads.Arrangement != PadArrangement::Flow)
+                {
+                    writer.Write(KeyArrangement, NameOf(PadArrangementNames, pads.Arrangement));
+                    writer.Write(KeyRows, static_cast<int64_t>(pads.Rows));
+                    writer.Write(KeyPadsPerRow, static_cast<int64_t>(pads.PadsPerRow));
+                }
+
+                if (pads.HighlightHeld)
+                {
+                    writer.Write(KeyHighlightHeld, true);
+                }
+
                 WriteUnknown(writer, pads.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Readout.Source != ReadoutSource::Value ||
+                !control.Readout.Targets.AllGrids ||
+                control.Readout.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyReadout);
+                writer.Write(KeySource, NameOf(ReadoutSourceNames, control.Readout.Source));
+                WriteTargets(writer, control.Readout.Targets);
+                WriteUnknown(writer, control.Readout.Unknown);
                 writer.EndObject();
             }
 

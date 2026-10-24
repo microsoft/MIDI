@@ -77,6 +77,11 @@ namespace glass
                     : std::wstring{};
             }
 
+            if (spec.Picks == SwitchPicks::InKeyOnly || spec.Picks == SwitchPicks::RowOffset || spec.Picks == SwitchPicks::Octave)
+            {
+                return PadPickerPositionName(control, position);
+            }
+
             return position < spec.Positions.size() ? spec.Positions[position] : std::to_wstring(position + 1);
         }
 

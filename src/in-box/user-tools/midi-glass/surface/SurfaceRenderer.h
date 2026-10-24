@@ -9,6 +9,7 @@
 
 #include "LayoutModel.h"
 #include "PadGrid.h"
+#include "PadGridChanges.h"
 #include "ThemeModel.h"
 #include "ThemeStore.h"
 #include "SurfaceColors.h"
@@ -312,6 +313,11 @@ namespace glass
         // until both have gone.
         std::vector<uint8_t> PadHeld{};
 
+        // With held notes highlighted: how many fingers hold each note, so every pad playing it
+        // lights and stays lit until the last finger on any of them has gone.
+        bool HighlightHeld{ false };
+        std::array<uint8_t, 128> NoteHeld{};
+
         // Where the pads were drawn, which is where a finger has to land to play one.
         PadGridLayout PadLayout{};
 
@@ -333,6 +339,16 @@ namespace glass
         // The beat count inside the ring. A XAML text block, because composition has no text.
         controls::TextBlock BeatText{ nullptr };
     };
+
+    // What one position of an in key only, row offset or octave picker prints
+    // (SurfaceKeyPickers.cpp). Empty for any other switch.
+    std::wstring PadPickerPositionName(_In_ Control const& picker, _In_ size_t position);
+
+    // What a readout showing a pad grid prints. Empty for a readout showing its own value.
+    std::wstring PadReadoutText(
+        _In_ Control const& readout,
+        _In_ LayoutDocument const& document,
+        _In_ PadGridStates const& states);
 
     // Draws one page of a layout, the way phase 0 decided: a light XAML element per control for
     // identity and hit testing, with the content drawn as composition visuals inside it.
@@ -426,15 +442,17 @@ namespace glass
         PadGridSpec const& PadGridAt(_In_ size_t itemIndex) const noexcept;
         PadGridLayout const& PadLayoutAt(_In_ size_t itemIndex) const noexcept;
 
-        // The key a root or scale picker picked while the layout runs (SurfaceKeyPickers.cpp).
-        // Every build draws pad grids in it until it is put back to nothing. Sends nothing.
-        void SetPickedKey(_In_ PickedKey const& picked) noexcept { m_pickedKey = picked; }
-        PickedKey const& PickedKeyNow() const noexcept { return m_pickedKey; }
+        // What grid buttons and pickers changed while the layout runs (SurfaceKeyPickers.cpp).
+        // Every build draws pad grids with these laid over them until they are cleared. Sends
+        // nothing.
+        void SetGridStates(_In_ PadGridStates const& states) { m_gridStates = states; }
+        PadGridStates const& GridStatesNow() const noexcept { return m_gridStates; }
 
-        // Redraws the pad grids on the page in the key picked and moves its pickers to show it.
-        // Returns each picker moved and its value, because the caller owns the elements' values.
-        std::vector<std::pair<size_t, double>> ApplyPickedKey(
-            _In_ PickedKey const& picked,
+        // Redraws the pad grids on the page with these changes, moves its pickers to show them
+        // and updates the readouts that show a grid. Returns each picker moved and its value,
+        // because the caller owns the elements' values.
+        std::vector<std::pair<size_t, double>> ApplyGridStates(
+            _In_ PadGridStates const& states,
             _In_ LayoutDocument const& document,
             _In_ Theme const& theme);
 
@@ -1084,8 +1102,17 @@ namespace glass
         std::vector<bool> m_latches{};
         std::vector<double> m_turnDegrees{};
 
-        // Outlives a build, so a page shown after a pick is drawn in the key picked.
-        PickedKey m_pickedKey{};
+        // Outlives a build, so a page shown after a change is drawn with it.
+        PadGridStates m_gridStates{};
+
+        // A pad grid as it plays now: the control's pads with the changes laid over them.
+        PadGridSpec GridSpecFor(_In_ Control const& control) const;
+
+        // What a readout showing a pad grid prints, by item. Empty for every other item.
+        std::vector<std::wstring> m_readoutTexts{};
+
+        // Works out what each readout showing a pad grid prints, and prints it.
+        void RefreshPadReadouts(_In_ LayoutDocument const& document) noexcept;
 
         // The picture or video a control shows, and the fill behind a grouping panel. A XAML
         // child of the host like the label, so it has to be carried when the control moves.

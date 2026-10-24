@@ -106,6 +106,7 @@
     <ClInclude Include="NewControlTests.h" />
     <ClInclude Include="PadGridTests.h" />
     <ClInclude Include="KeyPickerTests.h" />
+    <ClInclude Include="GridButtonTests.h" />
     <ClInclude Include="GeneratorTests.h" />
     <ClInclude Include="PackageSurveyTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
@@ -125,6 +126,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LfoShape.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\StepPattern.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\PadGrid.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\PadGridChanges.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
@@ -176,6 +178,7 @@
     <ClCompile Include="NewControlTests.cpp" />
     <ClCompile Include="PadGridTests.cpp" />
     <ClCompile Include="KeyPickerTests.cpp" />
+    <ClCompile Include="GridButtonTests.cpp" />
     <ClCompile Include="GeneratorTests.cpp" />
     <ClCompile Include="PackageSurveyTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
@@ -194,6 +197,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LfoShape.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\StepPattern.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\PadGrid.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\PadGridChanges.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />

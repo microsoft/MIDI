@@ -778,6 +778,8 @@ namespace winrt::midiglass::implementation
         pads.OutOfKeyColor = std::wstring{ PadOutOfKeyColorBox().Text() };
         pads.PressedColor = std::wstring{ PadPressedColorBox().Text() };
 
+        ReadPadArrangement(pads);
+
         ApplyControlEdit(control->Id, [&](std::wstring const& id)
             { return m_editor.SetControlPads(id, pads); });
     }

@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="pad-grids-common.css"><script src="pad-grids-notes.js"></script>
+<style>
+body { width: 1880px; }
+.wrap { display: grid; grid-template-columns: 1fr 340px; gap: 22px; padding: 0 28px 24px; }
+.left { display: flex; flex-direction: column; gap: 18px; }
+#wide { gap: 4px; }
+.bottom { display: grid; grid-template-columns: 250px 1fr; gap: 22px; align-items: start; }
+.notes { font-size: 14px; line-height: 1.45; color: #cfd3d8; }
+.notes li { margin-bottom: 6px; }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--dim); margin-top: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+</style></head><body>
+<div class="title">33 &middot; Note pads, "Rows" arrangement: fixed rows, each a set step above the one below</div>
+<div class="sub">Same Note pads control, one new setting. 8 rows &times; 24 pads = 192 pads, C major, In key only on, Row offset set to Fourth. Held chord in yellow; every other pad playing the same note gets a yellow ring.</div>
+<div class="wrap">
+  <div class="left">
+    <div class="frame"><div id="wide" class="grid"></div></div>
+    <div class="legend"><span><i class="sw" style="background:var(--root)"></i>Root</span><span><i class="sw" style="background:var(--pad)"></i>In key</span><span><i class="sw" style="background:var(--out)"></i>Out of key (chromatic only)</span><span><i class="sw" style="background:var(--held)"></i>Held</span><span><i class="sw" style="box-shadow: inset 0 0 0 3px var(--held); background:var(--pad)"></i>Same note, another pad</span><span><i class="sw" style="background:#141618;border:1px solid #2a2d30"></i>Off the note range (0&ndash;127): blank, plays nothing</span></div>
+    <div class="bottom">
+      <div>
+        <div class="frame"><div id="cols" class="grid" style="gap:4px"></div></div>
+        <div class="cap">"Columns", 6 &times; 14, chromatic</div>
+      </div>
+      <ul class="notes">
+        <li><b>Rows</b> (new): pads run left to right, rows stack bottom to top. A row never wraps into the next one. Rows &times; Pads per row can go well past 128 (proposed cap 1,024), because the row offset repeats notes on purpose.</li>
+        <li><b>Columns</b> (new): the same thing turned a quarter turn. Pads run bottom to top, columns stack left to right. Pads per column counts up, and Row offset sets how far each column is from the one to its left.</li>
+        <li><b>Flow</b> (today's behavior, still the default): a pad count that wraps to fit the width. Existing layouts open unchanged.</li>
+        <li>Pads stretch to fill the control in Rows and Columns, so resizing the control resizes the pads instead of reflowing them. A fixed shape is the point: a hand learns where things are.</li>
+        <li>Everything the grid has today comes along for free: key, scale, In key only, root and scale pickers, note names, colors, glide and per-note bend.</li>
+        <li>Hex pads get the same two arrangements. In Columns the hexagons turn flat side up.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="insp">
+    <h3>Pads</h3>
+    <div class="row"><span class="lbl">Arrangement</span><span class="tag">NEW</span></div>
+    <div class="seg"><div>Flow</div><div class="on">Rows</div><div>Columns</div></div>
+    <div class="row"><span class="lbl">Rows</span><span class="val new">8</span></div>
+    <div class="row"><span class="lbl">Pads per row</span><span class="val new">24</span></div>
+    <div class="note">192 pads. Rows 1&ndash;32, Pads per row 1&ndash;64, 1,024 at most.</div>
+    <div class="hr"></div>
+    <div class="row"><span class="lbl">First note</span><span class="val">C1</span></div>
+    <div class="row"><span class="lbl">Root note</span><span class="val">C &#9662;</span></div>
+    <div class="row"><span class="lbl">Scale</span><span class="val">Major &#9662;</span></div>
+    <div class="row"><span class="lbl">&#9745; In key only</span></div>
+    <div class="row"><span class="lbl">Row offset</span><span class="val">Fourth &#9662;</span></div>
+    <div class="note">Each pad is one step above the pad to its left: the next note in the key, or the next semitone when In key only is off. Row offset keeps the list it has today, from Continuous and Semitone up through Fourth and Fifth to Octave.</div>
+    <div class="hr"></div>
+    <div class="row"><span class="lbl">&#9745; Highlight held notes</span><span class="tag">NEW</span></div>
+    <div class="note">Push and LinnStrument both do this. It shows the shape of what you are holding everywhere it repeats.</div>
+  </div>
+</div>
+<script>
+drawGrid(document.getElementById('wide'), { lines: 8, along: 24, first: 36, root: 0, scale: 'major', inKey: true, right: 1, up: 3, dir: 'rows', fs: 12,
+  held: [[2,1],[2,3],[2,5]], showDupes: true });
+drawGrid(document.getElementById('cols'), { lines: 6, along: 14, first: 40, root: 0, scale: 'major', inKey: false, right: 1, up: 5, dir: 'cols', fs: 10 });
+</script>
+</body></html>
