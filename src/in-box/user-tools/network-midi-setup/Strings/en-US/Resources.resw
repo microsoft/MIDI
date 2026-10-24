@@ -372,6 +372,14 @@
   <data name="NetworkRemoteHostEnded" xml:space="preserve">
     <value>The device ended the connection attempt.</value>
   </data>
+  <data name="NetworkClientDisconnectedByRemoteFormat" xml:space="preserve">
+    <value>Disconnected by {0}. Windows will connect again when it's back on the network, or click Try again.</value>
+    <comment>Network MIDI 2.0 client entry. The remote device ended the session itself, so Windows stopped trying. {0} is the device's name.</comment>
+  </data>
+  <data name="NetworkClientDisconnectedByRemoteDirectFormat" xml:space="preserve">
+    <value>Disconnected by {0}. Click Try again to connect again.</value>
+    <comment>Network MIDI 2.0 client entry for a device connected by address. The device ended the session itself, so Windows stopped trying. {0} is the device's name.</comment>
+  </data>
   <data name="NetworkClientWaitingForHostFormat" xml:space="preserve">
     <value>Not connected: {0} is already connected to this PC through the host {1}. A device can connect to this PC in only one direction at a time. Windows will connect once that session ends.</value>
     <comment>Network MIDI 2.0 client entry. {0} is the remote device's name. {1} is the name of a host on this PC.</comment>
@@ -591,8 +599,13 @@
   <data name="HostNoConnections" xml:space="preserve">
     <value>No devices connected</value>
   </data>
+  <data name="HostConnectionCountOne" xml:space="preserve">
+    <value>1 device connected</value>
+    <comment>A host with exactly one connected device.</comment>
+  </data>
   <data name="HostConnectionCountFormat" xml:space="preserve">
-    <value>{0} device(s) connected</value>
+    <value>{0} devices connected</value>
+    <comment>A host with two or more connected devices. {0} is how many.</comment>
   </data>
   <data name="StartHostButton" xml:space="preserve">
     <value>Start</value>

@@ -2204,7 +2204,7 @@ namespace winrt::midinetworksetup::implementation
                         break;
                     }
 
-                    // the entry isn't trying while another session with the device is up
+                    // the entry isn't trying: the device ended the session, or another session with it is up
                     if (auto const waiting = client.IsSessionActive() ? winrt::hstring{} : DescribeNetworkClientWaiting(snapshot, client, row->DisplayName); !waiting.empty())
                     {
                         row->Status = waiting;
@@ -2527,7 +2527,7 @@ namespace winrt::midinetworksetup::implementation
                     auto const self = winrt::get_self<LocalHostItem>(item);
 
                     auto const connections = host.Connections();
-                    auto const connectionCount = connections == nullptr ? 0u : connections.Size();
+                    auto const connectionCount = CountActiveSessions(connections);
 
                     // A host waiting for its adapter is still switched on, so it offers Stop
                     auto const waitingForAdapter = !host.HasStarted() && host.IsNetworkAdapterMissing();
@@ -2551,9 +2551,7 @@ namespace winrt::midinetworksetup::implementation
                         host.RemoteClientPolicy() == midi2net::MidiNetworkRemoteClientPolicy::RequireApproval ?
                             res::GetString(L"HostPolicyRequireApproval") :
                             res::GetString(L"HostPolicyAllowAny"),
-                        connectionCount == 0 ?
-                            res::GetString(L"HostNoConnections") :
-                            res::FormatString(L"HostConnectionCountFormat", connectionCount),
+                        HostConnectionCountText(connectionCount),
                         host.HasStarted() || waitingForAdapter ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),
                         host.HasStarted() || waitingForAdapter,
                         host.CreateMidi1Ports());
@@ -3595,9 +3593,7 @@ namespace winrt::midinetworksetup::implementation
                         host.RemoteClientPolicy() == midi2rtp::MidiRtpRemoteClientPolicy::RequireApproval ?
                             res::GetString(L"HostPolicyRequireApproval") :
                             res::GetString(L"HostPolicyAllowAny"),
-                        connectionCount == 0 ?
-                            res::GetString(L"HostNoConnections") :
-                            res::FormatString(L"HostConnectionCountFormat", connectionCount),
+                        HostConnectionCountText(connectionCount),
                         // An enabled host which has not started is still being tried, so it
                         // offers Stop, and the start and stop handler reads this as its state.
                         host.IsEnabled() ? res::GetString(L"StopHostButton") : res::GetString(L"StartHostButton"),

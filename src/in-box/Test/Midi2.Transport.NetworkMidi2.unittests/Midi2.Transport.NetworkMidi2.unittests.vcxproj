@@ -210,6 +210,7 @@
     <ClInclude Include="NetworkMidiPortCreationTests.h" />
     <ClInclude Include="NetworkMidiShutdownTests.h" />
     <ClInclude Include="NetworkMidiInProcessTests.h" />
+    <ClInclude Include="NetworkMidiRemoteByeTests.h" />
     <ClInclude Include="NetworkMidiSessionRefusalTests.h" />
     <ClInclude Include="NetworkMidiTestInProcess.h" />
     <ClInclude Include="NetworkMidiErrorTests.h" />
@@ -234,6 +235,7 @@
     <ClCompile Include="NetworkMidiPortCreationTests.cpp" />
     <ClCompile Include="NetworkMidiShutdownTests.cpp" />
     <ClCompile Include="NetworkMidiInProcessTests.cpp" />
+    <ClCompile Include="NetworkMidiRemoteByeTests.cpp" />
     <ClCompile Include="NetworkMidiSessionRefusalTests.cpp" />
     <ClCompile Include="NetworkMidiTestInProcess.cpp" />
     <!-- White-box: compiled against the transport's own headers and precompiled header, and

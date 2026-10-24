@@ -161,4 +161,7 @@ private:
 
     // Set when a Bye arrives for a connection whose endpoint has not been created yet.
     std::atomic<bool> m_hostEndpointCreationAbandoned{ false };
+
+    // Refused before it had a session, and released. It never accepts anything again.
+    std::atomic<bool> m_releasedAfterRefusal{ false };
 };

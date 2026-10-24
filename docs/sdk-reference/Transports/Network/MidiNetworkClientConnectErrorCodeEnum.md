@@ -27,6 +27,6 @@ Returned in `MidiNetworkClientConnectResponse.ErrorCode`. The values from `NoRep
 | `HostBusy` | `0x00000075` | The remote host said it has no room for another session. A Windows host also says this for about 10 seconds after a connection to it drops. The service tries again |
 | `InvitationRefused` | `0x00000076` | The remote host's owner turned the connection down. The entry is `Failed` |
 | `AuthenticationRequired` | `0x00000077` | The remote host wants a password or a user name, which Windows doesn't support yet. The entry is `Failed` |
-| `InvitationEndedByHost` | `0x00000078` | The remote host ended the invitation for some other reason. The service tries again |
+| `InvitationEndedByHost` | `0x00000078` | The remote host ended the invitation for some other reason, and the service tries again. With entry state `Failed`, the remote host ended an established session because its user did or because it's powering down, and the service waits: it connects again when the entry is connected again, or when a host found through mDNS stops advertising and comes back |
 | `InvalidArgument` | `0x11000055` | Your code passed an argument that isn't valid |
 | `ClientApiException` | `0x11002011` | An exception happened in the client API |

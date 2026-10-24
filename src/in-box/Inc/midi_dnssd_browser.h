@@ -274,6 +274,17 @@ namespace WindowsMidiServicesInternal
             return true;
         }
 
+        // Stops tracking a service without reporting it removed, for a device known to be gone
+        // although its goodbye may never arrive: one which said it was powering down. The next
+        // time it announces itself it is new, and raises Added. A device which simply comes back
+        // with the same records would otherwise raise nothing at all.
+        bool ForgetService(_In_ std::wstring const& fullName)
+        {
+            auto lock = std::unique_lock{ m_lock };
+
+            return m_services.erase(ToLower(fullName)) != 0;
+        }
+
 
     private:
         struct TrackedService

@@ -77,6 +77,20 @@ public:
         }
     }
 
+    // The remote has a session with this host now, so an old refusal would only mislead
+    void Remove(
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId) noexcept
+    {
+        auto lock = m_lock.lock();
+
+        std::erase_if(m_entries, [&umpEndpointName, &productInstanceId](MidiNetworkRecentRefusal const& entry)
+            {
+                return entry.UmpEndpointName == umpEndpointName &&
+                    entry.ProductInstanceId == productInstanceId;
+            });
+    }
+
     void Clear() noexcept
     {
         auto lock = m_lock.lock();

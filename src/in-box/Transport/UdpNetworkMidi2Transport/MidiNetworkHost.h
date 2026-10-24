@@ -236,6 +236,13 @@ public:
         _In_ std::wstring const& remoteAddress,
         _In_ MidiNetworkSessionRefusalReason const reason) noexcept;
 
+    // The remote has a session with this host now. Its refusal is history, and shown next to the
+    // live connection it reads as if the host were still turning it away.
+    void ForgetRefusedRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity) noexcept
+    {
+        m_recentRefusals.Remove(identity.UmpEndpointName, identity.ProductInstanceId);
+    }
+
     // Newest first, without the ones which have expired
     std::vector<MidiNetworkRecentRefusal> GetRecentRefusals() noexcept
     {

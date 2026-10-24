@@ -788,7 +788,8 @@ MidiNetworkConnection::EndActiveSessionDueToTimeout()
 
     LOG_IF_FAILED(EndActiveSession(false));
 
-    OnSessionEndedByRemote();
+    // the remote stopped answering, which is one to re-establish
+    OnSessionEndedByRemote(MidiNetworkCommandByeReason::CommandByeReasonCommon_Timeout);
 
     return S_OK;
 }
@@ -1037,8 +1038,8 @@ MidiNetworkConnection::HandleIncomingBye(MidiNetworkCommandByeReason const reaso
     {
         LOG_IF_FAILED(EndActiveSession(true));
 
-        // the remote said goodbye on its own, so this is one to re-establish
-        OnSessionEndedByRemote();
+        // the remote said goodbye on its own. Whether to re-establish depends on why.
+        OnSessionEndedByRemote(reason);
     }
     else
     {

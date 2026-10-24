@@ -155,7 +155,9 @@ namespace NetworkMidiTest
     };
 
     // An unconnected UDP socket on 127.0.0.1, so it sees what arrives from every port. A remote
-    // device which uses one port for everything it does is exactly this.
+    // device which uses one port for everything it does is exactly this. Opened on every address
+    // instead, IPv4 and IPv6, it can stand in for a device found through mDNS, which is invited
+    // at this PC's network addresses rather than 127.0.0.1.
     class RawUdpPeer
     {
     public:
@@ -165,7 +167,7 @@ namespace NetworkMidiTest
         RawUdpPeer(RawUdpPeer const&) = delete;
         RawUdpPeer& operator=(RawUdpPeer const&) = delete;
 
-        bool Open();
+        bool Open(_In_ bool const everyAddress = false);
         uint16_t Port() const { return m_port; }
 
         bool SendTo(_In_ uint16_t const port, _In_ std::vector<uint8_t> const& bytes);
@@ -174,7 +176,13 @@ namespace NetworkMidiTest
         {
             uint16_t FromPort{ 0 };
             ParsedPacket Packet{ };
+
+            sockaddr_storage From{ };
+            int FromLength{ 0 };
         };
+
+        // Back to the address and port a datagram came from
+        bool SendToSender(_In_ Received const& from, _In_ std::vector<uint8_t> const& bytes);
 
         // Every datagram which arrives within the time, oldest first
         std::vector<Received> ReceiveFor(_In_ std::chrono::milliseconds const duration);
@@ -185,6 +193,7 @@ namespace NetworkMidiTest
     private:
         SOCKET m_socket{ INVALID_SOCKET };
         uint16_t m_port{ 0 };
+        bool m_everyAddress{ false };
         bool m_winsockStarted{ false };
     };
 }

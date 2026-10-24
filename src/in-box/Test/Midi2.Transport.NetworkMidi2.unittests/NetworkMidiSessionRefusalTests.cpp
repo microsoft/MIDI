@@ -490,3 +490,162 @@ void NetworkMidiSessionRefusalTests::HostListsTheRemotesItRefused()
     transport.DisconnectClient(clientEntry);
     transport.RemoveHost(hostEntry);
 }
+
+
+void NetworkMidiSessionRefusalTests::HostForgetsARefusalOnceTheDeviceConnects()
+{
+    InProcessTransport transport;
+    VERIFY_IS_TRUE(StartTransport(transport), L"The transport started in the test process");
+    auto restoreSettings = wil::scope_exit([&transport]() { RestoreDefaultSettings(transport); });
+
+    auto const hostEntry = MakeEntryIdentifier();
+    auto const hostPort = transport.CreateHostAndWait(hostEntry, L"nm2-refusal-forget", false);
+    VERIFY_ARE_NOT_EQUAL(static_cast<uint16_t>(0), hostPort, L"The host started");
+
+    std::string const name{ "Refusal Device Then Connected" };
+    std::string const productInstanceId{ "refusal-device-then-connected" };
+
+    RawUdpPeer firstSocket;
+    RawUdpPeer secondSocket;
+    VERIFY_IS_TRUE(firstSocket.Open());
+    VERIFY_IS_TRUE(secondSocket.Open());
+
+    VERIFY_IS_TRUE(firstSocket.SendTo(hostPort, Invitation(name, productInstanceId)));
+    VERIFY_IS_TRUE(firstSocket.WaitFor(CommandCode::InvitationReplyAccepted, hostPort, ReplyTimeout).has_value(), L"The first session opened");
+
+    VERIFY_IS_TRUE(secondSocket.SendTo(hostPort, Invitation(name, productInstanceId)));
+    VERIFY_IS_TRUE(secondSocket.WaitFor(CommandCode::Bye, hostPort, ReplyTimeout).has_value(), L"The second session was refused");
+
+    VERIFY_ARE_EQUAL(1u, WaitForRefusalCount(transport, hostEntry, 1).Size(), L"The refusal is listed");
+
+    // The first session ends, and the device connects from the second socket
+    VERIFY_IS_TRUE(firstSocket.SendTo(hostPort, Bye()));
+    VERIFY_IS_TRUE(firstSocket.WaitFor(CommandCode::ByeReply, hostPort, ReplyTimeout).has_value(), L"The first session ended");
+
+    // past the reply limit for a remote with no session
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+    std::optional<RawUdpPeer::Received> accepted{};
+    auto const deadline = std::chrono::steady_clock::now() + StateTimeout;
+
+    // the first session's endpoint may still be on its way out, which refuses again for a moment
+    while (!accepted.has_value() && std::chrono::steady_clock::now() < deadline)
+    {
+        VERIFY_IS_TRUE(secondSocket.SendTo(hostPort, Invitation(name, productInstanceId)));
+        accepted = secondSocket.WaitFor(CommandCode::InvitationReplyAccepted, hostPort, std::chrono::milliseconds(1500));
+    }
+
+    VERIFY_IS_TRUE(accepted.has_value(), L"The device connected from the socket which was refused");
+
+    auto refusals = RecentRefusals(transport, hostEntry);
+    auto const refusalDeadline = std::chrono::steady_clock::now() + StateTimeout;
+
+    while (refusals.Size() > 0 && std::chrono::steady_clock::now() < refusalDeadline)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        refusals = RecentRefusals(transport, hostEntry);
+    }
+
+    Log::Comment(String().Format(L"Recent refusals: %s", refusals.Stringify().c_str()));
+
+    VERIFY_ARE_EQUAL(0u, refusals.Size(), L"A device with a session on this host isn't listed as refused");
+
+    VERIFY_IS_TRUE(secondSocket.SendTo(hostPort, Bye()));
+    transport.RemoveHost(hostEntry);
+}
+
+
+void NetworkMidiSessionRefusalTests::HostDoesNotListARefusedConnection()
+{
+    InProcessTransport transport;
+    VERIFY_IS_TRUE(StartTransport(transport), L"The transport started in the test process");
+    auto restoreSettings = wil::scope_exit([&transport]() { RestoreDefaultSettings(transport); });
+
+    // Two connections at most, so a refused connection which lingered would fill the host
+    VERIFY_IS_TRUE(transport.Configure(L"{\"transportSettings\":{\"maxHostConnections\":2}}").has_value());
+    auto restoreMaxConnections = wil::scope_exit([&transport]() { transport.Configure(L"{\"transportSettings\":{\"maxHostConnections\":64}}"); });
+
+    auto const hostEntry = MakeEntryIdentifier();
+    auto const hostPort = transport.CreateHostAndWait(hostEntry, L"nm2-refusal-not-listed", false);
+    VERIFY_ARE_NOT_EQUAL(static_cast<uint16_t>(0), hostPort, L"The host started");
+
+    std::string const name{ "Refusal Device Not Listed" };
+    std::string const productInstanceId{ "refusal-device-not-listed" };
+
+    RawUdpPeer firstSocket;
+    RawUdpPeer secondSocket;
+    VERIFY_IS_TRUE(firstSocket.Open());
+    VERIFY_IS_TRUE(secondSocket.Open());
+
+    VERIFY_IS_TRUE(firstSocket.SendTo(hostPort, Invitation(name, productInstanceId)));
+    VERIFY_IS_TRUE(firstSocket.WaitFor(CommandCode::InvitationReplyAccepted, hostPort, ReplyTimeout).has_value(), L"The first session opened");
+
+    VERIFY_IS_TRUE(secondSocket.SendTo(hostPort, Invitation(name, productInstanceId)));
+    VERIFY_IS_TRUE(secondSocket.WaitFor(CommandCode::Bye, hostPort, ReplyTimeout).has_value(), L"The second session was refused");
+
+    VERIFY_ARE_EQUAL(1u, WaitForRefusalCount(transport, hostEntry, 1).Size(), L"The refusal is recorded");
+
+    auto const portText = [](uint16_t const port) { return std::to_wstring(port); };
+
+    auto listedPorts = [&transport, &hostEntry]()
+        {
+            std::vector<std::wstring> ports{};
+
+            if (auto const host = transport.FindHostEntry(hostEntry); host.has_value())
+            {
+                if (auto const connections = host->GetNamedArray(L"connections", nullptr); connections != nullptr)
+                {
+                    for (auto const& value : connections)
+                    {
+                        ports.push_back(std::wstring{ value.GetObject().GetNamedString(L"remotePort", L"") });
+                    }
+                }
+
+                Log::Comment(String().Format(L"Host: %s", host->Stringify().c_str()));
+            }
+
+            return ports;
+        };
+
+    // The connection is released by the endpoint worker, so give it a moment
+    std::vector<std::wstring> ports{};
+    auto const deadline = std::chrono::steady_clock::now() + StateTimeout;
+
+    do
+    {
+        ports = listedPorts();
+
+        if (std::find(ports.begin(), ports.end(), portText(secondSocket.Port())) == ports.end())
+        {
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    } while (std::chrono::steady_clock::now() < deadline);
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(1), ports.size(), L"Only the device with a session is listed");
+    VERIFY_IS_TRUE(std::find(ports.begin(), ports.end(), portText(firstSocket.Port())) != ports.end(), L"The connected device is listed");
+    VERIFY_IS_TRUE(std::find(ports.begin(), ports.end(), portText(secondSocket.Port())) == ports.end(), L"The refused connection is not listed");
+
+    // The refused connection gave its slot back, so another device still gets in. Lingering, it
+    // and the first session would fill the host, and this device would be turned away as busy.
+    RawUdpPeer otherDevice;
+    VERIFY_IS_TRUE(otherDevice.Open());
+
+    std::optional<RawUdpPeer::Received> admitted{};
+    auto const admitDeadline = std::chrono::steady_clock::now() + StateTimeout;
+
+    while (!admitted.has_value() && std::chrono::steady_clock::now() < admitDeadline)
+    {
+        VERIFY_IS_TRUE(otherDevice.SendTo(hostPort, Invitation("Refusal Other Device", "refusal-other-device")));
+
+        // past the reply limit for a remote with no session, before asking again
+        admitted = otherDevice.WaitFor(CommandCode::InvitationReplyAccepted, hostPort, std::chrono::milliseconds(1500));
+    }
+
+    VERIFY_IS_TRUE(admitted.has_value(), L"Another device was admitted: the refused connection doesn't hold a slot");
+
+    VERIFY_IS_TRUE(otherDevice.SendTo(hostPort, Bye()));
+    VERIFY_IS_TRUE(firstSocket.SendTo(hostPort, Bye()));
+    transport.RemoveHost(hostEntry);
+}

@@ -284,8 +284,8 @@ protected:
     // Called on the watchdog tick. Only the client has anything to do here.
     virtual HRESULT OnWatchdogTick() { return S_OK; }
 
-    // The remote ended an established session on its own.
-    virtual void OnSessionEndedByRemote() { }
+    // The remote ended an established session on its own: with a Bye, or by going quiet (Timeout).
+    virtual void OnSessionEndedByRemote(_In_ MidiNetworkCommandByeReason const reason) { UNREFERENCED_PARAMETER(reason); }
 
     // A Bye arrived with no session, so anything queued for this remote is pointless.
     virtual void OnSessionEndedBeforeEndpointCreated() noexcept { }

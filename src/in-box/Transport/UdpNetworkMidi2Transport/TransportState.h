@@ -198,6 +198,18 @@ public:
     // opened on is tried first next time.
     HRESULT MarkClientDefinitionSessionOpened(_In_ winrt::guid const& clientConfigEntryIdentifier);
 
+    // The remote host ended the session itself, saying the user ended it or it is powering down.
+    // The entry stops, as Failed with this error code, until the app connects it again or, for an
+    // advertised host, the host stops advertising and then advertises again.
+    HRESULT MarkClientDefinitionEndedByRemote(
+        _In_ winrt::guid const& clientConfigEntryIdentifier,
+        _In_ uint32_t const errorCode);
+
+    // An advertised host appeared again. Puts back to Pending every entry it ended which
+    // isAdvertisedAgain matches, and returns how many. isAdvertisedAgain runs under the state lock,
+    // so it must not call back into this class.
+    uint32_t RearmClientDefinitionsEndedByRemote(_In_ std::function<bool(MidiNetworkClientDefinition const&)> const& isAdvertisedAgain);
+
     // The app asking to connect an entry which is already configured: "it is available now, try
     // again". Returns S_FALSE when there is no such definition.
     HRESULT RearmClientDefinition(_In_ winrt::guid const& clientConfigEntryIdentifier);

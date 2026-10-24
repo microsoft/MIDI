@@ -370,6 +370,38 @@ CMidi2NetworkMidiEndpointManager::OnAdvertisedHostAdded(::WindowsMidiServicesInt
         m_foundAdvertisedHosts.insert_or_assign(service.DeviceId(), service);
     }
 
+    // Added is raised once each time a service appears, never for the re-announcements of one
+    // which is still there. An entry the host ended its session with is brought back by this.
+    try
+    {
+        decltype(m_foundAdvertisedHosts) justThisHost{ };
+        justThisHost.insert_or_assign(service.DeviceId(), service);
+
+        auto const rearmed = TransportState::Current().RearmClientDefinitionsEndedByRemote(
+            [&justThisHost](MidiNetworkClientDefinition const& definition)
+            {
+                ::WindowsMidiServicesInternal::MidiDnssdService unused{ };
+
+                return TryFindAdvertisedHost(justThisHost, definition.MatchId, unused) ||
+                    TryFindAdvertisedHost(justThisHost, definition.MatchProductInstanceId, unused) ||
+                    TryFindAdvertisedHost(justThisHost, definition.MatchUmpEndpointName, unused);
+            });
+
+        if (rearmed > 0)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"A host which ended its session advertised again. Connecting again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt32(rearmed, "entries")
+            );
+        }
+    }
+    CATCH_LOG();
+
     WakeupBackgroundEndpointCreatorThread();
 }
 
@@ -405,6 +437,52 @@ CMidi2NetworkMidiEndpointManager::OnAdvertisedHostRemoved(std::wstring const& fu
     m_foundAdvertisedHosts.erase(deviceId);
 }
 
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::ForgetAdvertisedHostForClient(winrt::guid const& clientEntryIdentifier) noexcept
+try
+{
+    auto const definition = TransportState::Current().GetClientDefinition(clientEntryIdentifier);
+
+    if (!definition.has_value() || definition->IsDirectConnection())
+    {
+        return;
+    }
+
+    ::WindowsMidiServicesInternal::MidiDnssdService advertisedHost{ };
+    bool found{ false };
+
+    {
+        auto lock = m_advertisedHostsLock.lock_exclusive();
+
+        found = TryFindAdvertisedHost(m_foundAdvertisedHosts, definition->MatchId, advertisedHost) ||
+            TryFindAdvertisedHost(m_foundAdvertisedHosts, definition->MatchProductInstanceId, advertisedHost) ||
+            TryFindAdvertisedHost(m_foundAdvertisedHosts, definition->MatchUmpEndpointName, advertisedHost);
+
+        if (found)
+        {
+            m_foundAdvertisedHosts.erase(advertisedHost.DeviceId());
+        }
+    }
+
+    // outside the lock above: the browser raises its events with its own lock released, into
+    // handlers which take that one
+    if (found)
+    {
+        m_browser.ForgetService(advertisedHost.FullName);
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Host is powering down. Forgot its advertisement until it announces itself again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(advertisedHost.FullName.c_str(), "full name")
+        );
+    }
+}
+CATCH_LOG()
 HRESULT
 CMidi2NetworkMidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
 {

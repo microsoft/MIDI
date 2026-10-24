@@ -35,6 +35,11 @@ public:
     // socket receive callback without stalling every other datagram behind it.
     HRESULT QueueConnectionShutdown(_In_ std::shared_ptr<MidiNetworkConnection> connection);
 
+    // The host a client entry connects to said it is powering down. Its advertisement is dropped
+    // here, so the host announcing itself when it is back counts as advertising again, even if its
+    // goodbye was never seen.
+    void ForgetAdvertisedHostForClient(_In_ winrt::guid const& clientEntryIdentifier) noexcept;
+
     // endpoint for a remote client connected to this host
     STDMETHOD(CreateNewHostEndpointToRemoteClient(
         _In_ std::wstring const& configIdentifier,

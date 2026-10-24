@@ -41,7 +41,7 @@ Returned by `MidiNetworkTransportManager.GetConfiguredClients()`.
 
 Every client that's set up is reported, whether or not it's connected, so an entry that has never reached its remote host still shows up. Use `EntryState` to tell the cases apart, and `LastErrorCode` to tell the person why. When there's no session running, use the `Configured*` properties, not the `Connected*` ones.
 
-`LastErrorCode` stays set while the service keeps trying. A `Pending` entry with `NoReplyToInvitation` is a host that isn't answering and is being tried again. A `Failed` entry with `AuthenticationRequired` is a host that wants a password, which Windows doesn't support yet. Connecting the entry again clears it.
+`LastErrorCode` stays set while the service keeps trying. A `Pending` entry with `NoReplyToInvitation` is a host that isn't answering and is being tried again. A `Failed` entry with `AuthenticationRequired` is a host that wants a password, which Windows doesn't support yet. A `Failed` entry with `InvitationEndedByHost` is a host that ended the session on purpose: its user disconnected, or it's powering down. Windows doesn't connect it again until it's back on the network, or until the entry is connected again. Connecting the entry again clears it.
 
 To tell whether an entry is waiting for another session with the same device, check whether either `WaitingForHostId` or `WaitingForClientId` isn't `GuidHelper.Empty()`. A waiting entry is `Pending`, its `LastErrorCode` is `NoErrorInformationAvailable`, and it isn't trying to connect.
 

@@ -38,4 +38,12 @@ public:
     // A host here turns away a second session from the same device, and a device this PC is a
     // client of. Each device is listed once, newest first, with the reason it was last refused.
     TEST_METHOD(HostListsTheRemotesItRefused);
+
+    // A device the host turned away, which then connects to it, is no longer listed as refused.
+    // Next to its live connection, the old line read as if the host were still turning it away.
+    TEST_METHOD(HostForgetsARefusalOnceTheDeviceConnects);
+
+    // A refused second session is released at once: it is not listed under the host, where it was
+    // counted as a connected device, and it doesn't hold one of the host's connection slots.
+    TEST_METHOD(HostDoesNotListARefusedConnection);
 };

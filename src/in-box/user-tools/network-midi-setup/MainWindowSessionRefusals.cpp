@@ -114,6 +114,17 @@ namespace winrt::midinetworksetup::implementation
         {
             auto const name = remoteName.empty() ? res::GetString(L"UnnamedDevice") : remoteName;
 
+            // The remote ended the session, saying its user did or it was powering down. The
+            // service leaves a Failed entry with this code only then, and doesn't try again until
+            // the device is back on the network or someone clicks Try again.
+            if (client.EntryState() == midi2net::MidiNetworkClientEntryState::Failed &&
+                client.LastErrorCode() == midi2net::MidiNetworkClientConnectErrorCode::InvitationEndedByHost)
+            {
+                return client.ConfiguredDirectAddress().empty() ?
+                    res::FormatString(L"NetworkClientDisconnectedByRemoteFormat", name) :
+                    res::FormatString(L"NetworkClientDisconnectedByRemoteDirectFormat", name);
+            }
+
             if (auto const hostId = client.WaitingForHostId(); hostId != winrt::guid{})
             {
                 winrt::hstring hostName{};
@@ -203,5 +214,38 @@ namespace winrt::midinetworksetup::implementation
         {
             return winrt::hstring{};
         }
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::HostConnectionCountText(uint32_t const count) noexcept
+    {
+        if (count == 0) return res::GetString(L"HostNoConnections");
+        if (count == 1) return res::GetString(L"HostConnectionCountOne");
+
+        return res::FormatString(L"HostConnectionCountFormat", count);
+    }
+
+    _Use_decl_annotations_
+    uint32_t MainWindow::CountActiveSessions(collections::IVectorView<midi2net::MidiNetworkHostConnection> const& connections) noexcept
+    {
+        uint32_t count{ 0 };
+
+        try
+        {
+            if (connections == nullptr) return 0;
+
+            for (auto const& connection : connections)
+            {
+                if (connection != nullptr && connection.IsSessionActive())
+                {
+                    count++;
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return count;
     }
 }

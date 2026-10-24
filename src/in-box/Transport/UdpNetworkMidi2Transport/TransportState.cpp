@@ -716,6 +716,8 @@ TransportState::MarkClientDefinitionForReconnect(winrt::guid const& clientConfig
 
             definition.State = MidiNetworkEntryState::Pending;
 
+            definition.EndedByRemote = false;
+
             return S_OK;
         }
     }
@@ -741,6 +743,8 @@ TransportState::MarkClientDefinitionForRetry(
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+
+            definition.EndedByRemote = false;
             definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
@@ -773,6 +777,8 @@ TransportState::MarkClientDefinitionUnanswered(winrt::guid const& clientConfigEn
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+
+            definition.EndedByRemote = false;
             definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = NETWORK_ERROR_CODE_NO_REPLY_TO_INVITATION;
             definition.UnansweredAttempts++;
@@ -834,6 +840,8 @@ TransportState::MarkClientDefinitionForRetryAfter(
             }
 
             definition.State = MidiNetworkEntryState::Pending;
+
+            definition.EndedByRemote = false;
             definition.RetryNotBeforeTickCount = GetTickCount64() + delayMilliseconds;
             definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
@@ -863,6 +871,8 @@ TransportState::MarkClientDefinitionFailed(
             }
 
             definition.State = MidiNetworkEntryState::Failed;
+
+            definition.EndedByRemote = false;
             definition.ClearWaitingForOtherSession();
             definition.LastErrorCode = errorCode;
 
@@ -918,6 +928,7 @@ TransportState::MarkClientDefinitionWaitingForSession(
             // Pending, so the worker looks at it again, but it is only tried once the other
             // session has ended. That is checked on every pass, and a session ending wakes it.
             definition.State = MidiNetworkEntryState::Pending;
+            definition.EndedByRemote = false;
             definition.RetryNotBeforeTickCount = 0;
             definition.LastErrorCode = 0;
 
@@ -962,6 +973,70 @@ TransportState::AnyClientDefinitionWaitingForSession()
 }
 _Use_decl_annotations_
 HRESULT
+TransportState::MarkClientDefinitionEndedByRemote(
+    winrt::guid const& clientConfigEntryIdentifier,
+    uint32_t const errorCode)
+{
+    auto lock = m_stateLock.lock_exclusive();
+
+    for (auto& definition : m_clientDefinitions)
+    {
+        if (definition.EntryIdentifier == clientConfigEntryIdentifier)
+        {
+            if (!definition.Enabled)
+            {
+                return S_FALSE;
+            }
+
+            definition.State = MidiNetworkEntryState::Failed;
+            definition.EndedByRemote = true;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.ClearWaitingForOtherSession();
+            definition.LastErrorCode = errorCode;
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+_Use_decl_annotations_
+uint32_t
+TransportState::RearmClientDefinitionsEndedByRemote(std::function<bool(MidiNetworkClientDefinition const&)> const& isAdvertisedAgain)
+{
+    uint32_t count{ 0 };
+
+    try
+    {
+        auto lock = m_stateLock.lock_exclusive();
+
+        for (auto& definition : m_clientDefinitions)
+        {
+            if (definition.State != MidiNetworkEntryState::Failed ||
+                !definition.EndedByRemote ||
+                !definition.Enabled ||
+                definition.IsDirectConnection() ||
+                !isAdvertisedAgain(definition))
+            {
+                continue;
+            }
+
+            definition.State = MidiNetworkEntryState::Pending;
+            definition.EndedByRemote = false;
+            definition.RetryNotBeforeTickCount = 0;
+            definition.LastErrorCode = 0;
+
+            count++;
+        }
+    }
+    CATCH_LOG();
+
+    return count;
+}
+
+_Use_decl_annotations_
+HRESULT
 TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdentifier)
 {
     auto lock = m_stateLock.lock_exclusive();
@@ -971,6 +1046,7 @@ TransportState::RearmClientDefinition(winrt::guid const& clientConfigEntryIdenti
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
             definition.State = MidiNetworkEntryState::Pending;
+            definition.EndedByRemote = false;
             definition.Enabled = true;
             definition.RetryNotBeforeTickCount = 0;
             definition.ClearWaitingForOtherSession();
@@ -997,6 +1073,7 @@ TransportState::MarkClientDefinitionLive(
         if (definition.EntryIdentifier == clientConfigEntryIdentifier)
         {
             definition.State = MidiNetworkEntryState::Live;
+            definition.EndedByRemote = false;
             definition.AttemptAddress = remoteAddress;
             definition.AttemptAddressCount = remoteAddressCount;
 

@@ -362,13 +362,40 @@ namespace NetworkMidiTest
         }
     }
 
-    bool RawUdpPeer::Open()
+    _Use_decl_annotations_
+    bool RawUdpPeer::Open(bool const everyAddress)
     {
         WSADATA data{};
 
         if (WSAStartup(MAKEWORD(2, 2), &data) != 0) return false;
 
         m_winsockStarted = true;
+        m_everyAddress = everyAddress;
+
+        if (everyAddress)
+        {
+            m_socket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+
+            if (m_socket == INVALID_SOCKET) return false;
+
+            DWORD v6Only{ 0 };
+
+            if (setsockopt(m_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char const*>(&v6Only), sizeof(v6Only)) != 0) return false;
+
+            sockaddr_in6 any{};
+            any.sin6_family = AF_INET6;
+            any.sin6_addr = in6addr_any;
+
+            if (bind(m_socket, reinterpret_cast<sockaddr*>(&any), sizeof(any)) != 0) return false;
+
+            int anyLength = sizeof(any);
+
+            if (getsockname(m_socket, reinterpret_cast<sockaddr*>(&any), &anyLength) != 0) return false;
+
+            m_port = ntohs(any.sin6_port);
+
+            return true;
+        }
 
         m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -391,8 +418,39 @@ namespace NetworkMidiTest
     }
 
     _Use_decl_annotations_
+    bool RawUdpPeer::SendToSender(Received const& from, std::vector<uint8_t> const& bytes)
+    {
+        auto const sent = sendto(
+            m_socket,
+            reinterpret_cast<char const*>(bytes.data()),
+            static_cast<int>(bytes.size()),
+            0,
+            reinterpret_cast<sockaddr const*>(&from.From),
+            from.FromLength);
+
+        return sent == static_cast<int>(bytes.size());
+    }
+
+    _Use_decl_annotations_
     bool RawUdpPeer::SendTo(uint16_t const port, std::vector<uint8_t> const& bytes)
     {
+        if (m_everyAddress)
+        {
+            // 127.0.0.1, as an IPv4-mapped address on the dual-stack socket
+            sockaddr_in6 mapped{};
+            mapped.sin6_family = AF_INET6;
+            mapped.sin6_port = htons(port);
+            inet_pton(AF_INET6, "::ffff:127.0.0.1", &mapped.sin6_addr);
+
+            return sendto(
+                m_socket,
+                reinterpret_cast<char const*>(bytes.data()),
+                static_cast<int>(bytes.size()),
+                0,
+                reinterpret_cast<sockaddr*>(&mapped),
+                sizeof(mapped)) == static_cast<int>(bytes.size());
+        }
+
         sockaddr_in remote{};
         remote.sin_family = AF_INET;
         remote.sin_port = htons(port);
@@ -433,7 +491,7 @@ namespace NetworkMidiTest
             if (select(0, &readable, nullptr, nullptr, &timeout) <= 0) break;
 
             std::vector<uint8_t> buffer(65536);
-            sockaddr_in from{};
+            sockaddr_storage from{};
             int fromLength = sizeof(from);
 
             auto const received = recvfrom(m_socket, reinterpret_cast<char*>(buffer.data()), static_cast<int>(buffer.size()), 0, reinterpret_cast<sockaddr*>(&from), &fromLength);
@@ -442,7 +500,11 @@ namespace NetworkMidiTest
             if (received <= 0) continue;
 
             Received entry{};
-            entry.FromPort = ntohs(from.sin_port);
+            entry.FromPort = from.ss_family == AF_INET6 ?
+                ntohs(reinterpret_cast<sockaddr_in6 const*>(&from)->sin6_port) :
+                ntohs(reinterpret_cast<sockaddr_in const*>(&from)->sin_port);
+            entry.From = from;
+            entry.FromLength = fromLength;
             entry.Packet = ParsePacket(buffer.data(), static_cast<size_t>(received));
 
             result.push_back(std::move(entry));

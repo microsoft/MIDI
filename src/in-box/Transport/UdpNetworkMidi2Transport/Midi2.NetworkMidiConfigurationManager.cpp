@@ -2077,6 +2077,16 @@ namespace
                 continue;
             }
 
+            // Nor is a remote which never had a session here and isn't waiting for approval: one
+            // which was refused, or whose session is still being set up. Listed, it reads as a
+            // connected device.
+            if (!connection->IsSessionActive() &&
+                !connection->IsAwaitingUserApproval() &&
+                !connection->IsSessionFinished())
+            {
+                continue;
+            }
+
             connectionsArray.Append(BuildEnumeratedHostConnectionObject(connection, identity));
         }
 

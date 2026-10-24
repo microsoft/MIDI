@@ -108,7 +108,7 @@ MidiNetworkHostConnection::CompleteHostSessionAfterEndpointCreated(
         auto lock = m_sessionLock.lock();
 
         // The remote said Bye, or this connection is being shut down
-        if (!m_shuttingDown && !m_hostEndpointCreationAbandoned)
+        if (!m_shuttingDown && !m_hostEndpointCreationAbandoned && !m_releasedAfterRefusal)
         {
             // this is what the Bidi uses when it is created
             hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_configIdentifier, m_remoteHostName, m_remotePort.c_str(), this);
@@ -167,6 +167,15 @@ MidiNetworkHostConnection::CompleteHostSessionAfterEndpointCreated(
 
     m_sessionEverEstablished = true;
 
+    try
+    {
+        if (auto host = TransportState::Current().GetHost(m_configIdentifier); host != nullptr)
+        {
+            host->ForgetRefusedRemoteClient(GetRemoteClientIdentity());
+        }
+    }
+    CATCH_LOG();
+
     // negotiation needs the connection wired up first, so it cannot happen during creation
     LOG_IF_FAILED(endpointManager->QueueDiscoveryAndNegotiation(endpointDeviceInterfaceId));
 
@@ -187,6 +196,16 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkHostConnection::FailHostSessionEndpointCreation(HRESULT const failure)
 {
+    // Refused before it ever had a session, so this connection is released below. Set before
+    // creation stops being pending: an invitation which then gets past the pending check sees
+    // this and starts nothing, and an endpoint already on its way is not claimed.
+    auto const release = !m_sessionEverEstablished && !m_sessionActive;
+
+    if (release)
+    {
+        m_releasedAfterRefusal = true;
+    }
+
     m_hostEndpointCreationPending = false;
 
     if (m_shuttingDown)
@@ -206,6 +225,34 @@ MidiNetworkHostConnection::FailHostSessionEndpointCreation(HRESULT const failure
 
     // Spec 6.6: a Pending reply is followed by an Accepted or a Bye. This is the Bye.
     LOG_IF_FAILED(RefuseSessionForEndpointCreationFailure(failure));
+
+    // Refused before it ever had a session: a second session from a device which already has one,
+    // or an endpoint which could not be created. Left registered it would be listed under the host
+    // until the idle reaper took it, counted as a connected device although nothing is connected.
+    // A remote which invites again gets a new connection, and is refused or accepted afresh.
+    if (release)
+    {
+        try
+        {
+            auto self = shared_from_this();
+
+            if (auto remoteHostName = GetRemoteHostName(); remoteHostName != nullptr)
+            {
+                // Only detached here. The endpoint worker shuts it down, as for any released connection.
+                TransportState::Current().DetachNetworkConnection(
+                    m_configIdentifier,
+                    remoteHostName,
+                    winrt::hstring{ GetRemotePort() },
+                    this);
+            }
+
+            if (auto endpointManager = TransportState::Current().GetEndpointManager(); endpointManager != nullptr)
+            {
+                LOG_IF_FAILED(endpointManager->QueueConnectionShutdown(self));
+            }
+        }
+        CATCH_LOG();
+    }
 
     return S_OK;
 }
@@ -241,7 +288,7 @@ MidiNetworkHostConnection::ApproveByUser()
 
     // Picks up exactly where the approval gate stopped: the client has already had its Pending
     // reply, so all that is left is the endpoint and the Accepted which follows it.
-    if (m_hostEndpointCreationPending.exchange(true))
+    if (m_hostEndpointCreationPending.exchange(true) || m_releasedAfterRefusal)
     {
         return S_FALSE;
     }
@@ -551,6 +598,13 @@ MidiNetworkHostConnection::AcceptInvitation(MidiNetworkRemoteClientIdentity cons
         // a repeated invitation while the endpoint is still being created
         LOG_IF_FAILED(SendInvitationReplyPending());
 
+        return S_OK;
+    }
+
+    // Refused and released while this invitation was on its way. A new invitation gets a new
+    // connection.
+    if (m_releasedAfterRefusal)
+    {
         return S_OK;
     }
 

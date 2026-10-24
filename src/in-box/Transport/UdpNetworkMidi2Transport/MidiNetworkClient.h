@@ -30,6 +30,10 @@ struct MidiNetworkClientDefinition
 
     bool IsWaitingForOtherSession() const noexcept { return WaitingForEntryIdentifier != winrt::guid{}; }
 
+    // Failed because the remote host ended the session (user terminated or power down). Only then
+    // does the host advertising again bring the entry back.
+    bool EndedByRemote{ false };
+
     void ClearWaitingForOtherSession() noexcept
     {
         WaitingForEntryIdentifier = winrt::guid{};

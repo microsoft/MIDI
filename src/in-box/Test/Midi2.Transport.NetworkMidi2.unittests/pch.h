@@ -85,5 +85,6 @@
 #include "NetworkMidiTestInProcess.h"
 #include "NetworkMidiInProcessTests.h"
 #include "NetworkMidiSessionRefusalTests.h"
+#include "NetworkMidiRemoteByeTests.h"
 
 #endif //PCH_H
