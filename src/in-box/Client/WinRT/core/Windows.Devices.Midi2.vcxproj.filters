@@ -677,6 +677,9 @@
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
+    <Midl Include="MidiNetworkRemoteClientRefusalReasonEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
     <Midl Include="MidiNetworkSendSpeedLimitEnum.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>

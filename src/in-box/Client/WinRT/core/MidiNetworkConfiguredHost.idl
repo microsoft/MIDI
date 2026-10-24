@@ -15,9 +15,6 @@ import "MidiNetworkRemoteClientPolicyEnum.idl";
 import "MidiNetworkRemoteClientSettings.idl";
 import "MidiNetworkSendSpeedLimitEnum.idl";
 
-
-// TODO: Change to runtimeclass
-
 namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
@@ -95,14 +92,10 @@ namespace Windows.Devices.Midi2.Transports.Network
 
             // A device has one session with this PC at a time, so the host turns away a second
             // one. These are the remote clients it turned away recently, newest first, so an app
-            // can say why a device didn't connect. Each list is short, a device which tries again
-            // stays one entry, and entries are dropped after a few minutes.
-
-            // remote clients which were already connected to this host
-            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRefusedRemoteClient> RecentlyRefusedSecondConnections{ get; };
-
-            // devices this PC was already connected to as a client, through a client entry
-            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRefusedRemoteClient> RecentlyRefusedRemoteHosts{ get; };
+            // can say why a device didn't connect. At most 8. A device which tries again stays
+            // one entry, with the time and reason of its latest try, and entries are dropped a
+            // few minutes after that.
+            [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkRefusedRemoteClient> RecentlyRefusedRemoteClients{ get; };
         }
     };
 }

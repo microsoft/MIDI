@@ -716,6 +716,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                         continue;
                                     }
 
+                                    auto const reasonText = refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_KEY, L"");
+
+                                    auto const reason =
+                                        reasonText == MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_ALREADY_CONNECTED ?
+                                            network::MidiNetworkRemoteClientRefusalReason::AlreadyConnectedToThisHost :
+                                        reasonText == MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE ?
+                                            network::MidiNetworkRemoteClientRefusalReason::ThisPcAlreadyConnectedToRemote :
+                                            network::MidiNetworkRemoteClientRefusalReason::Unknown;
+
                                     auto refusal = winrt::make_self<MidiNetworkRefusedRemoteClient>();
 
                                     refusal->InternalInitialize(
@@ -723,11 +732,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                         refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L""),
                                         refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L""),
                                         refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY, L""),
-                                        PendingRequestTimeFromString(refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_TIME_KEY, L"")));
+                                        PendingRequestTimeFromString(refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_TIME_KEY, L"")),
+                                        reason);
 
-                                    host->InternalAddRefusal(
-                                        *refusal,
-                                        refusalObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_KEY, L"") == MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE);
+                                    host->InternalAddRefusal(*refusal);
                                 }
                             }
 

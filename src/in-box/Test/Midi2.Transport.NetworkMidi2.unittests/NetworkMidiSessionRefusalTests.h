@@ -36,6 +36,6 @@ public:
     TEST_METHOD(ClientWaitsWhileAnotherClientEntryIsConnectedToTheRemote);
 
     // A host here turns away a second session from the same device, and a device this PC is a
-    // client of. Each is listed once, newest first, with its reason.
+    // client of. Each device is listed once, newest first, with the reason it was last refused.
     TEST_METHOD(HostListsTheRemotesItRefused);
 };

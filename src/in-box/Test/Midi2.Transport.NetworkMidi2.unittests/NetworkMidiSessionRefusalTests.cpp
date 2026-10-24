@@ -439,6 +439,53 @@ void NetworkMidiSessionRefusalTests::HostListsTheRemotesItRefused()
     VERIFY_ARE_EQUAL(invitation.has_value() ? 2u : 1u, refusals.Size(), L"A repeat is not a second entry");
     VERIFY_ARE_EQUAL(std::wstring{ L"Refusal Device Twice" }, std::wstring{ refusals.GetObjectAt(0).GetNamedString(L"umpEndpointName", L"") }, L"The repeat moved to the front");
 
+    // A device refused for the other reason is still one entry, with the latest reason. This PC
+    // stops being its client, it connects to the host, and then tries a second session.
+    if (invitation.has_value())
+    {
+        transport.DisconnectClient(clientEntry);
+        VERIFY_IS_TRUE(remoteHost.WaitFor(CommandCode::Bye, invitation->FromPort, ReplyTimeout).has_value(), L"This PC ended its session with the device");
+
+        RawUdpPeer thirdSocket;
+        RawUdpPeer fourthSocket;
+        VERIFY_IS_TRUE(thirdSocket.Open());
+        VERIFY_IS_TRUE(fourthSocket.Open());
+
+        VERIFY_IS_TRUE(thirdSocket.SendTo(hostPort, Invitation(hostName, hostProductInstanceId)));
+        VERIFY_IS_TRUE(thirdSocket.WaitFor(CommandCode::InvitationReplyAccepted, hostPort, ReplyTimeout).has_value(), L"The device connected to the host");
+
+        VERIFY_IS_TRUE(fourthSocket.SendTo(hostPort, Invitation(hostName, hostProductInstanceId)));
+        VERIFY_IS_TRUE(fourthSocket.WaitFor(CommandCode::Bye, hostPort, ReplyTimeout).has_value(), L"Its second session was refused");
+
+        auto const reasonDeadline = std::chrono::steady_clock::now() + StateTimeout;
+
+        do
+        {
+            refusals = RecentRefusals(transport, hostEntry);
+
+            if (refusals.Size() > 0 &&
+                refusals.GetObjectAt(0).GetNamedString(L"umpEndpointName", L"") == L"Refusal Device Is A Host" &&
+                refusals.GetObjectAt(0).GetNamedString(L"reason", L"") == L"alreadyConnected")
+            {
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        } while (std::chrono::steady_clock::now() < reasonDeadline);
+
+        Log::Comment(String().Format(L"Recent refusals: %s", refusals.Stringify().c_str()));
+
+        VERIFY_ARE_EQUAL(2u, refusals.Size(), L"Another reason is not another entry");
+
+        if (refusals.Size() >= 1)
+        {
+            VERIFY_ARE_EQUAL(std::wstring{ L"Refusal Device Is A Host" }, std::wstring{ refusals.GetObjectAt(0).GetNamedString(L"umpEndpointName", L"") }, L"Moved to the front");
+            VERIFY_ARE_EQUAL(std::wstring{ L"alreadyConnected" }, std::wstring{ refusals.GetObjectAt(0).GetNamedString(L"reason", L"") }, L"The latest reason");
+        }
+
+        VERIFY_IS_TRUE(thirdSocket.SendTo(hostPort, Bye()));
+    }
+
     VERIFY_IS_TRUE(firstSocket.SendTo(hostPort, Bye()));
     transport.DisconnectClient(clientEntry);
     transport.RemoveHost(hostEntry);

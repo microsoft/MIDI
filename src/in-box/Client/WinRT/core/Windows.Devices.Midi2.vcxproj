@@ -1790,6 +1790,7 @@
     <Midl Include="MidiNetworkHostConnection.idl" />
     <Midl Include="MidiNetworkAdvertisedHostChangedPropertiesEnum.idl" />
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl" />
+    <Midl Include="MidiNetworkRemoteClientRefusalReasonEnum.idl" />
     <Midl Include="MidiNetworkSendSpeedLimitEnum.idl" />
     <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostRemovalErrorCodeEnum.idl" />

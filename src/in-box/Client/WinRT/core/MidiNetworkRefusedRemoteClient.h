@@ -23,12 +23,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         foundation::DateTime RefusedTime() const noexcept { return m_refusedTime; }
 
+        network::MidiNetworkRemoteClientRefusalReason Reason() const noexcept { return m_reason; }
+
         void InternalInitialize(
             _In_ winrt::guid const& hostId,
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId,
             _In_ winrt::hstring const& remoteAddress,
-            _In_ foundation::DateTime const refusedTime
+            _In_ foundation::DateTime const refusedTime,
+            _In_ network::MidiNetworkRemoteClientRefusalReason const reason
         ) noexcept
         {
             m_hostId = hostId;
@@ -36,6 +39,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_productInstanceId = productInstanceId;
             m_remoteAddress = remoteAddress;
             m_refusedTime = refusedTime;
+            m_reason = reason;
         }
 
     private:
@@ -46,5 +50,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_remoteAddress{};
 
         foundation::DateTime m_refusedTime{};
+
+        network::MidiNetworkRemoteClientRefusalReason m_reason{ network::MidiNetworkRemoteClientRefusalReason::Unknown };
     };
 }

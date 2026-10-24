@@ -396,6 +396,10 @@
     <value>Refused {0} at {1}: this PC is already connected to it as a client.</value>
     <comment>Network MIDI 2.0 host card, one line per refusal. {0} is the device's name. {1} is the time, for example 7:17 PM.</comment>
   </data>
+  <data name="NetworkHostRefusedUnknownReasonFormat" xml:space="preserve">
+    <value>Refused {0} at {1}: it already has a connection with this PC.</value>
+    <comment>Network MIDI 2.0 host card, one line per refusal, for a reason this app doesn't know. {0} is the device's name. {1} is the time, for example 7:17 PM.</comment>
+  </data>
   <data name="NetworkRemoteHostRetryingFormat" xml:space="preserve">
     <value>{0} Windows will keep trying.</value>
     <comment>{0} is a sentence saying what went wrong.</comment>

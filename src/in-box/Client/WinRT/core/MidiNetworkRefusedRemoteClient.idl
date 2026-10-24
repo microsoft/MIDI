@@ -9,10 +9,12 @@
 #include "..\..\..\Inc\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
+import "MidiNetworkRemoteClientRefusalReasonEnum.idl";
+
 namespace Windows.Devices.Midi2.Transports.Network
 {
     // A remote client a host turned away because the device already has a session with this PC.
-    // Only the API creates these, in the lists on MidiNetworkConfiguredHost.
+    // Only the API creates these, in MidiNetworkConfiguredHost.RecentlyRefusedRemoteClients.
     [contract(MidiTransportsNetworkApiContract, 2)]
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRefusedRemoteClient", UUID_IMidiNetworkRefusedRemoteClient)]
     runtimeclass MidiNetworkRefusedRemoteClient
@@ -26,5 +28,8 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         // when the host last turned it away
         [noexcept] Windows.Foundation.DateTime RefusedTime{ get; };
+
+        // why, the last time the host turned it away
+        [noexcept] MidiNetworkRemoteClientRefusalReason Reason{ get; };
     }
 }

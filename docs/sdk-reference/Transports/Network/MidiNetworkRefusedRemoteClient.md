@@ -8,7 +8,7 @@ description: A device a host turned away because it already had a session with t
 
 Added in version 2 of `MidiTransportsNetworkApiContract`.
 
-Reported in the `RecentlyRefusedSecondConnections` and `RecentlyRefusedRemoteHosts` lists of [MidiNetworkConfiguredHost]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkConfiguredHost/). You can't create one yourself.
+Reported in the `RecentlyRefusedRemoteClients` list of [MidiNetworkConfiguredHost]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkConfiguredHost/). You can't create one yourself.
 
 ## Properties
 
@@ -19,9 +19,10 @@ Reported in the `RecentlyRefusedSecondConnections` and `RecentlyRefusedRemoteHos
 | `ProductInstanceId` | The Product Instance Id the device sent |
 | `RemoteAddress` | The address the invitation came from. For display only. Don't use it to recognize the device |
 | `RefusedTime` | When the host last turned the device away, in UTC |
+| `Reason` | Why the host last turned the device away, as a [MidiNetworkRemoteClientRefusalReason]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientRefusalReasonEnum/) |
 
 ## Remarks
 
 A device can have only one Network MIDI 2.0 session with this PC at a time. When it tries to open a second one, the host says no. Without this list, the person at the PC has no way to tell why the device didn't connect.
 
-A device that keeps trying stays one entry, and `RefusedTime` moves to its latest try. Entries go away a few minutes after the last try.
+A device has one entry, however often it tries and for whichever reason. `RefusedTime` and `Reason` are from its latest try. Entries go away a few minutes after the last try.

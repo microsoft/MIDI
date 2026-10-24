@@ -22,9 +22,9 @@ struct MidiNetworkRecentRefusal
     std::chrono::steady_clock::time_point When{};
 };
 
-// The refusals a host remembers, newest first. The remote's identity is unverified and a remote
-// retries, so the list is small, a repeat refreshes its entry rather than adding one, and entries
-// expire.
+// The refusals a host remembers, newest first, one entry per remote (name and product instance
+// id). The remote's identity is unverified and a remote retries, so the list is small, a repeat
+// replaces its entry, with the latest reason and time, rather than adding one, and entries expire.
 class MidiNetworkRecentRefusals
 {
 public:
@@ -46,8 +46,7 @@ public:
 
             std::erase_if(m_entries, [&refusal](MidiNetworkRecentRefusal const& entry)
                 {
-                    return entry.Reason == refusal.Reason &&
-                        entry.UmpEndpointName == refusal.UmpEndpointName &&
+                    return entry.UmpEndpointName == refusal.UmpEndpointName &&
                         entry.ProductInstanceId == refusal.ProductInstanceId;
                 });
 

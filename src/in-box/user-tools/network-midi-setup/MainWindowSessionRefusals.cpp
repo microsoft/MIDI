@@ -88,36 +88,18 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
-        void AppendRefusals(
-            _Inout_ std::vector<std::pair<int64_t, winrt::hstring>>& lines,
-            _In_ collections::IVectorView<midi2net::MidiNetworkRefusedRemoteClient> const& refusals,
-            _In_ std::wstring_view formatKey) noexcept
+        std::wstring_view RefusalFormatKey(_In_ midi2net::MidiNetworkRemoteClientRefusalReason const reason) noexcept
         {
-            try
+            switch (reason)
             {
-                if (refusals == nullptr)
-                {
-                    return;
-                }
+            case midi2net::MidiNetworkRemoteClientRefusalReason::AlreadyConnectedToThisHost:
+                return L"NetworkHostRefusedSecondConnectionFormat";
 
-                for (auto const& refusal : refusals)
-                {
-                    if (refusal == nullptr)
-                    {
-                        continue;
-                    }
+            case midi2net::MidiNetworkRemoteClientRefusalReason::ThisPcAlreadyConnectedToRemote:
+                return L"NetworkHostRefusedRemoteHostFormat";
 
-                    auto const name = refusal.UmpEndpointName().empty() ?
-                        res::GetString(L"UnnamedDevice") :
-                        refusal.UmpEndpointName();
-
-                    lines.emplace_back(
-                        refusal.RefusedTime().time_since_epoch().count(),
-                        res::FormatString(formatKey, name, RefusalTimeText(refusal.RefusedTime())));
-                }
-            }
-            catch (...)
-            {
+            default:
+                return L"NetworkHostRefusedUnknownReasonFormat";
             }
         }
     }
@@ -186,25 +168,33 @@ namespace winrt::midinetworksetup::implementation
     {
         try
         {
-            std::vector<std::pair<int64_t, winrt::hstring>> lines{};
-
-            AppendRefusals(lines, host.RecentlyRefusedSecondConnections(), L"NetworkHostRefusedSecondConnectionFormat");
-            AppendRefusals(lines, host.RecentlyRefusedRemoteHosts(), L"NetworkHostRefusedRemoteHostFormat");
-
-            // newest first, across both lists
-            std::stable_sort(lines.begin(), lines.end(),
-                [](auto const& left, auto const& right) { return left.first > right.first; });
-
             std::wstring text{};
 
-            for (auto const& line : lines)
+            // already newest first
+            auto const refusals = host.RecentlyRefusedRemoteClients();
+
+            if (refusals == nullptr)
             {
+                return winrt::hstring{};
+            }
+
+            for (auto const& refusal : refusals)
+            {
+                if (refusal == nullptr)
+                {
+                    continue;
+                }
+
+                auto const name = refusal.UmpEndpointName().empty() ?
+                    res::GetString(L"UnnamedDevice") :
+                    refusal.UmpEndpointName();
+
                 if (!text.empty())
                 {
                     text += L"\n";
                 }
 
-                text += line.second;
+                text += res::FormatString(RefusalFormatKey(refusal.Reason()), name, RefusalTimeText(refusal.RefusedTime()));
             }
 
             return winrt::hstring{ text };

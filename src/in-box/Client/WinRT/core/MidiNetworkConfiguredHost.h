@@ -55,26 +55,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void InternalSetSkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
-        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRefusedRemoteClient> RecentlyRefusedSecondConnections() const noexcept
+        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRefusedRemoteClient> RecentlyRefusedRemoteClients() const noexcept
         {
-            return m_recentlyRefusedSecondConnections.GetView();
-        }
-
-        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRefusedRemoteClient> RecentlyRefusedRemoteHosts() const noexcept
-        {
-            return m_recentlyRefusedRemoteHosts.GetView();
+            return m_recentlyRefusedRemoteClients.GetView();
         }
 
         // In the order the service reports them, newest first
-        void InternalAddRefusal(
-            _In_ network::MidiNetworkRefusedRemoteClient const& refusal,
-            _In_ bool const remoteIsAHostOfThisPc) noexcept
+        void InternalAddRefusal(_In_ network::MidiNetworkRefusedRemoteClient const& refusal) noexcept
         {
             if (refusal == nullptr) return;
 
             try
             {
-                (remoteIsAHostOfThisPc ? m_recentlyRefusedRemoteHosts : m_recentlyRefusedSecondConnections).Append(refusal);
+                m_recentlyRefusedRemoteClients.Append(refusal);
             }
             catch (...)
             {
@@ -190,10 +183,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRemoteClientSettings> m_remoteClientSettings{
             winrt::single_threaded_vector<network::MidiNetworkRemoteClientSettings>() };
 
-        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRefusedRemoteClient> m_recentlyRefusedSecondConnections{
-            winrt::single_threaded_vector<network::MidiNetworkRefusedRemoteClient>() };
-
-        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRefusedRemoteClient> m_recentlyRefusedRemoteHosts{
+        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRefusedRemoteClient> m_recentlyRefusedRemoteClients{
             winrt::single_threaded_vector<network::MidiNetworkRefusedRemoteClient>() };
     };
 }
