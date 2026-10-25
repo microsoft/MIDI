@@ -11,6 +11,10 @@
 
 ## Building a single project
 
+`build\build-all.ps1 -Target Service,Sdk -Platform x64,Arm64` builds the service, transports, SDK, and tools. It builds the required generated headers and path-linked static libraries before each solution, using the selected configuration. `-Target Sdk` also works without `Service`: it builds only the headers and libraries the SDK and tools need, not the service or transports. These prerequisite builds are incremental. Staging and packaging targets do not add prerequisite builds.
+
+Run `pwsh -NoProfile -File build\tests\build-prerequisites.tests.ps1` to check prerequisite order, target selection, and MSBuild arguments without building or staging files.
+
 ```powershell
 & $msbuild <project>.vcxproj /t:Build /p:Configuration=Release /p:Platform=x64 `
     "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo
