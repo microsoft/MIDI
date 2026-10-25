@@ -54,7 +54,7 @@ Turn on the switch on a tile to start that patch. To open a patch, select its ti
 
 Patch files end in `.midipatch`. To add one that somebody sent you, or one an AI assistant saved in another folder, select **Import patch…** and pick the file. You can also double-click it in File Explorer. The first time you do, Windows asks which app to open it with, so pick Windows MIDI Patchbay. Either way, the patch is copied into your patches. It doesn't route, and it doesn't start automatically, until you turn those on. A file from somewhere else shouldn't connect your devices before you've looked at it.
 
-To have an AI assistant build a patch for you, select **Ask an AI assistant…** next to **Import patch…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [Windows MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/), and the names of your MIDI devices and the groups they use, so the patch the assistant makes can find them. Windows MIDI Patchbay doesn't send anything itself. If you'd rather not see it, turn off **Ask an AI assistant** in the appearance and settings flyout.
+To have an AI assistant build a patch for you, select **Ask an AI assistant…** next to **Import patch…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [Windows MIDI Patchbay patch files, a guide for AI agents]({{ site.baseurl }}/kb/midi-patchbay-patches-for-agents/), and the names of your MIDI devices and the groups they use, so the patch the assistant makes can find them. Windows MIDI Patchbay doesn't send anything itself. If you'd rather not see it, turn off **AI assistant** in the appearance and settings flyout.
 
 Older versions of Windows MIDI Patchbay named patch files `.midipatch.json`. The current version renames them to `.midipatch` the next time it starts. If a file with the new name is already there, the old one is left alone.
 
@@ -74,7 +74,7 @@ A patch you don't name is **temporary**: it routes right now and disappears when
 
 Earlier versions of Windows MIDI Patchbay kept the filters, the changes, and the sending speed of a connection on the connection itself. Now each of those is a step on the canvas. When you open a patch made with an earlier version, Windows MIDI Patchbay turns them into steps, and the patch routes exactly the way it did. A bar across the top of the patch says so.
 
-Windows MIDI Patchbay keeps a copy of the original file in **Documents &rsaquo; MIDI Patches &rsaquo; Earlier versions**. Select **Show the original** on the bar to find it. Earlier versions of Windows MIDI Patchbay can't open the new files, so keep that copy if you might go back.
+Windows MIDI Patchbay keeps a copy of the original file in **Documents &rsaquo; MIDI Patches &rsaquo; Earlier versions**. Select **Show original** on the bar to find it. Earlier versions of Windows MIDI Patchbay can't open the new files, so keep that copy if you might go back.
 
 In a few rare cases, a note mapping next to a transpose can't be carried over exactly, because the transpose would push the note past the top or bottom of the keyboard. The bar lists any note that's affected.
 
@@ -95,7 +95,7 @@ There's a row for each group the endpoint declares, labeled with the group's num
 
 Connect a specific group to a different specific group and Windows MIDI Patchbay rewrites the group as the message goes past. That's how you fold four groups of one device onto one group of another.
 
-A step has one **In** and one **Out**, and both carry every group. A **Branch** and a **Switch** are different: they have an **Out** for each way a message can go. See [Logic steps](#logic-steps).
+A step has one **In** and one **Out**, and both carry every group. A **Branch** and a **Switch** are different: they have an **Out** for each of their outputs. See [Logic steps](#logic-steps).
 
 You can draw a connection by dragging from an Out point to an In point, or by clicking the Out point and then clicking the In point. The second way also works from the keyboard. You don't have to land exactly on the point &mdash; get close and the connection snaps to it.
 
@@ -111,7 +111,7 @@ To work with more than one endpoint or step at once, hold Ctrl or Shift and clic
 
 ## Steps
 
-Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Add a step here**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator, a game controller step, or an annotation is never put into a connection, so it's added on its own instead.
+Steps sit between the endpoints and do something to the messages that pass through them. Drag one from the **Steps** tab on the left, or select a connection and choose **Insert step**. Drop a step on a connection and the connection is split in two, with the step in the middle. A generator, a game controller step, or an annotation is never put into a connection, so it's added on its own instead.
 
 There are eight kinds:
 
@@ -159,7 +159,7 @@ Transforms change messages on the way past. Between them they do everything the 
 - **Group mapper** moves everything in one group to another. It works the same way as the channel mapper, with a list for each of the sixteen groups.
 - **Transpose** shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.
 - **Note mapper** sends one note as another. Notes you don't list go through unchanged. **Play** sends the new note so you can hear where it lands.
-- **Velocity rescaler** reshapes the ramp, linear to curved or curved to linear. It can rescale into a narrower range so a light touch still speaks and a heavy one doesn't max out, or send every note at the same fixed velocity. Only note on messages are touched, and a MIDI 1.0 note on with velocity zero is a note off, so it's always left alone.
+- **Velocity rescaler** reshapes the ramp. **Heavier touch** makes it harder to play loud, and **Lighter touch** makes it easier. It can rescale into a narrower range so a light touch still speaks and a heavy one doesn't max out, or send every note at the same fixed velocity. Only note on messages are touched, and a MIDI 1.0 note on with velocity zero is a note off, so it's always left alone.
 - **Aftertouch rescaler** reshapes channel pressure and poly pressure. Input low is how hard you have to press before anything is sent, input high is how hard counts as full, and the output range sets what comes out. Slow rise makes full pressure harder to reach, and fast rise makes it easier. A pressure of zero means you let go of the key, so zero always goes out as zero and no sound is left bent.
 - **Control change mapper** moves a controller to a different number. Controllers you don't list are passed through.
 - **Control change values** changes what a controller's value does on its way out. See [Shaping controller values](#shaping-controller-values) below.
@@ -185,36 +185,36 @@ Rules work on one message at a time. Some controllers split a value across two c
 
 ### Converting one kind of message to another
 
-Some DAW controllers send a note from a pad where the DAW wants a control change, or the other way around. A **Message converter** step fixes that. Each row says what to listen for, under **When it gets**, and what to send instead, under **Turn it into**. The first row that matches a message is used. A message that no row matches goes through unchanged.
+Some DAW controllers send a note from a pad where the DAW wants a control change, or the other way around. A **Message converter** step fixes that. Each row says what to listen for, under **Input**, and what to send instead, under **Output**. The first row that matches a message is used. A message that no row matches goes through unchanged.
 
 To turn note 27 on channel 3 into control change 27 with a value of 50 on channel 4:
 
-1. Put a **Message converter** step between the controller and the DAW, and select **Add a row**.
-2. Under **When it gets**, pick **Note** and **Channel 3**. Type 27 as both the lowest and the highest note.
-3. Under **Turn it into**, pick **Control change** and **Channel 4**. Leave **Same number** checked, so note 27 becomes CC 27.
+1. Put a **Message converter** step between the controller and the DAW, and select **Add row**.
+2. Under **Input**, pick **Note** and **Channel 3**. Type 27 as both the lowest and the highest note.
+3. Under **Output**, pick **Control change** and **Channel 4**. Leave **Same number** checked, so note 27 becomes CC 27.
 4. Clear **Same value**, and type 50 as the value.
 
 **What it listens for.** A note, a control change, a program change, pitch bend, channel pressure, poly pressure, a timing clock, Start, Continue, or Stop. A channel message can be on any channel or on one. For notes, controllers, and programs, a row can listen for one number or a range of them.
 
 **What it sends.** A note, a control change, a program change, pitch bend, channel pressure, poly pressure, an RPN, an NRPN, a timing clock, Start, Continue, Stop, or a message typed in hex. **Same channel**, **Same number**, and **Same value** copy that part from the message that came in, so one row can turn a whole range of notes into the controllers with the same numbers. A value keeps its share of the range, so a note played at full velocity sends a controller at full value. **Message format** keeps the format the message came in with, or always sends MIDI 1.0 or MIDI 2.0. An RPN or an NRPN always goes out as MIDI 2.0, and Windows converts it for a MIDI 1.0 device.
 
-**Letting go.** A note off, or a MIDI 1.0 note on with velocity 0, means you let go of the pad. When a row turns a note into a note or into a value, such as a control change, pick what letting go does under **When you let go**:
+**Letting go.** A note off, or a MIDI 1.0 note on with velocity 0, means you let go of the pad. When a row turns a note into a note or into a value, such as a control change, pick what letting go does under **On release**:
 
-- **Send a note off**, or **Send a value**. A value starts at 0, and you can change it under **Value when you let go**.
+- **Note off**, or **Value**. A value starts at 0, and you can change it under **Release value**.
 - **Send nothing**, for a DAW button that only wants the press.
-- **Switch on and off with each press**. One press sends the "on" message, the next press sends the "off" one, and letting go sends nothing. That turns a pad into a latching switch.
+- **Toggle**. One press sends the "on" message, the next press sends the "off" one, and letting go sends nothing. That turns a pad into a latching switch.
 
-**A controller as a button.** A control change, pitch bend, or pressure usually moves smoothly. Under **Read it as**, pick **A button** to treat it as one. **Pressed at** and above counts as pressed, and anything below it counts as let go. Only a change from one to the other sends anything, so a sustain pedal can play a note. **Pressed at** is shown in the step's **Value format**, as 0 to 127 or as a percentage.
+**A controller as a button.** A control change, pitch bend, or pressure usually moves smoothly. Under **Interpret as**, pick **A button** to treat it as one. **Pressed at** and above counts as pressed, and anything below it counts as let go. Only a change from one to the other sends anything, so a sustain pedal can play a note. **Pressed at** is shown in the step's **Value format**, as 0 to 127 or as a percentage.
 
-**Something that never lets go.** A program change, a timing clock, Start, Continue, Stop, or a value read as **A value that moves**, has no release. When a row turns one into a note, the note off is sent right after the note on, so no note is left sounding.
+**Something that never lets go.** A program change, a timing clock, Start, Continue, Stop, or a value read as **Continuous value**, has no release. When a row turns one into a note, the note off is sent right after the note on, so no note is left sounding.
 
-**Clock, Start, Continue, and Stop.** Some music software can't send MIDI clock, but it can play a note over and over. To turn that note into the clock, pick **Note** under **When it gets**, with its channel and number, and pick **Timing clock** under **Turn it into**. Each note on sends one clock tick, and the note off sends nothing. A device that follows MIDI clock expects 24 ticks for each quarter note, so the note has to repeat that often. Turn other notes into **Start**, **Continue**, and **Stop** the same way.
+**Clock, Start, Continue, and Stop.** Some music software can't send MIDI clock, but it can play a note over and over. To turn that note into the clock, pick **Note** under **Input**, with its channel and number, and pick **Timing clock** under **Output**. Each note on sends one clock tick, and the note off sends nothing. A device that follows MIDI clock expects 24 ticks for each quarter note, so the note has to repeat that often. Turn other notes into **Start**, **Continue**, and **Stop** the same way.
 
 It works the other way too: a clock tick, Start, Continue, or Stop can become a note or a control change. These messages have no channel, number, or value to copy, so the **Same** choices aren't offered. Pick the channel, the number, the value, and the format to send.
 
 > **Note:** Converting to or from system real-time messages like Clock will likely introduce jitter due to the size and priority of the messages. It's here for convenience for when there are no other reasonable options.
 
-**Program changes.** Under **Program to send**, a row can send one program, or the next or the previous one in a range you set. Check **Go around at the ends** to start over at the other end. The step keeps one place in the range for each group and channel, and every row in the step shares it, so one footswitch can go up and another down.
+**Program changes.** Under **Program**, a row can send one program, or the next or the previous one in a range you set. Check **Wrap** to start over at the other end. The step keeps one place in the range for each group and channel, and every row in the step shares it, so one footswitch can go up and another down.
 
 What the message converter can't do:
 
@@ -238,14 +238,14 @@ Leave **Bypass exact-pitch notes** clear and the pitch moves with the note, so t
 
 These decide where a message goes, rather than changing it.
 
-- **Note distributor** plays several one-note synths as one bigger synth. Connect one synth to its **Out** for each voice you want. Each connection is a voice, in the order you connected them, and each new note goes to one of them. Its note off, poly pressure, and MIDI 2.0 per-note messages follow it there. **Take turns** moves on to the next voice for each note. **First free voice** uses the first one that isn't playing. When every voice is playing, both cut the oldest note short. **Keep the highest notes** and **Keep the lowest notes** only cut a note short for a higher or a lower one. Control changes, channel pressure, and pitch bend go to every voice, or, with their box cleared, only to the voice that played the latest note. All notes off, program changes, and everything else always go to every voice.
+- **Note distributor** plays several one-note synths as one bigger synth. Connect one synth to its **Out** for each voice you want. Each connection is a voice, in the order you connected them, and each new note goes to one of them. Its note off, poly pressure, and MIDI 2.0 per-note messages follow it there. **Take turns** moves on to the next voice for each note. **First free voice** uses the first one that isn't playing. When every voice is playing, both cut the oldest note short. **Highest notes** and **Lowest notes** only cut a note short for a higher or a lower one. Control changes, channel pressure, and pitch bend go to every voice, or, with their box under **Send to all voices** cleared, only to the voice that played the latest note. All notes off, program changes, and everything else always go to every voice.
 
 ## Logic steps
 
 Logic steps look at what's in a message and decide what happens to it. They can also remember something from one message for the messages that come after it. That's how a footswitch can pick which synth a keyboard plays, or how hard notes and soft notes can go to different places with one step.
 
-- **Branch** sends each message one of two ways, **Yes** or **No**, by a test. It can test a part of the message, such as its channel, note, velocity, or a controller's value, or a tag or a memory. The tests are **Is**, **Is not**, **Is at least**, **Is below**, **Is between**, **Is one of**, **Is empty**, and **Is not empty**. A new Branch sends everything Yes until you give it a test.
-- **Switch** sends each message one of several ways. Each way has a test, and a message goes out the first way it matches, from the top. A message that matches none of them goes out **Anything else**. **Add a way for each channel**, or for each group, fills in sixteen ways at once. A Switch can have up to 64 ways.
+- **Branch** sends each message to one of two outputs, **Yes** or **No**, by a test. It can test a part of the message, such as its channel, note, velocity, or a controller's value, or a tag or a memory. The tests are **Is**, **Is not**, **Is at least**, **Is below**, **Is between**, **Is one of**, **Is empty**, and **Is not empty**. A new Branch sends everything Yes until you give it a test.
+- **Switch** sends each message to one of several outputs. Each output has a test, and a message goes out the first output it matches, from the top. A message that matches none of them goes out **Default**. **Add output per channel**, or **Add output per group**, fills in sixteen outputs at once. A Switch can have up to 64 outputs.
 - **Set tag** gives each message a value to carry through the rest of the patch, such as the channel it came in on before a channel mapper moved it. A step further along can test the tag, or put it back into the message. A tag lasts only for that message's trip through the patch. Devices never see it.
 - **Set memory** remembers a value for the messages that come later. It can remember a part of the message, such as the last program change, or a number. It can also switch between two numbers each time, step up or down through a range, or empty the memory. It can change on every message that reaches it, or only on one kind, such as a control change from a footswitch. You can keep the messages that change it out, or send them on.
 - **Put value** writes a number, a tag, or a memory into one part of each message, such as its channel or its velocity. A value keeps its share of the range, so 50% of a velocity becomes 50% of a controller value.
@@ -258,11 +258,11 @@ To play notes only while a sequencer is playing, connect the sequencer's clock a
 - A tag belongs to one message. It starts empty, and a message that leaves a message throttler leaves its tags behind.
 - A memory belongs to the patch. It starts empty and keeps its value until Windows MIDI Patchbay closes, even while the patch isn't routing. It isn't saved in the patch. Select a step that uses a memory to see its value under **Activity**.
 
-**Notes stay together.** A Branch or a Switch sends a note off the same way its note on went, even when the note off wouldn't pass the test on its own. A sustain pedal let go reaches every way it went down on, and the rest of a long message, such as system exclusive, follows its first packet.
+**Notes stay together.** A Branch or a Switch sends a note off out the same output as its note on, even when the note off wouldn't pass the test on its own. A sustain pedal let go reaches every output it went down on, and the rest of a long message, such as system exclusive, follows its first packet.
 
-**Missing value.** A Branch that tests the note can get a control change, and a memory can be empty. Under **Missing value**, choose what happens to those messages: send them every way, send them one way, or keep them out. Every way is the default, the same as two filters side by side would do.
+**Missing value.** A Branch that tests the note can get a control change, and a memory can be empty. Under **Missing value**, choose what happens to those messages: send them to **All outputs**, send them to one output, or **Block** them. **All outputs** is the default, the same as two filters side by side would do.
 
-**Bypass.** A bypassed Branch or Switch sends messages every way, or only its first way, as you choose under **Bypass behavior**.
+**Bypass.** A bypassed Branch or Switch sends messages to **All outputs**, or only to its first output (**Yes** or **Output 1**), as you choose under **Bypass behavior**.
 
 What logic steps can't do:
 
@@ -274,14 +274,14 @@ What logic steps can't do:
 
 MIDI-CI lets an app ask a device what it is and what it can do. A MIDI 2.0 device answers for itself. A MIDI 1.0 device can't, so Windows MIDI Patchbay can answer for it.
 
-- **MIDI-CI responder** answers MIDI-CI for the device it leads to. Put it on the path from the app to the device, usually right after a MIDI 2.0 loopback pair: the patch uses one side, and the app opens the other. When the app looks for MIDI-CI devices, it finds one with the manufacturer ID, family, model, and software version you give the step. Use the numbers from the device's manual if it has them. Everything that isn't MIDI-CI, such as notes, goes on to the device as usual. MIDI-CI doesn't, unless you check **Send MIDI-CI on to the device too**, because most MIDI 1.0 devices don't understand it.
+- **MIDI-CI responder** answers MIDI-CI for the device it leads to. Put it on the path from the app to the device, usually right after a MIDI 2.0 loopback pair: the patch uses one side, and the app opens the other. When the app looks for MIDI-CI devices, it finds one with the manufacturer ID, family, model, and software version you give the step. Use the numbers from the device's manual if it has them. Everything that isn't MIDI-CI, such as notes, goes on to the device as usual. MIDI-CI doesn't, unless you check **Enable MIDI-CI pass-through**, because most MIDI 1.0 devices don't understand it.
 - **MIDI-CI filter** keeps MIDI-CI away from a device, or lets only MIDI-CI through. Pick which kinds: discovery and management, profiles, Property Exchange, and Process Inquiry. System exclusive that isn't MIDI-CI goes through when MIDI-CI is kept out, and is kept out when only MIDI-CI is let through.
 
 **Where the answers go.** A responder's answers don't go out its **Out**. They go straight back to the endpoint the question came in from, on the group the question came in on. The steps between that endpoint and the responder don't touch them, so a filter or a group mapper on the way in doesn't change an answer. On the canvas, a dashed line runs from the dot at the bottom of the responder back to that endpoint's **In**, on its **Any group** row. Select the responder to see the endpoint under **Answer destination**. A responder answers even while the device it leads to isn't plugged in.
 
 **Use a loopback pair, not a basic loopback.** A basic loopback sends everything that goes into it back out to every app that has it open, and that includes Windows MIDI Patchbay. So the app hears everything it sends, and the notes and controllers in a MIDI message report come back into the patch and go on to the device again. With a MIDI 2.0 loopback pair, what goes into one side comes out of the other, so nothing comes back. When a basic loopback feeds a responder, the responder's details panel says so.
 
-With **Answer MIDI message reports** on, a responder tells an app which notes are playing, and where each channel's controllers, program, pitch bend, and channel pressure are. It only knows what went through it since the patch started routing, so a change made on the device itself doesn't show.
+With **MIDI Message Report** on, a responder tells an app which notes are playing, and where each channel's controllers, program, pitch bend, and channel pressure are. It only knows what went through it since the patch started routing, so a change made on the device itself doesn't show.
 
 **Profiles and properties.** A MIDI-CI file tells the responder which profiles the device follows, such as one for drawbar organs, and gives an app properties to read, such as the device's program list. Put the file in the patch folder, then type its name under **MIDI-CI file**, or select **Choose…**. A file from somewhere else is copied into the patch folder first. **Open patch folder** opens the folder in File Explorer. While the patch routes, changes to the file are picked up straight away.
 
@@ -302,19 +302,19 @@ Things a responder can't do:
 
 Generators make messages of their own. MIDI clock and MIDI Time Code only have an **Out**. An LFO also has an **In**, for a clock to follow. A generator runs for as long as its patch is routing: it starts when you start the patch and stops when you stop it. Connect it to everything that should get what it sends, straight or through other steps.
 
-- **MIDI clock** sends 24 timing clock pulses for every beat, at the tempo you set. With **Send Start and Stop messages** on, it sends Start as routing starts and Stop as it stops, so a sequencer or drum machine plays along. It can swing eighth notes or sixteenth notes, up to 75%. Select the step to change its tempo right in the panel on the right.
-- **MIDI Time Code** sends quarter frame messages at 24, 25, 29.97 drop frame, or 30 frames per second, counting from the start time you set. It starts from that time each time the patch starts routing. With **Send a full timecode when starting and stopping** on, a device finds its place at once.
-- **LFO** sweeps a value up and down in the same shapes as an LFO control in Windows MIDI Glass: sine, triangle, square, a ramp up or down, or one of four kinds of noise. Set its **Cycle length**, the beats one pass takes at a tempo you set, and how much of the range it covers. It can send a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN, on the channel and group you pick. **Return to center when routing stops** sends the value halfway between the two ends as it stops, so a pitch bend that sweeps its whole range ends up back in the middle.
+- **MIDI clock** sends 24 timing clock pulses for every beat, at the tempo you set. With **Send Start/Stop** on, it sends Start as routing starts and Stop as it stops, so a sequencer or drum machine plays along. It can swing eighth notes or sixteenth notes, up to 75%. Select the step to change its tempo right in the panel on the right.
+- **MIDI Time Code** sends quarter frame messages at 24, 25, 29.97 drop frame, or 30 frames per second, counting from the start time you set. It starts from that time each time the patch starts routing. With **Send full frame on start/stop** on, a device finds its place at once.
+- **LFO** sweeps a value up and down in the same shapes as an LFO control in Windows MIDI Glass: sine, triangle, square, a ramp up or down, or one of four kinds of noise. Set its **Cycle length**, the beats one pass takes at a tempo you set, and how much of the range it covers. It can send a control change, pitch bend, channel pressure, poly pressure on one note, or an RPN or NRPN, on the channel and group you pick. **Return to center on stop** sends the value halfway between the two ends as it stops, so a pitch bend that sweeps its whole range ends up back in the middle.
 
 **Keeping an LFO in step with a clock.** Connect a clock to the LFO's **In**: a device that sends MIDI clock, a MIDI clock step, or a clock divider. The LFO then follows that clock instead of its own tempo. One pass takes that many beats of the clock, a Start from the clock puts the LFO back at the beginning of a pass, and when the clock stops, the LFO stops moving. Only timing clock, Start, Continue, Stop and Song Position reach the LFO. Anything else that comes in stops there. With nothing connected to its **In**, an LFO keeps its own tempo. A muted connection still counts, so muting the clock holds the LFO still.
 
-With **Start and stop with the clock** checked, the LFO waits for a Start or Continue before it moves, and a Stop holds it until the next one. It goes back to the middle on Stop if **Return to center when routing stops** is checked. Without it, the LFO moves with every timing clock, whether the music is playing or not.
+With **Sync to clock** checked, the LFO waits for a Start or Continue before it moves, and a Stop holds it until the next one. It goes back to the middle on Stop if **Return to center on stop** is checked. Without it, the LFO moves with every timing clock, whether the music is playing or not.
 
 The clock and the time code go out on the group you pick. A connection to one group or port of an endpoint sends them there instead.
 
 **One clock for a whole setup.** Put a MIDI clock step on a patch and connect it to every device that should follow it. A device that should run at half speed gets its clock through a **Clock divider** set to 2. An LFO connected to the same clock sweeps in time with it. Make a patch like this for each project, each with its own tempo, and start the one you need.
 
-Changing a generator while its patch is routing doesn't start it again. A new tempo, more or less swing, and every change to an LFO take effect right away. Changing the clock's group, its **Swing note value**, or **Send Start and Stop messages**, or anything about the time code, starts it again from the top. So does connecting a clock to an LFO, or taking it away.
+Changing a generator while its patch is routing doesn't start it again. A new tempo, more or less swing, and every change to an LFO take effect right away. Changing the clock's group, its **Swing note value**, or **Send Start/Stop**, or anything about the time code, starts it again from the top. So does connecting a clock to an LFO, or taking it away.
 
 MIDI clock and MIDI Time Code don't follow a clock that comes in from a device, and messages don't start or stop them. They run whenever their patch routes.
 
@@ -333,30 +333,30 @@ Each step uses one control, so add a step for each control you want to use. Like
 
 **Learn.** Select **Learn**, then press the button, or move the stick or trigger, that you want. The step picks the controller and the control for you.
 
-**What a button sends.** Pick a message under **When pressed, send**:
+**What a button sends.** Pick a message under **On press**:
 
-- A **note**, which plays while the button is down. Clear **Send a note off when you let go** for a sound that should ring on, such as a drum.
+- A **note**, which plays while the button is down. Clear **Note off on release** for a sound that should ring on, such as a drum.
 - A **control change**, **pitch bend**, **channel pressure**, **poly pressure**, **RPN**, or **NRPN**, with a value for when you press, and if you like, another for when you let go. A new control change is a sustain pedal: controller 64, all the way down while you hold the button, and up when you let go.
 - A **program change**: one program, or the next or the previous program in a range you choose. Every step in the patch that sends the next or previous program on the same group and channel keeps one place in the range, so one button can go up and another down.
 - **Start**, **Continue**, or **Stop**.
-- **Message typed in**: any one message, typed as 1 to 4 words in hexadecimal.
+- **Custom message**: any one message, typed as 1 to 4 words in hexadecimal.
 
 Messages go out as MIDI 2.0, with the finest steps, and Windows converts them for a MIDI 1.0 device. To send MIDI 1.0 messages instead, choose **MIDI 1.0** under **Message format**. An RPN or an NRPN always goes as MIDI 2.0.
 
-**Holding a button.** Under **When held, send**, pick a second message. It goes once you've held the button for the time you set. With **Repeat while held**, it goes again and again until you let go. That's handy on the D-pad: tap it to move one program, and hold it to run through them. With **Tap or hold, not both**, a short press sends only the pressed message, and a long press sends only the held message. The pressed message then waits until you let go, so it comes a little later.
+**Holding a button.** Under **On hold**, pick a second message. It goes once you've held the button for the time you set. With **Auto-repeat**, it goes again and again until you let go. That's handy on the D-pad: tap it to move one program, and hold it to run through them. With **Separate tap and hold**, a short press sends only the pressed message, and a long press sends only the held message. The pressed message then waits until you let go, so it comes a little later.
 
-**On and off.** With **Switch on and off with each press**, one press sends the pressed message and the next press ends it, like a latching pedal. The held message isn't used.
+**On and off.** With **Toggle**, one press sends the pressed message and the next press ends it, like a latching pedal. The held message isn't used.
 
 **Sticks and triggers.** A stick or trigger step only sends when the control moves, so nothing goes out when the patch starts.
 
 - **Dead zone** is how far the control moves from where it rests before its value starts to change. A stick never comes back to exactly the middle, so without one, a stick you aren't touching could keep sending.
 - A joystick's twist turns a little whenever you push the stick hard, so a twist step changes too. If that gets in the way, raise its dead zone, or use the twist for something that can take small changes.
 - **Range and curve** shape the value with the input and output ranges, the curve, and **Invert**, the same way as in [Shaping controller values](#shaping-controller-values).
-- **At most one message every** limits how many messages a quick move sends. Where the control stops is always sent.
+- **Minimum interval** limits how many messages a quick move sends. Where the control stops is always sent.
 - A stick rests in the middle, the same as pitch bend, so the two are a good fit. A trigger rests at the bottom, which suits a control change.
 - A slider, a throttle, or a dial stays where you leave it. It has no dead zone, and nothing is sent for it when routing stops.
 
-**When it stops.** When the patch stops routing or the controller goes away, a note a button started gets its note off, a value gets its value for letting go, and a button that's switched on is switched off. A stick or trigger step with **Send where it rests when routing stops or the controller goes away** checked sends where the control rests, so a pitch bend isn't left bent.
+**When it stops.** When the patch stops routing or the controller goes away, a note a button started gets its note off, a value gets its value for letting go, and a button that's switched on is switched off. A stick or trigger step with **Send rest value on stop** checked sends where the control rests, so a pitch bend isn't left bent.
 
 **The Xbox Adaptive Controller.** A switch in one of its jacks works like the button the jack is named for, so a switch in the A jack is the A button. The X1 and X2 jacks are different. A joystick in X1 is the left stick, and one in X2 is the right stick. A switch in X1 is left stick up, and one in X2 is left stick down, unless you changed them in the Xbox Accessories app. To use those switches, pick **Left stick up** or **Left stick down** in a **Controller button** step, or use **Learn**.
 
@@ -393,7 +393,7 @@ Put the throttler last, right before the device, so its speed is spent only on t
 
 **Windows MIDI Patchbay holds the messages that are waiting** and sends them as fast as the speed allows. It never slows down the device or app that's sending to it. Select the throttler to see how many messages are waiting, under **Activity**. A throttler can hold minutes' worth of messages at MIDI 1.0 wire speed. If even more arrives, the newest messages are dropped, and **Activity** says how many.
 
-**A throttler that falls behind thins out fast moves.** When more than about a tenth of a second of messages is waiting, it skips some of the steps in the middle of each control change, pressure or pitch bend move, so the device catches up. Where each move starts, every point where it turns around, and where it ends are always sent, and so is the value right before and after each note. Notes, program changes and SysEx are never skipped. **Activity** says how many in-between values were skipped. Short moves are always sent in full, so an endless knob that sends how far it turned, rather than where it is, keeps working in nearly every case. To be sure every message gets through, turn off **Skip in-between values to catch up** for that throttler.
+**A throttler that falls behind thins out fast moves.** When more than about a tenth of a second of messages is waiting, it skips some of the steps in the middle of each control change, pressure or pitch bend move, so the device catches up. Where each move starts, every point where it turns around, and where it ends are always sent, and so is the value right before and after each note. Notes, program changes and SysEx are never skipped. **Activity** says how many in-between values were skipped. Short moves are always sent in full, so an endless knob that sends how far it turned, rather than where it is, keeps working in nearly every case. To be sure every message gets through, turn off **Skip intermediate values** for that throttler.
 
 Everything connected into one throttler shares its speed. Connect everything that goes to a slow device through one throttler, and the device never gets more than that. Two throttlers in front of the same device each send at their own speed, so together they can send it twice as much. A patch from an earlier version gets a throttler for each connection that had a sending speed, so it works the way it did.
 
@@ -443,11 +443,11 @@ For step-by-step setup with REAPER, TouchOSC, and other apps, see [Using OSC wit
 
 ### Adding an OSC connection
 
-To add one, open the **Endpoints** tab of a patch window and drag **OSC connection** onto the canvas, or click it. Pick a preset, the port to listen on, and where to send. **Find on the network** fills in where to send for an app that announces itself, like TouchOSC. **Play a test note** sends middle C, so you can check the other app hears it before you finish. An OSC connection sits on the canvas like a device, with an **In** and an **Out**, and you connect to it the same way.
+To add one, open the **Endpoints** tab of a patch window and drag **OSC connection** onto the canvas, or click it. Pick a preset, the port to listen on, and where to send. **Browse network** fills in where to send for an app that announces itself, like TouchOSC. **Test note** sends middle C, so you can check the other app hears it before you finish. An OSC connection sits on the canvas like a device, with an **In** and an **Out**, and you connect to it the same way.
 
 ### Rows and formats
 
-Each row of an OSC connection is an OSC address, like `/midi` or `/vkb_midi`, and acts like a MIDI group. Messages that arrive under that address come into the patch on that row's group, and messages connected into the row go out under its address. A connection can have up to 16 rows. **Add a row** in the details panel, or right-click the connection and choose **Add a row**.
+Each row of an OSC connection is an OSC address, like `/midi` or `/vkb_midi`, and acts like a MIDI group. Messages that arrive under that address come into the patch on that row's group, and messages connected into the row go out under its address. A connection can have up to 16 rows. **Add row** in the details panel, or right-click the connection and choose **Add row**.
 
 There's no single standard for MIDI in OSC, so each row picks one of three ways to write it, or uses rules of its own. Presets set everything for the apps they're named after.
 
@@ -474,17 +474,17 @@ Select an OSC connection to see the last 50 messages that arrived, newest first,
 
 ### MIDI 2.0
 
-MIDI 2.0 messages go out as their MIDI 1.0 versions, the way the MIDI specification says to translate them. A few MIDI 2.0 messages, such as per-note controllers, have no MIDI 1.0 version, so they aren't sent. The details panel counts them. Coming in, a row can make MIDI 2.0: check **Make MIDI 2.0 messages** on the row. Then a value from 0 to 1, like a TouchOSC fader's, sets a controller with 32-bit precision instead of 128 steps, and a note's velocity with 16 bits. Whole numbers are scaled up the way the MIDI 2.0 specification says. Turn it on only when what the row connects to takes MIDI 2.0.
+MIDI 2.0 messages go out as their MIDI 1.0 versions, the way the MIDI specification says to translate them. A few MIDI 2.0 messages, such as per-note controllers, have no MIDI 1.0 version, so they aren't sent. The details panel counts them. Coming in, a row can make MIDI 2.0: check **MIDI 2.0 messages** on the row. Then a value from 0 to 1, like a TouchOSC fader's, sets a controller with 32-bit precision instead of 128 steps, and a note's velocity with 16 bits. Whole numbers are scaled up the way the MIDI 2.0 specification says. Turn it on only when what the row connects to takes MIDI 2.0.
 
 ### UDP or TCP
 
-Almost every OSC app uses UDP, where each message travels on its own. Some apps, like TouchOSC, can also use TCP, which never loses a message and keeps them in order, so it suits big SysEx. Under **Network**, pick **TCP, connect to the other app** to connect to the app at the address under **Sending**, or **TCP, wait for apps to connect** to let up to 8 apps connect to the port under **Receiving**. Messages go both ways on each connection. A connection that drops is made again every 2 seconds. Pick the **TCP framing** the other app uses: **SLIP (OSC 1.1)** for most apps, or **Size first (OSC 1.0)**.
+Almost every OSC app uses UDP, where each message travels on its own. Some apps, like TouchOSC, can also use TCP, which never loses a message and keeps them in order, so it suits big SysEx. Under **Network**, pick **TCP client** to connect to the app at the address under **Sending**, or **TCP server** to let up to 8 apps connect to the port under **Receiving**. Messages go both ways on each connection. A connection that drops is made again every 2 seconds. Pick the **TCP framing** the other app uses: **SLIP (OSC 1.1)** for most apps, or **Size first (OSC 1.0)**.
 
 ### Finding apps on the network
 
-**Find on the network**, under where to send, lists the OSC apps that announce themselves on your network. Pick one to fill in its address and port. TouchOSC on a phone shows up as the phone's name and model, followed by `(TouchOSC)`, like `iPhone [iPhone] (TouchOSC)`. Set to connect over TCP, the list shows the apps that wait for TCP connections instead.
+**Browse network**, under where to send, lists the OSC apps that announce themselves on your network. Pick one to fill in its address and port. TouchOSC on a phone shows up as the phone's name and model, followed by `(TouchOSC)`, like `iPhone [iPhone] (TouchOSC)`. Set to connect over TCP, the list shows the apps that wait for TCP connections instead.
 
-It works the other way too. Apps that look for OSC devices, like TouchOSC, list each OSC connection by its name and this PC's name, like `Patchbay OSC (STUDIO-PC)`. In TouchOSC, picking it fills in the address and port. That only happens while the connection listens on every network and Windows Firewall lets Windows MIDI Patchbay in, because before then no other device could reach it. Clear **Let apps on the network find this connection** to stop it.
+It works the other way too. Apps that look for OSC devices, like TouchOSC, list each OSC connection by its name and this PC's name, like `Patchbay OSC (STUDIO-PC)`. In TouchOSC, picking it fills in the address and port. That only happens while the connection listens on every network and Windows Firewall lets Windows MIDI Patchbay in, because before then no other device could reach it. Clear **Discoverable on network** to stop it.
 
 Some apps and some networks don't pass these announcements along. When an app isn't listed, type its address and port.
 
@@ -496,7 +496,7 @@ When that's holding a routing patch back, a bar at the top of the patch window s
 
 ### Who can send to it
 
-OSC has no passwords, so anyone who can reach this PC can send to the port. By default, an OSC connection only takes messages from the computer it sends to. **Take messages from** can change that to anyone, or to a list of addresses. **Listen for** can keep it to apps on this PC only.
+OSC has no passwords, so anyone who can reach this PC can send to the port. By default, an OSC connection only takes messages from the computer it sends to. **Accept from** can change that to anyone, or to a list of addresses. **Listen for** can keep it to apps on this PC only.
 
 ### Timing
 
@@ -504,7 +504,7 @@ Messages play when they arrive. OSC can also say when a message should play, and
 
 ### Opening it from other apps
 
-Check **Show to other apps as a MIDI device** on an OSC connection, and while its patch routes, apps on this PC like your DAW can open it by its name, without a [loopback](#loopbacks). What arrives over OSC goes to them, and what they send goes out over OSC. Each row shows as a block of its own, named for its address, on its group. The same connection keeps the same device from one day to the next, so your DAW remembers it. The device is only there while the patch routes.
+Check **Virtual MIDI device** on an OSC connection, and while its patch routes, apps on this PC like your DAW can open it by its name, without a [loopback](#loopbacks). What arrives over OSC goes to them, and what they send goes out over OSC. Each row shows as a block of its own, named for its address, on its group. The same connection keeps the same device from one day to the next, so your DAW remembers it. The device is only there while the patch routes.
 
 ## When a device isn't there
 
@@ -547,7 +547,7 @@ It only shows a patch that's routing, and it waits while a trace is on the canva
 **Trace messages…**, under **Test**, shows where messages go in the patch, one step at a time, without sending anything to a device. It works on a patch that isn't routing, and on devices that aren't plugged in.
 
 1. Pick the endpoint the messages come in from, and the group.
-2. Make a list of messages, in order, such as a note on and its note off. Pick the kind, the channel, and the numbers, then select **Add to the list**. Check **Send it as a MIDI 2.0 message** for a MIDI 2.0 device, or type the words in hex for any other message.
+2. Make a list of messages, in order, such as a note on and its note off. Pick the kind, the channel, and the numbers, then select **Add**. Check **MIDI 2.0** for a MIDI 2.0 device, or type the words in hex for any other message.
 3. Select **Trace**.
 
 The canvas shows where the first message went. The connections and steps it went through are drawn in green, a step that kept it out has a red edge, and everything else fades. The bar at the top says which devices it reached, and what it looked like when it got there. **Next** and **Previous** step through the list, and **Change messages** opens the list again. Close the bar to put the canvas back. Any change to the patch puts the canvas back too.

@@ -931,6 +931,8 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(count);
 
+                body.Children().Append(patchbay::parts::Heading(resources::GetString(L"DistributorToAllHeading")));
+
                 struct Option
                 {
                     wchar_t const* Key;

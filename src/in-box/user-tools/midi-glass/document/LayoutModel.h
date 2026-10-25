@@ -153,6 +153,11 @@ namespace glass
         // while it runs. Pressed, it starts or stops, the way an LFO does.
         Steps = 26,
 
+        // A window onto the neck of a guitar, a bass, a ukulele or anything else with frets.
+        // Each string plays one note at a time, the way a real string does, and bends when the
+        // finger pushes across it.
+        Fretboard = 27,
+
         // Not a kind a file can name: a control of a kind this version doesn't know, kept as read.
         Placeholder = 1000,
     };
@@ -193,6 +198,10 @@ namespace glass
         // A per-note controller whose meaning the instrument decides. PerNoteController is the
         // registered kind, whose numbers MIDI 2.0 defines.
         AssignablePerNoteController = 14,
+
+        // Changes the pad grids on the layout while it runs: an octave up, the next scale, in key
+        // only on. Sends nothing, like a page change. PadFunction says which change.
+        PadGrid = 15,
 
         // Not a kind a file can name: one this version doesn't know, kept as read and never sent.
         Unrecognized = 1000,
@@ -668,17 +677,88 @@ namespace glass
     // In full with the pads, below. A scale picker names the scales it offers.
     enum class MusicalScale;
 
+    // Which pad grids a grid button, a picker or a readout works on: every grid on the layout,
+    // or the grids named here by control id. An empty list works on none.
+    struct PadGridTargets
+    {
+        bool AllGrids{ true };
+        std::vector<std::wstring> ControlIds{};
+
+        bool operator==(PadGridTargets const&) const = default;
+    };
+
+    // What a pad grid row does to its grids while the layout runs. Nothing is saved: the layout
+    // opens as it was built each time.
+    enum class PadGridFunction
+    {
+        OctaveUp = 0,
+        OctaveDown = 1,
+
+        // The whole grid moves by one row offset, the way the arrow keys on a grid controller
+        // move it.
+        RowUp = 2,
+        RowDown = 3,
+
+        // The whole grid moves by one pad along its rows.
+        ShiftLeft = 4,
+        ShiftRight = 5,
+
+        // One semitone, or with in key only on, one note of the scale.
+        SemitoneUp = 6,
+        SemitoneDown = 7,
+
+        InKeyOnlyOn = 8,
+        InKeyOnlyOff = 9,
+        InKeyOnlyToggle = 10,
+
+        NextRoot = 11,
+        PreviousRoot = 12,
+        NextScale = 13,
+        PreviousScale = 14,
+        NextRowOffset = 15,
+
+        // Back to the grid as it was built.
+        Reset = 16,
+
+        // Fretboards. The capo moves one fret, and the frets showing move one fret along the
+        // neck: up the neck is toward the body, where the notes are higher.
+        CapoUp = 17,
+        CapoDown = 18,
+        UpTheNeck = 19,
+        DownTheNeck = 20,
+
+        // Every string a fretboard is sounding stops, the way a palm across the strings stops
+        // them.
+        MuteStrings = 21,
+    };
+
+    constexpr int32_t PadGridFunctionCount = 22;
+
     // What a switch picks while the layout runs, instead of sending its rows.
     enum class SwitchPicks
     {
         Nothing = 0,
 
-        // Twelve positions, C up to B. Each sets the root note of every pad grid that has a key.
+        // Twelve positions, C up to B. Each sets the root note of the pad grids it targets that
+        // have a key.
         RootNote = 1,
 
-        // One position for each scale it offers. Each sets the scale of every pad grid that has
-        // a key.
+        // One position for each scale it offers. Each sets the scale of the pad grids it targets
+        // that have a key.
         Scale = 2,
+
+        // Two positions: every note, and only the notes of the key.
+        InKeyOnly = 3,
+
+        // A row offset for each position: continuous, a third, a fourth, a fifth, an octave.
+        RowOffset = 4,
+
+        // Two octaves down to two octaves up, from where the grid was built.
+        Octave = 5,
+
+        // One position for each tuning a fretboard can be in, in the order the inspector lists
+        // them. Each sets the tuning of the fretboards it targets.
+        Tuning = 6,
     };
 
     // The positions of a switch, in order, by the name printed on each. The first position is
@@ -692,12 +772,50 @@ namespace glass
         SwitchPicks Picks{ SwitchPicks::Nothing };
         std::vector<MusicalScale> Scales{};
 
+        // The pad grids a picker changes and shows.
+        PadGridTargets Targets{};
+
         UnknownFields Unknown{ nullptr };
     };
 
     constexpr int32_t MinimumSwitchPositions = 2;
     constexpr int32_t MaximumSwitchPositions = 16;
     constexpr int32_t RootPickerPositions = 12;
+    constexpr int32_t InKeyPickerPositions = 2;
+    constexpr int32_t RowOffsetPickerPositions = 5;
+    constexpr int32_t OctavePickerPositions = 5;
+
+    // What a readout shows: its own value, or something about a pad grid while the layout runs.
+    enum class ReadoutSource
+    {
+        Value = 0,
+
+        // The root and scale, such as "D Dorian".
+        PadKey = 1,
+
+        // How many octaves the grid has been moved from where it was built, such as "+1".
+        Octave = 2,
+
+        RowOffset = 3,
+
+        // The key, the octave and the row offset together.
+        PadSummary = 4,
+
+        // A fretboard's capo, such as "Capo 2", and its tuning, such as "Drop D".
+        Capo = 5,
+        Tuning = 6,
+    };
+
+    struct ReadoutSpec
+    {
+        ReadoutSource Source{ ReadoutSource::Value };
+
+        // The grid it shows: the first one these name. Every grid means the first grid on the
+        // layout.
+        PadGridTargets Targets{};
+
+        UnknownFields Unknown{ nullptr };
+    };
 
     // Which way a step sequencer walks its steps.
     enum class StepDirection
@@ -832,12 +950,43 @@ namespace glass
     // No key: every pad is the same color.
     constexpr int32_t NoKey = -1;
 
+    // How the pads are arranged in the control.
+    enum class PadArrangement
+    {
+        // As many to a row as the control's width holds, at the pad size asked for. Resizing the
+        // control moves pads between rows.
+        Flow = 0,
+
+        // A set number of rows, each with a set number of pads, stretched to fill the control.
+        // Pads run left to right and rows stack from the bottom.
+        Rows = 1,
+
+        // The same turned on its side: pads run bottom to top and columns stack from the left.
+        Columns = 2,
+    };
+
     // The pads on a note pad or hex pad control. Width and height come from the control's own
     // rectangle; this is what is drawn inside it and what each pad plays.
     struct PadGridSpec
     {
-        // How many pads there are. They flow into as many rows as the control's width needs.
+        // How many pads there are with the flow arrangement. They flow into as many rows as the
+        // control's width needs.
         int32_t PadCount{ 24 };
+
+        PadArrangement Arrangement{ PadArrangement::Flow };
+
+        // With rows or columns: how many, and how many pads in each.
+        int32_t Rows{ 8 };
+        int32_t PadsPerRow{ 8 };
+
+        // Every pad playing a note that is held lights, not only the one under the finger. A
+        // grid where rows overlap plays the same note in more than one place.
+        bool HighlightHeld{ false };
+
+        // Set only while the layout runs, by grid buttons. Never saved. How many rows the grid
+        // has moved, and how many steps along a row: semitones, or notes of the scale in key.
+        int32_t ShiftRows{ 0 };
+        int32_t ShiftSteps{ 0 };
 
         // How wide one pad is, in page units. The pads shrink to fit only when the control is
         // too small to hold them all at this size.
@@ -890,6 +1039,14 @@ namespace glass
 
     constexpr int32_t MinimumPadCount = 1;
     constexpr int32_t MaximumPadCount = 128;
+
+    // Rows or columns, and the pads in each. Never more than MaximumGridPads together: a giant
+    // touch screen can use a thousand pads, and that is enough.
+    constexpr int32_t MinimumGridRows = 1;
+    constexpr int32_t MaximumGridRows = 32;
+    constexpr int32_t MinimumPadsPerRow = 1;
+    constexpr int32_t MaximumPadsPerRow = 64;
+    constexpr int32_t MaximumGridPads = 1024;
     constexpr double MinimumPadSize = 12.0;
     constexpr double MaximumPadSize = 240.0;
     constexpr int32_t MinimumRightInterval = 1;
@@ -898,6 +1055,166 @@ namespace glass
     constexpr double MaximumPadNoteNameSize = 64.0;
     constexpr int32_t MinimumBendRangeSemitones = 1;
     constexpr int32_t MaximumBendRangeSemitones = 96;
+
+    // ---- fretboards ----
+
+    // The tunings a fretboard knows by name, in the order the inspector lists them. Custom is
+    // any other set of strings, and is what editing one string makes it.
+    enum class FretTuning
+    {
+        Standard = 0,
+        DropD = 1,
+        HalfStepDown = 2,
+        WholeStepDown = 3,
+        Dadgad = 4,
+        OpenG = 5,
+        OpenD = 6,
+        OpenE = 7,
+        SevenString = 8,
+        Bass = 9,
+        FiveStringBass = 10,
+        Ukulele = 11,
+        BaritoneUkulele = 12,
+        Mandolin = 13,
+        Banjo = 14,
+        Custom = 15,
+    };
+
+    // The named tunings, which is also how many positions a tuning picker has.
+    constexpr int32_t FretTuningPresetCount = 15;
+
+    // One string. The list runs top to bottom the way the strings are drawn.
+    struct FretString
+    {
+        // The note it plays open, with no finger on it and no capo.
+        int32_t Note{ 40 };
+
+        // Where a short string starts, like the fifth string of a banjo, which begins at the
+        // fifth fret. Zero for a string that runs the whole neck.
+        int32_t StartFret{ 0 };
+
+        UnknownFields Unknown{ nullptr };
+
+        bool operator==(FretString const& other) const noexcept
+        {
+            return Note == other.Note && StartFret == other.StartFret;
+        }
+    };
+
+    // Which side the strum area is on. On the right for a right-handed player, the side the
+    // body of a guitar is on; on the left for a left-handed player, and then the neck is drawn
+    // the other way round, with the nut on the right.
+    enum class StrumSide
+    {
+        None = 0,
+        Left = 1,
+        Right = 2,
+    };
+
+    // What touching a fret does.
+    enum class FretPlayMode
+    {
+        // Touching a fret plays the string at that fret.
+        Tap = 0,
+
+        // Touching a fret only holds it down. Sweeping across the strum area plays each string
+        // at the fret held on it, or open.
+        Strum = 1,
+    };
+
+    // How long a string keeps sounding.
+    enum class FretSustain
+    {
+        // Until the finger on it comes off.
+        WhileHeld = 0,
+
+        // Until it is played again or muted, the way a real string keeps ringing.
+        UntilReplayed = 1,
+    };
+
+    // What a fret whose note is not in the key does, when the fretboard shows a key.
+    enum class OutOfKeyFrets
+    {
+        Play = 0,
+        Dim = 1,
+
+        // Drawn dim, and plays nothing.
+        Mute = 2,
+    };
+
+    // What a finger sliding along a string does.
+    enum class FretSlide
+    {
+        // The note bends a semitone at each fret it crosses, with no new attack.
+        Stepped = 0,
+
+        // The note bends smoothly with the finger, as on a fretless neck.
+        Smooth = 1,
+
+        // Each fret the finger reaches plays a new note.
+        Off = 2,
+    };
+
+    // How the strings reach the instrument.
+    enum class FretOutput
+    {
+        // Every string on the note row's channel, bending with MIDI 2.0 per-note pitch bend.
+        PerNoteBend = 0,
+
+        // Each string on a channel of its own, counted up from the note row's channel, bending
+        // with ordinary pitch bend. What MIDI guitar pickups send.
+        ChannelPerString = 1,
+
+        // The MPE profile: the note row's channel is the manager channel, and each string plays
+        // on a member channel above it.
+        Mpe = 2,
+    };
+
+    struct FretboardSpec
+    {
+        FretTuning Tuning{ FretTuning::Standard };
+
+        // Top to bottom as drawn. Standard tuning puts the high string at the top and the low
+        // string at the bottom.
+        std::vector<FretString> Strings{};
+
+        // How many frets the neck has, and which of them show. Fret 0 is the open string,
+        // which always has its own column beside the nut.
+        int32_t Frets{ 22 };
+        int32_t FirstFret{ 0 };
+        int32_t LastFret{ 12 };
+
+        int32_t Capo{ 0 };
+
+        StrumSide Strum{ StrumSide::Right };
+        FretPlayMode Play{ FretPlayMode::Tap };
+        FretSustain Sustain{ FretSustain::UntilReplayed };
+
+        // The key the dots show, or NoKey for no dots.
+        int32_t KeyRoot{ NoKey };
+        MusicalScale Scale{ MusicalScale::Major };
+        OutOfKeyFrets OutOfKey{ OutOfKeyFrets::Play };
+
+        // How far a finger pushing across a string bends it, in semitones.
+        int32_t BendRangeSemitones{ 2 };
+
+        FretSlide Slide{ FretSlide::Stepped };
+
+        // A finger fretting higher on a string that is sounding changes its note without a new
+        // attack, and lifting it goes back to the fret still held.
+        bool HammerOns{ true };
+
+        FretOutput Output{ FretOutput::ChannelPerString };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumFretStrings = 1;
+    constexpr int32_t MaximumFretStrings = 12;
+    constexpr int32_t MinimumFrets = 1;
+    constexpr int32_t MaximumFrets = 36;
+    constexpr int32_t MinimumFretBendSemitones = 1;
+    constexpr int32_t MaximumFretBendSemitones = 12;
 
     // What lights a lamp or moves a meter. A meter following one controller is the ordinary
     // case; a lamp is more often "is anything coming from this device at all".
@@ -1071,6 +1388,10 @@ namespace glass
         std::wstring SequenceName{};
         std::wstring TargetPageId{};
 
+        // A pad grid row: what it changes, and on which grids.
+        PadGridFunction PadFunction{ PadGridFunction::OctaveUp };
+        PadGridTargets PadTargets{};
+
         // On a switch, the one position that sends this row, counted from 0, and it sends its
         // maximum. -1 is every change, the way a row on any other control works.
         int32_t Position{ -1 };
@@ -1242,6 +1563,12 @@ namespace glass
 
         // Only read when the kind is NotePads or HexPads.
         PadGridSpec Pads{};
+
+        // Only read when the kind is Fretboard.
+        FretboardSpec Fretboard{};
+
+        // Only read when the kind is Readout.
+        ReadoutSpec Readout{};
 
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };

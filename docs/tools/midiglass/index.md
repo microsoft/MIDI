@@ -24,8 +24,8 @@ Windows MIDI Glass opens to the **library**, where all your layouts are.
 2. **Each card is a layout.** Click a card to run it. Point at a card to see **Run**, **Edit** and **…** for more options. You can also right-click a card for the same options.
 3. **The status chip** on each card says whether the devices that layout sends to are connected right now.
 4. **Search, sort and view.** Type to find a layout. Sort by last used, by name or by last changed. Switch between cards and a list. The list shows each layout's description under its name.
-5. **Open a file…** runs a layout from any folder. **Ask an AI assistant…**, next to it, helps an AI assistant build a layout for you. **…** (More options) imports a pack, sets the name and license that go on what you make, opens the backups folder, and can keep the PC awake while a layout runs.
-6. **Appearance and settings** sets the app's light or dark theme and its window background, and turns **Ask an AI assistant** on or off.
+5. **Open…** runs a layout from any folder. **Ask an AI assistant…**, next to it, helps an AI assistant build a layout for you. **…** (More options) imports a pack, sets the name and license that go on what you make, opens the backups folder, and can keep the PC awake while a layout runs.
+6. **Appearance and settings** sets the app's light or dark theme and its window background, and turns **AI assistant** on or off.
 7. **The status bar** shows how many layouts you have and where they're saved. The chip on the right says whether the MIDI service is running.
 
 ### Make your first layout
@@ -86,7 +86,7 @@ The **Add** pane groups the controls by what they do.
 | Knobs and faders | Knob, Turntable, Fader, Wheel, Ribbon |
 | Two axis | XY pad, Joystick |
 | Generators | Beat clock, LFO, Steps |
-| Keys and pads | Mono keyboard, Note pads, Hex pads |
+| Keys and pads | Mono keyboard, Note pads, Hex pads, Fretboard |
 | Feedback and text | Meter, Lamp, Readout, Stopwatch, Text, Image |
 | Grouping | Group, Line |
 
@@ -98,15 +98,27 @@ A few of them need a word of explanation:
 - A **Ribbon** is a strip you slide a finger along. It sends one value, like a fader.
 - **Generators** play by themselves once they start. **Beat clock** sends MIDI clock at the tempo you set. **LFO** sweeps a value up and down. **Steps** plays a short pattern of notes, one step at a time.
 - **Note pads** and **Hex pads** take a finger on each pad, so you can play chords. The **Mono keyboard** plays one key at a time, and you can slide along it. Turn on **Show note names**, on its **Look** tab, to print each key's name and number on it.
-- To play in one key on **Note pads** or **Hex pads**, pick the key and the scale on the **Look** tab, then turn on **Only notes in the key**. Every pad then plays a note of that scale, and the bottom left pad plays the root. **First note** picks the root's octave. It's how many grid controllers play in key, and a chord shape you learn works the same in every key.
-- To change key while you play, select the pad grid and then **Add root and scale pickers**. That puts two switches on the page. One picks the root note and one picks the scale, such as Dorian or Lydian, and every pad grid with a key follows them the moment you touch one. The layout opens in its saved key each time. To change which scales the picker offers, select it and check them under **Scales it offers**.
-- All the pad grids in a layout follow the same pickers, so they always play in the same key. To play two grids in different keys at once, run two layouts side by side, each with its own pickers. Select **Duplicate** on the layout card's **…** menu, or put the second grid in a layout of its own. It has to be a second layout, because running a layout that's already open only brings its window to the front.
+- To play in one key on **Note pads** or **Hex pads**, pick the key and the scale on the **Look** tab, then turn on **In key only**. Every pad then plays a note of that scale, and the bottom left pad plays the root. **First note** picks the root's octave. It's how many grid controllers play in key, and a chord shape you learn works the same in every key.
+- To change key while you play, select the pad grid and then **Add root and scale pickers**. That puts two switches on the page. One picks the root note and one picks the scale, such as Dorian or Lydian, and the pad grids they target follow them the moment you touch one. The layout opens in its saved key each time. To change which scales the picker offers, select it and check them under **Scales**.
+- **Arrangement** sets how the pads sit. **Flow** fits as many pads to a row as the control is wide. **Rows** and **Columns** give a set grid, such as 8 rows of 24 pads, up to 1,024 pads. The pads stretch to fill the control, so making it bigger makes the pads bigger, and the grid keeps its shape. With rows that overlap, the same note is on more than one pad. Turn on **Highlight held notes** to light every pad playing a note you hold, so you can see the shape under your fingers.
+- You can type a note's name in **First note**, **Lowest note** and a step's note, such as **F#0**, **Bb1** or **C3**, as well as its number. Middle C, note 60, is C3. Use # or b for sharps and flats. A pad grid's **First note** box shows both, such as F♯0 (30). If some pads would play a note past 127 or below 0, they're blank, and the inspector says how many.
+- To move a pad grid while you play, select it and then **Add grid buttons**. Pick what you want, and Windows MIDI Glass puts them in a row under the grid: octave up and down, row up and down, an **In key only** switch, a readout that shows the key and octave, and a reset button. Each one changes only that grid. You can make your own too. Give a button a row of the type **Pad grid** and pick its **Function**, such as **Next scale** or **Shift right**. A switch's **Function** can also be **In key only**, **Row offset**, or **Octave**, and a readout's **Source** can show the grid's key, octave or row offset.
+- Pickers, grid buttons and readouts change every pad grid unless you pick **Targets**. Uncheck **All grids** and check the grids you want, so a split layout can have its bass pads and lead pads in different keys and octaves. Nothing they change is saved. The layout opens as you built it each time.
+- Pickers and grid buttons can target different grids, so two grids on one layout can play in different keys at once. Give each grid its own pickers, or use **Add root and scale pickers** on each one: the first pickers on a layout change every grid, and once a layout has pickers, new ones change only the grid you add them for. You can also pick **Targets** on any picker yourself.
+- A **Fretboard** is a guitar neck you play with your fingers. Each string plays one note at a time, the way a real string does. Touch a fret to play its string. Touch a higher fret on the same string and the note changes without a new attack, which is a hammer-on. Lift it and the note goes back to the fret you're still holding, which is a pull-off. Turn off **Hammer-ons** to make every change a new note.
+- Push your finger across a string, up or down, to bend the note up, as far as **Bend range**. Slide along the string to bend it a fret at a time (**Stepped**), smoothly like a fretless neck (**Smooth**), or to play a new note at each fret (**Off**).
+- Pick a **Tuning**, such as **Drop D**, **DADGAD**, **Bass** or **Ukulele**, or set each string yourself under **Strings**. The list runs top to bottom the way the strings are drawn, so a guitar's low string is last and sits at the bottom. **Move up** and **Move down** reorder them, and changing a note makes the tuning **Custom**.
+- **Visible frets** picks which part of the neck shows, such as frets 5 to 9. The strip under the strings shows the whole neck. Drag it to move along the neck while you play. **Capo** raises every open string, and the frets behind it play nothing.
+- **Strum side** puts a strum area on the right, or on the left for a left-handed player, which turns the neck round. With **Play mode** set to **Strum**, touching a fret only holds it down, and sweeping across the strum area plays each string at the fret you hold, or open. A faster sweep plays louder. **Sustain** decides whether a string stops when you lift your finger (**While held**) or rings until you play it again (**Until replayed**). Each string still plays one note at a time.
+- **Scale dots** mark the frets in a key, with the root in its own color. **Out-of-key frets** can play, dim, or be muted so they play nothing.
+- **Output** decides how the strings reach your instrument. **Channel per string** puts each string on its own channel, counting up from the note row's channel, the way MIDI guitar pickups do. Most guitar instruments expect this, and it bends each string on its own. **MPE** uses the note row's channel as the manager channel and plays each string on a channel above it. Set your instrument up for MPE on those channels. **Per-note bend** keeps every string on one channel and bends with MIDI 2.0, so a MIDI 1.0 instrument hears no bends.
+- To change a fretboard while you play, select it and then **Add fretboard buttons**. That adds a **Tuning** switch beside it and a row under it: **Capo down**, a readout that shows the capo, **Capo up**, **Down the neck**, **Up the neck** and **Mute**. Each one changes only that fretboard. You can make your own with a button's **Pad grid** row, too. Nothing they change is saved.
 - **Meter**, **Lamp** and **Readout** show values that arrive from a device. You set that up on their **Listens** tab. A **Stopwatch** counts up from when the layout starts, so you can see how long you've been playing. Tap it to start again from zero.
 - A **Group** control draws a frame around controls that belong together, and a **Line** divides one part of a page from another. Neither sends anything. Don't mix up the **Group** control with **Group** on the toolbar, which ties the selected controls together.
 
 ![A mono keyboard with Show note names on, showing each key's name and number from C2 48 to C4 72]({{ site.baseurl }}/assets/images/midiglass-keyboard-note-names.png)
 
-Type in **Find a control** to narrow the list. To add a control without the mouse, pick it with the keyboard and select **Add to page**. **Add to page** stays off until you pick a control.
+Type in **Search controls** to narrow the list. To add a control without the mouse, pick it with the keyboard and select **Add to page**. **Add to page** stays off until you pick a control.
 
 ## Arranging controls
 
@@ -148,7 +160,7 @@ A few types need more than a number:
 
 Windows MIDI Glass names notes the same way the rest of Windows MIDI Services does: note 60, middle C, is C3.
 
-The fastest way to fill in a row is **MIDI Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and Windows MIDI Glass copies what it sends. **Learn a bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. MIDI Learn listens to the devices in the layout's device list, so add your hardware there first.
+The fastest way to fill in a row is **MIDI Learn**. Turn on **Learn**, then move a knob or press a key on your hardware, and Windows MIDI Glass copies what it sends. **Learn bank** fills several controls in a row: touch the knobs on your hardware one after another, and each one fills the next control in keyboard order. MIDI Learn listens to the devices in the layout's device list, so add your hardware there first.
 
 Each device has a **Protocol** setting: **MIDI 2.0**, **MIDI 1.0** or **Mackie Control**. It decides how you type values on the **Sends** tab. [How Windows MIDI Glass talks to each device]({{ site.baseurl }}/kb/midi-glass-mackie-control/#how-midi-glass-talks-to-each-device) explains the choices.
 
@@ -183,7 +195,7 @@ Open **Layout…**, then **Pages and devices…**, to rename pages and change th
 
 LFO and Steps controls run at the layout's tempo. To set it, open **Layout…**, then **Pages and devices…**, and select **Behavior**. A **Beat clock** keeps its own tempo.
 
-To follow another device instead, such as your DAW, set **Tempo source** to **Incoming MIDI clock** and pick the device under **Clock comes from**. The LFOs and Steps controls then follow the speed of the clock it sends. Until the clock arrives they use the tempo you typed, and if the clock stops they keep the last tempo they had. They follow only the clock's speed. They don't start or stop when the clock does, and they don't line up with its beat.
+To follow another device instead, such as your DAW, set **Tempo source** to **External MIDI clock** and pick the device under **Clock source**. The LFOs and Steps controls then follow the speed of the clock it sends. Until the clock arrives they use the tempo you typed, and if the clock stops they keep the last tempo they had. They follow only the clock's speed. They don't start or stop when the clock does, and they don't line up with its beat.
 
 ![The Tempo settings, with Tempo source set to Incoming MIDI clock, Clock comes from set to Synth, and a tempo of 120]({{ site.baseurl }}/assets/images/midiglass-tempo.png)
 
@@ -203,7 +215,7 @@ You can move more than one control at once with more than one finger: two faders
 
 The bar also says whether the devices the layout sends to are connected. If one is missing, it says **Waiting for** and the device's name. Plug the device back in and the layout picks it up again by itself.
 
-If a layout runs for a long time while nobody touches the PC, such as one that only shows meters or plays a beat clock, Windows may turn the screen off or go to sleep. To stop that, select **…** (More options) in the library and turn on **Keep this PC awake while a layout runs**.
+If a layout runs for a long time while nobody touches the PC, such as one that only shows meters or plays a beat clock, Windows may turn the screen off or go to sleep. To stop that, select **…** (More options) in the library and turn on **Prevent sleep while running**.
 
 ## Devices
 
@@ -221,9 +233,9 @@ Each control uses one of the theme's six colors, chosen on its **Look** tab. A c
 
 **Layout…**, then **Background image…**, puts a picture or a video behind the controls. You can set how it fits the page and how see-through it is.
 
-Above the gallery, the page says which theme the layout uses and who made it. Select **About this theme…** next to it to see everything the theme's file says.
+Above the gallery, the page says which theme the layout uses and who made it. Select **Theme details…** next to it to see everything the theme's file says.
 
-The theme gallery shows who made each theme under its name. **Group themes by**, above the gallery, sorts the themes by who made them or by who signed them. Right-click a theme to see **About this theme…**, or, for one of your own, **Pack for sharing…**.
+The theme gallery shows who made each theme under its name. **Group by**, above the gallery, sorts the themes by who made them or by who signed them. Right-click a theme to see **Theme details…**, or, for one of your own, **Export pack…**.
 
 [How Windows MIDI Glass themes work]({{ site.baseurl }}/kb/midi-glass-themes/) covers every theme setting, where theme files go, and how to make your own.
 
@@ -232,30 +244,30 @@ The theme gallery shows who made each theme under its name. **Group themes by**,
 Layouts are saved in **Documents › MIDI Layouts**, one file per layout. The files end in `.midilayout`. A picture or a video you add to a layout is copied next to it, so the layout and its pictures stay together.
 
 - **Back up now**, on a card's **…** menu, saves a copy of the layout in the **Backups** folder next to your layouts.
-- **Restore from a backup…** puts a backup back. Windows MIDI Glass backs up the layout as it is now first, so you can change your mind.
-- **Pack for sharing…** makes one file that holds the layout and everything it uses. See [Sharing layouts and themes](#sharing-layouts-and-themes).
+- **Restore…** puts a backup back. Windows MIDI Glass backs up the layout as it is now first, so you can change your mind.
+- **Export pack…** makes one file that holds the layout and everything it uses. See [Sharing layouts and themes](#sharing-layouts-and-themes).
 - **Duplicate** makes a copy to try ideas on. The copy says which layout it's based on.
 - **Add to favorites** puts the layout in a **Favorites** section at the top of the library. Favorites belong to this PC, so a layout you share doesn't arrive as someone else's favorite.
 
-To have an AI assistant build a layout for you, select **Ask an AI assistant…** in the library, next to **Open a file…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [Windows MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/), the names of your MIDI devices, and the themes you have, so the layout the assistant makes can find your devices. Windows MIDI Glass doesn't send anything itself. If you'd rather not see it, open **Appearance and settings** and turn off **Ask an AI assistant**.
+To have an AI assistant build a layout for you, select **Ask an AI assistant…** in the library, next to **Open…**. It shows a starting prompt to paste into the AI assistant you use, such as a chat in your web browser. The prompt has the link to [Windows MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/), the names of your MIDI devices, and the themes you have, so the layout the assistant makes can find your devices. Windows MIDI Glass doesn't send anything itself. If you'd rather not see it, open **Appearance and settings** and turn off **AI assistant**.
 
 ## Sharing layouts and themes
 
-To give a layout to someone else, or move it to another PC, select **Pack for sharing…** on its card's **…** menu. In the editor, open **Layout…**, then **Pages and devices…**, and select **Export…**. Windows MIDI Glass makes a **pack**: one `.midilayoutpack` file that holds the layout, every picture and video it uses, and the theme it uses if that theme is one of yours. To share a theme on its own, right-click it in the theme gallery and select **Pack for sharing…**. That makes a `.midithemepack` file.
+To give a layout to someone else, or move it to another PC, select **Export pack…** on its card's **…** menu. In the editor, open **Layout…**, then **Pages and devices…**, and select **Export…**. Windows MIDI Glass makes a **pack**: one `.midilayoutpack` file that holds the layout, every picture and video it uses, and the theme it uses if that theme is one of yours. To share a theme on its own, right-click it in the theme gallery and select **Export pack…**. That makes a `.midithemepack` file.
 
 A pack lists every file inside it, with its size and a fingerprint called a SHA-256 hash. When someone imports the pack, Windows MIDI Glass checks every file against that list, so it can tell if anything was changed or added after the pack was made.
 
 ### Who made it
 
-Each layout and theme can say who made it: a name, a company or group, a website, a license, a version, and whether AI was used to make it. Windows MIDI Glass fills this in for everything you make, from **Your info for sharing…** on the library's **…** (More options) menu. Other Windows MIDI Services tools use the same info. Before you pack something, Windows MIDI Glass shows what it says and lets you change it.
+Each layout and theme can say who made it: a name, a company or group, a website, a license, a version, and whether AI was used to make it. Windows MIDI Glass fills this in for everything you make, from **Author profile…** on the library's **…** (More options) menu. Other Windows MIDI Services tools use the same info. Before you pack something, Windows MIDI Glass shows what it says and lets you change it.
 
-To see what a layout says about who made it, select **About this layout…** on its card's **…** menu. For a theme, right-click it in the theme gallery and select **About this theme…**.
+To see what a layout says about who made it, select **Layout details…** on its card's **…** menu. For a theme, right-click it in the theme gallery and select **Theme details…**.
 
-- **To change who made a layout,** open it in the editor and select **Layout…**, then **About this layout…**. The page has the layout's name and description, the fields that say who made it, and when and with what it was made. Changes save as you type, like everything else in the editor. **Change it in the editor**, in the library's **About this layout…**, takes you to the same page.
-- **To say who made a new theme,** fill in **Who made it** when you select **Save as theme…**. A theme saved under a new name starts with your info.
-- **To change who made one of your own themes,** select **About this theme…**. You can't change a theme that comes with Windows MIDI Glass, one from a signed pack, or one a newer version made.
-- **If AI helped,** say so under **How it was made**, and pick how a person was involved. If an AI assistant made the layout for you, you can say you checked its work after you have.
-- **To change your info,** select **Your info for sharing…** on the library's **…** (More options) menu, or **Change your info…** on the editor's **About this layout** page. Your info is only filled in for what you make from then on. **Fill in your info** puts it into a layout or theme you already have.
+- **To change who made a layout,** open it in the editor and select **Layout…**, then **Layout details…**. The page has the layout's name and description, the fields that say who made it, and when and with what it was made. Changes save as you type, like everything else in the editor. **Open in editor**, in the library's **Layout details…**, takes you to the same page.
+- **To say who made a new theme,** fill in **Author** when you select **Save as theme…**. A theme saved under a new name starts with your info.
+- **To change who made one of your own themes,** select **Theme details…**. You can't change a theme that comes with Windows MIDI Glass, one from a signed pack, or one a newer version made.
+- **If AI helped,** say so under **Source**, and pick how a person was involved under **Human oversight**. If an AI assistant made the layout for you, you can say you checked its work after you have.
+- **To change your info,** select **Author profile…** on the library's **…** (More options) menu, or **Edit author profile…** on the editor's **Details** page. Your info is only filled in for what you make from then on. **Fill from profile** puts it into a layout or theme you already have.
 
 Anyone can type any name into a file. So unless a signature backs it, Windows MIDI Glass shows the name with **(unverified)** after it.
 
@@ -263,13 +275,13 @@ Anyone can type any name into a file. So unless a signature backs it, Windows MI
 
 A publisher, such as an instrument maker, can **sign** a pack with a code-signing certificate. The signature proves who published the pack and that nothing in it changed since. It doesn't mean the layout is safe or that it works.
 
-- **To sign a pack,** pick your certificate under **Sign it** when you pack it. You need a code-signing certificate from a certificate provider, in your personal certificate store. A certificate on a hardware token or in a cloud signing service works when the provider's software puts it in that store. Add a **Timestamp server** from your certificate provider, so the signature stays good after your certificate runs out.
+- **To sign a pack,** pick your certificate under **Signature** when you pack it. You need a code-signing certificate from a certificate provider, in your personal certificate store. A certificate on a hardware token or in a cloud signing service works when the provider's software puts it in that store. Add a **Timestamp server** from your certificate provider, so the signature stays good after your certificate runs out.
 - **When you import a signed pack,** Windows MIDI Glass shows **Signed by** and the name on the certificate. Windows checks the certificate, including whether the company that issued it has withdrawn it. A pack whose signature doesn't match what's in it, or whose certificate was withdrawn, isn't imported.
 - **A layout from a signed pack** says **Signed by** on its card for as long as its files are exactly what was signed. When you select **Edit**, Windows MIDI Glass offers to make your own copy, so the signed layout stays as it was published. The copy says which layout it's based on.
 
 ### Importing a pack
 
-Select **…** (More options) > **Import a pack…** in the library. For a theme pack, you can also use **Import a theme…** on the **Appearance** page in the editor. Windows MIDI Glass shows what's in the pack, who made it, and whether it's signed, before it writes anything. If you already have the same layout or theme, it asks whether to replace it or keep both.
+Select **…** (More options) > **Import pack…** in the library. For a theme pack, you can also use **Import theme…** on the **Appearance** page in the editor. Windows MIDI Glass shows what's in the pack, who made it, and whether it's signed, before it writes anything. If you already have the same layout or theme, it asks whether to replace it or keep both.
 
 Windows MIDI Glass still imports the `.zip` layout packages that earlier versions made.
 
@@ -281,7 +293,7 @@ A layout made by a newer version of Windows MIDI Glass says **From a newer versi
 
 On a running layout, the Tab key moves from control to control, and a screen reader reads each control's name. The **keyboard order** decides the order Tab moves through the controls, and the order a screen reader reads them.
 
-To set it, open **Layout…**, then **Set the keyboard order…**, and click the controls in the order you want. **Keyboard order**, under the page, sets the order from where the controls are on the page. You can also move a control up or down in the **Outline**.
+To set it, open **Layout…**, then **Tab order…**, and click the controls in the order you want. **Keyboard order**, under the page, sets the order from where the controls are on the page. You can also move a control up or down in the **Outline**.
 
 Open **Layout…**, then **Pages and devices…**, and select **Accessibility check** to see whether the colors are easy to tell apart and whether every control has a label a screen reader can say.
 

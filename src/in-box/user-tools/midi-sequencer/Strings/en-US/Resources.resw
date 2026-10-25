@@ -95,7 +95,7 @@
     <value>Theme</value>
   </data>
   <data name="AppearanceThemeSystem" xml:space="preserve">
-    <value>Use the Windows setting</value>
+    <value>Use system setting</value>
   </data>
   <data name="AppearanceThemeLight" xml:space="preserve">
     <value>Light</value>
@@ -116,7 +116,7 @@
     <value>Acrylic</value>
   </data>
   <data name="AppearanceCustomColor" xml:space="preserve">
-    <value>Use a color of my own</value>
+    <value>Custom window color</value>
   </data>
   <data name="AppearanceColorPickerName" xml:space="preserve">
     <value>Window color</value>
@@ -158,16 +158,16 @@
     <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
   </data>
   <data name="MenuImportCapture.Text" xml:space="preserve">
-    <value>Capture from MIDI Monitor or the console (CSV)…</value>
+    <value>MIDI Monitor capture (CSV)…</value>
   </data>
   <data name="MenuImportPaste.Text" xml:space="preserve">
-    <value>Messages copied in MIDI Monitor…</value>
+    <value>Paste from MIDI Monitor…</value>
   </data>
   <data name="MenuExport.Text" xml:space="preserve">
     <value>Export</value>
   </data>
   <data name="MenuExportClipFiles.Text" xml:space="preserve">
-    <value>MIDI 2.0 clip files, one for each track…</value>
+    <value>MIDI 2.0 clip files (per track)…</value>
   </data>
   <data name="MenuExportStandardMidiFile.Text" xml:space="preserve">
     <value>Standard MIDI File…</value>
@@ -177,7 +177,7 @@
     <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
   </data>
   <data name="MenuRemoteControl.Text" xml:space="preserve">
-    <value>Remote control and MIDI Glass…</value>
+    <value>Remote control…</value>
   </data>
   <data name="RemoteEndpointName" xml:space="preserve">
     <value>MIDI Sequencer</value>
@@ -208,7 +208,7 @@
     <value>Remote control endpoint</value>
   </data>
   <data name="RemoteMapHeading" xml:space="preserve">
-    <value>What each message does</value>
+    <value>Mappings</value>
   </data>
   <data name="RemoteMapTracks" xml:space="preserve">
     <value>Channels 1 to 15 are tracks 1 to 15, in the order of the track list, with folders left out. On a track's channel, notes 0 to 63 launch the clips in scenes 1 to 64, note 64 stops the track, and note 65 sends it back to the timeline. Controllers 20, 21 and 22 mute, solo and arm it.</value>
@@ -220,7 +220,7 @@
     <value>Tracks 16 and up are on group 2 and up. A MIDI 1.0 controller can send all of these. Keep remote control on in only one sequencer window at a time: other apps find the endpoint by its name.</value>
   </data>
   <data name="RemoteMakeLayout" xml:space="preserve">
-    <value>Make a MIDI Glass layout…</value>
+    <value>Create MIDI Glass layout…</value>
   </data>
   <data name="RemoteMakeLayoutHelp" xml:space="preserve">
     <value>A layout with a pad for each clip, a button for each scene, the transport, and mute, solo and arm for each track. It opens in MIDI Glass and turns remote control on. After you add tracks or scenes, make it again: a new file leaves the old one alone.</value>
@@ -281,7 +281,7 @@
     <value>Stop</value>
   </data>
   <data name="GlassEmptySlot" xml:space="preserve">
-    <value>Empty</value>
+    <value>(Empty)</value>
   </data>
   <data name="SceneNumberFormat" xml:space="preserve">
     <value>Scene {0}</value>
@@ -314,7 +314,7 @@
     <value>DAWproject file</value>
   </data>
   <data name="FileTypeCapture" xml:space="preserve">
-    <value>Capture from MIDI Monitor or the console</value>
+    <value>MIDI Monitor capture (CSV)</value>
   </data>
 
   <!-- ==================================== Transport ==================================== -->
@@ -382,26 +382,26 @@
     <value>Done</value>
   </data>
   <data name="ClockTempoFromHeading" xml:space="preserve">
-    <value>Tempo comes from</value>
+    <value>Tempo source</value>
   </data>
   <data name="ClockTempoThisSequence" xml:space="preserve">
-    <value>This sequence</value>
+    <value>Internal</value>
   </data>
   <data name="ClockTempoThisSequenceFormat" xml:space="preserve">
     <value>The Tempo and meter track, which starts at {0} BPM. Ramps and changes play exactly.</value>
     <comment>{0} is a tempo, such as 124.</comment>
   </data>
   <data name="ClockTempoAnotherDevice" xml:space="preserve">
-    <value>Another device's MIDI clock</value>
+    <value>External MIDI clock</value>
   </data>
   <data name="ClockTempoAnotherDeviceHelp" xml:space="preserve">
     <value>Its clock sets the tempo, and its start, stop and song position run playback. While following, the loop is off and Play waits for that device. The sequencer can only plan as far as the next pulse, so timing is a little looser than with its own clock.</value>
   </data>
   <data name="FollowDeviceName" xml:space="preserve">
-    <value>Device whose clock to follow</value>
+    <value>Clock device</value>
   </data>
   <data name="FollowGroupName" xml:space="preserve">
-    <value>Group of the clock to follow</value>
+    <value>Clock group</value>
   </data>
   <data name="FollowNoDevice" xml:space="preserve">
     <value>Choose the device whose clock to follow, or let the tempo come from this sequence.</value>
@@ -410,7 +410,7 @@
     <value>Playback follows {0}. It starts when that device starts or continues.</value>
   </data>
   <data name="ClockSendHeading" xml:space="preserve">
-    <value>Send clock to</value>
+    <value>Clock outputs</value>
   </data>
   <data name="ClockColumnDevice" xml:space="preserve">
     <value>Device</value>
@@ -419,7 +419,7 @@
     <value>Clock</value>
   </data>
   <data name="ClockColumnStartStop" xml:space="preserve">
-    <value>Start and stop</value>
+    <value>Start/Stop</value>
   </data>
   <data name="ClockColumnSongPosition" xml:space="preserve">
     <value>Song position</value>
@@ -434,7 +434,7 @@
     <value>No devices get this sequence's clock yet.</value>
   </data>
   <data name="ClockAddDevice" xml:space="preserve">
-    <value>Add a device</value>
+    <value>Add device</value>
   </data>
   <data name="ClockRowNoDevice" xml:space="preserve">
     <value>the new row</value>
@@ -468,13 +468,13 @@
     <value>Send MIDI Time Code</value>
   </data>
   <data name="TimeCodeSendTo" xml:space="preserve">
-    <value>Send time code to</value>
+    <value>Time code outputs</value>
   </data>
   <data name="TimeCodeDeviceName" xml:space="preserve">
-    <value>Device for time code</value>
+    <value>Time code device</value>
   </data>
   <data name="TimeCodeGroupName" xml:space="preserve">
-    <value>Group for time code</value>
+    <value>Time code group</value>
   </data>
   <data name="TimeCodeRateName" xml:space="preserve">
     <value>Frame rate</value>
@@ -495,7 +495,7 @@
     <value>starting at</value>
   </data>
   <data name="TimeCodeStartName" xml:space="preserve">
-    <value>Time code at the top of the sequence</value>
+    <value>Start time</value>
   </data>
   <data name="TimeCodeHelp" xml:space="preserve">
     <value>For video and lighting gear. Time code counts the time on the wall from the top of the sequence, so a tempo change doesn't change it.</value>
@@ -510,7 +510,7 @@
     <value>Timing</value>
   </data>
   <data name="ApplyOffsetsCheck" xml:space="preserve">
-    <value>Send early for each device's offset</value>
+    <value>Apply device offsets</value>
   </data>
   <data name="ApplyOffsetsHelp" xml:space="preserve">
     <value>Some devices need their messages a little early to sound on time. You set how early for each device in MIDI Settings. The MIDI service in Windows doesn't send early yet, so the sequencer does it.</value>
@@ -795,13 +795,13 @@
     <comment>{0} is a number of messages. {1} is a track's name.</comment>
   </data>
   <data name="PasteOneAStep" xml:space="preserve">
-    <value>One message per step, from the playhead</value>
+    <value>One per step</value>
   </data>
   <data name="PasteStepSize" xml:space="preserve">
-    <value>Each step is</value>
+    <value>Step size</value>
   </data>
   <data name="PasteAllAtOnce" xml:space="preserve">
-    <value>All at the playhead, in the order copied</value>
+    <value>All at playhead</value>
   </data>
   <data name="PasteAllAtOnceHelp" xml:space="preserve">
     <value>Good for a setup dump: sound select, then a system exclusive patch.</value>
@@ -825,7 +825,7 @@
     <value>Pasted</value>
   </data>
   <data name="PastedOriginDetail" xml:space="preserve">
-    <value>Copied in MIDI Monitor</value>
+    <value>From MIDI Monitor</value>
   </data>
   <data name="UndoPaste" xml:space="preserve">
     <value>Paste</value>
@@ -833,10 +833,10 @@
 
   <!-- ==================================== Track list ==================================== -->
   <data name="AddTrackButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Add a track</value>
+    <value>Add track</value>
   </data>
   <data name="AddTrackButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Add a track (Ctrl+T)</value>
+    <value>Add track (Ctrl+T)</value>
   </data>
   <data name="AddTrackButtonText.Text" xml:space="preserve">
     <value>Track</value>
@@ -959,14 +959,14 @@
     <comment>{0} is a control such as Volume, {1} the MIDI controller number it sends.</comment>
   </data>
   <data name="MixerFollowsLane" xml:space="preserve">
-    <value>Follows its automation lane</value>
+    <value>Automated</value>
   </data>
   <data name="MixerWriteFormat" xml:space="preserve">
     <value>Write automation for {0}: while the sequence plays, moving a control records it into a lane</value>
     <comment>{0} is a track's name.</comment>
   </data>
   <data name="AddTrackRowText" xml:space="preserve">
-    <value>Add a track</value>
+    <value>Add track</value>
   </data>
   <data name="VerticalScroll.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Scroll the tracks</value>
@@ -1014,7 +1014,7 @@
     <value>Playing</value>
   </data>
   <data name="KeyboardSlotQueued" xml:space="preserve">
-    <value>Waiting to start</value>
+    <value>Queued</value>
   </data>
   <data name="KeyboardSlotStopped" xml:space="preserve">
     <value>Stopped</value>
@@ -1074,17 +1074,17 @@
     <value>This track doesn't record from a device yet, so it records only what it plays from the launcher. To play into it too, choose a device under Record from in its setup.</value>
   </data>
   <data name="NoDestination" xml:space="preserve">
-    <value>Not playing to anything</value>
+    <value>(No output)</value>
   </data>
   <data name="NoSource" xml:space="preserve">
-    <value>Not recording from anything</value>
+    <value>(No input)</value>
   </data>
   <data name="RecordingFromFormat" xml:space="preserve">
     <value>From {0}</value>
     <comment>{0} is a device's name.</comment>
   </data>
   <data name="UnknownEndpoint" xml:space="preserve">
-    <value>Unknown device</value>
+    <value>(Unknown device)</value>
   </data>
   <data name="NotConnectedSuffix" xml:space="preserve">
     <value>(not connected)</value>
@@ -1105,7 +1105,7 @@
     <value>Rename…</value>
   </data>
   <data name="MenuPin" xml:space="preserve">
-    <value>Pin to the top</value>
+    <value>Pin</value>
   </data>
   <data name="MenuUnpin" xml:space="preserve">
     <value>Unpin</value>
@@ -1135,7 +1135,7 @@
     <value>Compact</value>
   </data>
   <data name="MenuCompactTracks" xml:space="preserve">
-    <value>Compact the selected tracks</value>
+    <value>Compact</value>
   </data>
   <data name="MenuStandardHeight" xml:space="preserve">
     <value>Standard height</value>
@@ -1172,13 +1172,13 @@
     <value>Drag to make this row taller or shorter. Double-click for the standard height.</value>
   </data>
   <data name="MenuTopLevel" xml:space="preserve">
-    <value>Out of its folder</value>
+    <value>(No folder)</value>
   </data>
   <data name="MenuDeleteTrack" xml:space="preserve">
     <value>Delete track</value>
   </data>
   <data name="MenuDeleteFolder" xml:space="preserve">
-    <value>Delete folder and its tracks</value>
+    <value>Delete folder and tracks</value>
   </data>
   <data name="MenuEditClip" xml:space="preserve">
     <value>Edit</value>
@@ -1196,7 +1196,10 @@
     <value>Split here</value>
   </data>
   <data name="MenuMergeClips" xml:space="preserve">
-    <value>Merge selected clips (Ctrl+click to select)</value>
+    <value>Merge clips</value>
+  </data>
+  <data name="MenuMergeClipsTip" xml:space="preserve">
+    <value>Ctrl+click clips to select more than one</value>
   </data>
   <data name="MenuMergeClipsFormat" xml:space="preserve">
     <value>Merge {0} selected clips</value>
@@ -1229,10 +1232,10 @@
     <value>Delete</value>
   </data>
   <data name="MenuNewClipHere" xml:space="preserve">
-    <value>New clip here</value>
+    <value>New clip</value>
   </data>
   <data name="MenuAddTagHere" xml:space="preserve">
-    <value>Add a tag here…</value>
+    <value>Add tag…</value>
   </data>
   <data name="MenuPlayFromHere" xml:space="preserve">
     <value>Play from here</value>
@@ -1241,19 +1244,19 @@
     <value>New clip</value>
   </data>
   <data name="MenuStopTrack" xml:space="preserve">
-    <value>Stop this track</value>
+    <value>Stop track</value>
   </data>
   <data name="MenuLaunchClip" xml:space="preserve">
     <value>Launch</value>
   </data>
   <data name="MenuPlaceOnTimeline" xml:space="preserve">
-    <value>Put on the timeline at the playhead</value>
+    <value>Place at playhead</value>
   </data>
   <data name="MenuRenameScene" xml:space="preserve">
     <value>Rename scene…</value>
   </data>
   <data name="MenuAddScene" xml:space="preserve">
-    <value>Add a scene</value>
+    <value>Add scene</value>
   </data>
   <data name="MenuDeleteScene" xml:space="preserve">
     <value>Delete scene</value>
@@ -1294,7 +1297,7 @@
     <value>Click to add a point. Hold Ctrl and drag to draw.</value>
   </data>
   <data name="ClipLaneCaption" xml:space="preserve">
-    <value>The clip's own lane plays here</value>
+    <value>Clip lane</value>
   </data>
   <data name="ClipLaneAdd" xml:space="preserve">
     <value>+ Lane</value>
@@ -1364,13 +1367,13 @@
     <value>Hide automation</value>
   </data>
   <data name="MenuAddPointHere" xml:space="preserve">
-    <value>Add a point here</value>
+    <value>Add point</value>
   </data>
   <data name="MenuRenameLane" xml:space="preserve">
     <value>Rename lane…</value>
   </data>
   <data name="MenuClearLane" xml:space="preserve">
-    <value>Clear all points</value>
+    <value>Clear lane</value>
   </data>
   <data name="MenuDeleteLane" xml:space="preserve">
     <value>Delete lane</value>
@@ -1379,7 +1382,7 @@
     <value>Set value…</value>
   </data>
   <data name="MenuHoldPoint" xml:space="preserve">
-    <value>Hold until the next point</value>
+    <value>Hold</value>
   </data>
   <data name="MenuDeletePoint" xml:space="preserve">
     <value>Delete point</value>
@@ -1428,13 +1431,13 @@
     <value>Program {0}</value>
   </data>
   <data name="LaneValuePromptPercent" xml:space="preserve">
-    <value>Value, from 0 to 100%</value>
+    <value>Value (0–100%)</value>
   </data>
   <data name="LaneValuePromptBend" xml:space="preserve">
-    <value>Bend, from -100% to +100%</value>
+    <value>Bend (−100% to +100%)</value>
   </data>
   <data name="LaneValuePromptProgram" xml:space="preserve">
-    <value>Program number, from 1 to 128</value>
+    <value>Program (1–128)</value>
   </data>
   <data name="LaneValueOutOfRange" xml:space="preserve">
     <value>That value is outside what this lane can take.</value>
@@ -1446,10 +1449,10 @@
     <value>Add automation to {0}</value>
   </data>
   <data name="AddLaneKind" xml:space="preserve">
-    <value>What it changes</value>
+    <value>Type</value>
   </data>
   <data name="LaneKindController" xml:space="preserve">
-    <value>A controller (CC)</value>
+    <value>Control change (CC)</value>
   </data>
   <data name="LaneKindPitchBend" xml:space="preserve">
     <value>Pitch bend</value>
@@ -1461,10 +1464,10 @@
     <value>Program change</value>
   </data>
   <data name="LaneKindRegistered" xml:space="preserve">
-    <value>A registered controller (RPN)</value>
+    <value>Registered controller (RPN)</value>
   </data>
   <data name="LaneKindAssignable" xml:space="preserve">
-    <value>An assignable controller (NRPN)</value>
+    <value>Assignable controller (NRPN)</value>
   </data>
   <data name="AddLaneController" xml:space="preserve">
     <value>Controller number</value>
@@ -1482,7 +1485,7 @@
     <value>Name</value>
   </data>
   <data name="AddLaneNamePlaceholder" xml:space="preserve">
-    <value>Optional, such as Filter cutoff</value>
+    <value>Optional</value>
   </data>
   <data name="AddLaneAdd" xml:space="preserve">
     <value>Add</value>
@@ -1596,7 +1599,7 @@
     <value>Add a meter change at bar {0}…</value>
   </data>
   <data name="MenuChangeTempoHere" xml:space="preserve">
-    <value>Change the tempo here…</value>
+    <value>Insert tempo change…</value>
   </data>
   <data name="MenuChangeMeterFormat" xml:space="preserve">
     <value>Change the meter from bar {0}…</value>
@@ -1608,7 +1611,7 @@
     <value>Set tempo…</value>
   </data>
   <data name="MenuRampToNext" xml:space="preserve">
-    <value>Ramp to the next tempo change</value>
+    <value>Ramp to next</value>
   </data>
   <data name="MenuDeleteTempoChange" xml:space="preserve">
     <value>Delete tempo change</value>
@@ -1732,7 +1735,7 @@
     <value>Rename clip</value>
   </data>
   <data name="UndoPlaceClip" xml:space="preserve">
-    <value>Put clip on the timeline</value>
+    <value>Place clip</value>
   </data>
   <data name="UndoAddTag" xml:space="preserve">
     <value>Add tag</value>
@@ -1778,10 +1781,10 @@
     <value>Capture</value>
   </data>
   <data name="UndoChangeSource" xml:space="preserve">
-    <value>Change what the track records</value>
+    <value>Change track input</value>
   </data>
   <data name="UndoChangeDestination" xml:space="preserve">
-    <value>Change where the track plays</value>
+    <value>Change track output</value>
   </data>
   <data name="UniqueClipNameFormat" xml:space="preserve">
     <value>{0} (copy)</value>
@@ -1811,7 +1814,7 @@
     <value>Recording</value>
   </data>
   <data name="GeneratedAsItPlays" xml:space="preserve">
-    <value>Made as it plays</value>
+    <value>Generated</value>
   </data>
 
   <!-- ==================================== Status bar ==================================== -->
@@ -1897,7 +1900,7 @@
     <value>Record into slot</value>
   </data>
   <data name="MenuRecordIntoSlot" xml:space="preserve">
-    <value>Record into this slot</value>
+    <value>Record into slot</value>
   </data>
   <data name="MenuRecordLength" xml:space="preserve">
     <value>Record length</value>
@@ -1938,7 +1941,7 @@
     <value>Track name</value>
   </data>
   <data name="TrackPinToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Pin to the top</value>
+    <value>Pin</value>
   </data>
   <data name="TrackPinToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Keep this track at the top, above everything that scrolls</value>
@@ -1977,10 +1980,10 @@
     <value>System exclusive</value>
   </data>
   <data name="EchoSwitch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Echo while armed</value>
+    <value>Input monitoring</value>
   </data>
   <data name="EchoTitle.Text" xml:space="preserve">
-    <value>Echo while armed</value>
+    <value>Input monitoring</value>
   </data>
   <data name="EchoSub.Text" xml:space="preserve">
     <value>Hear what you play through this track's device</value>
@@ -2010,13 +2013,13 @@
     <value>The channel to play on. As is plays each note on its own channel.</value>
   </data>
   <data name="TrySoundButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Try this sound in MIDI Keyboard</value>
+    <value>Preview in MIDI Keyboard</value>
   </data>
   <data name="TrySoundButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Opens MIDI Keyboard on this track's device, group and channel</value>
   </data>
   <data name="TrySoundText.Text" xml:space="preserve">
-    <value>Try this sound in MIDI Keyboard</value>
+    <value>Preview in MIDI Keyboard</value>
   </data>
   <data name="StartupHeading.Text" xml:space="preserve">
     <value>Start-up messages</value>
@@ -2025,10 +2028,10 @@
     <value>Nothing else. The MIDI Mixer adds volume, pan and the rest here when you set them.</value>
   </data>
   <data name="NoSourceChoice" xml:space="preserve">
-    <value>Nothing</value>
+    <value>(None)</value>
   </data>
   <data name="NoDestinationChoice" xml:space="preserve">
-    <value>Nothing</value>
+    <value>(None)</value>
   </data>
   <data name="AnyGroup" xml:space="preserve">
     <value>Any group</value>
@@ -2069,7 +2072,7 @@
     <value>Metronome</value>
   </data>
   <data name="MetronomeEndpoint" xml:space="preserve">
-    <value>Play the click on</value>
+    <value>Click output</value>
   </data>
   <data name="MetronomeGroup" xml:space="preserve">
     <value>Group</value>
@@ -2081,7 +2084,7 @@
     <value>Note</value>
   </data>
   <data name="MetronomeOnlyRecording" xml:space="preserve">
-    <value>Only while recording</value>
+    <value>Recording only</value>
   </data>
 
   <!-- ==================================== Clip editor ==================================== -->
@@ -2113,16 +2116,16 @@
     <value>Transpose</value>
   </data>
   <data name="TransposeUpOctave.Text" xml:space="preserve">
-    <value>Up an octave</value>
+    <value>Octave up</value>
   </data>
   <data name="TransposeUpSemitone.Text" xml:space="preserve">
-    <value>Up a semitone</value>
+    <value>Semitone up</value>
   </data>
   <data name="TransposeDownSemitone.Text" xml:space="preserve">
-    <value>Down a semitone</value>
+    <value>Semitone down</value>
   </data>
   <data name="TransposeDownOctave.Text" xml:space="preserve">
-    <value>Down an octave</value>
+    <value>Octave down</value>
   </data>
   <data name="EditorKeyboardText.Text" xml:space="preserve">
     <value>MIDI Keyboard</value>
@@ -2132,10 +2135,10 @@
     <comment>{0} is where the track plays, such as "General MIDI Synth · Ch 1".</comment>
   </data>
   <data name="ShowValuesAsLabel.Text" xml:space="preserve">
-    <value>Show values as</value>
+    <value>Value format</value>
   </data>
   <data name="ValuesAsCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Show values as</value>
+    <value>Value format</value>
   </data>
   <data name="ValuesMidi2" xml:space="preserve">
     <value>MIDI 2.0 (16-bit)</value>
@@ -2238,7 +2241,7 @@
 
   <!-- ==================================== Sample sequence ==================================== -->
   <data name="MenuOpenSample.Text" xml:space="preserve">
-    <value>Open the sample sequence</value>
+    <value>Open sample</value>
   </data>
   <data name="SampleSequenceName" xml:space="preserve">
     <value>Night Drive Sketch</value>
@@ -2355,10 +2358,10 @@
     <value>Pattern steps</value>
   </data>
   <data name="MenuNewDrumPatternHere" xml:space="preserve">
-    <value>New drum pattern here</value>
+    <value>New drum pattern</value>
   </data>
   <data name="MenuNewMelodicPatternHere" xml:space="preserve">
-    <value>New melodic pattern here</value>
+    <value>New melodic pattern</value>
   </data>
   <data name="MenuNewDrumPattern" xml:space="preserve">
     <value>New drum pattern</value>
@@ -2391,7 +2394,7 @@
     <value>50 is straight. Higher numbers push every second step later, for a shuffle.</value>
   </data>
   <data name="PatternKeepLengthToggle.Content" xml:space="preserve">
-    <value>Lanes keep their own length</value>
+    <value>Independent lane lengths</value>
   </data>
   <data name="PatternKeepLengthToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Each lane runs its own number of steps, so a 12-step lane drifts against a 16-step one and comes back.</value>
@@ -2436,7 +2439,7 @@
     <value>Steps</value>
   </data>
   <data name="PatternAddLane" xml:space="preserve">
-    <value>Add a lane</value>
+    <value>Add lane</value>
   </data>
   <data name="PatternNoteRow" xml:space="preserve">
     <value>Note</value>
@@ -2511,28 +2514,28 @@
     <value>Chance (%)</value>
   </data>
   <data name="PatternChanceAlways" xml:space="preserve">
-    <value>Plays every time</value>
+    <value>Always</value>
   </data>
   <data name="PatternChanceNever" xml:space="preserve">
     <value>Never plays</value>
   </data>
   <data name="PatternRatchet" xml:space="preserve">
-    <value>Ratchet: quick repeats inside the step</value>
+    <value>Ratchet</value>
   </data>
   <data name="PatternRatchetCountFormat" xml:space="preserve">
     <value>{0} hits</value>
   </data>
   <data name="PatternShapeName" xml:space="preserve">
-    <value>How the repeats change</value>
+    <value>Ratchet shape</value>
   </data>
   <data name="PatternShapeEven" xml:space="preserve">
-    <value>Every repeat the same</value>
+    <value>Even</value>
   </data>
   <data name="PatternShapeSofter" xml:space="preserve">
-    <value>Each repeat a little softer</value>
+    <value>Softer</value>
   </data>
   <data name="PatternShapeLouder" xml:space="preserve">
-    <value>Each repeat a little louder</value>
+    <value>Louder</value>
   </data>
   <data name="PatternCondition" xml:space="preserve">
     <value>Condition</value>
@@ -2541,37 +2544,37 @@
     <value>Every time</value>
   </data>
   <data name="ConditionFirstPass" xml:space="preserve">
-    <value>First pass only</value>
+    <value>First pass</value>
   </data>
   <data name="ConditionNotFirstPass" xml:space="preserve">
-    <value>Every pass but the first</value>
+    <value>Not first pass</value>
   </data>
   <data name="ConditionEveryFormat" xml:space="preserve">
     <value>Pass {0} of every {1}</value>
   </data>
   <data name="PatternNudge" xml:space="preserve">
-    <value>Nudge (ticks, minus is early)</value>
+    <value>Nudge (ticks)</value>
   </data>
   <data name="PatternLength" xml:space="preserve">
-    <value>Length (% of a step)</value>
+    <value>Length (%)</value>
   </data>
   <data name="PatternNote" xml:space="preserve">
     <value>Note</value>
   </data>
   <data name="PatternAccent" xml:space="preserve">
-    <value>Accent (full velocity)</value>
+    <value>Accent</value>
   </data>
   <data name="PatternSlide" xml:space="preserve">
-    <value>Slide into the next step</value>
+    <value>Slide</value>
   </data>
   <data name="MenuRenamePatternLane" xml:space="preserve">
     <value>Rename lane…</value>
   </data>
   <data name="MenuPatternLaneNote" xml:space="preserve">
-    <value>Change the note…</value>
+    <value>Change note…</value>
   </data>
   <data name="MenuPatternLaneSteps" xml:space="preserve">
-    <value>Steps in this lane</value>
+    <value>Steps</value>
   </data>
   <data name="MenuPatternLaneStepsFormat" xml:space="preserve">
     <value>{0} steps</value>
@@ -2589,7 +2592,7 @@
     <value>Lane name</value>
   </data>
   <data name="PromptPatternLaneNote" xml:space="preserve">
-    <value>Note number, from 0 to 127</value>
+    <value>Note (0–127)</value>
   </data>
   <data name="PatternNoteInvalid" xml:space="preserve">
     <value>Type a note number from 0 to 127.</value>
@@ -2771,7 +2774,7 @@
     <value>Melody</value>
   </data>
   <data name="MenuNewGeneratorHere" xml:space="preserve">
-    <value>New generator here</value>
+    <value>New generator</value>
   </data>
   <data name="MenuNewGenerator" xml:space="preserve">
     <value>New generator</value>
@@ -2867,13 +2870,13 @@
     <value>Change seed</value>
   </data>
   <data name="GeneratorRingsDrawing" xml:space="preserve">
-    <value>The rings, drawn</value>
+    <value>Rings</value>
   </data>
   <data name="GeneratorRingsTip" xml:space="preserve">
     <value>Drag around a ring to turn it. Use the mouse wheel on a ring to add or take away pulses, and hold Shift to add or take away steps.</value>
   </data>
   <data name="GeneratorWhatItPlays" xml:space="preserve">
-    <value>What it plays, two bars</value>
+    <value>Preview (2 bars)</value>
   </data>
   <data name="GeneratorPassStepFormat" xml:space="preserve">
     <value>Pass {0} · step {1} of {2}</value>
@@ -2892,10 +2895,10 @@
     <value>Velocity</value>
   </data>
   <data name="GeneratorFirstPasses" xml:space="preserve">
-    <value>The first four passes (new notes are outlined)</value>
+    <value>First 4 passes</value>
   </data>
   <data name="GeneratorEveryPass" xml:space="preserve">
-    <value>What every pass plays</value>
+    <value>Every pass</value>
   </data>
   <data name="GeneratorPassFormat" xml:space="preserve">
     <value>Pass {0}</value>
@@ -2913,7 +2916,7 @@
     <value>{0} new notes</value>
   </data>
   <data name="GeneratorMakeNotesFromPasses" xml:space="preserve">
-    <value>Make notes from these passes</value>
+    <value>Convert to notes</value>
   </data>
   <data name="GeneratorTypeEuclidean" xml:space="preserve">
     <value>Euclidean rhythm</value>
@@ -3030,7 +3033,7 @@
     <value>Remove ring {0}</value>
   </data>
   <data name="GeneratorAddRing" xml:space="preserve">
-    <value>Add a ring</value>
+    <value>Add ring</value>
   </data>
   <data name="GeneratorSameHint" xml:space="preserve">
     <value>Same each pass: the seed only matters if a ring's chance is under 100%.</value>
@@ -3051,10 +3054,10 @@
     <value>Highest note</value>
   </data>
   <data name="GeneratorBusy" xml:space="preserve">
-    <value>How busy</value>
+    <value>Density</value>
   </data>
   <data name="GeneratorKeep" xml:space="preserve">
-    <value>Keep from the last pass</value>
+    <value>Carry over</value>
   </data>
   <data name="GeneratorKeepHelp" xml:space="preserve">
     <value>100% plays the same notes every pass. 0% is new every time.</value>
@@ -3069,25 +3072,25 @@
     <value>Highest velocity</value>
   </data>
   <data name="GeneratorNoteLength" xml:space="preserve">
-    <value>Note length (% of a step)</value>
+    <value>Note length (%)</value>
   </data>
   <data name="ArpNotesFrom" xml:space="preserve">
     <value>Notes from</value>
   </data>
   <data name="ArpFromHeld" xml:space="preserve">
-    <value>What you hold on this track's source</value>
+    <value>Held notes</value>
   </data>
   <data name="ArpNoSource" xml:space="preserve">
     <value>This track has no source yet. Choose one in the track's setup.</value>
   </data>
   <data name="ArpFromTrack" xml:space="preserve">
-    <value>Another track's notes</value>
+    <value>Track</value>
   </data>
   <data name="ArpFromTrackHelp" xml:space="preserve">
     <value>For example, the chords on another track. Each step plays from what that track's timeline is playing then.</value>
   </data>
   <data name="ArpTrackName" xml:space="preserve">
-    <value>Track to follow</value>
+    <value>Source track</value>
   </data>
   <data name="ArpOrder" xml:space="preserve">
     <value>Order</value>
@@ -3099,7 +3102,7 @@
     <value>Down</value>
   </data>
   <data name="ArpOrderUpAndDown" xml:space="preserve">
-    <value>Up and down</value>
+    <value>Up/Down</value>
   </data>
   <data name="ArpOrderAsHeld" xml:space="preserve">
     <value>As held</value>
@@ -3114,7 +3117,7 @@
     <value>Octaves</value>
   </data>
   <data name="ArpLatch" xml:space="preserve">
-    <value>Keep playing after you let go</value>
+    <value>Latch</value>
   </data>
   <data name="ArpLatchHelp" xml:space="preserve">
     <value>With this off and nothing held, the clip plays nothing.</value>
@@ -3174,17 +3177,17 @@
     <value>Lyrics…</value>
   </data>
   <data name="MenuExportLyrics.Text" xml:space="preserve">
-    <value>Lyrics with times (LRC)…</value>
+    <value>LRC lyrics…</value>
     <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
   </data>
   <data name="MenuEditLyrics" xml:space="preserve">
     <value>Edit lyrics…</value>
   </data>
   <data name="MenuShowLyricsBar" xml:space="preserve">
-    <value>Show the words as they're sung</value>
+    <value>Show lyrics</value>
   </data>
   <data name="MenuSaveLyricsAsLrc" xml:space="preserve">
-    <value>Save as an LRC file…</value>
+    <value>Save as LRC…</value>
     <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
   </data>
   <data name="MenuRemoveLyrics" xml:space="preserve">
@@ -3207,7 +3210,7 @@
     <comment>{0} is the name of a track.</comment>
   </data>
   <data name="LyricsSungByNone" xml:space="preserve">
-    <value>no track sings them</value>
+    <value>(No track)</value>
   </data>
   <data name="UndoEditLyrics" xml:space="preserve">
     <value>Edit lyrics</value>
@@ -3231,7 +3234,7 @@
     <value>Sung by</value>
   </data>
   <data name="LyricsSingerNone" xml:space="preserve">
-    <value>No track</value>
+    <value>(No track)</value>
   </data>
   <data name="LyricsLanguageHeader" xml:space="preserve">
     <value>Language</value>
@@ -3241,22 +3244,22 @@
     <comment>en and ja are language tags (English and Japanese). Keep them as they are.</comment>
   </data>
   <data name="LyricsPlacementHeader" xml:space="preserve">
-    <value>Where the words go</value>
+    <value>Placement</value>
   </data>
   <data name="LyricsPlaceKeep" xml:space="preserve">
-    <value>Keep their times, and put new words on the notes after them</value>
+    <value>Keep existing times</value>
   </data>
   <data name="LyricsPlaceOnNotes" xml:space="preserve">
-    <value>On the notes of the track that sings, from the start</value>
+    <value>One per note</value>
   </data>
   <data name="LyricsPlaceBeats" xml:space="preserve">
-    <value>A beat apart, from the playhead</value>
+    <value>One per beat</value>
   </data>
   <data name="LyricsNothingToExport" xml:space="preserve">
     <value>This sequence has no lyrics to save.</value>
   </data>
   <data name="FileTypeLyrics" xml:space="preserve">
-    <value>Lyrics with times (LRC)</value>
+    <value>LRC lyrics</value>
     <comment>LRC is the name of a file format for lyrics with times. Don't translate it.</comment>
   </data>
   <data name="DawProjectNoLyrics" xml:space="preserve">
@@ -3264,7 +3267,7 @@
     <comment>DAWproject is the name of a file format that DAWs share. Don't translate it.</comment>
   </data>
   <data name="MenuSequenceInfo.Text" xml:space="preserve">
-    <value>About this sequence…</value>
+    <value>Sequence details…</value>
   </data>
   <data name="SequenceInfoTitle" xml:space="preserve">
     <value>About this sequence</value>
@@ -3279,7 +3282,7 @@
     <value>Made by</value>
   </data>
   <data name="SequenceInfoOrganization" xml:space="preserve">
-    <value>Company or group</value>
+    <value>Organization</value>
   </data>
   <data name="SequenceInfoWebsite" xml:space="preserve">
     <value>Website</value>
@@ -3298,19 +3301,19 @@
     <comment>CC-BY-4.0 and CC0-1.0 are license names. Don't translate them.</comment>
   </data>
   <data name="SequenceInfoCopyright" xml:space="preserve">
-    <value>Copyright notice in exported files</value>
+    <value>Copyright</value>
   </data>
   <data name="SequenceInfoCopyrightPlaceholder" xml:space="preserve">
     <value>For example, Copyright 2026 Your Name</value>
   </data>
   <data name="FillInYourInfo" xml:space="preserve">
-    <value>Fill in your info</value>
+    <value>Fill from profile</value>
   </data>
   <data name="FillInYourInfoTip" xml:space="preserve">
-    <value>Puts in the name, company or group, website and license from Your info for sharing.</value>
+    <value>Puts in the name, organization, website and license from your author profile.</value>
   </data>
   <data name="SequenceInfoRemember" xml:space="preserve">
-    <value>Save these as your info for sharing</value>
+    <value>Save as author profile</value>
   </data>
   <data name="SequenceInfoMadeOnFormat" xml:space="preserve">
     <value>Made on {0}</value>
@@ -3331,62 +3334,62 @@
     <value>Change the sequence info</value>
   </data>
   <data name="SequenceInfoSourceHeading" xml:space="preserve">
-    <value>How the sequence was made</value>
+    <value>Source</value>
   </data>
   <data name="SequenceInfoAuthorPlaceholder" xml:space="preserve">
-    <value>Your name, or the name you share music under</value>
+    <value>Name or artist name</value>
   </data>
   <data name="SequenceInfoLicensePlaceholder" xml:space="preserve">
     <value>For example, CC-BY-4.0</value>
     <comment>CC-BY-4.0 is a license name. Don't translate it.</comment>
   </data>
   <data name="SequenceInfoSuggested" xml:space="preserve">
-    <value>suggested from the clips</value>
+    <value>(suggested)</value>
   </data>
   <data name="SequenceSourceMix" xml:space="preserve">
-    <value>A mix of things played, drawn and generated</value>
+    <value>Mixed</value>
   </data>
   <data name="SequenceSourceRecorded" xml:space="preserve">
-    <value>Played and recorded</value>
+    <value>Recorded</value>
   </data>
   <data name="SequenceSourceDrawn" xml:space="preserve">
-    <value>Drawn or typed in by a person</value>
+    <value>Entered by hand</value>
   </data>
   <data name="SequenceSourceAlgorithm" xml:space="preserve">
-    <value>Made by an algorithm, like this app's generators</value>
+    <value>Algorithmic</value>
   </data>
   <data name="SequenceSourceWithAi" xml:space="preserve">
-    <value>Includes parts made with generative AI</value>
+    <value>Partly AI-generated</value>
   </data>
   <data name="SequenceSourceAi" xml:space="preserve">
-    <value>Made with generative AI</value>
+    <value>AI-generated</value>
   </data>
   <data name="SourceAsWrittenFormat" xml:space="preserve">
     <value>As the file says: {0}</value>
   </data>
   <data name="ProvenanceOversightLabel" xml:space="preserve">
-    <value>How a person was involved</value>
+    <value>Human oversight</value>
   </data>
   <data name="OversightChoiceNone" xml:space="preserve">
-    <value>Not at all</value>
+    <value>None</value>
   </data>
   <data name="OversightChoicePrompted" xml:space="preserve">
-    <value>A person told the AI what to make</value>
+    <value>Prompted</value>
   </data>
   <data name="OversightChoiceChecked" xml:space="preserve">
-    <value>A person checked what the AI made</value>
+    <value>Reviewed</value>
   </data>
   <data name="ProvenanceModelLabel" xml:space="preserve">
     <value>AI model</value>
   </data>
   <data name="SequenceInfoClipsHeading" xml:space="preserve">
-    <value>Where the clips came from</value>
+    <value>Clip sources</value>
   </data>
   <data name="SequenceInfoClipColumn" xml:space="preserve">
     <value>Clip</value>
   </data>
   <data name="SequenceInfoHowColumn" xml:space="preserve">
-    <value>How it was made</value>
+    <value>Source</value>
   </data>
   <data name="SequenceInfoDetailsColumn" xml:space="preserve">
     <value>Details</value>
@@ -3422,14 +3425,14 @@
     <value>AI assistant</value>
   </data>
   <data name="ClipOriginUnknown" xml:space="preserve">
-    <value>Not known</value>
+    <value>(Unknown)</value>
   </data>
   <data name="ClipFromFormat" xml:space="preserve">
     <value>From {0}</value>
     <comment>{0} is the name of a MIDI device.</comment>
   </data>
   <data name="ClipPatternDetail" xml:space="preserve">
-    <value>Steps set by hand</value>
+    <value>Step entry</value>
   </data>
   <data name="ClipNoteCountFormat" xml:space="preserve">
     <value>{0} notes</value>
@@ -3442,7 +3445,7 @@
     <comment>{0} is a kind of generator, such as Chance melody. {1} is a number in hexadecimal.</comment>
   </data>
   <data name="ClipAssistantDetail" xml:space="preserve">
-    <value>Written by an AI assistant</value>
+    <value>AI assistant</value>
   </data>
   <data name="ImportedWithCopyrightFormat" xml:space="preserve">
     <value>{0}, “{1}”</value>
@@ -3456,7 +3459,7 @@
     <value>MIDI 1.0</value>
   </data>
   <data name="ProtocolMidi1Cable" xml:space="preserve">
-    <value>MIDI 1.0 at 5-pin cable speed</value>
+    <value>MIDI 1.0 wire speed</value>
     <comment>A group that stands for an old MIDI cable, which carries about a thousand messages a second.</comment>
   </data>
   <data name="ProtocolMidi2" xml:space="preserve">
@@ -3489,7 +3492,7 @@
     <value>Not connected</value>
   </data>
   <data name="DeviceUsesHeading" xml:space="preserve">
-    <value>In this sequence</value>
+    <value>Usage</value>
   </data>
   <data name="DeviceUsesPlaysFormat" xml:space="preserve">
     <value>Tracks that play to it: {0}</value>
@@ -3536,7 +3539,7 @@
     <value>From the device's group terminal blocks, because it has no function blocks. The sequencer sends each group MIDI 2.0 or MIDI 1.0 to match.</value>
   </data>
   <data name="DeviceBlockUnnamed" xml:space="preserve">
-    <value>Unnamed</value>
+    <value>(Unnamed)</value>
   </data>
   <data name="DeviceBlockReceives" xml:space="preserve">
     <value>Receives</value>
@@ -3550,10 +3553,10 @@
     <value>Sends and receives</value>
   </data>
   <data name="DeviceBlockInactive" xml:space="preserve">
-    <value>Not active right now</value>
+    <value>Inactive</value>
   </data>
   <data name="DeviceSendingHeading" xml:space="preserve">
-    <value>Sending to it</value>
+    <value>Outgoing</value>
   </data>
   <data name="DeviceOffsetNone" xml:space="preserve">
     <value>Sent on time. If it sounds late, set an offset for it in MIDI Settings.</value>
@@ -3585,7 +3588,7 @@
     <value>Needs real note off messages, as set in MIDI Settings. The sequencer always sends those.</value>
   </data>
   <data name="DeviceAboutHeading" xml:space="preserve">
-    <value>About the device</value>
+    <value>Details</value>
   </data>
   <data name="DeviceFactManufacturer" xml:space="preserve">
     <value>Manufacturer</value>
@@ -3600,7 +3603,7 @@
     <value>Product instance</value>
   </data>
   <data name="DeviceFactUsbIds" xml:space="preserve">
-    <value>USB vendor and product</value>
+    <value>USB VID and PID</value>
   </data>
   <data name="DeviceFactSystemExclusiveId" xml:space="preserve">
     <value>System exclusive ID</value>
@@ -3675,7 +3678,7 @@
     <value>Time code</value>
   </data>
   <data name="StudioUsedByClockOnly" xml:space="preserve">
-    <value>Only the clock</value>
+    <value>Clock only</value>
   </data>
   <data name="StudioOtherDevicesFormat" xml:space="preserve">
     <value>Other MIDI devices on this PC ({0})</value>
@@ -3735,11 +3738,11 @@
     <comment>{0} is a list of track names: the tracks that record what this device sends.</comment>
   </data>
   <data name="StudioUsedBySetsTempo" xml:space="preserve">
-    <value>Sets the tempo</value>
+    <value>Tempo source</value>
     <comment>In Studio setup's Used by column: the sequencer follows this device's clock.</comment>
   </data>
   <data name="StudioUsedByNotInSequence" xml:space="preserve">
-    <value>Not in this sequence</value>
+    <value>Unused</value>
   </data>
   <data name="StudioPortsHelp" xml:space="preserve">
     <value>Some devices stop working when an app sends them a message they don't expect. The sequencer opens only the devices this sequence uses, and sends a device nothing until you play, try a sound or move a mixer control. If a device still has trouble, turn off Play to for its group.</value>
@@ -3769,7 +3772,7 @@
     <value>Windows MIDI Monitor isn't installed beside this app.</value>
   </data>
   <data name="WatchInMonitor" xml:space="preserve">
-    <value>Watch in MIDI Monitor</value>
+    <value>Open in MIDI Monitor</value>
   </data>
   <data name="DialogClose" xml:space="preserve">
     <value>Close</value>
@@ -3778,10 +3781,10 @@
     <value>Open recent</value>
   </data>
   <data name="RecentFindPlaceholder" xml:space="preserve">
-    <value>Find a sequence by name or folder</value>
+    <value>Search</value>
   </data>
   <data name="RecentFindName" xml:space="preserve">
-    <value>Find a recent sequence</value>
+    <value>Search recent</value>
   </data>
   <data name="RecentPinnedHeading" xml:space="preserve">
     <value>Pinned</value>
@@ -3828,7 +3831,7 @@
     <value>Choose the program, and bank, this track asks its device for each time playback starts</value>
   </data>
   <data name="SoundNotChosen" xml:space="preserve">
-    <value>No sound chosen</value>
+    <value>(None)</value>
   </data>
   <data name="SoundNotChosenDetail" xml:space="preserve">
     <value>The device keeps whatever sound it has.</value>
@@ -3857,16 +3860,16 @@
     <comment>{0} is a track's name.</comment>
   </data>
   <data name="SoundEnabled" xml:space="preserve">
-    <value>Choose this track's sound</value>
+    <value>Sound</value>
   </data>
   <data name="SoundEnabledHelp" xml:space="preserve">
     <value>When this is on, the track sends a program change each time playback starts, with a bank when you choose one. When it's off, the device keeps whatever sound it has.</value>
   </data>
   <data name="SoundFindPlaceholder" xml:space="preserve">
-    <value>Find a sound</value>
+    <value>Search</value>
   </data>
   <data name="SoundFindName" xml:space="preserve">
-    <value>Find a sound by name</value>
+    <value>Search sounds</value>
   </data>
   <data name="SoundListName" xml:space="preserve">
     <value>Sounds</value>
@@ -3885,7 +3888,7 @@
     <value>Program</value>
   </data>
   <data name="SoundProgramName" xml:space="preserve">
-    <value>Program number, from 1 to 128</value>
+    <value>Program (1–128)</value>
   </data>
   <data name="SoundBankLabel" xml:space="preserve">
     <value>Bank</value>
@@ -3899,10 +3902,10 @@
     <comment>The bank select's least significant byte, controller 32.</comment>
   </data>
   <data name="SoundBankMsbName" xml:space="preserve">
-    <value>Bank select MSB, controller 0, from 0 to 127</value>
+    <value>Bank MSB (CC 0)</value>
   </data>
   <data name="SoundBankLsbName" xml:space="preserve">
-    <value>Bank select LSB, controller 32, from 0 to 127</value>
+    <value>Bank LSB (CC 32)</value>
   </data>
   <data name="SoundTryNote" xml:space="preserve">
     <value>Choosing a sound sends it to the device right away, so you can hear it. Cancel puts the old one back.</value>
@@ -4003,7 +4006,7 @@
     <value>Replace</value>
   </data>
   <data name="PatternTemplateAddOnTop" xml:space="preserve">
-    <value>Add on top</value>
+    <value>Merge</value>
   </data>
   <data name="UndoUseTemplateFormat" xml:space="preserve">
     <value>Use the {0} template</value>
@@ -4014,7 +4017,7 @@
     <comment>{0} is a template's name.</comment>
   </data>
   <data name="PatternTemplateGroupDrumMachine" xml:space="preserve">
-    <value>Drum machine classics</value>
+    <value>Drum machine</value>
   </data>
   <data name="PatternTemplateGroupElectronic" xml:space="preserve">
     <value>Electronic</value>
@@ -4149,7 +4152,7 @@
     <value>Range: drag either end, or the middle to move it. Scroll to move it an octave.</value>
   </data>
   <data name="GeneratorJump" xml:space="preserve">
-    <value>Largest jump</value>
+    <value>Max interval</value>
   </data>
   <data name="GeneratorJumpAny" xml:space="preserve">
     <value>Any</value>
@@ -4167,7 +4170,7 @@
     <value>Step</value>
   </data>
   <data name="GeneratorRootEnds" xml:space="preserve">
-    <value>Start and end on the root</value>
+    <value>Resolve to root</value>
   </data>
   <data name="GeneratorPassShownFormat" xml:space="preserve">
     <value>Pass {0} · {1} steps</value>
@@ -4194,10 +4197,10 @@
     <value>Select a pass to see it. A dot means it stopped changing there.</value>
   </data>
   <data name="LifeBackToStart" xml:space="preserve">
-    <value>Back to the first pass</value>
+    <value>Reset</value>
   </data>
   <data name="LifeStartHere" xml:space="preserve">
-    <value>Start from this pass</value>
+    <value>Set as start</value>
   </data>
   <data name="LifeStart" xml:space="preserve">
     <value>Start with</value>
@@ -4218,11 +4221,11 @@
     <value>Nothing</value>
   </data>
   <data name="LifeYourOwn" xml:space="preserve">
-    <value>Your own</value>
+    <value>Custom</value>
     <comment>Lit when the board's first pass was drawn by hand or started from a later pass, rather than one of the named shapes.</comment>
   </data>
   <data name="LifeDensity" xml:space="preserve">
-    <value>How full</value>
+    <value>Density</value>
   </data>
   <data name="LifeRule" xml:space="preserve">
     <value>Rule</value>
@@ -4255,13 +4258,13 @@
     <value>New cells</value>
   </data>
   <data name="LifeBirthsPlain" xml:space="preserve">
-    <value>Like the rest</value>
+    <value>Normal</value>
   </data>
   <data name="LifeBirthsOnly" xml:space="preserve">
-    <value>Only new ones</value>
+    <value>New only</value>
   </data>
   <data name="LifeSettledTitle" xml:space="preserve">
-    <value>When it stops changing</value>
+    <value>When stable</value>
   </data>
   <data name="LifeStartAgain" xml:space="preserve">
     <value>Start again</value>
@@ -4273,7 +4276,7 @@
     <value>Keep going</value>
   </data>
   <data name="LifeRestartEvery" xml:space="preserve">
-    <value>Start again every</value>
+    <value>Restart every</value>
   </data>
   <data name="LifeNever" xml:space="preserve">
     <value>Never</value>
@@ -4288,19 +4291,19 @@
     <value>Select a drum's name on the board to change it.</value>
   </data>
   <data name="LifeAddDrum" xml:space="preserve">
-    <value>Add a drum</value>
+    <value>Add drum</value>
   </data>
   <data name="LifeRemoveDrum" xml:space="preserve">
-    <value>Remove this drum</value>
+    <value>Remove drum</value>
   </data>
   <data name="LearnGraphName" xml:space="preserve">
-    <value>What it learned</value>
+    <value>Learned transitions</value>
   </data>
   <data name="LearnGraphTip" xml:space="preserve">
     <value>Each line is a move it learned from one note to the next, thicker the more often. The lit ones are this pass's.</value>
   </data>
   <data name="LearnPassRollName" xml:space="preserve">
-    <value>What this pass plays</value>
+    <value>Current pass</value>
   </data>
   <data name="LearnFrom" xml:space="preserve">
     <value>Learn from</value>
@@ -4327,10 +4330,10 @@
     <value>That needs at least two notes to learn from. It's still picked, so Keep listening can hear it when it plays.</value>
   </data>
   <data name="UndoLearn" xml:space="preserve">
-    <value>Learn from a clip or a track</value>
+    <value>Learn</value>
   </data>
   <data name="ListenPick" xml:space="preserve">
-    <value>A clip or a track</value>
+    <value>Source</value>
     <comment>The list of the sequence's tracks and clips a generator can learn from or listen to.</comment>
   </data>
   <data name="ListenTracks" xml:space="preserve">
@@ -4354,7 +4357,7 @@
     <value>Listen to</value>
   </data>
   <data name="LearnMemory" xml:space="preserve">
-    <value>How closely it follows</value>
+    <value>Memory</value>
   </data>
   <data name="LearnWanders" xml:space="preserve">
     <value>Wanders</value>
@@ -4366,7 +4369,7 @@
     <value>Stays close</value>
   </data>
   <data name="LearnRepeats" xml:space="preserve">
-    <value>Repeats a pass</value>
+    <value>Repeats</value>
   </data>
   <data name="WordsTitle" xml:space="preserve">
     <value>Words</value>
@@ -4375,46 +4378,46 @@
     <value>Type anything</value>
   </data>
   <data name="WordsBoxName" xml:space="preserve">
-    <value>Words to play</value>
+    <value>Text</value>
   </data>
   <data name="WordsLegend" xml:space="preserve">
     <value>Letters climb the scale. A space rests, a period ends on the root, and a question ends on the fifth. Capitals are louder.</value>
   </data>
   <data name="WordsDrawingName" xml:space="preserve">
-    <value>The words as notes</value>
+    <value>Notes</value>
   </data>
   <data name="EvolveFamilyName" xml:space="preserve">
-    <value>This pass and where it came from</value>
+    <value>Lineage</value>
   </data>
   <data name="EvolveFamilyTip" xml:space="preserve">
     <value>On top, this pass, with outlines of what it heard when it listens to something. Below, the eight changed copies made from it, each with a bar for its score. The framed one plays next.</value>
   </data>
   <data name="EvolveScoresName" xml:space="preserve">
-    <value>Each pass's score</value>
+    <value>Scores</value>
   </data>
   <data name="EvolveListensFor" xml:space="preserve">
-    <value>What it listens for</value>
+    <value>Goals</value>
   </data>
   <data name="EvolveSoundsLike" xml:space="preserve">
-    <value>Like what it hears</value>
+    <value>Similarity</value>
   </data>
   <data name="EvolveSteps" xml:space="preserve">
     <value>Small steps</value>
   </data>
   <data name="EvolveShape" xml:space="preserve">
-    <value>Rise and fall</value>
+    <value>Contour</value>
   </data>
   <data name="EvolveSyncopation" xml:space="preserve">
     <value>Syncopation</value>
   </data>
   <data name="EvolveMotif" xml:space="preserve">
-    <value>A motif that comes back</value>
+    <value>Recurring motif</value>
   </data>
   <data name="EvolveEnding" xml:space="preserve">
-    <value>Ending on the root</value>
+    <value>Resolve to root</value>
   </data>
   <data name="EvolveMutations" xml:space="preserve">
-    <value>Changes in each copy</value>
+    <value>Mutation</value>
   </data>
   <data name="InfinityDrawingName" xml:space="preserve">
     <value>The series</value>
@@ -4426,10 +4429,10 @@
     <value>Starts at note {0} of the series. A new seed starts it somewhere else.</value>
   </data>
   <data name="InfinityInterval" xml:space="preserve">
-    <value>Each step of the series is</value>
+    <value>Interval</value>
   </data>
   <data name="InfinitySteps" xml:space="preserve">
-    <value>A step of the scale</value>
+    <value>Scale step</value>
   </data>
   <data name="InfinityThirds" xml:space="preserve">
     <value>A third</value>
@@ -4444,13 +4447,13 @@
     <value>One</value>
   </data>
   <data name="InfinityTwoVoices" xml:space="preserve">
-    <value>Two, as a canon</value>
+    <value>Canon (2 voices)</value>
   </data>
   <data name="InfinityThreeVoices" xml:space="preserve">
     <value>Three</value>
   </data>
   <data name="LSystemDrawingName" xml:space="preserve">
-    <value>What it grew</value>
+    <value>Result</value>
   </data>
   <data name="LSystemDrawingTip" xml:space="preserve">
     <value>The drawing its rules grow. The melody follows it up and down, and the lit part is this pass.</value>
@@ -4462,7 +4465,7 @@
     <value>Shape</value>
   </data>
   <data name="LSystemYourOwn" xml:space="preserve">
-    <value>Your own</value>
+    <value>Custom</value>
   </data>
   <data name="LSystemDragon" xml:space="preserve">
     <value>Dragon</value>
@@ -4489,7 +4492,7 @@
     <value>Start</value>
   </data>
   <data name="LSystemRulePlaceholder" xml:space="preserve">
-    <value>Add a rule, such as F=F+F-F</value>
+    <value>F=F+F-F</value>
   </data>
   <data name="LSystemRuleFormat" xml:space="preserve">
     <value>Rule {0}</value>
@@ -4501,7 +4504,7 @@
     <value>Capitals play and small letters rest. + and - turn, and [ and ] branch. X, Y, and Z only steer the growing.</value>
   </data>
   <data name="RingingDrawingName" xml:space="preserve">
-    <value>The method's blue line</value>
+    <value>Blue line</value>
   </data>
   <data name="RingingDrawingTip" xml:space="preserve">
     <value>Each row is the order the bells ring in. The treble's path is red and the second bell's is blue, the way ringers draw a method.</value>
@@ -4635,7 +4638,7 @@
     <value>The bell leading each row loudest.</value>
   </data>
   <data name="VelocityShapeStrokes" xml:space="preserve">
-    <value>Hand and back</value>
+    <value>Handstroke/backstroke</value>
     <comment>Change ringing: handstroke and backstroke rows, which alternate.</comment>
   </data>
   <data name="VelocityShapeStrokesTip" xml:space="preserve">
@@ -4682,10 +4685,10 @@
     <value>Bars {0} to {1} of {2}</value>
   </data>
   <data name="TimelineBarPlainTip" xml:space="preserve">
-    <value>Plain scroll bar</value>
+    <value>Standard</value>
   </data>
   <data name="TimelineBarOverviewTip" xml:space="preserve">
-    <value>Overview: tracks and sections</value>
+    <value>Overview</value>
   </data>
   <data name="TimelineZoomOutTip" xml:space="preserve">
     <value>Zoom out (Ctrl+minus)</value>
@@ -4694,7 +4697,7 @@
     <value>Zoom in (Ctrl+plus)</value>
   </data>
   <data name="TimelineZoomFitTip" xml:space="preserve">
-    <value>Zoom to fit the sequence (Ctrl+0)</value>
+    <value>Zoom to fit (Ctrl+0)</value>
   </data>
   <data name="TimelineBarEndTip" xml:space="preserve">
     <value>Drag to zoom. Ctrl + wheel zooms where you point, and so does a pinch.</value>
@@ -4706,25 +4709,25 @@
     <value>Overview</value>
   </data>
   <data name="TimelineBarPlainItem" xml:space="preserve">
-    <value>Plain scroll bar</value>
+    <value>Standard</value>
   </data>
   <data name="TimelineBarUnderItem" xml:space="preserve">
-    <value>Under the timeline</value>
+    <value>Bottom</value>
   </data>
   <data name="TimelineBarAboveItem" xml:space="preserve">
-    <value>Above the ruler</value>
+    <value>Top</value>
   </data>
   <data name="TimelineZoomFitItem" xml:space="preserve">
-    <value>Zoom to fit the sequence</value>
+    <value>Zoom to fit</value>
   </data>
   <data name="TimelineZoomSelectionItem" xml:space="preserve">
-    <value>Zoom to the selection</value>
+    <value>Zoom to selection</value>
   </data>
   <data name="AppearanceTimelineBar" xml:space="preserve">
     <value>Timeline scroll bar</value>
   </data>
   <data name="AppearanceTimelineBarPlace" xml:space="preserve">
-    <value>Where it goes</value>
+    <value>Position</value>
   </data>
   <data name="SoundNamesUnknownFormat" xml:space="preserve">
     <value>{0} hasn't shared the names of its sounds, so pick one by its numbers, from the device's manual. If the device speaks MIDI-CI, you can ask it for its names below.</value>

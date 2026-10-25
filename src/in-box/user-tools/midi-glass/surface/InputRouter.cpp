@@ -66,6 +66,13 @@ namespace glass
                 binding.PadLayout = renderer.PadLayoutAt(i);
             }
 
+            if (IsFretboard(kind))
+            {
+                binding.PlaysStrings = true;
+                binding.FretSpec = renderer.FretSpecAt(i);
+                binding.FretLayout = renderer.FretLayoutAt(i);
+            }
+
             // A generator runs while held or latches on a press, and which one is the control's
             // own setting rather than its kind's.
             auto const generator = kind == ControlKind::Lfo || kind == ControlKind::Steps;
@@ -128,6 +135,12 @@ namespace glass
                             return;
                         }
 
+                        if (index < m_bindings.size() && m_bindings[index].PlaysStrings)
+                        {
+                            ReleaseFret(m_bindings[index], args.Pointer().PointerId());
+                            return;
+                        }
+
                         OnCaptureLost(index);
                     }
                     MIDI_GLASS_CATCH_AND_LOG(L"Unable to handle a lost pointer on the surface.")
@@ -176,6 +189,14 @@ namespace glass
                     binding.PadGrid = m_renderer->PadGridAt(binding.ItemIndex);
                     binding.PadLayout = m_renderer->PadLayoutAt(binding.ItemIndex);
                 }
+
+                // A finger already down keeps its string and goes on playing it.
+                if (binding.PlaysStrings)
+                {
+                    binding.FretSpec = m_renderer->FretSpecAt(binding.ItemIndex);
+                    binding.FretLayout = m_renderer->FretLayoutAt(binding.ItemIndex);
+                    ShowFretFingers(binding);
+                }
             }
         }
         catch (...)
@@ -196,6 +217,19 @@ namespace glass
                     if (finger.PointerId != 0)
                     {
                         ReleasePad(binding, finger.PointerId);
+                    }
+                }
+
+                continue;
+            }
+
+            if (binding.PlaysStrings)
+            {
+                for (auto const& finger : binding.FretFingers)
+                {
+                    if (finger.PointerId != 0)
+                    {
+                        ReleaseFret(binding, finger.PointerId);
                     }
                 }
 
@@ -347,6 +381,12 @@ namespace glass
         if (binding.PlaysPads)
         {
             PressPad(binding, args);
+            return;
+        }
+
+        if (binding.PlaysStrings)
+        {
+            PressFret(binding, args);
             return;
         }
 
@@ -654,6 +694,12 @@ namespace glass
             return;
         }
 
+        if (binding.PlaysStrings)
+        {
+            MoveFret(binding, args);
+            return;
+        }
+
         if (binding.PointerId != args.Pointer().PointerId() || binding.Element == nullptr)
         {
             return;
@@ -809,7 +855,7 @@ namespace glass
 
         auto& binding = m_bindings[index];
 
-        if (binding.PlaysPads)
+        if (binding.PlaysPads || binding.PlaysStrings)
         {
             auto const pointerId = args.Pointer().PointerId();
 
@@ -822,7 +868,15 @@ namespace glass
 
             // Releasing the capture may already have ended this finger through the capture
             // lost handler. Ending it twice is harmless: the second finds nothing.
-            ReleasePad(binding, pointerId);
+            if (binding.PlaysStrings)
+            {
+                ReleaseFret(binding, pointerId);
+            }
+            else
+            {
+                ReleasePad(binding, pointerId);
+            }
+
             return;
         }
 
@@ -1068,7 +1122,7 @@ namespace glass
             touch.Touch = pointerId;
             touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
             touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
-            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x, y);
 
             PadTouched(binding.ItemIndex, touch);
         }
@@ -1143,7 +1197,7 @@ namespace glass
             touch.Touch = pointerId;
             touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
             touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
-            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, cell, x, y);
 
             PadTouched(binding.ItemIndex, touch);
         }

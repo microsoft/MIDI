@@ -253,7 +253,7 @@ You can also give each piece of gear a connection of its own, instead of a chann
 <details id="connect-touchosc" markdown="1">
 <summary>Connect TouchOSC on a phone or tablet</summary>
 
-Add an **OSC connection** in [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connections), and choose the **TouchOSC** preset. Its faders, toggles, and push buttons then play controllers and notes as they come, with nothing to change in TouchOSC. To find each other without typing addresses, select **Find on the network** in Windows MIDI Patchbay, and pick this PC from the list on TouchOSC's OSC settings screen. Other devices can only reach the OSC connection once you select **Allow through Windows Firewall** in the bar at the top of the patch window.
+Add an **OSC connection** in [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connections), and choose the **TouchOSC** preset. Its faders, toggles, and push buttons then play controllers and notes as they come, with nothing to change in TouchOSC. To find each other without typing addresses, select **Browse network** in Windows MIDI Patchbay, and pick this PC from the list on TouchOSC's OSC settings screen. Other devices can only reach the OSC connection once you select **Allow through Windows Firewall** in the bar at the top of the patch window.
 
 For other controls, **Add a rule for this** in **Recently heard** maps each one. Or give each control an address and a value range of its own in the free TouchOSC Editor. We checked all of this with TouchOSC Mk1, the older version, on an iPhone, but not yet with the current TouchOSC. See [Connect TouchOSC on a phone or tablet]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#connect-touchosc-on-a-phone-or-tablet).
 
@@ -285,7 +285,7 @@ In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#osc-connection
 <details id="use-an-osc-app-in-my-daw" markdown="1">
 <summary>Use an OSC app in my DAW, without a loopback</summary>
 
-In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#opening-it-from-other-apps), select the OSC connection and check **Show to other apps as a MIDI device**. While its patch routes, your DAW can open it by its name, like any MIDI device. What the OSC app sends goes to the DAW, and what the DAW sends goes back to the OSC app. We checked it with the MIDI Console, but not yet with a DAW. See [Open it from your DAW]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#open-it-from-your-daw).
+In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#opening-it-from-other-apps), select the OSC connection and check **Virtual MIDI device**. While its patch routes, your DAW can open it by its name, like any MIDI device. What the OSC app sends goes to the DAW, and what the DAW sends goes back to the OSC app. We checked it with the MIDI Console, but not yet with a DAW. See [Open it from your DAW]({{ site.baseurl }}/kb/using-osc-with-midi-patchbay/#open-it-from-your-daw).
 
 </details>
 
@@ -400,7 +400,7 @@ In [Windows MIDI Clock]({{ site.baseurl }}/tools/midiclock/#midi-time-code), set
 Have the DAW send MIDI clock to a loopback, or connect the device that sends it. Then:
 
 - [Windows MIDI Sequencer]({{ site.baseurl }}/tools/midisequencer/#clock-sync-and-remote-control) follows it, from **Clock and sync**.
-- In [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/#tempo), set **Tempo source** to **Incoming MIDI clock**, and LFO and Steps controls follow its speed.
+- In [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/#tempo), set **Tempo source** to **External MIDI clock**, and LFO and Steps controls follow its speed.
 - In [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/#generators), connect the clock to an **LFO** step's **In**, or pass it through a **Clock divider** to send a slower clock on to another device.
 
 Windows MIDI Clock is a clock source. It sends clock, but it doesn't follow one.
@@ -476,7 +476,7 @@ From a command prompt, `midi endpoint monitor --capture-to-file take1.mid --capt
 
 Pick whichever fits the way you work:
 
-- **One button, in [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/#what-a-control-sends).** On a button's **Sends** tab, set **Type** to **A sequence of steps**, select **New**, then **Edit steps…**. Add program changes, controller values, system exclusive, and waits in between, for as many of the layout's devices as you like. A control can also send its starting value when the layout opens.
+- **One button, in [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/#what-a-control-sends).** On a button's **Sends** tab, set **Type** to **Sequence**, select **New**, then **Edit steps…**. Add program changes, controller values, system exclusive, and waits in between, for as many of the layout's devices as you like. A control can also send its starting value when the layout opens.
 - **A batch file, with the [MIDI Console]({{ site.baseurl }}/tools/console/).** Send `.syx` files with `midi sysex send-file`, and text files of messages with `midi endpoint send-message-file`. Run the batch file before the show.
 - **A script, with the [MIDI PowerShell cmdlets]({{ site.baseurl }}/tools/powershell/).** `Send-MidiMessage` and `Send-MidiSystemExclusive` can set up a whole room of gear in one go.
 - **For one synth, [Windows MIDI Keyboard]({{ site.baseurl }}/tools/midikeyboard/#bank-and-program)** can send your bank and program again each time the synth reconnects.
@@ -544,7 +544,7 @@ Windows MIDI Patchbay patches and Windows MIDI Glass layouts aren't part of a co
 Patches, layouts, and sequences move easily, because they're files:
 
 - **Windows MIDI Patchbay:** copy the `.midipatch` files from **Documents › MIDI Patches**, and use **Import patch…** on the other PC.
-- **Windows MIDI Glass:** select **Pack for sharing…** on a layout's **…** menu, and use **Import a pack…** on the other PC.
+- **Windows MIDI Glass:** select **Export pack…** on a layout's **…** menu, and use **Import pack…** on the other PC.
 - **Windows MIDI Sequencer:** copy the `.midisequence` files from **Documents › MIDI Sequences**.
 
 To move the configuration, with your device and port names, pictures, loopbacks, and network connections, use [Windows MIDI Settings]({{ site.baseurl }}/tools/settings/#sharing-a-configuration). On this PC, select **Configurations** on the toolbar, go to **Share**, and select **Save package...**. Save it where the other PC can reach it, such as a USB drive. On the other PC, double-click the package, or open it from the **Import** page. It shows what each part will do before anything changes. Select **Import**, and restart the MIDI service. Whatever that PC already had is kept, and backed up first, so you can get it back from **Backups**. Use these pages rather than copying configuration files yourself, because where they're kept and what's in them can change in any update.

@@ -355,6 +355,20 @@ namespace winrt::midiglass::implementation
         void OnSwitchPicksChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnAddKeyPickersClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
+        // Rows and columns, grid buttons, targets and readouts of a pad grid (EditorPadGrids.cpp).
+        void OnPadArrangementChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnPadGridFunctionChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnReadoutSourceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnAddGridButtonsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // A fretboard's section (EditorFretboard.cpp).
+        void OnFretTuningChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnFretboardChoiceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnFretboardNumberChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnFretboardCheckChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnFretAddStringClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAddFretboardButtonsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         void OnSpringTargetChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnDragAxisChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
@@ -563,6 +577,31 @@ namespace winrt::midiglass::implementation
         void RefreshKeyPickerPanel(_In_ glass::Control const& control);
         void RefreshPadGridPickers(_In_ glass::Control const& control);
         void ApplyPickerScales();
+
+        // EditorPadGrids.cpp.
+        void BuildPadGridChoices();
+        void RefreshPadArrangement(_In_ glass::Control const& control);
+        void ReadPadArrangement(_Inout_ glass::PadGridSpec& pads);
+        void RefreshSwitchTargets(_In_ glass::Control const& control);
+        void RefreshReadoutPanel(_In_ glass::Control const& control);
+        void RefreshPadGridRowFields(_In_ glass::ControlMessage const& message);
+
+        // A fretboard's section of the inspector (EditorFretboard.cpp).
+        void BuildFretboardChoices();
+        void RefreshFretboardPanel(_In_ glass::Control const& control);
+
+        // Every box in the section read back into the selected fretboard, as one edit.
+        void ApplyFretboardEdit();
+
+        // One change made to a copy of the selected fretboard's settings, applied as one edit.
+        void EditFretboard(_In_ std::function<void(glass::FretboardSpec&)> const& change);
+
+        // One check box for every grid, and one for all of them. Apply is called with what the
+        // boxes now say each time one changes.
+        void BuildTargetChecks(
+            _In_ controls::StackPanel const& panel,
+            _In_ glass::PadGridTargets const& targets,
+            _In_ std::function<void(glass::PadGridTargets const&)> apply);
 
         // The nine alignment buttons, the crop box and the opacity track. Built once; brought
         // into step with the selected control every time the inspector is filled in.
@@ -808,7 +847,7 @@ namespace winrt::midiglass::implementation
         void OnTryValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnTrySwitched(_In_ size_t itemIndex, _In_ bool isOn, _In_ double velocity);
         void OnTryFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
-        void OnTryKeyPicked(_In_ glass::PickedKey const& picked);
+        void OnTryGridsChanged(_In_ glass::PadGridStates const& states);
         void ForgetTryKey();
 
         void AppendMonitorRow(_In_ glass::SentMessage const& message);

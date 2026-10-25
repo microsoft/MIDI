@@ -235,6 +235,13 @@ namespace glass
                     }
                     break;
 
+                case ActionKind::ChangePadGrid:
+                    if (ChangePadGrid)
+                    {
+                        ChangePadGrid(action);
+                    }
+                    break;
+
                 default:
                     break;
                 }

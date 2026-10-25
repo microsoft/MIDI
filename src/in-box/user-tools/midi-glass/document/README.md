@@ -12,6 +12,9 @@ The layout document, its file format, the page size templates and the theme mode
 | `JsonText.*` | The deterministic writer, and the machinery that keeps fields this build does not understand. |
 | `PageTemplates.*` | The page sizes a new layout starts from, and the control sizes derived from them. |
 | `PadGrid.*` | Note pads and hex pads worked out: where each pad goes as the control is resized, which note it plays (every note, or only the notes of the key), and whether that note is the key's root, in the key or outside it. Also what a root or scale picker's positions pick, and the key a grid plays once one has. Pure, and tested. |
+| `PadGridChanges.*` | What grid buttons, pickers and readouts do to pad grids while a layout runs: an octave, a row, the next scale, in key only, and which grids each one targets. Never saved. Pure, and tested. |
+| `Fretboard.*` | The fretboard worked out: the named tunings, which note each string plays at each fret (with a capo and short strings), where the strings, frets, strum area and neck strip are drawn, what a point lands on, which strings a strum crosses, and how far a push across a string bends it. Pure, and tested. |
+| `FretboardChanges.*` | What grid buttons, pickers and readouts do to a fretboard while a layout runs: the capo, the frets showing, the tuning and the key its dots show. Never saved. Pure, and tested. |
 | `StepPattern.*` | The step sequencer worked out: which step plays next in each direction, when each step starts with swing, and how long its note sounds. Pure, and tested. The thread that keeps time is `runtime/StepSequencer`. |
 | `ThemeModel.*` | The theme property table, the nine shipped themes, and measured contrast. |
 | `ThemeStore.*` | Themes as their own shareable `.miditheme` files. |

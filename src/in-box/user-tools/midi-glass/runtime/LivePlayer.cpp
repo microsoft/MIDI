@@ -125,6 +125,14 @@ namespace glass
                 }
             };
 
+        m_runner->ChangePadGrid = [weak](PlanAction const& action)
+            {
+                if (auto strong = weak.lock())
+                {
+                    strong->ChangePadGrids(action);
+                }
+            };
+
         m_runner->Start(dispatcher);
 
         m_clocks = ClockGenerator::Create();
@@ -387,6 +395,7 @@ namespace glass
         m_lfoControls.clear();
         m_stepControls.clear();
         m_padControls.clear();
+        m_fretControls.clear();
         m_pickerControls.clear();
 
         size_t index{ 0 };
@@ -448,7 +457,9 @@ namespace glass
 
                     entry.ControlIndex = static_cast<uint32_t>(index);
                     entry.Spec = control.Pads;
-                    entry.StartNote = FirstPadNote(WithPickedKey(control.Pads, m_pickedKey));
+                    entry.ControlId = control.Id;
+                    entry.Hex = IsHexPadGrid(control.Kind);
+                    entry.StartNote = FirstPadNote(control.Pads);
                     entry.BendRange = std::clamp(
                         control.Pads.BendRangeSemitones, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
                     entry.Voices.Configure(control.Pads.Glide, entry.BendRange);
@@ -467,8 +478,30 @@ namespace glass
                     m_pickerControls.push_back(std::move(entry));
                 }
 
+                if (IsFretboard(control.Kind))
+                {
+                    FretEntry entry{};
+
+                    entry.ControlIndex = static_cast<uint32_t>(index);
+                    entry.ControlId = control.Id;
+                    entry.Spec = NormalizedFretboard(control.Fretboard);
+
+                    m_fretControls.push_back(std::move(entry));
+                }
+
                 index++;
             }
+        }
+
+        // A grid changed by a button before an edit in Try mode stays changed.
+        ConfigureFretboards();
+
+        for (auto& pads : m_padControls)
+        {
+            auto const spec = WithGridState(pads.Spec, pads.Hex, StateOf(m_gridStates, pads.ControlId));
+            auto const first = PadNote(spec, pads.Hex, 0, 0, std::max(spec.PadsPerRow, 1));
+
+            pads.StartNote = first >= 0 ? first : FirstPadNote(spec);
         }
 
         for (auto& clock : m_clockControls)
@@ -1198,6 +1231,9 @@ namespace glass
 
             SendPadActions(entry.ControlIndex, entry.BendRange, std::span<PadAction const>{ actions.data(), count });
         }
+
+        // A string left ringing has to end for the same reasons a pad's note does.
+        ReleaseAllFretboards();
     }
 
     _Use_decl_annotations_
@@ -1288,6 +1324,33 @@ namespace glass
             else
             {
                 PadReleased(controlIndex, AutomationTouch);
+            }
+
+            return;
+        }
+
+        // A fretboard pressed through assistive technology strums every string, open or as
+        // fretted, top to bottom. Its note row has no number of its own either.
+        if (auto* const fretboard = FindFretControl(controlIndex))
+        {
+            if (isOn)
+            {
+                for (int32_t string = 0; string < static_cast<int32_t>(fretboard->Voices.Spec().Strings.size()); ++string)
+                {
+                    std::array<StringAction, MaximumStringActions> actions{};
+
+                    auto const count = fretboard->Voices.Strum(string, velocity, actions);
+
+                    SendStringActions(*fretboard, std::span<StringAction const>{ actions.data(), count });
+                }
+            }
+            else if (fretboard->Voices.Spec().Sustain == FretSustain::WhileHeld)
+            {
+                std::array<StringAction, MaximumFretStrings> actions{};
+
+                auto const count = fretboard->Voices.MuteAll(actions);
+
+                SendStringActions(*fretboard, std::span<StringAction const>{ actions.data(), count });
             }
 
             return;

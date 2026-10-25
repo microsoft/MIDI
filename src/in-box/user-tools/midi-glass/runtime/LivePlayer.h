@@ -30,7 +30,9 @@
 #include "LfoGenerator.h"
 #include "StepSequencer.h"
 #include "PadVoices.h"
+#include "StringVoices.h"
 #include "PadGrid.h"
+#include "PadGridChanges.h"
 
 namespace glass
 {
@@ -122,9 +124,13 @@ namespace glass
         // on the dispatcher's thread, and only while SetLearning(true) is in force.
         std::function<void(LearnedBinding const& learned)> Learned{};
 
-        // A root or scale picker picked something new. The owner redraws the pad grids and the
-        // pickers in it.
-        std::function<void(PickedKey const& picked)> KeyPicked{};
+        // Grid buttons or pickers changed pad grids. The owner redraws the pad grids, the
+        // pickers and the readouts in it.
+        std::function<void(PadGridStates const& states)> PadGridsChanged{};
+
+        // Which strings of a fretboard are sounding changed, one bit per string. The owner lights
+        // them.
+        std::function<void(uint32_t controlIndex, uint32_t soundingStrings)> StringsSounding{};
 
         // ---- lifetime ----
 
@@ -188,6 +194,13 @@ namespace glass
 
         void PadReleased(_In_ uint32_t controlIndex, _In_ uint32_t touch);
 
+        // A finger on a fretboard (LivePlayerStrings.cpp): landing on a string, moving on it,
+        // lifting, or a strum crossing a string.
+        void FretTouched(_In_ uint32_t controlIndex, _In_ FretTouch const& touch);
+
+        // A finger dragged a fretboard's neck strip, so the frets showing start at this fret.
+        void NeckMoved(_In_ uint32_t controlIndex, _In_ int32_t firstFret);
+
         void Switched(_In_ uint32_t controlIndex, _In_ bool isOn);
 
         // The same, for a pad that takes its velocity from how hard it was hit. Everything else
@@ -241,12 +254,12 @@ namespace glass
 
         BindingEngine const& Engine() const noexcept { return m_engine; }
 
-        // What the root and scale pickers have picked since the layout opened (LivePlayerKeys.cpp).
-        // Nothing, for each, until one is touched.
-        PickedKey PickedKeyNow() const noexcept { return m_pickedKey; }
+        // What grid buttons and pickers have changed since the layout opened (LivePlayerKeys.cpp).
+        // Empty until one is touched.
+        PadGridStates const& GridStatesNow() const noexcept { return m_gridStates; }
 
-        // Back to nothing picked, which is where the editor goes on leaving Try mode.
-        void ForgetPickedKey() noexcept;
+        // Back to every grid as built, which is where the editor goes on leaving Try mode.
+        void ForgetGridChanges() noexcept;
 
     private:
         LivePlayer() = default;
@@ -262,6 +275,12 @@ namespace glass
         // A picker's new position, made into a key and announced. False when the control is not
         // a picker. A picker sends nothing either way.
         bool PickFromSwitch(_In_ uint32_t controlIndex, _In_ double value);
+
+        // A pad grid row ran. On the dispatcher's thread.
+        void ChangePadGrids(_In_ PlanAction const& action);
+
+        // The note each grid's first pad plays now, and the owner told. After any change.
+        void AnnounceGridChanges();
 
         // One already-built burst of words straight to a connection. What the sequence runner
         // calls, on the dispatcher's thread.
@@ -305,6 +324,8 @@ namespace glass
 
             // As saved, so the first pad can move with a key that is picked.
             PadGridSpec Spec{};
+            std::wstring ControlId{};
+            bool Hex{ false };
         };
 
         PadEntry* FindPadControl(_In_ uint32_t controlIndex) noexcept;
@@ -387,6 +408,35 @@ namespace glass
 
         std::vector<PadEntry> m_padControls{};
 
+        // Each fretboard, what it was built as, and which string is sounding what.
+        struct FretEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            std::wstring ControlId{};
+            FretboardSpec Spec{};
+            StringVoices Voices{};
+
+            // The channels already told how far a bend reaches, one bit per channel offset, so
+            // the instrument is told once a run rather than before every note.
+            uint32_t ToldSensitivity{ 0 };
+        };
+
+        std::vector<FretEntry> m_fretControls{};
+
+        FretEntry* FindFretControl(_In_ uint32_t controlIndex) noexcept;
+
+        // What one event on a fretboard came to, sent, and the owner told which strings sound.
+        void SendStringActions(_Inout_ FretEntry& entry, _In_ std::span<StringAction const> actions) noexcept;
+
+        // Every fretboard set up again from what it was built as and what grid buttons changed.
+        void ConfigureFretboards();
+
+        // Every string on every fretboard stopped and every finger forgotten.
+        void ReleaseAllFretboards() noexcept;
+
+        // A mute row ran: the fretboards it targets stop every string.
+        void MuteFretboards(_In_ PadGridTargets const& targets) noexcept;
+
         // The root and scale pickers, with only what picking needs: the kind and the switch.
         struct PickerEntry
         {
@@ -397,7 +447,7 @@ namespace glass
         std::vector<PickerEntry> m_pickerControls{};
 
         // UI thread only. Kept through an edit in Try mode, like a fader's position is.
-        PickedKey m_pickedKey{};
+        PadGridStates m_gridStates{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};

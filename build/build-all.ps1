@@ -11,6 +11,10 @@
       src/in-box/Midi2-AppSDK.sln   the SDK, every app and tool including MIDI Glass, and the
                                     NuGet projection
 
+    Service and Sdk build their required headers and static libraries first, for the selected
+    platform and configuration. These are incremental builds, not rebuilds. Sdk can run without
+    Service; it does not build the service or transports. Other targets do not add these builds.
+
     There are two installers for each platform, and each has its own version number:
 
       build/version.json              the Tools installer: every app and tool, the SDK they use and
@@ -347,14 +351,18 @@ $SampleExcludedExtensions = @('.user', '.log', '.zip', '.pfx', '.suo', '.cache',
 # Surfaced in the generated version headers and shown in midi2monitor's settings dialog.
 $SdkBuildSource = 'GitHub Preview'
 
-# Arm64EC is built only to produce the Arm64X SDK binary. These are Windows.Devices.Midi2 and the
-# projects it declares as solution dependencies, in build order - static libs are not rebuilt by
-# their dependents, so they have to come first.
-#
-# The first two exist only to emit generated headers the rest include out of their per-platform
-# intermediate folders. Together with com-extensions-idl they cover every intermediate folder
-# these projects include from, which is what makes this list complete on a clean tree.
-$Arm64EcProjects = @(
+# Some consumers link these libraries by path without declaring project dependencies. Build
+# them before starting the solution, or a parallel build can link before the library exists.
+$ServicePrerequisiteProjects = @(
+    @{ Project = 'idl\IDL.vcxproj'; Targets = @() }
+    @{ Project = 'Libs\MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj'; Targets = @() }
+    @{ Project = 'Libs\MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj'; Targets = @() }
+    @{ Project = 'Libs\MidiPnpLib\MidiPnpLib.vcxproj'; Targets = @() }
+)
+
+# The SDK uses different library projects and output folders. It also includes headers generated
+# by service projects that are not in Midi2-AppSDK.sln.
+$SdkPrerequisiteProjects = @(
     @{ Project = 'idl\IDL.vcxproj'; Targets = @() }
 
     # Midl only: the SDK core includes this project's generated header, but compiling its C++
@@ -364,6 +372,18 @@ $Arm64EcProjects = @(
     @{ Project = 'Libs\SDK-MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj'; Targets = @() }
     @{ Project = 'Libs\SDK-MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj'; Targets = @() }
     @{ Project = 'Libs\SDK-MidiPnpLib\MidiPnpLib.vcxproj'; Targets = @() }
+)
+
+# midi1enum, midi1monitor and midiksinfo link these libraries only on Arm64. Their projects are
+# not in the SDK solution. MidiKS needs the IDL headers generated above.
+$Arm64ToolPrerequisiteProjects = @(
+    @{ Project = 'Libs\MidiKsCommon\MidiKSCommon.vcxproj'; Targets = @() }
+    @{ Project = 'Libs\MidiKs\MidiKS.vcxproj'; Targets = @() }
+    @{ Project = 'Test\Libs\MidiKSEnum\MidiKSEnum.vcxproj'; Targets = @() }
+)
+
+# Arm64EC builds only the Arm64X SDK and its dependencies, not the tools or service.
+$Arm64EcProjects = $SdkPrerequisiteProjects + @(
     @{ Project = 'Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj'; Targets = @() }
     @{ Project = 'Client\WinRT\core\Windows.Devices.Midi2.vcxproj'; Targets = @() }
 )
@@ -953,7 +973,9 @@ function Invoke-MSBuild {
     # The app projects reach Windows.Devices.Midi2.vcxproj through more than one global-property
     # set, so MSBuild builds it twice in a single invocation. Both writes target the same
     # OutDir/IntDir, and in parallel they collide on the FileTracker logs (FTK1011).
-    $msbuildArgs += if ($Serial) { '/m:1' } elseif ($MaxCpuCount -gt 0) { "/m:$MaxCpuCount" } else { '/m' }
+    if (-not $Serial -and [IO.Path]::GetExtension($ProjectOrSolution) -eq '.sln') {
+        $msbuildArgs += if ($MaxCpuCount -gt 0) { "/m:$MaxCpuCount" } else { '/m' }
+    }
 
     # /m counts projects. A project with /MP would otherwise start one cl.exe per logical processor.
     if ($MaxCpuCount -gt 0) { $msbuildArgs += "/p:CL_MPCount=$script:CompilersPerProject" }
@@ -1207,10 +1229,25 @@ function Test-StagedSdkCopies {
 # Build
 # ----------------------------------------------------------------------------------------------
 
+function Invoke-PrerequisiteProjects {
+    param(
+        [Parameter(Mandatory)] [object[]] $Projects,
+        [Parameter(Mandatory)] [string] $BuildPlatform,
+        [hashtable] $Properties = @{}
+    )
+
+    foreach ($project in $Projects) {
+        Invoke-MSBuild -ProjectOrSolution (Join-Path $ApiRoot $project.Project) -BuildPlatform $BuildPlatform `
+            -Targets $project.Targets -Properties $Properties -SolutionDir $ApiRoot -Serial
+    }
+}
+
 function Invoke-ServiceTarget {
     Write-Step 'Build service and transports (Midi2.sln)'
 
     foreach ($plat in $Platform) {
+        Invoke-PrerequisiteProjects -Projects $ServicePrerequisiteProjects -BuildPlatform $plat `
+            -Properties @{ 'NoWarn' = 'MIDL2111' }
         Invoke-MSBuild -ProjectOrSolution $ServiceSolution -BuildPlatform $plat `
             -Properties @{ 'NoWarn' = 'MIDL2111' }
     }
@@ -1253,17 +1290,17 @@ function Invoke-SdkTarget {
 
     # Arm64 first, then Arm64EC, which links the Arm64X binary out of the Arm64 and Arm64EC code.
     if ($Platform -contains 'Arm64') {
+        Invoke-PrerequisiteProjects -Projects $SdkPrerequisiteProjects -BuildPlatform 'Arm64' -Properties $versionProps
+        Invoke-PrerequisiteProjects -Projects $Arm64ToolPrerequisiteProjects -BuildPlatform 'Arm64' -Properties $versionProps
         Invoke-MSBuild -ProjectOrSolution $SdkSolution -BuildPlatform 'Arm64' -Properties $versionProps
 
         # Only the SDK and the projects it depends on. Solution-level target names do not work
         # here - MSBuild forwards the name to every project and they all fail with MSB4057.
-        foreach ($project in $Arm64EcProjects) {
-            Invoke-MSBuild -ProjectOrSolution (Join-Path $ApiRoot $project.Project) -BuildPlatform 'Arm64EC' `
-                -Targets $project.Targets -Properties $versionProps -SolutionDir $ApiRoot
-        }
+        Invoke-PrerequisiteProjects -Projects $Arm64EcProjects -BuildPlatform 'Arm64EC' -Properties $versionProps
     }
 
     if ($Platform -contains 'x64') {
+        Invoke-PrerequisiteProjects -Projects $SdkPrerequisiteProjects -BuildPlatform 'x64' -Properties $versionProps
         Invoke-MSBuild -ProjectOrSolution $SdkSolution -BuildPlatform 'x64' -Properties $versionProps
     }
 

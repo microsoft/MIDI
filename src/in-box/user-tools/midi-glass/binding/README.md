@@ -10,6 +10,7 @@ What a control puts on the wire, and how often.
 | `LearnCapture.*` | An incoming message read back into a binding, and the rules for which of them are worth acting on. |
 | `MonitorFormat.*` | Words decoded back into something a person can read, for the editor's monitor rail. |
 | `PadVoices.*` | Which note each finger on a grid of pads is holding, so a slide between pads plays, glides or bends the right note and nothing is left sounding. Pure, and tested. |
+| `StringVoices.*` | One note per string on a fretboard: which fret sounds, hammer-ons and pull-offs, slides and bends, strums, mute, and which channel each string goes out on. Pure, and tested. `BindingEngineStrings.cpp` turns each into words. |
 
 ## The hot path
 

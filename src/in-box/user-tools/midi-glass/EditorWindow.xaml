@@ -352,13 +352,13 @@
                             <FontIcon Glyph="&#xE70D;" FontSize="9" />
                         </StackPanel>                        <Button.Flyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Name="AlignLeftItem" x:Uid="ArrangeAlignLeft" Text="Align left edges" Tag="alignleft" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignCenterXItem" x:Uid="ArrangeAlignCenterX" Text="Align centers across" Tag="aligncenterx" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignRightItem" x:Uid="ArrangeAlignRight" Text="Align right edges" Tag="alignright" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignLeftItem" x:Uid="ArrangeAlignLeft" Text="Align left" Tag="alignleft" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterXItem" x:Uid="ArrangeAlignCenterX" Text="Align center" Tag="aligncenterx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignRightItem" x:Uid="ArrangeAlignRight" Text="Align right" Tag="alignright" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Name="AlignTopItem" x:Uid="ArrangeAlignTop" Text="Align top edges" Tag="aligntop" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignTopItem" x:Uid="ArrangeAlignTop" Text="Align top" Tag="aligntop" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align middle" Tag="aligncentery" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom" Tag="alignbottom" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem x:Name="SpreadAcrossItem" x:Uid="ArrangeSpreadAcross" Text="Distribute horizontally" Tag="spreadx" Click="OnArrangeClick" />
                                 <MenuFlyoutItem x:Name="SpreadDownItem" x:Uid="ArrangeSpreadDown" Text="Distribute vertically" Tag="spready" Click="OnArrangeClick" />
@@ -455,11 +455,11 @@
                                 <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <MenuFlyoutItem x:Uid="LayoutMenuAbout" Text="About this layout…" Tag="name" Click="OnLayoutSettingsClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuAbout" Text="Layout details…" Tag="name" Click="OnLayoutSettingsClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Set the keyboard order…" Click="OnSortKeyboardOrderClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Tab order…" Click="OnSortKeyboardOrderClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
@@ -890,7 +890,7 @@
                         <InfoBar.ActionButton>
                             <Button x:Name="SelectOffPageButton"
                                     x:Uid="SelectOffPageButton"
-                                    Content="Select them"
+                                    Content="Select"
                                     Click="OnSelectOffPageClick" />
                         </InfoBar.ActionButton>
                     </InfoBar>
@@ -1838,6 +1838,30 @@
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
+                                    <!-- What a readout shows: its own value, or a pad grid while the layout runs. -->
+                                    <StackPanel x:Name="ReadoutPanel" Visibility="Collapsed">
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorReadoutHeading" Text="Readout" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="ReadoutSourceCombo"
+                                                  x:Uid="ReadoutSourceCombo"
+                                                  Header="Source"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="OnReadoutSourceChanged" />
+
+                                        <StackPanel x:Name="ReadoutTargetsPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                                            <TextBlock x:Uid="TargetsLabel" Text="Targets" Style="{StaticResource InspectorLabelStyle}" />
+                                            <StackPanel x:Name="ReadoutTargetChecks" />
+                                        </StackPanel>
+                                    </StackPanel>
+
                                     <!-- A switch's positions, each with the name printed on it.
                                          The rows are built in code, one per position. -->
                                     <StackPanel x:Name="SwitchPanel" Visibility="Collapsed">
@@ -1859,7 +1883,7 @@
 
                                         <!-- One check box per scale, built in code. -->
                                         <StackPanel x:Name="SwitchScalesPanel" Visibility="Collapsed" Margin="0,0,0,8">
-                                            <TextBlock x:Uid="SwitchScalesLabel" Text="Scales it offers" Style="{StaticResource InspectorLabelStyle}" />
+                                            <TextBlock x:Uid="SwitchScalesLabel" Text="Scales" Style="{StaticResource InspectorLabelStyle}" />
                                             <StackPanel x:Name="SwitchScaleChecks" />
                                         </StackPanel>
 
@@ -1868,6 +1892,12 @@
                                                    TextWrapping="Wrap"
                                                    Visibility="Collapsed"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- The pad grids a picker changes. Built in code. -->
+                                        <StackPanel x:Name="SwitchTargetsPanel" Visibility="Collapsed" Margin="0,8,0,8">
+                                            <TextBlock x:Uid="TargetsLabel" Text="Targets" Style="{StaticResource InspectorLabelStyle}" />
+                                            <StackPanel x:Name="SwitchTargetChecks" />
+                                        </StackPanel>
 
                                         <StackPanel x:Name="SwitchPositionRows" Spacing="6" />
 
@@ -1878,7 +1908,7 @@
                                                 Click="OnAddSwitchPositionClick">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE710;" FontSize="11" />
-                                                <TextBlock x:Uid="AddSwitchPositionLabel" Text="Add a position" FontSize="11" />
+                                                <TextBlock x:Uid="AddSwitchPositionLabel" Text="Add position" FontSize="11" />
                                             </StackPanel>
                                         </Button>
 
@@ -1996,7 +2026,40 @@
                                             <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
                                         </Grid>
 
-                                        <Grid ColumnSpacing="6">
+                                        <!-- Flow (as many to a row as fit), or a set number of rows or columns. -->
+                                        <ComboBox x:Name="PadArrangementCombo"
+                                                  x:Uid="PadArrangementCombo"
+                                                  Header="Arrangement"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="OnPadArrangementChanged" />
+
+                                        <Grid x:Name="PadLinesGrid" ColumnSpacing="6" Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="PadLinesBox"
+                                                       x:Uid="PadLinesBox"
+                                                       Header="Rows"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="32"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+
+                                            <NumberBox x:Name="PadsPerLineBox"
+                                                       x:Uid="PadsPerLineBox"
+                                                       Header="Pads per row"
+                                                       Grid.Column="1"
+                                                       Minimum="1"
+                                                       Maximum="64"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+                                        </Grid>
+
+                                        <Grid x:Name="PadFlowGrid" ColumnSpacing="6">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="*" />
@@ -2026,6 +2089,13 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
+                                        <CheckBox x:Name="PadHighlightHeldCheck"
+                                                  x:Uid="PadHighlightHeldCheck"
+                                                  Content="Highlight held notes"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnPadNotesChanged"
+                                                  Unchecked="OnPadNotesChanged" />
+
                                         <NumberBox x:Name="PadStartNoteBox"
                                                    x:Uid="PadStartNoteBox"
                                                    Minimum="0"
@@ -2039,6 +2109,14 @@
                                                    Margin="0,6,0,0"
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Shown only when some pads land past note 127 or below 0. -->
+                                        <TextBlock x:Name="PadSilentCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="Collapsed"
+                                                   Foreground="{ThemeResource SystemFillColorCautionBrush}" />
 
                                         <!-- Square pads: where each row starts. -->
                                         <ComboBox x:Name="PadRowCombo"
@@ -2133,7 +2211,7 @@
                                         <!-- Every pad on a note of the key, the way a grid controller plays in key. -->
                                         <CheckBox x:Name="PadInKeyCheck"
                                                   x:Uid="PadInKeyCheck"
-                                                  Content="Only notes in the key"
+                                                  Content="In key only"
                                                   Margin="0,6,0,0"
                                                   Checked="OnPadNotesChanged"
                                                   Unchecked="OnPadNotesChanged" />
@@ -2154,6 +2232,37 @@
                                                 Click="OnAddKeyPickersClick" />
 
                                         <TextBlock x:Name="PadPickersCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Buttons, a switch and a readout that change this grid while the layout runs. -->
+                                        <Button x:Name="PadAddGridButtonsButton"
+                                                x:Uid="PadAddGridButtonsButton"
+                                                Content="Add grid buttons"
+                                                Margin="0,8,0,0"
+                                                FontSize="11">
+                                            <Button.Flyout>
+                                                <Flyout x:Name="PadGridButtonsFlyout">
+                                                    <StackPanel Spacing="4" MinWidth="220">
+                                                        <CheckBox x:Name="GridButtonsOctaveCheck" x:Uid="GridButtonsOctaveCheck" Content="Octave up and down" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsRowsCheck" x:Uid="GridButtonsRowsCheck" Content="Row up and down" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsInKeyCheck" x:Uid="GridButtonsInKeyCheck" Content="In key only switch" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsReadoutCheck" x:Uid="GridButtonsReadoutCheck" Content="Readout" IsChecked="True" />
+                                                        <CheckBox x:Name="GridButtonsResetCheck" x:Uid="GridButtonsResetCheck" Content="Reset" IsChecked="True" />
+                                                        <Button x:Uid="GridButtonsAddButton"
+                                                                Content="Add"
+                                                                Margin="0,6,0,0"
+                                                                Style="{StaticResource AccentButtonStyle}"
+                                                                Click="OnAddGridButtonsClick" />
+                                                    </StackPanel>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+
+                                        <TextBlock x:Uid="PadGridButtonsCaption"
+                                                   Text="Adds controls under the grid that move it, switch in key only, show where it is and reset it while the layout runs. They change only this grid."
                                                    FontSize="11"
                                                    Margin="0,4,0,0"
                                                    TextWrapping="Wrap"
@@ -2259,6 +2368,204 @@
                                                    ValueChanged="OnPadGridNumberChanged" />
                                     </StackPanel>
 
+                                    <!-- A fretboard: its tuning and strings, the frets that show, and how it plays.
+                                         Filled in and read back in EditorFretboard.cpp. -->
+                                    <StackPanel x:Name="FretboardPanel" Visibility="Collapsed">
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorFretboardHeading" Text="Fretboard" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="FretTuningCombo"
+                                                  x:Uid="FretTuningCombo"
+                                                  Header="Tuning"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnFretTuningChanged" />
+
+                                        <TextBlock x:Uid="FretStringsHeading" Text="Strings" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <!-- One row per string, top to bottom as drawn: its note, and move up,
+                                             move down and remove. Built in code. -->
+                                        <StackPanel x:Name="FretStringRows" Spacing="4" />
+
+                                        <Button x:Name="FretAddStringButton"
+                                                x:Uid="FretAddStringButton"
+                                                Content="Add string"
+                                                Margin="0,6,0,0"
+                                                FontSize="11"
+                                                Click="OnFretAddStringClick" />
+
+                                        <TextBlock x:Uid="FretStringsCaption"
+                                                   Text="The list runs top to bottom the way the strings are drawn. Changing a note makes the tuning Custom."
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,8,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="FretCountBox"
+                                                       x:Uid="FretCountBox"
+                                                       Header="Frets"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="36"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+
+                                            <NumberBox x:Name="FretCapoBox"
+                                                       x:Uid="FretCapoBox"
+                                                       Header="Capo"
+                                                       Grid.Column="1"
+                                                       Minimum="0"
+                                                       Maximum="35"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+                                        </Grid>
+
+                                        <TextBlock x:Uid="FretVisibleLabel" Text="Visible frets" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="FretFirstBox"
+                                                       x:Uid="FretFirstBox"
+                                                       Header="From"
+                                                       Grid.Column="0"
+                                                       Minimum="0"
+                                                       Maximum="35"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+
+                                            <NumberBox x:Name="FretLastBox"
+                                                       x:Uid="FretLastBox"
+                                                       Header="To"
+                                                       Grid.Column="1"
+                                                       Minimum="1"
+                                                       Maximum="36"
+                                                       SpinButtonPlacementMode="Hidden"
+                                                       ValueChanged="OnFretboardNumberChanged" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="FretStrumSideCombo"
+                                                  x:Uid="FretStrumSideCombo"
+                                                  Header="Strum side"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <ComboBox x:Name="FretPlayModeCombo"
+                                                  x:Uid="FretPlayModeCombo"
+                                                  Header="Play mode"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Name="FretPlayModeCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <ComboBox x:Name="FretSustainCombo"
+                                                  x:Uid="FretSustainCombo"
+                                                  Header="Sustain"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Uid="FretScaleDotsLabel" Text="Scale dots" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox x:Name="FretKeyCombo"
+                                                      x:Uid="FretKeyCombo"
+                                                      Grid.Column="0"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFretboardChoiceChanged" />
+
+                                            <ComboBox x:Name="FretScaleCombo"
+                                                      x:Uid="FretScaleCombo"
+                                                      Grid.Column="1"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFretboardChoiceChanged" />
+                                        </Grid>
+
+                                        <ComboBox x:Name="FretOutOfKeyCombo"
+                                                  x:Uid="FretOutOfKeyCombo"
+                                                  Header="Out-of-key frets"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Uid="FretExpressionHeading" Text="Expression" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <NumberBox x:Name="FretBendBox"
+                                                   x:Uid="FretBendBox"
+                                                   Header="Bend range (semitones)"
+                                                   Minimum="1"
+                                                   Maximum="12"
+                                                   SpinButtonPlacementMode="Hidden"
+                                                   ValueChanged="OnFretboardNumberChanged" />
+
+                                        <ComboBox x:Name="FretSlideCombo"
+                                                  x:Uid="FretSlideCombo"
+                                                  Header="Slide"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <CheckBox x:Name="FretHammerOnsCheck"
+                                                  x:Uid="FretHammerOnsCheck"
+                                                  Content="Hammer-ons"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnFretboardCheckChanged"
+                                                  Unchecked="OnFretboardCheckChanged" />
+
+                                        <ComboBox x:Name="FretOutputCombo"
+                                                  x:Uid="FretOutputCombo"
+                                                  Header="Output"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnFretboardChoiceChanged" />
+
+                                        <TextBlock x:Name="FretOutputCaption"
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- A tuning picker and a row of buttons that change this fretboard while the layout runs. -->
+                                        <Button x:Name="FretAddButtonsButton"
+                                                x:Uid="FretAddButtonsButton"
+                                                Content="Add fretboard buttons"
+                                                Margin="0,8,0,0"
+                                                FontSize="11"
+                                                Click="OnAddFretboardButtonsClick" />
+
+                                        <TextBlock x:Uid="FretAddButtonsCaption"
+                                                   Text="Adds a tuning picker beside the fretboard and a row under it to move the capo, move along the neck and mute the strings while the layout runs. They change only this fretboard."
+                                                   FontSize="11"
+                                                   Margin="0,4,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
                                     <!-- The control itself, drawn the way it will actually look,
                                          so a style or a color is judged rather than imagined. -->
                                     <Grid x:Name="PreviewHeading" Style="{StaticResource InspectorSectionRowStyle}">
@@ -2326,7 +2633,7 @@
                                                       Unchecked="OnLearnBankToggled">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE8FD;" FontSize="11" />
-                                                <TextBlock x:Uid="LearnBankLabel" Text="Learn a bank" FontSize="11" />
+                                                <TextBlock x:Uid="LearnBankLabel" Text="Learn bank" FontSize="11" />
                                             </StackPanel>
                                         </ToggleButton>
                                     </StackPanel>
@@ -2401,7 +2708,7 @@
                                                              x:Uid="EditDevicesLink"
                                                              Padding="0"
                                                              FontSize="11"
-                                                             Content="Set up devices…"
+                                                             Content="Devices…"
                                                              Click="OnLayoutSettingsClick" />
                                         </StackPanel>
 
@@ -2578,7 +2885,7 @@
                                                     Click="OnAddDetentStopClick">
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                                     <FontIcon Glyph="&#xE710;" FontSize="11" />
-                                                    <TextBlock x:Uid="AddDetentStopLabel" Text="Add a stop" FontSize="11" />
+                                                    <TextBlock x:Uid="AddDetentStopLabel" Text="Add stop" FontSize="11" />
                                                 </StackPanel>
                                             </Button>
                                         </StackPanel>
@@ -2639,7 +2946,7 @@
                                         <HyperlinkButton x:Uid="RawWordsPrimerLink"
                                                          Padding="0"
                                                          FontSize="11"
-                                                         Content="How to read and understand UMP messages"
+                                                         Content="UMP primer"
                                                          NavigateUri="https://aka.ms/MidiUMPPrimer" />
                                     </StackPanel>
 
@@ -2682,6 +2989,22 @@
                                                   HorizontalAlignment="Stretch"
                                                   SelectionChanged="OnTargetPageChanged" />
                                     </StackPanel>
+
+                                    <!-- A pad grid row: what it changes, and on which grids. Sends nothing. -->
+                                    <StackPanel x:Name="PadGridRowPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <ComboBox x:Name="PadGridFunctionCombo"
+                                                  x:Uid="PadGridFunctionCombo"
+                                                  Header="Function"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnPadGridFunctionChanged" />
+                                        <TextBlock x:Uid="TargetsLabel" Text="Targets" Style="{StaticResource InspectorLabelStyle}" />
+                                        <StackPanel x:Name="RowTargetChecks" />
+                                        <TextBlock x:Uid="PadGridRowCaption"
+                                                   Text="This row sends no MIDI. While the layout runs, it changes the pad grids it targets. The layout opens as it was built each time."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
                                 </StackPanel>
 
                                 <!-- Moving a strip of controls to another synth is one change
@@ -2712,7 +3035,7 @@
                                             <HyperlinkButton x:Uid="ManySendDevicesLink"
                                                              Padding="0"
                                                              FontSize="11"
-                                                             Content="Set up devices…"
+                                                             Content="Devices…"
                                                              Click="OnLayoutSettingsClick" />
                                         </StackPanel>
 
@@ -2872,7 +3195,7 @@
                             <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                                 <StackPanel x:Name="BehaviorPanel" Margin="8,0,16,16" Spacing="4">
 
-                                    <TextBlock x:Uid="InspectorStartHeading" Text="When the layout opens" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Uid="InspectorStartHeading" Text="On open" Style="{StaticResource InspectorHeadingStyle}" />
                                     <ToggleSwitch x:Name="SendOnStartSwitch"
                                                   x:Uid="SendOnStartSwitch"
                                                   Header="Send value"
@@ -3284,7 +3607,7 @@
                             Click="OnCloseLayoutSettingsClick">
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <FontIcon Glyph="&#xE72B;" FontSize="13" />
-                            <TextBlock x:Uid="LayoutSettingsBackLabel" Text="Back to the editor" />
+                            <TextBlock x:Uid="LayoutSettingsBackLabel" Text="Back to editor" />
                         </StackPanel>
                     </Button>
 
@@ -3389,7 +3712,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="11">
                                     <FontIcon Glyph="&#xE8A5;" FontSize="15" Width="16"
                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                    <TextBlock x:Uid="SettingsNavNameLabel" Text="Name and description" />
+                                    <TextBlock x:Uid="SettingsNavNameLabel" Text="Details" />
                                 </StackPanel>
                             </ToggleButton>
 
@@ -3479,7 +3802,7 @@
                                             Click="OnThemeAboutClick">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE946;" FontSize="12" />
-                                            <TextBlock x:Uid="ThemeAboutLabel" Text="About this theme…" />
+                                            <TextBlock x:Uid="ThemeAboutLabel" Text="Theme details…" />
                                         </StackPanel>
                                     </Button>
                                 </Grid>
@@ -3489,7 +3812,7 @@
                                      the window loads can't rebuild a gallery that isn't there. -->
                                 <ComboBox x:Name="ThemeGroupPicker"
                                           x:Uid="ThemeGroupPicker"
-                                          Header="Group themes by"
+                                          Header="Group by"
                                           MinWidth="220"
                                           Margin="0,0,0,10"
                                           SelectionChanged="OnThemeGroupChanged" />
@@ -3567,7 +3890,7 @@
                                             Click="OnImportThemeClick">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <FontIcon Glyph="&#xE8B7;" FontSize="12" />
-                                            <TextBlock x:Uid="ImportThemeLabel" Text="Import a theme…" />
+                                            <TextBlock x:Uid="ImportThemeLabel" Text="Import theme…" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>

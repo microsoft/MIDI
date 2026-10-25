@@ -3100,6 +3100,14 @@ namespace winrt::midisequencer::implementation
         add(picked > 1 ? res::FormatString(L"MenuMergeClipsFormat", static_cast<uint32_t>(picked)) : res::GetString(L"MenuMergeClips"), L"\uEA3C",
             [weak]() { if (auto s = weak.get()) { s->MergeSelectedPlacements(); } }, picked > 1);
 
+        if (picked <= 1)
+        {
+            auto const merge = menu.Items().GetAt(menu.Items().Size() - 1);
+            auto const tip = res::GetString(L"MenuMergeClipsTip");
+            controls::ToolTipService::SetToolTip(merge, winrt::box_value(tip));
+            automation::AutomationProperties::SetHelpText(merge, tip);
+        }
+
         menu.Items().Append(controls::MenuFlyoutSeparator{});
         add(res::GetString(L"MenuDeleteClip"), L"\uE74D", [weak]() { if (auto s = weak.get()) { s->DeleteSelectedPlacement(); } });
 

@@ -249,11 +249,21 @@ namespace winrt::midiglass::implementation
                 }
             };
 
-        m_player->KeyPicked = [weak](glass::PickedKey const& picked)
+        m_player->PadGridsChanged = [weak](glass::PadGridStates const& states)
             {
                 if (auto strong = weak.get())
                 {
-                    strong->OnTryKeyPicked(picked);
+                    strong->OnTryGridsChanged(states);
+                }
+            };
+
+        m_player->StringsSounding = [weak](uint32_t controlIndex, uint32_t sounding)
+            {
+                size_t itemIndex{ 0 };
+
+                if (auto strong = weak.get(); strong != nullptr && strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetStringsSounding(itemIndex, sounding);
                 }
             };
 
@@ -473,6 +483,38 @@ namespace winrt::midiglass::implementation
                     case glass::PadTouchPhase::Up:
                         strong->m_player->PadReleased(controlIndex, touch.Touch);
                         break;
+                    }
+                };
+
+            m_input.FretTouched = [weak](size_t itemIndex, glass::FretTouch const& touch)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_player == nullptr)
+                    {
+                        return;
+                    }
+
+                    // The same rule as a pad grid: a release still ends its string after the
+                    // mode has changed.
+                    if (!strong->m_tryMode && touch.Phase != glass::FretTouchPhase::Up)
+                    {
+                        return;
+                    }
+
+                    if (touch.Phase == glass::FretTouchPhase::Down || touch.Phase == glass::FretTouchPhase::Strum)
+                    {
+                        strong->FollowPlayedControl(itemIndex);
+                    }
+
+                    strong->m_player->FretTouched(strong->m_renderer.ControlIndexOf(itemIndex), touch);
+                };
+
+            m_input.NeckMoved = [weak](size_t itemIndex, int32_t firstFret)
+                {
+                    if (auto strong = weak.get(); strong != nullptr && strong->m_tryMode && strong->m_player != nullptr)
+                    {
+                        strong->m_player->NeckMoved(strong->m_renderer.ControlIndexOf(itemIndex), firstFret);
                     }
                 };
 

@@ -90,7 +90,7 @@ What a control can do depends on what kind of control it is:
 
 A function sets its own message, so there's no channel, number or value to fill in. One row does the whole job: a press and a release for a button, or the position and the touch for a fader. The DAW's lights and fader moves come back on their own, with nothing to set on the **Listens** tab.
 
-If you switch a device that already has rows to Mackie Control, a row that already sends a Mackie Control message becomes that function, as long as it fits its control. For example, note 94 on channel 1 on a button becomes **Play**. Any other row says **Pick a function**, and it doesn't send anything until you pick one. Switch the device back, and each function becomes the plain message it stands for.
+If you switch a device that already has rows to Mackie Control, a row that already sends a Mackie Control message becomes that function, as long as it fits its control. For example, note 94 on channel 1 on a button becomes **Play**. Any other row says **Function**, and it doesn't send anything until you pick one. Switch the device back, and each function becomes the plain message it stands for.
 
 ## How Windows MIDI Glass talks to each device {#how-midi-glass-talks-to-each-device}
 

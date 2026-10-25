@@ -255,7 +255,7 @@
                         <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutSubItem.Icon>
                     </MenuFlyoutSubItem>
 
-                    <MenuFlyoutSubItem x:Uid="CornerMoveButton" Text="Move this button">
+                    <MenuFlyoutSubItem x:Uid="CornerMoveButton" Text="Move button">
                         <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE7C2;" /></MenuFlyoutSubItem.Icon>
                         <MenuFlyoutItem x:Uid="CornerTopLeft" Text="Top left" Tag="corner0" Click="OnCornerMenuClick" />
                         <MenuFlyoutItem x:Uid="CornerTopRight" Text="Top right" Tag="corner1" Click="OnCornerMenuClick" />
@@ -265,7 +265,7 @@
 
                     <MenuFlyoutSeparator />
 
-                    <MenuFlyoutItem x:Uid="CornerLeaveFullScreen" Text="Leave full screen" Tag="leave" Click="OnCornerMenuClick">
+                    <MenuFlyoutItem x:Uid="CornerLeaveFullScreen" Text="Exit full screen" Tag="leave" Click="OnCornerMenuClick">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE73F;" /></MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
 

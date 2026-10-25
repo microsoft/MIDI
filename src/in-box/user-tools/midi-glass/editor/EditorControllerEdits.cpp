@@ -16,6 +16,7 @@
 #include "PageTemplates.h"
 #include "LayoutSerializer.h"
 #include "PadGrid.h"
+#include "Fretboard.h"
 #include "StepPattern.h"
 
 #include <algorithm>
@@ -69,6 +70,8 @@ namespace glass
                 left.UseMidi1Protocol == right.UseMidi1Protocol &&
                 left.SequenceName == right.SequenceName &&
                 left.TargetPageId == right.TargetPageId &&
+                left.PadFunction == right.PadFunction &&
+                left.PadTargets == right.PadTargets &&
                 left.Axis == right.Axis &&
                 left.Position == right.Position;
         }
@@ -284,12 +287,19 @@ namespace glass
             }
         }
 
+        // A control turned into a fretboard gets the strings a new one does.
+        if (kind == ControlKind::Fretboard && control->Fretboard.Strings.empty())
+        {
+            control->Fretboard = NormalizedFretboard(std::move(control->Fretboard));
+        }
+
         // A control turned into a sequencer has no steps to play, which would look like a
         // sequencer that is broken. It gets the same pattern a new one does, and a note row to
-        // play it on, pointed wherever the control was already sending.
-        if (kind == ControlKind::Steps)
+        // play it on, pointed wherever the control was already sending. A fretboard needs the
+        // note row too.
+        if (kind == ControlKind::Steps || kind == ControlKind::Fretboard)
         {
-            if (control->Steps.Pattern.empty())
+            if (kind == ControlKind::Steps && control->Steps.Pattern.empty())
             {
                 FillStarterPattern(control->Steps, 48);
             }
@@ -1243,10 +1253,23 @@ namespace glass
             : 0.0;
         wanted.BendRangeSemitones = std::clamp(
             pads.BendRangeSemitones, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
+        wanted.Arrangement = pads.Arrangement == PadArrangement::Rows || pads.Arrangement == PadArrangement::Columns
+            ? pads.Arrangement
+            : PadArrangement::Flow;
+        wanted.PadsPerRow = std::clamp(pads.PadsPerRow, MinimumPadsPerRow, MaximumPadsPerRow);
+        wanted.Rows = RowsAllowed(pads.Rows, wanted.PadsPerRow);
+
+        // Only grid buttons move a grid, and only while the layout runs.
+        wanted.ShiftRows = 0;
+        wanted.ShiftSteps = 0;
 
         auto const& current = control->Pads;
 
         if (current.PadCount == wanted.PadCount &&
+            current.Arrangement == wanted.Arrangement &&
+            current.Rows == wanted.Rows &&
+            current.PadsPerRow == wanted.PadsPerRow &&
+            current.HighlightHeld == wanted.HighlightHeld &&
             current.PadSize == wanted.PadSize &&
             current.StartNote == wanted.StartNote &&
             current.RightInterval == wanted.RightInterval &&
@@ -2908,10 +2931,28 @@ namespace glass
                 }
             };
 
+        // A list of grids follows the copies the same way; a grid that is gone drops out.
+        auto const followTargets = [&follow](PadGridTargets& targets)
+            {
+                for (auto& id : targets.ControlIds)
+                {
+                    follow(id);
+                }
+
+                std::erase_if(targets.ControlIds, [](std::wstring const& id) { return id.empty(); });
+            };
+
         for (auto& copy : copies)
         {
             follow(copy.Clock.TempoControlId);
             follow(copy.Feedback.TempoControlId);
+            followTargets(copy.Switch.Targets);
+            followTargets(copy.Readout.Targets);
+
+            for (auto& message : copy.Messages)
+            {
+                followTargets(message.PadTargets);
+            }
         }
 
         auto const regrouped = RegroupCopies(copies);

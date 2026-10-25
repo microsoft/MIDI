@@ -14,6 +14,7 @@
 #include "StringResources.h"
 #include "PadGrid.h"
 #include "SpinButtons.h"
+#include "EditorNoteBoxes.h"
 #include "StepPattern.h"
 
 #include <format>
@@ -207,6 +208,9 @@ namespace winrt::midiglass::implementation
                 note.SmallChange(1.0);
                 note.LargeChange(12.0);
                 midiapp::UseTouchSpinButtons(note);
+
+                // The name is printed beside it, so the box shows the number but takes either.
+                UseNoteNames(note, false);
                 xaml::Automation::AutomationProperties::SetName(
                     note, winrt::hstring{ resources::FormatString(L"StepNoteNameFormat", number) });
 

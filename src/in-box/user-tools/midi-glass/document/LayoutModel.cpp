@@ -334,9 +334,18 @@ namespace glass
         // A picker has a position for each note or scale it offers, whatever names it holds.
         auto const& spec = control.Switch;
 
-        auto const count = spec.Picks == SwitchPicks::RootNote ? RootPickerPositions
-            : spec.Picks == SwitchPicks::Scale ? static_cast<int32_t>(spec.Scales.size())
-            : static_cast<int32_t>(spec.Positions.size());
+        auto count = static_cast<int32_t>(spec.Positions.size());
+
+        switch (spec.Picks)
+        {
+        case SwitchPicks::RootNote:  count = RootPickerPositions; break;
+        case SwitchPicks::Scale:     count = static_cast<int32_t>(spec.Scales.size()); break;
+        case SwitchPicks::InKeyOnly: count = InKeyPickerPositions; break;
+        case SwitchPicks::RowOffset: count = RowOffsetPickerPositions; break;
+        case SwitchPicks::Octave:    count = OctavePickerPositions; break;
+        case SwitchPicks::Tuning:    count = FretTuningPresetCount; break;
+        default: break;
+        }
 
         return std::clamp(count, MinimumSwitchPositions, MaximumSwitchPositions);
     }
@@ -405,6 +414,7 @@ namespace glass
     {
         return kind != MessageKind::Sequence &&
             kind != MessageKind::GoToPage &&
+            kind != MessageKind::PadGrid &&
             kind != MessageKind::Unrecognized;
     }
 

@@ -66,6 +66,7 @@ namespace midimcp
             { L"line", L"A line that divides the surface. Sends nothing." },
             { L"notePads", L"A grid of pads that play notes, colored by key." },
             { L"hexPads", L"A grid of hexagon pads laid out by interval." },
+            { L"fretboard", L"A guitar neck with strings and frets. One note per string; push across a string to bend it. Tuning is set in the app." },
         };
 
         struct KindInfo

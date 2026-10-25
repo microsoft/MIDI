@@ -253,7 +253,7 @@
                         <InfoBar.ActionButton>
                             <Button x:Name="ConversionShowButton"
                                     x:Uid="ConversionShowButton"
-                                    Content="Show the original"
+                                    Content="Show original"
                                     Click="OnShowEarlierVersionClick" />
                         </InfoBar.ActionButton>
                     </InfoBar>
@@ -848,7 +848,7 @@
                          TextChanged="OnLoopbackNameChanged" />
                 <CheckBox x:Name="LoopbackKeepCheck"
                           x:Uid="LoopbackKeepCheck"
-                          Content="Keep after Windows MIDI Patchbay closes"
+                          Content="Persistent"
                           IsChecked="True" />
                 <InfoBar x:Uid="LoopbackInfoBar"
                          Severity="Informational"
