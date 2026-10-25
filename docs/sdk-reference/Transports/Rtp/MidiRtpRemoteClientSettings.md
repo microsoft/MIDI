@@ -46,7 +46,7 @@ Some people want Windows to be the host, so their device connects to this PC. `O
 - Disconnecting the device from this PC removes its endpoint when the time is a number of seconds. With `KeepAlways`, the endpoint stays.
 - Only one device per name can keep its endpoint. If a second device sends a name that's already connected, it gets an endpoint of its own, and that one is removed when it leaves.
 
-Any device that sends the same name gets the kept endpoint, so use this only on a network you trust, or with a host that asks before it lets a device connect.
+While the device is away, the kept endpoint only goes back to a device connecting from an address that device used before. Another device sending the same name from a different address is listed with `GetPendingRemoteClients()` and waits until someone approves it, even on a host that lets anyone in. Once approved, it gets the kept endpoint too. After the service restarts, a `KeepAlways` endpoint goes to the first device that connects with its name. So after the device's address changes, for example when a router hands it a new one, approve it once more.
 
 A remote device is known by the name it sends, ignoring uppercase and lowercase differences, the same way the host's remembered decisions know it. RTP-MIDI carries nothing else that stays the same from one connection to the next. An entry with no name is left out when the configuration is sent or saved.
 

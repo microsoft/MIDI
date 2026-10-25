@@ -17,6 +17,10 @@ struct MidiRetransmitBufferEntry
 
     // what these messages take on a MIDI 1.0 cable, which is what a resend costs the speed limit
     uint32_t WireByteCount{ 0 };
+
+    // When this was last sent again because the remote asked, or 0. A repeat of the request
+    // shortly after gets nothing new for it: the resend is still on its way.
+    uint64_t LastResentTimestamp{ 0 };
 };
 
 struct MidiOutgoingPingTrackingEntry
@@ -38,7 +42,11 @@ struct MidiOutgoingPingTrackingEntry
 class MidiNetworkConnection : public std::enable_shared_from_this<MidiNetworkConnection>
 {
 public:
-    virtual ~MidiNetworkConnection() = default;
+    // Stops both worker threads. The last reference can be dropped on one of them (a session
+    // ending on the watchdog thread lets go of the connection's entry in the session map), and a
+    // thread can't join itself, so that one is detached instead. It has already finished with
+    // this object by then: see ConnectionWatcherThreadWorker.
+    virtual ~MidiNetworkConnection();
 
     HRESULT Shutdown();
 
@@ -158,7 +166,13 @@ public:
 
     // todo: session info, connection to bidi streams, etc.
 
-    uint64_t GetTotalNetworkPacketsSent() { return m_writer ? m_writer->GetCountNetworkPacketsSent() : 0; }
+    // Under the writer lock, because Shutdown and a reply source change replace or reset m_writer
+    uint64_t GetTotalNetworkPacketsSent()
+    {
+        auto lock = m_socketWriterLock.lock();
+
+        return m_writer ? m_writer->GetCountNetworkPacketsSent() : 0;
+    }
     uint64_t GetTotalNetworkPacketsReceived() { return m_totalNetworkPacketsReceived; }
 
     // Command packets we have resent because the remote asked for them.
@@ -270,8 +284,8 @@ protected:
     // Called on the watchdog tick. Only the client has anything to do here.
     virtual HRESULT OnWatchdogTick() { return S_OK; }
 
-    // The remote ended an established session on its own.
-    virtual void OnSessionEndedByRemote() { }
+    // The remote ended an established session on its own: with a Bye, or by going quiet (Timeout).
+    virtual void OnSessionEndedByRemote(_In_ MidiNetworkCommandByeReason const reason) { UNREFERENCED_PARAMETER(reason); }
 
     // A Bye arrived with no session, so anything queued for this remote is pointless.
     virtual void OnSessionEndedBeforeEndpointCreated() noexcept { }
@@ -310,6 +324,12 @@ protected:
     template<typename TWriteCommands>
     HRESULT SendToNetwork(_In_ TWriteCommands&& writeCommands)
     {
+        // a reply to a remote with no session, which has had its share for now
+        if (!MayReplyToRemote())
+        {
+            return S_FALSE;
+        }
+
         auto lock = m_socketWriterLock.lock();
 
         auto writer = m_writer;
@@ -527,11 +547,34 @@ protected:
     {
         bool RetransmitRequested{ false };
         bool SessionNotEstablishedSent{ false };
+
+        // When the datagram arrived. The UMP it carries is stamped with this.
+        uint64_t ArrivalTimestamp{ 0 };
+
+        // A session which was up when the datagram arrived still gets its replies, such as the
+        // Bye Reply to a Bye which has just ended it
+        bool SessionActiveAtArrival{ false };
+
+        // A remote without a session hasn't shown it owns the address it sends from, so what it
+        // can make us do with one datagram is capped. See MayReplyToRemote.
+        uint32_t CommandsOutsideSession{ 0 };
+        uint32_t RepliesOutsideSession{ 0 };
     };
 
+    // The datagram this thread is parsing, and for which connection. Set for the length of
+    // ProcessIncomingMessage, so a reply sent from anywhere below it can be recognized as one.
+    static thread_local MidiNetworkConnection const* s_receivingConnection;
+    static thread_local DatagramReplyState* s_receivingDatagram;
+
+    // False when this send is a reply to a datagram from a remote with no session, and that
+    // remote has already had its share: one reply per datagram, and no more often than the
+    // per-connection rate limiter allows. Sends which are not replies to a datagram (the
+    // watchdog, the send thread, a user decision) are never held back here.
+    bool MayReplyToRemote() noexcept;
+
     // Reads one command's payload and hands it to its handler. The payload length has already
-    // been checked against the datagram.
-    void DispatchIncomingCommand(
+    // been checked against the datagram. False when the command was not one we recognize.
+    bool DispatchIncomingCommand(
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader,
         _In_ MidiNetworkCommandPacketHeader const& commandHeader,
         _In_ uint32_t const payloadLengthInBytes,
@@ -643,13 +686,22 @@ protected:
     wil::slim_event_manual_reset m_byeReplyEvent;
     std::atomic<uint64_t> m_lastIncomingValidUdpPacketTimestamp{ 0 };
 
-    HRESULT SignalHealthyConnectionAndUpdateArrivalTimestamp();
-    HRESULT ConnectionWatcherThreadWorker(_In_ std::stop_token stopToken);
-    HRESULT EndActiveSessionDueToTimeout();
+    // Records that the remote was heard from at arrivalTimestamp, and resets the disconnect event
+    HRESULT SignalHealthyConnectionAndUpdateArrivalTimestamp(_In_ uint64_t const arrivalTimestamp);
 
-    // Puts an outbound client definition back in front of the creator worker after the remote
-    // host went away on its own. Deliberate teardowns do not call this.
-    HRESULT RequestClientReconnect();
+    // Holds a strong reference only while it acts on a tick, never while it waits, so the
+    // connection can still be destroyed while it sleeps. Acting can end the session, and that can
+    // let go of every other reference, so the strong one is what keeps the rest of the tick safe.
+    HRESULT ConnectionWatcherThreadWorker(
+        _In_ std::weak_ptr<MidiNetworkConnection> weakThis,
+        _In_ std::stop_token stopToken);
+
+    // One pass of the watchdog, with the caller holding a strong reference
+    void WatchdogTick(
+        _In_ uint64_t const threadWaitStartTimestamp,
+        _In_ std::stop_token const& stopToken);
+
+    HRESULT EndActiveSessionDueToTimeout();
 
     HRESULT AddUmpPacketToRetransmitBuffer(
         _In_ MidiSequenceNumber const sequenceNumber,

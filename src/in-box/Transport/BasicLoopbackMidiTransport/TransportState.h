@@ -45,7 +45,9 @@ public:
         return m_workQueue;
     }
 
+    // Idempotent: both managers call this, in either order.
     HRESULT Shutdown()
+    try
     {
         // Snapshot-and-clear the managed members under the lock, but run the
         // (potentially long) table shutdown outside the lock so we don't hold
@@ -74,6 +76,7 @@ public:
 
         return S_OK;
     }
+    CATCH_RETURN()
 
 
     HRESULT ConstructEndpointManager();

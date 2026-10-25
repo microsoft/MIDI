@@ -15,8 +15,11 @@
 // radio, the service or COM. Kept apart from midi_ble_utilities.h so it can be unit tested
 // without any of that.
 
+#include <algorithm>
 #include <cstdint>
+#include <cwctype>
 #include <string>
+#include <vector>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Data.Json.h>
@@ -812,6 +815,96 @@ namespace MidiBleUtilities
         }
 
         return interval < maxIntervalMilliseconds ? interval : maxIntervalMilliseconds;
+    }
+
+    // A write to the peripheral's characteristic is accepted only from the Central the connection
+    // was made for. Any Central in range can write to a published characteristic, and WinRT gives
+    // no way to refuse it, so this is what stops one from feeding MIDI into an endpoint another
+    // device was approved for. The ids come from the same WinRT property; case is ignored anyway.
+    inline bool IsWriteFromAttachedPeripheralClient(
+        _In_ winrt::hstring const& writerDeviceId,
+        _In_ winrt::hstring const& attachedClientDeviceId) noexcept
+    {
+        if (writerDeviceId.empty() || writerDeviceId.size() != attachedClientDeviceId.size())
+        {
+            return false;
+        }
+
+        return std::equal(
+            writerDeviceId.begin(), writerDeviceId.end(),
+            attachedClientDeviceId.begin(),
+            [](wchar_t const a, wchar_t const b) { return ::towlower(a) == ::towlower(b); });
+    }
+
+    // What the discovered device table needs to know about an entry to decide whether it may go.
+    struct DiscoveredDeviceRetention
+    {
+        winrt::hstring Id{ };
+        uint64_t LastSeenTimestamp{ 0 };
+        bool MustKeep{ false };
+    };
+
+    // The devices to drop from the discovered table before one more is added, so a radio which
+    // advertises the MIDI service from a stream of random addresses cannot grow it without limit.
+    //
+    // A device which must be kept always stays. Of the rest, one not heard for
+    // staleAfterMilliseconds always goes, because the device list hides it already. If the table
+    // is still full, the device heard longest ago goes next. canAdd is false when the table is full
+    // of devices which must be kept, and the new device has to be turned away.
+    inline std::vector<winrt::hstring> SelectDiscoveredDevicesToEvict(
+        _In_ std::vector<DiscoveredDeviceRetention> const& devices,
+        _In_ size_t const maxDevices,
+        _In_ uint64_t const now,
+        _In_ uint64_t const staleAfterMilliseconds,
+        _Out_ bool& canAdd)
+    {
+        std::vector<winrt::hstring> evicted{ };
+        std::vector<DiscoveredDeviceRetention const*> candidates{ };
+
+        for (auto const& device : devices)
+        {
+            if (device.MustKeep)
+            {
+                continue;
+            }
+
+            if (device.LastSeenTimestamp + staleAfterMilliseconds < now)
+            {
+                evicted.push_back(device.Id);
+            }
+            else
+            {
+                candidates.push_back(&device);
+            }
+        }
+
+        size_t remaining = devices.size() - evicted.size();
+
+        if (remaining >= maxDevices)
+        {
+            std::sort(candidates.begin(), candidates.end(),
+                [](DiscoveredDeviceRetention const* a, DiscoveredDeviceRetention const* b)
+                {
+                    return a->LastSeenTimestamp != b->LastSeenTimestamp ?
+                        a->LastSeenTimestamp < b->LastSeenTimestamp :
+                        a->Id < b->Id;
+                });
+
+            for (auto const* candidate : candidates)
+            {
+                if (remaining < maxDevices)
+                {
+                    break;
+                }
+
+                evicted.push_back(candidate->Id);
+                remaining--;
+            }
+        }
+
+        canAdd = remaining < maxDevices;
+
+        return evicted;
     }
 }
 

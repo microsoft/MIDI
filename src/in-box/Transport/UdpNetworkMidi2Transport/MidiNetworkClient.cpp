@@ -71,6 +71,20 @@ void MidiNetworkClient::OnMessageReceived(
             return;
         }
 
+        if (prologue == MidiNetworkPacketPrologueResult::TooLarge)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Oversized datagram dropped", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return;
+        }
+
         if (prologue != MidiNetworkPacketPrologueResult::Ok)
         {
             return;
@@ -256,18 +270,22 @@ MidiNetworkClient::Start(
     conn->SetSendSpeedLimit(m_sendSpeedLimit, m_reduceSendSpeedAutomatically);
     conn->SetSkipInBetweenValuesToCatchUp(m_skipInBetweenValuesToCatchUp);
 
-    TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
+    // Keyed by this entry as well as the remote, so a host connection from the same remote address
+    // and port is a different entry. A live connection is never replaced: one already there for
+    // this entry means an earlier client was not cleaned up, and this attempt gives way.
+    auto winner = TransportState::Current().AddNetworkConnectionIfAbsent(remoteHostName, remotePort, conn);
+
+    if (winner != conn)
+    {
+        LOG_IF_FAILED(conn->Shutdown());
+
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS));
+    }
 
     {
         auto lock = m_connectionLock.lock();
         m_networkConnection = conn;
     }
-
-    // todo: associate connection with the endpoint id
-
-
-    // todo: initiate discovery
-
 
     return S_OK;
 }
@@ -311,18 +329,9 @@ MidiNetworkClient::DisconnectByUser()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    for (auto& connection : TransportState::Current().GetAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier))
+    if (auto connection = GetConnection(); connection != nullptr)
     {
         LOG_IF_FAILED(connection->SendUserTerminatedByeAndAwaitReply());
-    }
-
-    {
-        auto lock = m_connectionLock.lock();
-
-        if (m_networkConnection != nullptr)
-        {
-            LOG_IF_FAILED(m_networkConnection->SendUserTerminatedByeAndAwaitReply());
-        }
     }
 
     return Shutdown();
@@ -341,34 +350,7 @@ MidiNetworkClient::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    auto connections = TransportState::Current().GetAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier);
-
-    for (auto& connection : connections)
-    {
-        LOG_IF_FAILED(connection->SendShutdownBye());
-    }
-
-    for (auto& connection : connections)
-    {
-        LOG_IF_FAILED(connection->Shutdown());
-    }
-
-    // now remove all those connections
-    RETURN_IF_FAILED(TransportState::Current().RemoveAllNetworkConnectionsForClient(m_clientDefinition.EntryIdentifier));
-
-    // may not be in the list above if Start failed part way through. Shutdown is idempotent.
-    std::shared_ptr<MidiNetworkClientConnection> connection{ nullptr };
-
-    {
-        auto lock = m_connectionLock.lock();
-        connection.swap(m_networkConnection);
-    }
-
-    if (connection != nullptr)
-    {
-        LOG_IF_FAILED(connection->Shutdown());
-    }
-
+    // Stop receiving first, so nothing new reaches the connection while it is torn down
     winrt::Windows::Networking::Sockets::DatagramSocket socket{ nullptr };
 
     {
@@ -381,11 +363,44 @@ MidiNetworkClient::Shutdown()
         try
         {
             socket.MessageReceived(m_messageReceivedEventToken);
-            socket.Close();
         }
         CATCH_LOG();
     }
 
+    // Only this client's own connection. Removing every connection for the entry identifier
+    // would also take a newer client's connection, if the entry has been reconnected meanwhile.
+    std::shared_ptr<MidiNetworkClientConnection> connection{ nullptr };
+
+    {
+        auto lock = m_connectionLock.lock();
+        connection.swap(m_networkConnection);
+    }
+
+    if (connection != nullptr)
+    {
+        // Shutdown is idempotent, and it says Bye itself while the writer is still up
+        LOG_IF_FAILED(connection->Shutdown());
+
+        auto remoteHostName = connection->GetRemoteHostName();
+
+        if (remoteHostName != nullptr)
+        {
+            TransportState::Current().DetachNetworkConnection(
+                m_configIdentifier,
+                remoteHostName,
+                winrt::hstring{ connection->GetRemotePort() },
+                connection.get());
+        }
+    }
+
+    if (socket)
+    {
+        try
+        {
+            socket.Close();
+        }
+        CATCH_LOG();
+    }
 
     return S_OK;
 }

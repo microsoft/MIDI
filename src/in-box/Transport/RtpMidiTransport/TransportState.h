@@ -20,10 +20,11 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
-    // Drops the references to both managers. This class is a function-local static, so anything
-    // still held here is released at DLL unload, after the service has destroyed the objects the
-    // managers hold. Called from both managers' Shutdown, so it is safe to call twice. A manager
-    // calling this must hold its own reference for the rest of its Shutdown.
+    // Drops the references to both managers, and lets the approvals' deferred notification finish.
+    // This class is a function-local static, so anything still held here is released at DLL unload,
+    // after the service has destroyed the objects the managers hold. Called from both managers'
+    // Shutdown, so it is safe to call twice. A manager calling this must hold its own reference for
+    // the rest of its Shutdown.
     void Shutdown() noexcept;
 
     // The configuration file and the endpoint manager come up in an order this transport does not
@@ -54,11 +55,12 @@ private:
     TransportState() = default;
     ~TransportState() = default;
 
-    std::mutex m_managersLock;
+    wil::srwlock m_managersLock;
     wil::com_ptr<CMidi2RtpMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2RtpMidiConfigurationManager> m_configurationManager;
 
-    std::mutex m_definitionsLock;
+    // taken before the approvals' own lock, never after it
+    wil::srwlock m_definitionsLock;
     std::map<GUID, RtpMidiHostDefinition, GuidLess> m_hosts;
     std::map<GUID, RtpMidiClientDefinition, GuidLess> m_clients;
     std::map<GUID, std::vector<RtpMidiRemoteClientSettings>, GuidLess> m_remoteClientSettings;

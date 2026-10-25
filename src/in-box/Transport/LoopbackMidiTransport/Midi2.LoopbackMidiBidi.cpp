@@ -111,6 +111,11 @@ CMidi2LoopbackMidiBidi::Initialize(
 
     // register this endpoint as part of a loopback device
 
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
+    {
+        return RegisterWithLoopbackDevice();
+    }
+
     auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
 
     if (device)
@@ -175,6 +180,16 @@ CMidi2LoopbackMidiBidi::Shutdown()
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
         );
+
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
+    {
+        // closed before its pair was added, so the waiting registration must not be applied later
+        try
+        {
+            TransportState::Current().GetEndpointTable()->RemovePendingRegistrations(this);
+        }
+        CATCH_LOG();
+    }
 
     if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
     {
@@ -358,5 +373,94 @@ CMidi2LoopbackMidiBidi::SendToOtherSideWithLock(
     );
 
     return E_FAIL;
+}
+
+
+// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The end of Initialize, with two changes.
+// The side is taken from the start of the instance id rather than from anywhere in the endpoint
+// id, because a B unique id can itself contain the A prefix. And an endpoint opened while its pair
+// is still being created is registered when the pair is added, instead of never.
+HRESULT
+CMidi2LoopbackMidiBidi::RegisterWithLoopbackDevice()
+{
+    try
+    {
+        if (m_isEndpointA)
+        {
+            // In an endpoint id the instance id follows a '#', so this is the start of it
+            if (internal::EndpointInterfaceIdContainsString(m_endpointId, std::wstring{ L"#" } + MIDI_LOOP_INSTANCE_ID_B_PREFIX))
+            {
+                TraceLoggingWrite(
+                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Side-B endpoint whose unique id contains the side-A prefix. Initializing as Side-B.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+                );
+
+                m_isEndpointA = false;
+            }
+        }
+
+        auto const table = TransportState::Current().GetEndpointTable();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+        auto const device = table->GetDeviceOrDeferRegistration(m_associationId, m_isEndpointA, this);
+
+        if (device)
+        {
+            if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+            {
+                if (m_isEndpointA)
+                {
+                    device->RegisterEndpointAWithLock(this);
+                }
+                else
+                {
+                    device->RegisterEndpointBWithLock(this);
+                }
+            }
+            else
+            {
+                if (m_isEndpointA)
+                {
+                    device->RegisterEndpointA(this);
+                }
+                else
+                {
+                    device->RegisterEndpointB(this);
+                }
+            }
+
+            return S_OK;
+        }
+
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Pair not in device table yet. Registering when it is added.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+            TraceLoggingWideString(m_associationId.c_str(), "association id")
+        );
+
+        if (Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled())
+        {
+            // A pair being created is enabled before it is in the table, so only a removed one is disabled.
+            if (!IsEndpointInterfaceEnabled(m_endpointId))
+            {
+                table->RemovePendingRegistrations(this);
+
+                RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_FOUND));
+            }
+        }
+
+        return S_OK;
+    }
+    CATCH_RETURN();
 }
 

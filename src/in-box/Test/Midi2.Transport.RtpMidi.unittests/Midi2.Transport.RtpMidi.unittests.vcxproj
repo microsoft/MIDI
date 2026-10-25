@@ -86,6 +86,7 @@
     <ClInclude Include="MidiSendBacklogPrunerTests.h" />
     <ClInclude Include="MidiSendPacerTests.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="RtpMidiAdmissionTests.h" />
     <ClInclude Include="RtpMidiDnssdTests.h" />
     <ClInclude Include="RtpMidiProtocolTests.h" />
     <ClInclude Include="RtpMidiReplySourceTests.h" />
@@ -104,6 +105,7 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="RtpMidiAdmissionTests.cpp" />
     <ClCompile Include="RtpMidiApprovalTests.cpp" />
     <ClCompile Include="RtpMidiChannelTests.cpp" />
     <ClCompile Include="RtpMidiKeptEndpointTests.cpp" />

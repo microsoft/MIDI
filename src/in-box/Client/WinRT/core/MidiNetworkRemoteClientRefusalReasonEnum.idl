@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // Why a host turned a remote client away. A device has one session with this PC at a time.
+    [contract(MidiTransportsNetworkApiContract, 2)]
+    enum MidiNetworkRemoteClientRefusalReason
+    {
+        // a reason this version of the API doesn't know
+        Unknown = 0,
+
+        // the device already has a session with this host
+        AlreadyConnectedToThisHost = 1,
+
+        // this PC is already connected to the device as a client, through a client entry
+        ThisPCAlreadyConnectedToRemote = 2,
+    };
+}

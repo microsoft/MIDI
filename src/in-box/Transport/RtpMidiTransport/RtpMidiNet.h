@@ -200,10 +200,14 @@ namespace RtpMidiNet
         {
             error = 0;
 
+            // Made fresh for each socket. The receive thread holds its own reference, so it never
+            // reads this object after the node that owns it is gone.
+            m_state = std::make_shared<ReceiveState>();
+
             auto const socket = WSASocketW(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, nullptr, 0, WSA_FLAG_OVERLAPPED);
             if (socket == INVALID_SOCKET) { error = WSAGetLastError(); return false; }
 
-            m_socket = socket;
+            m_state->Socket = socket;
 
             DWORD off = 0;
             setsockopt(socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char const*>(&off), sizeof(off));
@@ -235,9 +239,9 @@ namespace RtpMidiNet
             DWORD functionBytes = 0;
 
             if (WSAIoctl(socket, SIO_GET_EXTENSION_FUNCTION_POINTER, &receiveMessageId, sizeof(receiveMessageId),
-                &m_receiveMessage, sizeof(m_receiveMessage), &functionBytes, nullptr, nullptr) == SOCKET_ERROR)
+                &m_state->ReceiveMessage, sizeof(m_state->ReceiveMessage), &functionBytes, nullptr, nullptr) == SOCKET_ERROR)
             {
-                m_receiveMessage = nullptr;
+                m_state->ReceiveMessage = nullptr;
             }
 
             sockaddr_in6 local{};
@@ -264,14 +268,16 @@ namespace RtpMidiNet
 
         // Before StartReceiving. A datagram arriving on any other interface is dropped, as though
         // nothing were listening. Empty means every interface.
-        void LimitToInterfaces(_In_ std::vector<uint32_t> interfaces) { m_interfaces = std::move(interfaces); }
+        void LimitToInterfaces(_In_ std::vector<uint32_t> interfaces) { if (m_state != nullptr) m_state->Interfaces = std::move(interfaces); }
 
         HRESULT StartReceiving(_In_ ReceiveHandler handler, _In_ PCWSTR const threadName) noexcept
         {
             try
             {
-                m_handler = std::move(handler);
-                m_thread = std::thread([this]() { ReceiveLoop(); });
+                RETURN_HR_IF_NULL(E_ILLEGAL_METHOD_CALL, m_state);
+
+                m_state->Handler = std::move(handler);
+                m_thread = std::thread([state = m_state]() { ReceiveLoop(state); });
 
                 SetThreadDescription(m_thread.native_handle(), threadName);
                 SetThreadPriority(m_thread.native_handle(), THREAD_PRIORITY_HIGHEST);
@@ -283,7 +289,9 @@ namespace RtpMidiNet
 
         bool Send(_In_ RtpMidi::PeerAddress const& to, _In_ std::vector<uint8_t> const& datagram) noexcept
         {
-            auto const socket = m_socket.load();
+            if (m_state == nullptr) return false;
+
+            auto const socket = m_state->Socket.load();
             if (socket == INVALID_SOCKET || datagram.empty()) return false;
 
             auto const address = ToSockaddr(to);
@@ -293,7 +301,7 @@ namespace RtpMidiNet
             // address drops the reply. RFC 1122 4.1.3.5 asks for this.
             LocalAddress local{};
 
-            if (m_replySources.TryGet(to, local))
+            if (m_state->ReplySources.TryGet(to, local))
             {
                 if (SendFrom(socket, address, datagram, local)) return true;
             }
@@ -306,14 +314,15 @@ namespace RtpMidiNet
 
         void Close() noexcept
         {
-            auto const socket = m_socket.exchange(INVALID_SOCKET);
+            auto const socket = m_state == nullptr ? INVALID_SOCKET : m_state->Socket.exchange(INVALID_SOCKET);
 
             // closing the socket is what wakes the blocked receive
             if (socket != INVALID_SOCKET) closesocket(socket);
 
             if (m_thread.joinable())
             {
-                // a joinable std::thread left behind terminates the process when it is destroyed
+                // A joinable std::thread left behind terminates the process when it is destroyed.
+                // A thread closing its own socket finishes on its own: it reads only its state.
                 if (m_thread.get_id() != std::this_thread::get_id()) m_thread.join();
                 else m_thread.detach();
             }
@@ -322,6 +331,16 @@ namespace RtpMidiNet
     private:
         // Every datagram can name a new remote, so the table is bounded
         static constexpr size_t MaxReplySources = 1024;
+
+        // What the receive thread reads. Shared with it, so it outlives this object if it has to.
+        struct ReceiveState
+        {
+            std::atomic<SOCKET> Socket{ INVALID_SOCKET };
+            ReceiveHandler Handler;
+            LPFN_WSARECVMSG ReceiveMessage{ nullptr };
+            std::vector<uint32_t> Interfaces;
+            ReplySourceTable ReplySources{ MaxReplySources };
+        };
 
         static bool SendFrom(
             _In_ SOCKET const socket,
@@ -409,7 +428,7 @@ namespace RtpMidiNet
             return false;
         }
 
-        void ReceiveLoop() noexcept
+        static void ReceiveLoop(_In_ std::shared_ptr<ReceiveState> const state) noexcept
         {
             try
             {
@@ -417,7 +436,7 @@ namespace RtpMidiNet
 
                 for (;;)
                 {
-                    auto const socket = m_socket.load();
+                    auto const socket = state->Socket.load();
                     if (socket == INVALID_SOCKET) break;
 
                     sockaddr_storage from{};
@@ -427,7 +446,7 @@ namespace RtpMidiNet
                     LocalAddress local{};
                     bool knowLocal{ false };
 
-                    if (m_receiveMessage != nullptr)
+                    if (state->ReceiveMessage != nullptr)
                     {
                         char control[256]{};
 
@@ -443,7 +462,7 @@ namespace RtpMidiNet
 
                         DWORD bytes{ 0 };
 
-                        if (m_receiveMessage(socket, &message, &bytes, nullptr, nullptr) == 0)
+                        if (state->ReceiveMessage(socket, &message, &bytes, nullptr, nullptr) == 0)
                         {
                             received = static_cast<int>(bytes);
                             knowLocal = TryReadLocalAddress(message, local);
@@ -464,22 +483,22 @@ namespace RtpMidiNet
 
                     // A host limited to one adapter does not hear what arrives on the others. One
                     // which cannot tell where a datagram arrived does not answer it either.
-                    if (!m_interfaces.empty() &&
-                        (!knowLocal || std::find(m_interfaces.begin(), m_interfaces.end(), local.InterfaceIndex) == m_interfaces.end()))
+                    if (!state->Interfaces.empty() &&
+                        (!knowLocal || std::find(state->Interfaces.begin(), state->Interfaces.end(), local.InterfaceIndex) == state->Interfaces.end()))
                     {
                         continue;
                     }
 
-                    if (received > 0 && m_handler)
+                    if (received > 0 && state->Handler)
                     {
                         auto const peer = FromSockaddr(from);
 
-                        if (knowLocal) m_replySources.Remember(peer, local, GetTickCount64());
+                        if (knowLocal) state->ReplySources.Remember(peer, local, GetTickCount64());
 
                         // one datagram that fails must not stop the socket for every connection on it
                         try
                         {
-                            m_handler(peer, buffer.data(), static_cast<size_t>(received));
+                            state->Handler(peer, buffer.data(), static_cast<size_t>(received));
                         }
                         CATCH_LOG();
                     }
@@ -488,15 +507,9 @@ namespace RtpMidiNet
             CATCH_LOG();
         }
 
-        std::atomic<SOCKET> m_socket{ INVALID_SOCKET };
+        std::shared_ptr<ReceiveState> m_state;
         uint16_t m_port{ 0 };
-        ReceiveHandler m_handler;
         std::thread m_thread;
-
-        LPFN_WSARECVMSG m_receiveMessage{ nullptr };
-        std::vector<uint32_t> m_interfaces;
-
-        ReplySourceTable m_replySources{ MaxReplySources };
     };
 
     // AppleMIDI puts the data port at the control port plus one

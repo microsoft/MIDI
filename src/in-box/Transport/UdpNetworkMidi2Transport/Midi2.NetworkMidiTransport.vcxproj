@@ -340,6 +340,7 @@
     <ClInclude Include="MidiNetworkCredentials.h" />
     <ClInclude Include="MidiNetworkHost.h" />
     <ClInclude Include="MidiNetworkMessages.h" />
+    <ClInclude Include="MidiNetworkRecentRefusals.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

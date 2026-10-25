@@ -27,13 +27,11 @@ public:
     RtpMidi::PeerAddress const& RemoteControl() const noexcept { return m_remoteControl; }
     std::shared_ptr<RtpMidiNode> Node() const noexcept { return m_node.lock(); }
 
-    void SetEndpointIds(_In_ std::wstring const& instanceId, _In_ std::wstring const& interfaceId);
-    void ClearEndpointIds();
-    std::wstring EndpointDeviceInstanceId() const;
+    void SetEndpointInterfaceId(_In_ std::wstring const& interfaceId);
+    void ClearEndpointInterfaceId();
     std::wstring EndpointDeviceInterfaceId() const;
 
     HRESULT ConnectMidiCallback(_In_ IMidiCallback* callback, _In_ LONGLONG const context);
-    HRESULT DisconnectMidiCallback();
 
     // The service can connect a new endpoint before the one it replaces shuts down
     HRESULT DisconnectMidiCallbackIfCurrent(_In_ IMidiCallback* callback);
@@ -51,6 +49,10 @@ public:
 
     // The participant is gone. Drops what is waiting and releases senders waiting for room.
     void ClosePacedSend();
+
+    // Its participant ended. Set before the connection is reported down, so whoever hands it to an
+    // endpoint can check afterwards that it did not hand over one already gone.
+    bool IsClosed() const noexcept { return m_closed.load(); }
 
     // A speed for this connection alone, used instead of its host's or client's. Empty to go back
     // to that one. Takes effect at once and drops nothing.
@@ -97,32 +99,32 @@ private:
     std::wstring m_remoteName;
     RtpMidi::PeerAddress m_remoteControl{};
 
-    mutable std::mutex m_endpointIdsLock;
-    std::wstring m_endpointDeviceInstanceId;
+    mutable wil::srwlock m_endpointIdsLock;
     std::wstring m_endpointDeviceInterfaceId;
 
-    std::mutex m_callbackLock;
+    wil::srwlock m_callbackLock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback;
     LONGLONG m_callbackContext{ 0 };
     std::atomic<bool> m_reportedMissingCallback{ false };
 
     // one byte stream in each direction, each with its own translation state
-    std::mutex m_incomingLock;
+    wil::srwlock m_incomingLock;
     bytestreamToUMP m_bytestreamToUmp;
     uint64_t m_lastIncomingTimestamp{ 0 };
 
-    std::mutex m_outgoingLock;
+    wil::srwlock m_outgoingLock;
     umpToBytestream m_umpToBytestream;
 
     // Messages held back by the send speed limit, as MIDI 1.0 bytes, with the size of each
     // message so one is never split. Taken before the node's engine lock, never after it, and
     // held while sending so what the timer thread sends and what a sender sends never cross.
-    std::mutex m_pacedLock;
+    wil::srwlock m_pacedLock;
     std::deque<uint8_t> m_pacedBytes;
     std::deque<uint32_t> m_pacedMessageSizes;
     WindowsMidiServicesInternal::MidiSendPacer m_sendPacer{};
     uint32_t m_sendPacerMultiple{ 0 };
     bool m_pacedSendClosed{ false };
+    std::atomic<bool> m_closed{ false };
     WindowsMidiServicesInternal::MidiSendBacklogPruner m_pacedPruner{};
     bool m_pacedChangedSincePrune{ false };
 

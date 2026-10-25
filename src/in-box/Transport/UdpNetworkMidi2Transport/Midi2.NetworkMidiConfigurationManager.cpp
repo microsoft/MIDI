@@ -345,6 +345,7 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     IMidiDeviceManager* midiDeviceManager,
     IMidiServiceConfigurationManager* midiServiceConfigurationManager
 )
+try
 {
     UNREFERENCED_PARAMETER(transportId);
     UNREFERENCED_PARAMETER(midiServiceConfigurationManager);
@@ -360,10 +361,18 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+
+    {
+        auto lock = m_midiDeviceManagerLock.lock_exclusive();
+
+        m_midiDeviceManager = std::move(deviceManager);
+    }
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 
@@ -947,7 +956,13 @@ try
     }
 
 
-    auto client = TransportState::Current().GetClient(configEntryId);
+    // The definition goes first. Done the other way round, the creator worker could reconnect the
+    // entry while the old client was saying Bye, and the new client would then be dropped from
+    // the list below without ever being shut down, keeping its socket and its endpoint.
+    bool removedPendingDefinition{ false };
+    std::shared_ptr<MidiNetworkClient> client{ nullptr };
+
+    auto const removeHr = TransportState::Current().RemoveClient(configEntryId, removedPendingDefinition, client);
 
     // A client which never connected exists only as a definition. Disconnecting it is still a
     // real removal, so it must not be reported as "not found" - the entry is what the user sees
@@ -957,9 +972,7 @@ try
         LOG_IF_FAILED(client->DisconnectByUser());
     }
 
-    bool removedPendingDefinition{ false };
-
-    if (FAILED(TransportState::Current().RemoveClient(configEntryId, removedPendingDefinition)) && client == nullptr)
+    if (FAILED(removeHr))
     {
         internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_CLIENT_NOT_FOUND, internal::ResourceGetWString(IDS_ERROR_CLIENT_NOT_FOUND));
         return S_OK;
@@ -1524,6 +1537,17 @@ namespace
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(definition.LastErrorCode)));
 
+        if (definition.IsWaitingForOtherSession())
+        {
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_ENTRY_KEY,
+                json::JsonValue::CreateStringValue(winrt::hstring{ internal::GuidToString(definition.WaitingForEntryIdentifier) }));
+
+            clientObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_HOST_KEY,
+                json::JsonValue::CreateBooleanValue(definition.WaitingForHostSession));
+        }
+
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
             json::JsonValue::CreateBooleanValue(definition.CreateMidi1Ports));
@@ -1834,6 +1858,46 @@ namespace
         return connectionObject;
     }
 
+    std::wstring PendingRequestTimeToString(_In_ uint64_t const fileTime);
+
+    // The remote clients a host turned away recently because they already had a session with
+    // this PC, for enumerateHosts
+    json::JsonArray BuildRecentRefusalsArray(_In_ std::shared_ptr<MidiNetworkHost> const& host)
+    {
+        json::JsonArray refusalsArray;
+
+        for (auto const& refusal : host->GetRecentRefusals())
+        {
+            json::JsonObject refusalObject;
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                json::JsonValue::CreateStringValue(refusal.UmpEndpointName));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                json::JsonValue::CreateStringValue(refusal.ProductInstanceId));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REMOTE_ADDRESS_KEY,
+                json::JsonValue::CreateStringValue(refusal.RemoteAddress));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_TIME_KEY,
+                json::JsonValue::CreateStringValue(PendingRequestTimeToString(refusal.FileTime)));
+
+            refusalObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_KEY,
+                json::JsonValue::CreateStringValue(refusal.Reason == MidiNetworkSessionRefusalReason::ConnectedInOtherRole ?
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE :
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_ALREADY_CONNECTED));
+
+            refusalsArray.Append(refusalObject);
+        }
+
+        return refusalsArray;
+    }
+
     // One host, for enumerateHosts: what was configured, what the running host reports, and the
     // remote clients reaching it.
     json::JsonObject BuildEnumeratedHostObject(
@@ -1848,7 +1912,8 @@ namespace
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_IS_ENABLED_KEY,
-            json::JsonValue::CreateBooleanValue(host->IsEnabled()));
+            // a host only exists once its enabled entry has been started
+            json::JsonValue::CreateBooleanValue(true));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY,
@@ -2012,10 +2077,22 @@ namespace
                 continue;
             }
 
+            // Nor is a remote which never had a session here and isn't waiting for approval: one
+            // which was refused, or whose session is still being set up. Listed, it reads as a
+            // connected device.
+            if (!connection->IsSessionActive() &&
+                !connection->IsAwaitingUserApproval() &&
+                !connection->IsSessionFinished())
+            {
+                continue;
+            }
+
             connectionsArray.Append(BuildEnumeratedHostConnectionObject(connection, identity));
         }
 
         hostObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONNECTIONS_ARRAY_KEY, connectionsArray);
+
+        hostObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_RECENT_REFUSALS_ARRAY_KEY, BuildRecentRefusalsArray(host));
 
         return hostObject;
     }
@@ -2168,7 +2245,7 @@ namespace
 
     // FILETIME to ISO 8601 UTC, with the full 100ns resolution so the value round-trips. An
     // unset time returns empty rather than a 1601 date, which would read as a real answer.
-    std::wstring PendingRequestTimeToString(uint64_t const fileTime)
+    std::wstring PendingRequestTimeToString(_In_ uint64_t const fileTime)
     {
         if (fileTime == 0)
         {
@@ -3827,6 +3904,7 @@ catch (...)
 
 HRESULT
 CMidi2NetworkMidiConfigurationManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -3858,4 +3936,5 @@ CMidi2NetworkMidiConfigurationManager::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()
 

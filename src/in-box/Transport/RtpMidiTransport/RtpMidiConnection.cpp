@@ -31,34 +31,23 @@ RtpMidiConnection::RtpMidiConnection(
 
 _Use_decl_annotations_
 void
-RtpMidiConnection::SetEndpointIds(std::wstring const& instanceId, std::wstring const& interfaceId)
+RtpMidiConnection::SetEndpointInterfaceId(std::wstring const& interfaceId)
 {
-    auto lock = std::scoped_lock{ m_endpointIdsLock };
-
-    m_endpointDeviceInstanceId = instanceId;
+    auto lock = m_endpointIdsLock.lock_exclusive();
     m_endpointDeviceInterfaceId = interfaceId;
 }
 
 void
-RtpMidiConnection::ClearEndpointIds()
+RtpMidiConnection::ClearEndpointInterfaceId()
 {
-    auto lock = std::scoped_lock{ m_endpointIdsLock };
-
-    m_endpointDeviceInstanceId.clear();
+    auto lock = m_endpointIdsLock.lock_exclusive();
     m_endpointDeviceInterfaceId.clear();
-}
-
-std::wstring
-RtpMidiConnection::EndpointDeviceInstanceId() const
-{
-    auto lock = std::scoped_lock{ m_endpointIdsLock };
-    return m_endpointDeviceInstanceId;
 }
 
 std::wstring
 RtpMidiConnection::EndpointDeviceInterfaceId() const
 {
-    auto lock = std::scoped_lock{ m_endpointIdsLock };
+    auto lock = m_endpointIdsLock.lock_shared();
     return m_endpointDeviceInterfaceId;
 }
 
@@ -70,7 +59,7 @@ RtpMidiConnection::ConnectMidiCallback(IMidiCallback* callback, LONGLONG const c
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
     {
-        auto lock = std::scoped_lock{ m_callbackLock };
+        auto lock = m_callbackLock.lock_exclusive();
 
         m_callback = callback;
         m_callbackContext = context;
@@ -81,22 +70,11 @@ RtpMidiConnection::ConnectMidiCallback(IMidiCallback* callback, LONGLONG const c
     return S_OK;
 }
 
-HRESULT
-RtpMidiConnection::DisconnectMidiCallback()
-{
-    auto lock = std::scoped_lock{ m_callbackLock };
-
-    m_callback = nullptr;
-    m_callbackContext = 0;
-
-    return S_OK;
-}
-
 _Use_decl_annotations_
 HRESULT
 RtpMidiConnection::DisconnectMidiCallbackIfCurrent(IMidiCallback* callback)
 {
-    auto lock = std::scoped_lock{ m_callbackLock };
+    auto lock = m_callbackLock.lock_exclusive();
 
     if (m_callback.get() != callback) return S_FALSE;
 
@@ -117,7 +95,7 @@ RtpMidiConnection::DeliverFromNetwork(std::vector<uint8_t> const& bytes, uint64_
     {
         // Held across the callback so pieces from the receive and timer threads stay in order.
         // Nothing the service does inside the callback comes back to this lock.
-        auto lock = std::scoped_lock{ m_incomingLock };
+        auto lock = m_incomingLock.lock_exclusive();
 
         // A clock re-estimate can move the mapping back a little. Order matters more than that
         // fraction of a millisecond.
@@ -172,7 +150,7 @@ RtpMidiConnection::SendUmpWordsToCallback(uint32_t const* const words, size_t co
     LONGLONG callbackContext{ 0 };
 
     {
-        auto lock = std::scoped_lock{ m_callbackLock };
+        auto lock = m_callbackLock.lock_exclusive();
 
         if (m_callback == nullptr)
         {
@@ -230,7 +208,7 @@ try
     std::vector<uint32_t> messageSizes;
 
     {
-        auto lock = std::scoped_lock{ m_outgoingLock };
+        auto lock = m_outgoingLock.lock_exclusive();
 
         size_t index{ 0 };
 
@@ -282,7 +260,7 @@ try
         ULONG observedGeneration{ 0 };
 
         {
-            auto lock = std::scoped_lock{ m_pacedLock };
+            auto lock = m_pacedLock.lock_exclusive();
 
             RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_pacedSendClosed || !node->IsRunning());
 
@@ -371,7 +349,7 @@ RtpMidiConnection::SendPacedMidi()
     size_t messagesTaken{ 0 };
 
     {
-        auto lock = std::scoped_lock{ m_pacedLock };
+        auto lock = m_pacedLock.lock_exclusive();
 
         if (m_pacedSendClosed || m_pacedMessageSizes.empty()) return 0;
 
@@ -521,8 +499,10 @@ RtpMidiConnection::PrunePacedLocked(uint32_t const speedMultiple, size_t const i
 void
 RtpMidiConnection::ClosePacedSend()
 {
+    m_closed = true;
+
     {
-        auto lock = std::scoped_lock{ m_pacedLock };
+        auto lock = m_pacedLock.lock_exclusive();
 
         m_pacedSendClosed = true;
         m_pacedBytes.clear();
@@ -557,7 +537,7 @@ RtpMidiConnection::SetOwnSendSpeedLimit(std::optional<uint32_t> const speedMulti
 
     // a sender waiting for room may have more of it now, and what is queued may go sooner
     {
-        auto lock = std::scoped_lock{ m_pacedLock };
+        auto lock = m_pacedLock.lock_exclusive();
         m_pacedGeneration = m_pacedGeneration + 1;
     }
 

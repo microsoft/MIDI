@@ -274,6 +274,17 @@ namespace WindowsMidiServicesInternal
             return true;
         }
 
+        // Stops tracking a service without reporting it removed, for a device known to be gone
+        // although its goodbye may never arrive: one which said it was powering down. The next
+        // time it announces itself it is new, and raises Added. A device which simply comes back
+        // with the same records would otherwise raise nothing at all.
+        bool ForgetService(_In_ std::wstring const& fullName)
+        {
+            auto lock = std::unique_lock{ m_lock };
+
+            return m_services.erase(ToLower(fullName)) != 0;
+        }
+
 
     private:
         struct TrackedService
@@ -646,10 +657,24 @@ namespace WindowsMidiServicesInternal
 
             browser->m_callbacksInFlight++;
 
+            // An exception must not leave this function: it would unwind into the DNS client's
+            // thread, and the in-flight count would never come back down, so Stop would wait
+            // for it forever.
+            try
+            {
+                if (records != nullptr)
+                {
+                    browser->HandleRecords(*browse, status, records);
+                }
+            }
+            catch (...)
+            {
+                // A batch which can't be handled (out of memory, or a handler which threw) is
+                // dropped. The next answer from the device brings the same records again.
+            }
+
             if (records != nullptr)
             {
-                browser->HandleRecords(*browse, status, records);
-
                 DnsRecordListFree(records, DnsFreeRecordList);
             }
 

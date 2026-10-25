@@ -41,7 +41,7 @@ CMidi2BluetoothMidiBidi::Initialize(
         RETURN_HR_IF_NULL(E_NOTFOUND, connection);
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
 
             m_callback = callback;
             m_context = context;
@@ -72,7 +72,7 @@ CMidi2BluetoothMidiBidi::Shutdown()
         std::shared_ptr<MidiBleConnection> connection{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
             connection = m_connection.lock();
         }
 
@@ -85,7 +85,7 @@ CMidi2BluetoothMidiBidi::Shutdown()
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
 
             m_connection.reset();
             callback = std::move(m_callback);
@@ -144,7 +144,7 @@ CMidi2BluetoothMidiBidi::SendMidiMessage(
         std::shared_ptr<MidiBleConnection> connection{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
             connection = m_connection.lock();
         }
 
@@ -198,7 +198,7 @@ CMidi2BluetoothMidiBidi::Callback(
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 
         {
-            auto lock = std::scoped_lock{ m_lock };
+            auto lock = m_lock.lock_exclusive();
             callback = m_callback;
         }
 

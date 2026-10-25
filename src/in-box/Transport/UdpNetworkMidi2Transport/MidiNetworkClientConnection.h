@@ -71,7 +71,7 @@ protected:
     HRESULT OnWatchdogTick() override;
 
     // The remote host ended the session on its own, so this one is worth re-establishing.
-    void OnSessionEndedByRemote() override;
+    void OnSessionEndedByRemote(_In_ MidiNetworkCommandByeReason const reason) override;
 
     // A Bye in answer to our invitation decides whether, and when, to try again
     void OnByeReceived(_In_ MidiNetworkCommandByeReason const reason) noexcept override;

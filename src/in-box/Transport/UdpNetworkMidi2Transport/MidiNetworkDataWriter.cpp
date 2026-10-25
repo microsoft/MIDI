@@ -322,19 +322,6 @@ MidiNetworkDataWriter::WriteCommandByeReply()
 }
 
 HRESULT 
-MidiNetworkDataWriter::WriteCommandSessionReset()
-{
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
-
-    auto lock = m_dataWriterLock.lock();
-
-    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_SessionReset, MIDI_COMMAND_PAYLOAD_LENGTH_NO_PAYLOAD, 0));
-
-    return S_OK;
-}
-
-HRESULT 
 MidiNetworkDataWriter::WriteCommandSessionResetReply()
 {
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
@@ -496,22 +483,8 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyPending(
     return S_OK;
 }
 
-// can send multiple UMP messages. If more than the max
-// words are provided, will fail. Can be  zero words, in 
-// which case a command is still sent out as a keep-alive 
-// idle type of message (7.2.1)
-_Use_decl_annotations_
-HRESULT
-MidiNetworkDataWriter::WriteCommandUmpMessages(
-    MidiSequenceNumber sequenceNumber,
-    std::vector<uint32_t> words
-)
-{
-    RETURN_HR_IF(E_INVALIDARG, words.size() > MIDI_MAX_UMP_WORDS_PER_PACKET);
-
-    return WriteCommandUmpMessages(sequenceNumber, words.data(), static_cast<uint8_t>(words.size()));
-}
-
+// Can be zero words, in which case a command is still sent out as a keep-alive idle type of
+// message (7.2.1)
 _Use_decl_annotations_
 HRESULT
 MidiNetworkDataWriter::WriteCommandUmpMessages(

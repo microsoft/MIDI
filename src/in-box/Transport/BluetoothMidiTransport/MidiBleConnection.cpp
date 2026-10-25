@@ -85,10 +85,15 @@ MidiBleConnection::Initialize(
     m_deviceId = deviceId;
     m_deviceName = deviceName;
     m_protocol = protocol;
-    m_device = device;
-    m_service = service;
-    m_characteristic = characteristic;
-    m_session = session;
+
+    {
+        auto lock = m_gattObjectsLock.lock_exclusive();
+
+        m_device = device;
+        m_service = service;
+        m_characteristic = characteristic;
+        m_session = session;
+    }
 
     // BLE MIDI 1.0 endpoints are always a single group of MIDI 1.0 byte stream data
     m_bytestreamToUmp.defaultGroup = 0;
@@ -157,7 +162,12 @@ MidiBleConnection::Start()
     );
 
     RETURN_HR_IF(E_UNEXPECTED, m_started.load());
-    RETURN_HR_IF(E_UNEXPECTED, !m_isPeripheral && m_characteristic == nullptr);
+
+    auto const characteristic = Characteristic();
+    auto const device = Device();
+    auto const session = Session();
+
+    RETURN_HR_IF(E_UNEXPECTED, !m_isPeripheral && (characteristic == nullptr || device == nullptr || session == nullptr));
 
     m_writerThread = std::jthread([weakThis = weak_from_this()](std::stop_token stopToken)
         {
@@ -180,7 +190,7 @@ MidiBleConnection::Start()
         try
         {
             // revoking a token does not drain in-flight handlers, so the handler holds a weak reference
-            m_valueChangedToken = m_characteristic.ValueChanged(
+            m_valueChangedToken = characteristic.ValueChanged(
                 [weakThis = weak_from_this()](gatt::GattCharacteristic const& sender, gatt::GattValueChangedEventArgs const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -189,7 +199,7 @@ MidiBleConnection::Start()
                     }
                 });
 
-            m_connectionStatusChangedToken = m_device.ConnectionStatusChanged(
+            m_connectionStatusChangedToken = device.ConnectionStatusChanged(
                 [weakThis = weak_from_this()](bt::BluetoothLEDevice const& sender, foundation::IInspectable const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -200,7 +210,7 @@ MidiBleConnection::Start()
 
             // The negotiated interval can be renegotiated at any time by either end, so it is
             // tracked rather than read once.
-            m_connectionParametersChangedToken = m_device.ConnectionParametersChanged(
+            m_connectionParametersChangedToken = device.ConnectionParametersChanged(
                 [weakThis = weak_from_this()](bt::BluetoothLEDevice const&, foundation::IInspectable const&)
                 {
                     if (auto self = weakThis.lock())
@@ -209,7 +219,7 @@ MidiBleConnection::Start()
                     }
                 });
 
-            m_sessionStatusChangedToken = m_session.SessionStatusChanged(
+            m_sessionStatusChangedToken = session.SessionStatusChanged(
                 [weakThis = weak_from_this()](gatt::GattSession const&, gatt::GattSessionStatusChangedEventArgs const& args)
                 {
                     if (auto self = weakThis.lock())
@@ -249,7 +259,7 @@ MidiBleConnection::SubscribeToNotifications(uint32_t const timeoutMilliseconds)
 {
     // Copied because Shutdown clears the member, and this also runs on the writer thread rather
     // than only from Start.
-    auto characteristic = m_characteristic;
+    auto characteristic = Characteristic();
 
     RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
@@ -257,11 +267,13 @@ MidiBleConnection::SubscribeToNotifications(uint32_t const timeoutMilliseconds)
     {
         // The WithResult form is used only because the plain one returns a status with no ATT
         // error, and the ATT error is what distinguishes "pair me first" from "I am asleep".
-        auto descriptorResult = MidiBleUtilities::AwaitWithTimeout(
+        // Also runs on the writer thread to renew the subscription, and Shutdown joins that thread
+        auto descriptorResult = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
             characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
                 gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
             timeoutMilliseconds,
-            gatt::GattWriteResult{ nullptr });
+            gatt::GattWriteResult{ nullptr },
+            [this]() noexcept { return IsShuttingDownConnection(); });
 
         auto const descriptorStatus = descriptorResult != nullptr ?
             descriptorResult.Status() : gatt::GattCommunicationStatus::Unreachable;
@@ -290,10 +302,11 @@ MidiBleConnection::SubscribeToNotifications(uint32_t const timeoutMilliseconds)
 
         // the specified handshake: the Central reads the Characteristic after connecting and the
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
-        auto readResult = MidiBleUtilities::AwaitWithTimeout(
+        auto readResult = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
             characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
             timeoutMilliseconds,
-            gatt::GattReadResult{ nullptr });
+            gatt::GattReadResult{ nullptr },
+            [this]() noexcept { return IsShuttingDownConnection(); });
 
         // A device can allow the subscription and still demand authentication for the read
         if (readResult != nullptr &&
@@ -327,7 +340,7 @@ MidiBleConnection::ResetTranslationState()
     // A link drop can cut a SysEx transfer in half in either direction, and BLE MIDI 2.0
     // section 5.12 says UMP stream state is not preserved across disconnections either.
     {
-        auto lock = std::scoped_lock{ m_outgoingTranslationLock };
+        auto lock = m_outgoingTranslationLock.lock_exclusive();
 
         m_outgoingPacketBuilder.Reset();
         m_umpToBytestream.resetBuffer();
@@ -336,7 +349,7 @@ MidiBleConnection::ResetTranslationState()
     // A notification can be decoding on another thread right now
     m_incomingStateResetPending.store(true);
 
-    auto lock = std::scoped_lock{ m_outgoingQueueLock };
+    auto lock = m_outgoingQueueLock.lock_exclusive();
     m_outgoingPackets.clear();
 }
 
@@ -453,7 +466,7 @@ MidiBleConnection::RequestSubscriptionRenewal(bool const followsReconnect)
     }
 
     {
-        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+        auto lock = m_outgoingQueueLock.lock_exclusive();
 
         m_subscriptionRenewalPending = true;
         m_subscriptionRenewalFollowsReconnect = m_subscriptionRenewalFollowsReconnect || followsReconnect;
@@ -462,7 +475,7 @@ MidiBleConnection::RequestSubscriptionRenewal(bool const followsReconnect)
         m_nextSubscriptionRenewalTickCount = 0;
     }
 
-    m_outgoingPacketsAvailable.SetEvent();
+    m_outgoingWakeup.Signal();
 }
 
 
@@ -474,7 +487,7 @@ MidiBleConnection::RenewNotificationSubscription()
     bool followsReconnect{ false };
 
     {
-        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+        auto lock = m_outgoingQueueLock.lock_exclusive();
 
         generation = m_subscriptionRenewalGeneration;
         attempt = ++m_subscriptionRenewalAttempts;
@@ -484,7 +497,7 @@ MidiBleConnection::RenewNotificationSubscription()
     // A request made while this attempt ran is for a newer link, so this outcome leaves it pending
     auto const settle = [&](bool const retry, uint64_t const retryAtTickCount)
         {
-            auto lock = std::scoped_lock{ m_outgoingQueueLock };
+            auto lock = m_outgoingQueueLock.lock_exclusive();
 
             if (m_subscriptionRenewalGeneration != generation)
             {
@@ -514,9 +527,12 @@ MidiBleConnection::RenewNotificationSubscription()
         // The device's status can lag the session's, and either one being up is enough to try
         bool linkUp = IsDeviceConnected();
 
-        if (!linkUp && m_session != nullptr)
+        if (!linkUp)
         {
-            linkUp = m_session.SessionStatus() == gatt::GattSessionStatus::Active;
+            if (auto const session = Session())
+            {
+                linkUp = session.SessionStatus() == gatt::GattSessionStatus::Active;
+            }
         }
 
         // A write to a device which is away waits out a whole Bluetooth timeout, and its return asks again
@@ -587,6 +603,15 @@ MidiBleConnection::RenewNotificationSubscription()
             return;
         }
 
+        // Abandoned because this connection is shutting down. Asking the endpoint manager to
+        // rebuild it would bring back a device that is being disconnected.
+        if (m_shutdown.load())
+        {
+            settle(false, 0);
+
+            return;
+        }
+
         if (attempt < MIDI_BLE_SUBSCRIPTION_RENEWAL_MAX_ATTEMPTS)
         {
             auto const delay = MidiBleUtilities::ConnectRetryIntervalMilliseconds(
@@ -639,6 +664,27 @@ MidiBleConnection::RenewNotificationSubscription()
 }
 
 
+void
+MidiBleConnection::BeginShutdown() noexcept
+{
+    // Every path which sends, receives or renews checks this, and so do the writer's waits
+    m_shutdown = true;
+
+    DisconnectMidiCallback();
+
+    // The writer's stop callback signals under the queue lock too. This covers a writer which has
+    // not registered that callback yet, and m_shutdown, which also stops it.
+    m_writerThread.request_stop();
+    m_outgoingWakeup.SignalStop(m_outgoingQueueLock);
+
+    // Nothing queued is going to be sent now, so it is dropped rather than left for the join
+    {
+        auto lock = m_outgoingQueueLock.lock_exclusive();
+        m_outgoingPackets.clear();
+    }
+}
+
+
 HRESULT
 MidiBleConnection::Shutdown()
 {
@@ -652,53 +698,67 @@ MidiBleConnection::Shutdown()
         TraceLoggingWideString(m_deviceId.c_str(), "device id")
     );
 
-    if (m_shutdown.exchange(true))
+    // A separate flag from m_shutdown, which BeginShutdown sets ahead of this
+    if (m_tornDown.exchange(true))
     {
         return S_OK;
     }
 
-    DisconnectMidiCallback();
-
-    m_writerThread.request_stop();
-    m_outgoingPacketsAvailable.SetEvent();
+    BeginShutdown();
 
     if (m_writerThread.joinable() && m_writerThread.get_id() != std::this_thread::get_id())
     {
         m_writerThread.join();
     }
 
+    // Taken out under the lock, so a reader on another thread either already holds its own
+    // reference or finds nothing. The teardown below works on these copies.
+    bt::BluetoothLEDevice device{ nullptr };
+    gatt::GattDeviceService service{ nullptr };
+    gatt::GattCharacteristic characteristic{ nullptr };
+    gatt::GattSession session{ nullptr };
+
+    {
+        auto lock = m_gattObjectsLock.lock_exclusive();
+
+        device = std::exchange(m_device, nullptr);
+        service = std::exchange(m_service, nullptr);
+        characteristic = std::exchange(m_characteristic, nullptr);
+        session = std::exchange(m_session, nullptr);
+    }
+
     try
     {
-        if (m_device != nullptr && m_connectionStatusChangedToken)
+        if (device != nullptr && m_connectionStatusChangedToken)
         {
-            m_device.ConnectionStatusChanged(m_connectionStatusChangedToken);
+            device.ConnectionStatusChanged(m_connectionStatusChangedToken);
             m_connectionStatusChangedToken = {};
         }
 
-        if (m_device != nullptr && m_connectionParametersChangedToken)
+        if (device != nullptr && m_connectionParametersChangedToken)
         {
-            m_device.ConnectionParametersChanged(m_connectionParametersChangedToken);
+            device.ConnectionParametersChanged(m_connectionParametersChangedToken);
             m_connectionParametersChangedToken = {};
         }
 
-        if (m_session != nullptr && m_sessionStatusChangedToken)
+        if (session != nullptr && m_sessionStatusChangedToken)
         {
-            m_session.SessionStatusChanged(m_sessionStatusChangedToken);
+            session.SessionStatusChanged(m_sessionStatusChangedToken);
             m_sessionStatusChangedToken = {};
         }
 
-        if (m_characteristic != nullptr)
+        if (characteristic != nullptr)
         {
             if (m_valueChangedToken)
             {
-                m_characteristic.ValueChanged(m_valueChangedToken);
+                characteristic.ValueChanged(m_valueChangedToken);
                 m_valueChangedToken = {};
             }
 
             // Courtesy only, and the link is going away regardless, so it gets the shortest wait
             // of anything here.
             LOG_IF_FAILED(MidiBleUtilities::AwaitWithTimeout(
-                m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
                     gatt::GattClientCharacteristicConfigurationDescriptorValue::None),
                 MidiBleUtilities::BleTeardownOperationTimeoutMilliseconds,
                 gatt::GattCommunicationStatus::Unreachable) == gatt::GattCommunicationStatus::Success ? S_OK : S_FALSE);
@@ -708,27 +768,22 @@ MidiBleConnection::Shutdown()
 
     try
     {
-        if (m_session != nullptr)
+        if (session != nullptr)
         {
-            m_session.MaintainConnection(false);
+            session.MaintainConnection(false);
         }
     }
     CATCH_LOG();
 
-    MidiBleUtilities::CloseIfOpen(m_session);
-    MidiBleUtilities::CloseIfOpen(m_service);
+    MidiBleUtilities::CloseIfOpen(session);
+    MidiBleUtilities::CloseIfOpen(service);
 
     // The device object outlives the service and session it produced, and Windows caches one per
     // address, so releasing it without closing leaves it to be handed to the next connection.
-    MidiBleUtilities::CloseIfOpen(m_device);
-
-    m_characteristic = nullptr;
-    m_session = nullptr;
-    m_service = nullptr;
-    m_device = nullptr;
+    MidiBleUtilities::CloseIfOpen(device);
 
     {
-        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+        auto lock = m_outgoingQueueLock.lock_exclusive();
         m_outgoingPackets.clear();
     }
 
@@ -748,7 +803,7 @@ MidiBleConnection::ConnectMidiCallback(
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
     {
-        auto lock = std::scoped_lock{ m_callbackLock };
+        auto lock = m_callbackLock.lock_exclusive();
 
         // Logged with both pointers because a client reconnecting is supposed to replace the
         // previous one, and a missing replacement is invisible from outside.
@@ -777,7 +832,7 @@ MidiBleConnection::ConnectMidiCallback(
 HRESULT
 MidiBleConnection::DisconnectMidiCallback()
 {
-    auto lock = std::scoped_lock{ m_callbackLock };
+    auto lock = m_callbackLock.lock_exclusive();
 
     TraceLoggingWrite(
         MidiBluetoothMidiTransportTelemetryProvider::Provider(),
@@ -801,7 +856,7 @@ _Use_decl_annotations_
 HRESULT
 MidiBleConnection::DisconnectMidiCallbackIfCurrent(IMidiCallback* callback)
 {
-    auto lock = std::scoped_lock{ m_callbackLock };
+    auto lock = m_callbackLock.lock_exclusive();
 
     if (m_callback.get() != callback)
     {
@@ -842,7 +897,7 @@ _Use_decl_annotations_
 std::wstring
 MidiBleConnection::EndpointDeviceInterfaceId() const
 {
-    auto lock = std::scoped_lock{ m_identityLock };
+    auto lock = m_identityLock.lock_exclusive();
 
     return m_endpointDeviceInterfaceId;
 }
@@ -852,7 +907,7 @@ void
 MidiBleConnection::SetEndpointDeviceInterfaceId(std::wstring const& endpointDeviceInterfaceId)
 {
     {
-        auto lock = std::scoped_lock{ m_identityLock };
+        auto lock = m_identityLock.lock_exclusive();
 
         m_endpointDeviceInterfaceId = endpointDeviceInterfaceId;
     }
@@ -866,7 +921,7 @@ _Use_decl_annotations_
 std::wstring
 MidiBleConnection::EndpointDeviceInstanceId() const
 {
-    auto lock = std::scoped_lock{ m_identityLock };
+    auto lock = m_identityLock.lock_exclusive();
 
     return m_endpointDeviceInstanceId;
 }
@@ -875,7 +930,7 @@ _Use_decl_annotations_
 void
 MidiBleConnection::SetEndpointDeviceInstanceId(std::wstring const& endpointDeviceInstanceId)
 {
-    auto lock = std::scoped_lock{ m_identityLock };
+    auto lock = m_identityLock.lock_exclusive();
 
     m_endpointDeviceInstanceId = endpointDeviceInstanceId;
 }
@@ -899,7 +954,7 @@ MidiBleConnection::WriteCalculatedLatencyProperty()
     std::wstring endpointDeviceInterfaceId{ };
 
     {
-        auto lock = std::scoped_lock{ m_identityLock };
+        auto lock = m_identityLock.lock_exclusive();
 
         endpointDeviceInterfaceId = m_endpointDeviceInterfaceId;
     }
@@ -919,14 +974,21 @@ MidiBleConnection::WriteCalculatedLatencyProperty()
 void
 MidiBleConnection::RefreshConnectionParameters()
 {
-    if (m_shutdown.load() || m_device == nullptr)
+    if (m_shutdown.load())
+    {
+        return;
+    }
+
+    auto const device = Device();
+
+    if (device == nullptr)
     {
         return;
     }
 
     try
     {
-        auto const parameters = m_device.GetConnectionParameters();
+        auto const parameters = device.GetConnectionParameters();
 
         if (parameters == nullptr)
         {
@@ -964,16 +1026,17 @@ MidiBleConnection::RefreshConnectionParameters()
 
 bool
 MidiBleConnection::IsDeviceConnected() const
-{    try
+{
+    try
     {
         if (m_isPeripheral)
         {
             return m_peripheralLink.IsConnected != nullptr && m_peripheralLink.IsConnected();
         }
 
-        if (m_device != nullptr)
+        if (auto const device = Device())
         {
-            return m_device.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected;
+            return device.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected;
         }
     }
     CATCH_LOG();
@@ -1002,9 +1065,9 @@ MidiBleConnection::MaxAttPayloadByteCount() const
             return MidiBleMidi1::DefaultMaxPacketByteCount;
         }
 
-        if (m_session != nullptr)
+        if (auto const session = Session())
         {
-            auto const maxPduSize = m_session.MaxPduSize();
+            auto const maxPduSize = session.MaxPduSize();
 
             if (maxPduSize > AttHeaderByteCount)
             {
@@ -1015,6 +1078,33 @@ MidiBleConnection::MaxAttPayloadByteCount() const
     CATCH_LOG();
 
     return MidiBleMidi1::DefaultMaxPacketByteCount;
+}
+
+
+bt::BluetoothLEDevice
+MidiBleConnection::Device() const
+{
+    auto lock = m_gattObjectsLock.lock_shared();
+
+    return m_device;
+}
+
+
+gatt::GattSession
+MidiBleConnection::Session() const
+{
+    auto lock = m_gattObjectsLock.lock_shared();
+
+    return m_session;
+}
+
+
+gatt::GattCharacteristic
+MidiBleConnection::Characteristic() const
+{
+    auto lock = m_gattObjectsLock.lock_shared();
+
+    return m_characteristic;
 }
 
 
@@ -1057,6 +1147,8 @@ MidiBleConnection::ProcessIncomingPacket(
         return;
     }
 
+    auto lock = m_incomingLock.lock_exclusive();
+
     if (m_incomingStateResetPending.exchange(false))
     {
         // The remote clock has no continuity across a link drop, so the mapping is rebuilt from
@@ -1076,18 +1168,6 @@ MidiBleConnection::ProcessIncomingPacket(
     {
         ProcessIncomingMidi1Packet(bytes, byteCount);
     }
-}
-
-
-void
-MidiBleConnection::ResetForNewRemoteClient()
-{
-    {
-        auto lock = std::scoped_lock{ m_outgoingQueueLock };
-        m_outgoingPackets.clear();
-    }
-
-    ResetTranslationState();
 }
 
 
@@ -1270,7 +1350,7 @@ MidiBleConnection::SendUmpWordsToCallback(
     LONGLONG callbackContext{ 0 };
 
     {
-        auto lock = std::scoped_lock{ m_callbackLock };
+        auto lock = m_callbackLock.lock_exclusive();
 
         if (m_callback == nullptr)
         {
@@ -1326,7 +1406,7 @@ MidiBleConnection::QueueMidiMessagesToSendToDevice(
     auto const words = static_cast<uint32_t const*>(data);
     auto const wordCount = byteCount / sizeof(uint32_t);
 
-    auto lock = std::scoped_lock{ m_outgoingTranslationLock };
+    auto lock = m_outgoingTranslationLock.lock_exclusive();
 
     if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump)
     {
@@ -1458,7 +1538,7 @@ MidiBleConnection::QueueOutgoingPackets(std::vector<std::vector<uint8_t>>&& pack
     size_t droppedPacketCount{ 0 };
 
     {
-        auto lock = std::scoped_lock{ m_outgoingQueueLock };
+        auto lock = m_outgoingQueueLock.lock_exclusive();
 
         for (auto& packet : packets)
         {
@@ -1486,7 +1566,7 @@ MidiBleConnection::QueueOutgoingPackets(std::vector<std::vector<uint8_t>>&& pack
         );
     }
 
-    m_outgoingPacketsAvailable.SetEvent();
+    m_outgoingWakeup.Signal();
 }
 
 
@@ -1502,8 +1582,9 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
         winrt::init_apartment();
 
         // Without this the thread parks in wait() and never sees the stop request, so the jthread
-        // destructor's join would hang forever.
-        std::stop_callback wakeOnStop{ stopToken, [this]() { m_outgoingPacketsAvailable.SetEvent(); } };
+        // destructor's join would hang forever. It signals under the queue lock: see
+        // MidiBleWorkerWakeup for why a stop raised outside it can be lost.
+        std::stop_callback wakeOnStop{ stopToken, [this]() { m_outgoingWakeup.SignalStop(m_outgoingQueueLock); } };
 
         while (!stopToken.stop_requested() && !m_shutdown.load())
         {
@@ -1512,10 +1593,11 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
                 std::vector<uint8_t> packet;
                 bool havePacket{ false };
                 bool renewSubscription{ false };
+                bool stopping{ false };
                 DWORD waitMilliseconds{ INFINITE };
 
                 {
-                    auto lock = std::scoped_lock{ m_outgoingQueueLock };
+                    auto lock = m_outgoingQueueLock.lock_exclusive();
 
                     if (m_subscriptionRenewalPending)
                     {
@@ -1543,9 +1625,14 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
                         }
                         else
                         {
-                            m_outgoingPacketsAvailable.ResetEvent();
+                            stopping = !m_outgoingWakeup.PrepareToSleep(stopToken.stop_requested() || m_shutdown.load());
                         }
                     }
+                }
+
+                if (stopping)
+                {
+                    break;
                 }
 
                 if (renewSubscription)
@@ -1558,7 +1645,7 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
                 }
                 else
                 {
-                    m_outgoingPacketsAvailable.wait(waitMilliseconds);
+                    m_outgoingWakeup.Sleep(waitMilliseconds);
                 }
             }
             // One bad iteration must not end the worker. An exception leaving this thread
@@ -1615,7 +1702,7 @@ MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
             return hr;
         }
 
-        auto characteristic = m_characteristic;
+        auto characteristic = Characteristic();
         RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
         try
@@ -1623,11 +1710,22 @@ MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
             DataWriter writer;
             writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
 
-            // the Central always writes without response
-            auto status = MidiBleUtilities::AwaitWithTimeout(
+            // the Central always writes without response. Shutdown joins this thread, so the wait
+            // ends as soon as the connection starts shutting down.
+            MidiBleUtilities::AwaitOutcome outcome{ };
+
+            auto status = MidiBleUtilities::AwaitWithTimeoutOrAbandon(
                 characteristic.WriteValueAsync(writer.DetachBuffer(), gatt::GattWriteOption::WriteWithoutResponse),
                 MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
-                gatt::GattCommunicationStatus::Unreachable);
+                gatt::GattCommunicationStatus::Unreachable,
+                [this]() noexcept { return IsShuttingDownConnection(); },
+                outcome);
+
+            // not a send error: the connection is going away, and the writer stops next
+            if (outcome.Abandoned)
+            {
+                return S_FALSE;
+            }
 
             if (status != gatt::GattCommunicationStatus::Success)
             {

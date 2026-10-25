@@ -248,6 +248,12 @@
 // A NETWORK_ERROR_CODE_* saying why the last invitation did not open a session, or 0
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LAST_ERROR_CODE_KEY     L"lastErrorCode"
 
+// Present when the entry is waiting for another session with its remote host to end, because a
+// device has one session with this PC at a time. The entry identifier of the host here the
+// remote is a client of, or of the other client entry connected to it, and which of those it is.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_ENTRY_KEY   L"waitingForEntryIdentifier"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_WAITING_FOR_HOST_KEY    L"waitingForHostSession"
+
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CURRENT_LATENCY_KEY                   L"currentLatencyTicks"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_COUNT_KEY            L"totalRetransmitCount"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_RETRANSMIT_REQUEST_COUNT_KEY    L"totalRetransmitRequestCount"
@@ -319,6 +325,19 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_REDUCE_SEND_SPEED_AUTOMATICALLY_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SKIP_IN_BETWEEN_VALUES_TO_CATCH_UP_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_USES_REMOTE_CLIENT_SETTINGS_KEY    L"usesRemoteClientSettings"
+
+// Remote clients the host turned away recently because they already had a session with this PC,
+// newest first. Bounded and expiring: see MIDI_NETWORK_HOST_RECENT_REFUSALS_MAX. Each entry has
+// the identity keys, the remote address key, a time in the requestTime format, and a reason.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_RECENT_REFUSALS_ARRAY_KEY L"recentRefusals"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_TIME_KEY                              L"refusalTime"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_KEY                            L"reason"
+
+// the remote was already connected to this host
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_ALREADY_CONNECTED        L"alreadyConnected"
+
+// this PC was already connected to the remote as a client
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_REFUSAL_REASON_VALUE_CONNECTED_IN_OTHER_ROLE  L"connectedInOtherRole"
 
 
 // getPendingRemoteClients response. This is what the settings app polls, so each entry carries

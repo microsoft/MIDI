@@ -44,7 +44,10 @@ TransportState::ConstructConfigurationManager()
 
 HRESULT
 TransportState::Shutdown()
+try
 {
+    // Idempotent: both managers call this, in either order.
+    //
     // Snapshot and clear under the lock, then do the work outside it: tearing the device down
     // joins a worker thread and stops an audio stream, neither of which should run with a lock
     // held that an accessor might be waiting on.
@@ -64,6 +67,13 @@ TransportState::Shutdown()
         device = m_device;
     }
 
+    // First, because the negotiation thread opens a connection to the synthesizer. Joining it
+    // after the device has shut down would let it connect again, and start a worker nobody joins.
+    if (endpointManager)
+    {
+        endpointManager->ReleaseServiceObjects();
+    }
+
     if (device)
     {
         LOG_IF_FAILED(device->Shutdown());
@@ -71,3 +81,4 @@ TransportState::Shutdown()
 
     return S_OK;
 }
+CATCH_RETURN()

@@ -10,23 +10,15 @@
 #pragma once
 
 
-enum TransportWorkItemWorkType
-{
-    Create,
-    Update,
-    Delete
-};
-
+// A loopback from the configuration file, waiting for the endpoint manager to be ready
 struct TransportWorkItem
 {
-    TransportWorkItemWorkType Type{ TransportWorkItemWorkType::Create };
     std::shared_ptr<MidiBasicLoopbackDeviceDefinition> Definition{ nullptr };
 
     TransportWorkItem() { }
     TransportWorkItem(
-        _In_ TransportWorkItemWorkType type,
         _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition) :
-        Type(type), Definition(definition)
+        Definition(definition)
     { }
 };
 
@@ -45,7 +37,7 @@ public:
 
         auto lock = m_lock.lock_exclusive();
 
-        m_workItems.emplace(TransportWorkItemWorkType::Create, definition);
+        m_workItems.emplace(definition);
 
         return S_OK;
     }
@@ -63,12 +55,6 @@ public:
         m_workItems.pop();
 
         return true;
-    }
-
-    bool IsEmpty()
-    {
-        auto lock = m_lock.lock_shared();
-        return m_workItems.empty();
     }
 
 private:

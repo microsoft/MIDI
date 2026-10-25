@@ -37,6 +37,7 @@ Returned by `MidiNetworkTransportManager.GetConfiguredHosts()`.
 | `SkipInBetweenValuesToCatchUp` | True when a connection skips some in-between values to catch up when messages pile up behind `SendSpeedLimit`. Added in version 2 of `MidiTransportsNetworkApiContract` |
 | `RemoteClientSettings` | The remote clients this host sends to at a speed of their own instead of the host's, as [MidiNetworkRemoteClientSettings]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientSettings/) entries. This is the list the running service holds, whether or not the clients are connected |
 | `Connections` | The remote clients that have reached this host right now, including clients waiting for approval |
+| `RecentlyRefusedRemoteClients` | Devices this host turned away recently because they already had a session with this PC, newest first, as [MidiNetworkRefusedRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRefusedRemoteClient/) entries. Each one's `Reason` says why. A device has one session with this PC at a time, so a second one is refused. The list holds at most 8 devices, a device that tries again stays one entry with the time and reason of its latest try, and entries go away a few minutes after that. Added in version 2 of `MidiTransportsNetworkApiContract` |
 
 ## Remarks
 

@@ -17,8 +17,6 @@ using namespace wil;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-#define MAX_DEVICE_ID_LEN 200 // size in chars
-
 GUID TransportLayerGUID = TRANSPORT_LAYER_GUID;
 
 
@@ -28,6 +26,7 @@ CMidi2BasicLoopbackMidiEndpointManager::Initialize(
     IMidiDeviceManager* midiDeviceManager, 
     IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
+try
 {
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -40,14 +39,40 @@ CMidi2BasicLoopbackMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_MidiProtocolManager));
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager;
 
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&deviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&protocolManager));
+
+    {
+        auto lock = m_serviceLock.lock_exclusive();
+        m_MidiDeviceManager = deviceManager;
+        m_MidiProtocolManager = protocolManager;
+    }
+
+    // The service never shuts down an endpoint manager whose Initialize failed, so a failure here
+    // has to let go of the service's objects itself, or they are released at DLL unload, after
+    // the service has destroyed them.
+    auto releaseOnFailure = wil::scope_exit([&]() noexcept
+        {
+            wil::com_ptr_nothrow<IMidiDeviceManager> releasedDeviceManager;
+            wil::com_ptr_nothrow<IMidiEndpointProtocolManager> releasedProtocolManager;
+            {
+                auto lock = m_serviceLock.lock_exclusive();
+                releasedDeviceManager = std::move(m_MidiDeviceManager);
+                releasedProtocolManager = std::move(m_MidiProtocolManager);
+            }
+        });
 
     m_TransportTransportId = TransportLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
 
     RETURN_IF_FAILED(CreateParentDevice());
 
+    releaseOnFailure.release();
+
+    // Set before the queue is drained. A loopback queued by a create that saw this still false is
+    // either drained below or, once the create sees it true, drained by the create itself.
     m_initialized = true;
 
     // this must be the last thing we do, as it relies on everything being initialized
@@ -55,6 +80,7 @@ CMidi2BasicLoopbackMidiEndpointManager::Initialize(
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 HRESULT
@@ -77,14 +103,10 @@ CMidi2BasicLoopbackMidiEndpointManager::ProcessWorkQueue()
     TransportWorkItem item{ };
     while (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
     {
-        if (item.Type == TransportWorkItemWorkType::Create)
-        {
-            LOG_IF_FAILED(CreateEndpoint(item.Definition));
+        // CreateEndpoint releases the reservation itself when it fails
+        LOG_IF_FAILED(CreateEndpoint(item.Definition));
 
-            countItemsProcessed++;
-        }
-
-        // TODO: Process other types of work items
+        countItemsProcessed++;
     }
 
     TraceLoggingWrite(
@@ -114,7 +136,8 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateParentDevice()
 
     // this happens before initialization is complete, so don't gate on m_initialized here
 
-    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
+    auto deviceManager = GetDeviceManager();
+    RETURN_HR_IF_NULL(E_POINTER, deviceManager);
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
@@ -128,7 +151,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateParentDevice()
 
     wil::unique_cotaskmem_string newDeviceId;
 
-    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
+    RETURN_IF_FAILED(deviceManager->ActivateVirtualParentDevice(
         0,
         nullptr,
         &createInfo,
@@ -155,9 +178,13 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateParentDevice()
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
-    _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition)
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
+    // a feedback trip calls this on its own thread, and Shutdown may have let go already
+    auto deviceManager = GetDeviceManager();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, deviceManager);
 
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -187,7 +214,7 @@ CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
             DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropFalse });
     }
 
-    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+    RETURN_IF_FAILED(deviceManager->UpdateEndpointProperties(
         definition->CreatedEndpointInterfaceId.c_str(),
         static_cast<ULONG>(interfaceDevProperties.size()),
         interfaceDevProperties.data()
@@ -211,7 +238,7 @@ CMidi2BasicLoopbackMidiEndpointManager::UpdateEndpointMutedStateProperty(
 _Use_decl_annotations_
 HRESULT
 CMidi2BasicLoopbackMidiEndpointManager::DeleteEndpoint(
-    _In_ std::shared_ptr<MidiBasicLoopbackDeviceDefinition> const definition)
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> definition)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, definition);
 
@@ -223,7 +250,10 @@ CMidi2BasicLoopbackMidiEndpointManager::DeleteEndpoint(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(definition->CreatedShortClientInstanceId.c_str()));
+    auto deviceManager = GetDeviceManager();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, deviceManager);
+
+    RETURN_IF_FAILED(deviceManager->RemoveEndpoint(definition->CreatedShortClientInstanceId.c_str()));
 
     // Also need to remove from internal list
 
@@ -238,11 +268,25 @@ HRESULT
 CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     std::shared_ptr<MidiBasicLoopbackDeviceDefinition> definition
     )
+try
 {
-    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
-    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
-
     RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
+    auto const table = TransportState::Current().GetEndpointTable();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+    auto const associationId = definition->AssociationId;
+
+    // Whatever goes wrong below, the association id and unique id become free again
+    auto releaseReservation = wil::scope_exit([&]() noexcept
+        {
+            table->ReleaseReservation(associationId);
+        });
+
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+
+    auto deviceManager = GetDeviceManager();
+    RETURN_HR_IF_NULL(E_POINTER, deviceManager);
 
     RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
     RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
@@ -420,7 +464,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     LOG_IF_FAILED(nameTable.WriteProperties(interfaceDevProperties));
 
     
-    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
+    auto const activateHR = deviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         false,                                                  // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
@@ -430,8 +474,13 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         interfaceDevProperties.data(),
         nullptr,
         &createInfo,
-        &newDeviceInterfaceId));
+        &newDeviceInterfaceId);
 
+    RETURN_IF_FAILED(activateHR);
+
+    // S_FALSE means the service already has an endpoint with this instance id, and no interface id
+    // came back. That endpoint isn't this one, so it's left alone.
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED), activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr);
 
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -445,18 +494,28 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
         TraceLoggingWideString(newDeviceInterfaceId.get(), "new device interface id")
     );
 
+    // From here on, a failure must not leave this endpoint in the service with nothing in the
+    // table to remove it by.
+    auto removeOnFailure = wil::scope_exit([&]() noexcept
+        {
+            LOG_IF_FAILED(deviceManager->RemoveEndpoint(instanceId.c_str()));
+        });
 
     // we need this for removal later
     definition->CreatedShortClientInstanceId = instanceId;
     definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
 
-    // store for tracking
-    auto device = std::make_shared<MidiBasicLoopbackDevice>();
-    device->Definition = definition;
-    device->Feedback = MidiBasicLoopbackFeedback::Create(definition->AssociationId, definition->FeedbackProtectionEnabled);
+    // The device gets its own copy. The caller keeps reading this one for its response, and a
+    // published definition is never changed in place.
+    auto device = std::make_shared<MidiBasicLoopbackDevice>(
+        std::make_shared<MidiBasicLoopbackDeviceDefinition const>(*definition),
+        MidiBasicLoopbackFeedback::Create(definition->AssociationId, definition->FeedbackProtectionEnabled));
 
+    // store for tracking. This also takes over the reservation.
+    RETURN_IF_FAILED(table->AddDevice(definition->AssociationId, device));
 
-    TransportState::Current().GetEndpointTable()->SetDevice(definition->AssociationId, device);
+    removeOnFailure.release();
+    releaseReservation.release();
 
     // Written after activation because activation clears it, and nothing negotiates it for this endpoint
     BYTE configuredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1 };
@@ -464,7 +523,7 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     DEVPROPERTY configuredProtocolProperty{ { PKEY_MIDI_EndpointConfiguredProtocol, DEVPROP_STORE_SYSTEM, nullptr },
         DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(configuredProtocol)), &configuredProtocol };
 
-    LOG_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+    LOG_IF_FAILED(deviceManager->UpdateEndpointProperties(
         definition->CreatedEndpointInterfaceId.c_str(),
         1,
         &configuredProtocolProperty));
@@ -482,11 +541,13 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 
 HRESULT
 CMidi2BasicLoopbackMidiEndpointManager::Shutdown()
+try
 {
     TraceLoggingWrite(
         MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -496,18 +557,24 @@ CMidi2BasicLoopbackMidiEndpointManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-
-    // destroy and release all the devices we have created
-
-//    LOG_IF_FAILED(TransportState::Current().GetEndpointTable()->Shutdown());
-
-    TransportState::Current().Shutdown();
-
-    m_MidiDeviceManager.reset();
-    m_MidiProtocolManager.reset();
+    // TransportState::Shutdown releases the static's reference to this object
+    wil::com_ptr<CMidi2BasicLoopbackMidiEndpointManager> keepAlive{ this };
 
     m_initialized = false;
 
+    // destroy and release all the devices we have created
+    LOG_IF_FAILED(TransportState::Current().Shutdown());
+
+    // Swapped out under the lock and released outside it
+    wil::com_ptr_nothrow<IMidiDeviceManager> deviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager;
+    {
+        auto lock = m_serviceLock.lock_exclusive();
+        deviceManager = std::move(m_MidiDeviceManager);
+        protocolManager = std::move(m_MidiProtocolManager);
+    }
+
     return S_OK;
 }
+CATCH_RETURN()
 

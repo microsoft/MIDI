@@ -562,6 +562,40 @@ CMidi2LoopbackMidiConfigurationManager::ValidateNewUniqueIdentifiersDoNotOverlap
 
 _Use_decl_annotations_
 HRESULT
+CMidi2LoopbackMidiConfigurationManager::ValidateNewAssociationIdIsUnused(
+    MidiLoopbackDeviceDefinition const& definitionA,
+    json::JsonObject& responseObject)
+{
+    auto const table = TransportState::Current().GetEndpointTable();
+    RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+
+    // the table compares association ids without case or surrounding spaces
+    if (table->GetDevice(definitionA.AssociationId) == nullptr)
+    {
+        return S_OK;
+    }
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Association id already in use by another loopback", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(definitionA.AssociationId.c_str(), "association id")
+    );
+
+    internal::SetConfigurationResponseObjectFailWithErrorCode(
+        responseObject,
+        LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+        internal::ResourceGetWString(IDS_ERROR_ASSOCIATION_ID_IN_USE));
+
+    return E_FAIL;
+}
+
+
+_Use_decl_annotations_
+HRESULT
 CMidi2LoopbackMidiConfigurationManager::ValidateUpdatedEndpointNamesAreUnused(
     std::vector<PendingEndpointUpdate> const& pending,
     std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
@@ -672,6 +706,16 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
     // empty config is ok in this case. We just ignore
     if (configurationJsonSection == nullptr) return S_OK;
+
+    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The service does not serialize these
+    // calls, so two apps can be in here at once. Each validates against the table and then
+    // changes it, and an update rewrites endpoint names that a list in another call is reading.
+    std::unique_lock<std::mutex> configurationLock{};
+
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
+    {
+        configurationLock = std::unique_lock<std::mutex>{ TransportState::Current().ConfigurationLock() };
+    }
 
     // use this to track any ids in use from this one config file update
     std::map<std::wstring, bool> allocatedUniqueIdsA{};
@@ -1046,6 +1090,25 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                                     return internal::ConfigurationRejectionResult(overlapCheckHR);
+                                }
+                            }
+                        }
+
+                        if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
+                        {
+                            // Runtime creates only, like the checks above. The endpoint manager
+                            // also refuses it, for the configuration file, but without a reason.
+                            if (TransportState::Current().GetEndpointManager() != nullptr &&
+                                TransportState::Current().GetEndpointManager()->IsInitialized())
+                            {
+                                auto const associationCheckHR = ValidateNewAssociationIdIsUnused(
+                                    *definitionA, responseObject);
+
+                                if (FAILED(associationCheckHR))
+                                {
+                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                    return internal::ConfigurationRejectionResult(associationCheckHR);
                                 }
                             }
                         }

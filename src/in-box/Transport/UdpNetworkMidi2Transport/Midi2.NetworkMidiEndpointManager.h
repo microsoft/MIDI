@@ -35,6 +35,11 @@ public:
     // socket receive callback without stalling every other datagram behind it.
     HRESULT QueueConnectionShutdown(_In_ std::shared_ptr<MidiNetworkConnection> connection);
 
+    // The host a client entry connects to said it is powering down. Its advertisement is dropped
+    // here, so the host announcing itself when it is back counts as advertising again, even if its
+    // goodbye was never seen.
+    void ForgetAdvertisedHostForClient(_In_ winrt::guid const& clientEntryIdentifier) noexcept;
+
     // endpoint for a remote client connected to this host
     STDMETHOD(CreateNewHostEndpointToRemoteClient(
         _In_ std::wstring const& configIdentifier,
@@ -154,8 +159,12 @@ private:
         _In_ uint32_t const remoteAddressCount);
 
     // The two halves of each EndpointCreatorWorker pass
-    void StartPendingHosts();
+    void StartPendingHosts(_In_ std::stop_token const& stopToken);
     void StartPendingClients(_In_ std::stop_token const& stopToken);
+
+    // Stops what Initialize starts. Used by Shutdown, and by Initialize when it fails part way.
+    // False when the negotiation thread had to be abandoned and may still use service objects.
+    bool StopBackgroundWork() noexcept;
 
     // Starts the search for advertised hosts while a client entry finds its host by mDNS, and
     // stops it once none does. Only EndpointCreatorWorker calls this.
@@ -193,14 +202,38 @@ private:
         _Out_ std::wstring& customName,
         _Out_ std::wstring& customDescription);
 
-    // Spec section 12 has a device that is both a host and a client use one identity in both
-    // roles, so the devices it connects to can tell when it's already connected. True when this
-    // remote has an endpoint here in the other role and that session is still up. The same remote
-    // on two of this PC's hosts is not this case: each host is an endpoint of its own.
-    bool IsRemoteConnectedInOtherRole(
+    // A remote has one session with this PC in one direction, per host here or per remote host.
+    // True when a session which is up already covers what thisServiceRole is about to create:
+    // - ConnectedInOtherRole: this remote has an endpoint here in the other role. Spec section 12
+    //   has a device which is both a host and a client use one identity in both roles, so the
+    //   devices it connects to can tell. The same remote on two of this PC's hosts is not this
+    //   case: each host is an endpoint of its own.
+    // - AlreadyConnected: an endpoint with this instance id is up. A host here: the remote is
+    //   already connected to this host. A client here: this PC is already connected to that
+    //   remote host through another client entry.
+    // blockingEntryIdentifier is the host or client entry the session which is up belongs to.
+    bool FindBlockingSession(
         _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& instanceId,
         _In_ std::wstring const& remoteEndpointName,
-        _In_ std::wstring const& remoteProductInstanceId);
+        _In_ std::wstring const& remoteProductInstanceId,
+        _Out_ MidiNetworkSessionRefusalReason& reason,
+        _Out_ winrt::guid& blockingEntryIdentifier);
+
+    // Records why a session was declined, so Network MIDI Setup can say so: on the client entry,
+    // which then waits for the other session to end, or in the host's list of recent refusals
+    void RecordSessionRefusal(
+        _In_ MidiNetworkConnectionRole const thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
+        _In_ MidiNetworkSessionRefusalReason const reason,
+        _In_ winrt::guid const& blockingEntryIdentifier,
+        _In_ std::wstring const& remoteEndpointName,
+        _In_ std::wstring const& remoteProductInstanceId,
+        _In_ winrt::Windows::Networking::HostName const& remoteHostName) noexcept;
+
+    // A client entry waiting for another session with its remote host is skipped until that
+    // session has ended. True while it still has to wait.
+    bool IsClientDefinitionStillWaiting(_In_ MidiNetworkClientDefinition const& definition);
 
     // The groups an endpoint gets MIDI 1.0 ports for when the remote declares no function blocks,
     // read from the stored definitions so a later change to them reaches it. A remote client of a
@@ -280,7 +313,7 @@ private:
     wil::critical_section m_createdEndpointsLock;
     std::vector<CreatedEndpointRecord> m_createdEndpoints;
 
-    bool m_initialized{ false };
+    std::atomic<bool> m_initialized{ false };
 
     GUID m_transportId{ };
     std::wstring m_clientParentDeviceInstanceId{};

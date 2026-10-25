@@ -9,8 +9,51 @@
 #include "stdafx.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
+#include "Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.h"
+
+#include <cfgmgr32.h>
 
 using namespace winrt::Windows::Devices::Enumeration;
+
+// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The endpoint id comes from the client.
+// For an id that Plug and Play has never had, the DeviceInformation lookups further down throw
+// from inside the client manager lock instead of returning an error. This asks Plug and Play
+// directly, which is synchronous and cannot throw. An endpoint that was removed is still known
+// here, so its handling does not change.
+static HRESULT CheckEndpointInterfaceIsKnown(_In_opt_z_ LPCWSTR endpointInterfaceId) noexcept
+{
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), endpointInterfaceId == nullptr || endpointInterfaceId[0] == L'\0');
+
+    DEVPROPTYPE type{ DEVPROP_TYPE_EMPTY };
+    DEVPROP_BOOLEAN enabled{ DEVPROP_FALSE };
+    ULONG size{ sizeof(enabled) };
+
+    auto const result = CM_Get_Device_Interface_PropertyW(
+        endpointInterfaceId,
+        &DEVPKEY_DeviceInterface_Enabled,
+        &type,
+        reinterpret_cast<PBYTE>(&enabled),
+        &size,
+        0);
+
+    if (result != CR_SUCCESS)
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(nullptr, "this"),
+            TraceLoggingWideString(L"Endpoint interface is not known to Plug and Play. Cannot create MIDI client.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(endpointInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingULong(result, "configret")
+        );
+
+        return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+    }
+
+    return S_OK;
+}
 
 _Use_decl_annotations_
 HRESULT
@@ -1111,6 +1154,12 @@ CMidiClientManager::CreateMidiClient(
         );
 
         RETURN_IF_FAILED(E_UNEXPECTED);
+    }
+
+    if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
+    {
+        // before the lock, so an endpoint id nobody created is refused rather than thrown on
+        RETURN_IF_FAILED(CheckEndpointInterfaceIsKnown(midiDevice));
     }
 
     memset(client, 0, sizeof(MIDISRV_CLIENT));

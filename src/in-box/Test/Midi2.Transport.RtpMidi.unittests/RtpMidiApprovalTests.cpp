@@ -456,3 +456,55 @@ void RtpMidiTransportTests::TestNamesDefaultToThisPcName()
 
     VERIFY_IS_TRUE(WaitFor([&]() { return remoteHost.LastRemoteName() == pcNameUtf8; }, 8000), L"which is the name the remote sees");
 }
+
+
+// RTP-MIDI has no authentication, so a decision about a request holds for the address the request
+// showed. Another device sending the same name from somewhere else is asked about on its own.
+void RtpMidiTransportTests::TestApprovalHoldsForTheAddressItShowed()
+{
+    uint16_t port{ 0 };
+    auto const hostId = CreateHost(RequireApproval, port);
+    Finally cleanup{ [&]() { RemoveHost(hostId); } };
+
+    auto const pendingAddress = [&]()
+        {
+            auto const pending = FindPending(hostId, L"Address Peer");
+            return pending == nullptr ? std::wstring{} : std::wstring{ pending.GetNamedString(L"remoteAddress", L"") };
+        };
+
+    Peer remote("Address Peer", false);
+    VERIFY_IS_TRUE(remote.Start(), L"the remote binds an IPv6 loopback port pair");
+    remote.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return pendingAddress() == L"::1"; }, 3000), L"the request shows the address it came from");
+
+    // the engine sees ::1 and 127.0.0.1 as two hosts
+    Peer impostor("Address Peer", false, true);
+    VERIFY_IS_TRUE(impostor.Start(), L"another device with the same name binds an IPv4 loopback port pair");
+    impostor.Invite(port);
+
+    Sleep(1500);
+    VERIFY_IS_TRUE(pendingAddress() == L"::1", L"its asks don't change the address the request shows");
+
+    VERIFY_IS_TRUE(IsSuccess(Decide(L"approveRemoteClient", hostId, L"Address Peer", L"once")), L"approve the request");
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return remote.ConnectedCount() == 1; }, 3000), L"the remote at the address shown gets in");
+
+    // two more asks go by
+    Sleep(2500);
+    VERIFY_IS_TRUE(impostor.ConnectedCount() == 0, L"the one at another address does not");
+    VERIFY_IS_TRUE(impostor.Ended().empty(), L"and is not refused, so it keeps asking");
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return pendingAddress() == L"127.0.0.1"; }, 3000), L"it is asked about on its own, showing its address");
+
+    VERIFY_IS_TRUE(IsSuccess(Decide(L"approveRemoteClient", hostId, L"Address Peer", L"untilRestart")), L"approve it until restart");
+    VERIFY_IS_TRUE(WaitFor([&]() { return impostor.ConnectedCount() == 1; }, 3000), L"then it gets in");
+
+    // an approval until restart made for one request holds for that address only
+    Peer third("Address Peer", false);
+    VERIFY_IS_TRUE(third.Start(), L"a third device with the name binds an IPv6 loopback port pair");
+    third.Invite(port);
+
+    VERIFY_IS_TRUE(WaitFor([&]() { return pendingAddress() == L"::1"; }, 3000), L"from the first address it is asked about again");
+    VERIFY_IS_TRUE(third.ConnectedCount() == 0, L"and waits");
+}

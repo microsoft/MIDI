@@ -185,9 +185,49 @@ MidiNetworkClientConnection::OnWatchdogTick()
     return S_OK;
 }
 
+_Use_decl_annotations_
 void
-MidiNetworkClientConnection::OnSessionEndedByRemote()
+MidiNetworkClientConnection::OnSessionEndedByRemote(MidiNetworkCommandByeReason const reason)
 {
+    // M2-124 6.16: the user at the other end ended the session, or the device is powering down.
+    // Inviting it again at once would undo what that user did, so the entry waits for the app to
+    // connect it again, or for the host to stop advertising and come back.
+    if (reason == MidiNetworkCommandByeReason::CommandByeReasonCommon_UserTerminated ||
+        reason == MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown)
+    {
+        if (m_shuttingDown)
+        {
+            return;
+        }
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Remote host ended the session. Not reconnecting until it advertises again or the entry is connected again.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt8(reason, "bye reason"),
+            TraceLoggingGuid(m_configIdentifier, "entry identifier")
+        );
+
+        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionEndedByRemote(
+            m_configIdentifier,
+            NETWORK_ERROR_CODE_INVITATION_ENDED_BY_HOST));
+
+        // A device powering down has left, whether or not its mDNS goodbye arrives, so its next
+        // announcement is advertising again. One whose user ended the session is still there.
+        if (reason == MidiNetworkCommandByeReason::CommandByeReasonCommon_PowerDown)
+        {
+            if (auto endpointManager = TransportState::Current().GetEndpointManager(); endpointManager != nullptr)
+            {
+                endpointManager->ForgetAdvertisedHostForClient(m_configIdentifier);
+            }
+        }
+
+        return;
+    }
+
     LOG_IF_FAILED(RequestReconnect());
 }
 
@@ -428,7 +468,7 @@ MidiNetworkClientConnection::CompleteClientSessionAfterEndpointCreated(
         if (m_sessionActive && !m_shuttingDown)
         {
             // this is what the Bidi uses when it is created
-            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_remoteHostName, m_remotePort.c_str());
+            hr = TransportState::Current().AssociateMidiEndpointWithConnection(endpointDeviceInterfaceId, m_configIdentifier, m_remoteHostName, m_remotePort.c_str(), this);
 
             if (SUCCEEDED(hr))
             {

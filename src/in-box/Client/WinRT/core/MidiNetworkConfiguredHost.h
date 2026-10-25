@@ -55,6 +55,25 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool SkipInBetweenValuesToCatchUp() const noexcept { return m_skipInBetweenValuesToCatchUp; }
         void InternalSetSkipInBetweenValuesToCatchUp(_In_ bool const value) noexcept { m_skipInBetweenValuesToCatchUp = value; }
 
+        winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRefusedRemoteClient> RecentlyRefusedRemoteClients() const noexcept
+        {
+            return m_recentlyRefusedRemoteClients.GetView();
+        }
+
+        // In the order the service reports them, newest first
+        void InternalAddRefusal(_In_ network::MidiNetworkRefusedRemoteClient const& refusal) noexcept
+        {
+            if (refusal == nullptr) return;
+
+            try
+            {
+                m_recentlyRefusedRemoteClients.Append(refusal);
+            }
+            catch (...)
+            {
+            }
+        }
+
         winrt::Windows::Foundation::Collections::IVectorView<network::MidiNetworkRemoteClientSettings> RemoteClientSettings() const noexcept
         {
             return m_remoteClientSettings.GetView();
@@ -163,5 +182,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRemoteClientSettings> m_remoteClientSettings{
             winrt::single_threaded_vector<network::MidiNetworkRemoteClientSettings>() };
+
+        winrt::Windows::Foundation::Collections::IVector<network::MidiNetworkRefusedRemoteClient> m_recentlyRefusedRemoteClients{
+            winrt::single_threaded_vector<network::MidiNetworkRefusedRemoteClient>() };
     };
 }

@@ -63,7 +63,8 @@ public:
     HRESULT Advertise(_In_ std::wstring const& instanceLabel, _In_ std::stop_token const& stopToken, _In_ uint32_t const interfaceIndex = 0);
 
     // Says goodbye to every participant, then stops the threads and withdraws the advertisement.
-    // Never call from a listener callback.
+    // Nothing that arrives once it has begun can start a connection, and every connection reported
+    // up is reported down. Safe to call more than once. Never call from a listener callback.
     void Stop();
 
     HRESULT Invite(_In_ RtpMidi::PeerAddress const& remoteControl);
@@ -87,7 +88,6 @@ public:
     bool TrySnapshot(_In_ uint32_t const participantId, _Out_ RtpMidi::Participant& snapshot);
     std::vector<std::shared_ptr<RtpMidiConnection>> Connections();
 
-    Role GetRole() const noexcept { return m_role; }
     GUID EntryId() const noexcept { return m_entryId; }
     bool IsRunning() const noexcept { return m_running.load(); }
     uint16_t ControlPort() noexcept { return m_ports.Control().Port(); }
@@ -98,7 +98,6 @@ public:
 
     // The engine's clock: 100 microsecond ticks, from the same counter as MIDI timestamps
     static uint64_t SessionNow() noexcept;
-    static uint64_t SessionTicksToMidiTimestamp(_In_ uint64_t const sessionTicks) noexcept;
     static uint64_t SessionTicksToMidiTicks(_In_ uint64_t const sessionTicks) noexcept;
 
     // ISessionHost. Called by the engine with m_engineLock held.
@@ -127,7 +126,11 @@ private:
     };
 
     void OnDatagram(_In_ bool const isControlPort, _In_ RtpMidi::PeerAddress const& from, _In_reads_(size) uint8_t const* data, _In_ size_t const size);
-    void TickLoop(_In_ std::stop_token stopToken);
+
+    // The timer thread holds the node for one pass at a time. If the last reference goes at the end
+    // of a pass, the node is destroyed on that thread, which then reads nothing of it again.
+    static void TickThread(_In_ std::weak_ptr<RtpMidiNode> const weakThis, _In_ std::stop_token const stopToken) noexcept;
+    void TickOnce(_Inout_ uint64_t& nextEngineTick);
 
     // What each connection's speed limit lets go now. MIDI timestamp ticks until more may go, or
     // 0 when nothing is waiting.
@@ -143,15 +146,18 @@ private:
     IListener* m_listener{ nullptr };
     AdmissionCheck m_admissionCheck;
 
-    std::mutex m_engineLock;
+    wil::srwlock m_engineLock;
     std::unique_ptr<RtpMidi::Session> m_session;
     std::vector<PendingEvent> m_pending;
 
+    // False once Stop begins, so a late invitation never becomes a connection. Under m_engineLock.
+    bool m_receiving{ false };
+
     // Serializes delivery, so pieces taken by different threads reach clients in engine order.
     // Always taken before m_engineLock, never after it.
-    std::mutex m_deliveryLock;
+    wil::srwlock m_deliveryLock;
 
-    std::mutex m_connectionsLock;
+    wil::srwlock m_connectionsLock;
     std::map<uint32_t, std::shared_ptr<RtpMidiConnection>> m_connections;
 
     RtpMidiNet::PortPair m_ports;

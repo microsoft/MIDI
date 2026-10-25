@@ -137,31 +137,53 @@ CMidi2RtpMidiEndpointManager::ActivateRtpEndpoint(
         // The service makes the endpoint visible, and builds its MIDI 1.0 ports, before activation
         // returns. An app can open it in that time, and finds it here by its instance id.
         {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+            auto lock = m_createdEndpointsLock.lock_exclusive();
             m_createdEndpoints.push_back(endpoint);
         }
 
         auto unlistOnFailure = wil::scope_exit([&]()
             {
                 {
-                    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+                    auto lock = m_createdEndpointsLock.lock_exclusive();
                     std::erase(m_createdEndpoints, endpoint);
                 }
 
                 if (auto const connection = endpoint->Connection()) endpoint->DetachIfCurrent(connection.get());
             });
 
-        auto const activateHR = m_midiDeviceManager->ActivateEndpoint(
-            m_parentDeviceId.c_str(),
-            false,                                          // when false, WinMM MIDI 1.0 ports are created as well
-            MidiFlow::MidiFlowBidirectional,
-            &commonProperties,
-            static_cast<ULONG>(interfaceDevProperties.size()),
-            static_cast<ULONG>(0),
-            interfaceDevProperties.size() > 0 ? interfaceDevProperties.data() : nullptr,
-            nullptr,
-            &createInfo,
-            &newDeviceInterfaceId);
+        auto const activate = [&]()
+            {
+                newDeviceInterfaceId.reset();
+
+                return m_midiDeviceManager->ActivateEndpoint(
+                    m_parentDeviceId.c_str(),
+                    false,                                          // when false, WinMM MIDI 1.0 ports are created as well
+                    MidiFlow::MidiFlowBidirectional,
+                    &commonProperties,
+                    static_cast<ULONG>(interfaceDevProperties.size()),
+                    static_cast<ULONG>(0),
+                    interfaceDevProperties.size() > 0 ? interfaceDevProperties.data() : nullptr,
+                    nullptr,
+                    &createInfo,
+                    &newDeviceInterfaceId);
+            };
+
+        auto activateHR = activate();
+
+        // S_FALSE means the instance id is already active. If no other endpoint listed here has
+        // it, it was left in the service by a removal which failed, and nothing uses it.
+        if (activateHR == S_FALSE && !IsInstanceIdListedElsewhere(endpoint))
+        {
+            if (SUCCEEDED(LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(endpoint->NormalizedInstanceId().c_str()))))
+            {
+                {
+                    auto lock = m_createdEndpointsLock.lock_exclusive();
+                    std::erase_if(m_endpointsToRemove, [&](FailedRemoval const& failed) { return failed.NormalizedInstanceId == endpoint->NormalizedInstanceId(); });
+                }
+
+                activateHR = activate();
+            }
+        }
 
         RETURN_IF_FAILED(activateHR);
 
@@ -201,11 +223,13 @@ CMidi2RtpMidiEndpointManager::RemoveRtpEndpoint(std::shared_ptr<RtpMidiEndpoint>
         RETURN_HR_IF_NULL(E_INVALIDARG, endpoint);
 
         {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+            auto lock = m_createdEndpointsLock.lock_exclusive();
             std::erase(m_createdEndpoints, endpoint);
         }
 
         if (auto const connection = endpoint->Connection()) endpoint->DetachIfCurrent(connection.get());
+
+        if (endpoint->IsHostRemoteEndpoint()) TransportState::Current().Approvals().RemoteEndpointRemoved(endpoint->EntryId(), endpoint->HostRemoteName());
 
         auto const interfaceId = endpoint->InterfaceId();
         if (!interfaceId.empty()) m_lastWrittenLatencyTicks.erase(interfaceId);
@@ -214,7 +238,22 @@ CMidi2RtpMidiEndpointManager::RemoveRtpEndpoint(std::shared_ptr<RtpMidiEndpoint>
 
         // Any client with the endpoint open is shut down inside this call, which re-enters the
         // bidi's Shutdown. No lock of this class is held here.
-        RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(endpoint->NormalizedInstanceId().c_str()));
+        auto const removeHr = m_midiDeviceManager->RemoveEndpoint(endpoint->NormalizedInstanceId().c_str());
+
+        if (FAILED(removeHr))
+        {
+            // still in the service, so the worker tries again rather than leave it there
+            auto lock = m_createdEndpointsLock.lock_exclusive();
+
+            if (m_endpointsToRemove.size() < MIDI_RTP_MAX_FAILED_ENDPOINT_REMOVALS &&
+                std::none_of(m_endpointsToRemove.begin(), m_endpointsToRemove.end(),
+                    [&](FailedRemoval const& failed) { return failed.NormalizedInstanceId == endpoint->NormalizedInstanceId(); }))
+            {
+                m_endpointsToRemove.push_back(FailedRemoval{ endpoint->NormalizedInstanceId(), 1 });
+            }
+        }
+
+        RETURN_IF_FAILED(removeHr);
 
         TraceLoggingWrite(
             MidiRtpMidiTransportTelemetryProvider::Provider(),
@@ -232,13 +271,65 @@ CMidi2RtpMidiEndpointManager::RemoveRtpEndpoint(std::shared_ptr<RtpMidiEndpoint>
 }
 
 
+// The worker thread
+void
+CMidi2RtpMidiEndpointManager::RetryFailedRemovals()
+{
+    std::vector<FailedRemoval> failed;
+
+    {
+        auto lock = m_createdEndpointsLock.lock_exclusive();
+        if (m_endpointsToRemove.empty()) return;
+
+        failed = m_endpointsToRemove;
+    }
+
+    if (m_midiDeviceManager == nullptr) return;
+
+    for (auto const& removal : failed)
+    {
+        // made again since, and so in use: its next activation took care of the old one
+        bool const listed = IsInstanceIdInUse(removal.NormalizedInstanceId);
+
+        bool done = listed;
+
+        if (!listed)
+        {
+            done = SUCCEEDED(LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(removal.NormalizedInstanceId.c_str()))) ||
+                removal.Attempts + 1 >= MIDI_RTP_MAX_FAILED_REMOVAL_ATTEMPTS;
+        }
+
+        auto lock = m_createdEndpointsLock.lock_exclusive();
+
+        auto const it = std::find_if(m_endpointsToRemove.begin(), m_endpointsToRemove.end(),
+            [&](FailedRemoval const& candidate) { return candidate.NormalizedInstanceId == removal.NormalizedInstanceId; });
+
+        if (it == m_endpointsToRemove.end()) continue;
+
+        if (done) m_endpointsToRemove.erase(it);
+        else it->Attempts++;
+    }
+}
+
+
+_Use_decl_annotations_
+bool
+CMidi2RtpMidiEndpointManager::IsInstanceIdListedElsewhere(std::shared_ptr<RtpMidiEndpoint> const& endpoint)
+{
+    auto lock = m_createdEndpointsLock.lock_shared();
+
+    return std::any_of(m_createdEndpoints.begin(), m_createdEndpoints.end(),
+        [&](std::shared_ptr<RtpMidiEndpoint> const& listed) { return listed != endpoint && listed->NormalizedInstanceId() == endpoint->NormalizedInstanceId(); });
+}
+
+
 _Use_decl_annotations_
 std::shared_ptr<RtpMidiEndpoint>
 CMidi2RtpMidiEndpointManager::FindEndpointForConnection(RtpMidiConnection const* connection)
 {
     if (connection == nullptr) return nullptr;
 
-    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
     for (auto const& endpoint : m_createdEndpoints)
     {
@@ -253,7 +344,7 @@ _Use_decl_annotations_
 std::shared_ptr<RtpMidiEndpoint>
 CMidi2RtpMidiEndpointManager::FindEndpointForEntry(GUID const& entryId)
 {
-    auto lock = std::scoped_lock{ m_createdEndpointsLock };
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
     for (auto const& endpoint : m_createdEndpoints)
     {
@@ -294,7 +385,8 @@ CMidi2RtpMidiEndpointManager::CreateKeptEndpoint(
 
 
 // The node's delivery thread. Attached before anything else is delivered, so an app which kept the
-// endpoint open hears the remote's first message.
+// endpoint open hears the remote's first message. Under the list's lock, so the worker can't remove
+// the endpoint between finding it and handing it the connection.
 _Use_decl_annotations_
 bool
 CMidi2RtpMidiEndpointManager::AttachToKeptEndpoint(std::shared_ptr<RtpMidiConnection> const& connection)
@@ -302,12 +394,20 @@ CMidi2RtpMidiEndpointManager::AttachToKeptEndpoint(std::shared_ptr<RtpMidiConnec
     if (connection == nullptr) return false;
     if (connection->ThisPcIsHost()) return AttachToKeptHostEndpoint(connection);
 
-    auto const endpoint = FindEndpointForEntry(connection->EntryId());
-    if (endpoint == nullptr || !endpoint->IsKept()) return false;
+    auto lock = m_createdEndpointsLock.lock_exclusive();
 
-    endpoint->Attach(connection);
+    for (auto const& endpoint : m_createdEndpoints)
+    {
+        if (endpoint->EntryId() != connection->EntryId()) continue;
+        if (!endpoint->IsKept()) return false;
 
-    return true;
+        // a connection which already ended needs nothing more
+        (void)endpoint->Attach(connection);
+
+        return true;
+    }
+
+    return false;
 }
 
 // The node's delivery thread. The remote's held notes were already ended and any open SysEx closed
@@ -359,7 +459,7 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
         std::map<GUID, EntryView, GuidLess> entries;
 
         {
-            auto lock = std::scoped_lock{ m_runtimeLock };
+            auto lock = m_runtimeLock.lock_exclusive();
             for (auto const& [entryId, runtime] : m_clients) entries.emplace(entryId, EntryView{ runtime.State, runtime.Node, nullptr });
         }
 
@@ -399,7 +499,7 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
         std::vector<std::shared_ptr<RtpMidiEndpoint>> kept;
 
         {
-            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+            auto lock = m_createdEndpointsLock.lock_exclusive();
 
             for (auto const& endpoint : m_createdEndpoints)
             {
@@ -415,10 +515,11 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
 
             if (!keeps(definition))
             {
-                // One with a connection now ends with it, like any other
+                // One with a connection now ends with it, like any other. Removed only while
+                // nothing is attached, in case its remote came back since this pass looked.
                 endpoint->SetKept(false);
 
-                if (!connected) LOG_IF_FAILED(RemoveRtpEndpoint(endpoint));
+                if (!connected) (void)TryRemoveDetachedEndpoint(endpoint);
 
                 continue;
             }
@@ -449,7 +550,9 @@ CMidi2RtpMidiEndpointManager::ReconcileKeptEndpoints()
                     TraceLoggingInt32(definition->OfflineRetentionSeconds, "offline retention seconds")
                 );
 
-                LOG_IF_FAILED(RemoveRtpEndpoint(endpoint));
+                // a remote back since this pass looked keeps its endpoint until it leaves again
+                if (matches(endpoint, *definition)) (void)TryRemoveDetachedEndpoint(endpoint);
+                else LOG_IF_FAILED(RemoveRtpEndpoint(endpoint));
             }
         }
 

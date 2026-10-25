@@ -7,8 +7,6 @@
 // ============================================================================
 
 
-#pragma once
-
 #include "pch.h"
 
 
@@ -41,9 +39,7 @@ std::shared_ptr<MidiBasicLoopbackDevice> MidiBasicLoopbackDeviceTable::GetDevice
     {
         if (!device) continue;
 
-        // Snapshot the definition shared_ptr so a concurrent device Shutdown()
-        // (which resets Definition) can't tear the pointer during the deref.
-        auto definition = device->Definition;
+        auto definition = device->GetDefinition();
         if (!definition) continue;
 
         if (cleanId == internal::NormalizeEndpointInterfaceIdWStringCopy(definition->CreatedEndpointInterfaceId))
@@ -57,7 +53,116 @@ std::shared_ptr<MidiBasicLoopbackDevice> MidiBasicLoopbackDeviceTable::GetDevice
 
 
 _Use_decl_annotations_
-void MidiBasicLoopbackDeviceTable::SetDevice(
+bool MidiBasicLoopbackDeviceTable::IsNameTakenLocked(
+    std::wstring const& cleanName,
+    MidiBasicLoopbackDevice const* ignoredDevice)
+{
+    for (auto const& [key, device] : m_devices)
+    {
+        if (!device || device.get() == ignoredDevice) continue;
+
+        auto definition = device->GetDefinition();
+        if (!definition) continue;
+
+        if (cleanName == internal::ToLowerTrimmedWStringCopy(definition->EndpointName))
+        {
+            return true;
+        }
+    }
+
+    for (auto const& [key, reservation] : m_reservations)
+    {
+        if (!reservation.CleanName.empty() && cleanName == reservation.CleanName)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+_Use_decl_annotations_
+MidiBasicLoopbackReservation MidiBasicLoopbackDeviceTable::Reserve(
+    winrt::guid const& associationId,
+    std::wstring const& uniqueIdentifier,
+    std::wstring const& endpointName,
+    bool const checkOverlap)
+{
+    Reservation reservation{};
+    reservation.CleanUniqueIdentifier = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
+    reservation.CleanName = internal::ToLowerTrimmedWStringCopy(endpointName);
+
+    auto const uniqueIdRefusal = [&](std::wstring const& otherId) -> std::optional<MidiBasicLoopbackReservation>
+    {
+        if (otherId == reservation.CleanUniqueIdentifier)
+        {
+            return MidiBasicLoopbackReservation::UniqueIdInUse;
+        }
+
+        if (checkOverlap &&
+            (otherId.starts_with(reservation.CleanUniqueIdentifier) || reservation.CleanUniqueIdentifier.starts_with(otherId)))
+        {
+            return MidiBasicLoopbackReservation::UniqueIdOverlaps;
+        }
+
+        return std::nullopt;
+    };
+
+    auto lock = m_devicesLock.lock_exclusive();
+
+    // Two loopbacks under one association id would leave the first one in the service with
+    // nothing here to remove it by.
+    if (m_devices.find(associationId) != m_devices.end() ||
+        m_reservations.find(associationId) != m_reservations.end())
+    {
+        return MidiBasicLoopbackReservation::AssociationIdInUse;
+    }
+
+    for (auto const& [key, device] : m_devices)
+    {
+        if (!device) continue;
+
+        auto definition = device->GetDefinition();
+        if (!definition) continue;
+
+        if (auto refusal = uniqueIdRefusal(internal::ToLowerTrimmedWStringCopy(definition->EndpointUniqueIdentifier)))
+        {
+            return *refusal;
+        }
+    }
+
+    for (auto const& [key, other] : m_reservations)
+    {
+        if (auto refusal = uniqueIdRefusal(other.CleanUniqueIdentifier))
+        {
+            return *refusal;
+        }
+    }
+
+    if (!reservation.CleanName.empty() && IsNameTakenLocked(reservation.CleanName, nullptr))
+    {
+        return MidiBasicLoopbackReservation::NameInUse;
+    }
+
+    m_reservations.emplace(associationId, std::move(reservation));
+
+    return MidiBasicLoopbackReservation::Reserved;
+}
+
+
+_Use_decl_annotations_
+void MidiBasicLoopbackDeviceTable::ReleaseReservation(
+    winrt::guid const& associationId)
+{
+    auto lock = m_devicesLock.lock_exclusive();
+
+    m_reservations.erase(associationId);
+}
+
+
+_Use_decl_annotations_
+HRESULT MidiBasicLoopbackDeviceTable::AddDevice(
     winrt::guid const& associationId,
     std::shared_ptr<MidiBasicLoopbackDevice> device)
 {
@@ -71,9 +176,17 @@ void MidiBasicLoopbackDeviceTable::SetDevice(
         TraceLoggingGuid(associationId, "association id")
     );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, device);
+
     auto lock = m_devicesLock.lock_exclusive();
 
-    m_devices[associationId] = device;
+    // Replacing a device here would orphan the one already in the service
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS), m_devices.find(associationId) != m_devices.end());
+
+    m_devices.emplace(associationId, std::move(device));
+    m_reservations.erase(associationId);
+
+    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -100,88 +213,46 @@ void MidiBasicLoopbackDeviceTable::RemoveDevice(
     }
 }
 
-_Use_decl_annotations_
-bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
-    std::wstring const& uniqueIdentifier)
-{
-    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
-
-    auto lock = m_devicesLock.lock_shared();
-
-    for (auto const& [key, device] : m_devices)
-    {
-        if (!device) continue;
-
-        auto definition = device->Definition;
-        if (!definition) continue;
-
-        if (cleanId == internal::ToLowerTrimmedWStringCopy(definition->EndpointUniqueIdentifier))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 
 _Use_decl_annotations_
-bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierOverlappingAnotherLoopback(
-    std::wstring const& uniqueIdentifier)
-{
-    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueIdentifier);
-
-    auto lock = m_devicesLock.lock_shared();
-
-    for (auto const& [key, device] : m_devices)
-    {
-        if (!device) continue;
-
-        auto definition = device->Definition;
-        if (!definition) continue;
-
-        auto otherId = internal::ToLowerTrimmedWStringCopy(definition->EndpointUniqueIdentifier);
-
-        if (cleanId.starts_with(otherId) || otherId.starts_with(cleanId))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-_Use_decl_annotations_
-bool MidiBasicLoopbackDeviceTable::IsEndpointNameInUse(
+HRESULT MidiBasicLoopbackDeviceTable::RenameDevice(
+    std::shared_ptr<MidiBasicLoopbackDevice> const& device,
     std::wstring const& endpointName,
-    std::wstring const& ignoredEndpointDeviceId)
+    std::wstring const& endpointDescription,
+    std::wstring const& imageFileName,
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const>& previous)
 {
-    auto cleanName = internal::ToLowerTrimmedWStringCopy(endpointName);
-    auto cleanIgnoredId = internal::NormalizeEndpointInterfaceIdWStringCopy(ignoredEndpointDeviceId);
+    previous = nullptr;
 
-    auto lock = m_devicesLock.lock_shared();
+    RETURN_HR_IF_NULL(E_INVALIDARG, device);
 
-    for (auto const& [key, device] : m_devices)
+    auto const cleanName = internal::ToLowerTrimmedWStringCopy(endpointName);
+
+    auto lock = m_devicesLock.lock_exclusive();
+
+    // The endpoint being renamed is left out, so re-saving a description without touching the
+    // name does not collide with the name the endpoint already has.
+    if (IsNameTakenLocked(cleanName, device.get()))
     {
-        if (!device) continue;
-
-        auto definition = device->Definition;
-        if (!definition) continue;
-
-        if (!cleanIgnoredId.empty() &&
-            cleanIgnoredId == internal::NormalizeEndpointInterfaceIdWStringCopy(definition->CreatedEndpointInterfaceId))
-        {
-            continue;
-        }
-
-        if (cleanName == internal::ToLowerTrimmedWStringCopy(definition->EndpointName))
-        {
-            return true;
-        }
+        return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
     }
 
-    return false;
+    std::shared_ptr<MidiBasicLoopbackDeviceDefinition const> replaced{};
+
+    auto const renamed = device->ChangeDefinition([&](MidiBasicLoopbackDeviceDefinition& definition)
+        {
+            replaced = std::make_shared<MidiBasicLoopbackDeviceDefinition const>(definition);
+
+            definition.EndpointName = endpointName;
+            definition.EndpointDescription = endpointDescription;
+            definition.ImageFileName = imageFileName;
+        });
+
+    RETURN_HR_IF_NULL(E_NOTFOUND, renamed);
+
+    previous = std::move(replaced);
+
+    return S_OK;
 }
 
 
@@ -195,28 +266,26 @@ std::vector<MidiBasicLoopbackDeviceSnapshot> MidiBasicLoopbackDeviceTable::GetDe
 
     for (auto const& [key, device] : m_devices)
     {
-        // device may be shut down (Definition reset) but not yet removed,
-        // so guard both the device and its definition.
-        if (device && device->Definition)
+        if (!device) continue;
+
+        // device may be shut down (definition reset) but not yet removed
+        auto definition = device->GetDefinition();
+        if (!definition) continue;
+
+        // snapshot so no pointer issues if removed from table after this point
+        MidiBasicLoopbackDeviceSnapshot snapshot{ *definition, device->MessageCount() };
+
+        if (device->Feedback != nullptr)
         {
-            // snapshot so no pointer issues if removed from table after this point
-            MidiBasicLoopbackDeviceSnapshot snapshot{ *(device->Definition), device->MessageCount() };
-
-            if (device->Feedback != nullptr)
-            {
-                snapshot.FeedbackProtectionEnabled = device->Feedback->IsEnabled();
-                snapshot.FeedbackStatus = device->Feedback->GetStatus();
-            }
-
-            results.push_back(std::move(snapshot));
+            snapshot.FeedbackProtectionEnabled = device->Feedback->IsEnabled();
+            snapshot.FeedbackStatus = device->Feedback->GetStatus();
         }
+
+        results.push_back(std::move(snapshot));
     }
 
     return results;
 }
-
-
-
 
 
 
@@ -229,6 +298,7 @@ HRESULT MidiBasicLoopbackDeviceTable::Shutdown()
         auto lock = m_devicesLock.lock_exclusive();
         devices = std::move(m_devices);
         m_devices.clear();
+        m_reservations.clear();
     }
 
     for (auto& [key, device] : devices)

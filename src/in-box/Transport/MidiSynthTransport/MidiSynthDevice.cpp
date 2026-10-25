@@ -36,6 +36,27 @@ namespace
     // Long enough for the fade a voice ends with, short enough that a disconnect never hangs.
     constexpr DWORD DrainTimeoutMilliseconds = 100;
 
+    // How long notes are held for an audio device that is still being opened. Opening one takes
+    // well under a second, even over Bluetooth. Past this the audio stack is in trouble, and notes
+    // are dropped as they would be with no device at all.
+    constexpr uint64_t AudioOpenPatienceMilliseconds = 3000;
+
+    // The open is stamped after the caller read the clock, so the clock can be behind the stamp.
+    // Unsigned subtraction would then wrap to a huge age and drop the very note that asked for
+    // the device.
+    bool IsAudioOpenWorthWaitingFor(
+        _In_ uint64_t const startedAt,
+        _In_ uint64_t const now,
+        _In_ uint64_t const frequency) noexcept
+    {
+        if (now <= startedAt)
+        {
+            return true;
+        }
+
+        return now - startedAt < frequency * AudioOpenPatienceMilliseconds / 1000;
+    }
+
     std::wstring SystemSoundSetPath()
     {
         wchar_t systemDirectory[MAX_PATH]{};
@@ -292,7 +313,7 @@ MidiSynthDevice::PumpWithoutAudio(bool discardNotes) noexcept
 }
 
 
-// Caller must hold m_audioLock exclusively.
+// Only the worker calls this. Caller must hold m_audioLock exclusively.
 HRESULT
 MidiSynthDevice::AcquireAudio()
 {
@@ -307,11 +328,154 @@ MidiSynthDevice::AcquireAudio()
         settings = m_settings;
     }
 
+    if (m_pendingAudioOpen != nullptr)
+    {
+        if (!m_pendingAudioOpen->Done.load(std::memory_order_acquire))
+        {
+            return E_PENDING;
+        }
+
+        auto const pending = std::move(m_pendingAudioOpen);
+
+        // Switched off while the device was opening. Letting go of it is the point of the switch.
+        if (!settings.Enabled)
+        {
+            return S_FALSE;
+        }
+
+        // The audio mode changed while the device was opening, so it was opened the wrong way. It
+        // is let go first, or the new open could find it still busy.
+        if (pending->Settings.AudioMode != settings.AudioMode)
+        {
+            pending->Sink.reset();
+
+            RETURN_IF_FAILED(BeginAudioOpen(settings));
+            return E_PENDING;
+        }
+
+        if (pending->Sink == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSynthTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Could not open an audio device. MIDI will flow but nothing will sound.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE);
+        }
+
+        return InstallAudio(settings, pending->Sink);
+    }
+
     if (!settings.Enabled)
     {
         return S_FALSE;
     }
 
+    RETURN_IF_FAILED(BeginAudioOpen(settings));
+
+    return E_PENDING;
+}
+
+
+namespace
+{
+    struct AudioOpenWork
+    {
+        std::shared_ptr<MidiSynthPendingAudioOpen> Pending{};
+        HMODULE Module{ nullptr };
+    };
+
+    VOID CALLBACK OpenAudioOnThreadpool(_Inout_ PTP_CALLBACK_INSTANCE instance, _Inout_opt_ PVOID parameter) noexcept
+    {
+        std::unique_ptr<AudioOpenWork> work{ static_cast<AudioOpenWork*>(parameter) };
+
+        if (work == nullptr)
+        {
+            return;
+        }
+
+        auto const module = work->Module;
+
+        {
+            auto const comResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+
+            if (work->Pending != nullptr)
+            {
+                work->Pending->Sink = MidiSynthDevice::OpenAudioSink(work->Pending->Settings);
+                work->Pending->Done.store(true, std::memory_order_release);
+            }
+
+            // When the worker has given up on this open, the last reference is this one, and the
+            // device is closed here, while COM is still initialized on this thread.
+            work.reset();
+
+            if (SUCCEEDED(comResult))
+            {
+                CoUninitialize();
+            }
+        }
+
+        if (module != nullptr)
+        {
+            // keeps this code loaded until the callback has returned
+            ::FreeLibraryWhenCallbackReturns(instance, module);
+        }
+    }
+}
+
+
+// Caller must hold m_audioLock exclusively.
+_Use_decl_annotations_
+HRESULT
+MidiSynthDevice::BeginAudioOpen(MidiSynthSettings const& settings)
+{
+    auto pending = std::make_shared<MidiSynthPendingAudioOpen>();
+    pending->Settings = settings;
+    pending->StartedTimestamp = internal::GetCurrentMidiTimestamp();
+
+    auto work = std::make_unique<AudioOpenWork>();
+    work->Pending = pending;
+
+    // The opener can outlast everything else in this transport, so it holds the DLL loaded
+    if (!::GetModuleHandleExW(
+        GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+        reinterpret_cast<LPCWSTR>(&OpenAudioOnThreadpool),
+        &work->Module))
+    {
+        work->Module = nullptr;
+    }
+
+    if (!::TrySubmitThreadpoolCallback(&OpenAudioOnThreadpool, work.get(), nullptr))
+    {
+        auto const error = HRESULT_FROM_WIN32(::GetLastError());
+
+        if (work->Module != nullptr)
+        {
+            ::FreeLibrary(work->Module);
+        }
+
+        RETURN_HR(FAILED(error) ? error : E_OUTOFMEMORY);
+    }
+
+    // the callback owns it now
+    work.release();
+
+    m_pendingAudioOpen = std::move(pending);
+
+    return S_OK;
+}
+
+
+// Runs on the opener's threadpool thread, so it touches nothing but its arguments.
+_Use_decl_annotations_
+std::unique_ptr<WasapiAudioSink>
+MidiSynthDevice::OpenAudioSink(MidiSynthSettings const& settings) noexcept
+try
+{
     auto sink = std::make_unique<WasapiAudioSink>();
     bool opened{ false };
 
@@ -333,7 +497,6 @@ MidiSynthDevice::AcquireAudio()
                 MIDI_TRACE_EVENT_WARNING,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Could not take the audio device in exclusive mode. Playing in shared mode.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingHResult(exclusiveResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
             );
@@ -345,17 +508,24 @@ MidiSynthDevice::AcquireAudio()
     // A failed exclusive open falls back to the lowest latency shared mode the device offers.
     if (!opened && !sink->Open(settings.WantsLowLatency() || settings.WantsExclusive()))
     {
-        TraceLoggingWrite(
-            MidiSynthTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Could not open an audio device. MIDI will flow but nothing will sound.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
-        return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE);
+        return nullptr;
     }
+
+    return sink;
+}
+catch (...)
+{
+    LOG_CAUGHT_EXCEPTION();
+    return nullptr;
+}
+
+
+// Caller must hold m_audioLock exclusively.
+_Use_decl_annotations_
+HRESULT
+MidiSynthDevice::InstallAudio(MidiSynthSettings const& settings, std::unique_ptr<WasapiAudioSink>& sink)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, sink);
 
     // Modern mode renders at the device rate, so the audio engine converts nothing.
     auto config = SynthConfig::ForMode(settings.SynthMode, sink->SampleRate());
@@ -624,6 +794,9 @@ MidiSynthDevice::DisconnectCurrentClient() noexcept
     {
         auto lock = m_audioLock.lock_exclusive();
         ReleaseAudio();
+
+        // A device still opening is left to its opener, which closes it once nobody wants it
+        m_pendingAudioOpen.reset();
     }
 
     m_callback.reset();
@@ -829,14 +1002,15 @@ MidiSynthDevice::ApplySettings(MidiSynthSettings const& settings) noexcept
     if (m_sink != nullptr)
     {
         ReleaseAudio();
+
+        // The worker opens the device again with the new settings. Opening it here would make a
+        // configuration request, and everything waiting on this lock, wait on the audio stack.
         m_nextAudioRetryTimestamp = 0;
 
-        // Opening a device allocates, and nothing may leave here. The worker retries a failure.
-        try
+        if (!m_audioWanted.exchange(true, std::memory_order_acq_rel))
         {
-            LOG_IF_FAILED(AcquireAudio());
+            m_audioRequestedTimestamp.store(internal::GetCurrentMidiTimestamp(), std::memory_order_release);
         }
-        CATCH_LOG();
     }
 
     return S_OK;
@@ -1049,21 +1223,48 @@ MidiSynthDevice::WorkerThread() noexcept
                 auto const now = internal::GetCurrentMidiTimestamp();
                 auto const frequency = internal::GetMidiTimestampFrequency();
                 bool const wanted = m_audioWanted.load(std::memory_order_acquire);
+                bool opening{ false };
 
-                if (wanted && now >= m_nextAudioRetryTimestamp && AcquireAudio() != S_OK)
+                if (wanted && now >= m_nextAudioRetryTimestamp)
                 {
-                    // S_FALSE means the synthesizer is switched off rather than broken. Both back
-                    // off, because retrying either one every pass would spin.
-                    m_nextAudioRetryTimestamp = now + frequency * AudioRetryIntervalMilliseconds / 1000;
+                    auto const acquireResult = AcquireAudio();
+
+                    if (acquireResult == E_PENDING)
+                    {
+                        opening = true;
+                    }
+                    else if (acquireResult != S_OK)
+                    {
+                        // S_FALSE means the synthesizer is switched off rather than broken. Both
+                        // back off, because retrying either one every pass would spin.
+                        m_nextAudioRetryTimestamp = now + frequency * AudioRetryIntervalMilliseconds / 1000;
+                    }
+                }
+                else if (!wanted && m_pendingAudioOpen != nullptr && m_pendingAudioOpen->Done.load(std::memory_order_acquire))
+                {
+                    // Opened after nobody wanted it any more. Holding it would keep the device
+                    // from an application that wants it exclusively.
+                    m_pendingAudioOpen.reset();
                 }
 
                 if (m_sink == nullptr)
                 {
+                    // Notes wait for a device that is being opened, so the first one isn't lost,
+                    // but not for ever: an audio stack that has stalled would otherwise hold up
+                    // MIDI-CI behind them too.
+                    bool const worthWaitingFor =
+                        opening &&
+                        m_pendingAudioOpen != nullptr &&
+                        IsAudioOpenWorthWaitingFor(
+                            m_pendingAudioOpen->StartedTimestamp,
+                            internal::GetCurrentMidiTimestamp(),
+                            frequency);
+
                     // Nothing renders, so the endpoint answers discovery, MIDI-CI, identity and
                     // property exchange from here. When audio is wanted and can't be had, notes are
                     // dropped, so they neither hold up everything queued behind them nor all sound
                     // at once when the device comes back.
-                    PumpWithoutAudio(wanted);
+                    PumpWithoutAudio(wanted && !worthWaitingFor);
 
                     // Nobody has played anything for a while, so stop asking for a device that can't
                     // be had. The next note asks again. One arriving just as this is decided is still

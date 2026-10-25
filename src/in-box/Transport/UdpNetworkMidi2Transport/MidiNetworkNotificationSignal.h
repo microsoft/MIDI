@@ -21,12 +21,19 @@ public:
     // A host started or stopped waiting for a missing network adapter. Deferred the same way.
     void SignalHostNetworkAdapterChanged() noexcept;
 
+    // Waits for a write already queued, and lets go of the threadpool work. Called from
+    // TransportState::Shutdown: left to the static destructor, the wait happened at DLL unload,
+    // under the loader lock. A signal after this starts a new one.
+    void Shutdown() noexcept;
+
 private:
     void Queue(_Inout_ std::atomic<uint32_t>& queued, _In_ PCWSTR const valueName) noexcept;
 
     static void BumpCounter(_In_ PCWSTR const valueName) noexcept;
 
-    ThreadpoolWork m_work{ };
+    // Created on first use. Guarded by m_workLock.
+    wil::critical_section m_workLock;
+    std::unique_ptr<ThreadpoolWork> m_work{ };
 
     // Zero means nothing queued. Set before the work item runs, cleared by it, so a change which
     // arrives while the write is in flight queues another rather than being swallowed.
