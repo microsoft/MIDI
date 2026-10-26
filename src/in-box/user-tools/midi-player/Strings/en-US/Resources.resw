@@ -87,8 +87,120 @@
     <value>Nothing to play</value>
   </data>
   <data name="NowPlayingDetailFormat" xml:space="preserve">
-    <value>{0} tracks · {1} notes</value>
-    <comment>{0} number of tracks, {1} number of notes. The tempo is shown separately because it is a live value.</comment>
+    <value>{0} · {1}</value>
+    <comment>{0} the number of tracks, such as "5 tracks" (TrackCountFormat), {1} the number of notes, such as "5408 notes" (NoteCountFormat). The tempo is shown separately because it is a live value.</comment>
+  </data>
+  <data name="TrackCountOne" xml:space="preserve">
+    <value>1 track</value>
+  </data>
+  <data name="TrackCountFormat" xml:space="preserve">
+    <value>{0} tracks</value>
+    <comment>{0} number of tracks in the file, never 1</comment>
+  </data>
+  <data name="NoteCountOne" xml:space="preserve">
+    <value>1 note</value>
+  </data>
+  <data name="NoteCountFormat" xml:space="preserve">
+    <value>{0} notes</value>
+    <comment>{0} number of notes in the file, never 1</comment>
+  </data>
+
+  <!-- ============================== About this song ============================== -->
+  <data name="SongInfoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>About this song</value>
+  </data>
+  <data name="SongInfoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>About this song (Ctrl+I)</value>
+  </data>
+  <data name="SongInfoHeading.Text" xml:space="preserve">
+    <value>About this song</value>
+  </data>
+  <data name="SongInfoTitleCaption" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="SongInfoComposerCaption" xml:space="preserve">
+    <value>Composer</value>
+  </data>
+  <data name="SongInfoLyricistCaption" xml:space="preserve">
+    <value>Lyrics by</value>
+    <comment>The person who wrote the words of the song</comment>
+  </data>
+  <data name="SongInfoArtistCaption" xml:space="preserve">
+    <value>Artist</value>
+    <comment>The singer, band or musician</comment>
+  </data>
+  <data name="SongInfoCopyrightCaption" xml:space="preserve">
+    <value>Copyright</value>
+  </data>
+  <data name="SongInfoFileTypeCaption" xml:space="preserve">
+    <value>File type</value>
+  </data>
+  <data name="SongInfoTracksCaption" xml:space="preserve">
+    <value>Tracks</value>
+  </data>
+  <data name="SongInfoNotesCaption" xml:space="preserve">
+    <value>Notes</value>
+    <comment>The number of musical notes in the file</comment>
+  </data>
+  <data name="SongInfoLengthCaption" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="SongInfoFieldAccessibleNameFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>What a screen reader says for one line of About this song. {0} the caption, such as "Composer", {1} its value.</comment>
+  </data>
+  <data name="SongInfoFormatSingleTrack" xml:space="preserve">
+    <value>Standard MIDI File, type 0 (one track)</value>
+  </data>
+  <data name="SongInfoFormatMultiTrack" xml:space="preserve">
+    <value>Standard MIDI File, type 1 (tracks played together)</value>
+  </data>
+  <data name="SongInfoFormatMultiSequence" xml:space="preserve">
+    <value>Standard MIDI File, type 2 (tracks played one after another)</value>
+  </data>
+  <data name="SongInfoEncodingFormat" xml:space="preserve">
+    <value>Text encoding: {0}, {1}.</value>
+    <comment>{0} the name of the encoding, such as "Shift-JIS (Japanese)". {1} how it was chosen, such as "detected automatically".</comment>
+  </data>
+  <data name="SongInfoEncodingAsciiOnly" xml:space="preserve">
+    <value>Text encoding: all the text in this file is plain ASCII (English letters, digits and common symbols), which looks the same in every encoding.</value>
+  </data>
+  <data name="SongInfoEncodingDetected" xml:space="preserve">
+    <value>detected automatically</value>
+  </data>
+  <data name="SongInfoEncodingFromTag" xml:space="preserve">
+    <value>as the file says in its lyrics (an RP-026 tag)</value>
+  </data>
+  <data name="SongInfoEncodingFromByteOrderMark" xml:space="preserve">
+    <value>as the file marks its text</value>
+    <comment>The file starts its text with a Unicode byte order mark</comment>
+  </data>
+  <data name="SongInfoEncodingLatin1Hint" xml:space="preserve">
+    <value>If some text looks garbled, the file may use an encoding the player doesn't recognize.</value>
+  </data>
+  <data name="SongInfoEncodingUtf8" xml:space="preserve">
+    <value>UTF-8</value>
+  </data>
+  <data name="SongInfoEncodingLatin1" xml:space="preserve">
+    <value>Latin-1 (Western European)</value>
+  </data>
+  <data name="SongInfoEncodingWindows1252" xml:space="preserve">
+    <value>Windows-1252 (Western European)</value>
+  </data>
+  <data name="SongInfoEncodingShiftJis" xml:space="preserve">
+    <value>Shift-JIS (Japanese)</value>
+  </data>
+  <data name="SongInfoEncodingGbk" xml:space="preserve">
+    <value>GBK (Simplified Chinese)</value>
+  </data>
+  <data name="SongInfoEncodingBig5" xml:space="preserve">
+    <value>Big5 (Traditional Chinese)</value>
+  </data>
+  <data name="SongInfoEncodingKorean" xml:space="preserve">
+    <value>Code page 949 (Korean)</value>
+  </data>
+  <data name="SongInfoEncodingUnicode" xml:space="preserve">
+    <value>Unicode</value>
   </data>
   <data name="TempoCaption.Text" xml:space="preserve">
     <value>Tempo</value>
@@ -352,9 +464,12 @@
   </data>
 
   <!-- =================================== Queue =================================== -->
+  <data name="QueueHeaderOne" xml:space="preserve">
+    <value>Queue · 1 file</value>
+  </data>
   <data name="QueueHeaderFormat" xml:space="preserve">
     <value>Queue · {0} files</value>
-    <comment>{0} number of files in the queue</comment>
+    <comment>{0} number of files in the queue, never 1</comment>
   </data>
   <data name="ClearQueueButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Clear the queue</value>
@@ -363,8 +478,8 @@
     <value>Clear</value>
   </data>
   <data name="QueueItemDetailFormat" xml:space="preserve">
-    <value>{0} tracks · {1} notes</value>
-    <comment>{0} number of tracks, {1} number of notes. No tempo here: a file's tempo changes as it plays, so one number would be misleading.</comment>
+    <value>{0} · {1}</value>
+    <comment>{0} the number of tracks, such as "5 tracks" (TrackCountFormat), {1} the number of notes (NoteCountFormat). No tempo here: a file's tempo changes as it plays, so one number would be misleading.</comment>
   </data>
   <data name="QueueItemNotPlayable" xml:space="preserve">
     <value>This file does not contain anything that can be played</value>
@@ -417,9 +532,12 @@
     <value>{0} channels</value>
     <comment>{0} how many MIDI channels this track plays on</comment>
   </data>
+  <data name="TrackNoteCountOne" xml:space="preserve">
+    <value>1 note</value>
+  </data>
   <data name="TrackNoteCountFormat" xml:space="preserve">
     <value>{0} notes</value>
-    <comment>{0} number of notes on this track</comment>
+    <comment>{0} number of notes on this track, never 1</comment>
   </data>
   <data name="TrackMuteAccessibleNameFormat" xml:space="preserve">
     <value>Mute {0}</value>
@@ -492,9 +610,12 @@
   <data name="StatusFileNotPlayable" xml:space="preserve">
     <value>This file could not be played.</value>
   </data>
+  <data name="StatusFilesNotPlayableOne" xml:space="preserve">
+    <value>1 file in the queue could not be read. It is marked in the list.</value>
+  </data>
   <data name="StatusFilesNotPlayableFormat" xml:space="preserve">
     <value>{0} files in the queue could not be read. They are marked in the list.</value>
-    <comment>{0} number of files</comment>
+    <comment>{0} number of files, never 1</comment>
   </data>
   <data name="StatusNothingToPlayDropped" xml:space="preserve">
     <value>None of those were MIDI files.</value>

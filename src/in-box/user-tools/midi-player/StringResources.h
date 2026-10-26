@@ -30,4 +30,11 @@ namespace midiplayer::resources
             return GetString(resourceKey);
         }
     }
+
+    // A count with its noun, such as "1 file" or "5 files". The singular is its own resource
+    // string, because many languages change more than an ending, so it can't be built in code.
+    inline winrt::hstring FormatCount(std::wstring_view oneKey, std::wstring_view manyKey, uint32_t count) noexcept
+    {
+        return count == 1 ? GetString(oneKey) : FormatString(manyKey, count);
+    }
 }

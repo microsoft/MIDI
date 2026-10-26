@@ -27,6 +27,16 @@ All four return a [`MidiFileReadResult`]({{ site.baseurl }}/sdk-reference/Utilit
 
 A file that stops making sense partway through is read up to that point and reported as truncated, instead of being rejected, because a file with a damaged end is usually still worth hearing. Set `FailOnUnreadableData` on the options if you'd rather refuse it completely.
 
+A MIDI file doesn't say how its text is encoded, so the reader works it out for each file. Text such as the title, the copyright, track names and lyrics comes back as UTF-8 in every case. The reader tries UTF-8 first. Then it tries the encodings older files used for East Asian languages: Shift-JIS for Japanese, GBK for Simplified Chinese, Big5 for Traditional Chinese, and code page 949 for Korean. If none fits, it uses Latin-1, which many older Western files use. It picks one of the East Asian encodings only when every piece of text in the file reads cleanly that way and some of it clearly looks like real text in that language, so Western text with accented letters stays as it was. The same bytes can often be read in more than one of them, and then the reader picks the one that looks most like real text.
+
+Some files do say how their text is encoded, using the tags from the MIDI Association's RP-026, and those tags win over the guess:
+
+- A lyric that starts with `{@JP}` switches the lyrics that follow it to Shift-JIS, and `{@LATIN}` switches them to ANSI (Windows code page 1252), until the next tag. The tag is removed from the lyric, so it doesn't show up as a word to sing.
+- The first of those tags in a file also decides the other text in the file, such as the title and track names, unless all of that text is UTF-8.
+- After a tag RP-026 doesn't define, lyrics with characters outside ASCII are left out until a `{@JP}` or `{@LATIN}` tag appears, as RP-026 asks. Plain ASCII lyrics are kept.
+- Any text that starts with a Unicode byte order mark is read as UTF-16 or UTF-8.
+- Song information tags in lyrics, such as `{#Title=...}`, `{#Composer=...}`, `{#Lyrics=...}` and `{#Artist=...}`, are taken out of the lyrics. A title from these tags becomes the sequence's `Title`. The other items aren't available from `MidiSequence` yet.
+
 ## Example
 
 ```cpp

@@ -22,8 +22,8 @@
 //
 // "The same sequence" means the same events at the same ticks, the same tempo and meter maps and
 // the same text, not the same bytes. A file is not a canonical form: the reader repairs a missing
-// tempo event, merges two tempo events at one tick and decodes Latin-1 text to UTF-8, and those
-// repairs stay repaired.
+// tempo event, merges two tempo events at one tick and decodes Latin-1 or Shift-JIS text to UTF-8,
+// and those repairs stay repaired.
 //
 // Two things a sequence can hold that this format cannot:
 //

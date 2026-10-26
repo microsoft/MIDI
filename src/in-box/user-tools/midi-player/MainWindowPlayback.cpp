@@ -205,7 +205,7 @@ namespace winrt::midiplayer::implementation
             if (refused > 0)
             {
                 ShowStatus(
-                    res::FormatString(L"StatusFilesNotPlayableFormat", static_cast<uint32_t>(refused)),
+                    res::FormatCount(L"StatusFilesNotPlayableOne", L"StatusFilesNotPlayableFormat", static_cast<uint32_t>(refused)),
                     controls::InfoBarSeverity::Warning);
             }
 
@@ -394,7 +394,7 @@ namespace winrt::midiplayer::implementation
             }
 
             QueueHeaderText().Text(
-                res::FormatString(L"QueueHeaderFormat", static_cast<uint32_t>(entries.size())));
+                res::FormatCount(L"QueueHeaderOne", L"QueueHeaderFormat", static_cast<uint32_t>(entries.size())));
 
             auto const empty = entries.empty();
 
@@ -2124,6 +2124,8 @@ namespace winrt::midiplayer::implementation
 
     void MainWindow::UpdateNowPlayingText() noexcept
     {
+        UpdateSongInfoButton();
+
         try
         {
             auto const current = m_queue.Current();
@@ -2148,8 +2150,8 @@ namespace winrt::midiplayer::implementation
 
             std::wstring detail = std::wstring{ res::FormatString(
                 L"NowPlayingDetailFormat",
-                entry.TrackCount,
-                entry.NoteCount) };
+                std::wstring{ res::FormatCount(L"TrackCountOne", L"TrackCountFormat", entry.TrackCount) },
+                std::wstring{ res::FormatCount(L"NoteCountOne", L"NoteCountFormat", entry.NoteCount) }) };
 
             if (m_currentSequence != nullptr && !m_currentSequence->Copyright.empty())
             {

@@ -94,6 +94,14 @@ namespace winrt::midiplayer::implementation
         void OnRepeatShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnGoToTimeShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
 
+        // About this song, in MainWindowSongInfo.cpp.
+        void OnSongInfoShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnSongInfoFlyoutOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+        void UpdateSongInfoButton() noexcept;
+        std::shared_ptr<midifile::MidiSequence const> SongInfoSequence();
+        std::shared_ptr<midifile::MidiSequence const> m_songInfoSequence{};
+        std::wstring m_songInfoSequenceId{};
+
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnGroupSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
