@@ -9,6 +9,7 @@
 #include "SmfTestFileBuilder.h"
 
 #include "midi_file_smf_reader.h"
+#include "midi_file_smf_writer.h"
 
 #include <windows.h>
 
@@ -775,4 +776,112 @@ void SmfTextEncodingTests::KeepsLatin1SymbolsBeforeLettersOutOfBig5()
     VerifyText(L"HELLO DOLLY ©M.FERRE", sequence.Tracks[0].Name);
     VerifyText(L"ñar", sequence.Tracks[0].InstrumentName);
     VerifyText(L"feat. 98°_Thank", sequence.Copyright);
+}
+
+void SmfTextEncodingTests::ReadsSongInformationTags()
+{
+    // The example from RP-026, with the item names in different cases.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, "Piano")
+        .MetaText(0, MetaLyric, "{#Title= Beautiful Song} {#COMPOSER= Tom Smith} {#lyrics= Charles Scott} {#Artist= Eric Wilson } {#}")
+        .MetaText(120, MetaLyric, "la");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"Beautiful Song", sequence.SongInfo.Title);
+    VerifyText(L"Tom Smith", sequence.SongInfo.Composer);
+    VerifyText(L"Charles Scott", sequence.SongInfo.Lyricist);
+    VerifyText(L"Eric Wilson", sequence.SongInfo.Artist);
+
+    // The title the file names beats the first track name.
+    VerifyText(L"Beautiful Song", sequence.Title);
+
+    // The tags are not words to sing.
+    VerifyLyrics({ L"la" }, sequence);
+}
+
+void SmfTextEncodingTests::EndsASongInformationItemAtTheNextItem()
+{
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaLyric, "{#Title=Song{#Composer=Writer}");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"Song", sequence.SongInfo.Title);
+    VerifyText(L"Writer", sequence.SongInfo.Composer);
+}
+
+void SmfTextEncodingTests::ReadsSongInformationWithABraceInsideACharacter()
+{
+    // マ is 0x83 0x7D in Shift-JIS, and 0x7D is also the closing brace.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{#Title=" + Bytes({ 0x83, 0x7D }) + "}{#Artist=" + Bytes(ShiftJisSaku) + "}{#}")
+        .MetaText(0, MetaCopyright, Bytes(ShiftJisCopyright));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"マ", sequence.SongInfo.Title);
+    VerifyText(L"さく", sequence.SongInfo.Artist);
+    VERIFY_IS_TRUE(sequence.TextEncoding.Encoding == TextEncoding::ShiftJis);
+}
+
+void SmfTextEncodingTests::RecordsTheEncodingAndHowItWasChosen()
+{
+    auto encodingOf = [](std::string const& name, std::string const& lyric)
+        {
+            TrackBuilder track{};
+
+            track.MetaText(0, MetaTrackName, name);
+
+            if (!lyric.empty())
+            {
+                track.MetaText(0, MetaLyric, lyric);
+            }
+
+            return ParseOneTrack(track).TextEncoding;
+        };
+
+    auto verify = [](TextEncodingInfo const& info, TextEncoding encoding, TextEncodingSource source)
+        {
+            VERIFY_IS_TRUE(info.Encoding == encoding);
+            VERIFY_IS_TRUE(info.Source == source);
+        };
+
+    verify(encodingOf("Piano", ""), TextEncoding::None, TextEncodingSource::None);
+    verify(encodingOf("東京の夜", ""), TextEncoding::Utf8, TextEncodingSource::Detected);
+    verify(encodingOf(Bytes({ 0x43, 0x61, 0x66, 0xE9 }), ""), TextEncoding::Latin1, TextEncodingSource::Detected);
+    verify(encodingOf(Bytes(ShiftJisTokyoNight), ""), TextEncoding::ShiftJis, TextEncodingSource::Detected);
+    verify(encodingOf(Bytes(GbkSenbonzakura), ""), TextEncoding::Gbk, TextEncodingSource::Detected);
+    verify(encodingOf("Piano", "{@JP}la"), TextEncoding::ShiftJis, TextEncodingSource::CodeSetTag);
+    verify(encodingOf("Piano", "{@LATIN}la"), TextEncoding::Windows1252, TextEncodingSource::CodeSetTag);
+    verify(encodingOf(Bytes({ 0xFE, 0xFF, 0x30, 0x42 }), ""), TextEncoding::Unicode, TextEncodingSource::ByteOrderMark);
+}
+
+void SmfTextEncodingTests::WritesSongInformationBack()
+{
+    // Song information lives in a lyric event, which the reader takes it out of, so the writer
+    // has to put it back or saving a file would lose it.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@JP}{#Title=" + Bytes(ShiftJisTokyoNight) + "}{#Artist=Contoso}{#}")
+        .MetaText(120, MetaLyric, "la");
+
+    auto const original = ParseOneTrack(track);
+
+    std::vector<uint8_t> written{};
+    VERIFY_IS_TRUE(WriteStandardMidiFile(original, written).Succeeded());
+
+    MidiSequence reread{};
+    VERIFY_IS_TRUE(ParseStandardMidiFile(std::span<uint8_t const>{ written.data(), written.size() }, reread).Succeeded());
+
+    VerifyText(L"東京の夜", reread.SongInfo.Title);
+    VerifyText(L"Contoso", reread.SongInfo.Artist);
+    VERIFY_IS_TRUE(reread.SongInfo.Composer.empty());
+    VerifyLyrics({ L"la" }, reread);
 }

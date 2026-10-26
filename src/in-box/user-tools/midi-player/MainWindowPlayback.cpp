@@ -2124,6 +2124,8 @@ namespace winrt::midiplayer::implementation
 
     void MainWindow::UpdateNowPlayingText() noexcept
     {
+        UpdateSongInfoButton();
+
         try
         {
             auto const current = m_queue.Current();

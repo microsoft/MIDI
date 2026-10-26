@@ -112,6 +112,7 @@
     <ClCompile Include="TransposerTests.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_smf_reader.cpp" />
+    <ClCompile Include="..\..\..\Inc\midi_file_smf_writer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

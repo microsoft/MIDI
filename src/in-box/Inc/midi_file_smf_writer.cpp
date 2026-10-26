@@ -32,6 +32,7 @@ namespace midifile
         constexpr uint8_t MetaTextCopyright = 0x02;
         constexpr uint8_t MetaTextTrackName = 0x03;
         constexpr uint8_t MetaTextInstrumentName = 0x04;
+        constexpr uint8_t MetaTextLyric = 0x05;
         constexpr uint8_t MetaTextDeviceName = 0x09;
 
         constexpr uint32_t MaximumVariableLengthValue = 0x0FFFFFFF;
@@ -588,6 +589,29 @@ namespace midifile
             if (outputTrackIndex == 0)
             {
                 AppendMetaText(metas, 0, OrderTrackHeading, MetaTextCopyright, sequence.Copyright);
+
+                // RP-026 song information goes back in the one place it can live, a lyric event.
+                // The reader takes the tags off again, so this adds no words to the lyrics.
+                if (!sequence.SongInfo.IsEmpty())
+                {
+                    std::string tags{};
+
+                    auto appendTag = [&tags](char const* item, std::string const& value)
+                        {
+                            if (!value.empty())
+                            {
+                                tags.append("{#").append(item).append("=").append(value).append("}");
+                            }
+                        };
+
+                    appendTag("Title", sequence.SongInfo.Title);
+                    appendTag("Composer", sequence.SongInfo.Composer);
+                    appendTag("Lyrics", sequence.SongInfo.Lyricist);
+                    appendTag("Artist", sequence.SongInfo.Artist);
+                    tags.append("{#}");
+
+                    AppendMetaText(metas, 0, OrderTrackHeading, MetaTextLyric, tags);
+                }
 
                 if (context.RemapTicks)
                 {

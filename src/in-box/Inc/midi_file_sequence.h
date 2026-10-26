@@ -155,6 +155,50 @@ namespace midifile
         std::string Text{};                     // UTF-8
     };
 
+    // RP-026 song information. All UTF-8, empty when absent.
+    struct SongInformation
+    {
+        std::string Title{};
+        std::string Composer{};
+        std::string Lyricist{};                 // RP-026 calls it "Lyrics"
+        std::string Artist{};
+
+        bool IsEmpty() const noexcept
+        {
+            return Title.empty() && Composer.empty() && Lyricist.empty() && Artist.empty();
+        }
+    };
+
+    // The encoding the file's text was decoded with. Text in a file has no declared encoding, so
+    // this is either what the file said (an RP-026 code set tag or a byte order mark) or what the
+    // reader worked out.
+    enum class TextEncoding : uint8_t
+    {
+        None = 0,           // no text outside ASCII, which reads the same in every encoding
+        Utf8,
+        Latin1,             // also what a file falls back to when nothing else fits
+        Windows1252,        // RP-026 {@LATIN}, ANSI
+        ShiftJis,           // Japanese
+        Gbk,                // Simplified Chinese
+        Big5,               // Traditional Chinese
+        Korean,             // code page 949
+        Unicode,            // UTF-16 or UTF-8 marked with a byte order mark
+    };
+
+    enum class TextEncodingSource : uint8_t
+    {
+        None = 0,
+        Detected,           // worked out from the bytes
+        CodeSetTag,         // an RP-026 {@JP} or {@LATIN} tag
+        ByteOrderMark,
+    };
+
+    struct TextEncodingInfo
+    {
+        TextEncoding Encoding{ TextEncoding::None };
+        TextEncodingSource Source{ TextEncodingSource::None };
+    };
+
     // A file stores lyrics one syllable at a time, which is unreadable on its own. These are the
     // syllables assembled back into the lines the writer intended.
     struct LyricLine
@@ -317,6 +361,14 @@ namespace midifile
 
         std::string Title{};                    // UTF-8, best available name for the sequence
         std::string Copyright{};
+
+        // RP-026 song information, from {#Title=...}, {#Composer=...}, {#Lyrics=...} and
+        // {#Artist=...} tags in lyric events. UTF-8, empty when the file doesn't carry them.
+        // When SongInfo.Title is present it is also used as Title.
+        SongInformation SongInfo{};
+
+        // How the file's text was decoded, so a display can explain text that looks wrong.
+        TextEncodingInfo TextEncoding{};
 
         // A Soft Karaoke file, which announces itself with an "@K" text event and then puts its
         // words in plain text events rather than lyric events.

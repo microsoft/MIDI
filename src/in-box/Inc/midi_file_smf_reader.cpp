@@ -1049,6 +1049,10 @@ namespace midifile
             DeviceName,
             Copyright,
             TextEvent,
+            SongTitle,          // RP-026 song information
+            SongComposer,
+            SongLyricist,
+            SongArtist,
         };
 
         struct RecordedText
@@ -1154,11 +1158,44 @@ namespace midifile
                 }
             }
 
+            void SawByteOrderMark() noexcept { m_sawByteOrderMark = true; }
+
+            // Decodes the recorded texts in the encoding the file uses, and records which one that
+            // is and how it was chosen.
             void Apply(_Inout_ MidiSequence& sequence) noexcept
+            {
+                auto const guessed = Guess(sequence);
+
+                TextEncodingInfo info{};
+
+                if (m_firstCodeSet == CharacterCodeSet::Japanese)
+                {
+                    info = TextEncodingInfo{ TextEncoding::ShiftJis, TextEncodingSource::CodeSetTag };
+                }
+                else if (m_firstCodeSet == CharacterCodeSet::Latin)
+                {
+                    info = TextEncodingInfo{ TextEncoding::Windows1252, TextEncodingSource::CodeSetTag };
+                }
+                else if (guessed != TextEncoding::None)
+                {
+                    info = TextEncodingInfo{ guessed, TextEncodingSource::Detected };
+                }
+                else if (m_sawByteOrderMark)
+                {
+                    info = TextEncodingInfo{ TextEncoding::Unicode, TextEncodingSource::ByteOrderMark };
+                }
+
+                sequence.TextEncoding = info;
+            }
+
+        private:
+            // Returns the encoding the untagged text was decoded with: None when it is all ASCII,
+            // and Latin1 when nothing better fit, so each text kept its UTF-8 or Latin-1 reading.
+            TextEncoding Guess(_Inout_ MidiSequence& sequence) noexcept
             {
                 if (m_abandoned || m_texts.empty())
                 {
-                    return;
+                    return TextEncoding::None;
                 }
 
                 try
@@ -1171,7 +1208,7 @@ namespace midifile
 
                     if (allUtf8)
                     {
-                        return;
+                        return TextEncoding::Utf8;
                     }
 
                     if (m_firstCodeSet == CharacterCodeSet::Latin)
@@ -1194,7 +1231,7 @@ namespace midifile
                             }
                         }
 
-                        return;
+                        return TextEncoding::Windows1252;
                     }
 
                     // Every text is decoded before any is written back, so the model never ends up
@@ -1264,7 +1301,7 @@ namespace midifile
 
                         if (std::none_of(candidates.begin(), candidates.end(), [](Candidate const& candidate) noexcept { return candidate.Clean; }))
                         {
-                            return;
+                            return TextEncoding::Latin1;
                         }
                     }
 
@@ -1279,20 +1316,27 @@ namespace midifile
                     // Several can read cleanly, because their byte ranges overlap. The one that reads
                     // most like real text wins.
                     std::vector<std::string>* chosen{ nullptr };
+                    auto chosenEncoding = TextEncoding::Latin1;
                     int bestScore = 0;
+
+                    constexpr std::array<TextEncoding, CandidateCount> EncodingOf
+                    {
+                        TextEncoding::ShiftJis, TextEncoding::Gbk, TextEncoding::Big5, TextEncoding::Korean,
+                    };
 
                     for (size_t which = 0; which < CandidateCount; ++which)
                     {
                         if (fits[which] && (chosen == nullptr || candidates[which].Reading.Score > bestScore))
                         {
                             chosen = &candidates[which].Decoded;
+                            chosenEncoding = EncodingOf[which];
                             bestScore = candidates[which].Reading.Score;
                         }
                     }
 
                     if (chosen == nullptr)
                     {
-                        return;
+                        return TextEncoding::Latin1;
                     }
 
                     for (size_t index = 0; index < m_texts.size(); ++index)
@@ -1312,15 +1356,17 @@ namespace midifile
                             *destination = std::move(decoded);
                         }
                     }
+
+                    return chosenEncoding;
                 }
                 catch (...)
                 {
                     // Out of memory part way through the decision. Nothing has been written back
                     // yet, so every text keeps the decoding it was read with.
+                    return TextEncoding::Latin1;
                 }
             }
 
-        private:
             // Enough texts to settle the encoding of any real file, without letting a file made
             // of nothing but comments grow this list without limit.
             static constexpr size_t MaximumEvidenceOnlyTexts = 4096;
@@ -1349,6 +1395,18 @@ namespace midifile
                 case TextTarget::TextEvent:
                     return text.TargetIndex < sequence.TextEvents.size() ? &sequence.TextEvents[text.TargetIndex].Text : nullptr;
 
+                case TextTarget::SongTitle:
+                    return &sequence.SongInfo.Title;
+
+                case TextTarget::SongComposer:
+                    return &sequence.SongInfo.Composer;
+
+                case TextTarget::SongLyricist:
+                    return &sequence.SongInfo.Lyricist;
+
+                case TextTarget::SongArtist:
+                    return &sequence.SongInfo.Artist;
+
                 default:
                     return nullptr;
                 }
@@ -1358,8 +1416,148 @@ namespace midifile
             size_t m_evidenceOnlyCount{ 0 };
             CharacterCodeSet m_codeSet{ CharacterCodeSet::None };
             CharacterCodeSet m_firstCodeSet{ CharacterCodeSet::None };   // first LATIN or JP tag
+            bool m_sawByteOrderMark{ false };
             bool m_abandoned{ false };
         };
+
+        // Decodes one piece of event text the way the file says to, or, when it says nothing,
+        // the DecodeText way and leaves it to the file wide guess. decided is false in that case,
+        // and the caller has to Record the text with the detector.
+        std::string DecodeEventText(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ CharacterCodeSet codeSet,
+            _In_ bool preserveWhitespace,
+            _In_ bool truncated,
+            _Inout_ TextEncodingDetector& encodingDetector,
+            _Out_ bool& decided) noexcept
+        {
+            decided = true;
+
+            if (auto const mark = ReadByteOrderMark(bytes); mark != ByteOrderMark::None)
+            {
+                encodingDetector.SawByteOrderMark();
+                return DecodeUnicodeText(bytes, mark, preserveWhitespace);
+            }
+
+            if (codeSet != CharacterCodeSet::None)
+            {
+                return DecodeTaggedText(bytes, codeSet, preserveWhitespace);
+            }
+
+            decided = false;
+            return DecodeText(bytes, preserveWhitespace, truncated);
+        }
+
+        std::span<uint8_t const> TrimSpaces(_In_ std::span<uint8_t const> bytes) noexcept
+        {
+            while (!bytes.empty() && bytes.front() == ' ') { bytes = bytes.subspan(1); }
+            while (!bytes.empty() && bytes.back() == ' ') { bytes = bytes.first(bytes.size() - 1); }
+
+            return bytes;
+        }
+
+        // Reads the RP-026 song information tags at the start of a lyric event, such as
+        // {#Title=Beautiful Song}{#Composer=Tom Smith}{#}, into sequence.SongInfo, and returns what
+        // follows them. The item names are TITLE, COMPOSER, LYRICS and ARTIST in any case; others
+        // are skipped, and {#} only marks the end of a group. The first value of each item wins.
+        //
+        // RP-026 warns that the closing brace can't always be found in a multi-byte code set,
+        // because 0x7D can also be the second byte of a character, so the start of the next item
+        // ends an item too. Here an item runs to the next "{#", or the end of the event, and ends
+        // at the last closing brace before that.
+        std::span<uint8_t const> ReadSongInformationTags(
+            _Inout_ MidiSequence& sequence,
+            _In_ std::span<uint8_t const> bytes,
+            _In_ CharacterCodeSet codeSet,
+            _In_ bool truncated,
+            _Inout_ TextEncodingDetector& encodingDetector) noexcept
+        {
+            auto const startsWithTag = [](std::span<uint8_t const> rest) noexcept
+                {
+                    rest = TrimSpaces(rest);
+                    return rest.size() >= 2 && rest[0] == '{' && rest[1] == '#';
+                };
+
+            bool sawTag = false;
+
+            while (startsWithTag(bytes))
+            {
+                // RP-026's own example puts a space between tags.
+                while (bytes.front() == ' ') { bytes = bytes.subspan(1); }
+
+                sawTag = true;
+
+                size_t next = 2;
+
+                while (next + 1 < bytes.size() && !(bytes[next] == '{' && bytes[next + 1] == '#'))
+                {
+                    ++next;
+                }
+
+                if (next + 1 >= bytes.size())
+                {
+                    next = bytes.size();
+                }
+
+                size_t close = next;
+
+                while (close > 2 && bytes[close - 1] != '}')
+                {
+                    --close;
+                }
+
+                auto const closed = close > 2;
+                auto const body = bytes.subspan(2, (closed ? close - 1 : next) - 2);
+
+                bytes = bytes.subspan(closed ? close : next);
+
+                size_t equals = 0;
+
+                while (equals < body.size() && body[equals] != '=')
+                {
+                    ++equals;
+                }
+
+                if (equals >= body.size())
+                {
+                    continue;
+                }
+
+                auto const name = TrimSpaces(body.first(equals));
+                auto const value = TrimSpaces(body.subspan(equals + 1));
+
+                std::string* destination{ nullptr };
+                auto target = TextTarget::None;
+
+                if (EqualsIgnoringAsciiCase(name, "title")) { destination = &sequence.SongInfo.Title; target = TextTarget::SongTitle; }
+                else if (EqualsIgnoringAsciiCase(name, "composer")) { destination = &sequence.SongInfo.Composer; target = TextTarget::SongComposer; }
+                else if (EqualsIgnoringAsciiCase(name, "lyrics")) { destination = &sequence.SongInfo.Lyricist; target = TextTarget::SongLyricist; }
+                else if (EqualsIgnoringAsciiCase(name, "artist")) { destination = &sequence.SongInfo.Artist; target = TextTarget::SongArtist; }
+
+                if (destination == nullptr || !destination->empty() || value.empty())
+                {
+                    continue;
+                }
+
+                bool decided{};
+                auto const valueTruncated = truncated && !closed && bytes.empty();
+
+                *destination = DecodeEventText(value, codeSet, false, valueTruncated, encodingDetector, decided);
+
+                if (!decided && !destination->empty())
+                {
+                    encodingDetector.Record(value, valueTruncated, false, target, 0);
+                }
+            }
+
+            // Spaces left over after the last tag are not a lyric.
+            if (sawTag && TrimSpaces(bytes).empty())
+            {
+                return {};
+            }
+
+            return bytes;
+        }
 
         EventKind KindFromStatus(uint8_t status) noexcept
         {
@@ -1538,35 +1736,34 @@ namespace midifile
                 // spacing; everything else is a name or a note to a reader and is tidied up.
                 auto const preserveWhitespace = kind == TextKind::Lyric || kind == TextKind::Text;
 
-                // RP-026 code set tags travel in lyric events. They are instructions, not words to
-                // sing, so they are taken off the front of the lyric.
+                // RP-026 code set and song information tags travel in lyric events. They are
+                // instructions, not words to sing, so they are taken off the front of the lyric.
                 auto codeSet = CharacterCodeSet::None;
 
                 if (kind == TextKind::Lyric)
                 {
                     codeSet = encodingDetector.CurrentCodeSet();
-                    data = ReadCodeSetTags(data, codeSet);
-                    encodingDetector.SetCurrentCodeSet(codeSet);
+
+                    for (;;)
+                    {
+                        auto const before = data.size();
+
+                        data = ReadCodeSetTags(data, codeSet);
+                        encodingDetector.SetCurrentCodeSet(codeSet);
+
+                        data = ReadSongInformationTags(sequence, data, codeSet, truncated, encodingDetector);
+
+                        if (data.size() == before)
+                        {
+                            break;
+                        }
+                    }
                 }
 
                 // A text the file itself says how to read is decoded here and left out of the
                 // file wide guess.
-                bool decided = true;
-                std::string text{};
-
-                if (auto const mark = ReadByteOrderMark(data); mark != ByteOrderMark::None)
-                {
-                    text = DecodeUnicodeText(data, mark, preserveWhitespace);
-                }
-                else if (codeSet != CharacterCodeSet::None)
-                {
-                    text = DecodeTaggedText(data, codeSet, preserveWhitespace);
-                }
-                else
-                {
-                    text = DecodeText(data, preserveWhitespace, truncated);
-                    decided = false;
-                }
+                bool decided{};
+                auto text = DecodeEventText(data, codeSet, preserveWhitespace, truncated, encodingDetector, decided);
 
                 if (text.empty())
                 {

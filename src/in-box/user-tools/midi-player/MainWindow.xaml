@@ -299,14 +299,63 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Spacing="2">
-                    <TextBlock x:Name="NowPlayingTitleText"
-                               AutomationProperties.AutomationId="NowPlayingTitleText"
-                               FontSize="22"
-                               FontWeight="SemiBold"
-                               LineHeight="28"
-                               TextWrapping="NoWrap"
-                               TextTrimming="CharacterEllipsis"
-                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <!-- Left aligned with a star column, so the title trims when it is long and the
+                         button sits right after it when it is short. -->
+                    <Grid ColumnSpacing="4" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock x:Name="NowPlayingTitleText"
+                                   AutomationProperties.AutomationId="NowPlayingTitleText"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   LineHeight="28"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                        <!-- About this song: names, credits and how the file's text was read. -->
+                        <Button x:Name="SongInfoButton"
+                                x:Uid="SongInfoButton"
+                                Grid.Column="1"
+                                AutomationProperties.AutomationId="SongInfoButton"
+                                Visibility="Collapsed"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"
+                                Width="32" Height="32" Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0">
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control" Key="I" Invoked="OnSongInfoShortcut" />
+                            </Button.KeyboardAccelerators>
+                            <FontIcon Glyph="&#xE946;" FontSize="16" />
+                            <Button.Flyout>
+                                <Flyout x:Name="SongInfoFlyout" Placement="BottomEdgeAlignedLeft" Opening="OnSongInfoFlyoutOpening">
+                                    <ScrollViewer MaxWidth="440" MaxHeight="520" VerticalScrollBarVisibility="Auto">
+                                        <StackPanel x:Name="SongInfoPanel" Spacing="12" Padding="4,4,12,4">
+                                            <StackPanel.Resources>
+                                                <Style x:Key="SongInfoCaptionStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                                                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </Style>
+                                            </StackPanel.Resources>
+                                            <TextBlock x:Uid="SongInfoHeading"
+                                                       Style="{ThemeResource SubtitleTextBlockStyle}"
+                                                       AutomationProperties.HeadingLevel="Level1" />
+                                            <StackPanel x:Name="SongInfoFields" Spacing="10" />
+                                            <TextBlock x:Name="SongInfoEncodingText"
+                                                       AutomationProperties.AutomationId="SongInfoEncodingText"
+                                                       TextWrapping="Wrap"
+                                                       IsTextSelectionEnabled="True"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
 
                     <TextBlock x:Name="NowPlayingDetailText"
                                AutomationProperties.AutomationId="NowPlayingDetailText"

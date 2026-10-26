@@ -35,6 +35,7 @@ Some files do say how their text is encoded, using the tags from the MIDI Associ
 - The first of those tags in a file also decides the other text in the file, such as the title and track names, unless all of that text is UTF-8.
 - After a tag RP-026 doesn't define, lyrics with characters outside ASCII are left out until a `{@JP}` or `{@LATIN}` tag appears, as RP-026 asks. Plain ASCII lyrics are kept.
 - Any text that starts with a Unicode byte order mark is read as UTF-16 or UTF-8.
+- Song information tags in lyrics, such as `{#Title=...}`, `{#Composer=...}`, `{#Lyrics=...}` and `{#Artist=...}`, are taken out of the lyrics. A title from these tags becomes the sequence's `Title`. The other items aren't available from `MidiSequence` yet.
 
 ## Example
 

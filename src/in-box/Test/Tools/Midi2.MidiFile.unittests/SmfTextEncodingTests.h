@@ -64,4 +64,11 @@ public:
     TEST_METHOD(KeepsJapaneseInGbkOutOfBig5);
     TEST_METHOD(KeepsAShortHalfWidthKatakanaTitleAsShiftJis);
     TEST_METHOD(KeepsLatin1SymbolsBeforeLettersOutOfBig5);
+
+    // ---- RP-026 song information and the encoding record ----
+    TEST_METHOD(ReadsSongInformationTags);
+    TEST_METHOD(EndsASongInformationItemAtTheNextItem);
+    TEST_METHOD(ReadsSongInformationWithABraceInsideACharacter);
+    TEST_METHOD(RecordsTheEncodingAndHowItWasChosen);
+    TEST_METHOD(WritesSongInformationBack);
 };

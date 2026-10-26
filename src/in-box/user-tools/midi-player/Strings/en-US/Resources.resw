@@ -90,6 +90,100 @@
     <value>{0} tracks · {1} notes</value>
     <comment>{0} number of tracks, {1} number of notes. The tempo is shown separately because it is a live value.</comment>
   </data>
+
+  <!-- ============================== About this song ============================== -->
+  <data name="SongInfoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>About this song</value>
+  </data>
+  <data name="SongInfoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>About this song (Ctrl+I)</value>
+  </data>
+  <data name="SongInfoHeading.Text" xml:space="preserve">
+    <value>About this song</value>
+  </data>
+  <data name="SongInfoTitleCaption" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="SongInfoComposerCaption" xml:space="preserve">
+    <value>Composer</value>
+  </data>
+  <data name="SongInfoLyricistCaption" xml:space="preserve">
+    <value>Lyrics by</value>
+    <comment>The person who wrote the words of the song</comment>
+  </data>
+  <data name="SongInfoArtistCaption" xml:space="preserve">
+    <value>Artist</value>
+    <comment>The singer, band or musician</comment>
+  </data>
+  <data name="SongInfoCopyrightCaption" xml:space="preserve">
+    <value>Copyright</value>
+  </data>
+  <data name="SongInfoFileTypeCaption" xml:space="preserve">
+    <value>File type</value>
+  </data>
+  <data name="SongInfoTracksCaption" xml:space="preserve">
+    <value>Tracks</value>
+  </data>
+  <data name="SongInfoNotesCaption" xml:space="preserve">
+    <value>Notes</value>
+    <comment>The number of musical notes in the file</comment>
+  </data>
+  <data name="SongInfoLengthCaption" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="SongInfoFormatSingleTrack" xml:space="preserve">
+    <value>Standard MIDI File, type 0 (one track)</value>
+  </data>
+  <data name="SongInfoFormatMultiTrack" xml:space="preserve">
+    <value>Standard MIDI File, type 1 (tracks played together)</value>
+  </data>
+  <data name="SongInfoFormatMultiSequence" xml:space="preserve">
+    <value>Standard MIDI File, type 2 (tracks played one after another)</value>
+  </data>
+  <data name="SongInfoEncodingFormat" xml:space="preserve">
+    <value>Text encoding: {0}, {1}.</value>
+    <comment>{0} the name of the encoding, such as "Shift-JIS (Japanese)". {1} how it was chosen, such as "detected automatically".</comment>
+  </data>
+  <data name="SongInfoEncodingAsciiOnly" xml:space="preserve">
+    <value>Text encoding: all the text in this file is plain ASCII (English letters, digits and common symbols), which looks the same in every encoding.</value>
+  </data>
+  <data name="SongInfoEncodingDetected" xml:space="preserve">
+    <value>detected automatically</value>
+  </data>
+  <data name="SongInfoEncodingFromTag" xml:space="preserve">
+    <value>as the file says in its lyrics (an RP-026 tag)</value>
+  </data>
+  <data name="SongInfoEncodingFromByteOrderMark" xml:space="preserve">
+    <value>as the file marks its text</value>
+    <comment>The file starts its text with a Unicode byte order mark</comment>
+  </data>
+  <data name="SongInfoEncodingLatin1Hint" xml:space="preserve">
+    <value>If some text looks garbled, the file may use an encoding the player doesn't recognize.</value>
+  </data>
+  <data name="SongInfoEncodingUtf8" xml:space="preserve">
+    <value>UTF-8</value>
+  </data>
+  <data name="SongInfoEncodingLatin1" xml:space="preserve">
+    <value>Latin-1 (Western European)</value>
+  </data>
+  <data name="SongInfoEncodingWindows1252" xml:space="preserve">
+    <value>Windows-1252 (Western European)</value>
+  </data>
+  <data name="SongInfoEncodingShiftJis" xml:space="preserve">
+    <value>Shift-JIS (Japanese)</value>
+  </data>
+  <data name="SongInfoEncodingGbk" xml:space="preserve">
+    <value>GBK (Simplified Chinese)</value>
+  </data>
+  <data name="SongInfoEncodingBig5" xml:space="preserve">
+    <value>Big5 (Traditional Chinese)</value>
+  </data>
+  <data name="SongInfoEncodingKorean" xml:space="preserve">
+    <value>Code page 949 (Korean)</value>
+  </data>
+  <data name="SongInfoEncodingUnicode" xml:space="preserve">
+    <value>Unicode</value>
+  </data>
   <data name="TempoCaption.Text" xml:space="preserve">
     <value>Tempo</value>
     <comment>Small caption above the tempo at the current playback position</comment>

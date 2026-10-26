@@ -906,6 +906,12 @@ namespace midifile
 
         DurationMicroseconds = MicrosecondsAtTick(LastTick);
 
+        // A title the file names as such beats the first track name, which is often "Piano".
+        if (Title.empty() && !SongInfo.Title.empty())
+        {
+            Title = SongInfo.Title;
+        }
+
         if (Title.empty())
         {
             for (auto const& track : Tracks)
@@ -949,6 +955,8 @@ namespace midifile
 
         Title.clear();
         Copyright.clear();
+        SongInfo = SongInformation{};
+        TextEncoding = TextEncodingInfo{};
 
         IsKaraoke = false;
     }
