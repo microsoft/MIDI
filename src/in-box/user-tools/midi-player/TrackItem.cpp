@@ -53,7 +53,7 @@ namespace winrt::midiplayer::implementation
                 channels = res::FormatString(L"TrackChannelCountFormat", channelCount);
             }
 
-            auto const notes = std::wstring{ res::FormatString(L"TrackNoteCountFormat", data.NoteCount) };
+            auto const notes = std::wstring{ res::FormatCount(L"TrackNoteCountOne", L"TrackNoteCountFormat", data.NoteCount) };
 
             m_detailText = channels.empty()
                 ? winrt::hstring{ notes }

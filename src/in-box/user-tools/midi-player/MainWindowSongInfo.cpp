@@ -41,7 +41,13 @@ namespace winrt::midiplayer::implementation
             text.Text(value);
             text.TextWrapping(xaml::TextWrapping::Wrap);
             text.IsTextSelectionEnabled(true);
-            xaml::Automation::AutomationProperties::SetLabeledBy(text, caption);
+
+            // One stop for a screen reader, "Title: 千本桜", rather than the caption and the value
+            // as two. LabeledBy would replace the value with the caption, so the name is set.
+            auto const captionText = res::GetString(captionKey);
+            xaml::Automation::AutomationProperties::SetName(
+                text, res::FormatString(L"SongInfoFieldAccessibleNameFormat", std::wstring{ captionText }, std::wstring{ value }));
+            xaml::Automation::AutomationProperties::SetAccessibilityView(caption, xaml::Automation::Peers::AccessibilityView::Raw);
 
             controls::StackPanel field{};
             field.Spacing(0);
@@ -123,11 +129,52 @@ namespace winrt::midiplayer::implementation
     {
         try
         {
-            SongInfoButton().Visibility(m_currentSequence != nullptr
+            // Shown for any file that can be read, whether or not it has been loaded to play: a
+            // file added with --no-play, or before an output is chosen, has not been.
+            auto const current = m_queue.Current();
+
+            SongInfoButton().Visibility(current.has_value() && current.value().IsPlayable()
                 ? xaml::Visibility::Visible
                 : xaml::Visibility::Collapsed);
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update the song information button.")
+    }
+
+    // The sequence the flyout describes: the one loaded to play when it is the current file,
+    // otherwise the current file read on its own. The queue keeps only a summary of each file, so
+    // this reads it again, once, and keeps it until the current file changes.
+    std::shared_ptr<midifile::MidiSequence const> MainWindow::SongInfoSequence()
+    {
+        auto const current = m_queue.Current();
+
+        if (!current.has_value() || !current.value().IsPlayable())
+        {
+            return {};
+        }
+
+        auto const& entry = current.value();
+
+        if (m_currentSequence != nullptr && m_currentSequenceId == entry.Id)
+        {
+            return m_currentSequence;
+        }
+
+        if (m_songInfoSequence != nullptr && m_songInfoSequenceId == entry.Id)
+        {
+            return m_songInfoSequence;
+        }
+
+        auto sequence = std::make_shared<midifile::MidiSequence>();
+
+        if (!midifile::ReadStandardMidiFile(entry.FilePath, *sequence).Succeeded())
+        {
+            return {};
+        }
+
+        m_songInfoSequence = std::move(sequence);
+        m_songInfoSequenceId = entry.Id;
+
+        return m_songInfoSequence;
     }
 
     void MainWindow::OnSongInfoShortcut(input::KeyboardAccelerator const&, input::KeyboardAcceleratorInvokedEventArgs const& args)
@@ -136,7 +183,7 @@ namespace winrt::midiplayer::implementation
         {
             args.Handled(true);
 
-            if (m_currentSequence != nullptr && SongInfoButton().Visibility() == xaml::Visibility::Visible)
+            if (SongInfoButton().Visibility() == xaml::Visibility::Visible)
             {
                 SongInfoFlyout().ShowAt(SongInfoButton());
             }
@@ -152,7 +199,7 @@ namespace winrt::midiplayer::implementation
             auto const fields = SongInfoFields();
             fields.Children().Clear();
 
-            auto const sequence = m_currentSequence;
+            auto const sequence = SongInfoSequence();
 
             if (sequence == nullptr)
             {
