@@ -89,6 +89,7 @@
     <ClInclude Include="PlaybackClockTests.h" />
     <ClInclude Include="SmfReaderTests.h" />
     <ClInclude Include="SmfTestFileBuilder.h" />
+    <ClInclude Include="SmfTextEncodingTests.h" />
     <ClInclude Include="TimeTextTests.h" />
     <ClInclude Include="TransposerTests.h" />
     <!-- shared by source with midiplayer, so the reader is tested exactly as it ships -->
@@ -106,6 +107,7 @@
     <ClCompile Include="PlaybackClockTests.cpp" />
     <ClCompile Include="SmfReaderTests.cpp" />
     <ClCompile Include="SmfTestFileBuilder.cpp" />
+    <ClCompile Include="SmfTextEncodingTests.cpp" />
     <ClCompile Include="TimeTextTests.cpp" />
     <ClCompile Include="TransposerTests.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />

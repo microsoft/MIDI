@@ -27,6 +27,8 @@ All four return a [`MidiFileReadResult`]({{ site.baseurl }}/sdk-reference/Utilit
 
 A file that stops making sense partway through is read up to that point and reported as truncated, instead of being rejected, because a file with a damaged end is usually still worth hearing. Set `FailOnUnreadableData` on the options if you'd rather refuse it completely.
 
+A MIDI file doesn't say how its text is encoded, so the reader works it out for each file. Text such as the title, the copyright, track names and lyrics comes back as UTF-8 in every case. The reader tries UTF-8 first, then Shift-JIS, which many older Japanese files use, and then Latin-1, which many older Western files use. It picks Shift-JIS only when every piece of text in the file reads cleanly that way and some of it is clearly Japanese, so Western text with accented letters stays as it was.
+
 ## Example
 
 ```cpp

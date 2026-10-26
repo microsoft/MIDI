@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <climits>
+#include <string>
 
 namespace midifile
 {
@@ -183,9 +185,24 @@ namespace midifile
             return true;
         }
 
-        bool LooksLikeUtf8(std::span<uint8_t const> bytes) noexcept
+        bool HasNonAsciiByte(_In_ std::span<uint8_t const> bytes) noexcept
         {
+            return std::any_of(bytes.begin(), bytes.end(), [](uint8_t value) noexcept { return value >= 0x80; });
+        }
+
+        // True when the bytes are UTF-8. usable is how many of them to decode: all of them, unless
+        // the text was cut at MaximumTextBytes part way through a character, in which case the cut
+        // character is left off. A cut that would leave no other character outside ASCII is not
+        // treated as UTF-8, so that whether a text decodes to nothing never depends on the encoding.
+        bool TryMeasureUtf8(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ bool truncated,
+            _Out_ size_t& usable) noexcept
+        {
+            usable = bytes.size();
+
             size_t index = 0;
+            bool sawNonAscii = false;
 
             while (index < bytes.size())
             {
@@ -204,12 +221,10 @@ namespace midifile
                 else if ((lead & 0xF8) == 0xF0) { continuations = 3; }
                 else { return false; }
 
-                if (index + continuations >= bytes.size())
-                {
-                    return false;
-                }
+                auto const remaining = bytes.size() - index - 1;
+                auto const available = continuations < remaining ? continuations : remaining;
 
-                for (size_t offset = 1; offset <= continuations; ++offset)
+                for (size_t offset = 1; offset <= available; ++offset)
                 {
                     if ((bytes[index + offset] & 0xC0) != 0x80)
                     {
@@ -217,20 +232,60 @@ namespace midifile
                     }
                 }
 
+                if (available < continuations)
+                {
+                    if (!truncated || !sawNonAscii)
+                    {
+                        return false;
+                    }
+
+                    usable = index;
+                    return true;
+                }
+
+                sawNonAscii = true;
                 index += continuations + 1;
             }
 
             return true;
         }
 
-        // Text in a Standard MIDI File is bytes with no declared encoding. Modern files are
-        // usually UTF-8; older ones are Latin-1. Guessing UTF-8 first and falling back keeps both
-        // readable, and nothing here can fail.
+        // Control characters in a track name wreck a text block's layout.
         //
         // Lyrics are the one kind where the whitespace is the content: a karaoke file marks its
         // word breaks with a trailing space and its line breaks with a carriage return, so tidying
         // those away would run a whole verse together.
-        std::string DecodeText(std::span<uint8_t const> bytes, bool preserveWhitespace = false) noexcept
+        void TidyText(_Inout_ std::string& text, _In_ bool preserveWhitespace) noexcept
+        {
+            std::erase_if(text, [preserveWhitespace](char value) noexcept
+                {
+                    auto const byte = static_cast<unsigned char>(value);
+
+                    if (preserveWhitespace && (byte == '\r' || byte == '\n'))
+                    {
+                        return false;
+                    }
+
+                    return byte < 0x20 && byte != '\t';
+                });
+
+            while (!preserveWhitespace && !text.empty() && (text.back() == ' ' || text.back() == '\t'))
+            {
+                text.pop_back();
+            }
+        }
+
+        // Text in a Standard MIDI File is bytes with no declared encoding. Modern files are
+        // usually UTF-8, older Western ones are Latin-1, and older Japanese ones are Shift-JIS.
+        //
+        // This decodes one text on its own: UTF-8 when it is valid UTF-8, and Latin-1 otherwise,
+        // which cannot fail. Shift-JIS can't be told apart from Latin-1 one short text at a time,
+        // so that decision is made once for the whole file, after every text has been read. See
+        // TextEncodingDetector.
+        std::string DecodeText(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ bool preserveWhitespace,
+            _In_ bool truncated) noexcept
         {
             std::string text{};
 
@@ -239,9 +294,11 @@ namespace midifile
                 return text;
             }
 
-            if (LooksLikeUtf8(bytes))
+            size_t usable{};
+
+            if (TryMeasureUtf8(bytes, truncated, usable))
             {
-                text.assign(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+                text.assign(reinterpret_cast<char const*>(bytes.data()), usable);
             }
             else
             {
@@ -261,26 +318,321 @@ namespace midifile
                 }
             }
 
-            // Control characters in a track name wreck a text block's layout.
-            std::erase_if(text, [preserveWhitespace](char value) noexcept
-                {
-                    auto const byte = static_cast<unsigned char>(value);
+            TidyText(text, preserveWhitespace);
 
-                    if (preserveWhitespace && (byte == '\r' || byte == '\n'))
+            return text;
+        }
+
+        constexpr UINT ShiftJisCodePage = 932;
+
+        bool IsShiftJisLeadByte(_In_ uint8_t value) noexcept
+        {
+            return (value >= 0x81 && value <= 0x9F) || (value >= 0xE0 && value <= 0xFC);
+        }
+
+        bool IsAsciiLetter(_In_ uint8_t value) noexcept
+        {
+            return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z');
+        }
+
+        // Decodes Shift-JIS (Windows code page 932) to UTF-8. Returns false when the bytes are not
+        // clean Shift-JIS: an unknown double-byte code, a lead byte with no trail byte, or a code
+        // that only means something to one vendor's software. A lead byte cut off by
+        // MaximumTextBytes is left off rather than counted against the text.
+        //
+        // sawJapanese is set when the text holds a double-byte character that Western text can't
+        // easily produce by accident:
+        //
+        //  - Its lead byte is from 0x81 to 0x9F. Latin-1 uses those for control codes. Accented
+        //    letters in Latin-1 (0xC0 to 0xFF) can also form valid Shift-JIS pairs, as in "Canção",
+        //    so they never count.
+        //  - Its trail byte is above 0x7F, or its lead byte is 0x81 to 0x83, the rows that hold
+        //    Japanese punctuation, hiragana and katakana.
+        //  - It doesn't come straight after an ASCII letter, and the byte after it isn't a lowercase
+        //    ASCII letter. Old DOS files keep accented letters at 0x80 to 0x9F, and Windows-1252
+        //    keeps curly quotes there, and both sit inside a word: "Müde", "Flügel", "Über",
+        //    "don’t". Japanese text rarely puts a character between two ASCII letters like that.
+        //
+        // Allocates, so it can throw std::bad_alloc.
+        bool TryDecodeShiftJis(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ bool truncated,
+            _Out_ std::string& utf8,
+            _Inout_ bool& sawJapanese)
+        {
+            utf8.clear();
+
+            size_t usable = bytes.size();
+            bool afterAsciiLetter = false;
+
+            for (size_t index = 0; index < bytes.size();)
+            {
+                auto const lead = bytes[index];
+
+                if (!IsShiftJisLeadByte(lead))
+                {
+                    afterAsciiLetter = IsAsciiLetter(lead);
+                    ++index;
+                    continue;
+                }
+
+                if (index + 1 >= bytes.size())
+                {
+                    if (!truncated)
                     {
                         return false;
                     }
 
-                    return byte < 0x20 && byte != '\t';
-                });
+                    usable = index;
+                    break;
+                }
 
-            while (!preserveWhitespace && !text.empty() && (text.back() == ' ' || text.back() == '\t'))
-            {
-                text.pop_back();
+                auto const trail = bytes[index + 1];
+                auto const beforeLowercaseLetter =
+                    index + 2 < bytes.size() && bytes[index + 2] >= 'a' && bytes[index + 2] <= 'z';
+
+                if (lead <= 0x9F && (lead <= 0x83 || trail >= 0x80) && !afterAsciiLetter && !beforeLowercaseLetter)
+                {
+                    sawJapanese = true;
+                }
+
+                afterAsciiLetter = false;
+                index += 2;
             }
 
-            return text;
+            if (usable == 0)
+            {
+                return true;
+            }
+
+            if (usable > static_cast<size_t>(INT_MAX))
+            {
+                return false;
+            }
+
+            auto const source = reinterpret_cast<char const*>(bytes.data());
+            auto const sourceLength = static_cast<int>(usable);
+
+            // MB_ERR_INVALID_CHARS rejects double-byte codes that code page 932 doesn't define,
+            // a lead byte without a trail byte, and the single bytes 0xA0 and 0xFD to 0xFF.
+            auto const wideLength = ::MultiByteToWideChar(
+                ShiftJisCodePage, MB_ERR_INVALID_CHARS, source, sourceLength, nullptr, 0);
+
+            if (wideLength <= 0)
+            {
+                return false;
+            }
+
+            std::wstring wide(static_cast<size_t>(wideLength), L'\0');
+
+            if (::MultiByteToWideChar(
+                ShiftJisCodePage, MB_ERR_INVALID_CHARS, source, sourceLength, wide.data(), wideLength) != wideLength)
+            {
+                return false;
+            }
+
+            // It does accept two kinds of code that real Japanese text doesn't use: the byte 0x80,
+            // which becomes a control character, and the user defined codes from 0xF040, which
+            // become private use characters no font draws.
+            for (auto const character : wide)
+            {
+                if ((character >= 0x80 && character <= 0x9F) || (character >= 0xE000 && character <= 0xF8FF))
+                {
+                    return false;
+                }
+            }
+
+            auto const utf8Length = ::WideCharToMultiByte(
+                CP_UTF8, 0, wide.data(), wideLength, nullptr, 0, nullptr, nullptr);
+
+            if (utf8Length <= 0)
+            {
+                return false;
+            }
+
+            utf8.resize(static_cast<size_t>(utf8Length));
+
+            if (::WideCharToMultiByte(
+                CP_UTF8, 0, wide.data(), wideLength, utf8.data(), utf8Length, nullptr, nullptr) != utf8Length)
+            {
+                utf8.clear();
+                return false;
+            }
+
+            return true;
         }
+
+        enum class TextTarget : uint8_t
+        {
+            None,               // read for the encoding decision only
+            TrackName,
+            InstrumentName,
+            DeviceName,
+            Copyright,
+            TextEvent,
+        };
+
+        struct RecordedText
+        {
+            std::span<uint8_t const> Bytes{};   // points into the file, which outlives the parse
+            size_t TargetIndex{ 0 };            // the track, or the entry in TextEvents
+            TextTarget Target{ TextTarget::None };
+            bool Truncated{ false };
+            bool PreserveWhitespace{ false };
+        };
+
+        // Picks one text encoding for the whole file, in this order:
+        //
+        //  1. UTF-8, when every text that has a byte outside ASCII is valid UTF-8.
+        //  2. Shift-JIS, when every one of them is clean Shift-JIS AND at least one holds a
+        //     character Latin-1 text can't produce by accident (see TryDecodeShiftJis). A short
+        //     Latin-1 name made only of capital accented letters, such as "ÀÉÎ", is also valid
+        //     half-width katakana, so it stays Latin-1.
+        //  3. Otherwise each text keeps the decoding DecodeText gave it, which is how this reader
+        //     has always behaved.
+        //
+        // Deciding per file matters because one Japanese name is often only a few bytes long,
+        // and the copyright or another track name in the same file is what settles it.
+        //
+        // The model is filled in as the file is read, decoded the DecodeText way, and only
+        // rewritten here when the file turns out to be Shift-JIS. Whether a text decodes to
+        // nothing, and whether it starts with "@K", come out the same in every encoding, so the
+        // choices made while reading still hold afterward.
+        class TextEncodingDetector
+        {
+        public:
+            void Record(
+                _In_ std::span<uint8_t const> bytes,
+                _In_ bool truncated,
+                _In_ bool preserveWhitespace,
+                _In_ TextTarget target,
+                _In_ size_t targetIndex) noexcept
+            {
+                // ASCII reads the same in every encoding this reader considers.
+                if (m_abandoned || !HasNonAsciiByte(bytes))
+                {
+                    return;
+                }
+
+                if (target == TextTarget::None)
+                {
+                    if (m_evidenceOnlyCount >= MaximumEvidenceOnlyTexts)
+                    {
+                        return;
+                    }
+
+                    ++m_evidenceOnlyCount;
+                }
+
+                try
+                {
+                    m_texts.push_back(RecordedText{ bytes, targetIndex, target, truncated, preserveWhitespace });
+                }
+                catch (...)
+                {
+                    // Out of memory. Without the full list, a file wide decision can't be made,
+                    // so the texts keep the decoding they already have.
+                    m_abandoned = true;
+                    m_texts.clear();
+                }
+            }
+
+            void Apply(_Inout_ MidiSequence& sequence) noexcept
+            {
+                if (m_abandoned || m_texts.empty())
+                {
+                    return;
+                }
+
+                try
+                {
+                    auto const allUtf8 = std::all_of(m_texts.begin(), m_texts.end(), [](RecordedText const& text) noexcept
+                        {
+                            size_t usable{};
+                            return TryMeasureUtf8(text.Bytes, text.Truncated, usable);
+                        });
+
+                    if (allUtf8)
+                    {
+                        return;
+                    }
+
+                    // Every text is decoded before any is written back, so the model never ends up
+                    // with some texts in one encoding and the rest in another.
+                    std::vector<std::string> decoded(m_texts.size());
+                    bool sawJapanese = false;
+
+                    for (size_t index = 0; index < m_texts.size(); ++index)
+                    {
+                        if (!TryDecodeShiftJis(m_texts[index].Bytes, m_texts[index].Truncated, decoded[index], sawJapanese))
+                        {
+                            return;
+                        }
+
+                        TidyText(decoded[index], m_texts[index].PreserveWhitespace);
+                    }
+
+                    if (!sawJapanese)
+                    {
+                        return;
+                    }
+
+                    for (size_t index = 0; index < m_texts.size(); ++index)
+                    {
+                        // Only a dropped cut lead byte can make this empty; keep what was read.
+                        if (decoded[index].empty())
+                        {
+                            continue;
+                        }
+
+                        auto const destination = Destination(sequence, m_texts[index]);
+
+                        if (destination != nullptr)
+                        {
+                            *destination = std::move(decoded[index]);
+                        }
+                    }
+                }
+                catch (...)
+                {
+                    // Out of memory part way through the decision. Nothing has been written back
+                    // yet, so every text keeps the decoding it was read with.
+                }
+            }
+
+        private:
+            // Enough texts to settle the encoding of any real file, without letting a file made
+            // of nothing but comments grow this list without limit.
+            static constexpr size_t MaximumEvidenceOnlyTexts = 4096;
+
+            static std::string* Destination(_Inout_ MidiSequence& sequence, _In_ RecordedText const& text) noexcept
+            {
+                switch (text.Target)
+                {
+                case TextTarget::TrackName:
+                    return text.TargetIndex < sequence.Tracks.size() ? &sequence.Tracks[text.TargetIndex].Name : nullptr;
+
+                case TextTarget::InstrumentName:
+                    return text.TargetIndex < sequence.Tracks.size() ? &sequence.Tracks[text.TargetIndex].InstrumentName : nullptr;
+
+                case TextTarget::DeviceName:
+                    return text.TargetIndex < sequence.Tracks.size() ? &sequence.Tracks[text.TargetIndex].DeviceName : nullptr;
+
+                case TextTarget::Copyright:
+                    return &sequence.Copyright;
+
+                case TextTarget::TextEvent:
+                    return text.TargetIndex < sequence.TextEvents.size() ? &sequence.TextEvents[text.TargetIndex].Text : nullptr;
+
+                default:
+                    return nullptr;
+                }
+            }
+
+            std::vector<RecordedText> m_texts{};
+            size_t m_evidenceOnlyCount{ 0 };
+            bool m_abandoned{ false };
+        };
 
         EventKind KindFromStatus(uint8_t status) noexcept
         {
@@ -439,11 +791,14 @@ namespace midifile
             uint16_t trackIndex,
             uint32_t tick,
             uint8_t metaType,
-            std::span<uint8_t const> data) noexcept
+            std::span<uint8_t const> data,
+            _Inout_ TextEncodingDetector& encodingDetector) noexcept
         {
             if (metaType >= 0x01 && metaType <= 0x0F)
             {
-                if (data.size() > limits.MaximumTextBytes)
+                auto const truncated = data.size() > limits.MaximumTextBytes;
+
+                if (truncated)
                 {
                     data = data.subspan(0, limits.MaximumTextBytes);
                 }
@@ -456,12 +811,20 @@ namespace midifile
                 // spacing; everything else is a name or a note to a reader and is tidied up.
                 auto const preserveWhitespace = kind == TextKind::Lyric || kind == TextKind::Text;
 
-                auto text = DecodeText(data, preserveWhitespace);
+                auto text = DecodeText(data, preserveWhitespace, truncated);
 
                 if (text.empty())
                 {
                     return;
                 }
+
+                bool recorded = false;
+
+                auto record = [&](TextTarget target, size_t targetIndex) noexcept
+                    {
+                        encodingDetector.Record(data, truncated, preserveWhitespace, target, targetIndex);
+                        recorded = true;
+                    };
 
                 if (trackIndex < sequence.Tracks.size())
                 {
@@ -470,15 +833,15 @@ namespace midifile
                     switch (kind)
                     {
                     case TextKind::TrackName:
-                        if (track.Name.empty()) { track.Name = text; }
+                        if (track.Name.empty()) { track.Name = text; record(TextTarget::TrackName, trackIndex); }
                         break;
 
                     case TextKind::InstrumentName:
-                        if (track.InstrumentName.empty()) { track.InstrumentName = text; }
+                        if (track.InstrumentName.empty()) { track.InstrumentName = text; record(TextTarget::InstrumentName, trackIndex); }
                         break;
 
                     case TextKind::DeviceName:
-                        if (track.DeviceName.empty()) { track.DeviceName = text; }
+                        if (track.DeviceName.empty()) { track.DeviceName = text; record(TextTarget::DeviceName, trackIndex); }
                         break;
 
                     default:
@@ -489,6 +852,7 @@ namespace midifile
                 if (kind == TextKind::Copyright && sequence.Copyright.empty())
                 {
                     sequence.Copyright = text;
+                    record(TextTarget::Copyright, 0);
                 }
 
                 // A Soft Karaoke file announces itself before its first word, so from here on its
@@ -507,7 +871,14 @@ namespace midifile
                     if (sequence.TextEvents.size() < limits.MaximumTextEvents)
                     {
                         sequence.TextEvents.push_back(TextEvent{ tick, trackIndex, kind, std::move(text) });
+                        record(TextTarget::TextEvent, sequence.TextEvents.size() - 1);
                     }
+                }
+
+                // Texts the model doesn't keep still help decide the file's encoding.
+                if (!recorded)
+                {
+                    record(TextTarget::None, 0);
                 }
 
                 return;
@@ -577,7 +948,8 @@ namespace midifile
             ReadLimits const& limits,
             uint16_t trackIndex,
             uint32_t tickOffset,
-            uint32_t& lastTick) noexcept
+            uint32_t& lastTick,
+            _Inout_ TextEncodingDetector& encodingDetector) noexcept
         {
             TrackParseState state{};
 
@@ -644,7 +1016,7 @@ namespace midifile
                         return true;
                     }
 
-                    HandleMetaEvent(sequence, limits, trackIndex, state.Tick, metaType, data);
+                    HandleMetaEvent(sequence, limits, trackIndex, state.Tick, metaType, data, encodingDetector);
                     continue;
                 }
 
@@ -925,6 +1297,7 @@ namespace midifile
                 : static_cast<uint32_t>(trackCount);
 
             SequenceWriter writer{ sequence, limits };
+            TextEncodingDetector encodingDetector{};
 
             // Independent sequences are laid end to end rather than played on top of each other.
             uint32_t sequentialOffset = 0;
@@ -981,7 +1354,8 @@ namespace midifile
                     limits,
                     trackIndex,
                     sequence.Format == SequenceFormat::MultiSequence ? sequentialOffset : 0,
-                    trackLastTick))
+                    trackLastTick,
+                    encodingDetector))
                 {
                     result.Truncated = true;
                 }
@@ -1001,6 +1375,9 @@ namespace midifile
 
                 reader.SeekTo(payloadStart + chunkLength);
             }
+
+            // Before Finalize, which sorts the text events and builds lyric lines from them.
+            encodingDetector.Apply(sequence);
 
             if (sequence.Events.empty())
             {
