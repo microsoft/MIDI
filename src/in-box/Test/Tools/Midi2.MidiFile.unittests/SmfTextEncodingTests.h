@@ -45,4 +45,14 @@ public:
     TEST_METHOD(DropsNonAsciiLyricsInAnUndefinedCodeSet);
     TEST_METHOD(LeavesSomethingThatOnlyLooksLikeATagAlone);
     TEST_METHOD(ReadsTextThatStartsWithAByteOrderMark);
+
+    // ---- GBK, and telling it apart from Shift-JIS ----
+    TEST_METHOD(DecodesAGbkTitleOfKatakana);
+    TEST_METHOD(DecodesAGbkTitleThatIsAlsoValidShiftJis);
+    TEST_METHOD(DecodesAGbkTitleThatShiftJisReadsAsHalfWidthKatakana);
+    TEST_METHOD(KeepsAShiftJisFileThatIsAlsoValidGbk);
+    TEST_METHOD(KeepsAShortLatin1PairThatIsAlsoValidGbk);
+    TEST_METHOD(LetsAJapaneseTagWinOverGbk);
+    TEST_METHOD(KeepsHalfWidthKatakanaWithVoicingMarksAsShiftJis);
+    TEST_METHOD(KeepsAKoreanCopyrightSignOutOfGbk);
 };

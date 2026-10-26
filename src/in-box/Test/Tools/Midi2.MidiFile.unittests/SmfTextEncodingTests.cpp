@@ -536,3 +536,145 @@ void SmfTextEncodingTests::ReadsTextThatStartsWithAByteOrderMark()
     VerifyText(L"Café", sequence.Copyright);
     VerifyLyrics({ L"あ" }, sequence);
 }
+
+namespace
+{
+    // The bytes of three real files written in GBK, and of one written in Shift-JIS, rebuilt
+    // here rather than shipping the files. Each GBK file carries the same text event and an ASCII
+    // copyright alongside its title.
+    // 【主页】 URL
+    std::initializer_list<uint8_t> const GbkHomePage{ 0xA1, 0xBE, 0xD6, 0xF7, 0xD2, 0xB3, 0xA1, 0xBF, 0x20, 0x55, 0x52, 0x4C };
+    // アンノウン · マザーグース
+    std::initializer_list<uint8_t> const GbkUnknownMotherGoose{
+        0xA5, 0xA2, 0xA5, 0xF3, 0xA5, 0xCE, 0xA5, 0xA6, 0xA5, 0xF3, 0x20, 0xA1, 0xA4, 0x20,
+        0xA5, 0xDE, 0xA5, 0xB6, 0xA9, 0x60, 0xA5, 0xB0, 0xA9, 0x60, 0xA5, 0xB9 };
+    // 千本桜, which Shift-JIS reads as ﾇｧｱｾ諭
+    std::initializer_list<uint8_t> const GbkSenbonzakura{ 0xC7, 0xA7, 0xB1, 0xBE, 0x97, 0x40 };
+    // 紅一葉, which Shift-JIS reads as ｼtﾒｻﾈ~
+    std::initializer_list<uint8_t> const GbkKurenaiHitoha{ 0xBC, 0x74, 0xD2, 0xBB, 0xC8, 0x7E };
+
+    // 【サイト名】 URL and ---- 全体設定 ----
+    std::initializer_list<uint8_t> const ShiftJisSiteName{ 0x81, 0x79, 0x83, 0x54, 0x83, 0x43, 0x83, 0x67, 0x96, 0xBC, 0x81, 0x7A, 0x20, 0x55, 0x52, 0x4C };
+    std::initializer_list<uint8_t> const ShiftJisOverallSettings{ 0x2D, 0x2D, 0x2D, 0x2D, 0x20, 0x91, 0x53, 0x91, 0xCC, 0x90, 0xDD, 0x92, 0xE8, 0x20, 0x2D, 0x2D, 0x2D, 0x2D };
+
+    MidiSequence ParseGbkStyleFile(std::initializer_list<uint8_t> title)
+    {
+        TrackBuilder track{};
+
+        track
+            .MetaText(0, MetaTrackName, Bytes(title))
+            .MetaText(0, MetaText, Bytes(GbkHomePage))
+            .MetaText(0, MetaCopyright, "2025 Nikiyiki Music Media No Corporation");
+
+        return ParseOneTrack(track);
+    }
+}
+
+void SmfTextEncodingTests::DecodesAGbkTitleOfKatakana()
+{
+    // Not valid Shift-JIS at all.
+    auto const sequence = ParseGbkStyleFile(GbkUnknownMotherGoose);
+
+    VerifyText(L"アンノウン · マザーグース", sequence.Tracks[0].Name);
+    VerifyText(L"2025 Nikiyiki Music Media No Corporation", sequence.Copyright);
+}
+
+void SmfTextEncodingTests::DecodesAGbkTitleThatIsAlsoValidShiftJis()
+{
+    auto const sequence = ParseGbkStyleFile(GbkSenbonzakura);
+
+    VerifyText(L"千本桜", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::DecodesAGbkTitleThatShiftJisReadsAsHalfWidthKatakana()
+{
+    auto const sequence = ParseGbkStyleFile(GbkKurenaiHitoha);
+
+    VerifyText(L"紅一葉", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::KeepsAShiftJisFileThatIsAlsoValidGbk()
+{
+    // Every one of these bytes is also clean GBK, as rare characters from its extension.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaText, Bytes(ShiftJisSiteName))
+        .MetaText(0, 0x06, Bytes(ShiftJisOverallSettings));
+
+    auto const sequence = ParseOneTrack(track);
+
+    bool foundMarker = false;
+
+    for (auto const& text : sequence.TextEvents)
+    {
+        if (text.Kind == TextKind::Marker)
+        {
+            VerifyText(L"---- 全体設定 ----", text.Text);
+            foundMarker = true;
+        }
+    }
+
+    VERIFY_IS_TRUE(foundMarker);
+}
+
+void SmfTextEncodingTests::KeepsAShortLatin1PairThatIsAlsoValidGbk()
+{
+    // ÀÉ is also the GBK hanzi 郎. One character is not enough to believe GBK.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaTrackName, Bytes({ 0xC0, 0xC9 }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"ÀÉ", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::LetsAJapaneseTagWinOverGbk()
+{
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, Bytes(GbkSenbonzakura))
+        .MetaText(0, MetaLyric, "{@JP}la");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"ﾇｧｱｾ諭", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::KeepsHalfWidthKatakanaWithVoicingMarksAsShiftJis()
+{
+    // Older Japanese files often use only half-width katakana. Every byte here is also clean
+    // GBK, as common hanzi, but ﾌﾟ and ﾄﾞ only make sense in Japanese. From a real file.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaTrackName,
+        "FINAL FANTASY " + Bytes({ 0xA2, 0xCC, 0xDF, 0xDA, 0xD8, 0xAD, 0xB0, 0xC4, 0xDE, 0xA3 }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"FINAL FANTASY ｢ﾌﾟﾚﾘｭｰﾄﾞ｣", sequence.Tracks[0].Name);
+
+    TrackBuilder town{};
+
+    // ｢ﾏﾁ｣ has no voicing mark, but the brackets around kana are just as Japanese.
+    town.MetaText(0, MetaTrackName, "FINAL FANTASY " + Bytes({ 0xA2, 0xCF, 0xC1, 0xA3 }));
+
+    auto const townSequence = ParseOneTrack(town);
+
+    VerifyText(L"FINAL FANTASY ｢ﾏﾁ｣", townSequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::KeepsAKoreanCopyrightSignOutOfGbk()
+{
+    // The © of Korean code page 949 is 0xA8 0xCF, which GBK reads as the bopomofo ㄏ. This
+    // reader doesn't read Korean, so the text stays as it always was.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaCopyright, "Copyright " + Bytes({ 0xA8, 0xCF }) + " 1999 by Contoso");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"Copyright ¨Ï 1999 by Contoso", sequence.Copyright);
+}

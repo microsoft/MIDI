@@ -277,10 +277,12 @@ namespace midifile
         }
 
         // Text in a Standard MIDI File is bytes with no declared encoding. Modern files are
-        // usually UTF-8, older Western ones are Latin-1, and older Japanese ones are Shift-JIS.
+        // usually UTF-8, older Western ones are Latin-1, older Japanese ones are Shift-JIS, and
+        // older Chinese ones are GBK.
         //
         // This decodes one text on its own: UTF-8 when it is valid UTF-8, and Latin-1 otherwise,
-        // which cannot fail. Shift-JIS can't be told apart from Latin-1 one short text at a time,
+        // which cannot fail. Shift-JIS and GBK can't be told apart from Latin-1, or from each
+        // other, one short text at a time,
         // so that decision is made once for the whole file, after every text has been read. See
         // TextEncodingDetector.
         std::string DecodeText(
@@ -336,88 +338,46 @@ namespace midifile
             return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z');
         }
 
-        // Decodes Shift-JIS (Windows code page 932) to UTF-8. Returns false when the bytes are not
-        // clean Shift-JIS: an unknown double-byte code, a lead byte with no trail byte, or a code
-        // that only means something to one vendor's software. A lead byte cut off by
-        // MaximumTextBytes is left off rather than counted against the text.
+        constexpr UINT GbkCodePage = 936;
+
+        // A character that sits inside a Western word, right after an ASCII letter or right before
+        // a lowercase one, is more likely two accented letters than one CJK character, so it is
+        // never allowed to count in favor of an encoding.
+        int ScoreCharacter(_In_ int value, _In_ bool insideWord) noexcept
+        {
+            return insideWord && value > 0 ? 0 : value;
+        }
+
+        // Decodes with a double-byte code page to UTF-8, refusing anything that isn't clean.
         //
-        // sawJapanese is set when the text holds a double-byte character that Western text can't
-        // easily produce by accident:
-        //
-        //  - Its lead byte is from 0x81 to 0x9F. Latin-1 uses those for control codes. Accented
-        //    letters in Latin-1 (0xC0 to 0xFF) can also form valid Shift-JIS pairs, as in "Canção",
-        //    so they never count.
-        //  - Its trail byte is above 0x7F, or its lead byte is 0x81 to 0x83, the rows that hold
-        //    Japanese punctuation, hiragana and katakana.
-        //  - It doesn't come straight after an ASCII letter, and the byte after it isn't a lowercase
-        //    ASCII letter. Old DOS files keep accented letters at 0x80 to 0x9F, and Windows-1252
-        //    keeps curly quotes there, and both sit inside a word: "Müde", "Flügel", "Über",
-        //    "don’t". Japanese text rarely puts a character between two ASCII letters like that.
+        // MB_ERR_INVALID_CHARS rejects codes the code page doesn't define and a lead byte without
+        // a trail byte. Code pages 932 and 936 still accept codes real text doesn't use: 0x80
+        // becomes a control character in 932, and the user defined areas of both become private
+        // use characters no font draws. Those are refused here.
         //
         // Allocates, so it can throw std::bad_alloc.
-        bool TryDecodeShiftJis(
+        bool TryDecodeStrictly(
+            _In_ UINT codePage,
             _In_ std::span<uint8_t const> bytes,
-            _In_ bool truncated,
-            _Out_ std::string& utf8,
-            _Inout_ bool& sawJapanese)
+            _Out_ std::string& utf8)
         {
             utf8.clear();
 
-            size_t usable = bytes.size();
-            bool afterAsciiLetter = false;
-
-            for (size_t index = 0; index < bytes.size();)
-            {
-                auto const lead = bytes[index];
-
-                if (!IsShiftJisLeadByte(lead))
-                {
-                    afterAsciiLetter = IsAsciiLetter(lead);
-                    ++index;
-                    continue;
-                }
-
-                if (index + 1 >= bytes.size())
-                {
-                    if (!truncated)
-                    {
-                        return false;
-                    }
-
-                    usable = index;
-                    break;
-                }
-
-                auto const trail = bytes[index + 1];
-                auto const beforeLowercaseLetter =
-                    index + 2 < bytes.size() && bytes[index + 2] >= 'a' && bytes[index + 2] <= 'z';
-
-                if (lead <= 0x9F && (lead <= 0x83 || trail >= 0x80) && !afterAsciiLetter && !beforeLowercaseLetter)
-                {
-                    sawJapanese = true;
-                }
-
-                afterAsciiLetter = false;
-                index += 2;
-            }
-
-            if (usable == 0)
+            if (bytes.empty())
             {
                 return true;
             }
 
-            if (usable > static_cast<size_t>(INT_MAX))
+            if (bytes.size() > static_cast<size_t>(INT_MAX))
             {
                 return false;
             }
 
             auto const source = reinterpret_cast<char const*>(bytes.data());
-            auto const sourceLength = static_cast<int>(usable);
+            auto const sourceLength = static_cast<int>(bytes.size());
 
-            // MB_ERR_INVALID_CHARS rejects double-byte codes that code page 932 doesn't define,
-            // a lead byte without a trail byte, and the single bytes 0xA0 and 0xFD to 0xFF.
             auto const wideLength = ::MultiByteToWideChar(
-                ShiftJisCodePage, MB_ERR_INVALID_CHARS, source, sourceLength, nullptr, 0);
+                codePage, MB_ERR_INVALID_CHARS, source, sourceLength, nullptr, 0);
 
             if (wideLength <= 0)
             {
@@ -427,14 +387,11 @@ namespace midifile
             std::wstring wide(static_cast<size_t>(wideLength), L'\0');
 
             if (::MultiByteToWideChar(
-                ShiftJisCodePage, MB_ERR_INVALID_CHARS, source, sourceLength, wide.data(), wideLength) != wideLength)
+                codePage, MB_ERR_INVALID_CHARS, source, sourceLength, wide.data(), wideLength) != wideLength)
             {
                 return false;
             }
 
-            // It does accept two kinds of code that real Japanese text doesn't use: the byte 0x80,
-            // which becomes a control character, and the user defined codes from 0xF040, which
-            // become private use characters no font draws.
             for (auto const character : wide)
             {
                 if ((character >= 0x80 && character <= 0x9F) || (character >= 0xE000 && character <= 0xF8FF))
@@ -461,6 +418,215 @@ namespace midifile
             }
 
             return true;
+        }
+
+        // Half-width ｳ, ｶ to ﾄ and ﾊ to ﾎ can take the voicing mark ﾞ; ﾊ to ﾎ can take ﾟ.
+        bool TakesDakuten(_In_ uint8_t halfWidth) noexcept
+        {
+            return halfWidth == 0xB3 || (halfWidth >= 0xB6 && halfWidth <= 0xC4) || (halfWidth >= 0xCA && halfWidth <= 0xCE);
+        }
+
+        bool TakesHandakuten(_In_ uint8_t halfWidth) noexcept
+        {
+            return halfWidth >= 0xCA && halfWidth <= 0xCE;
+        }
+
+        // Decodes Shift-JIS (Windows code page 932) to UTF-8. Returns false when the bytes are not
+        // clean Shift-JIS: an unknown double-byte code, a lead byte with no trail byte, or a code
+        // that only means something to one vendor's software. A lead byte cut off by
+        // MaximumTextBytes is left off rather than counted against the text.
+        //
+        // sawJapanese is set when the text holds a double-byte character that Western text can't
+        // easily produce by accident:
+        //
+        //  - Its lead byte is from 0x81 to 0x9F. Latin-1 uses those for control codes. Accented
+        //    letters in Latin-1 (0xC0 to 0xFF) can also form valid Shift-JIS pairs, as in "Canção",
+        //    so they never count.
+        //  - Its trail byte is above 0x7F, or its lead byte is 0x81 to 0x83, the rows that hold
+        //    Japanese punctuation, hiragana and katakana.
+        //  - It doesn't come straight after an ASCII letter, and the byte after it isn't a lowercase
+        //    ASCII letter. Old DOS files keep accented letters at 0x80 to 0x9F, and Windows-1252
+        //    keeps curly quotes there, and both sit inside a word: "Müde", "Flügel", "Über",
+        //    "don’t". Japanese text rarely puts a character between two ASCII letters like that.
+        //
+        // score is how much the text looks like real Japanese, for choosing between Shift-JIS and
+        // GBK when the same bytes read cleanly in both (see ScoreCharacter). Half-width katakana,
+        // single bytes from 0xA1 to 0xDF, are what GBK text read as Shift-JIS is mostly made of,
+        // but older Japanese files use them a lot too, so on their own they count for nothing.
+        // A voicing mark on a kana that takes it does count, and is also evidence of Japanese.
+        //
+        // Allocates, so it can throw std::bad_alloc.
+        bool TryDecodeShiftJis(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ bool truncated,
+            _Out_ std::string& utf8,
+            _Inout_ bool& sawJapanese,
+            _Inout_ int& score)
+        {
+            utf8.clear();
+
+            size_t usable = bytes.size();
+            bool afterAsciiLetter = false;
+            uint8_t previousHalfWidth = 0;
+            bool openedBracket = false;
+
+            for (size_t index = 0; index < bytes.size();)
+            {
+                auto const lead = bytes[index];
+
+                if (!IsShiftJisLeadByte(lead))
+                {
+                    // Half-width katakana have structure that GBK text read as Shift-JIS doesn't:
+                    // the voicing marks ﾞ and ﾟ only follow kana that can take them, as in ﾌﾟ and
+                    // ﾄﾞ, and the long vowel mark ｰ follows a kana, as in ﾘｭｰ.
+                    if (lead == 0xDE && TakesDakuten(previousHalfWidth))
+                    {
+                        sawJapanese = true;
+                        score += 2;
+                    }
+                    else if (lead == 0xDF && TakesHandakuten(previousHalfWidth))
+                    {
+                        sawJapanese = true;
+                        score += 2;
+                    }
+                    else if (lead == 0xB0 && previousHalfWidth >= 0xA6 && previousHalfWidth <= 0xDF)
+                    {
+                        score += 1;
+                    }
+                    else if ((lead == 0xA2 && previousHalfWidth == 0 && index + 1 < bytes.size() &&
+                                 bytes[index + 1] >= 0xA6 && bytes[index + 1] <= 0xDD) ||
+                        (lead == 0xA3 && openedBracket && previousHalfWidth >= 0xA6 && previousHalfWidth <= 0xDF))
+                    {
+                        // The half-width corner brackets ｢ and ｣ around kana, as in ｢ﾏﾁ｣. The
+                        // opening one starts a word and the closing one only follows an opening one.
+                        openedBracket = lead == 0xA2;
+                        sawJapanese = true;
+                        score += 2;
+                    }
+
+                    previousHalfWidth = (lead >= 0xA1 && lead <= 0xDF) ? lead : 0;
+                    afterAsciiLetter = IsAsciiLetter(lead);
+                    ++index;
+                    continue;
+                }
+
+                previousHalfWidth = 0;
+
+                if (index + 1 >= bytes.size())
+                {
+                    if (!truncated)
+                    {
+                        return false;
+                    }
+
+                    usable = index;
+                    break;
+                }
+
+                auto const trail = bytes[index + 1];
+                auto const beforeLowercaseLetter =
+                    index + 2 < bytes.size() && bytes[index + 2] >= 'a' && bytes[index + 2] <= 'z';
+                auto const insideWord = afterAsciiLetter || beforeLowercaseLetter;
+
+                if (lead <= 0x9F && (lead <= 0x83 || trail >= 0x80) && !insideWord)
+                {
+                    sawJapanese = true;
+                }
+
+                // Rows 0x82 and 0x83 are hiragana and katakana, 0x81 is punctuation, 0x88 to 0x98
+                // are the everyday kanji of JIS level 1. Rows 0x87, 0xED, 0xEE and 0xFA to 0xFC
+                // are vendor extensions that real text seldom needs.
+                int value = 0;
+
+                if (lead == 0x82 || lead == 0x83) { value = 2; }
+                else if (lead == 0x81 || (lead >= 0x88 && lead <= 0x98)) { value = 1; }
+                else if (lead == 0x87 || lead == 0xED || lead == 0xEE || lead >= 0xFA) { value = -1; }
+
+                score += ScoreCharacter(value, insideWord);
+
+                afterAsciiLetter = false;
+                index += 2;
+            }
+
+            return TryDecodeStrictly(ShiftJisCodePage, bytes.first(usable), utf8);
+        }
+
+        // Decodes GBK (Windows code page 936), the encoding of older Simplified Chinese files, to
+        // UTF-8. Returns false when the bytes are not clean GBK, in the same way as
+        // TryDecodeShiftJis. Every byte from 0x81 to 0xFE starts a two byte character in GBK, so
+        // there is nothing like half-width katakana.
+        //
+        // score works like the one TryDecodeShiftJis gives. Characters from the GB2312 core of
+        // GBK (both bytes 0xA1 or above) count for it: rows 0xA4 and 0xA5, which hold hiragana and
+        // katakana, the punctuation rows 0xA1 to 0xA3, and the common hanzi from 0xB0 to 0xD7.
+        // Characters only GBK added, with a trail byte below 0xA1, count against it, because that
+        // is what Shift-JIS text read as GBK is mostly made of. So do row 0xA2, circled and Roman
+        // numerals, which is where the half-width brackets ｢ of Shift-JIS land, and row 0xA8,
+        // pinyin and bopomofo, which titles seldom use but Korean text read as GBK often lands
+        // in: the © of Korean code page 949 reads as the bopomofo ㄏ.
+        //
+        // Allocates, so it can throw std::bad_alloc.
+        bool TryDecodeGbk(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ bool truncated,
+            _Out_ std::string& utf8,
+            _Inout_ int& score)
+        {
+            utf8.clear();
+
+            size_t usable = bytes.size();
+            bool afterAsciiLetter = false;
+
+            for (size_t index = 0; index < bytes.size();)
+            {
+                auto const lead = bytes[index];
+
+                if (lead < 0x80)
+                {
+                    afterAsciiLetter = IsAsciiLetter(lead);
+                    ++index;
+                    continue;
+                }
+
+                // Code page 936 reads 0x80 alone as the euro sign, which GBK text doesn't use
+                // but Western text has at 0x80.
+                if (lead == 0x80 || lead == 0xFF)
+                {
+                    return false;
+                }
+
+                if (index + 1 >= bytes.size())
+                {
+                    if (!truncated)
+                    {
+                        return false;
+                    }
+
+                    usable = index;
+                    break;
+                }
+
+                auto const trail = bytes[index + 1];
+                auto const beforeLowercaseLetter =
+                    index + 2 < bytes.size() && bytes[index + 2] >= 'a' && bytes[index + 2] <= 'z';
+
+                int value = -1;
+
+                if (lead >= 0xA1 && lead <= 0xF7 && trail >= 0xA1 && trail <= 0xFE)
+                {
+                    if (lead == 0xA4 || lead == 0xA5) { value = 2; }
+                    else if (lead == 0xA2 || lead == 0xA8) { value = -1; }
+                    else if (lead <= 0xA3 || (lead >= 0xB0 && lead <= 0xD7)) { value = 1; }
+                    else { value = 0; }
+                }
+
+                score += ScoreCharacter(value, afterAsciiLetter || beforeLowercaseLetter);
+
+                afterAsciiLetter = false;
+                index += 2;
+            }
+
+            return TryDecodeStrictly(GbkCodePage, bytes.first(usable), utf8);
         }
 
         constexpr UINT AnsiCodePage = 1252;
@@ -784,15 +950,19 @@ namespace midifile
             TextTarget Target{ TextTarget::None };
             bool Truncated{ false };
             bool PreserveWhitespace{ false };
+            bool SameEventAsPrevious{ false };  // one event can fill two places; score it once
         };
 
         // Picks one text encoding for the whole file, in this order:
         //
         //  1. UTF-8, when every text that has a byte outside ASCII is valid UTF-8.
-        //  2. Shift-JIS, when every one of them is clean Shift-JIS AND at least one holds a
-        //     character Latin-1 text can't produce by accident (see TryDecodeShiftJis). A short
-        //     Latin-1 name made only of capital accented letters, such as "ÀÉÎ", is also valid
-        //     half-width katakana, so it stays Latin-1.
+        //  2. Shift-JIS or GBK. Shift-JIS fits when every text is clean Shift-JIS AND at least one
+        //     holds a character Latin-1 text can't produce by accident (see TryDecodeShiftJis). A
+        //     short Latin-1 name made only of capital accented letters, such as "ÀÉÎ", is also
+        //     valid half-width katakana, so it stays Latin-1. GBK fits when every text is clean
+        //     GBK and they score at least MinimumGbkScore (see TryDecodeGbk). The two overlap a
+        //     lot: 千本桜 in GBK is also valid Shift-JIS, as half-width katakana and one kanji.
+        //     When both fit, the higher score wins, and Shift-JIS wins a tie.
         //  3. Otherwise each text keeps the decoding DecodeText gave it, which is how this reader
         //     has always behaved.
         //
@@ -817,7 +987,8 @@ namespace midifile
         // and the copyright or another track name in the same file is what settles it.
         //
         // The model is filled in as the file is read, decoded the DecodeText way, and only
-        // rewritten here when the file turns out to be Shift-JIS. Whether a text decodes to
+        // rewritten here when the file turns out to be Shift-JIS, GBK or tagged ANSI. Whether a
+        // text decodes to
         // nothing, and whether it starts with "@K", come out the same in every encoding, so the
         // choices made while reading still hold afterward.
         class TextEncodingDetector
@@ -861,7 +1032,9 @@ namespace midifile
 
                 try
                 {
-                    m_texts.push_back(RecordedText{ bytes, targetIndex, target, truncated, preserveWhitespace });
+                    auto const sameEventAsPrevious = !m_texts.empty() && m_texts.back().Bytes.data() == bytes.data();
+
+                    m_texts.push_back(RecordedText{ bytes, targetIndex, target, truncated, preserveWhitespace, sameEventAsPrevious });
                 }
                 catch (...)
                 {
@@ -917,28 +1090,73 @@ namespace midifile
 
                     // Every text is decoded before any is written back, so the model never ends up
                     // with some texts in one encoding and the rest in another.
-                    std::vector<std::string> decoded(m_texts.size());
-                    bool sawJapanese = m_firstCodeSet == CharacterCodeSet::Japanese;
+                    auto const japaneseTagged = m_firstCodeSet == CharacterCodeSet::Japanese;
+
+                    std::vector<std::string> shiftJis(m_texts.size());
+                    std::vector<std::string> gbk(m_texts.size());
+                    bool sawJapanese = japaneseTagged;
+                    bool shiftJisClean = true;
+                    bool gbkClean = !japaneseTagged;
+                    int shiftJisScore = 0;
+                    int gbkScore = 0;
 
                     for (size_t index = 0; index < m_texts.size(); ++index)
                     {
-                        if (!TryDecodeShiftJis(m_texts[index].Bytes, m_texts[index].Truncated, decoded[index], sawJapanese))
+                        auto const& text = m_texts[index];
+                        int ignoredScore = 0;
+
+                        if (shiftJisClean)
+                        {
+                            shiftJisClean = TryDecodeShiftJis(
+                                text.Bytes, text.Truncated, shiftJis[index], sawJapanese,
+                                text.SameEventAsPrevious ? ignoredScore : shiftJisScore);
+                            TidyText(shiftJis[index], text.PreserveWhitespace);
+                        }
+
+                        if (gbkClean)
+                        {
+                            gbkClean = TryDecodeGbk(
+                                text.Bytes, text.Truncated, gbk[index],
+                                text.SameEventAsPrevious ? ignoredScore : gbkScore);
+                            TidyText(gbk[index], text.PreserveWhitespace);
+                        }
+
+                        if (!shiftJisClean && !gbkClean)
                         {
                             return;
                         }
-
-                        TidyText(decoded[index], m_texts[index].PreserveWhitespace);
                     }
 
-                    if (!sawJapanese)
+                    auto const shiftJisFits = shiftJisClean && sawJapanese;
+                    auto const gbkFits = gbkClean && gbkScore >= MinimumGbkScore;
+
+                    std::vector<std::string>* chosen{ nullptr };
+
+                    if (shiftJisFits && gbkFits)
+                    {
+                        // Both read cleanly, which happens because their byte ranges overlap. The
+                        // one that reads more like real text wins, and Shift-JIS wins a tie.
+                        chosen = gbkScore > shiftJisScore ? &gbk : &shiftJis;
+                    }
+                    else if (shiftJisFits)
+                    {
+                        chosen = &shiftJis;
+                    }
+                    else if (gbkFits)
+                    {
+                        chosen = &gbk;
+                    }
+                    else
                     {
                         return;
                     }
 
                     for (size_t index = 0; index < m_texts.size(); ++index)
                     {
+                        auto& decoded = (*chosen)[index];
+
                         // Only a dropped cut lead byte can make this empty; keep what was read.
-                        if (decoded[index].empty())
+                        if (decoded.empty())
                         {
                             continue;
                         }
@@ -947,7 +1165,7 @@ namespace midifile
 
                         if (destination != nullptr)
                         {
-                            *destination = std::move(decoded[index]);
+                            *destination = std::move(decoded);
                         }
                     }
                 }
@@ -962,6 +1180,11 @@ namespace midifile
             // Enough texts to settle the encoding of any real file, without letting a file made
             // of nothing but comments grow this list without limit.
             static constexpr size_t MaximumEvidenceOnlyTexts = 4096;
+
+            // GBK has no rule like the Shift-JIS one about control code lead bytes, so it needs a
+            // few characters that read like real Chinese or Japanese text before it is believed.
+            // Two is one kana, or two common hanzi or punctuation marks.
+            static constexpr int MinimumGbkScore = 2;
 
             static std::string* Destination(_Inout_ MidiSequence& sequence, _In_ RecordedText const& text) noexcept
             {

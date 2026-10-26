@@ -54,7 +54,7 @@ The top of the window is the file that's playing.
 
 **Chord symbols and lyrics are only there if the file has them.** Both panels stay out of the way completely on a file that doesn't, rather than showing you an empty label. Chord symbols in particular are uncommon &mdash; they turn up in lead sheet and karaoke files.
 
-**Japanese text in older files shows correctly.** A MIDI file doesn't say how its text is stored, so the player works it out for each file. It reads UTF-8, Shift-JIS (used by many older Japanese files) and Latin-1 (used by many older Western files). You don't need to pick one.
+**Japanese and Chinese text in older files shows correctly.** A MIDI file doesn't say how its text is stored, so the player works it out for each file. It reads UTF-8, Shift-JIS (used by many older Japanese files), GBK (used by many older Chinese files) and Latin-1 (used by many older Western files). You don't need to pick one. Korean and Traditional Chinese (Big5) files aren't recognized yet.
 
 ## Moving around a file
 
