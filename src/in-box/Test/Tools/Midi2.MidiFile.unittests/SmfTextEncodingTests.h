@@ -32,4 +32,17 @@ public:
     TEST_METHOD(KeepsCurlyQuotesOutOfShiftJis);
     TEST_METHOD(DropsAShiftJisCharacterCutByTheTextLimit);
     TEST_METHOD(DropsAUtf8CharacterCutByTheTextLimit);
+
+    // ---- RP-026 code set tags and byte order marks ----
+    TEST_METHOD(ReadsLyricsAfterAJapaneseCodeSetTag);
+    TEST_METHOD(ReadsATagAndTextInTheSameLyric);
+    TEST_METHOD(AcceptsTheCodeSetNameInAnyCase);
+    TEST_METHOD(SwitchesCodeSetsPartWayThrough);
+    TEST_METHOD(ReadsLatinTaggedLyricsAsWindows1252);
+    TEST_METHOD(UsesAJapaneseTagForNamesWithoutOtherEvidence);
+    TEST_METHOD(UsesALatinTagForNamesThatLookLikeShiftJis);
+    TEST_METHOD(KeepsUtf8NamesInATaggedFile);
+    TEST_METHOD(DropsNonAsciiLyricsInAnUndefinedCodeSet);
+    TEST_METHOD(LeavesSomethingThatOnlyLooksLikeATagAlone);
+    TEST_METHOD(ReadsTextThatStartsWithAByteOrderMark);
 };

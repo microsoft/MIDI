@@ -17,6 +17,7 @@
 #include <cctype>
 #include <climits>
 #include <string>
+#include <string_view>
 
 namespace midifile
 {
@@ -462,6 +463,310 @@ namespace midifile
             return true;
         }
 
+        constexpr UINT AnsiCodePage = 1252;
+
+        // Allocates, so it can throw std::bad_alloc.
+        std::string WideToUtf8(_In_ std::wstring_view wide)
+        {
+            std::string utf8{};
+
+            if (wide.empty() || wide.size() > static_cast<size_t>(INT_MAX))
+            {
+                return utf8;
+            }
+
+            auto const wideLength = static_cast<int>(wide.size());
+            auto const length = ::WideCharToMultiByte(CP_UTF8, 0, wide.data(), wideLength, nullptr, 0, nullptr, nullptr);
+
+            if (length <= 0)
+            {
+                return utf8;
+            }
+
+            utf8.resize(static_cast<size_t>(length));
+
+            if (::WideCharToMultiByte(CP_UTF8, 0, wide.data(), wideLength, utf8.data(), length, nullptr, nullptr) != length)
+            {
+                utf8.clear();
+            }
+
+            return utf8;
+        }
+
+        // Decodes with a Windows code page to UTF-8. Anything the code page can't map is replaced
+        // rather than refused, because the encoding is already known here, not being guessed.
+        //
+        // Allocates, so it can throw std::bad_alloc.
+        std::string DecodeCodePage(_In_ UINT codePage, _In_ std::span<uint8_t const> bytes)
+        {
+            if (bytes.empty() || bytes.size() > static_cast<size_t>(INT_MAX))
+            {
+                return {};
+            }
+
+            auto const source = reinterpret_cast<char const*>(bytes.data());
+            auto const sourceLength = static_cast<int>(bytes.size());
+            auto const wideLength = ::MultiByteToWideChar(codePage, 0, source, sourceLength, nullptr, 0);
+
+            if (wideLength <= 0)
+            {
+                return {};
+            }
+
+            std::wstring wide(static_cast<size_t>(wideLength), L'\0');
+
+            if (::MultiByteToWideChar(codePage, 0, source, sourceLength, wide.data(), wideLength) != wideLength)
+            {
+                return {};
+            }
+
+            return WideToUtf8(wide);
+        }
+
+        // How many bytes hold whole Shift-JIS characters, leaving off a lead byte at the very end
+        // that has no trail byte.
+        size_t ShiftJisCompleteLength(_In_ std::span<uint8_t const> bytes) noexcept
+        {
+            size_t index = 0;
+
+            while (index < bytes.size())
+            {
+                if (!IsShiftJisLeadByte(bytes[index]))
+                {
+                    ++index;
+                }
+                else if (index + 1 >= bytes.size())
+                {
+                    return index;
+                }
+                else
+                {
+                    index += 2;
+                }
+            }
+
+            return bytes.size();
+        }
+
+        enum class ByteOrderMark : uint8_t
+        {
+            None,
+            Utf8,
+            Utf16LittleEndian,
+            Utf16BigEndian,
+        };
+
+        ByteOrderMark ReadByteOrderMark(_In_ std::span<uint8_t const> bytes) noexcept
+        {
+            if (bytes.size() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            {
+                return ByteOrderMark::Utf8;
+            }
+
+            if (bytes.size() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+            {
+                return ByteOrderMark::Utf16LittleEndian;
+            }
+
+            if (bytes.size() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+            {
+                return ByteOrderMark::Utf16BigEndian;
+            }
+
+            return ByteOrderMark::None;
+        }
+
+        // RP-026: text that starts with a Unicode byte order mark is Unicode, whatever else the
+        // file says. The mark covers only the event it starts, because text without one can't be
+        // recognized as UTF-16 reliably. Empty on failure.
+        std::string DecodeUnicodeText(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ ByteOrderMark mark,
+            _In_ bool preserveWhitespace) noexcept
+        {
+            try
+            {
+                std::string text{};
+
+                if (mark == ByteOrderMark::Utf8)
+                {
+                    auto const body = bytes.subspan(3);
+                    size_t usable{};
+
+                    if (TryMeasureUtf8(body, true, usable))
+                    {
+                        text.assign(reinterpret_cast<char const*>(body.data()), usable);
+                    }
+                    else
+                    {
+                        text = DecodeCodePage(CP_UTF8, body);
+                    }
+                }
+                else
+                {
+                    auto const body = bytes.subspan(2);
+                    auto const bigEndian = mark == ByteOrderMark::Utf16BigEndian;
+
+                    std::wstring wide(body.size() / 2, L'\0');
+
+                    for (size_t index = 0; index < wide.size(); ++index)
+                    {
+                        auto const first = body[index * 2];
+                        auto const second = body[index * 2 + 1];
+
+                        wide[index] = bigEndian
+                            ? static_cast<wchar_t>((first << 8) | second)
+                            : static_cast<wchar_t>((second << 8) | first);
+                    }
+
+                    // Half of a surrogate pair, cut by MaximumTextBytes.
+                    if (!wide.empty() && wide.back() >= 0xD800 && wide.back() <= 0xDBFF)
+                    {
+                        wide.pop_back();
+                    }
+
+                    text = WideToUtf8(wide);
+                }
+
+                TidyText(text, preserveWhitespace);
+
+                return text;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
+        // RP-026 character code sets, chosen by a {@<code_set>} tag in a lyric event.
+        enum class CharacterCodeSet : uint8_t
+        {
+            None,       // no tag seen yet
+            Latin,      // {@LATIN}: ANSI, read as Windows code page 1252
+            Japanese,   // {@JP}: MS-Kanji, which is Shift-JIS, read as Windows code page 932
+            Unknown,    // a tag RP-026 doesn't define
+        };
+
+        bool EqualsIgnoringAsciiCase(_In_ std::span<uint8_t const> bytes, _In_ char const* expected) noexcept
+        {
+            size_t index = 0;
+
+            for (; expected[index] != '\0'; ++index)
+            {
+                if (index >= bytes.size())
+                {
+                    return false;
+                }
+
+                auto value = bytes[index];
+
+                if (value >= 'A' && value <= 'Z')
+                {
+                    value = static_cast<uint8_t>(value - 'A' + 'a');
+                }
+
+                if (value != static_cast<uint8_t>(expected[index]))
+                {
+                    return false;
+                }
+            }
+
+            return index == bytes.size();
+        }
+
+        // Reads the code set tags at the start of a lyric event and returns what follows them.
+        // codeSet is left alone when there is no tag. Something that starts like a tag but has no
+        // closing brace within a short distance is not a tag, and is left as text.
+        //
+        // RP-026 spells the names LATIN, Latin or latin, and JP, Jp or jp. Any mix of case is
+        // accepted here, and so are spaces around the name.
+        std::span<uint8_t const> ReadCodeSetTags(
+            _In_ std::span<uint8_t const> bytes,
+            _Inout_ CharacterCodeSet& codeSet) noexcept
+        {
+            constexpr size_t MaximumTagLength = 32;
+
+            while (bytes.size() >= 3 && bytes[0] == '{' && bytes[1] == '@')
+            {
+                size_t close = 2;
+
+                while (close < bytes.size() && close < MaximumTagLength && bytes[close] != '}')
+                {
+                    ++close;
+                }
+
+                if (close >= bytes.size() || bytes[close] != '}')
+                {
+                    break;
+                }
+
+                auto name = bytes.subspan(2, close - 2);
+
+                while (!name.empty() && name.front() == ' ') { name = name.subspan(1); }
+                while (!name.empty() && name.back() == ' ') { name = name.first(name.size() - 1); }
+
+                if (EqualsIgnoringAsciiCase(name, "latin"))
+                {
+                    codeSet = CharacterCodeSet::Latin;
+                }
+                else if (EqualsIgnoringAsciiCase(name, "jp"))
+                {
+                    codeSet = CharacterCodeSet::Japanese;
+                }
+                else
+                {
+                    codeSet = CharacterCodeSet::Unknown;
+                }
+
+                bytes = bytes.subspan(close + 1);
+            }
+
+            return bytes;
+        }
+
+        // Decodes a lyric in the code set its tag named. RP-026 says lyrics in a code set it
+        // doesn't define are ignored until a defined one appears. Plain ASCII reads the same in
+        // every code set, so those lyrics are kept, which also keeps the line breaks of a song;
+        // anything else is dropped rather than shown as nonsense. Empty when dropped.
+        std::string DecodeTaggedText(
+            _In_ std::span<uint8_t const> bytes,
+            _In_ CharacterCodeSet codeSet,
+            _In_ bool preserveWhitespace) noexcept
+        {
+            try
+            {
+                std::string text{};
+
+                switch (codeSet)
+                {
+                case CharacterCodeSet::Latin:
+                    text = DecodeCodePage(AnsiCodePage, bytes);
+                    break;
+
+                case CharacterCodeSet::Japanese:
+                    text = DecodeCodePage(ShiftJisCodePage, bytes.first(ShiftJisCompleteLength(bytes)));
+                    break;
+
+                default:
+                    if (HasNonAsciiByte(bytes))
+                    {
+                        return {};
+                    }
+
+                    text.assign(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+                    break;
+                }
+
+                TidyText(text, preserveWhitespace);
+
+                return text;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
         enum class TextTarget : uint8_t
         {
             None,               // read for the encoding decision only
@@ -491,6 +796,23 @@ namespace midifile
         //  3. Otherwise each text keeps the decoding DecodeText gave it, which is how this reader
         //     has always behaved.
         //
+        // RP-026 adds two ways for a file to say what it uses, and they come first:
+        //
+        //  - A text that starts with a Unicode byte order mark is decoded as Unicode while it is
+        //    read, and never reaches this class.
+        //  - A {@LATIN} or {@JP} tag in a lyric event sets the code set of the lyrics that follow
+        //    it, until the next tag. Those lyrics are also decoded while they are read.
+        //
+        // Everything else, meaning names, the copyright, other text events and any lyrics before
+        // the first tag, is decided here. RP-026 only defines the tag for lyrics, but a file that
+        // declares its lyrics Japanese or ANSI almost always means the rest of its text too, so
+        // the first defined tag in the file replaces step 2 above: {@JP} picks Shift-JIS whenever
+        // every text decodes cleanly in it, without looking for further evidence, and {@LATIN}
+        // picks Windows code page 1252. UTF-8 still wins when every text is valid UTF-8, and a
+        // file with no tag is guessed as described above. RP-026's own default for a file with
+        // no tag is ANSI, but the guess reads the same ANSI files the same way and also reads
+        // the many UTF-8 and Japanese files that never carried a tag.
+        //
         // Deciding per file matters because one Japanese name is often only a few bytes long,
         // and the copyright or another track name in the same file is what settles it.
         //
@@ -501,6 +823,19 @@ namespace midifile
         class TextEncodingDetector
         {
         public:
+            CharacterCodeSet CurrentCodeSet() const noexcept { return m_codeSet; }
+
+            void SetCurrentCodeSet(_In_ CharacterCodeSet codeSet) noexcept
+            {
+                m_codeSet = codeSet;
+
+                if (m_firstCodeSet == CharacterCodeSet::None &&
+                    (codeSet == CharacterCodeSet::Latin || codeSet == CharacterCodeSet::Japanese))
+                {
+                    m_firstCodeSet = codeSet;
+                }
+            }
+
             void Record(
                 _In_ std::span<uint8_t const> bytes,
                 _In_ bool truncated,
@@ -557,10 +892,33 @@ namespace midifile
                         return;
                     }
 
+                    if (m_firstCodeSet == CharacterCodeSet::Latin)
+                    {
+                        std::vector<std::string> ansi(m_texts.size());
+
+                        for (size_t index = 0; index < m_texts.size(); ++index)
+                        {
+                            ansi[index] = DecodeCodePage(AnsiCodePage, m_texts[index].Bytes);
+                            TidyText(ansi[index], m_texts[index].PreserveWhitespace);
+                        }
+
+                        for (size_t index = 0; index < m_texts.size(); ++index)
+                        {
+                            auto const destination = Destination(sequence, m_texts[index]);
+
+                            if (destination != nullptr && !ansi[index].empty())
+                            {
+                                *destination = std::move(ansi[index]);
+                            }
+                        }
+
+                        return;
+                    }
+
                     // Every text is decoded before any is written back, so the model never ends up
                     // with some texts in one encoding and the rest in another.
                     std::vector<std::string> decoded(m_texts.size());
-                    bool sawJapanese = false;
+                    bool sawJapanese = m_firstCodeSet == CharacterCodeSet::Japanese;
 
                     for (size_t index = 0; index < m_texts.size(); ++index)
                     {
@@ -631,6 +989,8 @@ namespace midifile
 
             std::vector<RecordedText> m_texts{};
             size_t m_evidenceOnlyCount{ 0 };
+            CharacterCodeSet m_codeSet{ CharacterCodeSet::None };
+            CharacterCodeSet m_firstCodeSet{ CharacterCodeSet::None };   // first LATIN or JP tag
             bool m_abandoned{ false };
         };
 
@@ -811,7 +1171,35 @@ namespace midifile
                 // spacing; everything else is a name or a note to a reader and is tidied up.
                 auto const preserveWhitespace = kind == TextKind::Lyric || kind == TextKind::Text;
 
-                auto text = DecodeText(data, preserveWhitespace, truncated);
+                // RP-026 code set tags travel in lyric events. They are instructions, not words to
+                // sing, so they are taken off the front of the lyric.
+                auto codeSet = CharacterCodeSet::None;
+
+                if (kind == TextKind::Lyric)
+                {
+                    codeSet = encodingDetector.CurrentCodeSet();
+                    data = ReadCodeSetTags(data, codeSet);
+                    encodingDetector.SetCurrentCodeSet(codeSet);
+                }
+
+                // A text the file itself says how to read is decoded here and left out of the
+                // file wide guess.
+                bool decided = true;
+                std::string text{};
+
+                if (auto const mark = ReadByteOrderMark(data); mark != ByteOrderMark::None)
+                {
+                    text = DecodeUnicodeText(data, mark, preserveWhitespace);
+                }
+                else if (codeSet != CharacterCodeSet::None)
+                {
+                    text = DecodeTaggedText(data, codeSet, preserveWhitespace);
+                }
+                else
+                {
+                    text = DecodeText(data, preserveWhitespace, truncated);
+                    decided = false;
+                }
 
                 if (text.empty())
                 {
@@ -822,7 +1210,11 @@ namespace midifile
 
                 auto record = [&](TextTarget target, size_t targetIndex) noexcept
                     {
-                        encodingDetector.Record(data, truncated, preserveWhitespace, target, targetIndex);
+                        if (!decided)
+                        {
+                            encodingDetector.Record(data, truncated, preserveWhitespace, target, targetIndex);
+                        }
+
                         recorded = true;
                     };
 

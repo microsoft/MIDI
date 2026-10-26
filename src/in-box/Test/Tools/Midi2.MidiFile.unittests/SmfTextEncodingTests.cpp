@@ -339,3 +339,200 @@ void SmfTextEncodingTests::DropsAUtf8CharacterCutByTheTextLimit()
 
     VerifyText(L"東京", sequence.Tracks[0].Name);
 }
+
+namespace
+{
+    std::vector<std::wstring> Lyrics(MidiSequence const& sequence)
+    {
+        std::vector<std::wstring> lyrics{};
+
+        for (auto const& text : sequence.TextEvents)
+        {
+            if (text.Kind == TextKind::Lyric)
+            {
+                lyrics.push_back(Wide(text.Text));
+            }
+        }
+
+        return lyrics;
+    }
+
+    void VerifyLyrics(std::initializer_list<wchar_t const*> expected, MidiSequence const& sequence)
+    {
+        auto const lyrics = Lyrics(sequence);
+
+        VERIFY_ARE_EQUAL(expected.size(), lyrics.size());
+
+        size_t index = 0;
+
+        for (auto const text : expected)
+        {
+            VERIFY_ARE_EQUAL(String(text), String(lyrics[index++].c_str()));
+        }
+    }
+}
+
+void SmfTextEncodingTests::ReadsLyricsAfterAJapaneseCodeSetTag()
+{
+    // Half-width katakana alone isn't enough evidence for a guess (see
+    // KeepsShortCapitalAccentedLatin1AsLatin1), but the tag says what it is. The tag itself is
+    // not a lyric.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@JP}")
+        .MetaText(0, MetaLyric, Bytes(ShiftJisHalfWidthAiu))
+        .MetaText(120, MetaLyric, Bytes(ShiftJisSaku));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"ｱｲｳ", L"さく" }, sequence);
+}
+
+void SmfTextEncodingTests::ReadsATagAndTextInTheSameLyric()
+{
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaLyric, "{@JP}" + Bytes(ShiftJisSaku));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"さく" }, sequence);
+}
+
+void SmfTextEncodingTests::AcceptsTheCodeSetNameInAnyCase()
+{
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@jp}" + Bytes(ShiftJisHalfWidthAiu))
+        .MetaText(120, MetaLyric, "{@Latin}" + Bytes(ShiftJisHalfWidthAiu))
+        .MetaText(120, MetaLyric, "{@Jp}" + Bytes(ShiftJisHalfWidthAiu));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"ｱｲｳ", L"±²³", L"ｱｲｳ" }, sequence);
+}
+
+void SmfTextEncodingTests::SwitchesCodeSetsPartWayThrough()
+{
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@JP}")
+        .MetaText(0, MetaLyric, Bytes(ShiftJisSaku))
+        .MetaText(120, MetaLyric, "{@LATIN}")
+        .MetaText(0, MetaLyric, Bytes({ 0x43, 0x61, 0x66, 0xE9 }))                  // Café
+        .MetaText(120, MetaLyric, "{@JP}")
+        .MetaText(0, MetaLyric, Bytes(ShiftJisRa));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"さく", L"Café", L"ら" }, sequence);
+}
+
+void SmfTextEncodingTests::ReadsLatinTaggedLyricsAsWindows1252()
+{
+    // ANSI puts curly quotes at 0x93 and 0x94, where Latin-1 has control codes.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@LATIN}")
+        .MetaText(0, MetaLyric, Bytes({ 0x93, 0x48, 0x69, 0x94 }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"\x201CHi\x201D" }, sequence);
+}
+
+void SmfTextEncodingTests::UsesAJapaneseTagForNamesWithoutOtherEvidence()
+{
+    // Untagged, a track name of half-width katakana stays Latin-1. A {@JP} lyric tag settles it.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, Bytes(ShiftJisHalfWidthAiu))
+        .MetaText(0, MetaLyric, "{@JP}")
+        .MetaText(0, MetaLyric, Bytes(ShiftJisSaku));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"ｱｲｳ", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::UsesALatinTagForNamesThatLookLikeShiftJis()
+{
+    // 0x93 0x8C 0x8B 0x9E is 東京 in Shift-JIS and would be guessed as such without a tag.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, Bytes({ 0x93, 0x8C, 0x8B, 0x9E }))
+        .MetaText(0, MetaLyric, "{@LATIN}la");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"\x201C\x0152\x2039\x017E", sequence.Tracks[0].Name);
+    VerifyLyrics({ L"la" }, sequence);
+}
+
+void SmfTextEncodingTests::KeepsUtf8NamesInATaggedFile()
+{
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, "東京の夜")
+        .MetaText(0, MetaLyric, "{@JP}" + Bytes(ShiftJisSaku));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"東京の夜", sequence.Tracks[0].Name);
+    VerifyLyrics({ L"さく" }, sequence);
+}
+
+void SmfTextEncodingTests::DropsNonAsciiLyricsInAnUndefinedCodeSet()
+{
+    // RP-026: lyrics in an undefined code set are ignored until a defined one appears. Plain
+    // ASCII reads the same in any code set, so it stays.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@KR}")
+        .MetaText(0, MetaLyric, Bytes({ 0xC7, 0xD1, 0xB1, 0xDB }))
+        .MetaText(120, MetaLyric, "la")
+        .MetaText(120, MetaLyric, "{@JP}" + Bytes(ShiftJisRa));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"la", L"ら" }, sequence);
+}
+
+void SmfTextEncodingTests::LeavesSomethingThatOnlyLooksLikeATagAlone()
+{
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaLyric, "{@JP")
+        .MetaText(0, MetaTrackName, "{@JP}");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyLyrics({ L"{@JP" }, sequence);
+    VerifyText(L"{@JP}", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::ReadsTextThatStartsWithAByteOrderMark()
+{
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, Bytes({ 0xFE, 0xFF, 0x30, 0x42, 0x30, 0x44 }))      // あい, big endian
+        .MetaText(0, MetaCopyright, Bytes({ 0xEF, 0xBB, 0xBF, 0x43, 0x61, 0x66, 0xC3, 0xA9 }))   // Café, UTF-8
+        .MetaText(0, MetaLyric, "{@JP}")
+        .MetaText(0, MetaLyric, Bytes({ 0xFF, 0xFE, 0x42, 0x30 }));                     // あ, little endian
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"あい", sequence.Tracks[0].Name);
+    VerifyText(L"Café", sequence.Copyright);
+    VerifyLyrics({ L"あ" }, sequence);
+}

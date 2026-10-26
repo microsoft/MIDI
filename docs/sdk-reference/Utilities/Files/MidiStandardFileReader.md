@@ -29,6 +29,13 @@ A file that stops making sense partway through is read up to that point and repo
 
 A MIDI file doesn't say how its text is encoded, so the reader works it out for each file. Text such as the title, the copyright, track names and lyrics comes back as UTF-8 in every case. The reader tries UTF-8 first, then Shift-JIS, which many older Japanese files use, and then Latin-1, which many older Western files use. It picks Shift-JIS only when every piece of text in the file reads cleanly that way and some of it is clearly Japanese, so Western text with accented letters stays as it was.
 
+Some files do say how their text is encoded, using the tags from the MIDI Association's RP-026, and those tags win over the guess:
+
+- A lyric that starts with `{@JP}` switches the lyrics that follow it to Shift-JIS, and `{@LATIN}` switches them to ANSI (Windows code page 1252), until the next tag. The tag is removed from the lyric, so it doesn't show up as a word to sing.
+- The first of those tags in a file also decides the other text in the file, such as the title and track names, unless all of that text is UTF-8.
+- After a tag RP-026 doesn't define, lyrics with characters outside ASCII are left out until a `{@JP}` or `{@LATIN}` tag appears, as RP-026 asks. Plain ASCII lyrics are kept.
+- Any text that starts with a Unicode byte order mark is read as UTF-16 or UTF-8.
+
 ## Example
 
 ```cpp
