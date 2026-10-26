@@ -10,6 +10,7 @@
 #include "pch.h"
 #include "midi2.VirtualMiditransport.h"
 #include <Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h>
+#include <Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock.h>
 #include <Feature_Servicing_MIDI2VirtualDeviceClientReconnect.h>
 
 _Use_decl_annotations_
@@ -141,7 +142,14 @@ CMidi2VirtualMidiBidi::Shutdown()
     {
         if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
         {
-            RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->OnDeviceDisconnectedAlwaysTeardown(m_endpointId));
+            if (Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock::IsEnabled())
+            {
+                RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->OnDeviceDisconnectedTeardownOutsideEntriesLock(m_endpointId));
+            }
+            else
+            {
+                RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->OnDeviceDisconnectedAlwaysTeardown(m_endpointId));
+            }
         }
         else
         {

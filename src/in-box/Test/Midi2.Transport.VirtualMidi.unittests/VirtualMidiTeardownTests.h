@@ -18,8 +18,9 @@
 // fails the test instead of stalling the whole test pass.
 //
 // Tests of gated behavior normally skip when the gate is off. These do not skip when
-// Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock is disabled: a hang takes MIDI down for the
-// whole PC, so it is a failure whichever code path the service takes.
+// Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock or
+// Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock is disabled: a hang takes MIDI
+// down for the whole PC, so it is a failure whichever code path the service takes.
 //
 // Running these against a service that hangs leaves MIDI hung on that PC until the MIDI service
 // is restarted.
