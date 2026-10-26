@@ -54,5 +54,14 @@ public:
     TEST_METHOD(KeepsAShortLatin1PairThatIsAlsoValidGbk);
     TEST_METHOD(LetsAJapaneseTagWinOverGbk);
     TEST_METHOD(KeepsHalfWidthKatakanaWithVoicingMarksAsShiftJis);
-    TEST_METHOD(KeepsAKoreanCopyrightSignOutOfGbk);
+    TEST_METHOD(ReadsAKoreanCopyrightSign);
+
+    // ---- Big5 and Korean ----
+    TEST_METHOD(DecodesKoreanNames);
+    TEST_METHOD(DecodesBig5ThatGbkReadsAsKana);
+    TEST_METHOD(DecodesBig5WithAsciiTrailBytes);
+    TEST_METHOD(DecodesBig5ThatIsNotValidGbk);
+    TEST_METHOD(KeepsJapaneseInGbkOutOfBig5);
+    TEST_METHOD(KeepsAShortHalfWidthKatakanaTitleAsShiftJis);
+    TEST_METHOD(KeepsLatin1SymbolsBeforeLettersOutOfBig5);
 };

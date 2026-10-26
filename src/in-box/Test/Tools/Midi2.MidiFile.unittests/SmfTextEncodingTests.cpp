@@ -666,15 +666,113 @@ void SmfTextEncodingTests::KeepsHalfWidthKatakanaWithVoicingMarksAsShiftJis()
     VerifyText(L"FINAL FANTASY ｢ﾏﾁ｣", townSequence.Tracks[0].Name);
 }
 
-void SmfTextEncodingTests::KeepsAKoreanCopyrightSignOutOfGbk()
+void SmfTextEncodingTests::ReadsAKoreanCopyrightSign()
 {
-    // The © of Korean code page 949 is 0xA8 0xCF, which GBK reads as the bopomofo ㄏ. This
-    // reader doesn't read Korean, so the text stays as it always was.
+    // The © of Korean code page 949 is 0xA8 0xCF. GBK reads it as the bopomofo ㄏ and Big5 as the
+    // common hanzi 使, but in an English copyright line it is the Korean copyright sign. From a
+    // real file.
     TrackBuilder track{};
 
-    track.MetaText(0, MetaCopyright, "Copyright " + Bytes({ 0xA8, 0xCF }) + " 1999 by Contoso");
+    track.MetaText(0, MetaCopyright, "Copyright " + Bytes({ 0xA8, 0xCF }) + " 1998 by Contoso");
 
     auto const sequence = ParseOneTrack(track);
 
-    VerifyText(L"Copyright ¨Ï 1999 by Contoso", sequence.Copyright);
+    VerifyText(L"Copyright ⓒ 1998 by Contoso", sequence.Copyright);
+}
+
+void SmfTextEncodingTests::DecodesKoreanNames()
+{
+    // Every one of these is also clean GBK and Big5. From real files.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, Bytes({ 0xB5, 0xE5, 0xB7, 0xB3 }))                                    // 드럼
+        .MetaText(0, MetaInstrumentName, Bytes({ 0xBA, 0xA3, 0xC0, 0xCC, 0xBD, 0xBA }))                   // 베이스
+        .MetaText(0, MetaCopyright,
+            "Copyright " + Bytes({ 0xA8, 0xCF }) + " 1998 by " + Bytes({ 0xB0, 0xAD, 0xC7, 0xFC, 0xBC, 0xF8 })); // 강형순
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"드럼", sequence.Tracks[0].Name);
+    VerifyText(L"베이스", sequence.Tracks[0].InstrumentName);
+    VerifyText(L"Copyright ⓒ 1998 by 강형순", sequence.Copyright);
+}
+
+void SmfTextEncodingTests::DecodesBig5ThatGbkReadsAsKana()
+{
+    // The most common Big5 hanzi, such as 心, sit where GBK keeps hiragana: GBK reads this as
+    // 狶惧蚌 - み笆.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaTrackName, Bytes({ 0xAA, 0x4C, 0xBE, 0xE5, 0xB0, 0xF6, 0x20, 0x2D, 0x20, 0xA4, 0xDF, 0xB0, 0xCA }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"林曉培 - 心動", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::DecodesBig5WithAsciiTrailBytes()
+{
+    // Both characters of 寶寶 have the underscore as their second byte.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaCopyright, "Midi by " + Bytes({ 0xC4, 0x5F, 0xC4, 0x5F }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"Midi by 寶寶", sequence.Copyright);
+}
+
+void SmfTextEncodingTests::DecodesBig5ThatIsNotValidGbk()
+{
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaTrackName, Bytes({ 0xC5, 0xA5, 0xAD, 0xB7, 0xAA, 0xBA, 0xBA, 0x71 }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"聽風的歌", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::KeepsJapaneseInGbkOutOfBig5()
+{
+    // Big5 reads these bytes as six common hanzi in a row. Runs of kana are what Japanese looks
+    // like. From a real file.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaTrackName, Bytes({ 0xA4, 0xB5, 0xA4, 0xE8, 0xA4, 0xCA, 0xA4, 0xE9, 0xA4, 0xCE, 0xCF, 0xC4 }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"さよならの夏", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::KeepsAShortHalfWidthKatakanaTitleAsShiftJis()
+{
+    // GBK reads ﾌｨｰﾙﾄﾞ as three common hanzi. From a real file.
+    TrackBuilder track{};
+
+    track.MetaText(0, MetaTrackName, Bytes({ 0xCC, 0xA8, 0xB0, 0xD9, 0xC4, 0xDE }));
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"ﾌｨｰﾙﾄﾞ", sequence.Tracks[0].Name);
+}
+
+void SmfTextEncodingTests::KeepsLatin1SymbolsBeforeLettersOutOfBig5()
+{
+    // ©M, ñar and °_ are each one valid Big5 character followed by ASCII. One such character on
+    // its own is not enough to believe Big5. From real files.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaTrackName, "HELLO DOLLY " + Bytes({ 0xA9, 0x4D }) + ".FERRE")
+        .MetaText(0, MetaInstrumentName, Bytes({ 0xF1, 0x61, 0x72 }))
+        .MetaText(0, MetaCopyright, "feat. 98" + Bytes({ 0xB0, 0x5F }) + "Thank");
+
+    auto const sequence = ParseOneTrack(track);
+
+    VerifyText(L"HELLO DOLLY ©M.FERRE", sequence.Tracks[0].Name);
+    VerifyText(L"ñar", sequence.Tracks[0].InstrumentName);
+    VerifyText(L"feat. 98°_Thank", sequence.Copyright);
 }

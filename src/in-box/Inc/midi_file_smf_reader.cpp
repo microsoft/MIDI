@@ -9,6 +9,7 @@
 // test project. See SmfReader.h for the rules this reader follows about untrusted input.
 
 #include "midi_file_smf_reader.h"
+#include "midi_file_common_characters.h"
 
 #include <windows.h>
 
@@ -277,14 +278,13 @@ namespace midifile
         }
 
         // Text in a Standard MIDI File is bytes with no declared encoding. Modern files are
-        // usually UTF-8, older Western ones are Latin-1, older Japanese ones are Shift-JIS, and
-        // older Chinese ones are GBK.
+        // usually UTF-8, older Western ones are Latin-1, older Japanese ones are Shift-JIS, older
+        // Chinese ones are GBK or Big5, and older Korean ones are code page 949.
         //
         // This decodes one text on its own: UTF-8 when it is valid UTF-8, and Latin-1 otherwise,
-        // which cannot fail. Shift-JIS and GBK can't be told apart from Latin-1, or from each
-        // other, one short text at a time,
-        // so that decision is made once for the whole file, after every text has been read. See
-        // TextEncodingDetector.
+        // which cannot fail. The double-byte code pages can't be told apart from Latin-1, or from
+        // each other, one short text at a time, so that decision is made once for the whole file,
+        // after every text has been read. See TextEncodingDetector.
         std::string DecodeText(
             _In_ std::span<uint8_t const> bytes,
             _In_ bool preserveWhitespace,
@@ -339,6 +339,8 @@ namespace midifile
         }
 
         constexpr UINT GbkCodePage = 936;
+        constexpr UINT Big5CodePage = 950;
+        constexpr UINT KoreanCodePage = 949;
 
         // A character that sits inside a Western word, right after an ASCII letter or right before
         // a lowercase one, is more likely two accented letters than one CJK character, so it is
@@ -470,6 +472,11 @@ namespace midifile
             uint8_t previousHalfWidth = 0;
             bool openedBracket = false;
 
+            // Half-width kana count for the text only once it shows the structure above, which
+            // short Chinese or Korean text read as Shift-JIS doesn't have.
+            int halfWidthKana = 0;
+            bool structured = false;
+
             for (size_t index = 0; index < bytes.size();)
             {
                 auto const lead = bytes[index];
@@ -482,11 +489,13 @@ namespace midifile
                     if (lead == 0xDE && TakesDakuten(previousHalfWidth))
                     {
                         sawJapanese = true;
+                        structured = true;
                         score += 2;
                     }
                     else if (lead == 0xDF && TakesHandakuten(previousHalfWidth))
                     {
                         sawJapanese = true;
+                        structured = true;
                         score += 2;
                     }
                     else if (lead == 0xB0 && previousHalfWidth >= 0xA6 && previousHalfWidth <= 0xDF)
@@ -501,7 +510,12 @@ namespace midifile
                         // opening one starts a word and the closing one only follows an opening one.
                         openedBracket = lead == 0xA2;
                         sawJapanese = true;
+                        structured = true;
                         score += 2;
+                    }
+                    else if (lead >= 0xA6 && lead <= 0xDD)
+                    {
+                        ++halfWidthKana;
                     }
 
                     previousHalfWidth = (lead >= 0xA1 && lead <= 0xDF) ? lead : 0;
@@ -548,34 +562,59 @@ namespace midifile
                 index += 2;
             }
 
+            if (structured)
+            {
+                score += halfWidthKana;
+            }
+
             return TryDecodeStrictly(ShiftJisCodePage, bytes.first(usable), utf8);
         }
 
-        // Decodes GBK (Windows code page 936), the encoding of older Simplified Chinese files, to
-        // UTF-8. Returns false when the bytes are not clean GBK, in the same way as
-        // TryDecodeShiftJis. Every byte from 0x81 to 0xFE starts a two byte character in GBK, so
-        // there is nothing like half-width katakana.
+        bool IsCommon(_In_ std::span<uint16_t const> table, _In_ uint8_t lead, _In_ uint8_t trail) noexcept
+        {
+            return std::binary_search(table.begin(), table.end(), static_cast<uint16_t>((lead << 8) | trail));
+        }
+
+        // How a text reads in one of the code pages where every byte from 0x81 to 0xFE starts a
+        // two byte character: GBK, Big5 and Korean. None of them has anything like half-width
+        // katakana.
+        struct DoubleByteReading
+        {
+            int Score{ 0 };
+
+            // At least one character that Western text can't easily make by accident: one with a
+            // trail byte of 0xA1 or above that isn't inside a word, or one that comes right after
+            // another. Code pages whose trail bytes can be ASCII letters need this, because a
+            // Latin-1 symbol followed by a letter, as in ©M or °C, is one valid character in them.
+            bool Evidence{ false };
+        };
+
+        // Walks the text in a double-byte code page, adding valueOf(lead, trail) for each
+        // character to the score (see ScoreCharacter), and then decodes it strictly. Returns false
+        // when the bytes are not clean in that code page. A lead byte cut off by
+        // MaximumTextBytes is left off rather than counted against the text.
         //
-        // score works like the one TryDecodeShiftJis gives. Characters from the GB2312 core of
-        // GBK (both bytes 0xA1 or above) count for it: rows 0xA4 and 0xA5, which hold hiragana and
-        // katakana, the punctuation rows 0xA1 to 0xA3, and the common hanzi from 0xB0 to 0xD7.
-        // Characters only GBK added, with a trail byte below 0xA1, count against it, because that
-        // is what Shift-JIS text read as GBK is mostly made of. So do row 0xA2, circled and Roman
-        // numerals, which is where the half-width brackets ｢ of Shift-JIS land, and row 0xA8,
-        // pinyin and bopomofo, which titles seldom use but Korean text read as GBK often lands
-        // in: the © of Korean code page 949 reads as the bopomofo ㄏ.
+        // scoreKanaRuns adds 2 for a GB2312 kana, rows 0xA4 and 0xA5, that comes right after
+        // another one. Japanese written in GBK reads as runs of kana, and Big5 text, whose most
+        // common characters sit on those same two rows, reads as kana scattered among hanzi.
         //
         // Allocates, so it can throw std::bad_alloc.
-        bool TryDecodeGbk(
+        template <typename ValueOf>
+        bool TryDecodeDoubleByte(
+            _In_ UINT codePage,
             _In_ std::span<uint8_t const> bytes,
             _In_ bool truncated,
+            _In_ ValueOf const& valueOf,
+            _In_ bool scoreKanaRuns,
             _Out_ std::string& utf8,
-            _Inout_ int& score)
+            _Inout_ DoubleByteReading& reading)
         {
             utf8.clear();
 
             size_t usable = bytes.size();
             bool afterAsciiLetter = false;
+            bool afterDoubleByte = false;
+            bool afterKana = false;
 
             for (size_t index = 0; index < bytes.size();)
             {
@@ -584,11 +623,13 @@ namespace midifile
                 if (lead < 0x80)
                 {
                     afterAsciiLetter = IsAsciiLetter(lead);
+                    afterDoubleByte = false;
+                    afterKana = false;
                     ++index;
                     continue;
                 }
 
-                // Code page 936 reads 0x80 alone as the euro sign, which GBK text doesn't use
+                // These code pages read 0x80 alone as the euro sign, which their text doesn't use
                 // but Western text has at 0x80.
                 if (lead == 0x80 || lead == 0xFF)
                 {
@@ -609,24 +650,91 @@ namespace midifile
                 auto const trail = bytes[index + 1];
                 auto const beforeLowercaseLetter =
                     index + 2 < bytes.size() && bytes[index + 2] >= 'a' && bytes[index + 2] <= 'z';
+                auto const insideWord = afterAsciiLetter || beforeLowercaseLetter;
 
-                int value = -1;
+                reading.Score += ScoreCharacter(valueOf(lead, trail), insideWord);
 
-                if (lead >= 0xA1 && lead <= 0xF7 && trail >= 0xA1 && trail <= 0xFE)
+                if ((trail >= 0xA1 && !insideWord) || afterDoubleByte)
                 {
-                    if (lead == 0xA4 || lead == 0xA5) { value = 2; }
-                    else if (lead == 0xA2 || lead == 0xA8) { value = -1; }
-                    else if (lead <= 0xA3 || (lead >= 0xB0 && lead <= 0xD7)) { value = 1; }
-                    else { value = 0; }
+                    reading.Evidence = true;
                 }
 
-                score += ScoreCharacter(value, afterAsciiLetter || beforeLowercaseLetter);
+                auto const kana = scoreKanaRuns && (lead == 0xA4 || lead == 0xA5) && trail >= 0xA1;
 
+                if (kana && afterKana)
+                {
+                    reading.Score += 2;
+                }
+
+                afterKana = kana;
+                afterDoubleByte = true;
                 afterAsciiLetter = false;
                 index += 2;
             }
 
-            return TryDecodeStrictly(GbkCodePage, bytes.first(usable), utf8);
+            return TryDecodeStrictly(codePage, bytes.first(usable), utf8);
+        }
+
+        // Every value below adds 2 for a character in the code page's list of common characters
+        // (midi_file_common_characters.h), the strongest sign of real text.
+        //
+        // GBK (code page 936), older Simplified Chinese files and some Japanese ones. Characters
+        // from the GB2312 core (both bytes 0xA1 or above) count for it: rows 0xA4 and 0xA5, which
+        // hold hiragana and katakana, the punctuation rows 0xA1 and 0xA3, and the common hanzi
+        // from 0xB0 to 0xD7. Characters only GBK added, with a trail byte below 0xA1, count
+        // against it, because that is what Shift-JIS text read as GBK is mostly made of. So do
+        // row 0xA2, circled and Roman numerals, which is where the half-width bracket ｢ of
+        // Shift-JIS lands, and row 0xA8, pinyin and bopomofo, which titles seldom use.
+        int GbkValue(_In_ uint8_t lead, _In_ uint8_t trail) noexcept
+        {
+            int value = -1;
+
+            if (lead >= 0xA1 && lead <= 0xF7 && trail >= 0xA1 && trail <= 0xFE)
+            {
+                if (lead == 0xA4 || lead == 0xA5) { value = 2; }
+                else if (lead == 0xA2 || lead == 0xA8) { value = -1; }
+                else if (lead <= 0xA3 || (lead >= 0xB0 && lead <= 0xD7)) { value = 1; }
+                else { value = 0; }
+            }
+
+            return IsCommon(common_characters::Gbk, lead, trail) ? value + 2 : value;
+        }
+
+        // Big5 (code page 950), older Traditional Chinese files from Taiwan and Hong Kong. Row
+        // 0xA1, punctuation, and the frequently used hanzi from 0xA440 to 0xC67E count for it.
+        int Big5Value(_In_ uint8_t lead, _In_ uint8_t trail) noexcept
+        {
+            auto const code = static_cast<uint16_t>((lead << 8) | trail);
+            int value = 0;
+
+            if (lead == 0xA1 || (code >= 0xA440 && code <= 0xC67E))
+            {
+                value = 1;
+            }
+
+            return IsCommon(common_characters::Big5, lead, trail) ? value + 2 : value;
+        }
+
+        // Korean (code page 949: EUC-KR and the Unified Hangul Code extension). The Hangul
+        // syllables from 0xB0 to 0xC8 and the symbols of row 0xA1 count for it, and 0xA8 0xCF, the
+        // circled c that Korean files use as their copyright sign, counts a lot: it is often the
+        // only Korean in an otherwise English file, and Big5 reads it as a common hanzi. The loose
+        // letters of row 0xA4, which read like ㄴㄴㄴ, and the extension's syllables, which only
+        // rare words need, count against it.
+        int KoreanValue(_In_ uint8_t lead, _In_ uint8_t trail) noexcept
+        {
+            int value = -1;
+
+            if (lead >= 0xA1 && trail >= 0xA1 && trail <= 0xFE)
+            {
+                if (lead >= 0xB0 && lead <= 0xC8) { value = 1; }
+                else if (lead == 0xA1) { value = 1; }
+                else if (lead == 0xA8 && trail == 0xCF) { value = 4; }
+                else if (lead == 0xA4) { value = -1; }
+                else { value = 0; }
+            }
+
+            return IsCommon(common_characters::Korean, lead, trail) ? value + 2 : value;
         }
 
         constexpr UINT AnsiCodePage = 1252;
@@ -956,13 +1064,15 @@ namespace midifile
         // Picks one text encoding for the whole file, in this order:
         //
         //  1. UTF-8, when every text that has a byte outside ASCII is valid UTF-8.
-        //  2. Shift-JIS or GBK. Shift-JIS fits when every text is clean Shift-JIS AND at least one
-        //     holds a character Latin-1 text can't produce by accident (see TryDecodeShiftJis). A
-        //     short Latin-1 name made only of capital accented letters, such as "ÀÉÎ", is also
-        //     valid half-width katakana, so it stays Latin-1. GBK fits when every text is clean
-        //     GBK and they score at least MinimumGbkScore (see TryDecodeGbk). The two overlap a
-        //     lot: 千本桜 in GBK is also valid Shift-JIS, as half-width katakana and one kanji.
-        //     When both fit, the higher score wins, and Shift-JIS wins a tie.
+        //  2. Shift-JIS, GBK (Simplified Chinese), Big5 (Traditional Chinese) or Korean. Shift-JIS
+        //     fits when every text is clean Shift-JIS AND at least one holds a character Latin-1
+        //     text can't produce by accident (see TryDecodeShiftJis). A short Latin-1 name made
+        //     only of capital accented letters, such as "ÀÉÎ", is also valid half-width katakana,
+        //     so it stays Latin-1. The other three fit when every text is clean in them and they
+        //     score at least MinimumDoubleByteScore (see TryDecodeDoubleByte), and Big5 also needs
+        //     its evidence. They all overlap a lot: 千本桜 in GBK is also valid Shift-JIS, and the
+        //     most common Big5 hanzi sit where GBK keeps its kana. When several fit, the highest
+        //     score wins, and a tie goes to the first in that list.
         //  3. Otherwise each text keeps the decoding DecodeText gave it, which is how this reader
         //     has always behaved.
         //
@@ -987,10 +1097,9 @@ namespace midifile
         // and the copyright or another track name in the same file is what settles it.
         //
         // The model is filled in as the file is read, decoded the DecodeText way, and only
-        // rewritten here when the file turns out to be Shift-JIS, GBK or tagged ANSI. Whether a
-        // text decodes to
-        // nothing, and whether it starts with "@K", come out the same in every encoding, so the
-        // choices made while reading still hold afterward.
+        // rewritten here when the file turns out to be Shift-JIS, GBK, Big5, Korean or tagged
+        // ANSI. Whether a text decodes to nothing, and whether it starts with "@K", come out the
+        // same in every encoding, so the choices made while reading still hold afterward.
         class TextEncodingDetector
         {
         public:
@@ -1092,61 +1201,96 @@ namespace midifile
                     // with some texts in one encoding and the rest in another.
                     auto const japaneseTagged = m_firstCodeSet == CharacterCodeSet::Japanese;
 
-                    std::vector<std::string> shiftJis(m_texts.size());
-                    std::vector<std::string> gbk(m_texts.size());
+                    // In the order that wins a tie.
+                    enum CandidateIndex : size_t { ShiftJis, Gbk, Big5, Korean, CandidateCount };
+
+                    struct Candidate
+                    {
+                        std::vector<std::string> Decoded{};
+                        DoubleByteReading Reading{};
+                        bool Clean{ true };
+                    };
+
+                    std::array<Candidate, CandidateCount> candidates{};
                     bool sawJapanese = japaneseTagged;
-                    bool shiftJisClean = true;
-                    bool gbkClean = !japaneseTagged;
-                    int shiftJisScore = 0;
-                    int gbkScore = 0;
+
+                    for (auto& candidate : candidates)
+                    {
+                        candidate.Decoded.resize(m_texts.size());
+                    }
+
+                    // A {@JP} tag leaves only Shift-JIS to check.
+                    if (japaneseTagged)
+                    {
+                        candidates[Gbk].Clean = false;
+                        candidates[Big5].Clean = false;
+                        candidates[Korean].Clean = false;
+                    }
 
                     for (size_t index = 0; index < m_texts.size(); ++index)
                     {
                         auto const& text = m_texts[index];
-                        int ignoredScore = 0;
+                        DoubleByteReading ignored{};
 
-                        if (shiftJisClean)
+                        auto readingFor = [&](Candidate& candidate) noexcept -> DoubleByteReading&
+                            {
+                                return text.SameEventAsPrevious ? ignored : candidate.Reading;
+                            };
+
+                        auto decode = [&](CandidateIndex which, UINT codePage, auto const& valueOf, bool scoreKanaRuns)
+                            {
+                                auto& candidate = candidates[which];
+
+                                if (candidate.Clean)
+                                {
+                                    candidate.Clean = TryDecodeDoubleByte(
+                                        codePage, text.Bytes, text.Truncated, valueOf, scoreKanaRuns,
+                                        candidate.Decoded[index], readingFor(candidate));
+                                    TidyText(candidate.Decoded[index], text.PreserveWhitespace);
+                                }
+                            };
+
+                        if (candidates[ShiftJis].Clean)
                         {
-                            shiftJisClean = TryDecodeShiftJis(
-                                text.Bytes, text.Truncated, shiftJis[index], sawJapanese,
-                                text.SameEventAsPrevious ? ignoredScore : shiftJisScore);
-                            TidyText(shiftJis[index], text.PreserveWhitespace);
+                            candidates[ShiftJis].Clean = TryDecodeShiftJis(
+                                text.Bytes, text.Truncated, candidates[ShiftJis].Decoded[index], sawJapanese,
+                                readingFor(candidates[ShiftJis]).Score);
+                            TidyText(candidates[ShiftJis].Decoded[index], text.PreserveWhitespace);
                         }
 
-                        if (gbkClean)
-                        {
-                            gbkClean = TryDecodeGbk(
-                                text.Bytes, text.Truncated, gbk[index],
-                                text.SameEventAsPrevious ? ignoredScore : gbkScore);
-                            TidyText(gbk[index], text.PreserveWhitespace);
-                        }
+                        decode(Gbk, GbkCodePage, GbkValue, true);
+                        decode(Big5, Big5CodePage, Big5Value, false);
+                        decode(Korean, KoreanCodePage, KoreanValue, false);
 
-                        if (!shiftJisClean && !gbkClean)
+                        if (std::none_of(candidates.begin(), candidates.end(), [](Candidate const& candidate) noexcept { return candidate.Clean; }))
                         {
                             return;
                         }
                     }
 
-                    auto const shiftJisFits = shiftJisClean && sawJapanese;
-                    auto const gbkFits = gbkClean && gbkScore >= MinimumGbkScore;
+                    std::array<bool, CandidateCount> const fits
+                    {
+                        candidates[ShiftJis].Clean && sawJapanese,
+                        candidates[Gbk].Clean && candidates[Gbk].Reading.Score >= MinimumDoubleByteScore,
+                        candidates[Big5].Clean && candidates[Big5].Reading.Score >= MinimumDoubleByteScore && candidates[Big5].Reading.Evidence,
+                        candidates[Korean].Clean && candidates[Korean].Reading.Score >= MinimumDoubleByteScore,
+                    };
 
+                    // Several can read cleanly, because their byte ranges overlap. The one that reads
+                    // most like real text wins.
                     std::vector<std::string>* chosen{ nullptr };
+                    int bestScore = 0;
 
-                    if (shiftJisFits && gbkFits)
+                    for (size_t which = 0; which < CandidateCount; ++which)
                     {
-                        // Both read cleanly, which happens because their byte ranges overlap. The
-                        // one that reads more like real text wins, and Shift-JIS wins a tie.
-                        chosen = gbkScore > shiftJisScore ? &gbk : &shiftJis;
+                        if (fits[which] && (chosen == nullptr || candidates[which].Reading.Score > bestScore))
+                        {
+                            chosen = &candidates[which].Decoded;
+                            bestScore = candidates[which].Reading.Score;
+                        }
                     }
-                    else if (shiftJisFits)
-                    {
-                        chosen = &shiftJis;
-                    }
-                    else if (gbkFits)
-                    {
-                        chosen = &gbk;
-                    }
-                    else
+
+                    if (chosen == nullptr)
                     {
                         return;
                     }
@@ -1181,10 +1325,10 @@ namespace midifile
             // of nothing but comments grow this list without limit.
             static constexpr size_t MaximumEvidenceOnlyTexts = 4096;
 
-            // GBK has no rule like the Shift-JIS one about control code lead bytes, so it needs a
-            // few characters that read like real Chinese or Japanese text before it is believed.
-            // Two is one kana, or two common hanzi or punctuation marks.
-            static constexpr int MinimumGbkScore = 2;
+            // GBK, Big5 and Korean have no rule like the Shift-JIS one about control code lead
+            // bytes, so each needs a few characters that read like real text before it is
+            // believed. Two is one kana or common character, or two plain hanzi or Hangul.
+            static constexpr int MinimumDoubleByteScore = 2;
 
             static std::string* Destination(_Inout_ MidiSequence& sequence, _In_ RecordedText const& text) noexcept
             {
