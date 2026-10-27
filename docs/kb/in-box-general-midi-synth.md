@@ -216,7 +216,7 @@ Sent as SysEx7 in UMP message type `0x3`. `dd` is the device ID byte, which is n
 | Identity Request | `F0 7E dd 06 01 F7` | Yes, answered with an Identity Reply carrying the identity above |
 | GM System On | `F0 7E dd 09 01 F7` | Yes, resets and selects Roland GS bank addressing |
 | GM2 System On | `F0 7E dd 09 03 F7` | Yes, resets and selects General MIDI 2 bank addressing |
-| GM System Off | `F0 7E dd 09 02 F7` | Treated as a system reset |
+| GM System Off | `F0 7E dd 09 02 F7` | Ignored. General MIDI 2 section 4.9.3 says a device that only does General MIDI ignores it, and this synth has no other mode |
 | Master Volume | `F0 7F dd 04 01 ll mm F7` | Yes |
 | Master Fine Tuning | `F0 7F dd 04 03 ll mm F7` | Yes, except on drum channels, as General MIDI 2 recommends |
 | Master Coarse Tuning | `F0 7F dd 04 04 ll mm F7` | Yes, except on drum channels, as General MIDI 2 recommends |
@@ -226,6 +226,10 @@ Sent as SysEx7 in UMP message type `0x3`. `dd` is the device ID byte, which is n
 | XG System On | `F0 43 dd 4C 00 00 7E 00 F7` | Yes, resets and selects Yamaha XG bank addressing |
 | MIDI Capability Inquiry | `F0 7E dd 0D ...` | Yes, see the MIDI-CI chart below |
 | Anything else | | Ignored |
+
+Every reset above (GM System On, GM2 System On, GS Reset, XG System On and System Reset) puts all 16 channels back to their starting point: program 1 (piano), bank 0, volume 100, expression 127, pan center, no modulation, damper up, pitch bend centered with a range of 2 semitones, no fine or coarse tuning, no registered parameter selected, reverb send 40 and chorus send 0, with drums on channel 10 only. Master volume and master tuning go back to normal too. Notes that are sounding fade out over a few milliseconds rather than being cut off, so the reset doesn't click.
+
+The synth keeps these settings between applications. Closing an app doesn't reset it, so a file that never picks its sounds plays with whatever the last app left. To start from a known state, send one of these resets first. Windows MIDI Player has a **GM Reset** button, and a setting to send it before each file.
 
 With Roland GS addressing, GS Use For Rhythm Part is the only way a file can put a drum kit on a channel other than 10, and without it eight of the nine kits in the sound set can never be heard alongside the tenth. With Yamaha XG or General MIDI 2 addressing, a bank select can choose a kit on any channel too.
 

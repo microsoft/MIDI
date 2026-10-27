@@ -105,6 +105,36 @@ namespace MidiSynthTestRig
             Send(0x8, channel, note, 0, 0x80000000u);
         }
 
+        // A SysEx payload without F0 and F7, split into as many sysex7 packets as it needs.
+        void SendSysEx(_In_ const std::vector<uint8_t>& payload)
+        {
+            for (size_t offset = 0; offset < payload.size(); offset += 6)
+            {
+                const auto count = static_cast<uint8_t>((std::min)(size_t{ 6 }, payload.size() - offset));
+
+                const bool isFirst = (offset == 0);
+                const bool isLast = (offset + count >= payload.size());
+                const uint8_t status = (isFirst && isLast) ? 0 : isFirst ? 1 : isLast ? 3 : 2;
+
+                uint8_t bytes[6]{};
+
+                for (uint8_t i = 0; i < count; i++)
+                {
+                    bytes[i] = payload[offset + i];
+                }
+
+                const uint32_t words[2]
+                {
+                    (3u << 28) | (static_cast<uint32_t>(status) << 20) | (static_cast<uint32_t>(count) << 16) |
+                        (static_cast<uint32_t>(bytes[0]) << 8) | bytes[1],
+                    (static_cast<uint32_t>(bytes[2]) << 24) | (static_cast<uint32_t>(bytes[3]) << 16) |
+                        (static_cast<uint32_t>(bytes[4]) << 8) | bytes[5],
+                };
+
+                m_dispatcher.ProcessWords(words, 2);
+            }
+        }
+
         std::vector<float> Render(_In_ double seconds)
         {
             const auto frames = static_cast<uint32_t>(seconds * SampleRate());

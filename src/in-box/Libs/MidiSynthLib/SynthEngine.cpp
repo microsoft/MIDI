@@ -202,9 +202,12 @@ namespace MidiSynth
 
     void SynthEngine::SystemReset()
     {
+        // GM2 4.9.1 and 4.9.2: sounding notes mute at once, but without a click. So they get the
+        // same short fade as All Sound Off rather than being cut off mid waveform. A killed voice
+        // can no longer be ended by a note off, so nothing the sender plays next reaches it.
         for (auto& voice : m_voices)
         {
-            voice = SynthVoice{};
+            KillVoice(voice);
         }
 
         ResetChannels();
@@ -215,7 +218,8 @@ namespace MidiSynth
         m_masterCoarseCents = 0.0;
         m_masterTuningCents = 0.0;
 
-        m_nextStartOrder = 1;
+        // The start order keeps counting. Voices still fading out carry the numbers they had, and
+        // restarting from one would make the next notes look older than them to voice stealing.
         m_stolenVoiceCount = 0;
         m_droppedNoteCount = 0;
         m_clippedSampleCount = 0;

@@ -585,6 +585,29 @@
   <data name="GroupComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Group</value>
   </data>
+  <data name="GmResetButton.Content" xml:space="preserve">
+    <value>GM Reset</value>
+    <comment>Button. GM is General MIDI, a standard; keep the abbreviation.</comment>
+  </data>
+  <data name="GmResetButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Send a GM Reset</value>
+  </data>
+  <data name="GmResetButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.AcceleratorKey" xml:space="preserve">
+    <value>Control+R</value>
+    <comment>Read by screen readers. Must match the keyboard shortcut on the button.</comment>
+  </data>
+  <data name="GmResetButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.HelpText" xml:space="preserve">
+    <value>Puts the output back to General MIDI settings: piano on every channel, drums on channel 10, and every control back to normal.</value>
+  </data>
+  <data name="GmResetButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Put the output back to General MIDI settings: piano on every channel, drums on channel 10, and every control back to normal (Ctrl+R)</value>
+  </data>
+  <data name="StatusGmResetSent" xml:space="preserve">
+    <value>Sent a GM Reset.</value>
+  </data>
+  <data name="StatusGmResetFailed" xml:space="preserve">
+    <value>Couldn't send the GM Reset. Check that the output is still connected.</value>
+  </data>
   <data name="GroupNumberFormat" xml:space="preserve">
     <value>Group {0}</value>
     <comment>{0} group number, counted from 1</comment>
@@ -665,5 +688,11 @@
   </data>
   <data name="SettingsChaseHeldNotesHint" xml:space="preserve">
     <value>Turn this on for organ stops, drones, and long pads. Leave it off for piano and drums, where restarting a note partway through sounds wrong.</value>
+  </data>
+  <data name="SettingsGmResetBeforeEachFile" xml:space="preserve">
+    <value>Send a GM Reset before each file</value>
+  </data>
+  <data name="SettingsGmResetBeforeEachFileHint" xml:space="preserve">
+    <value>Some files, like many piano recordings, never pick their sounds. Without a reset, they play with whatever sounds the last file left behind. Leave this off if you've set up sounds on your instrument yourself, because the reset clears them.</value>
   </data>
 </root>

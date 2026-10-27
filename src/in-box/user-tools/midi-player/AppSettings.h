@@ -48,6 +48,12 @@ namespace midiplayer
         bool ChaseHeldNotes() const noexcept { return m_chaseHeldNotes; }
         void ChaseHeldNotes(_In_ bool value) noexcept;
 
+        // Whether General MIDI System On goes out before each file starts. Off until the customer
+        // turns it on: it clears anything set up by hand on the instrument, and not every output
+        // is a General MIDI synthesizer.
+        bool GmResetBeforeEachFile() const noexcept { return m_gmResetBeforeEachFile; }
+        void GmResetBeforeEachFile(_In_ bool value) noexcept;
+
     private:
         AppSettings() noexcept;
 
@@ -57,5 +63,6 @@ namespace midiplayer
         bool m_showQueue{ true };
         bool m_keyboardView{ false };
         bool m_chaseHeldNotes{ false };
+        bool m_gmResetBeforeEachFile{ false };
     };
 }

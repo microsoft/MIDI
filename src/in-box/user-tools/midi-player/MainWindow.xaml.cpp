@@ -440,6 +440,11 @@ namespace winrt::midiplayer::implementation
             hint.Foreground(resources.Lookup(winrt::box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
             panel.Children().Append(hint);
 
+            if (auto const gmReset = BuildGmResetSetting())
+            {
+                panel.Children().Append(gmReset);
+            }
+
             return panel;
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to build the playback settings.")

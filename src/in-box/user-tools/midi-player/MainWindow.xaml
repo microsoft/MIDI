@@ -816,6 +816,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <ComboBox x:Name="EndpointComboBox"
@@ -833,6 +834,18 @@
                           MinWidth="190"
                           ItemTemplate="{StaticResource NamedChoiceTemplate}"
                           SelectionChanged="OnGroupSelectionChanged" />
+
+                <!-- Sends General MIDI System On to the output picked beside it. -->
+                <Button x:Name="GmResetButton"
+                        x:Uid="GmResetButton"
+                        Grid.Column="2"
+                        AutomationProperties.AutomationId="GmResetButton"
+                        VerticalAlignment="Bottom"
+                        Click="OnGmResetClick">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="R" />
+                    </Button.KeyboardAccelerators>
+                </Button>
             </Grid>
         </StackPanel>
 

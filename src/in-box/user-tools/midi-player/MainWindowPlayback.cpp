@@ -1117,6 +1117,10 @@ namespace winrt::midiplayer::implementation
             m_currentSequence = sequence;
             m_currentSequenceId = entry.Id;
 
+            // Before each file, when the customer asked for it. Load leaves the file stopped at its
+            // start, so whatever plays it next sends the reset first.
+            QueueGmResetBeforeNextStart(groupIndex);
+
             m_noteRoll.SetSequence(m_currentSequence);
             m_keyboardRoll.SetSequence(m_currentSequence);
 

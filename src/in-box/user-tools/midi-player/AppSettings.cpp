@@ -20,6 +20,7 @@ namespace midiplayer
         constexpr wchar_t ValueShowQueue[] = L"ShowQueue";
         constexpr wchar_t ValueKeyboardView[] = L"KeyboardView";
         constexpr wchar_t ValueChaseHeldNotes[] = L"ChaseHeldNotes";
+        constexpr wchar_t ValueGmResetBeforeEachFile[] = L"GmResetBeforeEachFile";
     }
 
     AppSettings::AppSettings() noexcept :
@@ -46,6 +47,7 @@ namespace midiplayer
         m_showQueue = ReadDword(ValueShowQueue, 1) != 0;
         m_keyboardView = ReadDword(ValueKeyboardView, 0) != 0;
         m_chaseHeldNotes = ReadDword(ValueChaseHeldNotes, 0) != 0;
+        m_gmResetBeforeEachFile = ReadDword(ValueGmResetBeforeEachFile, 0) != 0;
     }
 
     _Use_decl_annotations_
@@ -114,5 +116,17 @@ namespace midiplayer
 
         m_chaseHeldNotes = value;
         WriteDword(ValueChaseHeldNotes, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::GmResetBeforeEachFile(bool value) noexcept
+    {
+        if (m_gmResetBeforeEachFile == value)
+        {
+            return;
+        }
+
+        m_gmResetBeforeEachFile = value;
+        WriteDword(ValueGmResetBeforeEachFile, value ? 1 : 0);
     }
 }

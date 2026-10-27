@@ -1465,19 +1465,25 @@ namespace MidiSynth
                 return;
             }
 
-            // GM System On resets everything. Sub-id 2 distinguishes GM1 from GM2, and which one
-            // it is decides how a later bank select should be read.
+            // GM1 System On (sub-id 2 = 01) and GM2 System On (03) reset everything, and which one
+            // it was decides how a later bank select is read. GM System Off (02) is ignored: GM2
+            // 4.9.3 says a device that is exclusively GM does not respond to it, and this one has
+            // no other mode to go back to.
             if (m_sysex[2] == 0x09)
             {
-                m_engine->SystemReset();
-
-                if (size >= 4 && m_sysex[3] == 0x03)
+                if (m_sysex[3] == 0x01)
                 {
+                    m_engine->SystemReset();
+                    m_engine->NotifyAddressingConvention(BankSelectMode::RolandGS);
+                }
+                else if (m_sysex[3] == 0x03)
+                {
+                    m_engine->SystemReset();
                     m_engine->NotifyAddressingConvention(BankSelectMode::GeneralMidi2);
                 }
                 else
                 {
-                    m_engine->NotifyAddressingConvention(BankSelectMode::RolandGS);
+                    m_stats.Ignored++;
                 }
 
                 return;
