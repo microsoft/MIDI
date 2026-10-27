@@ -6413,4 +6413,274 @@
   <data name="StepUnrecognized" xml:space="preserve">
     <value>A step that needs a newer version of Windows MIDI Glass</value>
   </data>
+  <data name="SettingsNavRemote.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI remote control</value>
+  </data>
+  <data name="SettingsNavRemoteLabel.Text" xml:space="preserve">
+    <value>MIDI remote control</value>
+  </data>
+  <data name="StartsDisabledSwitch.Header" xml:space="preserve">
+    <value>Start turned off</value>
+  </data>
+  <data name="StartsHiddenSwitch.Header" xml:space="preserve">
+    <value>Start hidden</value>
+  </data>
+  <data name="StartsStateCaption.Text" xml:space="preserve">
+    <value>A MIDI remote control rule can turn it on or show it while the layout runs. A control that's off is drawn faint and ignores touch, but it still follows what a device sends.</value>
+  </data>
+  <data name="ListenRemoteHeading.Text" xml:space="preserve">
+    <value>Remote control</value>
+  </data>
+  <data name="ListenRemoteCaption.Text" xml:space="preserve">
+    <value>To have a message from a controller turn this control on, show it, press it or set it, add a rule for it in MIDI remote control.</value>
+  </data>
+  <data name="ListenRemoteRuleButton.Content" xml:space="preserve">
+    <value>Add a rule for this control</value>
+  </data>
+  <data name="RemoteHeading" xml:space="preserve">
+    <value>MIDI remote control</value>
+  </data>
+  <data name="RemoteCaption" xml:space="preserve">
+    <value>Let a foot controller or another MIDI device run this layout while it plays. Each rule listens for one message and does one thing when it arrives. Rules only work while the layout runs, or in Try mode.</value>
+  </data>
+  <data name="RemoteNoDevices" xml:space="preserve">
+    <value>This layout has no devices yet. Add your controller under Outputs, then pick it in a rule.</value>
+  </data>
+  <data name="RemoteRulesHeading" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="RemoteNoRules" xml:space="preserve">
+    <value>No rules yet. Add one, press Learn, then tap the switch on your controller.</value>
+  </data>
+  <data name="RemoteAddRule" xml:space="preserve">
+    <value>Add a rule</value>
+  </data>
+  <data name="RemoteRuleNameFormat" xml:space="preserve">
+    <value>Rule {0}</value>
+  </data>
+  <data name="RemoteRuleOnTip" xml:space="preserve">
+    <value>Clear this to keep the rule without it doing anything.</value>
+  </data>
+  <data name="RemoteRuleMenuNameFormat" xml:space="preserve">
+    <value>More actions for rule {0}</value>
+  </data>
+  <data name="RemoteLearn" xml:space="preserve">
+    <value>Learn</value>
+  </data>
+  <data name="RemoteLearnNameFormat" xml:space="preserve">
+    <value>Learn the message for rule {0}</value>
+  </data>
+  <data name="RemoteLearnWaiting" xml:space="preserve">
+    <value>Tap the switch on your controller now.</value>
+  </data>
+  <data name="RemoteMenuMoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="RemoteMenuMoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="RemoteMenuDuplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="RemoteMenuDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="RemoteWhenHeading" xml:space="preserve">
+    <value>When this arrives</value>
+  </data>
+  <data name="RemoteDoHeading" xml:space="preserve">
+    <value>Do this</value>
+  </data>
+  <data name="RemoteDeviceHeader" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="RemoteAnyDevice" xml:space="preserve">
+    <value>Any device in this layout</value>
+  </data>
+  <data name="RemoteKindHeader" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="RemoteKindProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="RemoteKindControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="RemoteKindNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="RemoteChannelHeader" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="RemoteAnyChannel" xml:space="preserve">
+    <value>Any</value>
+  </data>
+  <data name="RemoteNumberProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="RemoteNumberController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="RemoteNumberNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="RemoteAnyNumber" xml:space="preserve">
+    <value>Any</value>
+  </data>
+  <data name="RemoteAnyNumberName" xml:space="preserve">
+    <value>Any number</value>
+  </data>
+  <data name="RemoteControlChangeNote" xml:space="preserve">
+    <value>A control change counts only when its value is above 0, so letting go of a foot switch doesn't run the rule a second time.</value>
+  </data>
+  <data name="RemoteActionHeader" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="RemoteActionGoToPage" xml:space="preserve">
+    <value>Go to a page</value>
+  </data>
+  <data name="RemoteActionNextPage" xml:space="preserve">
+    <value>Next page</value>
+  </data>
+  <data name="RemoteActionPreviousPage" xml:space="preserve">
+    <value>Previous page</value>
+  </data>
+  <data name="RemoteActionPageFromMessage" xml:space="preserve">
+    <value>Go to the page the message picks</value>
+  </data>
+  <data name="RemoteActionPressControl" xml:space="preserve">
+    <value>Press a control</value>
+  </data>
+  <data name="RemoteActionSetControlValue" xml:space="preserve">
+    <value>Set a control's value</value>
+  </data>
+  <data name="RemoteActionEnableControl" xml:space="preserve">
+    <value>Turn a control on</value>
+  </data>
+  <data name="RemoteActionDisableControl" xml:space="preserve">
+    <value>Turn a control off</value>
+  </data>
+  <data name="RemoteActionToggleEnabled" xml:space="preserve">
+    <value>Turn a control on or off</value>
+  </data>
+  <data name="RemoteActionShowControl" xml:space="preserve">
+    <value>Show a control</value>
+  </data>
+  <data name="RemoteActionHideControl" xml:space="preserve">
+    <value>Hide a control</value>
+  </data>
+  <data name="RemoteActionToggleShown" xml:space="preserve">
+    <value>Show or hide a control</value>
+  </data>
+  <data name="RemoteActionShowOnlyThis" xml:space="preserve">
+    <value>Show only this one of its group</value>
+  </data>
+  <data name="RemoteActionPadGrid" xml:space="preserve">
+    <value>Change pad grids</value>
+  </data>
+  <data name="RemoteActionSetKeyRoot" xml:space="preserve">
+    <value>Set the key's root note</value>
+  </data>
+  <data name="RemoteActionSetScale" xml:space="preserve">
+    <value>Set the scale</value>
+  </data>
+  <data name="RemoteActionRunSequence" xml:space="preserve">
+    <value>Run a sequence</value>
+  </data>
+  <data name="RemoteActionPanic" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="RemoteActionUnrecognized" xml:space="preserve">
+    <value>This rule needs a newer version of Windows MIDI Glass. It's kept as it is and never runs.</value>
+  </data>
+  <data name="RemotePageHeader" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="RemoteTargetHeader" xml:space="preserve">
+    <value>Control or group</value>
+  </data>
+  <data name="RemoteControlOnPageFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="RemoteGroupFormat" xml:space="preserve">
+    <value>Group: {0} ({1})</value>
+  </data>
+  <data name="RemoteValueHeader" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="RemoteFromMessage" xml:space="preserve">
+    <value>Take it from the message</value>
+  </data>
+  <data name="RemoteFunctionHeader" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="RemoteGridsHeader" xml:space="preserve">
+    <value>Pad grids</value>
+  </data>
+  <data name="RemoteAllGrids" xml:space="preserve">
+    <value>All pad grids</value>
+  </data>
+  <data name="RemoteRootHeader" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="RemoteScaleHeader" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="RemoteSequenceHeader" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="RemoteCaptionNextPage" xml:space="preserve">
+    <value>Stops at the last page. A page that's always on screen isn't counted.</value>
+  </data>
+  <data name="RemoteCaptionPreviousPage" xml:space="preserve">
+    <value>Stops at the first page. A page that's always on screen isn't counted.</value>
+  </data>
+  <data name="RemoteCaptionPageFromMessage" xml:space="preserve">
+    <value>Program 0 opens the first page, 1 the second, and so on. A control change uses its value, and a note uses its number. A page that's always on screen isn't counted.</value>
+  </data>
+  <data name="RemoteCaptionPress" xml:space="preserve">
+    <value>A button presses and lets go, a toggle flips, and a switch moves to its next position.</value>
+  </data>
+  <data name="RemoteCaptionShowOnly" xml:space="preserve">
+    <value>Hides the other controls in its group. Stack several pad grids in one group to swap which one is in view.</value>
+  </data>
+  <data name="RemoteCaptionRootFromMessage" xml:space="preserve">
+    <value>The message's number picks the root: 0, 12, 24 and so on are C, 1 is D flat, and so on up to B.</value>
+  </data>
+  <data name="RemoteCaptionScaleFromMessage" xml:space="preserve">
+    <value>The message's number picks the scale, counting from 0 in the order this list shows them.</value>
+  </data>
+  <data name="RemoteCaptionNoSequences" xml:space="preserve">
+    <value>This layout has no sequences yet. Add one from a control's Sends tab.</value>
+  </data>
+  <data name="RemoteCaptionPanic" xml:space="preserve">
+    <value>Stops every note on every device this app is playing.</value>
+  </data>
+  <data name="RemoteTellHeading" xml:space="preserve">
+    <value>Tell the controller which page is showing</value>
+  </data>
+  <data name="RemoteTellCaption" xml:space="preserve">
+    <value>Optional. Each time the page changes, the layout sends a message, so the lights or the bank on your controller follow the screen. It never sends a device the same message that device just sent.</value>
+  </data>
+  <data name="RemoteTellSwitch" xml:space="preserve">
+    <value>Send the page</value>
+  </data>
+  <data name="RemoteTellDeviceHeader" xml:space="preserve">
+    <value>Send to</value>
+  </data>
+  <data name="RemoteTellKindHeader" xml:space="preserve">
+    <value>As</value>
+  </data>
+  <data name="RemoteTellFirstHeader" xml:space="preserve">
+    <value>First page sends</value>
+  </data>
+  <data name="RemoteLoopNote" xml:space="preserve">
+    <value>A rule can only do what this layout already holds. For a moment after the layout sends a message to a device, the same message coming back from that device is ignored, so a device that sends back what it hears can't start a loop.</value>
+  </data>
+  <data name="PageMenuOpenSequence" xml:space="preserve">
+    <value>When this page opens</value>
+  </data>
+  <data name="PageMenuOpenNothing" xml:space="preserve">
+    <value>Run nothing</value>
+  </data>
 </root>

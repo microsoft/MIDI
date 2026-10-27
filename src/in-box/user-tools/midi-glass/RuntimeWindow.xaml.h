@@ -217,6 +217,12 @@ namespace winrt::midiglass::implementation
             _In_ bool running);
         void OnPadGridsChanged(_In_ glass::PadGridStates const& states);
 
+        // Controls a MIDI remote control rule turned off or hid (RuntimeWindowRemote.cpp): the
+        // whole page after it is built, or the ones a rule just changed.
+        void ApplyControlStates();
+        void OnControlStatesChanged(_In_ std::vector<uint32_t> const& controlIndexes);
+        void ApplyControlState(_In_ size_t itemIndex);
+
         midiapp::WindowChrome m_chrome{};
 
         std::wstring m_filePath{};

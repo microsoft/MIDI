@@ -101,6 +101,7 @@
     <ClInclude Include="BindingEngineTests.h" />
     <ClInclude Include="ActionPlanTests.h" />
     <ClInclude Include="LearnCaptureTests.h" />
+    <ClInclude Include="RemoteControlTests.h" />
     <ClInclude Include="MonitorFormatTests.h" />
     <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="NewControlTests.h" />
@@ -173,6 +174,7 @@
     <ClCompile Include="BindingEngineTests.cpp" />
     <ClCompile Include="ActionPlanTests.cpp" />
     <ClCompile Include="LearnCaptureTests.cpp" />
+    <ClCompile Include="RemoteControlTests.cpp" />
     <ClCompile Include="MonitorFormatTests.cpp" />
     <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="NewControlTests.cpp" />
@@ -215,6 +217,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\BindingEngine.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ActionPlan.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\LearnCapture.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\RemoteRules.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\RemoteControlFile.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\HexText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.cpp" />
@@ -226,6 +230,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorController.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerEdits.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerPickers.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerRemote.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditorControllerFretboard.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\Fretboard.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\FretboardChanges.cpp" />

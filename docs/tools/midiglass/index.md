@@ -177,6 +177,12 @@ On the **Listens** tab, turn on **MIDI follow** and the control moves or lights 
 
 A fader that follows the DAW can be a long way from your finger when you touch it. On the **Behavior** tab, **Pickup** decides what happens then, for a fader, an XY pad, a joystick or a ribbon. **Jump** goes straight to your finger. **Catch** waits until your finger reaches the value, so nothing jumps. **Relative** moves the value by as far as your finger moves.
 
+## Running a layout from a foot controller
+
+A foot controller, or any other MIDI device, can run a layout while it plays. Open **Layout…**, then **Pages and devices…**, and select **MIDI remote control**. Each rule says which message to listen for and what to do when it arrives: go to a page, press a control, set its value, turn it on or off, show or hide it, change pad grids, set the key or the scale, run a sequence, or panic. Press **Learn** on a rule and tap the switch on your controller to fill in the message. A rule's card lights up when its message arrives.
+
+On a control's **Behavior** tab, **Start turned off** and **Start hidden** decide how it starts, so a rule can bring it in later. Stack two pad grids in one group and use **Show only this one of its group** to swap them in one spot. A page's **…** menu has **When this page opens**, to run a sequence each time you go to the page. Rules only work while the layout runs, or in Try mode. See [Run Windows MIDI Glass from a foot controller]({{ site.baseurl }}/kb/midi-glass-remote-control/).
+
 ## Trying a layout as you build it
 
 **Try** turns the page on without leaving the editor. Every control sends for real, so you can check that a fader sends what you expect before you go any further. Ctrl+Enter switches back to **Edit**.

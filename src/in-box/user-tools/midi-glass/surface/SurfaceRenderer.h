@@ -572,6 +572,16 @@ namespace glass
         // looking at it has to be able to see which controls have gone quiet.
         void SetUnavailable(_In_ size_t itemIndex, _In_ bool unavailable) noexcept;
 
+        // A MIDI remote control rule turned this control off or out of sight
+        // (SurfaceRemoteState.cpp). A control that is off is drawn faint, without the strike a
+        // missing device gets, and takes no input; one out of sight is not drawn at all.
+        // Neither touches its value.
+        void SetControlState(_In_ size_t itemIndex, _In_ bool enabled, _In_ bool shown) noexcept;
+
+        // Whether this item's element takes a finger at all once it's built. A grouping panel, a
+        // line and a placeholder never do, whatever a rule says.
+        bool TakesHitsAt(_In_ size_t itemIndex) const noexcept;
+
         // Activity, and the only thing that blooms. Decayed by the compositor rather than by a
         // timer on the UI thread, so a wall of blinking controls costs the app nothing.
         void Bloom(_In_ size_t itemIndex) noexcept;
@@ -1139,6 +1149,14 @@ namespace glass
         controls::Canvas m_host{ nullptr };
 
         std::vector<SurfaceVisual> m_visuals{};
+
+        // What SetUnavailable and SetControlState last said, one byte an item, so the two looks
+        // can't undo each other. Emptied by Teardown.
+        std::vector<uint8_t> m_itemStates{};
+
+        // The opacity and visibility those states come to, on the control and everything drawn
+        // beside it.
+        void ApplyItemLook(_In_ size_t itemIndex) noexcept;
         std::vector<GlassControlElement> m_elements{};
         std::vector<uint32_t> m_controlIndexes{};
         std::vector<ControlKind> m_kinds{};
