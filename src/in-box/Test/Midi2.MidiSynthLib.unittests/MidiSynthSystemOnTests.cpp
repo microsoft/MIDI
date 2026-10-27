@@ -202,7 +202,13 @@ void MidiSynthSystemOnTests::TestResetFadesInsteadOfCutting()
     {
         Rig rig{ *collection };
 
-        // A sustained organ low enough that its own steps between samples are small.
+        // A sustained organ low enough that its own steps between samples are small. Quiet, and
+        // with master volume turned down too, because the reset turns both back up: the fade has
+        // to carry on at the level the note had, not jump to the new one. Found on the live synth,
+        // where a note at volume 16 came back 25 dB louder for the length of the fade.
+        rig.SendSysEx({ 0x7F, 0x7F, 0x04, 0x01, 0x00, 0x40 });
+        rig.SendMidi1(StatusControlChange, 0, 7, 16);
+        rig.SendMidi1(StatusControlChange, 0, 10, 0);
         rig.SendMidi1(StatusProgramChange, 0, DrawbarOrgan, 0);
         rig.SendMidi1(StatusNoteOn, 0, 48, 120);
 
@@ -215,6 +221,12 @@ void MidiSynthSystemOnTests::TestResetFadesInsteadOfCutting()
         const auto fade = rig.Render(0.002);
         const double peakFade = Peak(fade);
 
+        // Panned hard left, so anything on the right during the fade came from the reset's pan.
+        double rightBefore = 0.0;
+        double rightFade = 0.0;
+        for (size_t i = before.size() - 4800; i < before.size(); i += 2) rightBefore = (std::max)(rightBefore, std::fabs(static_cast<double>(before[i + 1])));
+        for (size_t i = 0; i < fade.size(); i += 2) rightFade = (std::max)(rightFade, std::fabs(static_cast<double>(fade[i + 1])));
+
         // The first sample after the reset continues the wave rather than jumping to silence.
         const double jump = (std::max)(
             std::fabs(static_cast<double>(fade[0]) - before[before.size() - 2]),
@@ -224,11 +236,13 @@ void MidiSynthSystemOnTests::TestResetFadesInsteadOfCutting()
         const auto tail = rig.Render(0.01);
 
         Log::Comment(String().Format(
-            L"%s: peak before %.4f, peak in the first 2 ms after %.4f, step at the reset %.5f, largest step before %.5f",
-            reset.Name, peakBefore, peakFade, jump, stepBefore));
+            L"%s: peak before %.5f, peak in the first 2 ms after %.5f, step at the reset %.6f, largest step before %.6f, right side before %.6f and during the fade %.6f",
+            reset.Name, peakBefore, peakFade, jump, stepBefore, rightBefore, rightFade));
 
-        VERIFY_IS_TRUE(peakBefore > 0.01, L"the organ was playing");
+        VERIFY_IS_TRUE(peakBefore > 0.0001, L"the organ was playing");
         VERIFY_IS_TRUE(peakFade > peakBefore * 0.05, L"the note fades rather than stopping dead");
+        VERIFY_IS_TRUE(peakFade <= peakBefore * 1.05, L"and never gets louder than it was, though the reset turned volume up");
+        VERIFY_IS_TRUE(rightFade <= rightBefore + peakBefore * 0.01, L"and stays where it was panned");
         VERIFY_IS_TRUE(jump <= stepBefore * 2.0, L"and there is no step in the wave where the reset landed");
         VERIFY_ARE_EQUAL(rig.Engine().ActiveVoiceCount(), 0u, L"the note is gone within about 60 ms");
         VERIFY_ARE_EQUAL(Peak(tail), 0.0, L"and the output is silent");

@@ -204,10 +204,15 @@ namespace MidiSynth
     {
         // GM2 4.9.1 and 4.9.2: sounding notes mute at once, but without a click. So they get the
         // same short fade as All Sound Off rather than being cut off mid waveform. A killed voice
-        // can no longer be ended by a note off, so nothing the sender plays next reaches it.
+        // can no longer be ended by a note off, so nothing the sender plays next reaches it, and
+        // it keeps the controls it had, so the reset below can't make it louder as it goes.
         for (auto& voice : m_voices)
         {
-            KillVoice(voice);
+            if (voice.Active)
+            {
+                HoldControlsForReset(voice);
+                KillVoice(voice);
+            }
         }
 
         ResetChannels();
@@ -817,6 +822,27 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void SynthEngine::HoldControlsForReset(SynthVoice& voice) const noexcept
+    {
+        if (voice.ControlsHeldFromReset)
+        {
+            return;
+        }
+
+        const auto& state = m_channels[voice.Channel & 0x0F];
+
+        voice.ControlsHeldFromReset = true;
+        voice.HeldChannelGainDb = ConcaveTransformDb(state.Volume) + ConcaveTransformDb(state.Expression);
+        voice.HeldMasterVolumeDb = m_masterVolumeDb;
+        voice.HeldModulation = state.Modulation;
+        voice.HeldPanOffset = state.PanOffset;
+        voice.HeldBendCents = state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
+        voice.HeldTuningCents = state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+        voice.HeldReverbSend = static_cast<float>(state.ReverbSend);
+        voice.HeldChorusSend = static_cast<float>(state.ChorusSend);
+    }
+
+    _Use_decl_annotations_
     void SynthEngine::KillVoice(SynthVoice& voice) noexcept
     {
         if (!voice.Active)
@@ -1272,13 +1298,16 @@ namespace MidiSynth
         const auto& state = m_channels[voice.Channel];
         const auto& articulation = voice.Articulation;
 
+        // Only a voice a reset is fading out holds its own controls; see ControlsHeldFromReset.
+        const bool held = voice.ControlsHeldFromReset;
+
         double envelopeGain = (voice.Stage == EnvelopeStage::Attack)
             ? voice.AttackProgress
             : DecibelsToLinear(voice.EnvelopeLevelDb);
 
         // A drum note leaves modulation and pitch bend alone, whatever the channel held when it chose
         // the kit (General MIDI 2 sections 3.3.2 and 3.6).
-        const double modulationDepth = voice.DrumKit ? 0.0 : state.Modulation;
+        const double modulationDepth = voice.DrumKit ? 0.0 : (held ? voice.HeldModulation : state.Modulation);
 
         double lfoValue = 0.0;
 
@@ -1296,12 +1325,13 @@ namespace MidiSynth
         const double lfoAttenuationDb =
             lfoValue * (articulation.LfoToAttenuationDb + articulation.LfoModWheelToAttenuationDb * modulationDepth);
 
-        const double channelGainDb =
-            ConcaveTransformDb(state.Volume) +
-            ConcaveTransformDb(state.Expression);
+        const double channelGainDb = held
+            ? voice.HeldChannelGainDb
+            : ConcaveTransformDb(state.Volume) + ConcaveTransformDb(state.Expression);
 
         const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb
-            + m_config.MasterGainDb + m_masterVolumeDb + m_userVolumeDb.load(std::memory_order_relaxed);
+            + m_config.MasterGainDb + (held ? voice.HeldMasterVolumeDb : m_masterVolumeDb)
+            + m_userVolumeDb.load(std::memory_order_relaxed);
 
         // Per-note volume multiplies the channel's rather than replacing it, so a channel fade
         // still takes every note with it.
@@ -1310,7 +1340,7 @@ namespace MidiSynth
 
         // Equal power pan, combining the region's placement with the channel's and the note's.
         const double pan =
-            (std::clamp)(articulation.PanFraction + state.PanOffset + voice.PerNotePan, -0.5, 0.5) + 0.5;
+            (std::clamp)(articulation.PanFraction + (held ? voice.HeldPanOffset : state.PanOffset) + voice.PerNotePan, -0.5, 0.5) + 0.5;
 
         const double panAngle = pan * (3.14159265358979323846 / 2.0);
 
@@ -1330,7 +1360,7 @@ namespace MidiSynth
         // Pitch for this block.
         const double bendCents = voice.DrumKit
             ? 0.0
-            : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
+            : (held ? voice.HeldBendCents : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0);
 
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
@@ -1340,7 +1370,7 @@ namespace MidiSynth
         // channel changes program while it sounds.
         const double tuningCents = voice.DrumKit
             ? 0.0
-            : state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+            : (held ? voice.HeldTuningCents : state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents);
 
         // Per-note pitch adds to the channel bend rather than replacing it, so a MIDI 2.0 note can
         // be bent on its own while the channel wheel still moves the whole part.
@@ -1388,8 +1418,8 @@ namespace MidiSynth
         // when a channel is dry.
         const auto& state = m_channels[voice.Channel & 0x0F];
 
-        const auto reverbGain = static_cast<float>(state.ReverbSend);
-        const auto chorusGain = static_cast<float>(state.ChorusSend);
+        const auto reverbGain = voice.ControlsHeldFromReset ? voice.HeldReverbSend : static_cast<float>(state.ReverbSend);
+        const auto chorusGain = voice.ControlsHeldFromReset ? voice.HeldChorusSend : static_cast<float>(state.ChorusSend);
 
         float* reverbSend = (reverbGain > 0.0f && !m_reverbSendBuffer.empty())
             ? m_reverbSendBuffer.data() : nullptr;
