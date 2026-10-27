@@ -32,8 +32,8 @@ namespace winrt::midiplayer::implementation
 
                 m_detailText = res::FormatString(
                     L"QueueItemDetailFormat",
-                    entry.TrackCount,
-                    entry.NoteCount);
+                    std::wstring{ res::FormatCount(L"TrackCountOne", L"TrackCountFormat", entry.TrackCount) },
+                    std::wstring{ res::FormatCount(L"NoteCountOne", L"NoteCountFormat", entry.NoteCount) });
             }
             else
             {

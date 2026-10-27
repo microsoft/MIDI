@@ -54,6 +54,10 @@ The top of the window is the file that's playing.
 
 **Chord symbols and lyrics are only there if the file has them.** Both panels stay out of the way completely on a file that doesn't, rather than showing you an empty label. Chord symbols in particular are uncommon &mdash; they turn up in lead sheet and karaoke files.
 
+**Japanese, Chinese and Korean text in older files shows correctly.** A MIDI file doesn't say how its text is stored, so the player works it out for each file. It reads UTF-8, Shift-JIS (older Japanese files), GBK and Big5 (older Simplified and Traditional Chinese files), code page 949 (older Korean files) and Latin-1 (older Western files). You don't need to pick one.
+
+**The ⓘ button next to the title shows About this song** (or press **Ctrl+I**). It lists whatever the file says about itself: the title, composer, lyricist, artist and copyright, plus the file type, the number of tracks and notes, and the length. Anything the file doesn't include is left out. At the bottom, it says which text encoding the player used and how it chose it: because the file said so, or because the player worked it out. If names still look garbled, that line tells you why.
+
 ## Moving around a file
 
 The position bar under the file name shows where you are. Drag it, or tab to it and use the keys:
@@ -109,6 +113,7 @@ These work from anywhere in the window. Most are the keys Windows Media Player h
 | **Ctrl+Shift+B** | Go back 5 seconds |
 | **Ctrl+Shift+F** | Go forward 5 seconds |
 | **Ctrl+J** | Go to a time you type |
+| **Ctrl+I** | Show **About this song** |
 | **Ctrl+Shift+S** | Slow down by 5% |
 | **Ctrl+Shift+G** | Speed up by 5% |
 | **Ctrl+Shift+N** | Go back to normal speed |
