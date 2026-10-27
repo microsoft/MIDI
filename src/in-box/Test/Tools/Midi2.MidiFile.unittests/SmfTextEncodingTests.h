@@ -71,4 +71,8 @@ public:
     TEST_METHOD(ReadsSongInformationWithABraceInsideACharacter);
     TEST_METHOD(RecordsTheEncodingAndHowItWasChosen);
     TEST_METHOD(WritesSongInformationBack);
+
+    // ---- real files from a customer ----
+    TEST_METHOD(ReadsAMinimalShiftJisFile);
+    TEST_METHOD(ReadsShiftJisNamesFromTheLastTrack);
 };
