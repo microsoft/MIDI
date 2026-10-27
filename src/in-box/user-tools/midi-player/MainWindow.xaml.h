@@ -164,6 +164,11 @@ namespace winrt::midiplayer::implementation
         void UpdatePositionDisplay() noexcept;
         void UpdateQueueVisibility() noexcept;
 
+        // With nothing queued, in MainWindowEmptyState.cpp.
+        void UnloadCurrentFile() noexcept;
+        void UpdateEmptyLayout() noexcept;
+        bool m_emptyLayoutShown{ false };
+
         // What the keyboard shortcuts share. Focus does not move when a shortcut is used, so each
         // one says what it did.
         void SeekFromShortcut(_In_ int64_t offsetMicroseconds) noexcept;

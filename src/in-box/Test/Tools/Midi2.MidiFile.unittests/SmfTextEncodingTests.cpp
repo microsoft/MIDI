@@ -962,3 +962,58 @@ void SmfTextEncodingTests::ReadsShiftJisNamesFromTheLastTrack()
     VerifyText(L"ななこっち★ based by Fryderyk Franciszek Chopin", scherzo.Copyright);
     VerifyShiftJisDetected(scherzo);
 }
+
+namespace
+{
+    // Small generated files that each carry a title and a plain text event in one East Asian
+    // encoding. The plain text event isn't kept in the model, but it still counts when the file's
+    // encoding is chosen.
+    MidiSequence ParseTitleAndText(std::string const& title, std::string const& text)
+    {
+        TrackBuilder track{};
+
+        track.MetaText(0, MetaTrackName, title).MetaText(0, MetaText, text);
+
+        return ParseOneTrack(track);
+    }
+
+    void VerifyDetected(MidiSequence const& sequence, TextEncoding encoding)
+    {
+        VERIFY_IS_TRUE(sequence.TextEncoding.Encoding == encoding);
+        VERIFY_IS_TRUE(sequence.TextEncoding.Source == TextEncodingSource::Detected);
+    }
+}
+
+void SmfTextEncodingTests::ReadsKoreanWithHanja()
+{
+    // 봄의 노래, and 作者: 홍길동, whose first two characters are hanja. Both texts are also clean
+    // GBK, and the title is clean Big5.
+    auto const sequence = ParseTitleAndText(
+        Bytes({ 0xBA, 0xBD, 0xC0, 0xC7, 0x20, 0xB3, 0xEB, 0xB7, 0xA1 }),
+        Bytes({ 0xED, 0xC2, 0xED, 0xBA, 0x3A, 0x20, 0xC8, 0xAB, 0xB1, 0xE6, 0xB5, 0xBF }));
+
+    VerifyText(L"봄의 노래", sequence.Title);
+    VerifyDetected(sequence, TextEncoding::Korean);
+}
+
+void SmfTextEncodingTests::ReadsBig5WhenOnlyTheTextEventRulesOutKorean()
+{
+    // 春天的歌 is also clean code page 949. 作曲者: 李明 in the text event is clean only in Big5.
+    auto const sequence = ParseTitleAndText(
+        Bytes({ 0xAC, 0x4B, 0xA4, 0xD1, 0xAA, 0xBA, 0xBA, 0x71 }),
+        Bytes({ 0xA7, 0x40, 0xA6, 0xB1, 0xAA, 0xCC, 0x3A, 0x20, 0xA7, 0xF5, 0xA9, 0xFA }));
+
+    VerifyText(L"春天的歌", sequence.Title);
+    VerifyDetected(sequence, TextEncoding::Big5);
+}
+
+void SmfTextEncodingTests::ReadsGbkThatIsAlsoValidKoreanAndBig5()
+{
+    // 春天的歌 and 作曲者: 李明 in GBK. Both are also clean code page 949 and Big5.
+    auto const sequence = ParseTitleAndText(
+        Bytes({ 0xB4, 0xBA, 0xCC, 0xEC, 0xB5, 0xC4, 0xB8, 0xE8 }),
+        Bytes({ 0xD7, 0xF7, 0xC7, 0xFA, 0xD5, 0xDF, 0x3A, 0x20, 0xC0, 0xEE, 0xC3, 0xF7 }));
+
+    VerifyText(L"春天的歌", sequence.Title);
+    VerifyDetected(sequence, TextEncoding::Gbk);
+}

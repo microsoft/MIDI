@@ -401,6 +401,8 @@ namespace winrt::midiplayer::implementation
             QueueList().Visibility(empty ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
             EmptyQueuePanel().Visibility(empty ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             ClearQueueButton().IsEnabled(!empty);
+
+            UpdateEmptyLayout();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to rebuild the queue list.")
     }
@@ -442,22 +444,10 @@ namespace winrt::midiplayer::implementation
         try
         {
             m_engine.Stop();
-            m_engine.Unload();
-
-            m_currentSequence.reset();
-            m_currentSequenceId.clear();
-
             m_queue.Clear();
 
-            m_noteRoll.SetSequence(nullptr);
-            m_keyboardRoll.SetSequence(nullptr);
-
-            StopPositionTimer();
             RebuildQueueList();
-            RebuildTrackList();
-            UpdateNowPlayingText();
-            UpdateTransportState();
-            UpdatePositionDisplay();
+            UnloadCurrentFile();
             ClearStatus();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to clear the queue.")
@@ -530,9 +520,10 @@ namespace winrt::midiplayer::implementation
     {
         try
         {
-            auto const show = native::AppSettings::Current().ShowQueue();
+            // With nothing queued, the empty queue message is all the window has to show.
+            auto const show = native::AppSettings::Current().ShowQueue() || m_queue.IsEmpty();
 
-            QueuePanel().Visibility(show ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            QueueBody().Visibility(show ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to show or hide the queue.")
     }
@@ -1016,14 +1007,7 @@ namespace winrt::midiplayer::implementation
 
             if (!current.has_value() || !current.value().IsPlayable())
             {
-                m_engine.Unload();
-                m_currentSequence.reset();
-                m_currentSequenceId.clear();
-
-                StopPositionTimer();
-                UpdateNowPlayingText();
-                UpdateTransportState();
-                UpdatePositionDisplay();
+                UnloadCurrentFile();
 
                 co_return;
             }
@@ -1098,6 +1082,15 @@ namespace winrt::midiplayer::implementation
                 });
 
             m_busy = false;
+
+            // The file was removed, or the queue cleared, while it loaded.
+            if (auto const now = m_queue.Current(); !now.has_value() || now.value().Id != entry.Id)
+            {
+                UnloadCurrentFile();
+                StartCurrentAsync(false);
+
+                co_return;
+            }
 
             if (openResult != native::OpenResult::Success)
             {

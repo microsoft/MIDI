@@ -71,6 +71,11 @@ namespace midiplayer
             m_whiteKeyLayer = m_compositor.CreateContainerVisual();
             m_blackKeyLayer = m_compositor.CreateContainerVisual();
 
+            // Composition visuals are not clipped to the element they are hosted in, so without
+            // this the notes and keys draw over whatever sits below the view. One pixel in, so the
+            // host's border stays visible.
+            m_root.Clip(m_compositor.CreateInsetClip(1.0f, 1.0f, 1.0f, 1.0f));
+
             // Notes first, then the keyboard over them, so a note disappears behind the keys
             // instead of sliding across them. Black keys sit above the white ones.
             m_root.Children().InsertAtTop(m_noteLayer);

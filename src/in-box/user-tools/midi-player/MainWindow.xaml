@@ -479,21 +479,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <Button x:Name="OpenFilesButton"
-                            x:Uid="OpenFilesButton"
-                            AutomationProperties.AutomationId="OpenFilesButton"
-                            Height="34"
-                            Click="OnOpenFilesClick">
-                        <Button.KeyboardAccelerators>
-                            <KeyboardAccelerator Modifiers="Control" Key="O" />
-                        </Button.KeyboardAccelerators>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE8E5;" FontSize="14" />
-                            <TextBlock x:Uid="OpenFilesButtonLabel" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
+                <!-- Add files is in the queue header, so it is there with nothing loaded. -->
 
                 <!-- The shortcuts are the ones Windows Media Player has always used, which many
                      screen reader users already know. -->
@@ -691,8 +677,8 @@
 <!-- ========================= Notes, tracks and the queue ========================= -->
         <Grid Grid.Row="2" Margin="20,0,20,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" MinHeight="140" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition x:Name="RollRow" Height="*" MinHeight="140" />
+                <RowDefinition x:Name="QueueRow" Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- the track rail and the scrolling notes -->
@@ -734,19 +720,42 @@
             <Grid x:Name="QueuePanel" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition x:Name="QueueBodyRow" Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="0,0,0,4">
+                <!-- The header stays when the queue list is hidden, so Add files is always there. -->
+                <Grid Grid.Row="0" Margin="0,0,0,4" ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
                     <TextBlock x:Name="QueueHeaderText"
                                VerticalAlignment="Center"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                Style="{ThemeResource CaptionTextBlockStyle}" />
 
+                    <Button x:Name="OpenFilesButton"
+                            x:Uid="OpenFilesButton"
+                            Grid.Column="1"
+                            AutomationProperties.AutomationId="OpenFilesButton"
+                            Height="28"
+                            Padding="10,0,10,0"
+                            Click="OnOpenFilesClick">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="Control" Key="O" />
+                        </Button.KeyboardAccelerators>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8E5;" FontSize="12" />
+                            <TextBlock x:Uid="OpenFilesButtonLabel" Style="{ThemeResource CaptionTextBlockStyle}" />
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="ClearQueueButton"
                             x:Uid="ClearQueueButton"
+                            Grid.Column="2"
                             AutomationProperties.AutomationId="ClearQueueButton"
-                            HorizontalAlignment="Right"
                             Height="28"
                             Padding="10,0,10,0"
                             Background="Transparent"
@@ -756,41 +765,42 @@
                     </Button>
                 </Grid>
 
-                <ListView x:Name="QueueList"
-                          x:Uid="QueueList"
-                          Grid.Row="1"
-                          AutomationProperties.AutomationId="QueueList"
-                          MaxHeight="216"
-                          SelectionMode="Single"
-                          ItemTemplate="{StaticResource QueueItemTemplate}"
-                          DoubleTapped="OnQueueItemDoubleTapped">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="MinHeight" Value="46" />
-                            <Setter Property="Padding" Value="10,0,6,0" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                </ListView>
+                <!-- The queue button hides this part. With nothing queued it is always shown. -->
+                <Grid x:Name="QueueBody" Grid.Row="1">
+                    <ListView x:Name="QueueList"
+                              x:Uid="QueueList"
+                              AutomationProperties.AutomationId="QueueList"
+                              MaxHeight="216"
+                              SelectionMode="Single"
+                              ItemTemplate="{StaticResource QueueItemTemplate}"
+                              DoubleTapped="OnQueueItemDoubleTapped">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="MinHeight" Value="46" />
+                                <Setter Property="Padding" Value="10,0,6,0" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
 
-                <StackPanel x:Name="EmptyQueuePanel"
-                            Grid.Row="1"
-                            Spacing="8"
-                            Padding="0,18,0,18"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                    <FontIcon Glyph="&#xEC4F;" FontSize="28" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock x:Uid="EmptyQueueTitle"
-                               HorizontalAlignment="Center"
-                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <TextBlock x:Uid="EmptyQueueDescription"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center"
-                               MaxWidth="360"
-                               TextWrapping="Wrap"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Style="{ThemeResource CaptionTextBlockStyle}" />
-                </StackPanel>
+                    <StackPanel x:Name="EmptyQueuePanel"
+                                Spacing="8"
+                                Padding="0,18,0,18"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xEC4F;" FontSize="28" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Uid="EmptyQueueTitle"
+                                   HorizontalAlignment="Center"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="EmptyQueueDescription"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   MaxWidth="360"
+                                   TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
 
