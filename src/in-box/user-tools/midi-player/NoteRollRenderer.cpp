@@ -168,6 +168,11 @@ namespace midiplayer
             m_gridLayer = m_compositor.CreateContainerVisual();
             m_noteLayer = m_compositor.CreateContainerVisual();
 
+            // Composition visuals are not clipped to the element they are hosted in, so without
+            // this the grid, the playhead and the notes draw over whatever sits below the roll.
+            // One pixel in, so the host's border stays visible.
+            m_root.Clip(m_compositor.CreateInsetClip(1.0f, 1.0f, 1.0f, 1.0f));
+
             // The grid goes in first so the notes always draw over it.
             m_root.Children().InsertAtTop(m_gridLayer);
             m_root.Children().InsertAtTop(m_noteLayer);
