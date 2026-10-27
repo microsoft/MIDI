@@ -191,7 +191,7 @@
     <value>Shift-JIS (Japanese)</value>
   </data>
   <data name="SongInfoEncodingGbk" xml:space="preserve">
-    <value>GBK (Simplified Chinese)</value>
+    <value>GBK (Chinese encoding, also used for Japanese kana)</value>
   </data>
   <data name="SongInfoEncodingBig5" xml:space="preserve">
     <value>Big5 (Traditional Chinese)</value>
