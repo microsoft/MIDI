@@ -37,6 +37,53 @@ namespace winrt::midiplayer::implementation
                 (0x09u << 24) | (0x01u << 16),
             };
         }
+
+        // A named part of a control's template, searched depth first.
+        xaml::FrameworkElement FindTemplatePart(_In_ xaml::DependencyObject const& root, _In_ std::wstring_view name)
+        {
+            auto const count = media::VisualTreeHelper::GetChildrenCount(root);
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                auto const child = media::VisualTreeHelper::GetChild(root, i);
+
+                if (auto const element = child.try_as<xaml::FrameworkElement>(); element != nullptr && element.Name() == name)
+                {
+                    return element;
+                }
+
+                if (auto const found = FindTemplatePart(child, name))
+                {
+                    return found;
+                }
+            }
+
+            return nullptr;
+        }
+    }
+
+    // The combo boxes beside the button are taller than a plain button, and the Play to list's
+    // rows hold an icon, so no fixed height would match them at every text size. The button takes
+    // the height of the Group box itself, the part under its header, and sits on the same bottom
+    // edge, so the two line up top, middle and bottom.
+    _Use_decl_annotations_
+    void MainWindow::OnGroupComboBoxSizeChanged(foundation::IInspectable const&, xaml::SizeChangedEventArgs const&)
+    {
+        try
+        {
+            auto const box = FindTemplatePart(GroupComboBox(), L"Background");
+
+            if (box == nullptr || box.ActualHeight() <= 0.0)
+            {
+                return;
+            }
+
+            if (GmResetButton().Height() != box.ActualHeight())
+            {
+                GmResetButton().Height(box.ActualHeight());
+            }
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to line up the GM Reset button.")
     }
 
     _Use_decl_annotations_

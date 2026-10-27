@@ -107,6 +107,7 @@ namespace winrt::midiplayer::implementation
 
         // GM Reset, in MainWindowGmReset.cpp.
         winrt::fire_and_forget OnGmResetClick(_In_ foundation::IInspectable sender, _In_ xaml::RoutedEventArgs args);
+        void OnGroupComboBoxSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
 
     private:
         // GM Reset, in MainWindowGmReset.cpp. The setting's toggle goes in the settings flyout,
