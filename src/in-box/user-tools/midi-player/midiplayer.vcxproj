@@ -205,6 +205,7 @@
     </ClCompile>
     <ClCompile Include="MainWindowPlayback.cpp" />
     <ClCompile Include="MainWindowSongInfo.cpp" />
+    <ClCompile Include="MainWindowEmptyState.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />

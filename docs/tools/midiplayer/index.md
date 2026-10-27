@@ -18,13 +18,15 @@ A MIDI file isn't audio. It's a list of instructions, and what it sounds like de
 
 ![The Windows MIDI Player window playing a file, with numbered callouts on Add files, the Play to and Group lists, the transport buttons, the track rail, the track roll, the queue, and the view, repeat and queue buttons]({{ site.baseurl }}/assets/images/midiplayer-quick-start.png)
 
-1. **Add files** puts MIDI files in the queue. You can also drag files onto the window.
+1. **Add files** puts MIDI files in the queue. It's at the top of the queue, next to **Clear**. You can also drag files onto the window.
 2. **Play to** chooses the instrument that plays the music, and **Group** chooses which part of it. Most MIDI 1.0 gear has a single group.
 3. **Play** starts the music, and changes to **Pause** while it plays. **Stop**, **Previous**, and **Next** sit on either side of it.
 4. **The track rail** lists each track with its instrument. **M** mutes a track, and **S** plays only that track.
 5. **The track roll** shows the notes, with time running left to right and each track in its own color.
 6. **The queue.** Files play one after another. Double-click a file to jump to it.
-7. **Keyboard view** switches to notes falling towards a keyboard. **Repeat** starts the queue again from the top, and the last button shows or hides the queue.
+7. **Keyboard view** switches to notes falling towards a keyboard. **Repeat** starts the queue again from the top, and the last button shows or hides the list of queued files.
+
+Until you add a file, the window shows only the empty queue, **Add files**, and the **Play to** and **Group** lists. Everything else appears once there's something to play, and goes away again when you clear the queue.
 
 **Speed** and **Transpose**, under the transport buttons, play the music slower or faster, or in another key. See [Slowing down or speeding up](#slowing-down-or-speeding-up) and [Playing in another key](#playing-in-another-key). The transport buttons, speed, transpose, and repeat all have [keyboard shortcuts](#keyboard-shortcuts).
 
