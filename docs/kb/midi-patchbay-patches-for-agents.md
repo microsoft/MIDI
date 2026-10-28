@@ -1227,7 +1227,7 @@ Every key, and what to put in it, is in [Who made it]({{ site.baseurl }}/kb/midi
 | `match` | object | empty | How Windows MIDI Patchbay finds the real device. |
 | `matchMode` | `endpointDeviceId`, `usbVendorAndProduct`, `endpointName` | `endpointDeviceId` | Which part of `match` it uses. Write `endpointName`. |
 | `x`, `y` | numbers | 0 | Where the endpoint's top left corner sits on the canvas. See [Where things go on the canvas](#where-things-go-on-the-canvas). |
-| `showAllGroups` | `true`, `false` | `false` | Shows all sixteen groups on a device that doesn't say which it uses. |
+| `showAllGroups` | `true`, `false` | `false` | Shows all sixteen groups, even the ones the device doesn't declare. When it's `false`, the device shows every group it declares, or group 1 if it declares none. |
 | `transportCode` | text | empty | Kept by the app. Leave it out. |
 
 **Matching a device by name.** You can't know a device's ID, so match by name:

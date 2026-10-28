@@ -1290,13 +1290,6 @@ namespace midipatchbay
             groups.push_back(0);
         }
 
-        // A device that declares every group would otherwise make a node taller than the window;
-        // the customer opts into the rest from the node menu.
-        if (!endpoint.ShowAllGroups && !endpoint.IsOsc() && groups.size() > 8)
-        {
-            groups.resize(8);
-        }
-
         for (int side = 0; side < 2; side++)
         {
             bool const isOutput = side == 1;
