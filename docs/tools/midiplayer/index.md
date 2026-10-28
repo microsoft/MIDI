@@ -40,6 +40,20 @@ The **Play to** list at the bottom holds every MIDI output on the PC. Next to it
 
 Your choice is remembered, so the next time you open the player it's already pointing at the same instrument. If that instrument isn't connected when you start, the player tells you so rather than quietly playing to something else.
 
+## GM Reset
+
+Some MIDI files never choose their sounds. Piano recordings made by playing straight into a sequencer are the usual example: they start with the notes and nothing else. An instrument that keeps its settings between files then plays them with whatever sounds the last file left behind, so your piano piece might come out on a church organ.
+
+The **GM Reset** button next to **Group** fixes that (or press **Ctrl+R**). It sends the General MIDI reset message to the output you picked. The instrument goes back to its General MIDI starting point: piano on every channel, drums on channel 10, and every control, like volume, pan and pitch bend, back to normal.
+
+- Before you play, it goes out straight away.
+- While a file is playing, the player stops the sound the same way moving the position does, sends the reset, and then carries on from the same spot with the file's own sounds.
+- While a file is paused, the reset goes out straight away. When you press **Play**, the player sets up the file's sounds again before it carries on.
+
+To do this for every file, turn on **Send a GM Reset before each file** in the settings. The reset goes out just before each file starts, after the last file's notes have stopped, and the music waits a tenth of a second so the instrument has time to finish resetting. It doesn't go out again when you pause and resume.
+
+That switch is off until you turn it on. Leave it off if you've set up sounds on your instrument by hand, because the reset clears them too. It also only makes sense for a General MIDI instrument, such as the General MIDI Synth that comes with Windows MIDI Services.
+
 ## Reading the display
 
 The top of the window is the file that's playing.
@@ -58,7 +72,7 @@ The top of the window is the file that's playing.
 
 **Japanese, Chinese and Korean text in older files shows correctly.** A MIDI file doesn't say how its text is stored, so the player works it out for each file. It reads UTF-8, Shift-JIS (older Japanese files), GBK and Big5 (older Simplified and Traditional Chinese files), code page 949 (older Korean files) and Latin-1 (older Western files). You don't need to pick one.
 
-**The ⓘ button next to the title shows About** (or press **Ctrl+I**). It lists whatever the file says about itself: the title, composer, lyricist, artist and copyright, plus the file type, the number of tracks and notes, and the length. Anything the file doesn't include is left out. At the bottom, it says which text encoding the player used and how it chose it: because the file said so, or because the player worked it out. If names still look garbled, that line tells you why.
+**The ⓘ button next to the title shows About for the file that's playing** (or press **Ctrl+I**). The flyout lists whatever the file says about itself: the title, composer, lyricist, artist and copyright, plus the file type, the number of tracks and notes, and the length. Anything the file doesn't include is left out. At the bottom, it says which text encoding the player used and how it chose it: because the file said so, or because the player worked it out. If names still look garbled, that line tells you why.
 
 ## Moving around a file
 
@@ -123,6 +137,7 @@ These work from anywhere in the window. Most are the keys Windows Media Player h
 | **Ctrl+Shift+D** | Transpose down a semitone |
 | **Ctrl+Shift+K** | Go back to the original key |
 | **Ctrl+T** | Turn repeat on or off |
+| **Ctrl+R** | Send a [GM Reset](#gm-reset) to the output |
 | **Ctrl+O** | Add files |
 
 **With a screen reader, each shortcut says what it did.** Focus doesn't move when you use one, so the player tells your screen reader the result instead: "Paused", "Speed 80 percent", "Transposed up 2 semitones", the new position, such as "1:25 of 3:40", or the name of the file you moved to. When the slider a shortcut changes has focus, your screen reader reads the slider's new value instead, so you don't hear it twice.
@@ -194,7 +209,7 @@ The gear button at the top right opens the settings.
 
 **Appearance** sets whether the app follows your Windows light or dark mode, and which window background to use. Mica and Acrylic pick up colors from your desktop; Acrylic is the one that lets what's behind the window show through.
 
-**Playback** has one switch, **Restart held notes when you resume or move the position**. It's off until you turn it on. See [Starting partway through](#starting-partway-through) for when you'd want it.
+**Playback** has two switches, and both are off until you turn them on. **Restart held notes when you resume or move the position** is explained in [Starting partway through](#starting-partway-through). **Send a GM Reset before each file** is explained in [GM Reset](#gm-reset).
 
 The pin button next to the settings button keeps the player above your other windows.
 

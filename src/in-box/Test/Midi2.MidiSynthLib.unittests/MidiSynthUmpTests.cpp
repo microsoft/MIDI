@@ -918,7 +918,12 @@ void MidiSynthUmpTests::TestResets()
         sysex[1] = (0x09u << 24) | (0x01u << 16);
         dispatcher.ProcessWords(sysex, 2);
 
-        VERIFY_IS_TRUE(sounding && engine.ActiveVoiceCount() == 0,
+        // The note fades out rather than being cut off, so it takes a few milliseconds to go.
+        const bool fading = engine.ActiveVoiceCount() == 1;
+        std::vector<float> drain(2048 * 2);
+        engine.Render(drain.data(), 2048);
+
+        VERIFY_IS_TRUE(sounding && fading && engine.ActiveVoiceCount() == 0,
             L"GM System On resets the synthesizer");
     }
 
@@ -944,6 +949,9 @@ void MidiSynthUmpTests::TestResets()
         end[0] = (3u << 28) | (3u << 20) | (3u << 16) | (0x7Fu << 8) | 0x00u;
         end[1] = (0x41u << 24);
         dispatcher.ProcessWords(end, 2);
+
+        std::vector<float> drain(2048 * 2);
+        engine.Render(drain.data(), 2048);
 
         VERIFY_IS_TRUE(sounding && engine.ActiveVoiceCount() == 0,
             L"Roland GS Reset resets the synthesizer");

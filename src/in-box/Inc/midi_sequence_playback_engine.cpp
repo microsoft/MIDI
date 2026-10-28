@@ -457,6 +457,8 @@ namespace midiplayer
                 m_pausedMicroseconds = 0;
             }
 
+            SendStartMessagesUnderLock();
+
             RebaseClockUnderLock();
 
             // Bank, program, controllers and pitch bend as they stood at this point in the file,
@@ -535,6 +537,7 @@ namespace midiplayer
             if (wasPlaying)
             {
                 SendPanicUnderLock(true);
+                SendStartMessagesUnderLock();
             }
 
             RebaseClockUnderLock();
@@ -608,6 +611,63 @@ namespace midiplayer
     {
         std::lock_guard<std::recursive_mutex> const guard{ m_lock };
         return m_chaseOptions;
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SendBeforeNextStart(std::vector<uint32_t> words, uint32_t settleMilliseconds) noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+        m_startMessages = std::move(words);
+        m_startSettleMilliseconds = settleMilliseconds;
+    }
+
+    bool PlaybackEngine::HasMessagesBeforeNextStart() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+        return !m_startMessages.empty();
+    }
+
+    void PlaybackEngine::SendStartMessagesUnderLock() noexcept
+    {
+        if (m_startMessages.empty())
+        {
+            return;
+        }
+
+        // Sent at most once, whether or not it gets anywhere.
+        auto const words = std::move(m_startMessages);
+        m_startMessages.clear();
+
+        if (m_connection == nullptr)
+        {
+            return;
+        }
+
+        // The same moment a chase uses: now, or just after a silence still on its way, which
+        // would otherwise land on top of whatever the messages set up.
+        auto const now = midi2::MidiClock::Now();
+        auto const timestamp = m_sweepTimestamp > now ? m_sweepTimestamp + 1 : now;
+
+        auto const result = m_connection.SendMultipleMessagesWordArray(
+            timestamp,
+            0,
+            static_cast<uint32_t>(words.size()),
+            winrt::array_view<uint32_t const>{ words.data(), words.data() + words.size() });
+
+        if (midi2::MidiEndpointConnection::SendMessageFailed(result))
+        {
+            MIDI_PLAYER_LOG_INFO_WITH_ENDPOINT(L"Unable to send the messages before the start.", m_endpointDeviceId.c_str());
+            return;
+        }
+
+        // The start, and any chase, wait for this the same way they wait for a silence.
+        auto const ready = timestamp + TicksFromMilliseconds(m_startSettleMilliseconds);
+
+        if (ready > m_sweepTimestamp)
+        {
+            m_sweepTimestamp = ready;
+        }
     }
 
     PlaybackState PlaybackEngine::State() const noexcept

@@ -105,7 +105,17 @@ namespace winrt::midiplayer::implementation
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnGroupSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
+        // GM Reset, in MainWindowGmReset.cpp.
+        winrt::fire_and_forget OnGmResetClick(_In_ foundation::IInspectable sender, _In_ xaml::RoutedEventArgs args);
+        void OnGroupComboBoxSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+
     private:
+        // GM Reset, in MainWindowGmReset.cpp. The setting's toggle goes in the settings flyout,
+        // and the reset is armed for the next start whenever a file is made ready to play.
+        xaml::UIElement BuildGmResetSetting() noexcept;
+        void QueueGmResetBeforeNextStart(_In_ uint8_t groupIndex) noexcept;
+        bool m_gmResetSending{ false };
+
         void InitializeWindowChrome() noexcept;
         void InitializeStaticText() noexcept;
         void SingleInstancePublish() noexcept;
