@@ -75,4 +75,9 @@ public:
     // ---- real files from a customer ----
     TEST_METHOD(ReadsAMinimalShiftJisFile);
     TEST_METHOD(ReadsShiftJisNamesFromTheLastTrack);
+
+    // ---- generated samples with a title and a plain text event ----
+    TEST_METHOD(ReadsKoreanWithHanja);
+    TEST_METHOD(ReadsBig5WhenOnlyTheTextEventRulesOutKorean);
+    TEST_METHOD(ReadsGbkThatIsAlsoValidKoreanAndBig5);
 };

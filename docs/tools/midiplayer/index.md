@@ -72,7 +72,7 @@ The top of the window is the file that's playing.
 
 **Japanese, Chinese and Korean text in older files shows correctly.** A MIDI file doesn't say how its text is stored, so the player works it out for each file. It reads UTF-8, Shift-JIS (older Japanese files), GBK and Big5 (older Simplified and Traditional Chinese files), code page 949 (older Korean files) and Latin-1 (older Western files). You don't need to pick one.
 
-**The ⓘ button next to the title shows what the file says about itself** (or press **Ctrl+I**). The panel is headed **About**. It lists the title, composer, lyricist, artist and copyright, plus the file type, the number of tracks and notes, and the length. Anything the file doesn't include is left out. At the bottom, it says which text encoding the player used and how it chose it: because the file said so, or because the player worked it out. If names still look garbled, that line tells you why.
+**The ⓘ button next to the title shows About for the file that's playing** (or press **Ctrl+I**). The flyout lists whatever the file says about itself: the title, composer, lyricist, artist and copyright, plus the file type, the number of tracks and notes, and the length. Anything the file doesn't include is left out. At the bottom, it says which text encoding the player used and how it chose it: because the file said so, or because the player worked it out. If names still look garbled, that line tells you why.
 
 ## Moving around a file
 
@@ -129,7 +129,7 @@ These work from anywhere in the window. Most are the keys Windows Media Player h
 | **Ctrl+Shift+B** | Go back 5 seconds |
 | **Ctrl+Shift+F** | Go forward 5 seconds |
 | **Ctrl+J** | Go to a time you type |
-| **Ctrl+I** | Show **About**, what the file says about itself |
+| **Ctrl+I** | Show **About** for the file that's playing |
 | **Ctrl+Shift+S** | Slow down by 5% |
 | **Ctrl+Shift+G** | Speed up by 5% |
 | **Ctrl+Shift+N** | Go back to normal speed |

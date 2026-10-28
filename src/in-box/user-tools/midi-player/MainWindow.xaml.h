@@ -94,7 +94,7 @@ namespace winrt::midiplayer::implementation
         void OnRepeatShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnGoToTimeShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
 
-        // About this song, in MainWindowSongInfo.cpp.
+        // The About flyout, in MainWindowSongInfo.cpp.
         void OnSongInfoShortcut(_In_ input::KeyboardAccelerator const& sender, _In_ input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnSongInfoFlyoutOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
         void UpdateSongInfoButton() noexcept;

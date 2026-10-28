@@ -316,7 +316,7 @@
                                    TextTrimming="CharacterEllipsis"
                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
 
-                        <!-- About this song: names, credits and how the file's text was read. -->
+                        <!-- About: names, credits and how the file's text was read. -->
                         <Button x:Name="SongInfoButton"
                                 x:Uid="SongInfoButton"
                                 Grid.Column="1"
