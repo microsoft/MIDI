@@ -316,7 +316,7 @@
                                    TextTrimming="CharacterEllipsis"
                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
 
-                        <!-- About this song: names, credits and how the file's text was read. -->
+                        <!-- About: names, credits and how the file's text was read. -->
                         <Button x:Name="SongInfoButton"
                                 x:Uid="SongInfoButton"
                                 Grid.Column="1"
@@ -816,6 +816,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <ComboBox x:Name="EndpointComboBox"
@@ -832,7 +833,22 @@
                           AutomationProperties.AutomationId="GroupComboBox"
                           MinWidth="190"
                           ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                          SizeChanged="OnGroupComboBoxSizeChanged"
                           SelectionChanged="OnGroupSelectionChanged" />
+
+                <!-- Sends General MIDI System On to the output picked beside it. Its height is set
+                     to match the Group box in code, so the two line up. -->
+                <Button x:Name="GmResetButton"
+                        x:Uid="GmResetButton"
+                        Grid.Column="2"
+                        AutomationProperties.AutomationId="GmResetButton"
+                        VerticalAlignment="Bottom"
+                        VerticalContentAlignment="Center"
+                        Click="OnGmResetClick">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="R" />
+                    </Button.KeyboardAccelerators>
+                </Button>
             </Grid>
         </StackPanel>
 

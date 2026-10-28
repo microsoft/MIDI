@@ -195,6 +195,19 @@ namespace midiplayer
         void SetChaseOptions(_In_ ChaseOptions options) noexcept;
         ChaseOptions GetChaseOptions() const noexcept;
 
+        // Messages sent once to the engine's own connection, ahead of the music, the next time
+        // it starts: from Play, or from a seek while playing. Meant for a reset such as General
+        // MIDI System On, which turns off every note, so it is never sent into music already
+        // going out. It lands after any silence still on its way, and the music and whatever a
+        // chase restores wait settleMilliseconds more, so an instrument that takes a moment to
+        // apply it hears nothing too early. Replaces messages still waiting; empty words cancel.
+        // Complete Universal MIDI Packets only. It stays set across Load.
+        void SendBeforeNextStart(
+            _In_ std::vector<uint32_t> words,
+            _In_ uint32_t settleMilliseconds) noexcept;
+
+        bool HasMessagesBeforeNextStart() const noexcept;
+
         PlaybackState State() const noexcept;
         PlaybackPosition Position() const noexcept;
 
@@ -305,6 +318,12 @@ namespace midiplayer
 
         // When a chase can go out: now, or just after a silence that is still on its way.
         uint64_t ChaseTimestampUnderLock(_In_ uint64_t nowTimestamp) const noexcept;
+
+        // Sends what SendBeforeNextStart left waiting, and makes the start wait for it.
+        void SendStartMessagesUnderLock() noexcept;
+
+        std::vector<uint32_t> m_startMessages{};
+        uint32_t m_startSettleMilliseconds{ 0 };
 
         // Transposes note events, then rewrites the group and channel when the track's route
         // needs it, and sends the result.

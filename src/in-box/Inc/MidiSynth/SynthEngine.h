@@ -115,6 +115,21 @@ namespace MidiSynth
         double TargetGainLeft{ 0.0 };
         double TargetGainRight{ 0.0 };
         bool GainsPrimed{ false };
+
+        // A reset fades the voice out rather than cutting it off, and in the same moment puts the
+        // channel and master controls back to their defaults: volume up to 100, pan centered,
+        // reverb send up to 40. These are what the voice had just before the reset, so the fade
+        // carries on at the level, place, pitch and sends the note had instead of jumping to the
+        // new ones. Without them a quiet note comes back loud for the length of the fade.
+        bool ControlsHeldFromReset{ false };
+        double HeldChannelGainDb{ 0.0 };
+        double HeldMasterVolumeDb{ 0.0 };
+        double HeldModulation{ 0.0 };
+        double HeldPanOffset{ 0.0 };
+        double HeldBendCents{ 0.0 };
+        double HeldTuningCents{ 0.0 };
+        float HeldReverbSend{ 0.0f };
+        float HeldChorusSend{ 0.0f };
     };
 
     struct SynthChannelState
@@ -377,6 +392,10 @@ namespace MidiSynth
         // Ends a voice with a short fade rather than an instant cut, which would leave a step in
         // the waveform and be heard as a click.
         void KillVoice(_Inout_ SynthVoice& voice) noexcept;
+
+        // Copies into the voice what its channel and the master controls are now, for a reset
+        // about to change them. See SynthVoice::ControlsHeldFromReset.
+        void HoldControlsForReset(_Inout_ SynthVoice& voice) const noexcept;
 
         void UpdateVoiceControl(_Inout_ SynthVoice& voice, _In_ uint32_t frames) noexcept;
         void RenderVoiceBlock(

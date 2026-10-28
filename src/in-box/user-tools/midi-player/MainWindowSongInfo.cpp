@@ -5,7 +5,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-// About this song: the flyout beside the title, with the names and credits the file carries, a
+// About: the flyout beside the title, with the names and credits the file carries, a
 // few basics, and how its text was read. Split from MainWindowPlayback.cpp.
 
 #include "pch.h"
