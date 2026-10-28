@@ -105,15 +105,16 @@
     <comment>{0} number of notes in the file, never 1</comment>
   </data>
 
-  <!-- ============================== About this song ============================== -->
+  <!-- ============================== About this file ============================== -->
   <data name="SongInfoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>About this song</value>
+    <value>About this file</value>
   </data>
   <data name="SongInfoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>About this song (Ctrl+I)</value>
+    <value>About this file (Ctrl+I)</value>
   </data>
   <data name="SongInfoHeading.Text" xml:space="preserve">
-    <value>About this song</value>
+    <value>About</value>
+    <comment>Heading of the panel that shows what the MIDI file says about itself. Not every file is a song, so this stays general.</comment>
   </data>
   <data name="SongInfoTitleCaption" xml:space="preserve">
     <value>Title</value>
@@ -147,7 +148,7 @@
   </data>
   <data name="SongInfoFieldAccessibleNameFormat" xml:space="preserve">
     <value>{0}: {1}</value>
-    <comment>What a screen reader says for one line of About this song. {0} the caption, such as "Composer", {1} its value.</comment>
+    <comment>What a screen reader says for one line of the About panel. {0} the caption, such as "Composer", {1} its value.</comment>
   </data>
   <data name="SongInfoFormatSingleTrack" xml:space="preserve">
     <value>Standard MIDI File, type 0 (one track)</value>
