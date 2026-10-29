@@ -1580,34 +1580,31 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
         TraceLoggingUInt64(clientHandle, "client handle")
     );
 
-    {
-        // notify the client to shut down, but don't remove it yet.
-        // This just stops it from moving data to allow everything to complete
-        // for shutdown.
-        auto lock = m_ClientManagerLock.lock_shared();
-        auto client = m_ClientPipes.find(clientHandle);
-        if (client != m_ClientPipes.end())
-        {
-            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-            if (Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock::IsEnabled())
-            {
-                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
-            }
-            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-            midiClientPipe->Shutdown();
-        }
-    }
-
-    // holds a reference to every pipe erased below, so they stay alive until we
-    // shut them down after the lock has been released
-    std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
-    
-    // captured under the lock below, published after it is released
-    std::wstring inUseReportingTarget{ };
-    bool endpointInUse{ false };
-
     if (Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock::IsEnabled())
     {
+        {
+            // notify the client to shut down, but don't remove it yet.
+            // This just stops it from moving data to allow everything to complete
+            // for shutdown.
+            auto lock = m_ClientManagerLock.lock_shared();
+            auto client = m_ClientPipes.find(clientHandle);
+            if (client != m_ClientPipes.end())
+            {
+                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
+                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+                midiClientPipe->Shutdown();
+            }
+        }
+        
+        // holds a reference to every pipe erased below, so they stay alive until we
+        // shut them down after the lock has been released
+        std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
+        
+        // captured under the lock below, published after it is released
+        std::wstring inUseReportingTarget{ };
+        bool endpointInUse{ false };
+
         // Also captured under the lock and used after it is released. The session tracker takes
         // its own lock, and a thread holding m_ClientManagerLock exclusive must not wait on it:
         // the session rundown path takes them in the opposite order.
@@ -1752,6 +1749,28 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
     }
     else
     {
+        {
+            // notify the client to shut down, but don't remove it yet.
+            // This just stops it from moving data to allow everything to complete
+            // for shutdown.
+            auto lock = m_ClientManagerLock.lock_shared();
+            auto client = m_ClientPipes.find(clientHandle);
+            if (client != m_ClientPipes.end())
+            {
+                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+                midiClientPipe->Shutdown();
+            }
+        }
+        
+        // holds a reference to every pipe erased below, so they stay alive until we
+        // shut them down after the lock has been released
+        std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
+        
+        // captured under the lock below, published after it is released
+        std::wstring inUseReportingTarget{ };
+        bool endpointInUse{ false };
+
         {
             auto lock = m_ClientManagerLock.lock_exclusive();
 

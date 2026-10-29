@@ -48,11 +48,6 @@ public:
 private:
     HRESULT ProcessWorkQueue();
 
-    HRESULT CreateEndpointPairHardened(
-        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
-    );
-
     bool m_initialized{ false };
 
     void CleanupDeviceDefinition(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition)
