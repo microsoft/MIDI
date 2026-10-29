@@ -128,7 +128,7 @@ public:
         {
             {
                 auto lock = m_loopbackCallbackLock.Lock.lock_exclusive();
-                m_callbackA.swap(callback);
+                m_callbackB.swap(callback);
             }
 
             // callback now holds the one it replaced, released here, outside the lock
