@@ -239,7 +239,7 @@
     <value>1 - Legacy MIDI</value>
   </data>
   <data name="ApiModeLegacyDescription.Text" xml:space="preserve">
-    <value>The MIDI stack as it was before Windows MIDI Services. No multi-client access, no built-in loopbacks, no Network MIDI 2.0 and no MIDI 2.0 devices. Choose this if you have an application, driver, or device incompatibility with Windows MIDI Services, or you need to use legacy WinMM user-mode drivers (typically ".drv"), or DirectMusic drivers.</value>
+    <value>The MIDI stack as it was before Windows MIDI Services. No multi-client access and no MIDI 2.0 devices. These transports aren't available: Bluetooth LE MIDI, Network MIDI 2.0, RTP-MIDI, the MIDI 2.0 General MIDI Synth, the built-in MIDI loopbacks, and virtual devices that apps create. MIDI tools that need the MIDI service, such as MIDI Settings, can't be used. Choose this if you have an application, driver, or device incompatibility with Windows MIDI Services, or you need to use legacy WinMM user-mode drivers (typically ".drv"), or DirectMusic drivers.</value>
   </data>
   <data name="ApiModeHybridName.Text" xml:space="preserve">
     <value>2 - Hybrid</value>

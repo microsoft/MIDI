@@ -156,6 +156,7 @@
     <ClInclude Include="..\midi-app-shared\EmbeddedAssets.h" />
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="..\midi-app-shared\EmbeddedAssets.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
