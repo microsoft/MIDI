@@ -87,6 +87,17 @@ namespace winrt::midisequencer::implementation
             InitializeWindowChrome();
             ApplyPalette();
 
+            {
+                midiapp::ServiceUnavailableStrings serviceStrings{};
+                serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+                serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+                serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+                serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+                // Explains once, at startup, why nothing works when the service can't be used.
+                midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
+            }
+
             auto& settings = seq::AppSettings::Current();
             m_barWidth = settings.BarWidth();
             m_directory->ApplyOffsets(settings.ApplyDeviceOffsets());

@@ -17,6 +17,7 @@
 #include "EndpointCatalog.h"
 #include "LayoutStore.h"
 #include "MidiServiceStatus.h"
+#include "MidiServiceAvailability.h"
 #include "PopupBackdrop.h"
 #include "SingleInstance.h"
 #include "PreviewBuild.h"
@@ -247,6 +248,14 @@ namespace winrt::midiglass::implementation
                 }).detach();
 
             RefreshLibrary();
+
+            midiapp::ServiceUnavailableStrings serviceStrings{};
+            serviceStrings.Title = resources::GetString(L"MidiServiceUnavailableTitle");
+            serviceStrings.LegacyApiModeMessage = resources::GetString(L"MidiServiceUnavailableLegacyMessage");
+            serviceStrings.UnavailableMessage = resources::GetString(L"MidiServiceUnavailableMessage");
+            serviceStrings.CloseButton = resources::GetString(L"MidiServiceUnavailableClose");
+
+            midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
 
             Closed({ this, &MainWindow::OnWindowClosed });
         }

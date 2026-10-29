@@ -289,8 +289,12 @@ namespace winrt::midinetworksetup::implementation
 
         // False when neither transport is usable. Network MIDI 2.0 has to be installed and new
         // enough for the verbs this app needs; RTP-MIDI pages are only offered when it is
-        // installed at all. It has already shown the customer why by the time it returns.
-        bool VerifyTransportIsUsable() noexcept;
+        // installed at all. It has already shown the customer why by the time it returns. With the
+        // service down, nothing is asked and both are reported unusable.
+        bool VerifyTransportIsUsable(_In_ bool const serviceAvailable) noexcept;
+
+        // The part of loading that needs the MIDI service, which is checked first.
+        winrt::fire_and_forget FinishLoadingAsync() noexcept;
 
         // Network MIDI 2.0 checks the capabilities it needs, so an older transport is reported
         // rather than failing one operation at a time.

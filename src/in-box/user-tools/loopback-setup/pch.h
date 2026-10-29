@@ -130,6 +130,7 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "EmbeddedAssets.h"
 #include "EndpointImageAssets.h"
 #include "MidiEndpointHelpers.h"
+#include "MidiServiceAvailability.h"
 #include "AppearanceFlyout.h"
 
 // XAML generated type info activates these shared types by name, so their declarations have to

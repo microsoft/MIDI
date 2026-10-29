@@ -113,6 +113,7 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "PreviewBuild.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
+#include "MidiServiceAvailability.h"
 #include "AppearanceFlyout.h"
 #include "UmpPrimerLink.h"
 

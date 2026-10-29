@@ -284,10 +284,6 @@ namespace winrt::midinetworksetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
-            // A PC which has only ever had a transport package installed has no configuration
-            // file registered, and without one nothing done here can be persisted.
-            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
-
             PendingInvitationsList().ItemsSource(m_pendingInvitations);
             RemoteHostsListView().ItemsSource(m_remoteHosts);
             LocalHostsListView().ItemsSource(m_localHosts);
@@ -320,6 +316,81 @@ namespace winrt::midinetworksetup::implementation
             FirewallPrivateCheckBox().Content(winrt::box_value(res::GetString(L"FirewallPrivateNetworks")));
             FirewallPublicCheckBox().Content(winrt::box_value(res::GetString(L"FirewallPublicNetworks")));
 
+            // so the firewall page catches up with a change made in Windows Security meanwhile
+            Activated([weak = get_weak()](auto&&, xaml::WindowActivatedEventArgs const& args)
+                {
+                    try
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_closing ||
+                            args.WindowActivationState() == xaml::WindowActivationState::Deactivated)
+                        {
+                            return;
+                        }
+
+                        if (strong->FirewallPanel().Visibility() == xaml::Visibility::Visible)
+                        {
+                            strong->RefreshFirewallStateAsync();
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
+            Closed([weak = get_weak()](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        // Before m_closing, which the timer callback treats as a reason to skip
+                        strong->FlushPendingTransportSettingsWrite();
+
+                        strong->m_closing = true;
+                        strong->StopRefreshTimer();
+                        strong->StopWatcher();
+                        strong->m_chrome.SavePlacement();
+                        strong->m_chrome.Shutdown();
+                    }
+                });
+
+            m_loaded = true;
+
+            FinishLoadingAsync();
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to finish loading the window.")
+    }
+
+    // Everything from here asks the MIDI service, and in Legacy API mode, or with the service
+    // turned off, those calls can hold the UI thread for good. So the service is checked first,
+    // off the UI thread, and the customer is told why nothing works rather than left with a
+    // window that stops responding.
+    winrt::fire_and_forget MainWindow::FinishLoadingAsync() noexcept
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            midiapp::ServiceUnavailableStrings strings{};
+            strings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+            strings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+            strings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+            strings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+            auto const serviceAvailable = co_await midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), strings);
+
+            if (m_closing)
+            {
+                co_return;
+            }
+
+            if (serviceAvailable)
+            {
+                // A PC which has only ever had a transport package installed has no configuration
+                // file registered, and without one nothing done here can be persisted.
+                midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
+            }
+
             // the startup options were parsed before the window existed
             auto const& options = App::StartupOptions();
 
@@ -335,7 +406,7 @@ namespace winrt::midinetworksetup::implementation
 
             // The network transports ship out of band today, and older builds are in the wild.
             // This also decides which pages are offered, so it comes before choosing one.
-            auto const transportUsable = VerifyTransportIsUsable();
+            auto const transportUsable = VerifyTransportIsUsable(serviceAvailable);
 
             if (transportUsable)
             {
@@ -383,51 +454,11 @@ namespace winrt::midinetworksetup::implementation
                 }
             }
 
-            // so the firewall page catches up with a change made in Windows Security meanwhile
-            Activated([weak = get_weak()](auto&&, xaml::WindowActivatedEventArgs const& args)
-                {
-                    try
-                    {
-                        auto strong = weak.get();
-
-                        if (strong == nullptr || strong->m_closing ||
-                            args.WindowActivationState() == xaml::WindowActivationState::Deactivated)
-                        {
-                            return;
-                        }
-
-                        if (strong->FirewallPanel().Visibility() == xaml::Visibility::Visible)
-                        {
-                            strong->RefreshFirewallStateAsync();
-                        }
-                    }
-                    catch (...)
-                    {
-                    }
-                });
-
-            Closed([weak = get_weak()](auto&&, auto&&)
-                {
-                    if (auto strong = weak.get())
-                    {
-                        // Before m_closing, which the timer callback treats as a reason to skip
-                        strong->FlushPendingTransportSettingsWrite();
-
-                        strong->m_closing = true;
-                        strong->StopRefreshTimer();
-                        strong->StopWatcher();
-                        strong->m_chrome.SavePlacement();
-                        strong->m_chrome.Shutdown();
-                    }
-                });
-
-            m_loaded = true;
-
             // Nothing here works without a usable transport, so the app says so and stops rather
             // than failing one operation at a time.
             if (!transportUsable)
             {
-                return;
+                co_return;
             }
 
 #ifdef _DEBUG
@@ -465,10 +496,12 @@ namespace winrt::midinetworksetup::implementation
 
     // A transport which is missing or too old means none of its pages would work, and hiding them
     // beats a series of individual failures. With neither, one clear message is all there is.
-    bool MainWindow::VerifyTransportIsUsable() noexcept
+    _Use_decl_annotations_
+    bool MainWindow::VerifyTransportIsUsable(bool const serviceAvailable) noexcept
     {
-        m_networkMidi2Usable = IsNetworkMidi2TransportUsable();
-        m_rtpUsable = IsRtpTransportUsable();
+        // Asking about a transport with the service down can hold the UI thread for good.
+        m_networkMidi2Usable = serviceAvailable && IsNetworkMidi2TransportUsable();
+        m_rtpUsable = serviceAvailable && IsRtpTransportUsable();
 
         // Not required for the pages: a transport from before ports could be named still works,
         // and gets the count instead of the MIDI 1.0 ports dialog
@@ -512,6 +545,12 @@ namespace winrt::midinetworksetup::implementation
 
             if (noTransport)
             {
+                if (!serviceAvailable)
+                {
+                    TransportUnavailableBar().Title(res::GetString(L"MidiServiceUnavailableTitle"));
+                    TransportUnavailableBar().Message(res::GetString(L"ServiceUnavailableBarMessage"));
+                }
+
                 TransportUnavailableBar().IsOpen(true);
 
                 RemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
