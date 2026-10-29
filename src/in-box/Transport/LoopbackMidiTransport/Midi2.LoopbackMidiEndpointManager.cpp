@@ -566,7 +566,85 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
 
     if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
-        return CreateEndpointPairHardened(definitionA, definitionB);
+        RETURN_HR_IF_NULL(E_INVALIDARG, definitionA);
+        RETURN_HR_IF_NULL(E_INVALIDARG, definitionB);
+        
+        auto const table = TransportState::Current().GetEndpointTable();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+        
+        auto const associationId = definitionA->AssociationId;
+        
+        // A second pair under the same association id would replace the first one in the table. The
+        // first pair's endpoints would stay behind with no way to remove them, and what was sent to
+        // them would reach the new pair. Runtime creates are refused before this with a reason; this
+        // also covers the configuration file, where two keys can differ only in case.
+        if (table->GetDevice(associationId) != nullptr)
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Association id already in use by another loopback. Not creating this one.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(associationId.c_str(), "association id")
+            );
+        
+            return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+        }
+        
+        if (FAILED(CreateSingleEndpoint(definitionA)))
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to create loopback endpoint A", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        
+            table->DiscardPendingRegistrations(associationId);
+        
+            return E_FAIL;
+        }
+        
+        if (FAILED(CreateSingleEndpoint(definitionB)))
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to create loopback endpoint B. Removing A now.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        
+            LOG_IF_FAILED(DeleteSingleEndpoint(*definitionA));
+        
+            table->DiscardPendingRegistrations(associationId);
+        
+            return E_FAIL;
+        }
+        
+        auto device = MidiLoopbackDevice{};
+        
+        device.DefinitionA = *definitionA;
+        device.DefinitionB = *definitionB;
+        
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
+        {
+            device.IsMuted = definitionA->IsMuted;
+        }
+        
+        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+        {
+            device.Feedback = MidiLoopbackFeedback::Create(associationId, definitionA->FeedbackProtectionEnabled);
+        }
+        
+        table->SetDeviceApplyingPendingRegistrations(associationId, device);
+        
+        return S_OK;
     }
     else
     {
@@ -575,31 +653,31 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
             if (SUCCEEDED(CreateSingleEndpoint(definitionB)))
             {
                 // all good now. Create the device table entry.
-
+        
                 auto associationId = definitionA->AssociationId;
-
+        
                 auto device = MidiLoopbackDevice{};
-
+        
              //   device.IsFromConfigurationFile = isFromConfigurationFile;
                 device.DefinitionA = *definitionA;
                 device.DefinitionB = *definitionB;
-
+        
                 if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
                 {
                     device.IsMuted = definitionA->IsMuted;
                 }
-
+        
                 if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
                 {
                     device.Feedback = MidiLoopbackFeedback::Create(associationId, definitionA->FeedbackProtectionEnabled);
                 }
-
+        
                 TransportState::Current().GetEndpointTable()->SetDevice(associationId, device);
             }
             else
             {
                 // failed to create B. We need to remove A now
-
+        
                 TraceLoggingWrite(
                     MidiLoopbackMidiTransportTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_ERROR,
@@ -608,10 +686,10 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Failed to create loopback endpoint B. Removing A now.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
-
+        
                 // we can't do anything with the return value here
                 DeleteSingleEndpoint(*definitionA);
-
+        
                 return E_FAIL;
             }
         }
@@ -626,60 +704,9 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Failed to create loopback endpoint A", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
-
+        
             return E_FAIL;
         }
-
-        if (FAILED(CreateSingleEndpoint(definitionA)))
-        {
-            TraceLoggingWrite(
-                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Failed to create loopback endpoint A", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            table->DiscardPendingRegistrations(associationId);
-
-            return E_FAIL;
-        }
-
-        if (FAILED(CreateSingleEndpoint(definitionB)))
-        {
-            TraceLoggingWrite(
-                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Failed to create loopback endpoint B. Removing A now.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            LOG_IF_FAILED(DeleteSingleEndpoint(*definitionA));
-
-            table->DiscardPendingRegistrations(associationId);
-
-            return E_FAIL;
-        }
-
-        auto device = MidiLoopbackDevice{};
-
-        device.DefinitionA = *definitionA;
-        device.DefinitionB = *definitionB;
-
-        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
-        {
-            device.IsMuted = definitionA->IsMuted;
-        }
-
-        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
-        {
-            device.Feedback = MidiLoopbackFeedback::Create(associationId, definitionA->FeedbackProtectionEnabled);
-        }
-
-        table->SetDeviceApplyingPendingRegistrations(associationId, device);
     }
 
     return S_OK;

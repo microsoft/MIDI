@@ -81,7 +81,7 @@ public:
             wil::com_ptr_nothrow<IMidiCallback> releasedB{ nullptr };
             
             {
-                auto lock = m_callbackLock.Lock.lock_exclusive();
+                auto lock = m_loopbackCallbackLock.Lock.lock_exclusive();
             
                 releasedA.swap(m_callbackA);
                 releasedB.swap(m_callbackB);
@@ -108,7 +108,7 @@ public:
         if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
         {
             {
-                auto lock = m_callbackLock.Lock.lock_exclusive();
+                auto lock = m_loopbackCallbackLock.Lock.lock_exclusive();
                 m_callbackA.swap(callback);
             }
 
@@ -127,7 +127,7 @@ public:
         if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
         {
             {
-                auto lock = m_callbackLock.Lock.lock_exclusive();
+                auto lock = m_loopbackCallbackLock.Lock.lock_exclusive();
                 m_callbackA.swap(callback);
             }
 
@@ -153,7 +153,7 @@ public:
         wil::com_ptr_nothrow<IMidiCallback> destination{ nullptr };
 
         {
-            auto lock = m_callbackLock.Lock.lock_shared();
+            auto lock = m_loopbackCallbackLock.Lock.lock_shared();
             destination = directionAToB ? m_callbackB : m_callbackA;
         }
 
@@ -305,5 +305,7 @@ private:
 
     wil::com_ptr_nothrow<IMidiCallback> m_callbackA{ nullptr };
     wil::com_ptr_nothrow<IMidiCallback> m_callbackB{ nullptr };
+    MidiLoopbackCallbackLock m_loopbackCallbackLock{};
+
     wil::critical_section m_callbackLock;
 };

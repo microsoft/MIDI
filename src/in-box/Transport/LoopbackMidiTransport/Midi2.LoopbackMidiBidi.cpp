@@ -309,7 +309,7 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
         
         if (device)
         {
-            return device->SendMessageWithLock(m_isEndpointA, message, size, position, m_callbackContext);
+            return device->SendMessageWithLock(m_isEndpointA, Message, Size, Position, m_callbackContext);
         }
         
         TraceLoggingWrite(

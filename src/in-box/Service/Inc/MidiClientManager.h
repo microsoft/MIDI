@@ -40,7 +40,8 @@ public:
 
 private:
     HRESULT DestroyMidiClientDeferredPipeShutdown(
-        _In_ MidiClientHandle);
+        _In_ MidiClientHandle,
+        _In_ DWORD callerPid);
 
     HRESULT GetMidiClient(
         _In_ LPCWSTR,

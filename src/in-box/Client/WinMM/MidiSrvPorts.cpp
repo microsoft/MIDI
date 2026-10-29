@@ -292,15 +292,15 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
         case MIDM_OPEN:
             if (Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled())
             {
-                RETURN_HR_IF(E_POINTER, nullptr == user);
+                RETURN_HR_IF(E_POINTER, nullptr == (DWORD_PTR*)user);
                 
                 // winmm hands us a DWORD_PTR sized slot inside its own handle, so the handle is taken in a
                 // local of our own width and narrowed on the way out rather than written over the slot.
                 MidiPortHandle localPortHandle{ 0 };
                 
-                RETURN_IF_FAILED(Open(flow, portNumber, midiOpenDesc, flags, &localPortHandle));
+                RETURN_IF_FAILED(Open(MidiFlowIn, deviceID, (MIDIOPENDESC *) param1, param2, &localPortHandle));
                 
-                *user = static_cast<DWORD_PTR>(localPortHandle);
+                *((DWORD_PTR*)user) = static_cast<DWORD_PTR>(localPortHandle);
             }
             else
             {
@@ -358,15 +358,15 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
         case MODM_OPEN:
             if (Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled())
             {
-                RETURN_HR_IF(E_POINTER, nullptr == user);
+                RETURN_HR_IF(E_POINTER, nullptr == (DWORD_PTR*)user);
                 
                 // winmm hands us a DWORD_PTR sized slot inside its own handle, so the handle is taken in a
                 // local of our own width and narrowed on the way out rather than written over the slot.
                 MidiPortHandle localPortHandle{ 0 };
                 
-                RETURN_IF_FAILED(Open(flow, portNumber, midiOpenDesc, flags, &localPortHandle));
+                RETURN_IF_FAILED(Open(MidiFlowOut, deviceID, (MIDIOPENDESC *) param1, param2, &localPortHandle));
                 
-                *user = static_cast<DWORD_PTR>(localPortHandle);
+                *((DWORD_PTR*)user) = static_cast<DWORD_PTR>(localPortHandle);
             }
             else
             {

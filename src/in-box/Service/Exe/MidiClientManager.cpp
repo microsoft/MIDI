@@ -1436,7 +1436,7 @@ CMidiClientManager::DestroyMidiClient(
 {
     if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
     {
-        return DestroyMidiClientDeferredPipeShutdown(clientHandle);
+        return DestroyMidiClientDeferredPipeShutdown(clientHandle, callerPid);
     }
 
     TraceLoggingWrite(
@@ -1567,7 +1567,8 @@ CMidiClientManager::DestroyMidiClient(
 _Use_decl_annotations_
 HRESULT
 CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
-    MidiClientHandle clientHandle
+    MidiClientHandle clientHandle,
+    DWORD callerPid
 )
 {
     TraceLoggingWrite(
