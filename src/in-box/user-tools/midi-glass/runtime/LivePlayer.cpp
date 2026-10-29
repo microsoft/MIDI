@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "LivePlayer.h"
 #include "PadGrid.h"
+#include "SysExReview.h"
 
 #include <ump_helpers.h>
 
@@ -953,6 +954,11 @@ namespace glass
                 continue;
             }
 
+            if (!m_systemExclusiveAllowed && ContainsSystemExclusive(send.Words, send.WordCount))
+            {
+                continue;
+            }
+
             // Zero is now. Measured at a third of a microsecond from the UI thread, which is why
             // this is done in the pointer handler rather than queued to a render tick.
             connection->SendMidiMessagesRaw(0, send.WordCount, send.Words);
@@ -1500,6 +1506,30 @@ namespace glass
             return;
         }
 
+        // Held back: only what isn't SysEx goes, in order. Rare, so the copy costs nothing that
+        // matters, and the path a finger takes without SysEx is unchanged.
+        std::vector<uint32_t> kept{};
+
+        if (!m_systemExclusiveAllowed && ContainsSystemExclusive(words, wordCount))
+        {
+            try
+            {
+                kept = WithoutSystemExclusive(words, wordCount);
+            }
+            catch (...)
+            {
+                return;
+            }
+
+            if (kept.empty())
+            {
+                return;
+            }
+
+            words = kept.data();
+            wordCount = static_cast<uint32_t>(kept.size());
+        }
+
         try
         {
             // A dump is thousands of packets and a connection has its own limit on how many
@@ -1605,6 +1635,11 @@ namespace glass
             }
 
             auto const& connection = m_sendTable[static_cast<size_t>(send.DestinationIndex)];
+
+            if (!m_systemExclusiveAllowed && ContainsSystemExclusive(send.Words, send.WordCount))
+            {
+                continue;
+            }
 
             if (connection != nullptr && send.WordCount != 0)
             {

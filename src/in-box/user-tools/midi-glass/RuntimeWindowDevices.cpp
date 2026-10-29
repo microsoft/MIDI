@@ -16,6 +16,8 @@
 #include "StringResources.h"
 #include "GlassControl.h"
 #include "MidiServiceStatus.h"
+#include "SysExPrompt.h"
+#include "SysExReview.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -174,9 +176,39 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        // A layout from somewhere else sends no SysEx until the person here says it may. It
+        // starts held back, so nothing gets out while the question is open, not even from the
+        // startup pass.
+        auto const askAboutSysEx = glass::CheckSysExReview(m_document) == glass::SysExReview::Ask;
+
+        m_player->SetSystemExclusiveAllowed(!askAboutSysEx);
+
         // One owner per running layout, and the file path is what makes it unique, so the same
         // layout opened twice shares its connections instead of doubling them.
         m_player->Start(m_document, m_dispatcher, m_ownerId);
+
+        if (askAboutSysEx)
+        {
+            // After the window is up, so the question has a window to sit over.
+            m_dispatcher.TryEnqueue(winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low, [weak]()
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_closing || strong->m_player == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto const allowed = ::midiglass::sysexprompt::AskToAllowSysEx(
+                        strong->m_chrome.WindowHandle(), strong->m_document, strong->m_filePath);
+
+                    // The window may have closed while the question was open.
+                    if (!strong->m_closing && strong->m_player != nullptr)
+                    {
+                        strong->m_player->SetSystemExclusiveAllowed(allowed);
+                    }
+                });
+        }
     }
 
     void RuntimeWindow::UpdateDeviceStatus()

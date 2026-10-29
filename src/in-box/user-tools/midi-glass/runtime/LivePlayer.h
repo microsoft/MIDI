@@ -155,6 +155,12 @@ namespace glass
         // whole layout's worth of startup values.
         void SetOutputEnabled(_In_ bool enabled) noexcept;
 
+        // Holds back every system exclusive packet while false, from controls, sequences and the
+        // startup pass alike. A layout from somewhere else runs this way until the person says its
+        // SysEx may go out (SysExReview.h).
+        void SetSystemExclusiveAllowed(_In_ bool allowed) noexcept { m_systemExclusiveAllowed = allowed; }
+        bool IsSystemExclusiveAllowed() const noexcept { return m_systemExclusiveAllowed; }
+
         // Listen for something to bind to. Off by default, because reading every message that
         // arrives on every device costs something and nothing wants it until somebody asks.
         void SetLearning(_In_ bool learning) noexcept { m_learning = learning; }
@@ -483,6 +489,7 @@ namespace glass
         bool m_started{ false };
         bool m_stopping{ false };
         bool m_outputEnabled{ true };
+        bool m_systemExclusiveAllowed{ true };
 
         // Read on a service callback thread and written on the UI thread, so it is atomic rather
         // than a plain bool.

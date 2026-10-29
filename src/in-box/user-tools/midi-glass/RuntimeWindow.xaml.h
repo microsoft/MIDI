@@ -32,6 +32,10 @@ namespace winrt::midiglass::implementation
 
         std::wstring const& LayoutFilePath() const noexcept { return m_filePath; }
 
+        // A newer copy of the layout arrived from another PC (RuntimeWindowUpdate.cpp).
+        void ShowUpdateReady();
+        void OnUpdateReadyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         void OnRootLoaded(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);

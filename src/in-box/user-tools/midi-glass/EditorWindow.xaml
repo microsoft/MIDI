@@ -430,6 +430,17 @@
                         </StackPanel>
                     </Grid>
 
+                    <!-- Saves, then sends the layout to the PC it last went to, or asks which one. -->
+                    <Button x:Name="SyncToDeviceButton"
+                            x:Uid="EditorSyncToDeviceButton"
+                            Style="{StaticResource EditorSmallButtonStyle}"
+                            Loaded="OnSyncToDeviceLoaded"
+                            Click="OnSyncToDeviceClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE895;" FontSize="13" />
+                            <TextBlock x:Name="SyncToDeviceLabel" x:Uid="EditorSyncToDeviceLabel" Text="Sync to device…" />
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="LayoutSettingsButton"
                             x:Uid="EditorLayoutSettingsButton"
                             Style="{StaticResource EditorSmallButtonStyle}">

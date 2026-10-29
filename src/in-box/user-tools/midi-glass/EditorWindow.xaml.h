@@ -99,6 +99,12 @@ namespace winrt::midiglass::implementation
         void OnSortKeyboardOrderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRunClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // Sync to device (EditorSync.cpp)
+        void OnSyncToDeviceLoaded(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSyncToDeviceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget SyncToDeviceAsync();
+        void UpdateSyncToDeviceLabel();
+
         // ---- Edit and Try (EditorTryMode.cpp) ----
 
         void OnEditModeChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -669,6 +675,7 @@ namespace winrt::midiglass::implementation
 
         void MarkChanged();
         void SaveNow();
+        bool SysExIsAllowedHere() const noexcept;
         void UpdateSavedChip();
         void UpdateStatusBar();
 
@@ -1107,6 +1114,9 @@ namespace winrt::midiglass::implementation
 
         xaml::DispatcherTimer m_saveTimer{ nullptr };
         bool m_saveFailed{ false };
+
+        // Whether this layout's SysEx is the person's own here (EditorTryMode.cpp).
+        bool m_sysExIsOwn{ false };
 
         // ---- Edit and Try ----
 
