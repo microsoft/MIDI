@@ -61,15 +61,23 @@ Choose what to include, select **Start capture**, reproduce whatever is going wr
 
 By default the package contains:
 
-- an ETW trace of the MIDI service and the MIDI components in Windows, recorded while you reproduced the problem
-- a time travel trace of the MIDI service, which lets an engineer step backwards through what the service actually did
+- an ETW trace of the MIDI service, the MIDI components in Windows and the Windows MIDI Services apps, recorded while you reproduced the problem
+- a time travel trace of the MIDI service and of any Windows MIDI Services app that's open when you start, which lets an engineer step backwards through what each one actually did
+- a list of the Windows MIDI Services apps that were open, and the MIDI libraries each one had loaded
 - the mididiag and midiksinfo reports
 - ddodiag, dxdiag and an export of the plug and play state
 - a summary of this PC and the state of the MIDI service
 
 A time travel trace makes the package much larger, but it is very often the thing that lets us find a problem from a single capture instead of asking you to reproduce it again, so it's on by default.
 
-Time travel tracing isn't available on every build of Windows, and it can be refused if the service is running with certain security mitigations. If that happens, the capture carries on without it and says so in the log, rather than failing.
+If the problem shows up in one of the Windows MIDI Services apps, such as Windows MIDI Monitor, midi1monitor or midi1rtmonitor, open that app before you select **Start capture**. Only apps that are already open get a time travel trace. An app you open later still shows up in the ETW trace, but with less detail. This only covers the apps that come with Windows MIDI Services. It doesn't record your DAW or other music apps.
+
+The two kinds of trace show different things:
+
+- **The ETW trace** has the events that the MIDI service, the Windows MIDI Services SDK, WinMM's MIDI driver (wdmaud2) and the apps write, plus which libraries each app loaded. It doesn't list every call an app makes into `Windows.Devices.Midi`, `Windows.Devices.Midi2` or WinMM, or what each call returned.
+- **The time travel trace** records everything an app did, including every call into those libraries and its result. An engineer can replay it in WinDbg.
+
+Time travel tracing isn't available on every build of Windows, and it can be refused if the service or an app is running with certain security mitigations. If that happens, the capture carries on without it and says so in the log, rather than failing. A traced app stays slow after the capture, so close it and open it again when you're done.
 
 ## DPC latency check
 

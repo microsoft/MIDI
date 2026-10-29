@@ -17,9 +17,9 @@ namespace miditroubleshooter
         bool IncludeMidiDiag{ true };
         bool IncludeMidiKsInfo{ true };
 
-        // Only offered when tttracer.exe is present. Shadow stack mitigations are not touched,
-        // so an attach can still be refused; that is recorded in the package rather than
-        // failing the capture.
+        // Only offered when tttracer.exe is present. Records the service and every in-box MIDI
+        // app that is already running. Shadow stack mitigations are not touched, so an attach
+        // can still be refused; that is recorded in the package rather than failing the capture.
         bool IncludeTimeTravelTrace{ false };
     };
 
