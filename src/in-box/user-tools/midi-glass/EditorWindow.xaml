@@ -3164,6 +3164,19 @@
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                         </StackPanel>
                                     </ContentControl>
+
+                                    <TextBlock x:Uid="ListenRemoteHeading" Text="Remote control" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <TextBlock x:Uid="ListenRemoteCaption"
+                                               Text="To have a message turn this control on, show it, press it or set it, add a rule for it in MIDI remote control."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <Button x:Name="ListenRemoteRuleButton"
+                                            x:Uid="ListenRemoteRuleButton"
+                                            Content="Add a rule for this control"
+                                            Margin="0,4,0,0"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnListenRemoteRuleClick" />
                                 </StackPanel>
 
                                 <!-- Only the controls that follow what arrives are changed.
@@ -3213,6 +3226,20 @@
                                                   Toggled="OnSendOnStartToggled" />
                                     <TextBlock x:Uid="SendOnStartCaption"
                                                Text="A layout whose faders sit at zero, pushed to a live desk on load, mutes the show. Off unless this control genuinely has to put something into a known state."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <ToggleSwitch x:Name="StartsDisabledSwitch"
+                                                  x:Uid="StartsDisabledSwitch"
+                                                  Header="Start turned off"
+                                                  Toggled="OnStartsDisabledToggled" />
+                                    <ToggleSwitch x:Name="StartsHiddenSwitch"
+                                                  x:Uid="StartsHiddenSwitch"
+                                                  Header="Start hidden"
+                                                  Toggled="OnStartsHiddenToggled" />
+                                    <TextBlock x:Uid="StartsStateCaption"
+                                               Text="A MIDI remote control rule can turn it on or show it while the layout runs. A control that's off is drawn faint and ignores touch, but still follows what a device sends."
                                                FontSize="11"
                                                TextWrapping="Wrap"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
@@ -3707,6 +3734,19 @@
                                 </StackPanel>
                             </ToggleButton>
 
+                            <ToggleButton x:Name="NavRemote"
+                                          x:Uid="SettingsNavRemote"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="remote"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE8AF;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavRemoteLabel" Text="MIDI remote control" />
+                                </StackPanel>
+                            </ToggleButton>
+
                             <TextBlock x:Uid="SettingsNavThisLayout"
                                        Text="This layout"
                                        FontSize="11"
@@ -4125,6 +4165,15 @@
                                   VerticalScrollBarVisibility="Auto"
                                   Padding="18,14,18,18">
                         <StackPanel x:Name="SettingsBehaviorPanel" Spacing="0" MaxWidth="520" HorizontalAlignment="Left" />
+                    </ScrollViewer>
+
+                    <!-- ===================================== MIDI remote control -->
+                    <!-- Built in code (EditorRemoteControl.cpp): one card per rule. -->
+                    <ScrollViewer x:Name="RemoteControlPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel x:Name="RemoteControlPanel" Spacing="0" MaxWidth="760" HorizontalAlignment="Left" />
                     </ScrollViewer>
 
                     <!-- =================================== Name and description -->

@@ -201,6 +201,7 @@
     <ClInclude Include="document\StepPattern.h" />
     <ClInclude Include="document\PadGrid.h" />
     <ClInclude Include="document\PadGridChanges.h" />
+    <ClInclude Include="document\RemoteControlFile.h" />
     <ClInclude Include="document\Fretboard.h" />
     <ClInclude Include="document\FretboardChanges.h" />
     <ClInclude Include="EditorPadGridKeys.h" />
@@ -233,6 +234,7 @@
     <ClInclude Include="binding\BindingEngine.h" />
     <ClInclude Include="binding\ActionPlan.h" />
     <ClInclude Include="binding\LearnCapture.h" />
+    <ClInclude Include="binding\RemoteRules.h" />
     <ClInclude Include="document\HexText.h" />
     <ClInclude Include="binding\MonitorFormat.h" />
     <ClInclude Include="binding\ValueThrottle.h" />
@@ -312,6 +314,8 @@
     <ClCompile Include="EditorPanes.cpp" />
     <ClCompile Include="EditorTryMode.cpp" />
     <ClCompile Include="EditorKeyPickers.cpp" />
+    <ClCompile Include="EditorRemoteControl.cpp" />
+    <ClCompile Include="RuntimeWindowRemote.cpp" />
     <ClCompile Include="EditorPadGrids.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
@@ -509,6 +513,15 @@
     <ClCompile Include="editor\EditorControllerPickers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="editor\EditorControllerRemote.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\RemoteControlFile.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\RemoteRules.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="editor\EditorControllerFretboard.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -525,6 +538,7 @@
     <ClCompile Include="surface\DeckBrush.cpp" />
     <ClCompile Include="runtime\LivePlayer.cpp" />
     <ClCompile Include="runtime\LivePlayerKeys.cpp" />
+    <ClCompile Include="runtime\LivePlayerRemote.cpp" />
     <ClCompile Include="runtime\LivePlayerStrings.cpp" />
     <ClCompile Include="surface\InputRouterStrings.cpp" />
     <ClCompile Include="surface\SurfaceFretboard.cpp" />
@@ -536,6 +550,7 @@
     <ClCompile Include="surface\SurfaceAutomationPeer.cpp" />
     <ClCompile Include="surface\SurfaceControls.cpp" />
     <ClCompile Include="surface\SurfaceKeyPickers.cpp" />
+    <ClCompile Include="surface\SurfaceRemoteState.cpp" />
     <ClCompile Include="surface\SurfacePads.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
     <ClCompile Include="surface\SurfaceTextures.cpp" />

@@ -82,3 +82,7 @@ The wait is a condition variable with a **predicate**, not a bare `wait_for`. A 
 - **It does not re-initialize a layout when a device comes back.** Startup values are sent once per run; the window owns that decision.
 - **The runner does not decide what a sequence contains.** It is handed a flat list of actions; expanding a repeat block and building the words is the binding layer's job, at load time.
 - **The runner never unwinds.** Stopping a sequence half way leaves what it already sent where it is, because guessing at somebody's synthesizer state is worse than leaving it alone. Panic is the thing that puts a rig back.
+
+## LivePlayerRemote
+
+Where MIDI remote control runs. The callback thread finds the rules a message sets off next to the feedback a control follows, and marshals only the hits. The dispatcher's thread does what they say, through the same paths a finger takes, and only while output is on, so the editor's Edit mode lights a rule's row and does nothing else. A control that is off or hidden starts nothing; letting go of one always goes through. `PageShown` tells the controller the page, if the layout asks, and runs the page's open sequence, queued so it never runs inside the owner's page build.

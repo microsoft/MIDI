@@ -166,6 +166,14 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->ControlStatesChanged = [weak](std::vector<uint32_t> const& controlIndexes)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnControlStatesChanged(controlIndexes);
+                }
+            };
+
         m_player->StringsSounding = [weak](uint32_t controlIndex, uint32_t sounding)
             {
                 size_t itemIndex{ 0 };
@@ -186,6 +194,10 @@ namespace winrt::midiglass::implementation
         // One owner per running layout, and the file path is what makes it unique, so the same
         // layout opened twice shares its connections instead of doubling them.
         m_player->Start(m_document, m_dispatcher, m_ownerId);
+
+        // The page was built before there was a player to tell.
+        ApplyControlStates();
+        m_player->PageShown(m_pageIndex);
 
         if (askAboutSysEx)
         {

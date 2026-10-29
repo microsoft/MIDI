@@ -91,6 +91,11 @@ namespace glass
 
         bool IsAnythingHeld() const noexcept { return m_heldCount > 0; }
 
+        // Every finger on one control lets go, the way it would if it lifted, so whatever the
+        // control was holding ends. For a control a rule just turned off or hid
+        // (SurfaceRemoteState.cpp).
+        void ReleaseItem(_In_ size_t itemIndex);
+
     private:
         // Ten fingers on one grid. A pen or a mouse is one more pointer, and a hand has five.
         static constexpr size_t MaximumPadFingers = 10;

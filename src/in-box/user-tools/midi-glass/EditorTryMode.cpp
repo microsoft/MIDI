@@ -271,6 +271,22 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->RemoteRuleHeard = [weak](uint32_t ruleIndex)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnRemoteRuleHeard(ruleIndex);
+                }
+            };
+
+        m_player->ControlStatesChanged = [weak](std::vector<uint32_t> const& controlIndexes)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnTryControlStatesChanged(controlIndexes);
+                }
+            };
+
         m_player->StringsSounding = [weak](uint32_t controlIndex, uint32_t sounding)
             {
                 size_t itemIndex{ 0 };
@@ -284,10 +300,12 @@ namespace winrt::midiglass::implementation
         // Nothing leaves until Try mode says so. Learning opens the connections and listens;
         // it must not push a layout's worth of startup values at a desk on its own.
         m_player->SetOutputEnabled(false);
+        m_player->SetRemoteLive(false);
 
         // A layout being edited and the same layout running are two owners on purpose, so
         // closing one does not take the other's connections down.
         m_player->Start(m_editor.Document(), m_dispatcher, m_filePath + L"\x1editor");
+        m_player->PageShown(m_editor.PageIndex());
     }
 
     _Use_decl_annotations_
@@ -334,6 +352,7 @@ namespace winrt::midiglass::implementation
                 }
 
                 m_player->SetOutputEnabled(true);
+                m_player->SetRemoteLive(true);
             }
             else
             {
@@ -343,10 +362,12 @@ namespace winrt::midiglass::implementation
 
                 if (m_player != nullptr)
                 {
+                    m_player->SetRemoteLive(false);
                     m_player->SetOutputEnabled(false);
                 }
 
                 ForgetTryKey();
+                ForgetTryControlStates();
 
                 for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
                 {
@@ -401,6 +422,10 @@ namespace winrt::midiglass::implementation
 
             // Cut and paste are for building. In Try mode a right click belongs to the surface.
             CanvasScroll().ContextFlyout(m_tryMode ? nullptr : CanvasMenu());
+
+            // After every element's hit testing was set above, so a control a rule turned off
+            // stays out of reach.
+            SyncRemoteSurface();
 
             if (!m_tryMode)
             {

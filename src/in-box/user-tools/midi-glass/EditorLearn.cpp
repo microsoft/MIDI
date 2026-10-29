@@ -195,6 +195,12 @@ namespace winrt::midiglass::implementation
     _Use_decl_annotations_
     void EditorWindow::OnLearned(glass::LearnedBinding const& learned)
     {
+        // A MIDI remote control rule waiting for its message takes it first.
+        if (TryApplyRemoteLearn(learned))
+        {
+            return;
+        }
+
         if (m_learnMode == LearnMode::Off)
         {
             return;
