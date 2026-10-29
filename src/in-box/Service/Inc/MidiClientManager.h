@@ -39,6 +39,8 @@ public:
     HRESULT Shutdown();
 
 private:
+    HRESULT DestroyMidiClientDeferredPipeShutdown(
+        _In_ MidiClientHandle);
 
     HRESULT GetMidiClient(
         _In_ LPCWSTR,

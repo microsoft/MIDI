@@ -9,7 +9,6 @@
 
 #include "pch.h"
 
-// Net-new for Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint.
 static bool IsEndpointInterfaceEnabled(_In_ std::wstring const& endpointInterfaceId)
 {
     try
@@ -69,10 +68,20 @@ CMidi2LoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
 
-        m_callback = Callback;
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            auto lock = m_callbackSrwLock.lock_exclusive();
+            m_callback = Callback;
 
-        m_isEndpointA = true;
+            m_isEndpointA = true;
+        }
+        else
+        {
+            auto lock = m_callbackLock.lock();
+            m_callback = Callback;
 
+            m_isEndpointA = true;
+        }
     }
     else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_LOOP_INSTANCE_ID_B_PREFIX))
     {
@@ -87,9 +96,20 @@ CMidi2LoopbackMidiBidi::Initialize(
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
 
-        m_callback = Callback;
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            auto lock = m_callbackSrwLock.lock_exclusive();
+            m_callback = Callback;
 
-        m_isEndpointA = false;
+            m_isEndpointA = false;
+        }
+        else
+        {
+            auto lock = m_callbackLock.lock();
+            m_callback = Callback;
+
+            m_isEndpointA = false;
+        }
     }
     else
     {
@@ -113,25 +133,77 @@ CMidi2LoopbackMidiBidi::Initialize(
 
     if (Feature_Servicing_MIDI2LoopbackAndClientOpenHardening::IsEnabled())
     {
-        return RegisterWithLoopbackDevice();
-    }
-
-    auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
-
-    if (device)
-    {
-        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        try
         {
             if (m_isEndpointA)
             {
-                device->RegisterEndpointAWithLock(this);
+                // In an endpoint id the instance id follows a '#', so this is the start of it
+                if (internal::EndpointInterfaceIdContainsString(m_endpointId, std::wstring{ L"#" } + MIDI_LOOP_INSTANCE_ID_B_PREFIX))
+                {
+                    TraceLoggingWrite(
+                        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Side-B endpoint whose unique id contains the side-A prefix. Initializing as Side-B.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+                    );
+        
+                    m_isEndpointA = false;
+                }
             }
-            else
+        
+            auto const table = TransportState::Current().GetEndpointTable();
+            RETURN_HR_IF_NULL(E_UNEXPECTED, table);
+        
+            auto const device = table->GetDeviceOrDeferRegistration(m_associationId, m_isEndpointA, this);
+        
+            if (device)
             {
-                device->RegisterEndpointBWithLock(this);
+                if (m_isEndpointA)
+                {
+                    device->RegisterEndpointA(this);
+                }
+                else
+                {
+                    device->RegisterEndpointB(this);
+                }
+        
+                return S_OK;
             }
+        
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Pair not in device table yet. Registering when it is added.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+                TraceLoggingWideString(m_associationId.c_str(), "association id")
+            );
+        
+            if (Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled())
+            {
+                // A pair being created is enabled before it is in the table, so only a removed one is disabled.
+                if (!IsEndpointInterfaceEnabled(m_endpointId))
+                {
+                    table->RemovePendingRegistrations(this);
+        
+                    RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_FOUND));
+                }
+            }
+        
+            return S_OK;
         }
-        else
+        CATCH_RETURN();
+    }
+    else
+    {
+        auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
+
+        if (device)
         {
             if (m_isEndpointA)
             {
@@ -142,26 +214,26 @@ CMidi2LoopbackMidiBidi::Initialize(
                 device->RegisterEndpointB(this);
             }
         }
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to find matching device in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-            TraceLoggingWideString(m_associationId.c_str(), "association id")
-        );
-
-        if (Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled())
+        else
         {
-            // A pair being created is enabled before it is in the table, so only a removed one is disabled.
-            if (!IsEndpointInterfaceEnabled(m_endpointId))
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unable to find matching device in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+                TraceLoggingWideString(m_associationId.c_str(), "association id")
+            );
+
+            if (Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled())
             {
-                RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_FOUND));
+                // A pair being created is enabled before it is in the table, so only a removed one is disabled.
+                if (!IsEndpointInterfaceEnabled(m_endpointId))
+                {
+                    RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_FOUND));
+                }
             }
         }
     }
@@ -196,12 +268,13 @@ CMidi2LoopbackMidiBidi::Shutdown()
         wil::com_ptr_nothrow<IMidiCallback> released{ nullptr };
 
         {
-            auto lock = m_callbackLock.lock_exclusive();
+            auto lock = m_callbackSrwLock.lock_exclusive();
             released.swap(m_callback);
         }
     }
     else
     {
+        auto lock = m_callbackLock.lock();
         m_callback = nullptr;
     }
 
@@ -232,69 +305,89 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
 
     if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
     {
-        return SendToOtherSideWithLock(Message, Size, Position);
-    }
-
-    if (m_isEndpointA)
-    {
-        // send endpoint A to B
         auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
-
+        
         if (device)
         {
-            if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
-            {
-                return device->SendMessageAToBWithFeedbackProtection(Message, Size, Position, m_callbackContext);
-            }
-            else
-            {
-                return device->SendMessageAToB(Message, Size, Position, m_callbackContext);
-            }
+            return device->SendMessageWithLock(m_isEndpointA, message, size, position, m_callbackContext);
         }
-        else
-        {
-            TraceLoggingWrite(
-                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-                TraceLoggingWideString(L"Send A to B : Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
-
-            return E_FAIL;
-        }
+        
+        TraceLoggingWrite(
+            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+            TraceLoggingBool(m_isEndpointA, "is endpoint A"),
+            TraceLoggingWideString(L"Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+        
+        return E_FAIL;
     }
     else
     {
-        // send endpoint B to A
-        auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
-
-        if (device)
+        if (m_isEndpointA)
         {
-            if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+            // send endpoint A to B
+            auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
+
+            if (device)
             {
-                return device->SendMessageBToAWithFeedbackProtection(Message, Size, Position, m_callbackContext);
+                if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+                {
+                    return device->SendMessageAToBWithFeedbackProtection(Message, Size, Position, m_callbackContext);
+                }
+                else
+                {
+                    return device->SendMessageAToB(Message, Size, Position, m_callbackContext);
+                }
             }
             else
             {
-                return device->SendMessageBToA(Message, Size, Position, m_callbackContext);
+                TraceLoggingWrite(
+                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+                    TraceLoggingWideString(L"Send A to B : Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                return E_FAIL;
             }
         }
         else
         {
-            TraceLoggingWrite(
-                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-                TraceLoggingWideString(L"Send B to A : Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
+            // send endpoint B to A
+            auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
 
-            return E_FAIL;
+            if (device)
+            {
+                if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+                {
+                    return device->SendMessageBToAWithFeedbackProtection(Message, Size, Position, m_callbackContext);
+                }
+                else
+                {
+                    return device->SendMessageBToA(Message, Size, Position, m_callbackContext);
+                }
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+                    TraceLoggingWideString(L"Send B to A : Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
+                return E_FAIL;
+            }
         }
     }
 }
@@ -325,7 +418,7 @@ CMidi2LoopbackMidiBidi::Callback(
         wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
 
         {
-            auto lock = m_callbackLock.lock_shared();
+            auto lock = m_callbackSrwLock.lock_shared();
             callback = m_callback;
         }
 
@@ -336,131 +429,18 @@ CMidi2LoopbackMidiBidi::Callback(
     }
     else
     {
-        if (m_callback != nullptr)
+        wil::com_ptr_nothrow<IMidiCallback> callback;
         {
-            return m_callback->Callback(optionFlags, Message, Size, Position, Context);
+            auto lock = m_callbackLock.lock();
+            callback = m_callback;
+        }
+
+        if (callback != nullptr)
+        {
+            return callback->Callback(optionFlags, Message, Size, Position, Context);
         }
     }
 
     return S_OK;
-}
-
-
-_Use_decl_annotations_
-HRESULT
-CMidi2LoopbackMidiBidi::SendToOtherSideWithLock(
-    PVOID message,
-    UINT size,
-    LONGLONG position
-)
-{
-    auto device = TransportState::Current().GetEndpointTable()->GetDevice(m_associationId);
-
-    if (device)
-    {
-        return device->SendMessageWithLock(m_isEndpointA, message, size, position, m_callbackContext);
-    }
-
-    TraceLoggingWrite(
-        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_ERROR,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-        TraceLoggingBool(m_isEndpointA, "is endpoint A"),
-        TraceLoggingWideString(L"Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    return E_FAIL;
-}
-
-
-// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The end of Initialize, with two changes.
-// The side is taken from the start of the instance id rather than from anywhere in the endpoint
-// id, because a B unique id can itself contain the A prefix. And an endpoint opened while its pair
-// is still being created is registered when the pair is added, instead of never.
-HRESULT
-CMidi2LoopbackMidiBidi::RegisterWithLoopbackDevice()
-{
-    try
-    {
-        if (m_isEndpointA)
-        {
-            // In an endpoint id the instance id follows a '#', so this is the start of it
-            if (internal::EndpointInterfaceIdContainsString(m_endpointId, std::wstring{ L"#" } + MIDI_LOOP_INSTANCE_ID_B_PREFIX))
-            {
-                TraceLoggingWrite(
-                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Side-B endpoint whose unique id contains the side-A prefix. Initializing as Side-B.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-                );
-
-                m_isEndpointA = false;
-            }
-        }
-
-        auto const table = TransportState::Current().GetEndpointTable();
-        RETURN_HR_IF_NULL(E_UNEXPECTED, table);
-
-        auto const device = table->GetDeviceOrDeferRegistration(m_associationId, m_isEndpointA, this);
-
-        if (device)
-        {
-            if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
-            {
-                if (m_isEndpointA)
-                {
-                    device->RegisterEndpointAWithLock(this);
-                }
-                else
-                {
-                    device->RegisterEndpointBWithLock(this);
-                }
-            }
-            else
-            {
-                if (m_isEndpointA)
-                {
-                    device->RegisterEndpointA(this);
-                }
-                else
-                {
-                    device->RegisterEndpointB(this);
-                }
-            }
-
-            return S_OK;
-        }
-
-        TraceLoggingWrite(
-            MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Pair not in device table yet. Registering when it is added.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-            TraceLoggingWideString(m_associationId.c_str(), "association id")
-        );
-
-        if (Feature_Servicing_MIDI2LoopbackRejectRemovedEndpoint::IsEnabled())
-        {
-            // A pair being created is enabled before it is in the table, so only a removed one is disabled.
-            if (!IsEndpointInterfaceEnabled(m_endpointId))
-            {
-                table->RemovePendingRegistrations(this);
-
-                RETURN_HR(HRESULT_FROM_WIN32(ERROR_NOT_FOUND));
-            }
-        }
-
-        return S_OK;
-    }
-    CATCH_RETURN();
 }
 

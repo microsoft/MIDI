@@ -9,8 +9,7 @@
 
 #pragma once
 
-// Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability. The table keeps a
-// copy of the device built at creation, so a copy gets a lock of its own instead of sharing one.
+// The table keeps a copy of the device built at creation, so a copy gets a lock of its own instead of sharing one.
 class MidiLoopbackCallbackLock
 {
 public:
@@ -31,81 +30,118 @@ public:
 
     MidiLoopbackDeviceDefinition DefinitionA;
     MidiLoopbackDeviceDefinition DefinitionB;
+    MidiLoopbackDevice() = default;
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection, and only ever set at
-    // creation. A pointer because the table keeps a copy of the device built at creation, and both
+    // A pointer because the table keeps a copy of the device built at creation, and both
     // copies must share one set of guards.
     std::shared_ptr<MidiLoopbackFeedback> Feedback{};
 
-    void Shutdown()
+    MidiLoopbackDevice(const MidiLoopbackDevice& rhs)
     {
-        if (m_callbackA != nullptr)
+        IsMuted = rhs.IsMuted;
+        DefinitionA = rhs.DefinitionA;
+        DefinitionB = rhs.DefinitionB;
+
+        auto lock = const_cast<wil::critical_section&>(rhs.m_callbackLock).lock();
+        m_callbackA = rhs.m_callbackA;
+        m_callbackB = rhs.m_callbackB;
+    }
+
+    MidiLoopbackDevice& operator=(const MidiLoopbackDevice& rhs)
+    {
+        if (this == &rhs)
         {
-            m_callbackA = nullptr;
+            return *this;
         }
 
-        if (m_callbackB != nullptr)
+        IsMuted = rhs.IsMuted;
+        DefinitionA = rhs.DefinitionA;
+        DefinitionB = rhs.DefinitionB;
+
+        wil::com_ptr_nothrow<IMidiCallback> callbackA;
+        wil::com_ptr_nothrow<IMidiCallback> callbackB;
         {
-            m_callbackB = nullptr;
+            auto rhsLock = const_cast<wil::critical_section&>(rhs.m_callbackLock).lock();
+            callbackA = rhs.m_callbackA;
+            callbackB = rhs.m_callbackB;
+        }
+
+        auto thisLock = m_callbackLock.lock();
+        m_callbackA = callbackA;
+        m_callbackB = callbackB;
+
+        return *this;
+    }
+
+    void Shutdown()
+    {
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            wil::com_ptr_nothrow<IMidiCallback> releasedA{ nullptr };
+            wil::com_ptr_nothrow<IMidiCallback> releasedB{ nullptr };
+            
+            {
+                auto lock = m_callbackLock.Lock.lock_exclusive();
+            
+                releasedA.swap(m_callbackA);
+                releasedB.swap(m_callbackB);
+            }
+            
+            // released here, outside the lock
+        }
+        else
+        {
+            auto lock = m_callbackLock.lock();
+            if (m_callbackA != nullptr)
+            {
+                m_callbackA = nullptr;
+            }
+            if (m_callbackB != nullptr)
+            {
+                m_callbackB = nullptr;
+            }
         }
     }
 
-
-
-
-
     void RegisterEndpointA(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
-        //m_bidiA = endpoint;
-        m_callbackA = callback;
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            {
+                auto lock = m_callbackLock.Lock.lock_exclusive();
+                m_callbackA.swap(callback);
+            }
+
+            // callback now holds the one it replaced, released here, outside the lock
+        }
+        else
+        {
+            auto lock = m_callbackLock.lock();
+            //m_bidiA = endpoint;
+            m_callbackA = callback;
+        }
     }
 
     void RegisterEndpointB(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
-        //m_bidiB = endpoint;
-        m_callbackB = callback;
-    }
-
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
-    void ShutdownWithLock()
-    {
-        wil::com_ptr_nothrow<IMidiCallback> releasedA{ nullptr };
-        wil::com_ptr_nothrow<IMidiCallback> releasedB{ nullptr };
-
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
         {
-            auto lock = m_callbackLock.Lock.lock_exclusive();
+            {
+                auto lock = m_callbackLock.Lock.lock_exclusive();
+                m_callbackA.swap(callback);
+            }
 
-            releasedA.swap(m_callbackA);
-            releasedB.swap(m_callbackB);
+            // callback now holds the one it replaced, released here, outside the lock
         }
-
-        // released here, outside the lock
-    }
-
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
-    void RegisterEndpointAWithLock(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
-    {
+        else
         {
-            auto lock = m_callbackLock.Lock.lock_exclusive();
-            m_callbackA.swap(callback);
+            auto lock = m_callbackLock.lock();
+            //m_bidiB = endpoint;
+            m_callbackB = callback;
         }
-
-        // callback now holds the one it replaced, released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
-    void RegisterEndpointBWithLock(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
-    {
-        {
-            auto lock = m_callbackLock.Lock.lock_exclusive();
-            m_callbackB.swap(callback);
-        }
-
-        // callback now holds the one it replaced, released here, outside the lock
-    }
-
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability. Holds its own
-    // reference to the destination for the whole delivery, and keeps the muting and feedback
+    // Holds its own reference to the destination for the whole delivery, and keeps the muting and feedback
     // protection behavior of the four Send functions below.
     HRESULT SendMessageWithLock(
         _In_ bool const directionAToB,
@@ -144,18 +180,23 @@ public:
 
     HRESULT SendMessageAToB(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
+        wil::com_ptr_nothrow<IMidiCallback> callback;
+        {
+            auto lock = m_callbackLock.lock();
+            callback = m_callbackB;
+        }
         if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
         {
-            if (m_callbackB != nullptr && !IsMuted)
+            if (callback != nullptr && !IsMuted)
             {
-                return m_callbackB->Callback(MessageOptionFlags_None, message, size, position, context);
+                return callback->Callback(MessageOptionFlags_None, message, size, position, context);
             }
         }
         else
         {
-            if (m_callbackB != nullptr)
+            if (callback != nullptr)
             {
-                return m_callbackB->Callback(MessageOptionFlags_None, message, size, position, context);
+                return callback->Callback(MessageOptionFlags_None, message, size, position, context);
             }
         }
 
@@ -164,26 +205,30 @@ public:
 
     HRESULT SendMessageBToA(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
+        wil::com_ptr_nothrow<IMidiCallback> callback;
+        {
+            auto lock = m_callbackLock.lock();
+            callback = m_callbackA;
+        }
         if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
         {
-            if (m_callbackA != nullptr && !IsMuted)
+            if (callback != nullptr && !IsMuted)
             {
-                return m_callbackA->Callback(MessageOptionFlags_None, message, size, position, context);
+                return callback->Callback(MessageOptionFlags_None, message, size, position, context);
             }
         }
         else
         {
-            if (m_callbackA != nullptr)
+            if (callback != nullptr)
             {
-                return m_callbackA->Callback(MessageOptionFlags_None, message, size, position, context);
+                return callback->Callback(MessageOptionFlags_None, message, size, position, context);
             }
         }
 
         return S_OK;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection. Protection acts by muting,
-    // so where muting has been rolled back it stands aside and this is the shipped path.
+    // Protection acts by muting, so where muting has been rolled back it stands aside and this is the shipped path.
     HRESULT SendMessageAToBWithFeedbackProtection(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
         if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
@@ -204,7 +249,6 @@ public:
         return S_OK;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection.
     HRESULT SendMessageBToAWithFeedbackProtection(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
         if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
@@ -225,7 +269,6 @@ public:
         return S_OK;
     }
 
-
     ~MidiLoopbackDevice()
     {
         //m_bidiA = nullptr;
@@ -235,8 +278,7 @@ public:
     }
 
 private:
-    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection. With protection off the
-    // guard is not touched at all, so there is no test and no cost.
+    // With protection off the guard is not touched at all, so there is no test and no cost.
     HRESULT SendThroughFeedbackGuard(
         _In_ bool const directionAToB,
         _In_ wil::com_ptr_nothrow<IMidiCallback> const& destination,
@@ -261,14 +303,7 @@ private:
         return destination->Callback(MessageOptionFlags_None, message, size, position, context);
     }
 
-    // these are needed to enable these two to find each other once opened
-    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> m_bidiA{ nullptr };
-    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> m_bidiB{ nullptr };
-
     wil::com_ptr_nothrow<IMidiCallback> m_callbackA{ nullptr };
     wil::com_ptr_nothrow<IMidiCallback> m_callbackB{ nullptr };
-
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
-    MidiLoopbackCallbackLock m_callbackLock{};
-
+    wil::critical_section m_callbackLock;
 };

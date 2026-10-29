@@ -12,7 +12,6 @@
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiOutProxy::Initialize(
@@ -48,36 +47,6 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
     //m_device.reset(new (std::nothrow) KSMidiInDevice());
     m_device = std::make_unique<KSMidiOutDevice>();
     RETURN_IF_NULL_ALLOC(m_device);
-
-    auto initResult =
-        m_device->Initialize(
-            endpointDeviceInterfaceId,
-            filter,
-            pinId,
-            MidiTransport::MidiTransport_StandardByteStream,
-            bufferSize,
-            mmcssTaskId,
-            MessageOptionFlags_None
-        );
-
-    if (FAILED(initResult))
-    {
-        TraceLoggingWrite(
-            MidiKSAggregateTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to initialize sub-device for input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
-            TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingUInt32(pinId, "pin id")
-        );
-
-        m_device = nullptr;
-        RETURN_IF_FAILED(initResult);
-    }
-
 
     wil::com_ptr_nothrow<IMidiTransform> transformPlugin;
 
@@ -118,6 +87,37 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
         TraceLoggingUInt32(pinId, "Pin id"),
         TraceLoggingUInt8(groupIndex, "Group index")
     );
+
+    // Once the device is initialized we are multi threaded and data can start flowing, 
+    // so ensure everything else is ready before initializing.
+    auto initResult =
+        m_device->Initialize(
+            endpointDeviceInterfaceId,
+            filter,
+            pinId,
+            MidiTransport::MidiTransport_StandardByteStream,
+            bufferSize,
+            mmcssTaskId,
+            MessageOptionFlags_None
+        );
+
+    if (FAILED(initResult))
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to initialize sub-device for input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
+            TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingUInt32(pinId, "pin id")
+        );
+
+        m_device = nullptr;
+        RETURN_IF_FAILED(initResult);
+    }
 
     return S_OK;
 }
@@ -288,14 +288,17 @@ CMidi2KSAggregateMidiOutProxy::Shutdown()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Shutting down UMP to BS transform", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Shutting down KsMidiOutDevice", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    if (m_ump2BSTransform)
+    // Shut down the midi device before tearing down the transform; there can be
+    // callbacks in flight before the device is shut down. One it's shut down,
+    // we're single threaded and can continue normally.
+    if (m_device)
     {
-        m_ump2BSTransform->Shutdown();
-        m_ump2BSTransform.reset();
+        m_device->Shutdown();
+        m_device.reset();
     }
 
     TraceLoggingWrite(
@@ -304,14 +307,14 @@ CMidi2KSAggregateMidiOutProxy::Shutdown()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Shutting down KsMidiOutDevice", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Shutting down UMP to BS transform", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    if (m_device)
+    if (m_ump2BSTransform)
     {
-        m_device->Shutdown();
-        m_device.reset();
+        m_ump2BSTransform->Shutdown();
+        m_ump2BSTransform.reset();
     }
 
     TraceLoggingWrite(

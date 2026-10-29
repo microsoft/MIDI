@@ -28,7 +28,7 @@
 
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2KSInputRemovalDeadlock.h"
-#include "Feature_Servicing_MIDI2KSInputReadCompletionTimestamp.h"
+#include "Feature_Servicing_MIDI2TimestampRounding.h"
 
 namespace
 {
@@ -721,7 +721,14 @@ KSMidiInDevice::OnRemoveCallbackInternal()
     // SyncIoctl waits on this event, so signalling it releases the reader no matter what
     // the driver does with the cancel. Without this, the cfgmgr32 callback deadlocks and
     // PnP can never finish removing the device, which needs a reboot to clear.
-    m_ThreadTerminateEvent.SetEvent();
+    //
+    // Avoid reading m_ThreadHandle here: Shutdown() can concurrently reset it, and the PnP
+    // removal callback runs on a different thread. The terminate event handle is only ever
+    // created once (during Initialize) and then only signalled, so it is safe to test/use.
+    if (m_ThreadTerminateEvent)
+    {
+        m_ThreadTerminateEvent.SetEvent();
+    }
 }
 
 HRESULT
@@ -908,10 +915,9 @@ KSMidiInDevice::ReadAbandonableMidiData()
 
             if (m_MidiInCallback && payloadSize > 0)
             {
-                if (Feature_Servicing_MIDI2KSInputReadCompletionTimestamp::IsEnabled())
+                if (Feature_Servicing_MIDI2TimestampRounding::IsEnabled())
                 {
-                    // Drivers fill TimeDeltaMs inconsistently, or not at all, so stamp the data when the read completes.
-                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, static_cast<LONGLONG>(WindowsMidiServicesInternal::GetCurrentMidiTimestamp()), m_MidiInCallbackContext));
+                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + ((LONGLONG)context->Event.ksMusicFormat.TimeDeltaMs * m_qpcFrequency / MILLISECONDS_PER_SECOND), m_MidiInCallbackContext));
                 }
                 else
                 {
@@ -982,17 +988,16 @@ KSMidiInDevice::SendRequestToDriver()
             // is closed and the SyncIoctl returns, it may succeed, but have no data.
             if (m_MidiInCallback && payloadSize > 0)
             {
-                if (Feature_Servicing_MIDI2KSInputReadCompletionTimestamp::IsEnabled())
+                // For MidiIn, PresentationTime from the KSSTREAM_HEADER is empty, and legacy drivers provide the TimeDeltaMs
+                // in the ksmusicformat, which is the time elapsed from the start of the pin for the given buffer.
+                // 
+                // convert the delta to HNS time, and then add it to the start time to get the QPC that it would have arrived.
+                if (Feature_Servicing_MIDI2TimestampRounding::IsEnabled())
                 {
-                    // Drivers fill TimeDeltaMs inconsistently, or not at all, so stamp the data when the read completes.
-                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, static_cast<LONGLONG>(WindowsMidiServicesInternal::GetCurrentMidiTimestamp()), m_MidiInCallbackContext));
+                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + ((LONGLONG)event.ksMusicFormat.TimeDeltaMs * m_qpcFrequency / MILLISECONDS_PER_SECOND), m_MidiInCallbackContext));
                 }
                 else
                 {
-                    // For MidiIn, PresentationTime from the KSSTREAM_HEADER is empty, and legacy drivers provide the TimeDeltaMs
-                    // in the ksmusicformat, which is the time elapsed from the start of the pin for the given buffer.
-                    // 
-                    // convert the delta to HNS time, and then add it to the start time to get the QPC that it would have arrived.
                     LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + (event.ksMusicFormat.TimeDeltaMs * (m_qpcFrequency / MILLISECONDS_PER_SECOND)), m_MidiInCallbackContext));
                 }
             }

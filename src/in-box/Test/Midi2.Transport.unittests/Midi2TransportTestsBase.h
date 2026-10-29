@@ -36,6 +36,7 @@ protected:
     void TestMidiTransportCreationOrder(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiTransportBidi(_In_ REFIID, _In_ MidiDataFormats);
     void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL, _In_ MessageOptionFlags);
+    void TestMidiTransportCreateInvalidParams(_In_ REFIID iid, _In_ MidiDataFormats dataFormat, _In_ MessageOptionFlags optionsFlag, _In_ BOOL midiOneInterface);
 
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 

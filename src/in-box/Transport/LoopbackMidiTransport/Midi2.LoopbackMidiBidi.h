@@ -37,12 +37,6 @@ public:
     //}
 
 private:
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
-    HRESULT SendToOtherSideWithLock(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG position);
-
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.
-    HRESULT RegisterWithLoopbackDevice();
-
     bool m_isEndpointA = false;
 
     std::wstring m_associationId{};
@@ -53,8 +47,9 @@ private:
     wil::com_ptr_nothrow <IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{};
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
-    wil::srwlock m_callbackLock;
+    wil::srwlock m_callbackSrwLock;
+    // Remove with Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
+    wil::critical_section m_callbackLock;
 
     std::wstring m_endpointId{};
 };

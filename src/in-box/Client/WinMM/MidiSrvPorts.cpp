@@ -292,7 +292,15 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
         case MIDM_OPEN:
             if (Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled())
             {
-                hr = OpenIntoPointerSizedSlot(MidiFlowIn, deviceID, (MIDIOPENDESC *) param1, param2, (DWORD_PTR*) user);
+                RETURN_HR_IF(E_POINTER, nullptr == user);
+                
+                // winmm hands us a DWORD_PTR sized slot inside its own handle, so the handle is taken in a
+                // local of our own width and narrowed on the way out rather than written over the slot.
+                MidiPortHandle localPortHandle{ 0 };
+                
+                RETURN_IF_FAILED(Open(flow, portNumber, midiOpenDesc, flags, &localPortHandle));
+                
+                *user = static_cast<DWORD_PTR>(localPortHandle);
             }
             else
             {
@@ -312,23 +320,7 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDeviceInterface(MidiFlowIn, deviceID, msg, param1, param2);
             break;
         default:
-            if (Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled())
-            {
-                if (MIDM_UNPREPARE == msg)
-                {
-                    hr = ForwardMidUnprepare((MidiPortHandle) user, param1, param2);
-                    break;
-                }
-            }
-
-            if (Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval::IsEnabled())
-            {
-                hr = ForwardMidMessageAllowingCleanup(msg, (MidiPortHandle) user, param1, param2);
-            }
-            else
-            {
-                hr = ForwardMidMessage(msg, (MidiPortHandle) user, param1, param2);
-            }
+            hr = ForwardMidMessage(msg, (MidiPortHandle) user, param1, param2);
     }
 
     return MMRESULT_FROM_HRESULT(hr);
@@ -366,7 +358,15 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
         case MODM_OPEN:
             if (Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled())
             {
-                hr = OpenIntoPointerSizedSlot(MidiFlowOut, deviceID, (MIDIOPENDESC *) param1, param2, (DWORD_PTR*) user);
+                RETURN_HR_IF(E_POINTER, nullptr == user);
+                
+                // winmm hands us a DWORD_PTR sized slot inside its own handle, so the handle is taken in a
+                // local of our own width and narrowed on the way out rather than written over the slot.
+                MidiPortHandle localPortHandle{ 0 };
+                
+                RETURN_IF_FAILED(Open(flow, portNumber, midiOpenDesc, flags, &localPortHandle));
+                
+                *user = static_cast<DWORD_PTR>(localPortHandle);
             }
             else
             {
@@ -386,22 +386,11 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDeviceInterface(MidiFlowOut, deviceID, msg, param1, param2);
             break;
         default:
-            if (Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled())
-            {
-                if (MODM_UNPREPARE == msg)
-                {
-                    hr = ForwardModUnprepare((MidiPortHandle) user, param1, param2);
-                    break;
-                }
-            }
-
             hr = ForwardModMessage(msg, (MidiPortHandle) user, param1, param2);
     }
 
     return MMRESULT_FROM_HRESULT(hr);
 }
-
-
 
 _Use_decl_annotations_
 HRESULT
@@ -694,7 +683,6 @@ CMidiPorts::RemovePortForInterface(MidiFlow flow, std::wstring const& interfaceI
     return S_OK;
 }
 
-
 _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps, DWORD_PTR midiCapsSize)
@@ -787,11 +775,6 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDesc, DWORD_PTR flags, MidiPortHandle* openedPort)
 {
-    if (Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled())
-    {
-        return OpenOutsidePortListLock(flow, portNumber, midiOpenDesc, flags, openedPort);
-    }
-
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
@@ -801,35 +784,95 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
         TraceLoggingValue(portNumber, "portNumber"),
         TraceLoggingValue(flags, "Flags"));
 
-    auto lock = m_Lock.lock();
+    if (Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled())
+    {
+        RETURN_HR_IF(E_POINTER, nullptr == midiOpenDesc);
+        RETURN_HR_IF(E_POINTER, nullptr == openedPort);
+        RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
+        
+        try
+        {
+            // Service assigned port numbers start at 1, winmm port numbers start at 0.
+            UINT localPortNumber = portNumber + 1;
+            std::wstring interfaceId;
+            std::list<PortOpening>::iterator opening;
+        
+            {
+                auto lock = m_Lock.lock();
+        
+                RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), localPortNumber > m_MidiPortCount[flow]);
+                auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
+        
+                RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
+        
+                interfaceId = portInfo->second.InterfaceId;
+                opening = m_PortsOpening.insert(m_PortsOpening.end(), PortOpening{ interfaceId });
+            }
+        
+            auto forgetOpening = wil::scope_exit([&]()
+            {
+                auto lock = m_Lock.lock();
+                m_PortsOpening.erase(opening);
+            });
+        
+            // Connecting to the service takes milliseconds, and every winmm midi call in this process needs the lock.
+            wil::com_ptr_nothrow<CMidiPort> midiPort;
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, interfaceId, flow, midiOpenDesc, flags));
+        
+            bool removedWhileOpening{ false };
+        
+            {
+                auto lock = m_Lock.lock();
+        
+                removedWhileOpening = opening->InterfaceRemoved;
+                m_PortsOpening.erase(opening);
+                forgetOpening.release();
+        
+                m_OpenPorts.emplace((MidiPortHandle) midiPort.get(), midiPort);
+            }
+        
+            // A removal handled while we were connecting had no open port to tell.
+            if (removedWhileOpening)
+            {
+                midiPort->NotifyInterfaceRemoval(interfaceId);
+            }
+        
+            *openedPort = (MidiPortHandle) midiPort.get();
+        }
+        CATCH_RETURN();
+    }
+    else
+    {
+        auto lock = m_Lock.lock();
 
-    wil::com_ptr_nothrow<CMidiPort> midiPort;
+        wil::com_ptr_nothrow<CMidiPort> midiPort;
 
-    RETURN_HR_IF(E_POINTER, nullptr == midiOpenDesc);
-    RETURN_HR_IF(E_POINTER, nullptr == openedPort);
-    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
+        RETURN_HR_IF(E_POINTER, nullptr == midiOpenDesc);
+        RETURN_HR_IF(E_POINTER, nullptr == openedPort);
+        RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
 
-    // The port numbers provided to us by winmm start with index 0. Early in the design
-    // the intent was to skip port numbers to get the input and output port numbers to align,
-    // and because index 0 is always the midi synth it made sense to always start service port
-    // numbers at 1, so the service assigned port number matched the winmm port number.
-    // That strategy broke some legacy clients that didn't handle non-contiguous port numbers and
-    // was abandoned.
-    // We've left the service assigned port numbers as starting at index 1, so we have to add 1
-    // to the port number provided by winmm.
-    UINT localPortNumber = portNumber + 1;
+        // The port numbers provided to us by winmm start with index 0. Early in the design
+        // the intent was to skip port numbers to get the input and output port numbers to align,
+        // and because index 0 is always the midi synth it made sense to always start service port
+        // numbers at 1, so the service assigned port number matched the winmm port number.
+        // That strategy broke some legacy clients that didn't handle non-contiguous port numbers and
+        // was abandoned.
+        // We've left the service assigned port numbers as starting at index 1, so we have to add 1
+        // to the port number provided by winmm.
+        UINT localPortNumber = portNumber + 1;
 
-    RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), localPortNumber > m_MidiPortCount[flow]);
-    auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
+        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), localPortNumber > m_MidiPortCount[flow]);
+        auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
 
-    RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
+        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
 
-    // create the CMidiPort for this port.
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, flow, midiOpenDesc, flags));
+        // create the CMidiPort for this port.
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, flow, midiOpenDesc, flags));
 
-    *openedPort = (MidiPortHandle) midiPort.get();
+        *openedPort = (MidiPortHandle) midiPort.get();
 
-    m_OpenPorts.emplace(*openedPort, std::move(midiPort));
+        m_OpenPorts.emplace(*openedPort, std::move(midiPort));
+    }
 
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -840,23 +883,6 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
         TraceLoggingValue(portNumber, "portNumber"),
         TraceLoggingValue(flags, "Flags"),
         TraceLoggingValue(*openedPort, "MidiPortHandle"));
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiPorts::OpenIntoPointerSizedSlot(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDesc, DWORD_PTR flags, DWORD_PTR* openedPort)
-{
-    RETURN_HR_IF(E_POINTER, nullptr == openedPort);
-
-    // winmm hands us a DWORD_PTR sized slot inside its own handle, so the handle is taken in a
-    // local of our own width and narrowed on the way out rather than written over the slot.
-    MidiPortHandle localPortHandle{ 0 };
-
-    RETURN_IF_FAILED(Open(flow, portNumber, midiOpenDesc, flags, &localPortHandle));
-
-    *openedPort = static_cast<DWORD_PTR>(localPortHandle);
 
     return S_OK;
 }
@@ -865,140 +891,44 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::Close(MidiFlow flow, MidiPortHandle portHandle)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"),
+        TraceLoggingValue(portHandle, "MidiPortHandle"));
+
     if (Feature_Servicing_MIDI2WinMMPortListLockScope::IsEnabled())
     {
-        return CloseOutsidePortListLock(flow, portHandle);
+        wil::com_ptr_nothrow<CMidiPort> port;
+        
+        {
+            auto lock = m_Lock.lock();
+        
+            auto openPort = m_OpenPorts.find(portHandle);
+            RETURN_HR_IF(E_INVALIDARG, openPort == m_OpenPorts.end());
+            RETURN_HR_IF(E_INVALIDARG, !openPort->second->IsFlow(flow));
+        
+            port = std::move(openPort->second);
+            m_OpenPorts.erase(openPort);
+        }
+        
+        // Shutdown waits for a callback in progress, which may be calling into winmm and need the lock.
+        RETURN_IF_FAILED(port->Shutdown());
     }
-
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue((int)flow, "MidiFlow"),
-        TraceLoggingValue(portHandle, "MidiPortHandle"));
-
-    auto lock = m_Lock.lock();
-
-    auto port = m_OpenPorts.find(portHandle);
-    RETURN_HR_IF(E_INVALIDARG, port == m_OpenPorts.end());
-    RETURN_HR_IF(E_INVALIDARG, !port->second->IsFlow(flow));
-
-    // remove it from the open ports list, even if cleanup fails.
-    auto remove = wil::scope_exit([&]() { m_OpenPorts.erase(port); });
-    RETURN_IF_FAILED(port->second->Shutdown());
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiPorts::OpenOutsidePortListLock(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDesc, DWORD_PTR flags, MidiPortHandle* openedPort)
-{
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue((int)flow, "MidiFlow"),
-        TraceLoggingValue(portNumber, "portNumber"),
-        TraceLoggingValue(flags, "Flags"));
-
-    RETURN_HR_IF(E_POINTER, nullptr == midiOpenDesc);
-    RETURN_HR_IF(E_POINTER, nullptr == openedPort);
-    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
-
-    try
-    {
-        // Service assigned port numbers start at 1, winmm port numbers start at 0.
-        UINT localPortNumber = portNumber + 1;
-        std::wstring interfaceId;
-        std::list<PortOpening>::iterator opening;
-
-        {
-            auto lock = m_Lock.lock();
-
-            RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), localPortNumber > m_MidiPortCount[flow]);
-            auto portInfo = m_MidiPortInfo[flow].find(localPortNumber);
-
-            RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER), portInfo == m_MidiPortInfo[flow].end());
-
-            interfaceId = portInfo->second.InterfaceId;
-            opening = m_PortsOpening.insert(m_PortsOpening.end(), PortOpening{ interfaceId });
-        }
-
-        auto forgetOpening = wil::scope_exit([&]()
-        {
-            auto lock = m_Lock.lock();
-            m_PortsOpening.erase(opening);
-        });
-
-        // Connecting to the service takes milliseconds, and every winmm midi call in this process needs the lock.
-        wil::com_ptr_nothrow<CMidiPort> midiPort;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, interfaceId, flow, midiOpenDesc, flags));
-
-        bool removedWhileOpening{ false };
-
-        {
-            auto lock = m_Lock.lock();
-
-            removedWhileOpening = opening->InterfaceRemoved;
-            m_PortsOpening.erase(opening);
-            forgetOpening.release();
-
-            m_OpenPorts.emplace((MidiPortHandle) midiPort.get(), midiPort);
-        }
-
-        // A removal handled while we were connecting had no open port to tell.
-        if (removedWhileOpening)
-        {
-            midiPort->NotifyInterfaceRemoval(interfaceId);
-        }
-
-        *openedPort = (MidiPortHandle) midiPort.get();
-    }
-    CATCH_RETURN();
-
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue((int)flow, "MidiFlow"),
-        TraceLoggingValue(portNumber, "portNumber"),
-        TraceLoggingValue(flags, "Flags"),
-        TraceLoggingValue(*openedPort, "MidiPortHandle"));
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiPorts::CloseOutsidePortListLock(MidiFlow flow, MidiPortHandle portHandle)
-{
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue((int)flow, "MidiFlow"),
-        TraceLoggingValue(portHandle, "MidiPortHandle"));
-
-    wil::com_ptr_nothrow<CMidiPort> port;
-
+    else
     {
         auto lock = m_Lock.lock();
 
-        auto openPort = m_OpenPorts.find(portHandle);
-        RETURN_HR_IF(E_INVALIDARG, openPort == m_OpenPorts.end());
-        RETURN_HR_IF(E_INVALIDARG, !openPort->second->IsFlow(flow));
+        auto port = m_OpenPorts.find(portHandle);
+        RETURN_HR_IF(E_INVALIDARG, port == m_OpenPorts.end());
+        RETURN_HR_IF(E_INVALIDARG, !port->second->IsFlow(flow));
 
-        port = std::move(openPort->second);
-        m_OpenPorts.erase(openPort);
+        // remove it from the open ports list, even if cleanup fails.
+        auto remove = wil::scope_exit([&]() { m_OpenPorts.erase(port); });
+        RETURN_IF_FAILED(port->second->Shutdown());
     }
-
-    // Shutdown waits for a callback in progress, which may be calling into winmm and need the lock.
-    RETURN_IF_FAILED(port->Shutdown());
 
     return S_OK;
 }
@@ -1070,48 +1000,73 @@ CMidiPorts::ForwardMidMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR par
 
     RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, portHandle, port));
 
-    // If this is a close message, we still want to forward
-    // the message to the port so that it has the opportunity
-    // to close, even if it has been invalidated.
-    if (MIDM_CLOSE != msg && port->IsInvalidated())
+    if (Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled())
     {
-        // If the device has been removed, return no driver
-        return HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER);
+        // If this is a close message, we still want to forward
+        // the message to the port so that it has the opportunity
+        // to close, even if it has been invalidated.
+        //
+        // A prepared header is the app's memory, and unpreparing it never touches the device. Refusing
+        // it once the device is removed leaves the header prepared, and apps that check the result, like
+        // RtMidi, take their error path while closing the port. The port answers MMSYSERR_NOTSUPPORTED,
+        // removed or not, and winmm then unprepares the header itself.
+        //
+        // Stop and reset are the documented way for a client to get its queued input buffers back,
+        // and neither one touches the device. Refusing them once the device is gone leaves close
+        // permanently answering MIDIERR_STILLPLAYING, so the port and its service connection are
+        // stranded until the process exits.
+        if (MIDM_CLOSE != msg && 
+            MIDM_UNPREPARE != msg && 
+            MIDM_STOP !=msg && 
+            MIDM_RESET != msg &&
+            port->IsInvalidated())
+        {
+            // If the device has been removed, return no driver
+            return HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER);
+        }
+    }
+    else
+    {
+        if (Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval::IsEnabled())
+        {
+            // If this is a close message, we still want to forward
+            // the message to the port so that it has the opportunity
+            // to close, even if it has been invalidated.
+            //
+            // A prepared header is the app's memory, and unpreparing it never touches the device. Refusing
+            // it once the device is removed leaves the header prepared, and apps that check the result, like
+            // RtMidi, take their error path while closing the port. The port answers MMSYSERR_NOTSUPPORTED,
+            // removed or not, and winmm then unprepares the header itself.
+            //
+            // Stop and reset are the documented way for a client to get its queued input buffers back,
+            // and neither one touches the device. Refusing them once the device is gone leaves close
+            // permanently answering MIDIERR_STILLPLAYING, so the port and its service connection are
+            // stranded until the process exits.
+            if (MIDM_CLOSE != msg && 
+                MIDM_UNPREPARE != msg && 
+                MIDM_STOP !=msg && 
+                MIDM_RESET != msg &&
+                port->IsInvalidated())
+            {
+                // If the device has been removed, return no driver
+                return HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER);
+            }
+        }
+        else
+        {
+            // If this is a close message, we still want to forward
+            // the message to the port so that it has the opportunity
+            // to close, even if it has been invalidated.
+            if (MIDM_CLOSE != msg && port->IsInvalidated())
+            {
+                // If the device has been removed, return no driver
+                return HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER);
+            }
+        }
     }
 
     RETURN_IF_FAILED(port->MidMessage(msg, param1, param2));
     return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiPorts::ForwardMidMessageAllowingCleanup(UINT msg, MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
-{
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(msg, "msg"),
-        TraceLoggingValue(portHandle, "MidiPortHandle"),
-        TraceLoggingValue(param1, "param1"),
-        TraceLoggingValue(param2, "param2"));
-
-    // Stop and reset are the documented way for a client to get its queued input buffers back,
-    // and neither one touches the device. Refusing them once the device is gone leaves close
-    // permanently answering MIDIERR_STILLPLAYING, so the port and its service connection are
-    // stranded until the process exits.
-    if (MIDM_STOP == msg || MIDM_RESET == msg)
-    {
-        wil::com_ptr_nothrow<CMidiPort> port;
-
-        RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, portHandle, port));
-        RETURN_IF_FAILED(port->MidMessage(msg, param1, param2));
-
-        return S_OK;
-    }
-
-    return ForwardMidMessage(msg, portHandle, param1, param2);
 }
 
 _Use_decl_annotations_
@@ -1132,60 +1087,37 @@ CMidiPorts::ForwardModMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR par
 
     RETURN_IF_FAILED(GetOpenedPort(MidiFlowOut, portHandle, port));
 
-    // If this is a close message, we still want to forward
-    // the message to the port so that it has the opportunity
-    // to close, even if it has been invalidated.
-    if (MODM_CLOSE != msg && port->IsInvalidated())
+    if (Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled())
     {
-        // If the device has been removed, return no driver
-        return E_HANDLE;
+        // If this is a close message, we still want to forward
+        // the message to the port so that it has the opportunity
+        // to close, even if it has been invalidated.
+        //
+        // A prepared header is the app's memory, and unpreparing it never touches the device. Refusing
+        // it once the device is removed leaves the header prepared, and apps that check the result, like
+        // RtMidi, take their error path while closing the port. The port answers MMSYSERR_NOTSUPPORTED,
+        // removed or not, and winmm then unprepares the header itself.
+        if (MODM_CLOSE != msg &&
+            MODM_UNPREPARE != msg &&
+            port->IsInvalidated())
+        {
+            // If the device has been removed, return no driver
+            return HRESULT_FROM_MMRESULT(MMSYSERR_NODRIVER);;
+        }
+    }
+    else
+    {
+        // If this is a close message, we still want to forward
+        // the message to the port so that it has the opportunity
+        // to close, even if it has been invalidated.
+        if (MODM_CLOSE != msg && port->IsInvalidated())
+        {
+            // If the device has been removed, return no driver
+            return E_HANDLE;
+        }
     }
 
     RETURN_IF_FAILED(port->ModMessage(msg, param1, param2));
     return S_OK;
-}
-
-// A prepared header is the app's memory, and unpreparing it never touches the device. Refusing
-// it once the device is removed leaves the header prepared, and apps that check the result, like
-// RtMidi, take their error path while closing the port. The port answers MMSYSERR_NOTSUPPORTED,
-// removed or not, and winmm then unprepares the header itself.
-_Use_decl_annotations_
-HRESULT
-CMidiPorts::ForwardMidUnprepare(MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
-{
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(portHandle, "MidiPortHandle"),
-        TraceLoggingValue(param1, "param1"),
-        TraceLoggingValue(param2, "param2"));
-
-    wil::com_ptr_nothrow<CMidiPort> port;
-
-    RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, portHandle, port));
-
-    return port->MidMessage(MIDM_UNPREPARE, param1, param2);
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiPorts::ForwardModUnprepare(MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
-{
-    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(portHandle, "MidiPortHandle"),
-        TraceLoggingValue(param1, "param1"),
-        TraceLoggingValue(param2, "param2"));
-
-    wil::com_ptr_nothrow<CMidiPort> port;
-
-    RETURN_IF_FAILED(GetOpenedPort(MidiFlowOut, portHandle, port));
-
-    return port->ModMessage(MODM_UNPREPARE, param1, param2);
 }
 

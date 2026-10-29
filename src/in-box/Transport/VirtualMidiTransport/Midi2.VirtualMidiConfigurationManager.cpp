@@ -188,7 +188,14 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return internal::ConfigurationRejectionResult(E_INVALIDARG);
+                            if (Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId::IsEnabled())
+                            {
+                                return internal::ConfigurationRejectionResult(E_INVALIDARG);
+                            }
+                            else
+                            {
+                                return E_INVALIDARG;
+                            }
                         }
                     }
 

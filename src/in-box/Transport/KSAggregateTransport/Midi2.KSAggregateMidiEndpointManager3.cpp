@@ -2378,22 +2378,22 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
                 {
                     driverSuppliedName = markName(pinDefinition->DriverSuppliedName);
                 }
-				else
-				{
+                else
+                {
                     driverSuppliedName = std::format(L"{1} - {0}", pinDefinition->DriverSuppliedName, parentDevice->IndexOfDevicesWithThisSameName + 1);
-				}
+                }
             }
 
             if (!pinDefinition->FilterName.empty())
             {
                 if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
                 {
-				    filterName = markName(pinDefinition->FilterName);
-				}
-				else
-				{
-	                filterName = std::format(L"{1} - {0}", pinDefinition->FilterName, parentDevice->IndexOfDevicesWithThisSameName + 1);
-				}
+                    filterName = markName(pinDefinition->FilterName);
+                }
+                else
+                {
+                    filterName = std::format(L"{1} - {0}", pinDefinition->FilterName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                }
             }
 
             // feels dirty putting this logic in here, but have to be able to
@@ -2404,11 +2404,11 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
                 if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
                 {
                     pinName = markName(pinDefinition->PinName);
-		        }
-				else
-				{
-				    pinName = std::format(L"{1} - {0}", pinDefinition->PinName, parentDevice->IndexOfDevicesWithThisSameName + 1);
-				}
+                }
+                else
+                {
+                    pinName = std::format(L"{1} - {0}", pinDefinition->PinName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                }
             }
         }
         else

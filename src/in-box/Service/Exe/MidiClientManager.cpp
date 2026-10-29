@@ -10,12 +10,12 @@
 #include "Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock.h"
 #include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
 #include "Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock.h"
 
 #include <cfgmgr32.h>
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The endpoint id comes from the client.
 // For an id that Plug and Play has never had, the DeviceInformation lookups further down throw
 // from inside the client manager lock instead of returning an error. This asks Plug and Play
 // directly, which is synchronous and cannot throw. An endpoint that was removed is still known
@@ -1092,6 +1092,21 @@ CMidiClientManager::CreateMidiClient(
 
     RETURN_HR_IF(E_INVALIDARG, 0 != (creationParams->MessageOptions & ~MessageOptionFlags_Valid));
 
+    // reject an invalid data format
+    RETURN_HR_IF(E_INVALIDARG, creationParams->DataFormat == MidiDataFormats_Invalid);
+
+    // MessageOptionFlags_SeparateUMPs is not available as a client option, and if made available,
+    // cannot be used in combination with bytestream data formats.
+    RETURN_HR_IF(E_INVALIDARG, 0 != (creationParams->MessageOptions & MessageOptionFlags_SeparateUMPs));
+
+    // MessageOptionFlags_ContextContainsGroupIndex is not available as a client option, it's an internal option 
+    // that goes along with messages which have the context in the group index.
+    RETURN_HR_IF(E_INVALIDARG, 0 != (creationParams->MessageOptions & MessageOptionFlags_ContextContainsGroupIndex));
+
+    // MessageOptionFlags_HasRunningStatus is only applicable for MidiDataFormats_Bytestream
+    RETURN_HR_IF(E_INVALIDARG, (creationParams->MessageOptions & MessageOptionFlags_HasRunningStatus) &&
+                                (creationParams->DataFormat != MidiDataFormats_ByteStream));
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -1421,39 +1436,178 @@ CMidiClientManager::DestroyMidiClient(
 {
     if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
     {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt64(clientHandle, "client handle")
-        );
-        
+        return DestroyMidiClientDeferredPipeShutdown(clientHandle);
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(clientHandle, "client handle")
+    );
+
+    {
+        // notify the client to shut down, but don't remove it yet.
+        // This just stops it from moving data to allow everything to complete
+        // for shutdown.
+        auto lock = m_ClientManagerLock.lock_shared();
+        auto client = m_ClientPipes.find(clientHandle);
+        if (client != m_ClientPipes.end())
         {
-            // notify the client to shut down, but don't remove it yet.
-            // This just stops it from moving data to allow everything to complete
-            // for shutdown.
-            auto lock = m_ClientManagerLock.lock_shared();
-            auto client = m_ClientPipes.find(clientHandle);
-            if (client != m_ClientPipes.end())
-            {
-                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
-                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-                midiClientPipe->Shutdown();
-            }
+            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+            RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
+            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+            midiClientPipe->Shutdown();
         }
-        
-        // holds a reference to every pipe erased below, so they stay alive until we
-        // shut them down after the lock has been released
-        std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
-        
-        // captured under the lock below, published after it is released
-        std::wstring inUseReportingTarget{ };
-        bool endpointInUse{ false };
-        
+    }
+
+    {
+        auto lock = m_ClientManagerLock.lock_exclusive();
+
+        // locate this client in the list and clean it up, which will disconnect
+        // itself from the device pipe.
+        // After the client is cleaned up and released, locate the device pipe
+        // which was used, and if it no longer has any associated clients, clean
+        // it up as well.
+        auto client = m_ClientPipes.find(clientHandle);
+        if (client != m_ClientPipes.end())
+        {
+            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+
+            m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
+
+            // remove this client from all of the transforms and disconnect it and any transforms no longer in use
+            for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
+            {
+                wil::com_ptr_nothrow<CMidiPipe> midiTransformPipe = transform->second.get();
+
+                // Remove the connection between the client and the transform, if connected.
+                //
+                // Also unregister this client as a client of this tranform, it may be
+                // a client of this transform without being directly attached to it.
+                midiTransformPipe->RemoveConnectedPipe(clientAsMidiPipe);
+                midiTransformPipe->RemoveClient(clientHandle);
+
+                // if this transform is no longer in use, has no clients associated to it,
+                // disconnect it from any devices or other transforms it may have been connected to,
+                // and clean it up.
+                if (!midiTransformPipe->InUse())
+                {
+                    for (auto connection = m_DevicePipes.begin(); connection != m_DevicePipes.end();++connection)
+                    {
+                        connection->second->RemoveConnectedPipe(midiTransformPipe);
+                    }
+                    for (auto connection = m_TransformPipes.begin(); connection != m_TransformPipes.end();++connection)
+                    {
+                        connection->second->RemoveConnectedPipe(midiTransformPipe);
+                    }
+
+                    midiTransformPipe->Shutdown();
+                    transform = m_TransformPipes.erase(transform);
+                }
+                else
+                {
+                    transform++;
+                }
+            }
+
+            for (auto device = m_DevicePipes.begin(); device != m_DevicePipes.end();)
+            {
+                wil::com_ptr_nothrow<CMidiPipe> midiDevicePipe = device->second.get();
+
+                // Remove the connection between the client and the device, if connected.
+                //
+                // Also unregister this client as a client of this device, it may be
+                // a client of this device without being directly attached to it.
+                midiDevicePipe->RemoveConnectedPipe(clientAsMidiPipe);
+                midiDevicePipe->RemoveClient(clientHandle);
+
+                // if this device is no longer in use, has no clients associated to it,
+                // clean it up.
+                if (!midiDevicePipe->InUse())
+                {
+                    midiDevicePipe->Shutdown();
+                    device = m_DevicePipes.erase(device);
+                }
+                else
+                {
+                    device++;
+                }
+            }
+
+            m_ClientPipes.erase(client);
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(clientHandle, "client handle")
+    );
+
+    return S_OK;
+}
+
+// Same teardown as DestroyMidiClient, except that no pipe is shut down while
+// m_ClientManagerLock is held. A virtual device's pipe Shutdown deletes the associated
+// client-side endpoint, which re-enters this class through OnDeviceRemoved and would
+// deadlock on the exclusive lock this thread already owns.
+_Use_decl_annotations_
+HRESULT
+CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
+    MidiClientHandle clientHandle
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(clientHandle, "client handle")
+    );
+
+    {
+        // notify the client to shut down, but don't remove it yet.
+        // This just stops it from moving data to allow everything to complete
+        // for shutdown.
+        auto lock = m_ClientManagerLock.lock_shared();
+        auto client = m_ClientPipes.find(clientHandle);
+        if (client != m_ClientPipes.end())
+        {
+            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+            if (Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock::IsEnabled())
+            {
+                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
+            }
+            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+            midiClientPipe->Shutdown();
+        }
+    }
+
+    // holds a reference to every pipe erased below, so they stay alive until we
+    // shut them down after the lock has been released
+    std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
+    
+    // captured under the lock below, published after it is released
+    std::wstring inUseReportingTarget{ };
+    bool endpointInUse{ false };
+
+    if (Feature_Servicing_MIDI2VirtualDeviceOpenDuringTeardownDeadlock::IsEnabled())
+    {
         // Also captured under the lock and used after it is released. The session tracker takes
         // its own lock, and a thread holding m_ClientManagerLock exclusive must not wait on it:
         // the session rundown path takes them in the opposite order.
@@ -1593,34 +1747,11 @@ CMidiClientManager::DestroyMidiClient(
             TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingUInt64(clientHandle, "client handle")
         );
+
+
     }
     else
     {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt64(clientHandle, "client handle")
-        );
-
-        {
-            // notify the client to shut down, but don't remove it yet.
-            // This just stops it from moving data to allow everything to complete
-            // for shutdown.
-            auto lock = m_ClientManagerLock.lock_shared();
-            auto client = m_ClientPipes.find(clientHandle);
-            if (client != m_ClientPipes.end())
-            {
-                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
-                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-                midiClientPipe->Shutdown();
-            }
-        }
-
         {
             auto lock = m_ClientManagerLock.lock_exclusive();
 
@@ -1634,6 +1765,14 @@ CMidiClientManager::DestroyMidiClient(
             {
                 wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
                 wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+
+                // the device pipe is erased below once its last client goes, so read this first
+                std::wstring endpointId = client->second->MidiDevice();
+
+                if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+                {
+                    inUseReportingTarget = GetEndpointInUseReportingTarget(endpointId);
+                }
 
                 m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
 
@@ -1663,7 +1802,7 @@ CMidiClientManager::DestroyMidiClient(
                             connection->second->RemoveConnectedPipe(midiTransformPipe);
                         }
 
-                        midiTransformPipe->Shutdown();
+                        pipesToShutdown.push_back(midiTransformPipe);
                         transform = m_TransformPipes.erase(transform);
                     }
                     else
@@ -1687,7 +1826,7 @@ CMidiClientManager::DestroyMidiClient(
                     // clean it up.
                     if (!midiDevicePipe->InUse())
                     {
-                        midiDevicePipe->Shutdown();
+                        pipesToShutdown.push_back(midiDevicePipe);
                         device = m_DevicePipes.erase(device);
                     }
                     else
@@ -1697,6 +1836,14 @@ CMidiClientManager::DestroyMidiClient(
                 }
 
                 m_ClientPipes.erase(client);
+
+                if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+                {
+                    if (!inUseReportingTarget.empty())
+                    {
+                        endpointInUse = EndpointHasApplicationClients(endpointId);
+                    }
+                }
             }
             else
             {
@@ -1704,16 +1851,29 @@ CMidiClientManager::DestroyMidiClient(
             }
         }
 
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt64(clientHandle, "client handle")
-        );
+        if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+        {
+            if (!inUseReportingTarget.empty())
+            {
+                LOG_IF_FAILED(UpdateEndpointInUseProperty(inUseReportingTarget, endpointInUse));
+            }
+        }
+
+        for (auto const& pipe : pipesToShutdown)
+        {
+            pipe->Shutdown();
+        }
     }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(clientHandle, "client handle")
+    );
 
     return S_OK;
 }

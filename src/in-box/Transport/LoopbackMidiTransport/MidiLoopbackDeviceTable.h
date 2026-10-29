@@ -66,14 +66,7 @@ public:
 
         if (deviceToRemove)
         {
-            if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
-            {
-                deviceToRemove->ShutdownWithLock();
-            }
-            else
-            {
-                deviceToRemove->Shutdown();
-            }
+            deviceToRemove->Shutdown();
         }
     }
 
@@ -112,8 +105,7 @@ public:
         return false;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability. The service removes
-    // endpoints by the start of their instance id, so removing one of two overlapping loopbacks
+    // The service removes endpoints by the start of their instance id, so removing one of two overlapping loopbacks
     // would take the other with it.
     bool IsUniqueIdentifierOverlappingAnotherLoopbackA(_In_ std::wstring const& uniqueIdentifier)
     {
@@ -134,7 +126,6 @@ public:
         return false;
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     bool IsUniqueIdentifierOverlappingAnotherLoopbackB(_In_ std::wstring const& uniqueIdentifier)
     {
         std::lock_guard<std::mutex> lock{ m_devicesLock };
@@ -190,8 +181,7 @@ public:
     }
 
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. Endpoint A is visible to apps before
-    // B is created, and the pair only arrives here after both exist. An endpoint opened in that
+    // Endpoint A is visible to apps before B is created, and the pair only arrives here after both exist. An endpoint opened in that
     // moment used to be connected to nothing for as long as it stayed open. Now its registration
     // waits here and is applied when the pair is added. Checked and recorded under one lock, so the
     // pair cannot be added in between.
@@ -214,8 +204,7 @@ public:
         return {};
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. For an endpoint closed, or refused,
-    // before its pair was added.
+    // For an endpoint closed, or refused, before its pair was added.
     void RemovePendingRegistrations(_In_opt_ IMidiCallback* const callback)
     {
         std::vector<PendingRegistration> removed{};
@@ -240,7 +229,7 @@ public:
         // released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. For a pair whose creation failed.
+    // For a pair whose creation failed.
     void DiscardPendingRegistrations(_In_ std::wstring const& associationId)
     {
         std::vector<PendingRegistration> removed{};
@@ -267,8 +256,7 @@ public:
         // released here, outside the lock
     }
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. Replaces SetDevice. Registrations which
-    // were waiting for this pair go into it, in the order they arrived, before anyone else can see
+    // Replaces SetDevice. Registrations which were waiting for this pair go into it, in the order they arrived, before anyone else can see
     // it, so a later open still replaces an earlier one exactly as it would have.
     void SetDeviceApplyingPendingRegistrations(_In_ std::wstring const& associationId, _In_ MidiLoopbackDevice const& device)
     {
@@ -322,7 +310,6 @@ public:
 
 
 private:
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening.
     struct PendingRegistration
     {
         std::wstring AssociationId{};

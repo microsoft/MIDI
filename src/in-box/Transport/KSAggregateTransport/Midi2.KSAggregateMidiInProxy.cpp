@@ -50,6 +50,36 @@ CMidi2KSAggregateMidiInProxy::Initialize(
     m_device = std::make_unique<KSMidiInDevice>();
     RETURN_IF_NULL_ALLOC(m_device);
 
+    wil::com_ptr_nothrow<IMidiTransform> transformPlugin;
+
+    auto transformId = __uuidof(Midi2BS2UMPTransform);
+
+    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
+    {
+        RETURN_IF_FAILED(internal::IsComponentPermittedWithCaching(transformId));
+    }
+    else
+    {
+        // Confirm that this component is either signed, or we are in developer mode.
+        // Else, do not use it. componentFileLock pins the verified DLL across the load.
+        wil::unique_hfile componentFileLock;
+        RETURN_IF_FAILED(internal::IsComponentPermitted(transformId, componentFileLock));
+    }
+
+    RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
+
+    RETURN_IF_FAILED(transformPlugin->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
+
+    TRANSFORMCREATIONPARAMS creationParams{};
+    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_ByteStream;
+    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
+    creationParams.UmpGroupIndex = groupIndex;
+
+    // in this case, the message is translated and then sent directly to the callback provided in initialize
+    RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, 0, nullptr));
+
+    // Once the device is initialized we are multi threaded and data can start flowing, 
+    // so ensure everything else is ready before initializing.
     auto initResult =
         m_device->Initialize(
             endpointDeviceInterfaceId,
@@ -80,35 +110,6 @@ CMidi2KSAggregateMidiInProxy::Initialize(
         m_device = nullptr;
         RETURN_IF_FAILED(initResult);
     }
-
-
-    wil::com_ptr_nothrow<IMidiTransform> transformPlugin;
-
-    auto transformId = __uuidof(Midi2BS2UMPTransform);
-
-    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
-    {
-        RETURN_IF_FAILED(internal::IsComponentPermittedWithCaching(transformId));
-    }
-    else
-    {
-        // Confirm that this component is either signed, or we are in developer mode.
-        // Else, do not use it. componentFileLock pins the verified DLL across the load.
-        wil::unique_hfile componentFileLock;
-        RETURN_IF_FAILED(internal::IsComponentPermitted(transformId, componentFileLock));
-    }
-
-    RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
-
-    RETURN_IF_FAILED(transformPlugin->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
-
-    TRANSFORMCREATIONPARAMS creationParams{};
-    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_ByteStream;
-    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
-    creationParams.UmpGroupIndex = groupIndex;
-
-    // in this case, the message is translated and then sent directly to the callback provided in initialize
-    RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, 0, nullptr));
 
     return S_OK;
 }
@@ -177,6 +178,25 @@ CMidi2KSAggregateMidiInProxy::Shutdown()
         TraceLoggingUInt64(m_countMidiMessageSent, "Count messages forwarded")
     );
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_METRICS,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Shutting down KsMidiInDevice", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    // Shut down the midi device before tearing down the transform or callback; there can be
+    // callbacks in flight before the device is shut down. One it's shut down,
+    // we're single threaded and can continue normally.
+    if (m_device)
+    {
+        m_device->Shutdown();
+        m_device.reset();
+    }
+
     m_callback = nullptr;
 
     TraceLoggingWrite(
@@ -195,21 +215,6 @@ CMidi2KSAggregateMidiInProxy::Shutdown()
         m_bs2UmpTransform.reset();
     }
 
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_METRICS,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Shutting down KsMidiInDevice", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
-
-    if (m_device)
-    {
-        m_device->Shutdown();
-        m_device.reset();
-    }
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),

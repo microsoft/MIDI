@@ -267,7 +267,6 @@ namespace WindowsMidiServicesInternal
         return cache;
     }
 
-    // Net-new alongside IsFileCatalogSigned / IsFileDigitallySigned.
     inline HRESULT IsFilePermittedWithCaching(const std::wstring& filePath)
     {
         auto& cache = GetComponentSignatureCache();

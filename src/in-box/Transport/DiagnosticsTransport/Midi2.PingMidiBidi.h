@@ -24,8 +24,9 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    IMidiCallback* m_Callback;
+    wil::com_ptr_nothrow<IMidiCallback> m_Callback;
     LONGLONG m_Context;
+    wil::critical_section m_CallbackLock;
 
     // loopback is simple, so we only have the one device we're associated with
     MidiPingBidiDevice* m_MidiDevice;

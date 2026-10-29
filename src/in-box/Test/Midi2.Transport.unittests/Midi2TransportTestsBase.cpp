@@ -938,3 +938,105 @@ void MidiTransportTestsBase::TestMidiIO_Latency(REFIID iid, MidiDataFormats data
     }
 }
 
+_Use_decl_annotations_
+void MidiTransportTestsBase::TestMidiTransportCreateInvalidParams(REFIID iid, MidiDataFormats dataFormat, MessageOptionFlags optionsFlag, BOOL midiOneInterface)
+{
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+    wil::com_ptr_nothrow<IMidiIn> midiInDevice;
+    wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+        
+    DWORD mmcssTaskId {0};
+    TRANSPORTCREATIONPARAMS transportCreationParams { optionsFlag, dataFormat, TEST_APPID };
+    std::wstring midiInInstanceId;
+    std::wstring midiOutInstanceId;
+
+    VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+
+    auto cleanupOnFailure = wil::scope_exit([&]() {
+        if (midiOutDevice.get())
+        {
+            midiOutDevice->Shutdown();
+        }
+        if (midiInDevice.get())
+        {
+            midiInDevice->Shutdown();
+        }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
+    });
+
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiIn), (void **) &midiInDevice));
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiOut), (void **) &midiOutDevice));
+
+    // may fail, depending on transport layer support, currently only midisrv transport supports
+    // the session tracker.
+    midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
+
+    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
+    {
+        PrintMidiMessage(payload, payloadSize, (transportCreationParams.DataFormat == MidiDataFormats_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
+    };
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        if (!midiSessionTracker->VerifyConnectivity())
+        {
+            midiSessionTracker.reset();
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode/no midisrv connectivity.");
+            return;
+        }
+
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiTransportCreateInvalidParams"));
+    }
+
+    MidiDataFormats format = transportCreationParams.DataFormat;
+
+    // Look for a compatible endpoint even though
+    // the requested format is invalid.
+    if (format == MidiDataFormats_Invalid)
+    {
+        if (midiOneInterface)
+        {
+            format = MidiDataFormats_ByteStream;
+        }
+        else
+        {
+            format = MidiDataFormats_UMP;
+        }
+    }
+
+    if (!GetEndpoints(format, midiOneInterface, iid, midiInInstanceId, midiOutInstanceId))
+    {
+        return;
+    }
+
+    transportCreationParams.MessageOptions = MessageOptionFlags_SeparateUMPs;
+
+    LOG_OUTPUT(L"Initializing midi in with invalid option flag");
+    VERIFY_FAILED(midiInDevice->Initialize(midiInInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
+
+    LOG_OUTPUT(L"Initializing midi out with invalid option flag");
+    VERIFY_FAILED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, m_SessionId));
+
+    LOG_OUTPUT(L"Done, cleaning up");
+    cleanupOnFailure.release();
+    VERIFY_SUCCEEDED(midiOutDevice->Shutdown());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
+}
+

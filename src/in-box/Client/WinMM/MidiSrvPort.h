@@ -39,32 +39,37 @@ public:
         if (Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled())
         {
             // A long SysEx send holds m_Lock for seconds, and device removal handling must not wait for it.
-            if (m_RemovalInterfaceId == interfaceId)
+            // This is safe because m_InterfaceId is set during initialization and remains unmodified for the
+            // lifetime of the midi port. m_Invalidated is a bool assignment, which is atomic, so
+            // no lock is required.
+            if (m_InterfaceId == interfaceId)
             {
-                m_RemovedWithoutPortLock = true;
+                m_Invalidated = true;
             }
 
             return;
         }
-
-        auto lock = m_Lock.lock();
-        if (m_InterfaceId == interfaceId)
+        else
         {
-            m_Invalidated = true;
+            auto lock = m_Lock.lock();
+            if (m_InterfaceId == interfaceId)
+            {
+                m_Invalidated = true;
+            }
         }
     }
     bool IsInvalidated()
     {
         if (Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled())
         {
-            if (m_RemovedWithoutPortLock)
-            {
-                return true;
-            }
+            // m_Invalidated is a bool read, which is atomic, no lock is required.
+            return m_Invalidated;
         }
-
-        auto lock = m_Lock.lock();
-        return m_Invalidated;
+        else
+        {
+            auto lock = m_Lock.lock();
+            return m_Invalidated;
+        }
     }
 
 private:
@@ -86,11 +91,7 @@ private:
 
     wil::critical_section m_Lock;
 
-    bool m_Invalidated {false};
-
-    // Set once before the port is published and never changed, so removal handling reads it without m_Lock.
-    std::wstring m_RemovalInterfaceId;
-    std::atomic<bool> m_RemovedWithoutPortLock {false};
+    std::atomic<bool> m_Invalidated {false};
 
     MIDIOPENDESC m_OpenDesc {0};
     DWORD_PTR m_Flags {0};

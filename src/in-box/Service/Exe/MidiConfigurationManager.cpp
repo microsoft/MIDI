@@ -20,7 +20,7 @@
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
 
-
+// Remove with Feature_Servicing_MIDI2ComponentSignatureCache
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexcept
 {
@@ -161,11 +161,8 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
     // return a copy
     return availableTransportLayers;
 }
+// end remove with Feature_Servicing_MIDI2ComponentSignatureCache
 
-// Net-new alongside GetEnabledTransports. Identical, except that a plugin subkey which cannot be
-// opened skips that one transport instead of ending the enumeration. Opening the subkey used to
-// sit outside any per-subkey handler, so a single unreadable key escaped to the handler wrapping
-// the whole loop and every transport sorted after it vanished with no diagnostic.
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportsSkippingUnreadableKeys() const noexcept
 {
     std::vector<GUID> availableTransportLayers;

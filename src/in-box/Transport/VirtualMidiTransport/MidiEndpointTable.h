@@ -56,10 +56,13 @@ public:
     HRESULT OnDeviceConnected(_In_ std::wstring const deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBidi* deviceBidi) noexcept;
     HRESULT OnClientConnected(_In_ std::wstring const clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBidi* clientBidi) noexcept;
 
+    // BEGIN remove with Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock
     HRESULT OnDeviceDisconnected(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
+    // END remove with Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock
     HRESULT OnDeviceDisconnectedAlwaysTeardown(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
-    HRESULT OnDeviceDisconnectedTeardownOutsideEntriesLock(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
+    // BEGIN remove with Feature_Servicing_MIDI2VirtualDeviceClientReconnect
     HRESULT OnClientDisconnected(_In_ std::wstring const clientEndpointInterfaceId) noexcept;
+    // END remove with Feature_Servicing_MIDI2VirtualDeviceClientReconnect
     HRESULT OnClientDisconnectedKeepDeviceLink(_In_ std::wstring const clientEndpointInterfaceId) noexcept;
 
     bool IsUniqueIdInUse(_In_ std::wstring const uniqueId) noexcept;

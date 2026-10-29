@@ -86,6 +86,11 @@ public:
 
     TEST_METHOD(TestWinmmPortEnumeration);
 
+    TEST_METHOD(TestMidiSrvTransport_CreateInvalidFormat);
+    TEST_METHOD(TestMidiSrvTransport_CreateInvalidOption_ContextContainsGroupIndex);
+    TEST_METHOD(TestMidiSrvTransport_CreateInvalidOption_SeparateUMPs);
+    TEST_METHOD(TestMidiSrvTransport_CreateInvalidOption_HasRunningStatus);
+
 private:
     void TestMidiSrvMultiClient(_In_ MidiDataFormats, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiSrvMultiClientBidi(_In_ MidiDataFormats, _In_ MidiDataFormats);

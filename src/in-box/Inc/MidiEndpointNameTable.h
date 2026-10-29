@@ -77,10 +77,10 @@ namespace WindowsMidiServicesNamingLib
         std::wstring FilterName{ };
     };
 
-// Long enough for every device string measured so far, the longest being around forty characters.
-// These are inputs, not published names, so a device which somehow exceeds it loses only material
-// the fit ladder would have dropped anyway.
-#define MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS   64
+    // Long enough for every device string measured so far, the longest being around forty characters.
+    // These are inputs, not published names, so a device which somehow exceeds it loses only material
+    // the fit ladder would have dropped anyway.
+    #define MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS   64
 
     // The serialized form of Midi1PortNameInput, for PKEY_MIDI_NamingPortNameInputs. Fixed size so
     // it can be copied as a block, like Midi1PortNameEntry. This is a new format rather than an
