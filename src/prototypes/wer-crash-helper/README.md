@@ -66,3 +66,5 @@ Not tested: listing the module in HKCU only, 32-bit apps (which need the WOW6432
 ## How the real feature would differ
 
 The real helper would be the MIDI Troubleshooting app, opened on a crash dumps page with the crashed app's process ID and exe name. Its midisrv button would use the existing elevated service dump code. The installer would write the LocalDumps and `RuntimeExceptionHelperModules` entries for each MIDI app. None of that is built here.
+
+That's now built: see `src\in-box\user-tools\midi-crash-handler\README.md`. The real dumps are custom dumps (heap, stacks and handles) rather than the full dumps used here.

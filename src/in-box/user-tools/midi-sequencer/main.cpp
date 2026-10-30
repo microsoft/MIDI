@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "CrashHandlerRegistration.h"
 
 // The XAML compiler emits its own wWinMain; this one keeps startup under our control. The
 // apartment must stay STA: an MTA UI thread makes UI Automation fail, which would leave the app
@@ -17,6 +18,9 @@
 // sequences can be open, and even play, side by side.
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
+    // First, so a crash anywhere after this opens MIDI Troubleshooting and Repair.
+    ::midiapp::RegisterCrashHandler();
+
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)

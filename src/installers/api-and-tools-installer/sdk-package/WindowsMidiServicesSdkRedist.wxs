@@ -47,7 +47,9 @@
             the generated _SetupFiles.wxs (ComponentGroup SdkRedistFiles). Start Menu shortcuts for
             the GUI tools are in the generated _StartMenu.wxs (ComponentGroup ToolAppShortcuts).
             build\build-all.ps1 writes both from $ConsoleTools/$GuiTools, so adding a tool is a
-            one-line change there.
+            one-line change there. It also writes _CrashDumps.wxs (ComponentGroup ToolCrashDumps):
+            a Windows Error Reporting LocalDumps entry for every tool, and the registration of the
+            crash handler that opens MIDI Troubleshooting and Repair when one of them crashes.
         -->
 
         <Component Id="WindowsMidiServicesToolsRegistration"
@@ -161,6 +163,7 @@
     <Feature Id="WindowsMIDIServices">
             <ComponentGroupRef Id="SdkRedistFiles" />
             <ComponentGroupRef Id="ToolAppShortcuts" />
+            <ComponentGroupRef Id="ToolCrashDumps" />
             <ComponentRef Id="WindowsMidiServicesToolsRegistration" />
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
             <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>

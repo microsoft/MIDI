@@ -10,6 +10,7 @@
 #include "MainWindow.g.h"
 
 #include "AppSettings.h"
+#include "CommandLineOptions.h"
 #include "DriverTools.h"
 #include "RegistryRepair.h"
 #include "ReportFile.h"
@@ -158,6 +159,25 @@ namespace winrt::miditroubleshooter::implementation
         // False when the action needs administrator rights the app does not have. It has
         // already told the customer by the time it returns.
         bool RequireElevation() noexcept;
+
+        // The Crash dumps page, in MainWindowCrashDumps.cpp. Another MIDI tool's crash arrives
+        // either on this app's own command line or, when it was already open, from the copy the
+        // crash handler started, as a WM_COPYDATA.
+        void InitializeCrashDumpsPage() noexcept;
+        void ApplyCrashStartupOptions() noexcept;
+        void ShowCrashReport(_In_ ::miditroubleshooter::CommandLineOptions const& options) noexcept;
+        bool RelaunchElevatedForServiceDump() noexcept;
+
+        static LRESULT CALLBACK CrashHandoffSubclassProcedure(
+            _In_ HWND window,
+            _In_ UINT message,
+            _In_ WPARAM wParam,
+            _In_ LPARAM lParam,
+            _In_ UINT_PTR subclassId,
+            _In_ DWORD_PTR referenceData) noexcept;
+
+        // the crash the page is showing, so an elevated copy can carry it on
+        ::miditroubleshooter::CommandLineOptions m_crashReport{};
 
         winrt::fire_and_forget SaveTextAsync(winrt::hstring const& suggestedName, winrt::hstring const& text) noexcept;
 

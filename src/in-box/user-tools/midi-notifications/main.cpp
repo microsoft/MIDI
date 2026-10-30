@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "..\midi-app-shared\CrashHandlerRegistration.h"
 
 namespace
 {
@@ -231,6 +232,9 @@ int APIENTRY wWinMain(
     _In_ LPWSTR,
     _In_ int)
 {
+    // First, so a crash anywhere after this opens MIDI Troubleshooting and Repair.
+    ::midiapp::RegisterCrashHandler();
+
     // There is no window to bring forward, so a second copy just leaves. The shared helper is
     // used anyway so every MIDI tool answers "am I already running" the same way.
     if (!::midiapp::SingleInstance::AcquireOrActivateExisting(SingleInstanceKey))

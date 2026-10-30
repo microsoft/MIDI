@@ -110,4 +110,18 @@ namespace miditroubleshooter
 
         Microsoft.UI.Xaml.Visibility ProblemVisibility{ get; };
     }
+
+    // A crash dump Windows saved for one of the MIDI tools, or a MIDI service dump. The list is
+    // rebuilt rather than updated, so the values never change after it is made.
+    [default_interface]
+    runtimeclass CrashDumpItem
+    {
+        CrashDumpItem();
+
+        String Path{ get; };
+        String Title{ get; };
+        String DetailText{ get; };
+        String FileName{ get; };
+        String AccessibleName{ get; };
+    }
 }
