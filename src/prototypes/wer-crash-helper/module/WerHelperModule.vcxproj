@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PROTOTYPE. WER runtime exception module. Not part of any solution or installer. See ..\README.md. -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{8E3F2A61-4B7C-4D9E-A1F0-3C6B5D2E7A14}</ProjectGuid>
+    <RootNamespace>WerHelperModule</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="..\wer-proto.props" />
+
+  <PropertyGroup>
+    <TargetName>WerHelperModule</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <ModuleDefinitionFile>WerHelperModule.def</ModuleDefinitionFile>
+      <AdditionalDependencies>advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="WerHelperModule.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\shared\protolog.h" />
+    <None Include="WerHelperModule.def" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
