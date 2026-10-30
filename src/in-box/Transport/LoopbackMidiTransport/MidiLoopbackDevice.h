@@ -344,5 +344,7 @@ private:
     wil::com_ptr_nothrow<IMidiCallback> m_callbackB{ nullptr };
     MidiLoopbackCallbackLock m_loopbackCallbackLock{};
 
+    // BEGIN remove with Feature_Servicing_MIDI2LoopbackAddRemoveReliability
     wil::critical_section m_callbackLock;
+    // END remove with Feature_Servicing_MIDI2LoopbackAddRemoveReliability
 };
