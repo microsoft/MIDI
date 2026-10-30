@@ -22,3 +22,7 @@ Each message gets its own line:
 Active sensing and clock messages are hidden by default, because they make everything else hard to read. Press the spacebar to show or hide them.
 
 Press escape to exit. The tool then shows how many bytes arrived and how long they took.
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown, and based on the original source for midi1monitor.

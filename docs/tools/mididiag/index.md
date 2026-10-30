@@ -153,3 +153,7 @@ All times in the report use the PC's own time zone, written as YYYY-MM-DD HH:MM:
 | 5 | The MIDI service stopped answering, so the report stopped early. |
 | 6 | A section took too long, so the report stopped early. |
 | 99 | Something else went wrong. The report says what. |
+
+## App provenance
+
+This app was originally coded in C++ by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API originally coded by Pete Brown.

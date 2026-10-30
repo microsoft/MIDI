@@ -301,3 +301,7 @@ This preview doesn't have everything. These are known gaps:
 - [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/), to build a control surface for the sequencer
 - [Windows MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), to see what the sequencer sends
 - [Windows MIDI Keyboard]({{ site.baseurl }}/tools/midikeyboard/), to play notes into a track from the screen
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

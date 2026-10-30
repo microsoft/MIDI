@@ -209,3 +209,7 @@ Sometimes a device connects, shows as **Connected**, and then sends nothing at a
 This page covers what the app shows you and what to do about it. For how any of it actually works underneath, see [How Bluetooth MIDI works in Windows]({{ site.baseurl }}/kb/ble-midi-transport-architecture/), which covers discovery and why a device has to advertise before it can be found, how the two clocks are matched up and what happens when a device does not keep time, device identity and rotating Bluetooth addresses, the conflict with the older in-box Bluetooth MIDI support, connection interval measurements, and where this transport currently deviates from the specifications.
 
 Application developers reading device state programmatically want the [Bluetooth SDK reference]({{ site.baseurl }}/sdk-reference/Transports/Bluetooth/), which documents the same information as API properties.
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown. Underlying API and BLE MIDI transport were coded in the same way.

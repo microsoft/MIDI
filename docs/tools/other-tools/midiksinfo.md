@@ -8,3 +8,7 @@ categories:
 ---
 
 Documentation on `midiksinfo.exe` coming soon
+
+## App provenance
+
+This app was coded by Pete Brown.

@@ -194,3 +194,7 @@ For the technical detail of how each kind of loopback is implemented, and how th
 To create loopbacks from a script or a command prompt rather than from this app, use the `loopback` and `basic-loopback` commands in the [MIDI Console]({{ site.baseurl }}/tools/console/). A loopback made that way lasts until the MIDI service restarts, unless you add `--save-to-config` to save it. The console is also where you work with the association id you need in order to remove a MIDI 2.0 pair again from a script.
 
 To watch what's actually traveling through a loopback, point [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) at one end of it. To send something through by hand, use the [MIDI Scratch Pad]({{ site.baseurl }}/tools/midiscratchpad/).
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API and Transports originally coded by Pete Brown and then modified in the same way.
