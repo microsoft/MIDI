@@ -177,6 +177,7 @@
     <ClInclude Include="LoopbackConfigTests.h" />
     <ClInclude Include="LoopbackDataPathTests.h" />
     <ClInclude Include="LoopbackHardeningTests.h" />
+    <ClInclude Include="LoopbackRemovedEndpointTests.h" />
     <ClInclude Include="LoopbackServiceTests.h" />
     <ClInclude Include="LoopbackTeardownTests.h" />
     <ClInclude Include="LoopbackTestSupport.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="LoopbackConfigTests.cpp" />
     <ClCompile Include="LoopbackDataPathTests.cpp" />
     <ClCompile Include="LoopbackHardeningTests.cpp" />
+    <ClCompile Include="LoopbackRemovedEndpointTests.cpp" />
     <ClCompile Include="LoopbackServiceTests.cpp" />
     <ClCompile Include="LoopbackTeardownTests.cpp" />
     <ClCompile Include="BasicLoopbackInProcessTests.cpp" />

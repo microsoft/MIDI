@@ -74,10 +74,9 @@ Check your work with `build/check_en_us_spelling.ps1 -Path <file or folder>`.
 Read [.github/skills/midi-contributing/SKILL.md](.github/skills/midi-contributing/SKILL.md) before
 you edit any source file. The rules that get broken most often:
 
-1. **Changes to code that ships in Windows must be wrapped in a servicing gate (KIR)**, with the
-   original behavior preserved exactly when the gate is disabled. The trigger is where the file
-   lives, not how small the diff is. Where the branch goes — call site, a net-new function, in
-   place, or a net-new class chosen at the factory — depends on the shape of the change.
+1. **Changes to code that ships in Windows must be wrapped in a servicing gate (KIR).** The
+   trigger is where the file lives, not how small the diff is. All the gate rules are in
+   [.github/skills/midi-contributing/references/kir-servicing.md](.github/skills/midi-contributing/references/kir-servicing.md).
 2. **SAL-annotate every function parameter**, and use `_Use_decl_annotations_` with bare parameters
    in the `.cpp` when the declaration is in a header.
 3. **User-facing strings go in resource files** (`.resw` or `.rc`), never inline in code.

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  PROTOTYPE. Shared settings for the three WER crash helper prototype projects. Not part of any
+  solution or installer. See README.md.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProtoRoot>$(MSBuildThisFileDirectory)</ProtoRoot>
+    <OutDir>$(ProtoRoot)out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProtoRoot)out\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+
+    <!-- WIL: the in-box packages folder when an in-box build has restored it, else the NuGet cache -->
+    <WilIncludeDir>$(ProtoRoot)..\..\in-box\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\include\</WilIncludeDir>
+    <WilIncludeDir Condition="!Exists('$(WilIncludeDir)')">$(UserProfile)\.nuget\packages\microsoft.windows.implementationlibrary\1.0.260126.7\include\</WilIncludeDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProtoRoot)shared;$(WilIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>
