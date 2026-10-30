@@ -532,4 +532,19 @@
   <data name="StatusPeripheralMidi2Warning" xml:space="preserve">
     <value>Bluetooth LE MIDI 2.0 is a draft standard and almost nothing supports it yet. Only one protocol is published at a time, so a MIDI 1.0 device cannot connect while this is selected.</value>
   </data>
+  <data name="MidiServiceUnavailableTitle" xml:space="preserve">
+    <value>Windows MIDI Services isn't available</value>
+  </data>
+  <data name="MidiServiceUnavailableLegacyMessage" xml:space="preserve">
+    <value>This PC is set to Legacy API mode, so the MIDI service doesn't run and this app can't use MIDI. To use this app, open MIDI Troubleshooting and Repair, choose Windows MIDI Services on the API mode page, and restart the PC.</value>
+  </data>
+  <data name="MidiServiceUnavailableMessage" xml:space="preserve">
+    <value>The MIDI service couldn't be started, so this app can't use MIDI right now. Check that Windows MIDI Services is installed and that the MIDI service isn't turned off. MIDI Troubleshooting and Repair can help you find the problem.</value>
+  </data>
+  <data name="MidiServiceUnavailableClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ServiceUnavailableBarMessage" xml:space="preserve">
+    <value>The MIDI service isn't running, so this tool has nothing to work with. Restart the app once Windows MIDI Services is available.</value>
+  </data>
 </root>

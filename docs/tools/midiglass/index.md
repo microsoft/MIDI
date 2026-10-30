@@ -177,6 +177,12 @@ On the **Listens** tab, turn on **MIDI follow** and the control moves or lights 
 
 A fader that follows the DAW can be a long way from your finger when you touch it. On the **Behavior** tab, **Pickup** decides what happens then, for a fader, an XY pad, a joystick or a ribbon. **Jump** goes straight to your finger. **Catch** waits until your finger reaches the value, so nothing jumps. **Relative** moves the value by as far as your finger moves.
 
+## Running a layout from a foot controller
+
+A foot controller, or any other MIDI device, can run a layout while it plays. Open **Layout…**, then **Pages and devices…**, and select **MIDI remote control**. Each rule says which message to listen for and what to do when it arrives: go to a page, press a control, set its value, turn it on or off, show or hide it, change pad grids, set the key or the scale, run a sequence, or panic. Press **Learn** on a rule and tap the switch on your controller to fill in the message. A rule's card lights up when its message arrives.
+
+On a control's **Behavior** tab, **Start turned off** and **Start hidden** decide how it starts, so a rule can bring it in later. Stack two pad grids in one group and use **Show only this one of its group** to swap them in one spot. A page's **…** menu has **When this page opens**, to run a sequence each time you go to the page. Rules only work while the layout runs, or in Try mode. See [Run Windows MIDI Glass from a foot controller]({{ site.baseurl }}/kb/midi-glass-remote-control/).
+
 ## Trying a layout as you build it
 
 **Try** turns the page on without leaving the editor. Every control sends for real, so you can check that a fader sends what you expect before you go any further. Ctrl+Enter switches back to **Edit**.
@@ -285,9 +291,38 @@ Select **…** (More options) > **Import pack…** in the library. For a theme p
 
 Windows MIDI Glass still imports the `.zip` layout packages that earlier versions made.
 
+### Layouts that send SysEx
+
+A layout can send system exclusive (SysEx) messages, and the wrong SysEx can change a device's settings, sounds or firmware, or even damage it. So the first time you run or try a layout that came from somewhere else, Windows MIDI Glass asks before it sends any SysEx, and names the devices the SysEx would go to. That covers a pack, an old `.zip` package, a layout sent from another PC, and a file you open from outside your layouts folder.
+
+- Select **Allow SysEx** if you trust whoever made the layout. It won't ask again for that layout, unless a newer copy arrives with different SysEx.
+- Select **Run without SysEx** if you're not sure. The layout still runs, and everything else it sends still goes out. It asks again the next time you run it.
+
+A layout that doesn't send SysEx never asks. Neither does one you made on this PC.
+
 ### Layouts from a newer version
 
 A layout made by a newer version of Windows MIDI Glass says **From a newer version** on its card. You can run it, and you can open it in the editor to look around and try it. Windows MIDI Glass won't save changes to it, so nothing the newer version added gets lost. That's also why **Duplicate**, **Rename…** and **Edit description…** are turned off for it. A control this version doesn't have shows as a dashed outline with its name. It doesn't respond to touch and doesn't send anything. To change the layout, update Windows MIDI Glass.
+
+## Send a layout to another PC
+
+You can design a layout on one PC and play it on another, like a Surface or another tablet. Both PCs need Windows MIDI Glass, and both need to be on the same home or studio network.
+
+1. On the PC that will get the layout, select **…** (More options) > **Receive from another PC…** in the library. Keep that window open. Windows MIDI Glass listens for other PCs only while it's open.
+2. The first time only, select **Pair with another PC…** in that Receive window, so the two PCs can pair.
+3. On the PC with the layout, select **Sync to device…** in the editor, or select **Send to device…** on the layout's card in the library. Pick the other PC from the list. The first time, both PCs show a 6-digit code. Check that the codes match, and select **They match** on both. If they don't match, select **They don't match**. That can mean the wrong PC, or someone on the network trying to listen in.
+4. The receiving PC shows what's in the layout and asks before it adds it, or before it replaces a copy it already has.
+
+After that, **Sync to** *PC name* in the editor saves the layout and sends it to the same PC in one step. Only what changed is sent: the layout itself, plus any pictures, videos or theme the other PC doesn't have yet. So after the first send, a sync is fast even for a layout with video.
+
+Good to know:
+
+- **The receiving PC asks once.** The first time a PC sends a layout, the receiving PC asks. Later syncs of that layout from that PC go straight in until Windows MIDI Glass closes. If you changed the layout on the receiving PC since the last sync, it asks again, so you don't lose your changes. You can keep both copies.
+- **A layout that's running doesn't change under your hands.** If the layout is running on the receiving PC, it shows **Update ready**. Select it when you're ready, and the new copy loads. Controls go back to where the layout starts them.
+- **What arrives is checked like a pack.** Every file is checked against the list the sending PC made, and a signed layout stays signed. Nothing gets more trust than a pack file from a USB stick would.
+- **Paired PCs.** To see or remove the PCs this one is paired with, select **…** (More options) > **Paired devices…**. Each PC shows a short key, so you can check you have the right one. Removing a PC means it has to pair again.
+- **Windows Firewall.** The Receive window checks Windows Firewall first, and starts listening only once Windows Firewall lets Windows MIDI Glass in. If it doesn't yet, select **Allow on private networks**. That needs an administrator, and it lets in other PCs on your local network only. If your network is set to **Public**, Windows keeps other PCs out. Change it to **Private** in Windows Settings, under **Network & internet**, if it's a network you trust. The window notices the change within a few seconds.
+- **No network?** You can still use **Pack for sharing…** and copy the pack with a USB stick or OneDrive.
 
 ## Keyboard and screen readers
 

@@ -276,6 +276,18 @@ namespace winrt::midiloopbacksetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
+            {
+                midiapp::ServiceUnavailableStrings serviceStrings{};
+                serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+                serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+                serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+                serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+                // Explains once, at startup, why nothing works when the service can't be used.
+                // Before the configuration calls below, which can fail when it can't.
+                midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
+            }
+
             // A PC which has only ever had a transport package installed has no configuration
             // file registered, and without one nothing done here can be persisted.
             midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();

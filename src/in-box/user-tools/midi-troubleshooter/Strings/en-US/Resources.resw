@@ -239,7 +239,7 @@
     <value>1 - Legacy MIDI</value>
   </data>
   <data name="ApiModeLegacyDescription.Text" xml:space="preserve">
-    <value>The MIDI stack as it was before Windows MIDI Services. No multi-client access, no built-in loopbacks, no Network MIDI 2.0 and no MIDI 2.0 devices. Choose this if you have an application, driver, or device incompatibility with Windows MIDI Services, or you need to use legacy WinMM user-mode drivers (typically ".drv"), or DirectMusic drivers.</value>
+    <value>The MIDI stack as it was before Windows MIDI Services. No multi-client access and no MIDI 2.0 devices. These transports aren't available: Bluetooth LE MIDI, Network MIDI 2.0, RTP-MIDI, the MIDI 2.0 General MIDI Synth, the built-in MIDI loopbacks, and virtual devices that apps create. MIDI tools that need the MIDI service, such as MIDI Settings, can't be used. Choose this if you have an application, driver, or device incompatibility with Windows MIDI Services, or you need to use legacy WinMM user-mode drivers (typically ".drv"), or DirectMusic drivers.</value>
   </data>
   <data name="ApiModeHybridName.Text" xml:space="preserve">
     <value>2 - Hybrid</value>
@@ -731,16 +731,16 @@
     <value>Include midiksinfo output</value>
   </data>
   <data name="CaptureTimeTravelCheck.Content" xml:space="preserve">
-    <value>Include a time travel trace of the MIDI service</value>
+    <value>Include a time travel trace of the MIDI service and any Windows MIDI Services apps that are open</value>
   </data>
   <data name="CaptureTimeTravelCaption.Text" xml:space="preserve">
-    <value>The most useful information you can send, but much larger, and it needs a reboot or a MIDI service restart afterwards.</value>
+    <value>The most useful information you can send, but much larger, and it needs a reboot or a MIDI service restart afterwards. Open the MIDI app you're having trouble with, such as Windows MIDI Monitor or midi1rtmonitor, before you start. Apps you open after that aren't included.</value>
   </data>
   <data name="CaptureTimeTravelInfoBar.Title" xml:space="preserve">
     <value>The MIDI service will run slowly until it is restarted</value>
   </data>
   <data name="CaptureTimeTravelInfoBar.Message" xml:space="preserve">
-    <value>Time travel tracing cannot detach from a process once it has attached, so the Windows MIDI service keeps the recording overhead. MIDI still works, but with noticeably more latency. Restart Windows to clear it. Restarting only the MIDI service works as well, but every MIDI application has to be closed first, including background ones you did not start yourself.</value>
+    <value>Time travel tracing cannot detach from a process once it has attached, so the Windows MIDI service keeps the recording overhead. MIDI still works, but with noticeably more latency. Restart Windows to clear it. Restarting only the MIDI service works as well, but every MIDI application has to be closed first, including background ones you did not start yourself. Any Windows MIDI Services app that was traced stays slow too, until you close it and open it again.</value>
   </data>
   <data name="StartCaptureButton.Content" xml:space="preserve">
     <value>Start capture</value>
@@ -835,6 +835,18 @@
   </data>
   <data name="CaptureLogTimeTravelStopped" xml:space="preserve">
     <value>Time travel tracing stopped.</value>
+  </data>
+  <data name="CaptureLogClientsFoundFormat" xml:space="preserve">
+    <value>Windows MIDI Services apps running: {0}. Their MIDI libraries are listed in client-processes.txt.</value>
+    <comment>{0} is a number of apps.</comment>
+  </data>
+  <data name="CaptureLogTimeTravelClientStartedFormat" xml:space="preserve">
+    <value>Time travel tracing attached to {0} (process {1}).</value>
+    <comment>{0} is a program file name such as midi2monitor.exe. {1} is a process ID number.</comment>
+  </data>
+  <data name="CaptureLogTimeTravelClientFailedFormat" xml:space="preserve">
+    <value>Time travel tracing could not attach to {0} (process {1}). The rest of the capture continues without it.</value>
+    <comment>{0} is a program file name such as midi2monitor.exe. {1} is a process ID number.</comment>
   </data>
   <data name="CaptureLogTraceWritten" xml:space="preserve">
     <value>Trace written to Repro.etl.</value>

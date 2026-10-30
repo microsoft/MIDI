@@ -49,3 +49,7 @@ The layout document, its file format, the page size templates and the theme mode
 - **It does not know what a control looks like.** `ControlKind` is an identity, not an appearance.
 - **It does not enforce validity.** A document can be built and saved with problems in it, because an editor has to let somebody be half way through. `Validate` reports; it does not repair.
 - **It has no notion of running.** No values, no state, no time. A layout always starts from its own defaults, so there is nothing here to carry between runs.
+
+## MIDI remote control in the file
+
+`remoteControl` at the top of a layout holds the rules and `tellPage`; `RemoteControlFile.cpp` reads and writes it, and keeps what it doesn't know. A rule naming an action this build doesn't know marks the layout as from a newer version, so it is never written. A page's `openSequence` and a control's `startsDisabled` and `startsHidden` are written only when set, so older layouts come back byte for byte.

@@ -401,6 +401,11 @@ $ApiReferenceHeaders = @(
 
 $ApiReferencePlatforms = @('x64', 'Arm64', 'Arm64EC')
 
+# MIDL output of idl\IDL.vcxproj. mididiag includes WindowsMidiServices.h from
+# src/shared/api-ref/<platform>, so these are copied there each time IDL is built for x64 or
+# Arm64. Not Arm64EC: only the SDK builds for it, and api-ref/Arm64EC holds a tracked copy.
+$ApiReferenceIdlFiles = @('WindowsMidiServices.h', 'WindowsMidiServices_i.c')
+
 # ----------------------------------------------------------------------------------------------
 # Output helpers
 # ----------------------------------------------------------------------------------------------
@@ -1273,6 +1278,22 @@ function Update-ApiReferenceHeader {
     Write-Detail "Shared API headers current for $($ApiReferencePlatforms -join ', ')"
 }
 
+# Call after idl\IDL.vcxproj is built for $BuildPlatform, and before anything that includes its
+# headers from src/shared/api-ref compiles.
+function Update-ApiReferenceIdlOutput {
+    param([Parameter(Mandatory)] [string] $BuildPlatform)
+
+    # Midl OutputDirectory in IDL.vcxproj, with the SolutionDir that Invoke-PrerequisiteProjects passes.
+    $source = Join-Path $ApiRoot "VSFiles\intermediate\idl\$BuildPlatform\$Configuration"
+    $destination = Join-Path $ApiReferenceRoot $BuildPlatform
+
+    foreach ($file in $ApiReferenceIdlFiles) {
+        Copy-IfChanged -Source (Join-Path $source $file) -DestinationFolder $destination
+    }
+
+    Write-Detail "IDL output current in api-ref\$BuildPlatform"
+}
+
 function Invoke-SdkTarget {
     Write-Step 'Build SDK, apps and tools (Midi2-AppSDK.sln)'
 
@@ -1291,6 +1312,7 @@ function Invoke-SdkTarget {
     # Arm64 first, then Arm64EC, which links the Arm64X binary out of the Arm64 and Arm64EC code.
     if ($Platform -contains 'Arm64') {
         Invoke-PrerequisiteProjects -Projects $SdkPrerequisiteProjects -BuildPlatform 'Arm64' -Properties $versionProps
+        Update-ApiReferenceIdlOutput -BuildPlatform 'Arm64'
         Invoke-PrerequisiteProjects -Projects $Arm64ToolPrerequisiteProjects -BuildPlatform 'Arm64' -Properties $versionProps
         Invoke-MSBuild -ProjectOrSolution $SdkSolution -BuildPlatform 'Arm64' -Properties $versionProps
 
@@ -1301,6 +1323,7 @@ function Invoke-SdkTarget {
 
     if ($Platform -contains 'x64') {
         Invoke-PrerequisiteProjects -Projects $SdkPrerequisiteProjects -BuildPlatform 'x64' -Properties $versionProps
+        Update-ApiReferenceIdlOutput -BuildPlatform 'x64'
         Invoke-MSBuild -ProjectOrSolution $SdkSolution -BuildPlatform 'x64' -Properties $versionProps
     }
 

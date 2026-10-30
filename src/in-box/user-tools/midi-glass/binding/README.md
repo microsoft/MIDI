@@ -114,3 +114,7 @@ Touching a control on hardware says which endpoint it arrived on, which group, w
 - A check box per field decides what a capture may write, so somebody remapping inside one device can lock the endpoint and take only the number.
 - **A note off, a control change at zero and pitch bend at center do not arm anything.** All three arrive constantly while somebody is still reaching for the control they actually mean.
 - **A swept knob is one binding.** Without that, a bank learn would fill eight controls from one gesture.
+
+## Remote control rules (RemoteRules)
+
+A layout's MIDI remote control rules, prepared into a table that never changes once built, so the service's callback thread can match an arriving message against it without a lock held during the match. `ResolveRemoteCommand` turns one rule and one message into what to do, with every name resolved to an index. `ControlStateSet` holds which controls are turned off or hidden while the layout runs; nothing in it is saved. `RemoteEchoGuard` and `RemoteRateLimit` are the loop guards: the layout's own output coming straight back from a device is not a press, and a runaway loop through another app stops at 200 actions a second.

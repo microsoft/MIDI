@@ -33,6 +33,7 @@
 #include "StringVoices.h"
 #include "PadGrid.h"
 #include "PadGridChanges.h"
+#include "RemoteRules.h"
 
 namespace glass
 {
@@ -155,6 +156,12 @@ namespace glass
         // whole layout's worth of startup values.
         void SetOutputEnabled(_In_ bool enabled) noexcept;
 
+        // Holds back every system exclusive packet while false, from controls, sequences and the
+        // startup pass alike. A layout from somewhere else runs this way until the person says its
+        // SysEx may go out (SysExReview.h).
+        void SetSystemExclusiveAllowed(_In_ bool allowed) noexcept { m_systemExclusiveAllowed = allowed; }
+        bool IsSystemExclusiveAllowed() const noexcept { return m_systemExclusiveAllowed; }
+
         // Listen for something to bind to. Off by default, because reading every message that
         // arrives on every device costs something and nothing wants it until somebody asks.
         void SetLearning(_In_ bool learning) noexcept { m_learning = learning; }
@@ -261,6 +268,35 @@ namespace glass
         // Back to every grid as built, which is where the editor goes on leaving Try mode.
         void ForgetGridChanges() noexcept;
 
+        // ---- MIDI remote control (LivePlayerRemote.cpp) ----
+
+        // A rule's message arrived. Raised on the dispatcher's thread for every rule it set off,
+        // whether or not output is on, so the editor can light the rule's row.
+        std::function<void(uint32_t ruleIndex)> RemoteRuleHeard{};
+
+        // Rules turned controls on or off, or brought them into or out of sight. The owner
+        // redraws them from ControlStates().
+        std::function<void(std::vector<uint32_t> const& controlIndexes)> ControlStatesChanged{};
+
+        // The owner showed a page, the first one included. Tells the controller which page is
+        // showing, if the layout asks, and runs the page's open sequence.
+        void PageShown(_In_ size_t pageIndex);
+
+        // Which controls are on and in sight while the layout runs.
+        ControlStateSet const& ControlStates() const noexcept { return m_controlStates; }
+
+        // Back to every control as it starts, which is where the editor goes on leaving Try mode.
+        void ForgetControlStates() noexcept;
+
+        // Whether the layout is being played: always in the runtime window, only in Try mode in
+        // the editor. Rules act and pages open only then. Separate from the output gate, which
+        // the editor also opens to test a sequence.
+        void SetRemoteLive(_In_ bool live);
+
+        // The rules alone changed, in the editor outside Try mode. Takes them without reopening
+        // a connection, so the rules pane can light a row while somebody types.
+        void UpdateRemoteRules(_In_ LayoutDocument const& document);
+
     private:
         LivePlayer() = default;
 
@@ -354,6 +390,70 @@ namespace glass
         // Every sequencer stopped and every note they were playing ended. Run before the engine
         // that started them is replaced, for the same reason as ReleaseAllPads.
         void StopAllSteps(_In_ bool announce) noexcept;
+
+        // ---- MIDI remote control (LivePlayerRemote.cpp) ----
+
+        // The rules again after the document changed. UI thread.
+        void PrepareRemote();
+
+        // On the service's callback thread: the rules one message sets off, unless it is the
+        // layout's own output coming back.
+        void CollectRemoteHits(
+            _In_ int32_t deviceIndex,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint32_t wordCount,
+            _Inout_ std::vector<RemoteHit>& hits) noexcept;
+
+        // On the dispatcher's thread: what the rules do.
+        void RunRemoteHits(_In_ std::vector<RemoteHit> const& hits);
+        void RunRemoteCommand(_In_ RemoteCommand const& command);
+
+        // A rule pressed a control: a button presses and lets go, a toggle flips.
+        void PressFromRemote(_In_ uint32_t controlIndex);
+
+        // A rule turned a control off or hid it: whatever it had running stops.
+        void StopControl(_In_ uint32_t controlIndex) noexcept;
+
+        // The page's open sequence and what tells the controller the page, once connected.
+        // Queued rather than run, so it never runs inside the owner's page build.
+        void RunPageOpened(_In_ size_t pageIndex);
+        void QueuePageOpened();
+
+        // Where a control was last put, so a rule that presses a toggle flips it and one that
+        // presses a switch moves it on a position.
+        void RememberValue(_In_ uint32_t controlIndex, _In_ double value) noexcept;
+
+        // Whether a finger or a screen reader may start something on this control.
+        bool TakesInput(_In_ uint32_t controlIndex) const noexcept { return m_controlStates.TakesInput(controlIndex); }
+
+        // Everything sent goes past here, so a device that sends it straight back can't set a
+        // rule off. Costs nothing on a layout with no rules.
+        void NoteSentForEcho(
+            _In_ int32_t destinationIndex,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint32_t wordCount) noexcept;
+
+        // Built whole on the UI thread and swapped under the lock, so the callback thread reads
+        // a table that never changes under it.
+        std::mutex m_remoteLock{};
+        std::shared_ptr<RemoteRuleTable const> m_remoteRules{};
+        std::atomic<bool> m_hasRemoteRules{ false };
+
+        // The callback thread asks, the UI thread writes.
+        std::mutex m_echoLock{};
+        RemoteEchoGuard m_echo{};
+
+        // UI thread only.
+        ControlStateSet m_controlStates{};
+        RemoteRateLimit m_remoteRate{};
+        std::vector<double> m_lastValues{};
+        size_t m_shownPage{ static_cast<size_t>(-1) };
+        bool m_remoteLive{ true };
+        bool m_pageOpenPending{ false };
+
+        // What the rules heard lately, so telling the controller the page never sends a device
+        // the message it just sent. UI thread only.
+        RemoteEchoGuard m_heard{};
 
         LayoutDocument m_document{};
 
@@ -483,6 +583,7 @@ namespace glass
         bool m_started{ false };
         bool m_stopping{ false };
         bool m_outputEnabled{ true };
+        bool m_systemExclusiveAllowed{ true };
 
         // Read on a service callback thread and written on the UI thread, so it is atomic rather
         // than a plain bool.

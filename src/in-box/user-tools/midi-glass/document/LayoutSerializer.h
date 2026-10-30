@@ -48,4 +48,19 @@ namespace glass
     // is a way to make this app read a file somewhere else on the PC. Shared with the editor so
     // that what gets written can never be something the reader would refuse.
     std::wstring SanitizeFileName(_In_ std::wstring name) noexcept;
+
+    // The names the file gives these, shared with RemoteControlFile.cpp so one name means one
+    // thing everywhere in a layout file. The readers return false for a name they don't know.
+    std::wstring_view MessageKindFileName(_In_ MessageKind kind) noexcept;
+    bool TryReadMessageKindName(_In_ std::wstring_view name, _Out_ MessageKind& kind) noexcept;
+
+    std::wstring_view PadGridFunctionFileName(_In_ PadGridFunction function) noexcept;
+    bool TryReadPadGridFunctionName(_In_ std::wstring_view name, _Out_ PadGridFunction& function) noexcept;
+
+    std::wstring_view ScaleFileName(_In_ MusicalScale scale) noexcept;
+    bool TryReadScaleName(_In_ std::wstring_view name, _Out_ MusicalScale& scale) noexcept;
+
+    // 0 (C) to 11 (B).
+    std::wstring_view KeyRootFileName(_In_ int32_t root) noexcept;
+    bool TryReadKeyRootName(_In_ std::wstring_view name, _Out_ int32_t& root) noexcept;
 }

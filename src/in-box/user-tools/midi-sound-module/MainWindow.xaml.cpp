@@ -15,6 +15,7 @@
 #include "AppearanceFlyout.h"
 #include "FileDialogs.h"
 #include "LiveRegion.h"
+#include "MidiServiceAvailability.h"
 #include "PopupBackdrop.h"
 #include "PreviewBuild.h"
 #include "SingleInstance.h"
@@ -174,6 +175,17 @@ namespace winrt::midisoundmodule::implementation
             m_loaded = true;
 
             InitializeWindowChrome();
+
+            {
+                midiapp::ServiceUnavailableStrings serviceStrings{};
+                serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+                serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+                serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+                serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+                // Explains once, at startup, why nothing works when the service can't be used.
+                midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
+            }
 
             midiapp::MakeLiveStatusRegion(AudioStatusTextBlock());
 

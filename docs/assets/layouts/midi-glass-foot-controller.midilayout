@@ -1,0 +1,165 @@
+{
+  "fileVersion": 1,
+  "name": "Foot controller example",
+  "description": "Six foot switches and an expression pedal turn pages, swap two pad grids, step through scales, and turn a hold switch on and off.",
+  "provenance": {
+    "id": "c2cd15f0-0b14-4b9d-b0b2-055ec5276f1f",
+    "version": "1.0",
+    "license": "MIT",
+    "created": "2026-10-27T18:00:00Z",
+    "tool": "GitHub Copilot",
+    "digitalSourceType": "trainedAlgorithmicMedia",
+    "aiDisclosure": {
+      "humanOversightLevel": "prompt_guided"
+    }
+  },
+  "pageWidth": 1280,
+  "pageHeight": 800,
+  "canvasWidth": 1280,
+  "canvasHeight": 800,
+  "theme": "Studio Dark",
+  "scaleMode": "fitToScreen",
+  "remoteControl": {
+    "rules": [
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 20 }, "do": "previousPage" },
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 21 }, "do": "nextPage" },
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 22 }, "do": "showOnlyThis", "control": "square-pads" },
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 23 }, "do": "showOnlyThis", "control": "hex-pads" },
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 24 }, "do": "padGrid", "function": "nextScale" },
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 25 }, "do": "toggleEnabled", "control": "hold" },
+      { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 11 }, "do": "setControlValue", "control": "volume", "fromMessage": true },
+      { "when": { "device": "Foot", "kind": "programChange", "group": 0, "channel": 0, "anyNumber": true }, "do": "pageFromMessage" }
+    ],
+    "tellPage": { "enabled": true, "device": "Foot", "kind": "programChange", "group": 0, "channel": 0, "firstValue": 0 }
+  },
+  "devices": [
+    {
+      "name": "Foot",
+      "match": { "transportSuppliedEndpointName": "MC6 Pro" },
+      "matchMode": "endpointName"
+    },
+    {
+      "name": "Synth",
+      "match": { "transportSuppliedEndpointName": "Default App Loopback (A)" },
+      "matchMode": "endpointName"
+    }
+  ],
+  "pages": [
+    {
+      "id": "play",
+      "name": "Play",
+      "openSequence": "Piano sound",
+      "controls": [
+        {
+          "id": "square-pads", "kind": "notePads", "label": "Square pads",
+          "x": 48, "y": 48, "width": 768, "height": 576,
+          "hueSlot": 0, "controlGroup": "pads", "keyboardOrder": 1,
+          "pads": { "arrangement": "rows", "rows": 6, "padsPerRow": 8, "startNote": 48, "key": "c", "scale": "major", "notes": "inKey", "rightSteps": 1, "rowSteps": 3 },
+          "messages": [
+            { "trigger": "turnsOn", "kind": "note", "device": "Synth", "group": 0, "channel": 0, "number": 48 },
+            { "trigger": "turnsOff", "kind": "note", "device": "Synth", "group": 0, "channel": 0, "number": 48 }
+          ]
+        },
+        {
+          "id": "hex-pads", "kind": "hexPads", "label": "Hex pads",
+          "x": 48, "y": 48, "width": 768, "height": 576,
+          "hueSlot": 1, "controlGroup": "pads", "keyboardOrder": 2, "startsHidden": true,
+          "pads": { "arrangement": "rows", "rows": 6, "padsPerRow": 10, "startNote": 48, "key": "c", "scale": "major", "notes": "inKey", "rightSteps": 1, "rowSteps": 4 },
+          "messages": [
+            { "trigger": "turnsOn", "kind": "note", "device": "Synth", "group": 0, "channel": 0, "number": 48 },
+            { "trigger": "turnsOff", "kind": "note", "device": "Synth", "group": 0, "channel": 0, "number": 48 }
+          ]
+        },
+        {
+          "id": "key", "kind": "readout", "label": "Key",
+          "x": 864, "y": 48, "width": 368, "height": 56,
+          "hueSlot": 6, "keyboardOrder": 3,
+          "readout": { "source": "padKey" }
+        },
+        {
+          "id": "hold", "kind": "toggle", "label": "Hold",
+          "x": 864, "y": 136, "width": 176, "height": 72,
+          "hueSlot": 2, "keyboardOrder": 4, "startsDisabled": true,
+          "messages": [
+            { "trigger": "turnsOn", "kind": "controlChange", "device": "Synth", "group": 0, "channel": 0, "number": 64 },
+            { "trigger": "turnsOff", "kind": "controlChange", "device": "Synth", "group": 0, "channel": 0, "number": 64 }
+          ]
+        },
+        {
+          "id": "help", "kind": "label", "label": "A and B: page. C: square pads. D: hex pads. E: next scale. F: turn Hold on or off.",
+          "x": 864, "y": 248, "width": 368, "height": 120,
+          "hueSlot": 6, "keyboardOrder": 5
+        }
+      ]
+    },
+    {
+      "id": "mix",
+      "name": "Mix",
+      "controls": [
+        {
+          "id": "volume", "kind": "fader", "label": "Volume",
+          "x": 96, "y": 96, "width": 72, "height": 480,
+          "hueSlot": 1, "defaultValue": 0.8, "keyboardOrder": 1,
+          "messages": [
+            { "trigger": "changes", "kind": "controlChange", "device": "Synth", "group": 0, "channel": 0, "number": 7 }
+          ]
+        },
+        {
+          "id": "cutoff", "kind": "knob", "label": "Cutoff",
+          "x": 256, "y": 96, "width": 160, "height": 160,
+          "hueSlot": 0, "aspectLocked": true, "defaultValue": 0.5, "keyboardOrder": 2,
+          "messages": [
+            { "trigger": "changes", "kind": "controlChange", "device": "Synth", "group": 0, "channel": 0, "number": 74 }
+          ]
+        },
+        {
+          "id": "resonance", "kind": "knob", "label": "Resonance",
+          "x": 464, "y": 96, "width": 160, "height": 160,
+          "hueSlot": 0, "aspectLocked": true, "keyboardOrder": 3,
+          "messages": [
+            { "trigger": "changes", "kind": "controlChange", "device": "Synth", "group": 0, "channel": 0, "number": 71 }
+          ]
+        },
+        {
+          "id": "mix-help", "kind": "label", "label": "The expression pedal moves Volume.",
+          "x": 256, "y": 320, "width": 368, "height": 56,
+          "hueSlot": 6, "keyboardOrder": 4
+        }
+      ]
+    },
+    {
+      "id": "sounds",
+      "name": "Sounds",
+      "controls": [
+        {
+          "id": "sound-piano", "kind": "button", "label": "Piano",
+          "x": 96, "y": 96, "width": 240, "height": 120,
+          "hueSlot": 3, "keyboardOrder": 1,
+          "messages": [ { "trigger": "turnsOn", "kind": "sequence", "sequence": "Piano sound" } ]
+        },
+        {
+          "id": "sound-strings", "kind": "button", "label": "Strings",
+          "x": 384, "y": 96, "width": 240, "height": 120,
+          "hueSlot": 3, "keyboardOrder": 2,
+          "messages": [ { "trigger": "turnsOn", "kind": "sequence", "sequence": "Strings sound" } ]
+        }
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "name": "Piano sound",
+      "mode": "once",
+      "steps": [
+        { "kind": "sendMessage", "message": { "kind": "programChange", "device": "Synth", "number": 0 } }
+      ]
+    },
+    {
+      "name": "Strings sound",
+      "mode": "once",
+      "steps": [
+        { "kind": "sendMessage", "message": { "kind": "programChange", "device": "Synth", "number": 48 } }
+      ]
+    }
+  ]
+}

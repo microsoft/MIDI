@@ -2429,6 +2429,8 @@ namespace glass
             m_document.Tempo.DeviceName = newName;
         }
 
+        RenameRemoteDevice(oldName, newName);
+
         Commit(EditNames::Devices);
 
         return true;

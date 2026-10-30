@@ -14,6 +14,7 @@
 #include "App.xaml.h"
 #include "BackgroundWork.h"
 #include "DocumentHandoff.h"
+#include "MidiServiceAvailability.h"
 #include "PatchCanvas.h"
 #include "PatchLayout.h"
 #include "PatchProvenance.h"
@@ -361,6 +362,15 @@ namespace winrt::midipatchbay::implementation
                 });
 
             InitializeNotificationArea();
+
+            midiapp::ServiceUnavailableStrings serviceStrings{};
+            serviceStrings.Title = resources::GetString(L"MidiServiceUnavailableTitle");
+            serviceStrings.LegacyApiModeMessage = resources::GetString(L"MidiServiceUnavailableLegacyMessage");
+            serviceStrings.UnavailableMessage = resources::GetString(L"MidiServiceUnavailableMessage");
+            serviceStrings.CloseButton = resources::GetString(L"MidiServiceUnavailableClose");
+
+            // The library is the main window, so this explains it once, here, and not per editor.
+            midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish loading the library.")
     }

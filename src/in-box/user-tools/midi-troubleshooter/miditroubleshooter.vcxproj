@@ -136,6 +136,7 @@
     <ClInclude Include="RegistryRepair.h" />
     <ClInclude Include="ReportFile.h" />
     <ClInclude Include="ReproLog.h" />
+    <ClInclude Include="ClientProcesses.h" />
     <ClInclude Include="ServiceControl.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="SystemInfo.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="RegistryRepair.cpp" />
     <ClCompile Include="ReportFile.cpp" />
     <ClCompile Include="ReproLog.cpp" />
+    <ClCompile Include="ClientProcesses.cpp" />
     <ClCompile Include="ServiceControl.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="SystemInfo.cpp" />

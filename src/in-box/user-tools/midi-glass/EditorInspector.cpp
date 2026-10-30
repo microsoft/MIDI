@@ -1156,6 +1156,8 @@ namespace winrt::midiglass::implementation
             RefreshPreview(*control);
 
             SendOnStartSwitch().IsOn(control->SendsValueOnStart);
+            StartsDisabledSwitch().IsOn(control->StartsDisabled);
+            StartsHiddenSwitch().IsOn(control->StartsHidden);
             DefaultValueSlider().Value(control->DefaultValue * 100.0);
             DefaultValueYSlider().Value(control->DefaultValueY * 100.0);
             ReturnsToDefaultSwitch().IsOn(control->ReturnsToDefault);

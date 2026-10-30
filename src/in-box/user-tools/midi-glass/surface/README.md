@@ -90,3 +90,7 @@ Bloom decay is a composition animation, so a page of blinking controls costs the
 - **It does not edit.** No selection, no drag to move, no handles.
 - **It does not draw pages other than the one on screen.** A page change rebuilds.
 - **It does not handle an XY pad's second axis, or draw a meter from anything but its own value.** Both are honest gaps, not design decisions.
+
+## Controls a rule turned off or hid (SurfaceRemoteState)
+
+`SetControlState` draws a control that is off faint, without the strike a missing device gets, and takes it out of the automation tree when it is hidden. The opacity and visibility go through each element's composition visual, so they never overwrite what the renderer set on the element itself. `InputRouter::ReleaseItem` lets go of every finger on one control, so a held note ends when a rule turns its control off.

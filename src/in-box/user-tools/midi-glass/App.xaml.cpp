@@ -173,6 +173,50 @@ namespace winrt::midiglass::implementation
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to open a runtime window.")
     }
 
+    _Use_decl_annotations_
+    void App::NotifyLayoutUpdated(std::wstring const& filePath)
+    {
+        try
+        {
+            for (auto const& existing : g_runtimeWindows)
+            {
+                auto* const implementation = winrt::get_self<RuntimeWindow>(existing);
+
+                if (implementation != nullptr && SamePath(implementation->LayoutFilePath(), filePath))
+                {
+                    implementation->ShowUpdateReady();
+                }
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to tell a runtime window about an update.")
+    }
+
+    _Use_decl_annotations_
+    void App::ReloadRuntimeWindow(std::wstring const& filePath)
+    {
+        try
+        {
+            auto const found = std::find_if(g_runtimeWindows.begin(), g_runtimeWindows.end(), [&filePath](midiglass::RuntimeWindow const& window)
+                {
+                    auto* const implementation = winrt::get_self<RuntimeWindow>(window);
+                    return implementation != nullptr && SamePath(implementation->LayoutFilePath(), filePath);
+                });
+
+            if (found == g_runtimeWindows.end())
+            {
+                return;
+            }
+
+            auto const window = *found;
+            g_runtimeWindows.erase(found);
+
+            // Its own teardown runs first, so the new one opens its devices after the old one let go.
+            window.Close();
+
+            OpenRuntimeWindow(filePath);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to load the new copy of a layout.")
+    }
     App::App()
     {
         // XAML objects must not call InitializeComponent during construction; winrt::make does it

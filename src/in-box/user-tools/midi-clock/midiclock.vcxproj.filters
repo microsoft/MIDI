@@ -30,6 +30,7 @@
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -53,6 +54,7 @@
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\BeatClockGenerator.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="..\midi-app-shared\MidiAppShared.idl" />

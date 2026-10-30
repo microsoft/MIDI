@@ -32,6 +32,10 @@ namespace winrt::midiglass::implementation
 
         std::wstring const& LayoutFilePath() const noexcept { return m_filePath; }
 
+        // A newer copy of the layout arrived from another PC (RuntimeWindowUpdate.cpp).
+        void ShowUpdateReady();
+        void OnUpdateReadyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         void OnRootLoaded(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
@@ -216,6 +220,12 @@ namespace winrt::midiglass::implementation
             _In_ double phase,
             _In_ bool running);
         void OnPadGridsChanged(_In_ glass::PadGridStates const& states);
+
+        // Controls a MIDI remote control rule turned off or hid (RuntimeWindowRemote.cpp): the
+        // whole page after it is built, or the ones a rule just changed.
+        void ApplyControlStates();
+        void OnControlStatesChanged(_In_ std::vector<uint32_t> const& controlIndexes);
+        void ApplyControlState(_In_ size_t itemIndex);
 
         midiapp::WindowChrome m_chrome{};
 

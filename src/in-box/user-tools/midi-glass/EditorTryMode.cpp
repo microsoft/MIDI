@@ -23,6 +23,8 @@
 #include "StringResources.h"
 #include "MonitorFormat.h"
 #include "GlassControl.h"
+#include "SysExPrompt.h"
+#include "SysExReview.h"
 
 namespace resources = ::midiglass::resources;
 
@@ -62,15 +64,27 @@ namespace winrt::midiglass::implementation
 
     // The player is shared: Try mode sends through it and Learn listens through it, and both
     // need the same connections. Creating two would open the same devices twice.
+    // SysEx goes out from the editor when it's this person's own: the layout's SysEx was already
+    // trusted when it opened, or allowed since. Otherwise only once it's on the list.
+    bool EditorWindow::SysExIsAllowedHere() const noexcept
+    {
+        return m_sysExIsOwn || glass::CheckSysExReview(m_editor.Document()) == glass::SysExReview::Allowed;
+    }
+
     void EditorWindow::StartPlayerForLearning()
     {
         if (m_player != nullptr)
         {
             m_player->UpdateDocument(m_editor.Document());
+            m_player->SetSystemExclusiveAllowed(SysExIsAllowedHere());
             return;
         }
 
         m_player = glass::LivePlayer::Create();
+
+        // A layout from somewhere else sends no SysEx from the editor either, until the person
+        // says it may (SetTryMode asks).
+        m_player->SetSystemExclusiveAllowed(SysExIsAllowedHere());
 
         auto weak = get_weak();
 
@@ -257,6 +271,22 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->RemoteRuleHeard = [weak](uint32_t ruleIndex)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnRemoteRuleHeard(ruleIndex);
+                }
+            };
+
+        m_player->ControlStatesChanged = [weak](std::vector<uint32_t> const& controlIndexes)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnTryControlStatesChanged(controlIndexes);
+                }
+            };
+
         m_player->StringsSounding = [weak](uint32_t controlIndex, uint32_t sounding)
             {
                 size_t itemIndex{ 0 };
@@ -270,10 +300,12 @@ namespace winrt::midiglass::implementation
         // Nothing leaves until Try mode says so. Learning opens the connections and listens;
         // it must not push a layout's worth of startup values at a desk on its own.
         m_player->SetOutputEnabled(false);
+        m_player->SetRemoteLive(false);
 
         // A layout being edited and the same layout running are two owners on purpose, so
         // closing one does not take the other's connections down.
         m_player->Start(m_editor.Document(), m_dispatcher, m_filePath + L"\x1editor");
+        m_player->PageShown(m_editor.PageIndex());
     }
 
     _Use_decl_annotations_
@@ -308,7 +340,19 @@ namespace winrt::midiglass::implementation
                 // does, and the player has to exist before either.
                 StartPlayerForLearning();
 
+                if (!m_player->IsSystemExclusiveAllowed())
+                {
+                    auto const allowed = ::midiglass::sysexprompt::AskToAllowSysEx(
+                        m_chrome.WindowHandle(), m_editor.Document(), m_filePath);
+
+                    // Allowed, the layout's SysEx is as good as written here, so what's added to it
+                    // from now on is too.
+                    m_sysExIsOwn = m_sysExIsOwn || allowed;
+                    m_player->SetSystemExclusiveAllowed(allowed);
+                }
+
                 m_player->SetOutputEnabled(true);
+                m_player->SetRemoteLive(true);
             }
             else
             {
@@ -318,10 +362,12 @@ namespace winrt::midiglass::implementation
 
                 if (m_player != nullptr)
                 {
+                    m_player->SetRemoteLive(false);
                     m_player->SetOutputEnabled(false);
                 }
 
                 ForgetTryKey();
+                ForgetTryControlStates();
 
                 for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
                 {
@@ -376,6 +422,10 @@ namespace winrt::midiglass::implementation
 
             // Cut and paste are for building. In Try mode a right click belongs to the surface.
             CanvasScroll().ContextFlyout(m_tryMode ? nullptr : CanvasMenu());
+
+            // After every element's hit testing was set above, so a control a rule turned off
+            // stays out of reach.
+            SyncRemoteSurface();
 
             if (!m_tryMode)
             {

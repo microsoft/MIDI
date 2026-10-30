@@ -11,6 +11,7 @@
 #include "CommandLine.h"
 #include "DocumentHandoff.h"
 #include "LayoutStore.h"
+#include "SyncDialogs.h"
 #include "ThemeModel.h"
 #include "ThemeStore.h"
 #include "ThumbnailLayout.h"
@@ -115,6 +116,24 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
         return RunThumbnail(arguments);
     }
 
+    // The elevated copy the Receive screen starts to let other PCs on this one's subnet reach it.
+    // It changes one rule and exits without a window, so it stops here, before single instance.
+    if (::midiapp::firewall::IsAllowRequest(::midiglass::devicesync::FirewallAllowSwitch))
+    {
+        HRESULT result{ E_UNEXPECTED };
+        long networks{ 0 };
+
+        try
+        {
+            ::midiapp::firewall::TryRunAllowRequest(::midiglass::devicesync::FirewallTarget(), result, networks);
+        }
+        catch (...)
+        {
+            result = E_UNEXPECTED;
+        }
+
+        return static_cast<int>(result);
+    }
     // midiglass --run "<layout file>" opens the layout beside the library. So does the file on
     // its own, which is what a double-click in Explorer sends.
     std::wstring runPath{};

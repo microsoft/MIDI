@@ -13,6 +13,7 @@
 #include "MackieControl.h"
 #include "PadGrid.h"
 #include "ThemeStore.h"
+#include "RemoteControlFile.h"
 
 #include <algorithm>
 
@@ -53,6 +54,10 @@ namespace glass
         constexpr wchar_t KeyDevices[] = L"devices";
         constexpr wchar_t KeyPages[] = L"pages";
         constexpr wchar_t KeySequences[] = L"sequences";
+        constexpr wchar_t KeyRemoteControl[] = L"remoteControl";
+        constexpr wchar_t KeyOpenSequence[] = L"openSequence";
+        constexpr wchar_t KeyStartsDisabled[] = L"startsDisabled";
+        constexpr wchar_t KeyStartsHidden[] = L"startsHidden";
 
         constexpr wchar_t KeyId[] = L"id";
         constexpr wchar_t KeyHueSlot[] = L"hueSlot";
@@ -1784,6 +1789,8 @@ namespace glass
             control.LightsFromCenter = ReadBool(object, KeyLightsFromCenter, false);
             control.SendsValueOnStart = ReadBool(object, KeySendsValueOnStart, false);
             control.SendIntervalMilliseconds = ReadInt(object, KeySendInterval, 0, 0, 10000);
+            control.StartsDisabled = ReadBool(object, KeyStartsDisabled, false);
+            control.StartsHidden = ReadBool(object, KeyStartsHidden, false);
 
             if (auto const messages = ReadArray(object, KeyMessages))
             {
@@ -1809,7 +1816,7 @@ namespace glass
                   KeyLiteralColor, KeyAspectLocked, KeyLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyLightsFromCenter, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
                   KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyFretboard, KeyReadout, KeyDefaultValueY, KeyVelocityFromTouch,
-                  KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
+                  KeySendsValueOnStart, KeySendInterval, KeyStartsDisabled, KeyStartsHidden, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
             return control;
@@ -1823,6 +1830,7 @@ namespace glass
             page.Name = ReadString(object, KeyName);
             page.HueSlot = ReadInt(object, KeyHueSlot, 0, LiteralHue, HueSlotCount - 1);
             page.IsSharedBand = ReadBool(object, KeySharedBand, false);
+            page.OpenSequenceName = ReadString(object, KeyOpenSequence);
 
             if (auto const controls = ReadArray(object, KeyControls))
             {
@@ -1867,7 +1875,7 @@ namespace glass
                 }
             }
 
-            page.Unknown = CaptureUnknown(object, { KeyId, KeyName, KeyHueSlot, KeySharedBand, KeyControls, KeyControlGroups });
+            page.Unknown = CaptureUnknown(object, { KeyId, KeyName, KeyHueSlot, KeySharedBand, KeyOpenSequence, KeyControls, KeyControlGroups });
 
             return page;
         }
@@ -2210,6 +2218,18 @@ namespace glass
                 }
             }
 
+            if (auto const remote = ReadObject(root, KeyRemoteControl))
+            {
+                bool unknownAction{ false };
+
+                ReadRemoteControl(remote, document.Remote, unknownAction);
+
+                if (unknownAction)
+                {
+                    t_readUnknownKind = true;
+                }
+            }
+
             document.Unknown = CaptureUnknown(root,
                 { KeyComment, KeyFileVersion, KeyName, KeyDescription, midiapp::ProvenanceKey, KeyCreated, KeyModified,
                   KeyPageWidth, KeyPageHeight, KeyCanvasWidth, KeyCanvasHeight, KeyTheme,
@@ -2217,7 +2237,7 @@ namespace glass
                   KeyBackgroundImage, KeyBackgroundFit, KeyBackgroundOpacity,
                   KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, RetiredPreferredDisplay,
                   KeySuppressStartup, KeyVirtualDevice, KeyToolbarWindow, KeyAlwaysOnTop, KeySeeThrough,
-                  KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
+                  KeyFavorite, KeyTempo, KeyRemoteControl, KeyDevices, KeyPages, KeySequences });
 
             // A kind this build doesn't know is read as the nearest one it does, so the layout
             // still opens. Written back, the original would be gone.
@@ -2444,6 +2464,16 @@ namespace glass
             writer.Write(KeyReturnsToDefault, control.ReturnsToDefault);
             writer.Write(KeySendsValueOnStart, control.SendsValueOnStart);
             writer.Write(KeySendInterval, static_cast<int64_t>(control.SendIntervalMilliseconds));
+
+            if (control.StartsDisabled)
+            {
+                writer.Write(KeyStartsDisabled, true);
+            }
+
+            if (control.StartsHidden)
+            {
+                writer.Write(KeyStartsHidden, true);
+            }
 
             if (control.Drag != DragAxis::Vertical)
             {
@@ -2856,6 +2886,8 @@ namespace glass
             WriteUnknown(writer, document.Tempo.Unknown);
             writer.EndObject();
 
+            WriteRemoteControl(writer, KeyRemoteControl, document.Remote);
+
             writer.BeginArray(KeyDevices);
 
             for (auto const& device : document.Devices)
@@ -2889,6 +2921,11 @@ namespace glass
                 writer.Write(KeyName, page.Name);
                 writer.Write(KeyHueSlot, static_cast<int64_t>(page.HueSlot));
                 writer.Write(KeySharedBand, page.IsSharedBand);
+
+                if (!page.OpenSequenceName.empty())
+                {
+                    writer.Write(KeyOpenSequence, page.OpenSequenceName);
+                }
 
                 writer.BeginArray(KeyControls);
 
@@ -3006,5 +3043,77 @@ namespace glass
         {
             return {};
         }
+    }
+
+    // ---- names shared with RemoteControlFile.cpp ----
+
+    namespace
+    {
+        template <typename TEnum, size_t N>
+        bool TryValueOf(
+            _In_ EnumName<TEnum> const (&table)[N],
+            _In_ std::wstring_view name,
+            _Out_ TEnum& value) noexcept
+        {
+            for (auto const& entry : table)
+            {
+                if (entry.Name == name)
+                {
+                    value = entry.Value;
+                    return true;
+                }
+            }
+
+            value = table[0].Value;
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring_view MessageKindFileName(MessageKind kind) noexcept
+    {
+        return NameOf(MessageKindNames, kind);
+    }
+
+    _Use_decl_annotations_
+    bool TryReadMessageKindName(std::wstring_view name, MessageKind& kind) noexcept
+    {
+        return TryValueOf(MessageKindNames, name, kind);
+    }
+
+    _Use_decl_annotations_
+    std::wstring_view PadGridFunctionFileName(PadGridFunction function) noexcept
+    {
+        return NameOf(PadGridFunctionNames, function);
+    }
+
+    _Use_decl_annotations_
+    bool TryReadPadGridFunctionName(std::wstring_view name, PadGridFunction& function) noexcept
+    {
+        return TryValueOf(PadGridFunctionNames, name, function);
+    }
+
+    _Use_decl_annotations_
+    std::wstring_view ScaleFileName(MusicalScale scale) noexcept
+    {
+        return NameOf(ScaleNames, scale);
+    }
+
+    _Use_decl_annotations_
+    bool TryReadScaleName(std::wstring_view name, MusicalScale& scale) noexcept
+    {
+        return TryValueOf(ScaleNames, name, scale);
+    }
+
+    _Use_decl_annotations_
+    std::wstring_view KeyRootFileName(int32_t root) noexcept
+    {
+        return root >= 0 && root <= 11 ? NameOf(KeyRootNames, root) : std::wstring_view{ L"c" };
+    }
+
+    _Use_decl_annotations_
+    bool TryReadKeyRootName(std::wstring_view name, int32_t& root) noexcept
+    {
+        return TryValueOf(KeyRootNames, name, root) && root >= 0 && root <= 11;
     }
 }
