@@ -36,18 +36,17 @@ public:
     // copies must share one set of guards.
     std::shared_ptr<MidiLoopbackFeedback> Feedback{};
 
-    MidiLoopbackDevice(const MidiLoopbackDevice& rhs)
+    MidiLoopbackDevice(_In_ const MidiLoopbackDevice& rhs)
     {
         IsMuted = rhs.IsMuted;
         DefinitionA = rhs.DefinitionA;
         DefinitionB = rhs.DefinitionB;
+        Feedback = rhs.Feedback;
 
-        auto lock = const_cast<wil::critical_section&>(rhs.m_callbackLock).lock();
-        m_callbackA = rhs.m_callbackA;
-        m_callbackB = rhs.m_callbackB;
+        rhs.CopyCallbacks(m_callbackA, m_callbackB);
     }
 
-    MidiLoopbackDevice& operator=(const MidiLoopbackDevice& rhs)
+    MidiLoopbackDevice& operator=(_In_ const MidiLoopbackDevice& rhs)
     {
         if (this == &rhs)
         {
@@ -57,18 +56,28 @@ public:
         IsMuted = rhs.IsMuted;
         DefinitionA = rhs.DefinitionA;
         DefinitionB = rhs.DefinitionB;
+        Feedback = rhs.Feedback;
 
         wil::com_ptr_nothrow<IMidiCallback> callbackA;
         wil::com_ptr_nothrow<IMidiCallback> callbackB;
-        {
-            auto rhsLock = const_cast<wil::critical_section&>(rhs.m_callbackLock).lock();
-            callbackA = rhs.m_callbackA;
-            callbackB = rhs.m_callbackB;
-        }
+        rhs.CopyCallbacks(callbackA, callbackB);
 
-        auto thisLock = m_callbackLock.lock();
-        m_callbackA = callbackA;
-        m_callbackB = callbackB;
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            {
+                auto thisLock = m_loopbackCallbackLock.Lock.lock_exclusive();
+                m_callbackA.swap(callbackA);
+                m_callbackB.swap(callbackB);
+            }
+
+            // callbackA and callbackB now hold the replaced ones, released here, outside the lock
+        }
+        else
+        {
+            auto thisLock = m_callbackLock.lock();
+            m_callbackA = callbackA;
+            m_callbackB = callbackB;
+        }
 
         return *this;
     }
@@ -278,6 +287,25 @@ public:
     }
 
 private:
+    // Reads both callbacks under the lock their writers use, which depends on the gate.
+    void CopyCallbacks(
+        _Out_ wil::com_ptr_nothrow<IMidiCallback>& callbackA,
+        _Out_ wil::com_ptr_nothrow<IMidiCallback>& callbackB) const
+    {
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            auto lock = const_cast<wil::srwlock&>(m_loopbackCallbackLock.Lock).lock_shared();
+            callbackA = m_callbackA;
+            callbackB = m_callbackB;
+        }
+        else
+        {
+            auto lock = const_cast<wil::critical_section&>(m_callbackLock).lock();
+            callbackA = m_callbackA;
+            callbackB = m_callbackB;
+        }
+    }
+
     // With protection off the guard is not touched at all, so there is no test and no cost.
     HRESULT SendThroughFeedbackGuard(
         _In_ bool const directionAToB,
