@@ -123,3 +123,7 @@ You can find the endpoint device id for a device using the [MIDI Console]({{ sit
 
 - [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) to confirm the clock is arriving. Timing clock messages are hidden there by default, so switch them back on with the button at the bottom left
 - [MIDI Settings]({{ site.baseurl }}/tools/settings/) for the per-device timing offsets mentioned above
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

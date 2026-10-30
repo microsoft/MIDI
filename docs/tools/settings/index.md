@@ -185,3 +185,7 @@ These are shared by everyone who uses the PC, so they need administrator rights.
 ## Appearance
 
 The palette button in the title bar sets the theme, the window material and a custom window color, and the pin next to it keeps the window on top. These are the same settings every Windows MIDI Services tool has, and they are remembered per app.
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API and Service originally coded by Pete Brown and Gary Daniels.

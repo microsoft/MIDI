@@ -338,3 +338,7 @@ Open **Layout…**, then **Pages and devices…**, and select **Accessibility ch
 - [How to control your DAW with Mackie Control in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-mackie-control/)
 - [How to make a floating toolbar or palette in Windows MIDI Glass]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/)
 - [Windows MIDI Glass layout files, a guide for AI agents]({{ site.baseurl }}/kb/midi-glass-layouts-for-agents/)
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

@@ -152,3 +152,7 @@ You can find the endpoint device id for a device using the [MIDI Console]({{ sit
 - [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) to see exactly what the keyboard is sending, including the MIDI 2.0 messages
 - [How to read a device's patch list]({{ site.baseurl }}/kb/how-to-read-a-device-patch-list/), which is what the bank and program flyout is doing
 - [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/) to send the keyboard to more than one instrument at once
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

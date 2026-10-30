@@ -8,3 +8,7 @@ categories:
 ---
 
 Documentation on `midi1enum.exe` coming soon
+
+## App provenance
+
+This app was originally coded by Pete Brown. It has been modified and fixed using GitHub Copilot since that time.

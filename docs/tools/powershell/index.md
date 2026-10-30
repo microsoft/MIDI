@@ -574,3 +574,7 @@ foreach ($message in $messages)
 
 
 PowerShell [samples in the repo on GitHub](https://aka.ms/midisamples).
+
+## Library provenance
+
+This library was originally written by Pete Brown in C#, and has been updated using GitHub Copilot to keep up with new transports and API features.

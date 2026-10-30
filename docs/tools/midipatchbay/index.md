@@ -555,3 +555,7 @@ The canvas shows where the first message went. The connections and steps it went
 The messages in a trace go through the patch one after another, the same way they would while it routes. A note off goes where its note on went, and memories start empty and carry from one message to the next. So to see how a footswitch changes where notes go, trace the footswitch message, then a note.
 
 A trace doesn't run generators, and it doesn't wait for a message throttler. What comes after a throttler is shown at once.
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

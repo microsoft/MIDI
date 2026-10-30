@@ -167,3 +167,7 @@ Close your MIDI applications before changing a driver. Afterwards, unplug the de
 
 > There is a Plug and Play issue in Windows which can revert your choice after an update, so you may
 > have to repeat this occasionally.
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API originally coded by Pete Brown and modified in the same way.
