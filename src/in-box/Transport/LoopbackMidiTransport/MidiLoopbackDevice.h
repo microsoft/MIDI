@@ -41,9 +41,19 @@ public:
         IsMuted = rhs.IsMuted;
         DefinitionA = rhs.DefinitionA;
         DefinitionB = rhs.DefinitionB;
-        Feedback = rhs.Feedback;
 
-        rhs.CopyCallbacks(m_callbackA, m_callbackB);
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
+            Feedback = rhs.Feedback;
+
+            rhs.CopyCallbacks(m_callbackA, m_callbackB);
+        }
+        else
+        {
+            auto lock = const_cast<wil::critical_section&>(rhs.m_callbackLock).lock();
+            m_callbackA = rhs.m_callbackA;
+            m_callbackB = rhs.m_callbackB;
+        }
     }
 
     MidiLoopbackDevice& operator=(_In_ const MidiLoopbackDevice& rhs)
@@ -56,24 +66,32 @@ public:
         IsMuted = rhs.IsMuted;
         DefinitionA = rhs.DefinitionA;
         DefinitionB = rhs.DefinitionB;
-        Feedback = rhs.Feedback;
 
         wil::com_ptr_nothrow<IMidiCallback> callbackA;
         wil::com_ptr_nothrow<IMidiCallback> callbackB;
-        rhs.CopyCallbacks(callbackA, callbackB);
 
         if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
         {
+            Feedback = rhs.Feedback;
+
+            rhs.CopyCallbacks(callbackA, callbackB);
+
             {
                 auto thisLock = m_loopbackCallbackLock.Lock.lock_exclusive();
                 m_callbackA.swap(callbackA);
                 m_callbackB.swap(callbackB);
             }
-
+            
             // callbackA and callbackB now hold the replaced ones, released here, outside the lock
         }
         else
         {
+            {
+                auto rhsLock = const_cast<wil::critical_section&>(rhs.m_callbackLock).lock();
+                callbackA = rhs.m_callbackA;
+                callbackB = rhs.m_callbackB;
+            }
+            
             auto thisLock = m_callbackLock.lock();
             m_callbackA = callbackA;
             m_callbackB = callbackB;
@@ -292,18 +310,9 @@ private:
         _Out_ wil::com_ptr_nothrow<IMidiCallback>& callbackA,
         _Out_ wil::com_ptr_nothrow<IMidiCallback>& callbackB) const
     {
-        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
-        {
-            auto lock = const_cast<wil::srwlock&>(m_loopbackCallbackLock.Lock).lock_shared();
-            callbackA = m_callbackA;
-            callbackB = m_callbackB;
-        }
-        else
-        {
-            auto lock = const_cast<wil::critical_section&>(m_callbackLock).lock();
-            callbackA = m_callbackA;
-            callbackB = m_callbackB;
-        }
+        auto lock = const_cast<wil::srwlock&>(m_loopbackCallbackLock.Lock).lock_shared();
+        callbackA = m_callbackA;
+        callbackB = m_callbackB;
     }
 
     // With protection off the guard is not touched at all, so there is no test and no cost.

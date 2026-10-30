@@ -316,7 +316,7 @@ CMidiEndpointProtocolWorker::Start(
 
         // after timing out, or receiving everything, we set the Discovery Complete property
         {
-            if (!Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
+            if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
             {
                 // m_inInitialFunctionBlockDiscovery is read on the transport callback thread,
                 // so publish this transition under m_lock (the broad lock was already released above).
@@ -327,7 +327,7 @@ CMidiEndpointProtocolWorker::Start(
             {
                 // m_inInitialFunctionBlockDiscovery is read on the transport callback thread,
                 // so publish this transition under m_lock (the broad lock was already released above).
-                auto reLock = m_lock.lock();
+                auto lock = m_lock.lock();
                 m_inInitialFunctionBlockDiscovery = false;
             }
         }
