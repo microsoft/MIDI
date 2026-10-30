@@ -31,36 +31,7 @@ Read [CONTRIBUTING.md](../../../CONTRIBUTING.md) for process, licensing and the 
 
 Any change to code that has already shipped in Windows must be selectable at run time, so it can be rolled back in servicing without rebuilding. The trigger is the **location of the file**, not the size of the diff: a one-line fix in `midisrv` still needs a gate.
 
-Only two things decide whether the gating is right:
-
-1. **With the gate disabled, the behavior and the code is exactly what shipped.**
-2. **The result still reads sensibly to a human.**
-
-Where the branch goes follows from those, and depends on the shape of the change:
-
-| The change | Where the gate goes |
-|---|---|
-| Changes a function's signature | The call site. There is no other option — a signature cannot be conditional. |
-| Would need several `if (Feature_Servicing_...)` branches inside one function | Add a net-new function beside the old one and branch once at the call site |
-| A small piece of code inside an existing function | Branch in place, inside the function. That is fine. |
-| Rewrites how a whole class behaves | Build a net-new class beside the old one and choose between them in the factory that constructs it |
-
-The call-site form, where that is the right choice:
-
-```cpp
-if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
-{
-    RETURN_IF_FAILED(table->OnDeviceDisconnectedAlwaysTeardown(m_endpointId));
-}
-else
-{
-    RETURN_IF_FAILED(table->OnDeviceDisconnected(m_endpointId));
-}
-```
-
-Whichever form you pick: never combine another condition with the gate check in one `if` — nest instead. Never rename an existing function; add a net-new one beside it, or the rollback path disappears. The `else` branch must be the original code, unchanged, byte-for-byte, except for the new indent inside the braces.
-
-Full rules, the shipping/not-shipping list, test gating and how to prove the gate works: [references/kir-servicing.md](references/kir-servicing.md).
+**Read [references/kir-servicing.md](references/kir-servicing.md) before you write the change.** It is the only list of gate rules, and it changes. In short: gate in place as `if (gate) { new } else { original }`, always with the `else`, so the change can be rolled back and is cleaned up automatically when the gate is retired.
 
 ### 2. SAL-annotate every function parameter
 
