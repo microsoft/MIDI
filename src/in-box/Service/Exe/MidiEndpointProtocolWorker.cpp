@@ -327,7 +327,7 @@ CMidiEndpointProtocolWorker::Start(
             {
                 // m_inInitialFunctionBlockDiscovery is read on the transport callback thread,
                 // so publish this transition under m_lock (the broad lock was already released above).
-                auto lock = m_lock.lock();
+                auto reLock = m_lock.lock();
                 m_inInitialFunctionBlockDiscovery = false;
             }
         }
