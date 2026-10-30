@@ -42,10 +42,13 @@ public:
         DefinitionA = rhs.DefinitionA;
         DefinitionB = rhs.DefinitionB;
 
-        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
         {
             Feedback = rhs.Feedback;
+        }
 
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
             rhs.CopyCallbacks(m_callbackA, m_callbackB);
         }
         else
@@ -70,10 +73,13 @@ public:
         wil::com_ptr_nothrow<IMidiCallback> callbackA;
         wil::com_ptr_nothrow<IMidiCallback> callbackB;
 
-        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
         {
             Feedback = rhs.Feedback;
+        }
 
+        if (Feature_Servicing_MIDI2LoopbackAddRemoveReliability::IsEnabled())
+        {
             rhs.CopyCallbacks(callbackA, callbackB);
 
             {
