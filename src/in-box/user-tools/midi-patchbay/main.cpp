@@ -10,6 +10,7 @@
 #include "CommandLineOptions.h"
 #include "DocumentHandoff.h"
 #include "OscHub.h"
+#include "CrashHandlerRegistration.h"
 
 // The XAML compiler emits its own wWinMain; we supply this one so startup stays under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail with
@@ -18,6 +19,9 @@
 // from this thread - see RouteEngine and BackgroundWork.
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
+    // First, so a crash anywhere after this opens MIDI Troubleshooting and Repair.
+    ::midiapp::RegisterCrashHandler();
+
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
     // The elevated copy the OSC firewall bar starts. It changes one rule and exits without a

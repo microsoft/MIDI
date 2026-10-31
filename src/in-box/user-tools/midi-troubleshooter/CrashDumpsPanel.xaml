@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="miditroubleshooter.CrashDumpsPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:miditroubleshooter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!-- the same look as the cards on the other pages, which keep theirs in the main window -->
+        <Style x:Key="CrashCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <Style x:Key="CrashCardTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="CrashBodyTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="IsTextSelectionEnabled" Value="True" />
+        </Style>
+
+        <Style x:Key="CrashSecondaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer Padding="16,12,16,16">
+        <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock x:Uid="CrashDumpsPageTitle" Text="Crash dumps"
+                       AutomationProperties.HeadingLevel="Level1"
+                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+            <TextBlock x:Uid="CrashDumpsPageDescription"
+                       Text="When a MIDI app stops unexpectedly, Windows saves a crash dump."
+                       Style="{StaticResource CrashBodyTextStyle}" />
+
+            <!-- Shown when another MIDI app has just crashed and Windows opened this page. Title
+                 and Message are set from code, because they name the app and change as Windows
+                 finishes the dump. -->
+            <InfoBar x:Name="CrashBar" IsOpen="False" IsClosable="True" Severity="Error">
+                <InfoBar.Content>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                        <ProgressRing x:Name="CrashWaitRing" x:Uid="CrashDumpsWaitRing" IsActive="False" Width="20" Height="20"
+                                      Visibility="Collapsed" />
+                        <Button x:Name="ShowCrashDumpButton" x:Uid="CrashDumpsShowCrashDumpButton"
+                                Content="Show the crash dump" Visibility="Collapsed"
+                                Click="OnShowCrashDumpClick" />
+                        <Button x:Name="CrashServiceDumpButton" x:Uid="CrashDumpsCrashServiceDumpButton"
+                                Content="Also save a MIDI service dump..."
+                                Click="OnSaveServiceDumpClick" />
+                    </StackPanel>
+                </InfoBar.Content>
+            </InfoBar>
+
+            <!-- ============================ MIDI service dump ============================ -->
+            <Border Style="{StaticResource CrashCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Uid="CrashDumpsServiceTitle" Text="MIDI service dump"
+                               AutomationProperties.HeadingLevel="Level2"
+                               Style="{StaticResource CrashCardTitleStyle}" />
+                    <TextBlock x:Uid="CrashDumpsServiceDescription"
+                               Text="A memory dump of the MIDI service shows the developers what it was doing."
+                               Style="{StaticResource CrashBodyTextStyle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="ServiceDumpButton" x:Uid="CrashDumpsServiceDumpButton"
+                                Content="Save a MIDI service dump" Style="{StaticResource AccentButtonStyle}"
+                                Click="OnSaveServiceDumpClick" />
+                        <ProgressRing x:Name="ServiceDumpRing" x:Uid="CrashDumpsServiceDumpRing" IsActive="False" Width="20" Height="20"
+                                      Visibility="Collapsed" />
+                    </StackPanel>
+                    <TextBlock x:Name="ServiceDumpStatusText" Style="{StaticResource CrashBodyTextStyle}"
+                               Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+
+            <!-- ================================ Saved dumps ================================ -->
+            <Border Style="{StaticResource CrashCardStyle}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Uid="CrashDumpsSavedTitle" Text="Saved dumps"
+                               AutomationProperties.HeadingLevel="Level2"
+                               Style="{StaticResource CrashCardTitleStyle}" />
+                    <TextBlock x:Uid="CrashDumpsSavedDescription"
+                               Text="Windows keeps the 10 newest crash dumps for each MIDI app."
+                               Style="{StaticResource CrashBodyTextStyle}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="RefreshButton" x:Uid="CrashDumpsRefreshButton"
+                                Content="Refresh" Click="OnRefreshClick" />
+                        <Button x:Name="OpenFolderButton" x:Uid="CrashDumpsOpenFolderButton"
+                                Content="Open folder" Click="OnOpenFolderClick" />
+                        <Button x:Name="ZipButton" x:Uid="CrashDumpsZipButton"
+                                Content="Save selected as zip..." IsEnabled="False"
+                                Click="OnZipClick" />
+                        <Button x:Name="DeleteButton" x:Uid="CrashDumpsDeleteButton"
+                                Content="Delete selected" IsEnabled="False"
+                                Click="OnDeleteClick" />
+                        <ProgressRing x:Name="ListBusyRing" x:Uid="CrashDumpsListBusyRing" IsActive="False" Width="20" Height="20"
+                                      Visibility="Collapsed" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="ListStatusText" Style="{StaticResource CrashBodyTextStyle}"
+                               Visibility="Collapsed" />
+
+                    <TextBlock x:Name="NoDumpsText" x:Uid="CrashDumpsNoDumpsText"
+                               Text="There are no saved dumps."
+                               Style="{StaticResource CrashSecondaryTextStyle}"
+                               Visibility="Collapsed" />
+
+                    <ListView x:Name="DumpsListView" x:Uid="CrashDumpsListView"
+                              AutomationProperties.Name="Saved dumps"
+                              SelectionMode="Extended" MaxHeight="480"
+                              SelectionChanged="OnDumpsSelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:CrashDumpItem">
+                                <StackPanel Padding="0,6" Spacing="2"
+                                            AutomationProperties.Name="{x:Bind AccessibleName}">
+                                    <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock Text="{x:Bind DetailText}" Style="{StaticResource CrashSecondaryTextStyle}" />
+                                    <TextBlock Text="{x:Bind FileName}" Style="{StaticResource CrashSecondaryTextStyle}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Uid="CrashDumpsPrivacyText"
+                       Text="A dump can hold personal information."
+                       Style="{StaticResource CrashSecondaryTextStyle}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

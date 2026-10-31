@@ -96,6 +96,23 @@ Choose how long to check, select **Start check**, and use your PC the way you do
 
 The check changes nothing on your PC, installs no driver, and works on x64 and Arm64. There's much more about what it measures and what to do about it in [Find what makes audio late on your PC (DPC latency)]({{ site.baseurl }}/kb/dpc-latency/).
 
+## Crash dumps
+
+When a Windows MIDI Services app stops unexpectedly, Windows saves a crash dump. It's a snapshot of the app's memory at the moment it crashed, and it shows the developers what went wrong. This page lists the dumps on your PC and helps you share them.
+
+You don't have to come here yourself. When one of the Windows MIDI Services apps crashes, this app opens on the Crash dumps page and says which app stopped. It waits a few seconds while Windows finishes the dump, then offers **Show the crash dump**. It doesn't ask for administrator rights when it opens this way.
+
+**Save a MIDI service dump** saves a memory dump of the MIDI service too. If an app crashed or froze while it was using MIDI, the two dumps together show the developers what each side was doing. Save it straight away, before you restart the service or your PC, because a restart clears what the dump would show. It needs administrator rights, so you'll see a Windows prompt if the app doesn't have them yet.
+
+Under **Saved dumps** you can open the folder, save the dumps you select in one zip file to attach to a GitHub issue, and delete the ones you don't need.
+
+Some things to know:
+
+- The dumps stay on your PC, in `%LOCALAPPDATA%\Microsoft\MIDI\CrashDumps`, with a folder for each app. Nothing is sent from here.
+- Windows keeps the 10 newest dumps for each app and deletes the oldest when it saves a new one. This page does the same for MIDI service dumps.
+- This covers the apps that come with Windows MIDI Services, including the console tools. It doesn't cover your DAW or other music apps.
+- A dump can hold personal information, such as file names, device names and network MIDI passwords. Share it only with the developers who asked for it.
+
 ## Active sessions
 
 Every application currently connected to the MIDI service, with the process it belongs to and when it started. Expand one to see which endpoints and MIDI 1.0 ports it has open, how many times each is open, and since when.

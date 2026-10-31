@@ -157,6 +157,10 @@
     <ClInclude Include="LatencyCheckPanel.xaml.h">
       <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
     </ClInclude>
+    <ClInclude Include="CrashDumpsPanel.xaml.h">
+      <DependentUpon>CrashDumpsPanel.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="CrashDumps.h" />
     <ClInclude Include="LatencyCheckText.h" />
     <!-- the DPC latency check engine: plain C++ and Win32, so it builds and is tested without the app -->
     <ClInclude Include="LatencyAnalyzer.h" />
@@ -185,6 +189,7 @@
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\Deflate.h" />
     <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
+    <ClInclude Include="..\midi-app-shared\DocumentHandoff.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -241,6 +246,14 @@
     <ClCompile Include="LatencyCheckPanelResults.cpp">
       <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="CrashDumpsPanel.xaml.cpp">
+      <DependentUpon>CrashDumpsPanel.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowCrashDumps.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="CrashDumps.cpp" />
+    <ClCompile Include="..\midi-app-shared\DocumentHandoff.cpp" />
     <ClCompile Include="LatencyCheckText.cpp" />
     <!-- the DPC latency check engine: standard C++ and Win32 only, so no precompiled header -->
     <ClCompile Include="LatencyAnalyzer.cpp">
@@ -300,6 +313,9 @@
     <Midl Include="LatencyCheckPanel.idl">
       <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
     </Midl>
+    <Midl Include="CrashDumpsPanel.idl">
+      <DependentUpon>CrashDumpsPanel.xaml</DependentUpon>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -312,6 +328,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="LatencyCheckPanel.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CrashDumpsPanel.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
@@ -334,8 +353,26 @@
     <ProjectReference Include="..\..\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
+    <!-- Built first, then copied in below. Nothing links against it. -->
+    <ProjectReference Include="..\midi-crash-handler\midicrashhandler.vcxproj">
+      <Project>{6121b8e4-0e1e-45e8-a264-258b899c387e}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <!--
+    The WER crash handler starts this app from the folder the handler is in, so it lives next to
+    miditroubleshooter.exe, and the Tools installer ships it from this output folder. The other
+    tools find it here in a development build too. See midi-crash-handler\README.md.
+  -->
+  <Target Name="CopyMidiCrashHandler" AfterTargets="Build">
+    <PropertyGroup>
+      <MidiCrashHandlerOutput>$(SolutionDir)vsfiles-sdk\out\midicrashhandler\$(Platform)\$(Configuration)\midicrashhandler.dll</MidiCrashHandlerOutput>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(MidiCrashHandlerOutput)')" Text="The crash handler was not built: $(MidiCrashHandlerOutput)" />
+    <Copy SourceFiles="$(MidiCrashHandlerOutput)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
