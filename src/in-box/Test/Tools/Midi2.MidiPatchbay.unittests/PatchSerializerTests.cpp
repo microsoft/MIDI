@@ -840,6 +840,38 @@ void PatchSerializerTests::LinksToMissingThingsAreLeftOut()
     VERIFY_ARE_EQUAL(std::wstring{ L"fallback" }, patch->Name);
 }
 
+void PatchSerializerTests::OneGroupOfAnEndpointIntoAnotherSurvivesTheFile()
+{
+    // One interface, a keyboard on DIN In 1 and a sound module on DIN Out 2.
+    auto const patch = ReadPatchJson(LR"({
+        "fileVersion": 2,
+        "endpoints": [ { "id": "a", "match": {} } ],
+        "connections": [
+            { "id": "1", "source": "a", "sourceGroup": 0, "destination": "a", "destinationGroup": 1 },
+            { "id": "2", "source": "a", "sourceGroup": 2, "destination": "a", "destinationGroup": 2 },
+            { "id": "3", "source": "a", "destination": "a" }
+        ]
+    })", L"fallback");
+
+    VERIFY_IS_TRUE(patch.has_value());
+
+    // A group into itself is left out, and so is all groups into all groups.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, patch->Connections.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"1" }, patch->Connections[0].Id);
+    VERIFY_ARE_EQUAL(0, patch->Connections[0].SourceGroupIndex);
+    VERIFY_ARE_EQUAL(1, patch->Connections[0].DestinationGroupIndex);
+
+    // Saved and opened again, it is still there.
+    auto const reread = ReadPatchJson(WritePatchJson(*patch), L"fallback");
+
+    VERIFY_IS_TRUE(reread.has_value());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, reread->Connections.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"a" }, reread->Connections[0].SourceId);
+    VERIFY_ARE_EQUAL(std::wstring{ L"a" }, reread->Connections[0].DestinationId);
+    VERIFY_ARE_EQUAL(0, reread->Connections[0].SourceGroupIndex);
+    VERIFY_ARE_EQUAL(1, reread->Connections[0].DestinationGroupIndex);
+}
+
 void PatchSerializerTests::AnUnknownBlockIsLeftOutWithItsLinks()
 {
     auto const patch = ReadPatchJson(LR"({

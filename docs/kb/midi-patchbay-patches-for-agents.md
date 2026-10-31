@@ -944,7 +944,11 @@ foreach ($c in (Get-List $patch.connections)) {
     $where = if ($c.source -and $c.destination) { "The connection from '$($c.source)' to '$($c.destination)'" } else { "The connection '$($c.id)'" }
     Test-Keys $c @('id', 'source', 'sourceGroup', 'sourceOutput', 'destination', 'destinationGroup', 'muted') $where
     if (-not $c.source -or -not $c.destination -or -not $kinds.ContainsKey($c.source) -or -not $kinds.ContainsKey($c.destination)) { $problems.Add("$where names an endpoint or step that isn't in the patch, so Windows MIDI Patchbay leaves it out."); continue }
-    if ($c.source -ceq $c.destination) { $problems.Add("$where goes from something to itself, so Windows MIDI Patchbay leaves it out."); continue }
+    if ($c.source -ceq $c.destination) {
+        # The file reader counts a group outside 0 to 15 as all groups. One group into another group of the same endpoint is kept.
+        $groupOf = { param($v) if ((Test-Number $v) -and $v -ge 0 -and $v -lt 16) { [int][Math]::Truncate($v) } else { -1 } }
+        if ($kinds[$c.source] -cne 'endpoint' -or (& $groupOf $c.sourceGroup) -eq (& $groupOf $c.destinationGroup)) { $problems.Add("$where goes from something to itself, so Windows MIDI Patchbay leaves it out."); continue }
+    }
     if ($kinds[$c.source] -ceq 'annotation') { $problems.Add("$where comes out of an annotation, which has no Out, so Windows MIDI Patchbay leaves it out."); continue }
     if ($kinds[$c.destination] -ceq 'annotation') { $problems.Add("$where goes into an annotation, which has no In, so Windows MIDI Patchbay leaves it out."); continue }
     if ($kinds[$c.destination] -cin $noInput) { $problems.Add("$where goes into a $($kinds[$c.destination]) step, which has no In, so Windows MIDI Patchbay leaves it out."); continue }
@@ -1413,7 +1417,7 @@ The steps are in the `blocks` list.
 | `destinationGroup` | -1 to 15 | -1 | Only when `destination` is an endpoint. The group messages go to, counted from 0. -1 keeps each message's own group. |
 | `muted` | `true`, `false` | `false` | A muted connection passes nothing. Write `false`. |
 
-A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself, when it goes into a MIDI clock, MIDI Time Code, or game controller step, which has no **In**, when it goes into or out of an annotation, when its `sourceOutput` names an output its branch or switch doesn't have, or when it repeats another connection between the same two points with the same groups and output. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
+A connection is left out when it names an endpoint or step the patch doesn't have, when it goes from something to itself (one group of an endpoint into a different group of the same endpoint is kept), when it goes into a MIDI clock, MIDI Time Code, or game controller step, which has no **In**, when it goes into or out of an annotation, when its `sourceOutput` names an output its branch or switch doesn't have, or when it repeats another connection between the same two points with the same groups and output. A step has no groups, so `sourceGroup` and `destinationGroup` are ignored at a step's end of a connection.
 
 ### Where things go on the canvas
 
