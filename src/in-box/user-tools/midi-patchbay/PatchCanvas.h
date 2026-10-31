@@ -71,8 +71,9 @@ namespace midipatchbay
             std::function<void()> LayoutChanged{};
 
             // The point is relative to the scroll viewer, so the menu opens where the click
-            // happened rather than at the corner of the canvas.
-            std::function<void(std::wstring, foundation::Point)> NodeContextMenuRequested{};
+            // happened rather than at the corner of the canvas. The flag is false for a right
+            // click on a group, which leaves the selection, and so the inspector, alone.
+            std::function<void(std::wstring, foundation::Point, bool)> NodeContextMenuRequested{};
 
             // The customer dragged one end of an existing connection onto a different port.
             // The window validates and commits it, the same as a brand new connection.
