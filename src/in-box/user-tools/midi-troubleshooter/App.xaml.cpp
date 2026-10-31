@@ -66,9 +66,11 @@ namespace winrt::miditroubleshooter::implementation
             // Almost everything this tool does writes HKLM or drives the service control
             // manager, so it asks once up front rather than failing an action at a time.
             // A declined prompt still leaves a usable read-only tool. Reading a saved latency
-            // trace needs no rights at all, so that doesn't ask.
+            // trace needs no rights at all, so that doesn't ask. Nor does opening because another
+            // MIDI tool just crashed: the customer didn't ask for this window, and the Crash dumps
+            // page asks only if they choose to save a MIDI service dump.
             if (!s_isElevated && !s_startupOptions.NoElevate && !s_startupOptions.Relaunched &&
-                s_startupOptions.LatencyTracePath.empty())
+                s_startupOptions.LatencyTracePath.empty() && !s_startupOptions.HasCrashReport())
             {
                 // The elevated copy takes the single instance check before it has a window, so
                 // ownership has to be given up before it starts or it turns itself away and

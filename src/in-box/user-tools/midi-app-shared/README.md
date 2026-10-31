@@ -92,3 +92,5 @@ alias for it. Types in the app's own root namespace keep the short generated nam
 conventions sit side by side in the same project.
 
 `NoteNames.h` is header only and plain C++. `midiapp::ParseNoteNumber` reads a note typed as a number or a name, such as `52`, `E2`, `F#0`, `Bb1` or `E2 (52)`, with middle C (60) as C3. MIDI Sequencer's note boxes and Windows MIDI Glass's note boxes both use it, so a note typed in one reads the same in the other.
+
+`CrashHandlerRegistration.h` is header only and plain Win32. `midiapp::RegisterCrashHandler()` is the first call in every GUI tool's `wWinMain` except MIDI Troubleshooting and Repair. It registers `midicrashhandler.dll` with Windows Error Reporting, so when the tool crashes, Windows opens MIDI Troubleshooting and Repair on its Crash dumps page. It finds the DLL next to the tool when installed, or in the Troubleshooter's build output folder in a development build, and does nothing if neither is there. See `midi-crash-handler\README.md`.

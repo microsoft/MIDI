@@ -18,6 +18,7 @@
 #include "ThumbnailRenderer.h"
 
 #include <filesystem>
+#include "CrashHandlerRegistration.h"
 
 namespace midiglass
 {
@@ -104,6 +105,9 @@ namespace
 // from this thread.
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
+    // First, so a crash anywhere after this opens MIDI Troubleshooting and Repair.
+    ::midiapp::RegisterCrashHandler();
+
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
     auto const arguments = CommandLineArguments();

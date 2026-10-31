@@ -2033,4 +2033,203 @@ Every application using MIDI loses its connections when the service restarts, so
   <data name="ReportSection_latency_trace" xml:space="preserve">
     <value>Trace</value>
   </data>
+  <!-- Crash dumps page (CrashDumpsPanel.xaml). CrashDumpsToolName_<exe name> names the tools whose dumps it lists. -->
+  <data name="CrashDumpsNavigationItem.Content" xml:space="preserve">
+    <value>Crash dumps</value>
+  </data>
+  <data name="CrashDumpsPageTitle.Text" xml:space="preserve">
+    <value>Crash dumps</value>
+  </data>
+  <data name="CrashDumpsPageDescription.Text" xml:space="preserve">
+    <value>When a MIDI app stops unexpectedly, Windows saves a crash dump. It&apos;s a snapshot of the app&apos;s memory at that moment, and it shows the developers what went wrong. Windows keeps them on this PC. Nothing is sent to Microsoft from here unless you send it yourself.</value>
+  </data>
+  <data name="CrashDumpsShowCrashDumpButton.Content" xml:space="preserve">
+    <value>Show the crash dump</value>
+  </data>
+  <data name="CrashDumpsCrashServiceDumpButton.Content" xml:space="preserve">
+    <value>Also save a MIDI service dump</value>
+  </data>
+  <data name="CrashDumpsServiceTitle.Text" xml:space="preserve">
+    <value>MIDI service dump</value>
+  </data>
+  <data name="CrashDumpsServiceDescription.Text" xml:space="preserve">
+    <value>If MIDI stopped working, or an app froze or crashed while it was using MIDI, a memory dump of the MIDI service shows the developers what the service was doing. Save it as soon as you can, before you restart the service or your PC. This needs administrator rights.</value>
+  </data>
+  <data name="CrashDumpsServiceDumpButton.Content" xml:space="preserve">
+    <value>Save a MIDI service dump</value>
+  </data>
+  <data name="CrashDumpsSavedTitle.Text" xml:space="preserve">
+    <value>Saved dumps</value>
+  </data>
+  <data name="CrashDumpsSavedDescription.Text" xml:space="preserve">
+    <value>Windows keeps the 10 newest crash dumps for each MIDI app, and this page keeps the 10 newest MIDI service dumps. Older ones are deleted for you.</value>
+  </data>
+  <data name="CrashDumpsRefreshButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="CrashDumpsOpenFolderButton.Content" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="CrashDumpsZipButton.Content" xml:space="preserve">
+    <value>Save selected as zip...</value>
+  </data>
+  <data name="CrashDumpsDeleteButton.Content" xml:space="preserve">
+    <value>Delete selected</value>
+  </data>
+  <data name="CrashDumpsNoDumpsText.Text" xml:space="preserve">
+    <value>There are no saved dumps.</value>
+  </data>
+  <data name="CrashDumpsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Saved dumps</value>
+  </data>
+  <data name="CrashDumpsWaitRing.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Saving the crash dump</value>
+  </data>
+  <data name="CrashDumpsServiceDumpRing.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Saving the MIDI service dump</value>
+  </data>
+  <data name="CrashDumpsListBusyRing.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Working</value>
+  </data>
+  <data name="CrashDumpsPrivacyText.Text" xml:space="preserve">
+    <value>A dump can hold personal information, such as file names, device names and what was on screen in the app. Only share one with someone you trust to help, such as a developer who asked for it in a GitHub issue.</value>
+  </data>
+  <data name="CrashDumpsDateTimeFormat" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="CrashDumpsItemDetailFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="CrashDumpsItemAccessibleFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="CrashDumpsServiceName" xml:space="preserve">
+    <value>MIDI service</value>
+  </data>
+  <data name="CrashDumpsCrashTitleFormat" xml:space="preserve">
+    <value>{0} stopped unexpectedly</value>
+  </data>
+  <data name="CrashDumpsCrashWaiting" xml:space="preserve">
+    <value>Windows is saving a crash dump. This can take a few seconds.</value>
+  </data>
+  <data name="CrashDumpsCrashSavedFormat" xml:space="preserve">
+    <value>Windows saved a crash dump to {0}</value>
+  </data>
+  <data name="CrashDumpsCrashNotSaved" xml:space="preserve">
+    <value>Windows didn&apos;t save a crash dump this time.</value>
+  </data>
+  <data name="CrashDumpsCrashNotSetUp" xml:space="preserve">
+    <value>Windows didn&apos;t save a crash dump, because crash dumps aren&apos;t turned on for this app. Install the Windows MIDI Services Tools again to turn them on.</value>
+  </data>
+  <data name="CrashDumpsServiceDumpDeclined" xml:space="preserve">
+    <value>The MIDI service dump needs administrator rights, so it wasn&apos;t saved.</value>
+  </data>
+  <data name="CrashDumpsServiceDumpSaving" xml:space="preserve">
+    <value>Saving a MIDI service dump. This can take a minute.</value>
+  </data>
+  <data name="CrashDumpsServiceDumpSavedFormat" xml:space="preserve">
+    <value>Saved the MIDI service dump to {0}</value>
+  </data>
+  <data name="CrashDumpsServiceDumpFailedFormat" xml:space="preserve">
+    <value>Couldn&apos;t save the MIDI service dump. {0}</value>
+  </data>
+  <data name="CrashDumpsServiceDumpFailed" xml:space="preserve">
+    <value>Something went wrong while it was being written.</value>
+  </data>
+  <data name="CrashDumpsNoFolder" xml:space="preserve">
+    <value>Couldn&apos;t create the folder for it.</value>
+  </data>
+  <data name="CrashDumpsOpenFolderFailed" xml:space="preserve">
+    <value>Couldn&apos;t open the crash dump folder.</value>
+  </data>
+  <data name="CrashDumpsZipSaving" xml:space="preserve">
+    <value>Saving the zip. Large dumps can take a minute or two.</value>
+  </data>
+  <data name="CrashDumpsZipSavedFormat" xml:space="preserve">
+    <value>Saved {0}</value>
+  </data>
+  <data name="CrashDumpsZipFailed" xml:space="preserve">
+    <value>Couldn&apos;t save the zip.</value>
+  </data>
+  <data name="CrashDumpsZipTooLarge" xml:space="preserve">
+    <value>Couldn&apos;t save the zip, because together these dumps are larger than a zip file can hold (4 GB). Select fewer dumps and try again.</value>
+  </data>
+  <data name="CrashDumpsDeleteTitle" xml:space="preserve">
+    <value>Delete dumps?</value>
+  </data>
+  <data name="CrashDumpsDeleteMessageFormat" xml:space="preserve">
+    <value>This deletes {0} selected dump(s) from this PC. You can&apos;t get them back.</value>
+  </data>
+  <data name="CrashDumpsDeleteConfirm" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CrashDumpsDeleteCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CrashDumpsDeleteFailedFormat" xml:space="preserve">
+    <value>Couldn&apos;t delete {0} dump(s). Windows may still be writing one, or it may be open in another app.</value>
+  </data>
+  <data name="CrashDumpsToolName_midisettings" xml:space="preserve">
+    <value>MIDI Settings</value>
+  </data>
+  <data name="CrashDumpsToolName_midiloopbacksetup" xml:space="preserve">
+    <value>MIDI Loopback Setup</value>
+  </data>
+  <data name="CrashDumpsToolName_midinetworksetup" xml:space="preserve">
+    <value>Network MIDI Setup</value>
+  </data>
+  <data name="CrashDumpsToolName_midibluetoothsetup" xml:space="preserve">
+    <value>Bluetooth MIDI Setup</value>
+  </data>
+  <data name="CrashDumpsToolName_midiscratchpad" xml:space="preserve">
+    <value>MIDI Scratch Pad</value>
+  </data>
+  <data name="CrashDumpsToolName_midikeyboard" xml:space="preserve">
+    <value>MIDI Keyboard</value>
+  </data>
+  <data name="CrashDumpsToolName_midiplayer" xml:space="preserve">
+    <value>Windows MIDI Player</value>
+  </data>
+  <data name="CrashDumpsToolName_midiclock" xml:space="preserve">
+    <value>MIDI Clock</value>
+  </data>
+  <data name="CrashDumpsToolName_midisysextool" xml:space="preserve">
+    <value>MIDI SysEx Tool</value>
+  </data>
+  <data name="CrashDumpsToolName_midi2monitor" xml:space="preserve">
+    <value>MIDI Monitor</value>
+  </data>
+  <data name="CrashDumpsToolName_midipatchbay" xml:space="preserve">
+    <value>Windows MIDI Patchbay</value>
+  </data>
+  <data name="CrashDumpsToolName_midiglass" xml:space="preserve">
+    <value>Windows MIDI Glass</value>
+  </data>
+  <data name="CrashDumpsToolName_midisequencer" xml:space="preserve">
+    <value>MIDI Sequencer</value>
+  </data>
+  <data name="CrashDumpsToolName_miditroubleshooter" xml:space="preserve">
+    <value>MIDI Troubleshooting and Repair</value>
+  </data>
+  <data name="CrashDumpsToolName_midinotifications" xml:space="preserve">
+    <value>MIDI Notifications</value>
+  </data>
+  <data name="CrashDumpsToolName_midi" xml:space="preserve">
+    <value>midi console</value>
+  </data>
+  <data name="CrashDumpsToolName_mididiag" xml:space="preserve">
+    <value>mididiag</value>
+  </data>
+  <data name="CrashDumpsToolName_midiksinfo" xml:space="preserve">
+    <value>midiksinfo</value>
+  </data>
+  <data name="CrashDumpsToolName_midi1monitor" xml:space="preserve">
+    <value>midi1monitor</value>
+  </data>
+  <data name="CrashDumpsToolName_midi1rtmonitor" xml:space="preserve">
+    <value>midi1rtmonitor</value>
+  </data>
+  <data name="CrashDumpsToolName_midi1enum" xml:space="preserve">
+    <value>midi1enum</value>
+  </data>
 </root>
