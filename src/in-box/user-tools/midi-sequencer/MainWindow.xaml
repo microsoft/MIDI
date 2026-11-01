@@ -1428,29 +1428,32 @@
               Padding="14,0,14,0"
               BorderThickness="0,1,0,0"
               BorderBrush="{ThemeResource SeqDividerBrush}">
+            <!-- Each piece is centered on its own: in a row with the 22-pixel Devices button, text
+                 left to stretch sits at the top of the row while icons and the button's text sit in
+                 the middle. -->
             <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                    <FontIcon x:Name="ServiceStatusIcon" Glyph="&#xE73E;" FontSize="11" />
-                    <TextBlock x:Name="ServiceStatusText" FontSize="11" />
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                    <FontIcon x:Name="ServiceStatusIcon" Glyph="&#xE73E;" FontSize="11" VerticalAlignment="Center" />
+                    <TextBlock x:Name="ServiceStatusText" FontSize="11" VerticalAlignment="Center" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                    <FontIcon Glyph="&#xE823;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                    <TextBlock x:Name="ClockStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE823;" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock x:Name="ClockStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </StackPanel>
-                <TextBlock x:Name="ClockOutStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="ClockOutStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 <!-- The devices the sequence uses: opens Studio setup, which lists them. -->
                 <Button x:Name="DevicesStatusButton" x:Uid="DevicesStatusButton" Height="22" MinHeight="0" Padding="5,0,5,0" Margin="-5,0,-5,0"
-                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center" Visibility="Collapsed" Click="OnStudioSetupClick">
-                    <TextBlock x:Name="DevicesStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center" VerticalContentAlignment="Center" Visibility="Collapsed" Click="OnStudioSetupClick">
+                    <TextBlock x:Name="DevicesStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center" HorizontalAlignment="Right">
-                <StackPanel x:Name="RecordingStatus" Orientation="Horizontal" Spacing="5" Visibility="Collapsed">
-                    <FontIcon Glyph="&#xE7C8;" FontSize="11" Foreground="{ThemeResource SeqRecordTextBrush}" />
-                    <TextBlock x:Name="RecordingStatusText" FontSize="11" Foreground="{ThemeResource SeqRecordTextBrush}" />
+                <StackPanel x:Name="RecordingStatus" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Visibility="Collapsed">
+                    <FontIcon Glyph="&#xE7C8;" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource SeqRecordTextBrush}" />
+                    <TextBlock x:Name="RecordingStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource SeqRecordTextBrush}" />
                 </StackPanel>
-                <TextBlock x:Name="MessageStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                <TextBlock x:Name="SavedStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="MessageStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="SavedStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
             </StackPanel>
         </Grid>
     </Grid>
