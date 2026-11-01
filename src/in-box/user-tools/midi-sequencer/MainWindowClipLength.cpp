@@ -251,7 +251,8 @@ namespace winrt::midisequencer::implementation
             {
                 if (auto strong = weak.get())
                 {
-                    strong->SetEditorClipLoop(toggled.as<controls::ToggleSwitch>().IsOn());
+                    auto const id = strong->m_editorClipId;
+                    strong->SetClipLoop(id, toggled.as<controls::ToggleSwitch>().IsOn());
                 }
             });
             panel.Children().Append(loop);
@@ -303,11 +304,11 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::SetEditorClipLoop(bool loop) noexcept
+    void MainWindow::SetClipLoop(std::wstring const& clipId, bool loop) noexcept
     {
         try
         {
-            auto const clip = seq::FindClip(m_doc, m_editorClipId);
+            auto const clip = seq::FindClip(m_doc, clipId);
 
             if (clip == nullptr || clip->Loop == loop)
             {

@@ -370,7 +370,7 @@ namespace winrt::midisequencer::implementation
         winrt::fire_and_forget AskHowToResizeClip(_In_ std::vector<seq::Track> before, _In_ std::wstring trackId, _In_ size_t placement, _In_ int64_t length);
         void ApplyClipResize(_In_ std::vector<seq::Track> const& before, _In_ std::wstring const& trackId, _In_ size_t placement, _In_ int64_t length, _In_ bool onlyHere) noexcept;
         void SetEditorClipLength(_In_ int64_t length) noexcept;
-        void SetEditorClipLoop(_In_ bool loop) noexcept;
+        void SetClipLoop(_In_ std::wstring const& clipId, _In_ bool loop) noexcept;
         void AddTagAt(_In_ std::wstring const& trackId, _In_ int64_t tick) noexcept;
         void RenameClip(_In_ std::wstring const& clipId) noexcept;
         void AddScene() noexcept;

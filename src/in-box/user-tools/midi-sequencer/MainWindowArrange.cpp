@@ -3088,6 +3088,23 @@ namespace winrt::midisequencer::implementation
         add(res::GetString(L"MenuDuplicateClip"), L"\uE8C8", [weak]() { if (auto s = weak.get()) { s->DuplicateSelectedPlacement(); } });
         add(res::GetString(L"MenuMakeUnique"), L"\uE71B", [weak, trackId, placement]() { if (auto s = weak.get()) { s->MakePlacementUnique(trackId, placement); } }, uses > 1);
 
+        // Whether dragging its end repeats it or makes the clip itself longer (#1326): the same
+        // as Loop in the clip editor's length, here so it's easy to find.
+        if (auto const clip = seq::FindClip(m_doc, clipId); clip != nullptr && clip->Kind == seq::ClipKind::Notes)
+        {
+            for (auto const loop : { true, false })
+            {
+                controls::RadioMenuFlyoutItem item{};
+                item.Text(res::GetString(loop ? L"MenuClipLoop" : L"MenuClipLinear"));
+                item.GroupName(L"ClipLoop");
+                item.IsChecked(clip->Loop == loop);
+                item.Click([weak, clipId, loop](auto&&, auto&&) { if (auto s = weak.get()) { s->SetClipLoop(clipId, loop); } });
+                menu.Items().Append(item);
+            }
+        }
+
+        menu.Items().Append(controls::MenuFlyoutSeparator{});
+
         // Split where it was right-clicked, on the snap grid when that's still inside the clip.
         if (tick >= 0)
         {
