@@ -96,6 +96,8 @@ namespace themeengine
             _In_ PaintRect const& shape);
 
         std::unordered_map<std::wstring, NineSlice> m_shadows{};
+        std::unordered_map<std::wstring, winrt::Microsoft::Graphics::Canvas::Brushes::ICanvasBrush> m_gradients{};
+        winrt::Microsoft::Graphics::Canvas::CanvasDevice m_gradientDevice{ nullptr };
         float m_dpi{ 0 };
         winrt::Microsoft::Graphics::Canvas::CanvasDevice m_device{ nullptr };
     };
