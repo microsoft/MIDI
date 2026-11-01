@@ -257,6 +257,7 @@
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowRecordPlayed.cpp" />
     <ClCompile Include="MainWindowLaunchState.cpp" />
+    <ClCompile Include="MainWindowClipLength.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="MainWindowClipEdits.cpp" />
     <ClCompile Include="MainWindowGhostNotes.cpp" />

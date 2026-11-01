@@ -1145,10 +1145,17 @@
                         <TextBlock x:Name="EditorKindChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </Grid>
 
+                    <!-- Opens the clip's length and loop settings (MainWindowClipLength.cpp). -->
                     <Grid x:Name="EditorLengthChipFrame" Height="22" VerticalAlignment="Center">
                         <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
                                    Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
-                        <TextBlock x:Name="EditorLengthChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <Button x:Name="EditorLengthButton" x:Uid="EditorLengthButton" Height="22" MinHeight="0" Padding="9,0,7,0"
+                                Background="Transparent" BorderThickness="0" CornerRadius="11" VerticalAlignment="Center" Click="OnEditorLengthClick">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock x:Name="EditorLengthChip" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="8" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Button>
                     </Grid>
 
                     <Grid x:Name="EditorUsesChip" Height="22" VerticalAlignment="Center">

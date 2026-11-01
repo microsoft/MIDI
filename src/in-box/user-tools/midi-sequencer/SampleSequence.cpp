@@ -66,6 +66,9 @@ namespace midisequencer
             auto clip = MakeNotesClip(name, length);
             clip.Origin = ClipOrigin::Drawn;
             clip.Seed = seed;
+
+            // The sample's grooves repeat across longer placements.
+            clip.Loop = true;
             return clip;
         }
 

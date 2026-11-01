@@ -97,6 +97,7 @@ namespace winrt::midisequencer::implementation
         void OnSnapChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnCaptureClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnBackToTimelineClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorLengthClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSilenceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnUndoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRedoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -361,6 +362,15 @@ namespace winrt::midisequencer::implementation
         void DeleteSelectedPlacement() noexcept;
         void DuplicateSelectedPlacement() noexcept;
         void MakePlacementUnique(_In_ std::wstring const& trackId, _In_ size_t placement) noexcept;
+
+        // A clip's own length and whether it loops (MainWindowClipLength.cpp, #1326). Dragging the
+        // end of a clip that doesn't loop changes the clip; when it plays elsewhere too, the person
+        // is asked whether to change only this one, as its own copy, or all of them.
+        bool FinishClipResize(_In_ std::vector<seq::Track> before) noexcept;
+        winrt::fire_and_forget AskHowToResizeClip(_In_ std::vector<seq::Track> before, _In_ std::wstring trackId, _In_ size_t placement, _In_ int64_t length);
+        void ApplyClipResize(_In_ std::vector<seq::Track> const& before, _In_ std::wstring const& trackId, _In_ size_t placement, _In_ int64_t length, _In_ bool onlyHere) noexcept;
+        void SetEditorClipLength(_In_ int64_t length) noexcept;
+        void SetEditorClipLoop(_In_ bool loop) noexcept;
         void AddTagAt(_In_ std::wstring const& trackId, _In_ int64_t tick) noexcept;
         void RenameClip(_In_ std::wstring const& clipId) noexcept;
         void AddScene() noexcept;

@@ -782,7 +782,10 @@ namespace midisequencer
         clip.Kind = ClipKind::Notes;
         clip.Name = std::move(name);
         clip.Length = std::max<int64_t>(1, length);
-        clip.Loop = true;
+
+        // Dragging its end makes the clip itself longer (#1326). Loop, in the clip editor's length
+        // chip, makes it repeat instead.
+        clip.Loop = false;
         clip.Seed = NewSeed();
         clip.Origin = ClipOrigin::Drawn;
         return clip;

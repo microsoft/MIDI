@@ -4764,4 +4764,43 @@
   <data name="MidiServiceUnavailableClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="EditorLengthButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Clip length</value>
+  </data>
+  <data name="EditorLengthButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Change how long the clip is, and whether it repeats</value>
+  </data>
+  <data name="ClipLengthBars" xml:space="preserve">
+    <value>Bars</value>
+  </data>
+  <data name="ClipLengthBeats" xml:space="preserve">
+    <value>Beats</value>
+  </data>
+  <data name="ClipLoopSwitch" xml:space="preserve">
+    <value>Loop</value>
+  </data>
+  <data name="ClipLoopHelp" xml:space="preserve">
+    <value>On: dragging the clip's end on the timeline repeats it. Off: dragging its end makes the clip itself longer or shorter.</value>
+  </data>
+  <data name="UndoClipLoop" xml:space="preserve">
+    <value>Turn clip looping on or off</value>
+  </data>
+  <data name="ClipResizeSharedTitle" xml:space="preserve">
+    <value>Change every place this clip plays?</value>
+  </data>
+  <data name="ClipResizeSharedBodyFormat" xml:space="preserve">
+    <value>{0} plays in {1} places, and they all share its notes. You can change only this one, which makes it a separate copy, or change the clip everywhere it plays.</value>
+  </data>
+  <data name="ClipResizeOnlyThis" xml:space="preserve">
+    <value>Only this one</value>
+  </data>
+  <data name="ClipResizeAll" xml:space="preserve">
+    <value>Everywhere</value>
+  </data>
+  <data name="ClipResizeCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ClipNowSeparateFormat" xml:space="preserve">
+    <value>{0} is now a separate clip. Changes to it no longer change the others.</value>
+  </data>
 </root>

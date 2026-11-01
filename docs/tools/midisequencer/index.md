@@ -119,6 +119,8 @@ To move a clip, drag it to another time, another track, or another launcher slot
 
 To cut a clip in two, select the razor (the scissors above the tracks), then select the clip where you want the cut. The cut lands on the grid. Press Esc or select the scissors again to put the razor away. You can also right-click a clip and select **Split here**. To join clips, select one, hold Ctrl and select the others on the same track, then right-click and select **Merge clips**. They become one clip, with the same gaps between them.
 
+To make a clip longer or shorter, drag its right end. What happens depends on **Loop**. With Loop off, the clip itself gets longer, with empty bars to draw in, or shorter. With Loop on, the clip repeats to fill the space you drag out. To set Loop, or to type an exact length in bars and beats, select the length (like **4 bars**) at the top of the clip editor. New notes clips on the timeline start with Loop off, and clips you make in the launcher start with it on. If a clip with Loop off plays in more than one place, the sequencer asks whether to change only the one you dragged or every place it plays. Changing only one makes it a separate copy, with "(copy)" added to its name. It loses the link mark that shared clips show, so changing it no longer changes the others.
+
 ### Start a pattern from a template
 
 Not sure where to start? **Templates**, at the top of a pattern, has starter patterns, like the presets on a drum machine.

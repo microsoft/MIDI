@@ -2744,6 +2744,13 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            // A clip that doesn't loop takes the new length itself (MainWindowClipLength.cpp).
+            if (FinishClipResize(m_dragTracksBefore))
+            {
+                m_dragTracksBefore.clear();
+                return;
+            }
+
             // The tracks as they were when the drag began, and as they are now.
             seq::ChangeList changes{};
             changes.push_back(seq::MakeTracksChange(std::move(m_dragTracksBefore), m_doc.Tracks));
@@ -3772,6 +3779,9 @@ namespace winrt::midisequencer::implementation
             auto clip = generator.has_value() ? seq::MakeGeneratorClip(NextClipName(generatorName), *generator, melody ? 2 * length : length) :
                 pattern.has_value() ? seq::MakePatternClip(NextClipName(L"DefaultPatternName"), *pattern) : seq::MakeNotesClip(NextClipName(), length);
             clip.Origin = generator.has_value() ? seq::ClipOrigin::Generated : seq::ClipOrigin::Drawn;
+
+            // A clip made in the launcher goes round while it's launched, as launcher clips do.
+            clip.Loop = true;
 
             if (clip.Pattern.has_value())
             {

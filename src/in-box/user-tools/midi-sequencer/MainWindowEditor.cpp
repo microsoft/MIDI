@@ -246,6 +246,9 @@ namespace winrt::midisequencer::implementation
             PatternTemplatesButton().Visibility(visible(pattern));
             EditorLengthChipFrame().Visibility(visible(!generator));
 
+            // A pattern's length comes from its steps, so only a notes clip's opens to change.
+            EditorLengthButton().IsEnabled(!pattern);
+
             // An arpeggiator's rate sits with its octaves and note length instead (comp 4).
             auto const arpeggiator = generator && clip->Generator->Type == seq::GeneratorType::Arpeggiator;
             GeneratorStepSizeText().Visibility(visible(!arpeggiator));
