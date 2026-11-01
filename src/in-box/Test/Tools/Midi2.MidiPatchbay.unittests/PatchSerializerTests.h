@@ -26,6 +26,7 @@ public:
     TEST_METHOD(ANoteMapEntryThatCannotBeKeptIsReported);
     TEST_METHOD(AMutedConnectionStaysMuted);
     TEST_METHOD(LinksToMissingThingsAreLeftOut);
+    TEST_METHOD(OneGroupOfAnEndpointIntoAnotherSurvivesTheFile);
     TEST_METHOD(AnUnknownBlockIsLeftOutWithItsLinks);
     TEST_METHOD(TextThatIsNotAPatchIsRejected);
     TEST_METHOD(RemovingABlockRemovesItsLinks);

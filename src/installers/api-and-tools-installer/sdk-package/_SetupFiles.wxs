@@ -51,6 +51,9 @@
       <Component Id="c83B99D1974BEF4C7" Guid="b629a7fc-7196-5e85-902a-273b2234c945" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiclock.pri -->
         <File Id="f83B99D1974BEF4C7" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiclock.pri" Vital="true" />
       </Component>
+      <Component Id="cFFC43BC6AB719F36" Guid="6db99e78-2456-5d29-83ab-fb28be44822a" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midicrashhandler.dll -->
+        <File Id="MidiCrashHandlerDll" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicrashhandler.dll" Vital="true" />
+      </Component>
       <Component Id="c45719FF01C9186EF" Guid="b912acd5-c379-5635-9b68-f07c610e61d5" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- mididiag.exe -->
         <File Id="MidiDiagExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" />
       </Component>

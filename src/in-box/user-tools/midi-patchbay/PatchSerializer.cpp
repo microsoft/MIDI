@@ -507,8 +507,7 @@ namespace midipatchbay
 
                 // a link to something the file does not contain would draw from nowhere, so it
                 // is left out rather than half drawn
-                if (connection.SourceId == connection.DestinationId ||
-                    !patch.HasNode(connection.SourceId) ||
+                if (!patch.HasNode(connection.SourceId) ||
                     !patch.HasNode(connection.DestinationId))
                 {
                     continue;
@@ -553,6 +552,14 @@ namespace midipatchbay
                 connection.DestinationGroupIndex = patch.IsBlock(connection.DestinationId)
                     ? AllGroups
                     : ReadGroupIndex(item, KeyDestinationGroup);
+
+                // A step can't feed itself, and neither can one group of an endpoint. One group
+                // of an endpoint into another group of the same endpoint is a real routing.
+                if (connection.SourceId == connection.DestinationId &&
+                    (sourceBlock != nullptr || connection.SourceGroupIndex == connection.DestinationGroupIndex))
+                {
+                    continue;
+                }
 
                 if (patch.HasConnection(
                     connection.SourceId, connection.SourceGroupIndex,
