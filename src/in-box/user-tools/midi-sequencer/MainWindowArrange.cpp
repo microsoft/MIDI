@@ -2371,8 +2371,9 @@ namespace winrt::midisequencer::implementation
 
             auto const top = static_cast<float>(row->Top - (pinned ? 0.0 : m_scrollY));
 
-            // A launched clip covers the lane, with a button to go back.
-            if (auto view = m_launchViews.find(row->TrackId); view != m_launchViews.end() && view->second.Mode == seq::TrackPlayMode::Clip)
+            // A track playing a launched clip, or stopped from the launcher, has its lane covered,
+            // with a button to go back. Both draw the button (ArrangeRenderer), so both take it.
+            if (auto view = m_launchViews.find(row->TrackId); view != m_launchViews.end() && view->second.Mode != seq::TrackPlayMode::Timeline)
             {
                 auto const bounds = m_renderer.BackToTimelineButtonBounds(top, static_cast<float>(row->Height));
 
