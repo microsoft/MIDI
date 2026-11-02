@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "PianoRoll.h"
+#include "PixelSnap.h"
 
 using winrt::Windows::Foundation::Point;
 using winrt::Windows::Foundation::Rect;
@@ -874,8 +875,11 @@ namespace midisequencer
 
             if (m_playhead >= 0)
             {
-                auto const x = static_cast<float>(XAtTick(static_cast<double>(m_playhead)));
-                ds.FillRectangle(x, RollTop(), 1.5f, RollBottom() - RollTop(), colors.Playhead);
+                // On whole physical pixels, so it keeps its width as it moves (PixelSnap.h).
+                auto const scale = ds.Dpi() / 96.0f;
+                auto const lineWidth = WholePixels(1.5f, scale);
+                auto const x = SnapToPixel(static_cast<float>(XAtTick(static_cast<double>(m_playhead))), scale);
+                ds.FillRectangle(x, RollTop(), lineWidth, RollBottom() - RollTop(), colors.Playhead);
             }
 
             layer.Close();

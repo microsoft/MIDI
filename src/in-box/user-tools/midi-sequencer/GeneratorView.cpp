@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "GeneratorView.h"
+#include "PixelSnap.h"
 
 #include "SequenceGenerator.h"
 
@@ -301,7 +302,10 @@ namespace midisequencer
 
         if (playhead >= 0 && playhead <= ticks)
         {
-            ds.FillRectangle(x(playhead) - 0.75f, 0, 1.5f, height, colors.Playhead);
+            // On whole physical pixels, so it keeps its width as it moves (PixelSnap.h).
+            auto const scale = ds.Dpi() / 96.0f;
+            auto const lineWidth = WholePixels(1.5f, scale);
+            ds.FillRectangle(SnapToPixel(x(playhead) - lineWidth / 2.0f, scale), 0, lineWidth, height, colors.Playhead);
         }
     }
 }

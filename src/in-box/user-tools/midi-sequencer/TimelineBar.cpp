@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "TimelineBar.h"
+#include "PixelSnap.h"
 #include "TimelineBarHost.h"
 #include "ThemeCanvas.h"
 
@@ -897,7 +898,10 @@ namespace midisequencer
 
             if (model.Playhead >= 0)
             {
-                ds.FillRectangle(x(static_cast<double>(model.Playhead)) - 0.75f, track.Y, 1.5f, track.Height, playheadColor);
+                // On whole physical pixels, so it keeps its width as it moves (PixelSnap.h).
+                auto const scale = ds.Dpi() / 96.0f;
+                auto const lineWidth = WholePixels(1.5f, scale);
+                ds.FillRectangle(SnapToPixel(x(static_cast<double>(model.Playhead)) - lineWidth / 2.0f, scale), track.Y, lineWidth, track.Height, playheadColor);
             }
 
             // what's outside the view, veiled

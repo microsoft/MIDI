@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
+#include "PixelSnap.h"
 
 #include "GeneratorNames.h"
 #include "HarmonyFollow.h"
@@ -1824,11 +1825,16 @@ namespace winrt::midisequencer::implementation
             PlayheadLine().Visibility(xaml::Visibility::Visible);
             PlayheadMarker().Visibility(xaml::Visibility::Visible);
 
+            // On whole physical pixels, so the line keeps its width and brightness as it moves.
+            auto const scale = Content().XamlRoot() != nullptr ? Content().XamlRoot().RasterizationScale() : 1.0;
+            auto const lineWidth = seq::WholePixels(1.5, scale);
+
+            PlayheadLine().Width(lineWidth);
             PlayheadLine().Height(std::max(0.0, PlayheadLayer().ActualHeight()));
-            controls::Canvas::SetLeft(PlayheadLine(), x - 0.75);
+            controls::Canvas::SetLeft(PlayheadLine(), seq::SnapToPixel(x - lineWidth / 2.0, scale));
             controls::Canvas::SetTop(PlayheadLine(), 0);
 
-            controls::Canvas::SetLeft(PlayheadMarker(), x - 5.5);
+            controls::Canvas::SetLeft(PlayheadMarker(), seq::SnapToPixel(x - 5.5, scale));
             controls::Canvas::SetTop(PlayheadMarker(), 24);
         }
         catch (...)

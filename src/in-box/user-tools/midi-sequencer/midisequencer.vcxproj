@@ -178,6 +178,7 @@
     <ClInclude Include="HarmonySuggest.h" />
     <ClInclude Include="HarmonyFollow.h" />
     <ClInclude Include="HarmonySong.h" />
+    <ClInclude Include="PixelSnap.h" />
     <ClInclude Include="SequenceProvenance.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
