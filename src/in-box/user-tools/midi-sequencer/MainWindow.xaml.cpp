@@ -176,9 +176,7 @@ namespace winrt::midisequencer::implementation
                 ShowMixer(true);
             }
 
-            m_frameTimer = xaml::DispatcherTimer{};
-            m_frameTimer.Interval(FrameInterval);
-            m_frameTimer.Tick([weak = get_weak()](auto&&, auto&&)
+            m_frames = std::make_unique<midiapp::FrameTicker>(DispatcherQueue(), std::chrono::duration_cast<std::chrono::microseconds>(FrameInterval), [weak = get_weak()]()
             {
                 if (auto strong = weak.get())
                 {
@@ -939,7 +937,7 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            if (m_frameTimer != nullptr) { StopFrames(); }
+            StopFrames();
             if (m_serviceTimer != nullptr) { m_serviceTimer.Stop(); }
             if (m_autosaveTimer != nullptr) { m_autosaveTimer.Stop(); }
 

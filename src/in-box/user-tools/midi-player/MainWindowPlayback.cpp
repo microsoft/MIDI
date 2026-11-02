@@ -2006,15 +2006,11 @@ namespace winrt::midiplayer::implementation
     {
         try
         {
-            if (m_positionTimer == nullptr)
+            if (m_positionTicker == nullptr)
             {
-                m_positionTimer = xaml::DispatcherTimer{};
-
                 // Fast enough for the notes to scroll smoothly. The text only changes when the
                 // displayed second does, so the extra ticks cost almost nothing.
-                m_positionTimer.Interval(std::chrono::milliseconds{ 33 });
-
-                m_positionTimer.Tick([weak = get_weak()](auto&&, auto&&)
+                m_positionTicker = std::make_unique<midiapp::FrameTicker>(DispatcherQueue(), std::chrono::milliseconds{ 33 }, [weak = get_weak()]()
                     {
                         if (auto strong = weak.get())
                         {
@@ -2023,21 +2019,17 @@ namespace winrt::midiplayer::implementation
                     });
             }
 
-            m_positionTimer.Start();
+            m_positionTicker->Start();
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to start the position timer.")
     }
 
     void MainWindow::StopPositionTimer() noexcept
     {
-        try
+        if (m_positionTicker != nullptr)
         {
-            if (m_positionTimer != nullptr)
-            {
-                m_positionTimer.Stop();
-            }
+            m_positionTicker->Stop();
         }
-        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to stop the position timer.")
     }
 
     void MainWindow::UpdatePositionDisplay() noexcept

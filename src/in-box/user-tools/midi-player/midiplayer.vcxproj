@@ -156,6 +156,7 @@
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
+    <ClInclude Include="..\midi-app-shared\FrameTicker.h" />
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="MainWindowEmptyState.cpp" />
     <ClCompile Include="MainWindowGmReset.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\FrameTicker.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />

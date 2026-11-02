@@ -2235,30 +2235,19 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
-            // The system timer's finest period while frames are drawn, so they come evenly.
-            // Counted by the SDK, so it's shared with anything else in the process that asks.
-            if (!m_finePeriodHeld)
+            if (m_frames != nullptr)
             {
-                m_finePeriodHeld = midi2::MidiClock::BeginLowLatencySystemTimerPeriod();
+                m_frames->Start();
             }
-
-            m_frameTimer.Start();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start drawing frames.")
     }
 
     void MainWindow::StopFrames() noexcept
     {
-        try
+        if (m_frames != nullptr)
         {
-            m_frameTimer.Stop();
-
-            if (m_finePeriodHeld)
-            {
-                m_finePeriodHeld = false;
-                midi2::MidiClock::EndLowLatencySystemTimerPeriod();
-            }
+            m_frames->Stop();
         }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to stop drawing frames.")
     }
 }

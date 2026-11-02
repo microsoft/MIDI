@@ -44,7 +44,7 @@ namespace winrt::midisequencer::implementation
             InvalidateLaunchers();
             InvalidateArrange();
 
-            if (m_engine != nullptr && m_engine->IsPlaying() && m_frameTimer != nullptr)
+            if (m_engine != nullptr && m_engine->IsPlaying() && m_frames != nullptr)
             {
                 StartFrames();
             }

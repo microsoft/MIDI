@@ -179,6 +179,7 @@
     <ClInclude Include="HarmonyFollow.h" />
     <ClInclude Include="HarmonySong.h" />
     <ClInclude Include="PixelSnap.h" />
+    <ClInclude Include="..\midi-app-shared\FrameTicker.h" />
     <ClInclude Include="SequenceProvenance.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -268,6 +269,7 @@
     <ClCompile Include="MainWindowChordSuggest.cpp" />
     <ClCompile Include="MainWindowChordFollow.cpp" />
     <ClCompile Include="MainWindowChordAssistant.cpp" />
+    <ClCompile Include="..\midi-app-shared\FrameTicker.cpp" />
     <ClCompile Include="ArrangeRendererHarmony.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="MainWindowClipEdits.cpp" />
