@@ -80,4 +80,18 @@ namespace midisequencer
     // (ChordNotes), at the velocity given, on channel 1. Its name is left empty. Empty chords give
     // an empty clip a bar long.
     Clip ChordsAsNotes(_In_ std::vector<ChordEvent> const& chords, _In_ uint16_t velocity);
+
+    // ---- Find key (proposal section 4) ----
+
+    struct KeyCandidate
+    {
+        KeyChange Key{};            // major or natural minor
+        double Score{ 0.0 };        // how well the notes fit it, -1 to 1
+    };
+
+    // The most likely keys for some notes, best first, by matching how long each note name sounds
+    // against the typical shape of each major and minor key (Krumhansl and Schmuckler's key
+    // profiles). At most count of them. Nothing when there are no notes, or every note name
+    // sounds equally long, so there's no telling.
+    std::vector<KeyCandidate> FindKeys(_In_ std::vector<Note> const& notes, _In_ size_t count);
 }

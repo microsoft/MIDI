@@ -627,6 +627,10 @@ namespace winrt::midisequencer::implementation
         // Follow key on a notes clip or a melodic pattern: turning it on records the key the
         // notes are written in, the song's key where the clip is first placed.
         void SetClipFollowsKey(_In_ std::wstring const& clipId, _In_ bool on) noexcept;
+
+        // Find key on a clip's menu: puts the picked key on the Key and chords row where the clip
+        // starts, showing the row if needed. One undo step.
+        void UseFoundKey(_In_ int64_t tick, _In_ seq::KeyChange key) noexcept;
         void AddKeyRules(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
 
         // How loud it plays: the ways it can set each note's velocity, and the range they play in

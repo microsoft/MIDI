@@ -3151,6 +3151,41 @@ namespace winrt::midisequencer::implementation
             }
         }
 
+        // Find key (Key and chords proposal, section 4): the likeliest keys for the clip's notes.
+        // Nothing changes unless one is picked.
+        if (auto const clip = seq::FindClip(m_doc, clipId); clip != nullptr && !clip->Notes.empty() &&
+            (clip->Kind == seq::ClipKind::Notes || (clip->Kind == seq::ClipKind::Pattern && clip->Pattern.has_value() && clip->Pattern->Mode == seq::PatternMode::Melodic)))
+        {
+            auto const found = seq::FindKeys(clip->Notes, 3);
+
+            if (!found.empty())
+            {
+                controls::MenuFlyoutSubItem findKey{};
+                findKey.Text(res::GetString(L"MenuFindKey"));
+                controls::FontIcon icon{};
+                icon.Glyph(L"\uE8D6");
+                findKey.Icon(icon);
+
+                auto const at = track->Timeline[placement].Tick;
+
+                for (size_t i = 0; i < found.size(); ++i)
+                {
+                    auto const key = found[i].Key;
+                    auto const name = std::wstring{ KeyDisplayName(key) };
+
+                    controls::MenuFlyoutItem choice{};
+                    choice.Text(i == 0 ? res::FormatString(L"MenuFindKeyLikeliestFormat", name) : winrt::hstring{ name });
+                    choice.Click([weak, at, key](auto&&, auto&&) { if (auto s = weak.get()) { s->UseFoundKey(at, key); } });
+                    findKey.Items().Append(choice);
+                }
+
+                auto const tip = res::GetString(L"MenuFindKeyHelp");
+                controls::ToolTipService::SetToolTip(findKey, winrt::box_value(tip));
+                automation::AutomationProperties::SetHelpText(findKey, tip);
+                menu.Items().Append(findKey);
+            }
+        }
+
         menu.Items().Append(controls::MenuFlyoutSeparator{});
 
         // Split where it was right-clicked, on the snap grid when that's still inside the clip.

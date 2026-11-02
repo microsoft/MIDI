@@ -31,5 +31,6 @@ public:
     TEST_METHOD(ChordsBecomeNotes);
     TEST_METHOD(KeySignatures);
     TEST_METHOD(StandardMidiFileKeysRoundTrip);
+    TEST_METHOD(FindsTheKey);
     TEST_METHOD(SettingsRoundTrip);
 };

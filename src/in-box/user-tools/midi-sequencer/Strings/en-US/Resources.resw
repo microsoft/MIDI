@@ -5219,6 +5219,23 @@
   <data name="SongPromptRequest" xml:space="preserve">
     <value>Here's what I have in mind:</value>
   </data>
+  <data name="MenuFindKey" xml:space="preserve">
+    <value>Find key</value>
+  </data>
+  <data name="MenuFindKeyLikeliestFormat" xml:space="preserve">
+    <value>{0} (most likely)</value>
+    <comment>{0} is a key, like "A minor".</comment>
+  </data>
+  <data name="MenuFindKeyHelp" xml:space="preserve">
+    <value>The keys these notes most likely belong to. Pick one to put it on the Key and chords row where this clip starts.</value>
+  </data>
+  <data name="UndoFindKey" xml:space="preserve">
+    <value>Find key</value>
+  </data>
+  <data name="FoundKeyFormat" xml:space="preserve">
+    <value>The Key and chords row is in {0} from here.</value>
+    <comment>{0} is a key, like "A minor".</comment>
+  </data>
   <data name="SongProblemMeterChangesInside" xml:space="preserve">
     <value>The sequence changes meter inside where the song would go. Put it where the meter stays the same, or ask the assistant for a song that fits before the change.</value>
   </data>

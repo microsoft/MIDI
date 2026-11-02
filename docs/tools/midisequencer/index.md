@@ -265,6 +265,10 @@ An AI assistant can write the chords and the sections for a whole song with you.
 
 The assistant writes the key, the chords and the sections, nothing else. Each section becomes a tag on **Tempo and meter**, colored by its kind, such as Verse or Chorus. To hear the chords, turn on **Play chords**, or set generators to **Song key**. Windows MIDI Sequencer never sends anything to an assistant itself. If you'd rather not see it, turn off **AI assistant** in Settings. Assistants follow the [guide for AI assistants]({{ site.baseurl }}/kb/midi-sequencer-key-and-chords-for-agents/).
 
+### Find the key
+
+Not sure what key a part is in? Right-click a notes clip or a melodic pattern on the timeline and point to **Find key**. You see the three keys its notes most likely belong to, the most likely first. It works out which notes sound longest and matches them to the typical shape of each key. Pick one to put it on the Key and chords row where the clip starts. Nothing changes unless you pick one.
+
 ### Chords to notes
 
 To turn the chords into notes you can edit, right-click the row and select **Copy chords to new track**. You get a new track on **Default output** with one clip that holds every chord, each for its length, around middle C with the bass note an octave below. After that it's ordinary notes: changing a chord later doesn't change the clip.

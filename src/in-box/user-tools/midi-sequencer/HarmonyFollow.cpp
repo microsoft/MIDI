@@ -18,7 +18,9 @@
 #undef GetObject
 
 #include <algorithm>
+#include <array>
 #include <climits>
+#include <cmath>
 #include <cstdlib>
 
 namespace midisequencer
@@ -321,6 +323,70 @@ namespace midisequencer
 
         clip.Length = end - start;
         return clip;
+    }
+
+    _Use_decl_annotations_
+    std::vector<KeyCandidate> FindKeys(std::vector<Note> const& notes, size_t count)
+    {
+        // Krumhansl and Kessler's ratings of how well each note fits a key, from its root up.
+        static constexpr std::array<double, 12> MajorProfile{ 6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88 };
+        static constexpr std::array<double, 12> MinorProfile{ 6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17 };
+
+        std::array<double, 12> durations{};
+
+        for (auto const& note : notes)
+        {
+            durations[note.Number % 12] += static_cast<double>(std::max<int64_t>(1, note.Length));
+        }
+
+        auto const correlate = [&durations](std::array<double, 12> const& profile, uint8_t root)
+        {
+            double meanX{ 0 };
+            double meanY{ 0 };
+
+            for (size_t i = 0; i < 12; ++i)
+            {
+                meanX += durations[(root + i) % 12];
+                meanY += profile[i];
+            }
+
+            meanX /= 12.0;
+            meanY /= 12.0;
+
+            double top{ 0 };
+            double sumX{ 0 };
+            double sumY{ 0 };
+
+            for (size_t i = 0; i < 12; ++i)
+            {
+                auto const x = durations[(root + i) % 12] - meanX;
+                auto const y = profile[i] - meanY;
+                top += x * y;
+                sumX += x * x;
+                sumY += y * y;
+            }
+
+            return sumX <= 0.0 || sumY <= 0.0 ? 0.0 : top / std::sqrt(sumX * sumY);
+        };
+
+        auto const spread = std::any_of(durations.begin(), durations.end(), [&durations](double d) { return d != durations[0]; });
+
+        if (notes.empty() || !spread || count == 0)
+        {
+            return {};
+        }
+
+        std::vector<KeyCandidate> candidates{};
+
+        for (uint8_t root = 0; root < 12; ++root)
+        {
+            candidates.push_back(KeyCandidate{ KeyChange{ 0, root, ScaleKind::Major }, correlate(MajorProfile, root) });
+            candidates.push_back(KeyCandidate{ KeyChange{ 0, root, ScaleKind::NaturalMinor }, correlate(MinorProfile, root) });
+        }
+
+        std::stable_sort(candidates.begin(), candidates.end(), [](KeyCandidate const& a, KeyCandidate const& b) { return a.Score > b.Score; });
+        candidates.resize(std::min(count, candidates.size()));
+        return candidates;
     }
 
     _Use_decl_annotations_

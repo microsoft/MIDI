@@ -205,6 +205,29 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::UseFoundKey(int64_t tick, seq::KeyChange key) noexcept
+    {
+        try
+        {
+            auto const before = m_doc.Harmony;
+            auto after = m_doc.Harmony.value_or(seq::HarmonyTrack{});
+            after.Hidden = false;
+
+            key.Tick = std::max<int64_t>(0, tick);
+            std::erase_if(after.Keys, [&key](seq::KeyChange const& existing) { return existing.Tick == key.Tick; });
+            after.Keys.push_back(key);
+            seq::NormalizeHarmony(after);
+
+            seq::ChangeList changes{};
+            changes.push_back(seq::MakeHarmonyChange(before, after));
+            m_doc.Harmony = std::move(after);
+            Commit(std::wstring{ res::GetString(L"UndoFindKey") }, std::move(changes));
+            ShowMessage(res::FormatString(L"FoundKeyFormat", std::wstring{ KeyDisplayName(key) }));
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to use the key found.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::SetClipFollowsKey(std::wstring const& clipId, bool on) noexcept
     {
         try

@@ -509,6 +509,52 @@ void HarmonyFollowTests::StandardMidiFileKeysRoundTrip()
     VERIFY_IS_FALSE(ImportStandardMidiFile(plain, L"plain.mid").Harmony.has_value());
 }
 
+void HarmonyFollowTests::FindsTheKey()
+{
+    // A G major scale up and down, with G and D held longest.
+    std::vector<Note> notes{};
+    int64_t tick{ 0 };
+
+    for (auto const number : { 67, 69, 71, 72, 74, 76, 78, 79, 74, 71, 67 })
+    {
+        auto note = MakeNote(tick, static_cast<uint8_t>(number));
+        note.Length = (number % 12 == G || number % 12 == D) ? Beat * 2 : Beat;
+        notes.push_back(note);
+        tick += note.Length;
+    }
+
+    auto const found = FindKeys(notes, 3);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, found.size());
+    VERIFY_IS_TRUE((found[0].Key == KeyChange{ 0, G, ScaleKind::Major }));
+    VERIFY_IS_TRUE(found[0].Score >= found[1].Score && found[1].Score >= found[2].Score);
+
+    // A minor: A, C and E held, with G♯ leading back.
+    std::vector<Note> minor{};
+    tick = 0;
+
+    for (auto const number : { 57, 60, 64, 69, 68, 69, 64, 60, 57 })
+    {
+        auto note = MakeNote(tick, static_cast<uint8_t>(number));
+        note.Length = number % 12 == A ? Beat * 3 : Beat;
+        minor.push_back(note);
+        tick += note.Length;
+    }
+
+    VERIFY_IS_TRUE((FindKeys(minor, 1).front().Key == KeyChange{ 0, A, ScaleKind::NaturalMinor }));
+
+    // Nothing to tell from.
+    VERIFY_IS_TRUE(FindKeys({}, 3).empty());
+
+    std::vector<Note> chromatic{};
+
+    for (int i = 0; i < 12; ++i)
+    {
+        chromatic.push_back(MakeNote(i * Beat, static_cast<uint8_t>(60 + i)));
+    }
+
+    VERIFY_IS_TRUE(FindKeys(chromatic, 3).empty());
+}
+
 void HarmonyFollowTests::SettingsRoundTrip()
 {
     Sequence original{};
