@@ -299,7 +299,7 @@ For each device and group, choose whether the sequencer uses it. A group that on
 - **Play to** sends the group its notes and anything else it gets. Turn it off, and the sequencer sends nothing to that group, not even the clock. A device the sequencer uses for nothing else isn't even opened.
 - **Record from** listens to what the group sends. Turn it off, and the sequencer ignores that group, including its clock.
 
-Then choose what else each group it plays to gets:
+Then choose what else each group it plays to gets. All of these start off, so a device gets only notes until you turn them on. Only turn on what a device uses: a synth that plays only the notes it's sent, such as the General MIDI Synth, doesn't need the clock.
 
 - **Clock** sends MIDI clock, so the device keeps time with the sequence.
 - **Start/Stop** starts, stops and continues the device with the sequence.
@@ -309,7 +309,7 @@ Then choose what else each group it plays to gets:
 
 To see what a group sends, select the eye on its row. That opens Windows MIDI Monitor on that device and group. MIDI Monitor only listens, so it sends the device nothing.
 
-These choices belong to the PC, not the sequence, so every sequence that uses a device gives it the same. To send the clock to a device no track plays to, such as a drum machine that plays its own pattern, select **Add device**. **Other MIDI devices on this PC** lists every other device, so you can look at what any of them is, or watch what it sends.
+These choices belong to the PC, not the sequence, so every sequence that uses a device gives it the same. To send the clock to a device no track plays to, such as a drum machine that plays its own pattern, select **Add device**, pick the device, and turn on what it should get. **Other MIDI devices on this PC** lists every other device, so you can look at what any of them is, or watch what it sends.
 
 ### A device that stops working when an app talks to it
 

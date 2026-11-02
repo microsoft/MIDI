@@ -25,12 +25,14 @@ namespace midisequencer
         std::wstring EndpointId{};
         std::wstring EndpointName{};
         uint8_t Group{ 0 };
-        bool Clock{ true };
-        bool StartStop{ true };
-        bool SongPosition{ true };
+
+        // Nothing is sent until it's chosen in Studio setup.
+        bool Clock{ false };
+        bool StartStop{ false };
+        bool SongPosition{ false };
 
         // A MIDI 2.0 Set Tempo message at each change. Only sent to a group that speaks MIDI 2.0.
-        bool Tempo{ true };
+        bool Tempo{ false };
 
         // Positive sends later, negative sends earlier.
         int32_t OffsetMilliseconds{ 0 };

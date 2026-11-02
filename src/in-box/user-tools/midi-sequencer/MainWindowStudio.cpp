@@ -834,12 +834,10 @@ namespace winrt::midisequencer::implementation
                         return;
                     }
 
-                    // A device added here is one that follows the clock, so it starts with all of it.
+                    // A device added here starts with nothing sent: the person picks what it follows.
+                    // Clock to every device made playback lag for people whose devices don't use
+                    // it (Pete, November 1 2026, after two reports).
                     seq::StudioRow row{};
-                    row.Sync.Clock = true;
-                    row.Sync.StartStop = true;
-                    row.Sync.SongPosition = true;
-                    row.Sync.Tempo = true;
                     addRow(row, true);
 
                     // Straight to the new row's device list.
