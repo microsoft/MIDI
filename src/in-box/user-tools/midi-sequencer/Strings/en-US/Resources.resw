@@ -5222,6 +5222,9 @@
   <data name="MenuFindKey" xml:space="preserve">
     <value>Find key</value>
   </data>
+  <data name="StudioSynthNoClock" xml:space="preserve">
+    <value>The General MIDI Synth plays the notes it's sent and doesn't use the clock, so it never gets these.</value>
+  </data>
   <data name="EditorScaleHighlightText.Text" xml:space="preserve">
     <value>Scale highlight</value>
   </data>

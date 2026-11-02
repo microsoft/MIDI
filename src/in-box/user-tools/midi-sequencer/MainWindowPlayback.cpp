@@ -552,6 +552,13 @@ namespace winrt::midisequencer::implementation
             {
                 seq::ClockOutput clock{};
                 clock.Endpoint = seq::EndpointRef{ output.EndpointName, output.EndpointId };
+
+                // Never to the General MIDI Synth, whatever was saved: it doesn't use it.
+                if (IsSynthEndpoint(clock.Endpoint))
+                {
+                    continue;
+                }
+
                 clock.Group = output.Group;
                 clock.OffsetMicroseconds = output.OffsetMilliseconds * 1000;
                 clock.SendClock = output.Clock;

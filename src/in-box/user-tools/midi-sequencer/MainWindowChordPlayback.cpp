@@ -50,6 +50,31 @@ namespace winrt::midisequencer::implementation
         return seq::EndpointRef{};
     }
 
+    _Use_decl_annotations_
+    bool MainWindow::IsSynthEndpoint(seq::EndpointRef const& endpoint) const
+    {
+        auto const synthId = m_directory->SynthEndpointId();
+
+        if (endpoint.IsEmpty() || synthId.empty())
+        {
+            return false;
+        }
+
+        if (!endpoint.Id.empty() && _wcsicmp(endpoint.Id.c_str(), synthId.c_str()) == 0)
+        {
+            return true;
+        }
+
+        // Saved by name, or by an id from another PC: what it is here.
+        if (auto const resolved = m_directory->Resolve(endpoint); resolved.has_value())
+        {
+            auto const id = seq::EndpointDirectory::MakeRef(resolved->Live).Id;
+            return _wcsicmp(id.c_str(), synthId.c_str()) == 0;
+        }
+
+        return false;
+    }
+
     seq::EndpointRef MainWindow::ChordsDestination() const
     {
         if (!seq::AppSettings::Current().PlayChords() || !m_doc.Harmony || m_doc.Harmony->Hidden || m_doc.Harmony->Chords.empty())

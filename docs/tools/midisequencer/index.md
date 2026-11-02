@@ -299,7 +299,7 @@ For each device and group, choose whether the sequencer uses it. A group that on
 - **Play to** sends the group its notes and anything else it gets. Turn it off, and the sequencer sends nothing to that group, not even the clock. A device the sequencer uses for nothing else isn't even opened.
 - **Record from** listens to what the group sends. Turn it off, and the sequencer ignores that group, including its clock.
 
-Then choose what else each group it plays to gets. All of these start off, so a device gets only notes until you turn them on. Only turn on what a device uses: a synth that plays only the notes it's sent, such as the General MIDI Synth, doesn't need the clock.
+Then choose what else each group it plays to gets. All of these start off, so a device gets only notes until you turn them on. Only turn on what a device uses. The General MIDI Synth never gets them: it plays the notes it's sent and doesn't use the clock.
 
 - **Clock** sends MIDI clock, so the device keeps time with the sequence.
 - **Start/Stop** starts, stops and continues the device with the sequence.

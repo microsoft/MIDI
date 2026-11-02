@@ -780,6 +780,11 @@ namespace winrt::midisequencer::implementation
         // or the General MIDI Synth when there's none. Empty when neither is there.
         seq::EndpointRef DefaultOutput() const;
 
+        // Whether a device is the General MIDI Synth. It plays the notes it's sent and doesn't use
+        // clock, start and stop, song position or tempo, so the sequencer never sends it those:
+        // clock to it made playback lag (#1324; Pete, November 1 2026).
+        bool IsSynthEndpoint(_In_ seq::EndpointRef const& endpoint) const;
+
         // Where the row's chords go while Play chords is on and there are chords; empty otherwise.
         seq::EndpointRef ChordsDestination() const;
 

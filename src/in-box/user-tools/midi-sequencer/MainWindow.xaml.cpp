@@ -670,6 +670,12 @@ namespace winrt::midisequencer::implementation
 
             for (auto const& output : clockSettings.ClockOutputs())
             {
+                // The General MIDI Synth never gets the clock, whatever was saved.
+                if (IsSynthEndpoint(seq::EndpointRef{ output.EndpointName, output.EndpointId }))
+                {
+                    continue;
+                }
+
                 followerDevices.insert(output.EndpointId.empty() ? output.EndpointName : output.EndpointId);
             }
 

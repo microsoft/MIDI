@@ -107,6 +107,9 @@ namespace winrt::midisequencer::implementation
             // False when the group is known to speak MIDI 1.0, which has no tempo message.
             bool TempoPossible{ true };
 
+            // False for the General MIDI Synth, which uses none of the clock choices.
+            bool SyncPossible{ true };
+
             controls::Grid Grid{ nullptr };
             controls::ComboBox Device{ nullptr };
             controls::ComboBox Group{ nullptr };
@@ -153,10 +156,11 @@ namespace winrt::midisequencer::implementation
 
             if (view.Clock != nullptr)
             {
-                row.Sync.Clock = IsChecked(view.Clock);
-                row.Sync.StartStop = IsChecked(view.StartStop);
-                row.Sync.SongPosition = IsChecked(view.SongPosition);
-                row.Sync.Tempo = view.TempoPossible && IsChecked(view.Tempo);
+                // The General MIDI Synth gets none of them, whatever was ticked before.
+                row.Sync.Clock = view.SyncPossible && IsChecked(view.Clock);
+                row.Sync.StartStop = view.SyncPossible && IsChecked(view.StartStop);
+                row.Sync.SongPosition = view.SyncPossible && IsChecked(view.SongPosition);
+                row.Sync.Tempo = view.SyncPossible && view.TempoPossible && IsChecked(view.Tempo);
 
                 constexpr long Limit = ::midisequencer::AppSettings::MaximumClockOffsetMilliseconds;
                 auto const offset = view.Offset.Value();
@@ -174,13 +178,26 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            auto const on = view.PlayTo == nullptr || IsChecked(view.PlayTo);
+            auto const on = (view.PlayTo == nullptr || IsChecked(view.PlayTo)) && view.SyncPossible;
 
             view.Clock.IsEnabled(on);
             view.StartStop.IsEnabled(on);
             view.SongPosition.IsEnabled(on);
             view.Tempo.IsEnabled(on && view.TempoPossible);
             view.Offset.IsEnabled(on);
+
+            // The synth's boxes show off, with why.
+            winrt::hstring const tip = view.SyncPossible ? winrt::hstring{} : ::midisequencer::resources::GetString(L"StudioSynthNoClock");
+
+            for (auto const& box : { view.Clock, view.StartStop, view.SongPosition, view.Tempo })
+            {
+                if (!view.SyncPossible)
+                {
+                    box.IsChecked(false);
+                }
+
+                controls::ToolTipService::SetToolTip(box, tip.empty() ? foundation::IInspectable{ nullptr } : winrt::box_value(tip));
+            }
         }
     }
 
@@ -374,6 +391,13 @@ namespace winrt::midisequencer::implementation
                     }
 
                     return window->m_directory->Lookup(endpoint, group).SpeaksMidi2;
+                };
+
+                // The General MIDI Synth gets no clock, start and stop, song position or tempo.
+                auto const syncPossible = [weak](seq::EndpointRef const& endpoint)
+                {
+                    auto const window = weak.get();
+                    return !window || !window->IsSynthEndpoint(endpoint);
                 };
 
                 // What a screen reader says each control of a row is for, such as "Send clock to Moog One, group 1".
@@ -607,7 +631,7 @@ namespace winrt::midisequencer::implementation
                     return { playTo, recordFrom };
                 };
 
-                auto const addRow = [weak, weakViews, weakPanel = winrt::make_weak(rowsPanel), refresh, nameRow, tempoPossible, directions, deviceCell, usedByCell, endpointTemplate, namedTemplate](seq::StudioRow const& row, bool added)
+                auto const addRow = [weak, weakViews, weakPanel = winrt::make_weak(rowsPanel), refresh, nameRow, tempoPossible, syncPossible, directions, deviceCell, usedByCell, endpointTemplate, namedTemplate](seq::StudioRow const& row, bool added)
                 {
                     auto const window = weak.get();
                     auto const list = weakViews.lock();
@@ -623,6 +647,7 @@ namespace winrt::midisequencer::implementation
                     view->Added = added;
                     view->Grid = MakeStudioRowGrid();
                     view->TempoPossible = tempoPossible(row.Endpoint, row.Group);
+                    view->SyncPossible = syncPossible(row.Endpoint);
 
                     // A row added here is for a device that follows the clock.
                     auto const ways = added ? std::pair<bool, bool>{ true, false } : directions(row);
@@ -762,12 +787,13 @@ namespace winrt::midisequencer::implementation
                     if (added)
                     {
                         // Another device or group may speak another protocol.
-                        auto const recheck = [weakRow, nameRow, tempoPossible]()
+                        auto const recheck = [weakRow, nameRow, tempoPossible, syncPossible]()
                         {
                             if (auto const current = weakRow.lock())
                             {
                                 auto const now = CurrentRow(*current);
                                 current->TempoPossible = tempoPossible(now.Endpoint, now.Group);
+                                current->SyncPossible = syncPossible(now.Endpoint);
                                 EnableSync(*current);
                                 nameRow(*current);
                             }
