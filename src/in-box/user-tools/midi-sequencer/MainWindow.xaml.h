@@ -721,6 +721,18 @@ namespace winrt::midisequencer::implementation
         void ShowChordPicker(_In_ size_t chord, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         void ShowKeyPicker(_In_ size_t key, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         std::vector<winrt::hstring> const& KeyScaleNames();
+
+        // Default output in Settings: the device the Key and chords row plays on. Its own setting,
+        // or the General MIDI Synth when there's none. Empty when neither is there.
+        seq::EndpointRef DefaultOutput() const;
+
+        // Where the row's chords go while Play chords is on and there are chords; empty otherwise.
+        seq::EndpointRef ChordsDestination() const;
+
+        // The sequence as the engine plays it: the document, plus a track for the row's chords
+        // when Play chords is on.
+        std::shared_ptr<seq::Sequence const> PlayableSequence() const;
+        xaml::UIElement MakeDefaultOutputSetting();
         void ShowLyricsEditor();
         void ApplyLyrics(_In_ std::optional<seq::LyricsTrack> lyrics, _In_ std::wstring const& undoName);
         void UpdateLyricsBar() noexcept;

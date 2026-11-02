@@ -122,7 +122,15 @@ namespace midisequencer
 
         // Roman numerals on the Key and chords row's chords, when they fit.
         bool ShowRomanNumerals() const noexcept { return m_showRomanNumerals; }
-        void ShowRomanNumerals(bool value) noexcept;
+        void ShowRomanNumerals(_In_ bool value) noexcept;
+
+        // Whether the Key and chords row plays its chords, and the device it, and anything else
+        // without a device of its own, plays on. An empty output means the General MIDI Synth.
+        bool PlayChords() const noexcept { return m_playChords; }
+        void PlayChords(_In_ bool value) noexcept;
+        std::wstring const& DefaultOutputName() const noexcept { return m_defaultOutputName; }
+        std::wstring const& DefaultOutputId() const noexcept { return m_defaultOutputId; }
+        void DefaultOutput(_In_ std::wstring const& name, _In_ std::wstring const& id) noexcept;
 
         bool ShowMixer() const noexcept { return m_showMixer; }
         void ShowMixer(bool value) noexcept;
@@ -244,6 +252,9 @@ namespace midisequencer
 
         bool m_showLauncher{ true };
         bool m_showRomanNumerals{ true };
+        bool m_playChords{ false };
+        std::wstring m_defaultOutputName{};
+        std::wstring m_defaultOutputId{};
         bool m_showMixer{ false };
         bool m_timelineOverview{ true };
         bool m_timelineBarAtTop{ false };

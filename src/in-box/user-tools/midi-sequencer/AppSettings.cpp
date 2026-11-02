@@ -29,6 +29,9 @@ namespace midisequencer
         constexpr wchar_t ValueMetronomeNote[] = L"MetronomeNote";
         constexpr wchar_t ValueShowLauncher[] = L"ShowLauncher";
     constexpr wchar_t ValueShowRomanNumerals[] = L"ShowRomanNumerals";
+    constexpr wchar_t ValuePlayChords[] = L"PlayChords";
+    constexpr wchar_t ValueDefaultOutputName[] = L"DefaultOutputName";
+    constexpr wchar_t ValueDefaultOutputId[] = L"DefaultOutputId";
         constexpr wchar_t ValueShowMixer[] = L"ShowMixer";
         constexpr wchar_t ValueTimelineScrollBar[] = L"TimelineScrollBar";
         constexpr wchar_t ValueTimelineScrollBarPlace[] = L"TimelineScrollBarPlace";
@@ -360,6 +363,9 @@ namespace midisequencer
         m_metronomeNote = static_cast<uint8_t>(std::min<uint32_t>(ReadDword(ValueMetronomeNote, 37), 127));
         m_showLauncher = ReadDword(ValueShowLauncher, 1) != 0;
         m_showRomanNumerals = ReadDword(ValueShowRomanNumerals, 1) != 0;
+        m_playChords = ReadDword(ValuePlayChords, 0) != 0;
+        m_defaultOutputName = ReadString(ValueDefaultOutputName, L"");
+        m_defaultOutputId = ReadString(ValueDefaultOutputId, L"");
         m_showMixer = ReadDword(ValueShowMixer, 0) != 0;
 
         // 0 is the overview and 1 the plain bar; 0 is under the timeline and 1 above the ruler.
@@ -455,6 +461,22 @@ namespace midisequencer
     {
         m_showRomanNumerals = value;
         WriteDword(ValueShowRomanNumerals, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::PlayChords(bool value) noexcept
+    {
+        m_playChords = value;
+        WriteDword(ValuePlayChords, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::DefaultOutput(std::wstring const& name, std::wstring const& id) noexcept
+    {
+        m_defaultOutputName = name;
+        m_defaultOutputId = id;
+        WriteString(ValueDefaultOutputName, name);
+        WriteString(ValueDefaultOutputId, id);
     }
 
     void AppSettings::ShowMixer(bool value) noexcept

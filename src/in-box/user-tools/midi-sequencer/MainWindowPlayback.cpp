@@ -175,7 +175,7 @@ namespace winrt::midisequencer::implementation
 
             m_engine = std::make_unique<seq::PlaybackEngine>(*m_output, clock);
             m_engine->SetDestinationLookup([directory](seq::EndpointRef const& endpoint, uint8_t group) { return directory->Lookup(endpoint, group); });
-            m_engine->SetSequence(std::make_shared<seq::Sequence const>(m_doc));
+            m_engine->SetSequence(PlayableSequence());
             ApplyEngineSettings();
             m_engine->StartThread();
 
@@ -414,6 +414,17 @@ namespace winrt::midisequencer::implementation
 
                     return true;
                 });
+
+                // The Key and chords row's own chords, when Play chords is on (MainWindowHarmony.cpp).
+                if (auto const chords = ChordsDestination(); !chords.IsEmpty())
+                {
+                    if (std::find(destinations.begin(), destinations.end(), chords) == destinations.end())
+                    {
+                        destinations.push_back(chords);
+                    }
+
+                    sendTo(chords, 0);
+                }
 
                 auto& settings = seq::AppSettings::Current();
 

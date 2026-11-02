@@ -695,6 +695,20 @@ namespace winrt::midisequencer::implementation
         });
         menu.Items().Append(numerals);
 
+        controls::ToggleMenuFlyoutItem play{};
+        play.Text(res::GetString(L"MenuPlayChords"));
+        play.IsChecked(seq::AppSettings::Current().PlayChords());
+        controls::ToolTipService::SetToolTip(play, winrt::box_value(res::GetString(L"MenuPlayChordsHelp")));
+        play.Click([weak](foundation::IInspectable const& sender, auto&&)
+        {
+            if (auto s = weak.get())
+            {
+                seq::AppSettings::Current().PlayChords(sender.as<controls::ToggleMenuFlyoutItem>().IsChecked());
+                s->Publish();
+            }
+        });
+        menu.Items().Append(play);
+
         add(res::GetString(L"MenuHideKeyAndChords"), L"\uED1A", [weak]() { if (auto s = weak.get()) { s->HideHarmonyRow(); } });
         menu.Items().Append(controls::MenuFlyoutSeparator{});
 

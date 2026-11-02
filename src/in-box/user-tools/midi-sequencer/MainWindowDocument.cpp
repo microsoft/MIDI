@@ -1443,7 +1443,7 @@ namespace winrt::midisequencer::implementation
         {
             if (m_engine != nullptr)
             {
-                m_engine->SetSequence(std::make_shared<seq::Sequence const>(m_doc));
+                m_engine->SetSequence(PlayableSequence());
             }
 
             UpdateEchoRoutes();

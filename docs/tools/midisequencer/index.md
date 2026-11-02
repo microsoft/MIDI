@@ -226,7 +226,9 @@ A sequence can have a **Key and chords** row, for writing down the song's key an
 - **Under each chord's name** is its place in the key, as a Roman numeral, like ii7 or V7, when there's room. A chord with notes from outside the key has a star and a warm outline. That isn't a mistake, just something worth seeing. To hide the numerals, right-click the row and turn off **Roman numerals**, or turn it off in Settings.
 - **To hide the row**, right-click it and select **Hide**. The keys and chords stay in the sequence, and come back when you show the row again.
 
-The keys and chords are saved in the sequence file. They don't play by themselves yet, and generators don't follow them yet.
+To hear the chords, right-click the row and turn on **Play chords**. They play as the sequence plays, a little softer than your tracks, on **Default output** in Settings. Until you pick a device there, that's the General MIDI Synth, so there's nothing to set up. Play chords is a setting for the app, not for one sequence.
+
+The keys and chords are saved in the sequence file. Generators don't follow them yet.
 
 ## The clip launcher
 
