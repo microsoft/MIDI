@@ -720,6 +720,12 @@ namespace winrt::midisequencer::implementation
             add(res::GetString(L"MenuCopyChordsToTrack"), L"\uE8C8", [weak]() { if (auto s = weak.get()) { s->CopyChordsToNewTrack(); } });
         }
 
+        // Hidden for people who don't want AI help, in Settings.
+        if (seq::AppSettings::Current().ShowAssistant())
+        {
+            add(res::GetString(L"MenuAskAssistant"), L"\uE99A", [weak]() { if (auto s = weak.get()) { s->ShowSongAssistant(); } });
+        }
+
         menu.Items().Append(controls::MenuFlyoutSeparator{});
 
         controls::ToggleMenuFlyoutItem numerals{};

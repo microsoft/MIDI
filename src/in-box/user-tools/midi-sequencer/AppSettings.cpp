@@ -30,6 +30,7 @@ namespace midisequencer
         constexpr wchar_t ValueShowLauncher[] = L"ShowLauncher";
     constexpr wchar_t ValueShowRomanNumerals[] = L"ShowRomanNumerals";
     constexpr wchar_t ValuePlayChords[] = L"PlayChords";
+    constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
     constexpr wchar_t ValueDefaultOutputName[] = L"DefaultOutputName";
     constexpr wchar_t ValueDefaultOutputId[] = L"DefaultOutputId";
         constexpr wchar_t ValueShowMixer[] = L"ShowMixer";
@@ -364,6 +365,7 @@ namespace midisequencer
         m_showLauncher = ReadDword(ValueShowLauncher, 1) != 0;
         m_showRomanNumerals = ReadDword(ValueShowRomanNumerals, 1) != 0;
         m_playChords = ReadDword(ValuePlayChords, 0) != 0;
+        m_showAssistant = ReadDword(ValueShowAssistant, 1) != 0;
         m_defaultOutputName = ReadString(ValueDefaultOutputName, L"");
         m_defaultOutputId = ReadString(ValueDefaultOutputId, L"");
         m_showMixer = ReadDword(ValueShowMixer, 0) != 0;
@@ -468,6 +470,13 @@ namespace midisequencer
     {
         m_playChords = value;
         WriteDword(ValuePlayChords, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ShowAssistant(bool value) noexcept
+    {
+        m_showAssistant = value;
+        WriteDword(ValueShowAssistant, value ? 1 : 0);
     }
 
     _Use_decl_annotations_

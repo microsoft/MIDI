@@ -5125,6 +5125,171 @@
   <data name="UndoCopyChordsToTrack" xml:space="preserve">
     <value>Copy chords to new track</value>
   </data>
+  <data name="MenuAskAssistant" xml:space="preserve">
+    <value>Ask an AI assistant…</value>
+  </data>
+  <data name="AssistantSettingHeader" xml:space="preserve">
+    <value>AI assistant</value>
+  </data>
+  <data name="AssistantSettingHelp" xml:space="preserve">
+    <value>Shows Ask an AI assistant on the Key and chords row. It copies a starting prompt for the AI assistant you use. Windows MIDI Sequencer doesn't send anything itself.</value>
+  </data>
+  <data name="SongAssistantTitle" xml:space="preserve">
+    <value>Ask an AI assistant</value>
+  </data>
+  <data name="SongAssistantMessage" xml:space="preserve">
+    <value>Copy this and paste it into the AI assistant you use, such as a chat in your web browser. It asks you about the song, then writes its key, chords and sections. Paste its whole answer below and select Check. Windows MIDI Sequencer doesn't send anything itself.</value>
+  </data>
+  <data name="SongAssistantPromptHeader" xml:space="preserve">
+    <value>Prompt</value>
+  </data>
+  <data name="SongAssistantCopy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="SongAssistantCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="SongAssistantCopyFailed" xml:space="preserve">
+    <value>Couldn't copy. Try again</value>
+  </data>
+  <data name="SongAssistantGuideLink" xml:space="preserve">
+    <value>Assistant guide</value>
+  </data>
+  <data name="SongAssistantAnswerHeader" xml:space="preserve">
+    <value>Answer</value>
+  </data>
+  <data name="SongAssistantAnswerPlaceholder" xml:space="preserve">
+    <value>Paste the assistant's whole answer here</value>
+  </data>
+  <data name="SongAssistantWhereHeader" xml:space="preserve">
+    <value>Put it</value>
+  </data>
+  <data name="SongAssistantReplace" xml:space="preserve">
+    <value>In place of the keys, chords and tags there now</value>
+  </data>
+  <data name="SongAssistantAddAtPlayhead" xml:space="preserve">
+    <value>From the bar at the playhead</value>
+  </data>
+  <data name="SongAssistantCheck" xml:space="preserve">
+    <value>Check</value>
+  </data>
+  <data name="SongAssistantApply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="SongAssistantClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="SongAssistantSummaryFormat" xml:space="preserve">
+    <value>Ready: {0} sections, {1} bars, {2} chords, {3} key changes.</value>
+  </data>
+  <data name="SongAssistantSummaryOneKeyChangeFormat" xml:space="preserve">
+    <value>Ready: {0} sections, {1} bars, {2} chords, {3} key change.</value>
+  </data>
+  <data name="SongAppliedFormat" xml:space="preserve">
+    <value>Added {0} sections, {1} bars and {2} chords from the AI assistant.</value>
+  </data>
+  <data name="UndoSongFromAssistant" xml:space="preserve">
+    <value>Song from AI assistant</value>
+  </data>
+  <!-- The prompt the customer pastes into an AI assistant. Any language works, so translate it like other text. -->
+  <data name="SongPromptIntroFormat" xml:space="preserve">
+    <value>I want help writing the key, the chords and the sections of a song for the Key and chords row in Windows MIDI Sequencer. Before you start, read the whole guide at {0} and follow it. If you can't open the guide, tell me and stop. Don't guess the format: the app refuses an answer that isn't in it. Ask me what you need to know, one question at a time, and suggest an answer each time. Then give me the song in one block fenced as midi-sequencer-song, so I can paste your whole answer into the app.</value>
+    <comment>{0} is the address of the guide, a web link</comment>
+  </data>
+  <data name="SongPromptMeterFormat" xml:space="preserve">
+    <value>My sequence is in {0} at {1} beats per minute. Use that meter.</value>
+    <comment>{0} is a meter like "4/4". {1} is a number.</comment>
+  </data>
+  <data name="SongPromptKeyFormat" xml:space="preserve">
+    <value>It's in {0} now (root {1}, scale {2}).</value>
+    <comment>{0} is a key like "A minor". {1} is a note like "A". {2} is a scale id like "naturalMinor"; don't translate it.</comment>
+  </data>
+  <data name="SongPromptNoKey" xml:space="preserve">
+    <value>It doesn't have a key yet.</value>
+  </data>
+  <data name="SongPromptSections" xml:space="preserve">
+    <value>It already has these sections marked:</value>
+  </data>
+  <data name="SongPromptSectionFormat" xml:space="preserve">
+    <value>- Bar {0}: {1}</value>
+  </data>
+  <data name="SongPromptNoSections" xml:space="preserve">
+    <value>It doesn't have any sections marked yet.</value>
+  </data>
+  <data name="SongPromptRequest" xml:space="preserve">
+    <value>Here's what I have in mind:</value>
+  </data>
+  <data name="SongProblemMeterChangesInside" xml:space="preserve">
+    <value>The sequence changes meter inside where the song would go. Put it where the meter stays the same, or ask the assistant for a song that fits before the change.</value>
+  </data>
+  <data name="SongPromptMeterChangeFormat" xml:space="preserve">
+    <value>From bar {0} it's in {1}.</value>
+    <comment>{1} is a meter like "3/4".</comment>
+  </data>
+  <data name="SongProblemEmpty" xml:space="preserve">
+    <value>Paste the assistant's answer first.</value>
+  </data>
+  <data name="SongProblemTooLong" xml:space="preserve">
+    <value>That answer is too long to be a song plan.</value>
+  </data>
+  <data name="SongProblemNoJson" xml:space="preserve">
+    <value>There's no song in that answer. Ask the assistant for the block fenced as midi-sequencer-song.</value>
+  </data>
+  <data name="SongProblemBadJson" xml:space="preserve">
+    <value>The song block isn't written correctly, so it can't be read. Ask the assistant to check it against the guide.</value>
+  </data>
+  <data name="SongProblemWrongFormat" xml:space="preserve">
+    <value>That isn't a song plan for Windows MIDI Sequencer. Its "format" should be "windows-midi-sequencer-song".</value>
+  </data>
+  <data name="SongProblemNewerVersion" xml:space="preserve">
+    <value>That song plan is for a newer version of Windows MIDI Sequencer. Ask the assistant for version 1.</value>
+  </data>
+  <data name="SongProblemBadVersion" xml:space="preserve">
+    <value>The song plan needs "version": 1.</value>
+  </data>
+  <data name="SongProblemBadMeterFormat" xml:space="preserve">
+    <value>The meter "{0}" isn't one the sequencer knows. Write it like "4/4" or "6/8".</value>
+  </data>
+  <data name="SongProblemMeterDiffersFormat" xml:space="preserve">
+    <value>The song is in {0}, but the sequence is in {1} there. Ask the assistant to use {1}.</value>
+  </data>
+  <data name="SongProblemBadKey" xml:space="preserve">
+    <value>The song's key is missing or not written correctly. It needs a root like "A" or "B♭" and a scale like "naturalMinor".</value>
+  </data>
+  <data name="SongProblemBadSectionKeyFormat" xml:space="preserve">
+    <value>The key change at {0} isn't written correctly. It needs a root like "A" or "B♭" and a scale like "naturalMinor".</value>
+  </data>
+  <data name="SongProblemNoSections" xml:space="preserve">
+    <value>The song doesn't have any sections.</value>
+  </data>
+  <data name="SongProblemTooManySectionsFormat" xml:space="preserve">
+    <value>The song has more than {0} sections.</value>
+  </data>
+  <data name="SongProblemBadSectionNameFormat" xml:space="preserve">
+    <value>Section {0} needs a name of 1 to {1} characters.</value>
+  </data>
+  <data name="SongProblemBadBarsFormat" xml:space="preserve">
+    <value>{0} needs a whole number of bars, from 1 to {1}.</value>
+  </data>
+  <data name="SongProblemTooManyBarsFormat" xml:space="preserve">
+    <value>The song is {0} bars long. The most is {1}.</value>
+  </data>
+  <data name="SongProblemNoChordsFormat" xml:space="preserve">
+    <value>{0} doesn't have any chords. Use "N.C." for bars with no chord.</value>
+  </data>
+  <data name="SongProblemTooManyChordsFormat" xml:space="preserve">
+    <value>The song has more than {0} chords.</value>
+  </data>
+  <data name="SongProblemBadChordFormat" xml:space="preserve">
+    <value>{0} has a chord the sequencer doesn't know: "{1}". Ask the assistant to use a chord type from the guide.</value>
+  </data>
+  <data name="SongProblemBadBeatsFormat" xml:space="preserve">
+    <value>In {0}, "{1}" needs a whole number of beats, 1 or more.</value>
+  </data>
+  <data name="SongProblemBeatsFormat" xml:space="preserve">
+    <value>{0} has {1} beats of chords but is {2} bars of {3}, which is {4}.</value>
+    <comment>{0} is a section's name, like "Chorus". {3} is a meter like "4/4".</comment>
+  </data>
   <data name="RomanNumeralsHelp" xml:space="preserve">
     <value>Shows each chord's place in the key, like ii or V7, under its name on the Key and chords row, when there's room.</value>
   </data>

@@ -128,6 +128,11 @@ namespace midisequencer
         // without a device of its own, plays on. An empty output means the General MIDI Synth.
         bool PlayChords() const noexcept { return m_playChords; }
         void PlayChords(_In_ bool value) noexcept;
+
+        // Shows Ask an AI assistant… on the Key and chords row. On by default, as in Windows
+        // MIDI Glass and Windows MIDI Patchbay.
+        bool ShowAssistant() const noexcept { return m_showAssistant; }
+        void ShowAssistant(_In_ bool value) noexcept;
         std::wstring const& DefaultOutputName() const noexcept { return m_defaultOutputName; }
         std::wstring const& DefaultOutputId() const noexcept { return m_defaultOutputId; }
         void DefaultOutput(_In_ std::wstring const& name, _In_ std::wstring const& id) noexcept;
@@ -253,6 +258,7 @@ namespace midisequencer
         bool m_showLauncher{ true };
         bool m_showRomanNumerals{ true };
         bool m_playChords{ false };
+        bool m_showAssistant{ true };
         std::wstring m_defaultOutputName{};
         std::wstring m_defaultOutputId{};
         bool m_showMixer{ false };

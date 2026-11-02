@@ -22,6 +22,7 @@
 #include "DawProject.h"
 #include "GeneratorKinds.h"
 #include "GeneratorView.h"
+#include "HarmonySong.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
 #include "ClipLaneStrip.h"
@@ -780,6 +781,15 @@ namespace winrt::midisequencer::implementation
         // Copy chords to new track on the row's menu: every chord as one notes clip on a new
         // track on Default output. One undo step.
         void CopyChordsToNewTrack() noexcept;
+
+        // Ask an AI assistant on the Key and chords row (MainWindowChordAssistant.cpp): the
+        // prompt, the dialog that reads the answer back, and putting the song on the row and the
+        // tags, in place of what's there or from the playhead. One undo step.
+        winrt::hstring BuildSongPrompt();
+        winrt::hstring DescribeSongProblem(_In_ seq::SongReadResult const& result);
+        void ShowSongAssistant() noexcept;
+        void ApplySongPlan(_In_ seq::SongPlan const& plan, _In_ int64_t start, _In_ bool replace) noexcept;
+        xaml::UIElement MakeAssistantSetting();
         void ShowLyricsEditor();
         void ApplyLyrics(_In_ std::optional<seq::LyricsTrack> lyrics, _In_ std::wstring const& undoName);
         void UpdateLyricsBar() noexcept;

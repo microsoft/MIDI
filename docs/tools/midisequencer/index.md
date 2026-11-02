@@ -255,6 +255,16 @@ Generators and clips can follow the song's key, so a key change carries the whol
 
 A clip that follows the song's key has a small note mark on the timeline, so it's clear why it plays different notes in different places.
 
+### Ask an AI assistant
+
+An AI assistant can write the chords and the sections for a whole song with you. Right-click the Key and chords row and select **Ask an AI assistant…**.
+
+1. Select **Copy**, and paste the prompt into the AI assistant you use, such as a chat in your web browser. It asks you about the style, the song's sections and how long they are, the key, and how rich the chords should be, one question at a time.
+2. When it gives you the song, copy its whole answer and paste it into **Answer**. Select **Check**. You see what's in it ("8 sections, 64 bars, 31 chords, 1 key change"), or exactly what's wrong, so you can ask the assistant to fix it.
+3. Pick where it goes: in place of the keys, chords and tags there now, or from the bar at the playhead. Then select **Apply**. It's one step to undo.
+
+The assistant writes the key, the chords and the sections, nothing else. Each section becomes a tag on **Tempo and meter**, colored by its kind, such as Verse or Chorus. To hear the chords, turn on **Play chords**, or set generators to **Song key**. Windows MIDI Sequencer never sends anything to an assistant itself. If you'd rather not see it, turn off **AI assistant** in Settings. Assistants follow the [guide for AI assistants]({{ site.baseurl }}/kb/midi-sequencer-key-and-chords-for-agents/).
+
 ### Chords to notes
 
 To turn the chords into notes you can edit, right-click the row and select **Copy chords to new track**. You get a new track on **Default output** with one clip that holds every chord, each for its length, around middle C with the bass note an octave below. After that it's ordinary notes: changing a chord later doesn't change the clip.

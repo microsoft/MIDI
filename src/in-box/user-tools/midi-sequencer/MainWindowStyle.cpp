@@ -310,6 +310,9 @@ namespace winrt::midisequencer::implementation
         // Where the Key and chords row plays (MainWindowChordPlayback.cpp).
         panel.Children().Append(MakeDefaultOutputSetting());
 
+        // Ask an AI assistant… on the Key and chords row (MainWindowChordAssistant.cpp).
+        panel.Children().Append(MakeAssistantSetting());
+
         return panel;
     }
 
