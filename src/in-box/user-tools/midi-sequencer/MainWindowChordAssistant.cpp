@@ -27,9 +27,8 @@ namespace winrt::midisequencer::implementation
 {
     namespace
     {
-        // The guide the prompt sends the assistant to. Pete will have an aka.ms link for it on
-        // November 2 2026; until then, its published address.
-        constexpr wchar_t SongGuideAddress[] = L"https://microsoft.github.io/MIDI/kb/midi-sequencer-key-and-chords-for-agents/";
+        // The guide the prompt sends the assistant to: docs/kb/midi-sequencer-key-and-chords-for-agents.md.
+        constexpr wchar_t SongGuideAddress[] = L"https://aka.ms/AgentGuideMidiSequencerKeyAndChords";
 
         std::wstring Number(int64_t value)
         {
