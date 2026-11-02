@@ -28,5 +28,8 @@ public:
     TEST_METHOD(ChordTonesOnTheBeat);
     TEST_METHOD(ArpeggiatorPlaysTheChords);
     TEST_METHOD(ArpeggiatorHearsTheKeyMove);
+    TEST_METHOD(ChordsBecomeNotes);
+    TEST_METHOD(KeySignatures);
+    TEST_METHOD(StandardMidiFileKeysRoundTrip);
     TEST_METHOD(SettingsRoundTrip);
 };

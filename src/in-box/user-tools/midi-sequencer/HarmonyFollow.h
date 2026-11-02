@@ -72,4 +72,12 @@ namespace midisequencer
     // plays from a key uses Song key, and a melodic pattern follows the key, written in the song's
     // key at the tick. Anything else, or a sequence with no key there, is left as made.
     void StartInSongKey(_Inout_ Clip& clip, _In_ Sequence const& sequence, _In_ int64_t tick);
+
+    // ---- chords to notes (proposal section 6) ----
+
+    // The chords as a notes clip that doesn't loop, from the first chord's start: each chord held
+    // for its length, its notes in close position around middle C with the bass an octave below
+    // (ChordNotes), at the velocity given, on channel 1. Its name is left empty. Empty chords give
+    // an empty clip a bar long.
+    Clip ChordsAsNotes(_In_ std::vector<ChordEvent> const& chords, _In_ uint16_t velocity);
 }

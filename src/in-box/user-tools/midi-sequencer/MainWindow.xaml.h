@@ -776,6 +776,10 @@ namespace winrt::midisequencer::implementation
         // when Play chords is on.
         std::shared_ptr<seq::Sequence const> PlayableSequence() const;
         xaml::UIElement MakeDefaultOutputSetting();
+
+        // Copy chords to new track on the row's menu: every chord as one notes clip on a new
+        // track on Default output. One undo step.
+        void CopyChordsToNewTrack() noexcept;
         void ShowLyricsEditor();
         void ApplyLyrics(_In_ std::optional<seq::LyricsTrack> lyrics, _In_ std::wstring const& undoName);
         void UpdateLyricsBar() noexcept;

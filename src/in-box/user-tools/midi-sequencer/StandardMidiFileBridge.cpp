@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "StandardMidiFileBridge.h"
+#include "Harmony.h"
 #include "Lyrics.h"
 
 #include "SequenceRender.h"
@@ -198,6 +199,25 @@ namespace midisequencer
             meter.Numerator = std::clamp<uint8_t>(change.Numerator, 1, 64);
             meter.Denominator = static_cast<uint8_t>(1u << std::min<uint8_t>(change.DenominatorPowerOfTwo, 5));
             imported.Meter.push_back(meter);
+        }
+
+        // Key signatures become keys on the Key and chords row.
+        if (!file.KeySignatureMap.empty())
+        {
+            HarmonyTrack harmony{};
+
+            for (auto const& change : file.KeySignatureMap)
+            {
+                if (harmony.Keys.size() >= MaximumHarmonyEvents)
+                {
+                    break;
+                }
+
+                harmony.Keys.push_back(KeyFromSignature(KeySignature{ change.Accidentals, change.IsMinor }, toTick(change.Tick)));
+            }
+
+            NormalizeHarmony(harmony);
+            imported.Harmony = std::move(harmony);
         }
 
         if (options.MarkersAsTags)
@@ -535,6 +555,17 @@ namespace midisequencer
         if (file.TimeSignatureMap.empty() || file.TimeSignatureMap.front().Tick != 0)
         {
             file.TimeSignatureMap.insert(file.TimeSignatureMap.begin(), midifile::TimeSignatureChange{});
+        }
+
+        // Each key on the Key and chords row as a key signature (FF 59). A mode goes as the key
+        // signature it shares, since that's all the event can say.
+        if (sequence.Harmony)
+        {
+            for (auto const& key : sequence.Harmony->Keys)
+            {
+                auto const signature = KeySignatureOf(key);
+                file.KeySignatureMap.push_back(midifile::KeySignatureChange{ clampTick(key.Tick), signature.Accidentals, signature.Minor });
+            }
         }
 
         for (auto const& tag : sequence.Tags)

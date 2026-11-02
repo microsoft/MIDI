@@ -284,6 +284,46 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    Clip ChordsAsNotes(std::vector<ChordEvent> const& chords, uint16_t velocity)
+    {
+        Clip clip{};
+        clip.Kind = ClipKind::Notes;
+        clip.Loop = false;
+        clip.Length = TicksPerQuarterNote * 4;
+
+        if (chords.empty())
+        {
+            return clip;
+        }
+
+        auto const start = std::min_element(chords.begin(), chords.end(), [](ChordEvent const& a, ChordEvent const& b) { return a.Tick < b.Tick; })->Tick;
+        int64_t end{ start + 1 };
+
+        for (auto const& chord : chords)
+        {
+            for (auto const number : ChordNotes(chord))
+            {
+                Note note{};
+                note.Tick = chord.Tick - start;
+                note.Length = std::max<int64_t>(1, chord.Length);
+                note.Number = number;
+                note.Velocity = velocity;
+                clip.Notes.push_back(note);
+            }
+
+            end = std::max(end, chord.Tick + std::max<int64_t>(1, chord.Length));
+        }
+
+        std::stable_sort(clip.Notes.begin(), clip.Notes.end(), [](Note const& a, Note const& b)
+        {
+            return a.Tick != b.Tick ? a.Tick < b.Tick : a.Number < b.Number;
+        });
+
+        clip.Length = end - start;
+        return clip;
+    }
+
+    _Use_decl_annotations_
     bool ClipFollowsKey(Clip const& clip) noexcept
     {
         if (!clip.FollowKey)

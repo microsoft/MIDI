@@ -13,9 +13,12 @@
 #include "SequenceGenerator.h"
 #include "SequenceRender.h"
 #include "SequenceSerializer.h"
+#include "StandardMidiFileBridge.h"
+#include "midi_file_smf_reader.h"
 
 #include <algorithm>
 #include <set>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -385,6 +388,125 @@ void HarmonyFollowTests::ArpeggiatorHearsTheKeyMove()
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(62), second.Notes[0].Number);
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(66), second.Notes[1].Number);
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(69), second.Notes[2].Number);
+}
+
+void HarmonyFollowTests::ChordsBecomeNotes()
+{
+    // Am for a bar from bar 3, then E7/G♯ for two.
+    auto am = Chord(A, ChordType::Minor, Bar * 2, Bar);
+    auto e7 = Chord(E, ChordType::Seventh, Bar * 3, Bar * 2);
+    e7.Bass = static_cast<uint8_t>(8);
+
+    auto const clip = ChordsAsNotes({ am, e7 }, 30000);
+    VERIFY_IS_TRUE(clip.Kind == ClipKind::Notes);
+    VERIFY_IS_FALSE(clip.Loop);
+    VERIFY_ARE_EQUAL(Bar * 3, clip.Length);
+
+    auto const amNotes = ChordNotes(am);
+    auto const e7Notes = ChordNotes(e7);
+    VERIFY_ARE_EQUAL(amNotes.size() + e7Notes.size(), clip.Notes.size());
+
+    // From the first chord's start, each held for its chord's length, sorted.
+    VERIFY_ARE_EQUAL(int64_t{ 0 }, clip.Notes.front().Tick);
+    VERIFY_ARE_EQUAL(Bar, clip.Notes.front().Length);
+    VERIFY_ARE_EQUAL(amNotes.front(), clip.Notes.front().Number);
+    VERIFY_ARE_EQUAL(Bar, clip.Notes.back().Tick);
+    VERIFY_ARE_EQUAL(Bar * 2, clip.Notes.back().Length);
+    VERIFY_ARE_EQUAL(static_cast<uint16_t>(30000), clip.Notes.back().Velocity);
+    VERIFY_IS_TRUE(std::is_sorted(clip.Notes.begin(), clip.Notes.end(), [](Note const& a, Note const& b) { return a.Tick != b.Tick ? a.Tick < b.Tick : a.Number < b.Number; }));
+
+    // The G♯ bass is there.
+    VERIFY_IS_TRUE(std::any_of(clip.Notes.begin(), clip.Notes.end(), [](Note const& note) { return note.Tick == Bar && note.Number % 12 == 8; }));
+
+    // Nothing to copy: an empty clip a bar long.
+    auto const empty = ChordsAsNotes({}, 30000);
+    VERIFY_IS_TRUE(empty.Notes.empty());
+    VERIFY_ARE_EQUAL(Bar, empty.Length);
+}
+
+void HarmonyFollowTests::KeySignatures()
+{
+    auto const check = [](KeyChange const& key, int8_t accidentals, bool minor)
+    {
+        auto const signature = KeySignatureOf(key);
+        VERIFY_ARE_EQUAL(accidentals, signature.Accidentals);
+        VERIFY_ARE_EQUAL(minor, signature.Minor);
+    };
+
+    check(Key(C, ScaleKind::Major), 0, false);
+    check(Key(G, ScaleKind::Major), 1, false);
+    check(Key(F, ScaleKind::Major), -1, false);
+    check(Key(B, ScaleKind::Major), 5, false);
+    check(Key(6, ScaleKind::Major), -6, false);       // G♭, as the row spells it
+    check(Key(A, ScaleKind::NaturalMinor), 0, true);
+    check(Key(D, ScaleKind::NaturalMinor), -1, true);
+    check(Key(E, ScaleKind::HarmonicMinor), 1, true);
+
+    // A mode goes as the key signature it shares.
+    check(Key(D, ScaleKind::Dorian), 0, true);
+    check(Key(G, ScaleKind::Mixolydian), 0, false);
+
+    // Read back: major keys and natural minor ones.
+    VERIFY_IS_TRUE((KeyFromSignature(KeySignature{ 2, false }, 10) == KeyChange{ 10, D, ScaleKind::Major }));
+    VERIFY_IS_TRUE((KeyFromSignature(KeySignature{ -3, true }, 0) == KeyChange{ 0, 0, ScaleKind::NaturalMinor }));
+    VERIFY_IS_TRUE((KeyFromSignature(KeySignature{ 7, false }, 0) == KeyChange{ 0, 1, ScaleKind::Major }));
+    VERIFY_IS_TRUE((KeyFromSignature(KeySignature{ -7, true }, 0).Root == 8));
+
+    // Every major and natural minor key comes back as it went.
+    for (uint8_t root = 0; root < 12; ++root)
+    {
+        for (auto const scale : { ScaleKind::Major, ScaleKind::NaturalMinor })
+        {
+            auto const key = Key(root, scale, 480);
+            VERIFY_IS_TRUE(KeyFromSignature(KeySignatureOf(key), 480) == key);
+        }
+    }
+}
+
+void HarmonyFollowTests::StandardMidiFileKeysRoundTrip()
+{
+    // A file needs something to play, so one note.
+    Clip clip{};
+    clip.Kind = ClipKind::Notes;
+    clip.Length = Bar;
+    clip.Notes = { MakeNote(0, 64) };
+
+    auto sequence = OneClip(clip, Bar);
+    sequence.Name = L"Keys";
+
+    HarmonyTrack harmony{};
+    harmony.Keys = { Key(E, ScaleKind::NaturalMinor), Key(G, ScaleKind::Major, Bar * 4), Key(D, ScaleKind::Dorian, Bar * 8) };
+    harmony.Chords = { Chord(E, ChordType::Minor, 0, Bar) };
+    sequence.Harmony = harmony;
+
+    auto const exported = ExportStandardMidiFile(sequence, {}, ClipFileText{});
+    VERIFY_IS_TRUE(exported.Succeeded);
+
+    midifile::MidiSequence file{};
+    auto const read = midifile::ParseStandardMidiFile(std::span<uint8_t const>{ exported.Bytes }, file);
+    Log::Comment(String().Format(L"Read status %d at byte %llu, %u of %u tracks, %zu bytes", static_cast<int>(read.Status), read.ByteOffset, read.TracksRead, read.TracksDeclared, exported.Bytes.size()));
+    VERIFY_IS_TRUE(read.Succeeded());
+    VERIFY_ARE_EQUAL(size_t{ 3 }, file.KeySignatureMap.size());
+    VERIFY_ARE_EQUAL(static_cast<int8_t>(1), file.KeySignatureMap[0].Accidentals);
+    VERIFY_IS_TRUE(file.KeySignatureMap[0].IsMinor);
+
+    auto const imported = ImportStandardMidiFile(file, L"keys.mid");
+    VERIFY_IS_TRUE(imported.Harmony.has_value());
+    VERIFY_ARE_EQUAL(size_t{ 3 }, imported.Harmony->Keys.size());
+    VERIFY_IS_TRUE(imported.Harmony->Keys[0] == Key(E, ScaleKind::NaturalMinor));
+    VERIFY_IS_TRUE(imported.Harmony->Keys[1] == Key(G, ScaleKind::Major, Bar * 4));
+
+    // D Dorian shares C major's signature, written as minor: it comes back as A minor.
+    VERIFY_IS_TRUE(imported.Harmony->Keys[2] == Key(A, ScaleKind::NaturalMinor, Bar * 8));
+
+    // Chords have no standard event.
+    VERIFY_IS_TRUE(imported.Harmony->Chords.empty());
+
+    // A file without key signatures gives no row.
+    sequence.Harmony.reset();
+    midifile::MidiSequence plain{};
+    VERIFY_IS_TRUE(midifile::ParseStandardMidiFile(std::span<uint8_t const>{ ExportStandardMidiFile(sequence, {}, ClipFileText{}).Bytes }, plain).Succeeded());
+    VERIFY_IS_FALSE(ImportStandardMidiFile(plain, L"plain.mid").Harmony.has_value());
 }
 
 void HarmonyFollowTests::SettingsRoundTrip()

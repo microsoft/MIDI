@@ -4964,7 +4964,7 @@
     <value>Default output</value>
   </data>
   <data name="DefaultOutputHelp" xml:space="preserve">
-    <value>Where the Key and chords row plays its chords when Play chords is on. Until you pick one, it's the General MIDI Synth.</value>
+    <value>Where the Key and chords row plays its chords when Play chords is on, and where Copy chords to new track puts its track. Until you pick one, it's the General MIDI Synth.</value>
   </data>
   <data name="DefaultOutputNone" xml:space="preserve">
     <value>(None)</value>
@@ -5115,6 +5115,15 @@
   </data>
   <data name="UndoFollowKey" xml:space="preserve">
     <value>Follow key</value>
+  </data>
+  <data name="MenuCopyChordsToTrack" xml:space="preserve">
+    <value>Copy chords to new track</value>
+  </data>
+  <data name="ChordsTrackName" xml:space="preserve">
+    <value>Chords</value>
+  </data>
+  <data name="UndoCopyChordsToTrack" xml:space="preserve">
+    <value>Copy chords to new track</value>
   </data>
   <data name="RomanNumeralsHelp" xml:space="preserve">
     <value>Shows each chord's place in the key, like ii or V7, under its name on the Key and chords row, when there's room.</value>

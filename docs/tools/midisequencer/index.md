@@ -255,6 +255,14 @@ Generators and clips can follow the song's key, so a key change carries the whol
 
 A clip that follows the song's key has a small note mark on the timeline, so it's clear why it plays different notes in different places.
 
+### Chords to notes
+
+To turn the chords into notes you can edit, right-click the row and select **Copy chords to new track**. You get a new track on **Default output** with one clip that holds every chord, each for its length, around middle C with the bass note an octave below. After that it's ordinary notes: changing a chord later doesn't change the clip.
+
+### Keys in Standard MIDI Files
+
+Exporting a Standard MIDI File writes each key on the row as a key signature. That kind of file only knows major and minor keys, so a mode such as D Dorian is written as the key signature it shares (no sharps or flats, so it reads back as A minor). Chords aren't written, because a Standard MIDI File has no standard way to hold them. Importing a file brings its key signatures in as keys.
+
 ## The clip launcher
 
 The launcher plays clips without following the timeline. Select **Launcher** to show it. Select the triangle at a clip's top left to play it on its track, and select it again to stop it. Select the rest of the clip to open it in the editor; it keeps playing, or not, as it was. Double-click an empty slot to make a clip there. A track playing a launched clip shows **Playing a launched clip** across its timeline. That stays after you stop, so the next Play carries on with what each track was playing. Select **Back to timeline** to go back to the timeline, whether or not the sequence is playing. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.
@@ -298,7 +306,7 @@ Windows MIDI Keyboard is different. When it opens on a device, it asks the devic
 
 **File**, then **Import**, brings in:
 
-- A **Standard MIDI File** (`.mid` or `.kar`), with each of its tracks as a track. Its lyrics and copyright notice come too.
+- A **Standard MIDI File** (`.mid` or `.kar`), with each of its tracks as a track. Its lyrics and copyright notice come too, and its key signatures become keys on the Key and chords row when the row doesn't have any yet.
 - A **MIDI 2.0 clip file** (`.midi2`).
 - A **DAWproject file** (`.dawproject`), which many DAWs can save. You pick a device for each of its instrument tracks.
 - A **capture** from Windows MIDI Monitor or the `midi` console (`.csv`), with a track for each group.

@@ -427,6 +427,34 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    KeySignature KeySignatureOf(KeyChange const& key) noexcept
+    {
+        // Sharps or flats of each major key by its root, spelled as KeyUsesFlats spells them.
+        static constexpr std::array<int8_t, 12> MajorAccidentals{ 0, -5, 2, -3, 4, -1, -6, 1, -4, 3, -2, 5 };
+
+        auto const index = static_cast<size_t>(key.Scale) < ScaleCount ? static_cast<size_t>(key.Scale) : 0;
+        auto const parent = (key.Root % 12 + ParentMajorOffsets[index]) % 12;
+
+        KeySignature signature{};
+        signature.Accidentals = MajorAccidentals[parent];
+        signature.Minor = TonicChordType(key.Scale) == ChordType::Minor;
+        return signature;
+    }
+
+    _Use_decl_annotations_
+    KeyChange KeyFromSignature(KeySignature signature, int64_t tick) noexcept
+    {
+        auto const accidentals = std::clamp<int>(signature.Accidentals, -7, 7);
+        auto const majorRoot = static_cast<uint8_t>(((accidentals * 7) % 12 + 12) % 12);
+
+        KeyChange key{};
+        key.Tick = std::max<int64_t>(0, tick);
+        key.Root = signature.Minor ? static_cast<uint8_t>((majorRoot + 9) % 12) : majorRoot;
+        key.Scale = signature.Minor ? ScaleKind::NaturalMinor : ScaleKind::Major;
+        return key;
+    }
+
+    _Use_decl_annotations_
     std::wstring NoteName(uint8_t pitchClass, bool flats)
     {
         static constexpr std::array<std::wstring_view, 12> SharpNames{

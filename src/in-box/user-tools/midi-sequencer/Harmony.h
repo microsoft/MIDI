@@ -33,6 +33,19 @@ namespace midisequencer
     // Whether a key is written with flats (F major, B♭ major, D minor...) rather than sharps.
     bool KeyUsesFlats(_In_ uint8_t root, _In_ ScaleKind scale) noexcept;
 
+    // A Standard MIDI File key signature (FF 59): sharps (positive) or flats (negative), -7 to 7,
+    // and major or minor. That event only knows major and minor, so a mode becomes the key
+    // signature it shares (D Dorian is no sharps or flats), marked minor when the mode sounds
+    // minor. Reading one back gives a major key or a natural minor one.
+    struct KeySignature
+    {
+        int8_t Accidentals{ 0 };
+        bool Minor{ false };
+    };
+
+    KeySignature KeySignatureOf(_In_ KeyChange const& key) noexcept;
+    KeyChange KeyFromSignature(_In_ KeySignature signature, _In_ int64_t tick) noexcept;
+
     // A note's name, 0 to 11, with ♯ or ♭ (U+266F, U+266D): "C", "C♯", "D♭".
     std::wstring NoteName(_In_ uint8_t pitchClass, _In_ bool flats);
 

@@ -17,6 +17,7 @@
 #include "MainWindow.xaml.h"
 
 #include "Harmony.h"
+#include "HarmonyFollow.h"
 #include "StringResources.h"
 
 namespace res = ::midisequencer::resources;
@@ -70,34 +71,9 @@ namespace winrt::midisequencer::implementation
 
         auto playable = std::make_shared<seq::Sequence>(m_doc);
 
-        seq::Clip clip{};
+        auto clip = seq::ChordsAsNotes(m_doc.Harmony->Chords, ChordVelocity);
         clip.Id = ChordsClipId;
-        clip.Kind = seq::ClipKind::Notes;
-        clip.Loop = false;
-
-        int64_t end{ 1 };
-
-        for (auto const& chord : m_doc.Harmony->Chords)
-        {
-            for (auto const number : seq::ChordNotes(chord))
-            {
-                seq::Note note{};
-                note.Tick = chord.Tick;
-                note.Length = std::max<int64_t>(1, chord.Length);
-                note.Number = number;
-                note.Velocity = ChordVelocity;
-                clip.Notes.push_back(note);
-            }
-
-            end = std::max(end, chord.Tick + chord.Length);
-        }
-
-        std::stable_sort(clip.Notes.begin(), clip.Notes.end(), [](seq::Note const& a, seq::Note const& b)
-        {
-            return a.Tick != b.Tick ? a.Tick < b.Tick : a.Number < b.Number;
-        });
-
-        clip.Length = end;
+        auto const start = m_doc.Harmony->Chords.front().Tick;
 
         seq::Track track{};
         track.Id = ChordsTrackId;
@@ -105,11 +81,63 @@ namespace winrt::midisequencer::implementation
         track.Destination.Endpoint = destination;
         track.Destination.Group = 0;
         track.Destination.Channel = 0;
-        track.Timeline.push_back(seq::Placement{ clip.Id, 0, end });
+        track.Timeline.push_back(seq::Placement{ clip.Id, start, clip.Length });
 
         playable->Clips.push_back(std::move(clip));
         playable->Tracks.push_back(std::move(track));
         return playable;
+    }
+
+    void MainWindow::CopyChordsToNewTrack() noexcept
+    {
+        try
+        {
+            if (!m_doc.Harmony || m_doc.Harmony->Chords.empty())
+            {
+                return;
+            }
+
+            auto const& chords = m_doc.Harmony->Chords;
+            auto clip = seq::ChordsAsNotes(chords, ChordVelocity);
+            clip.Id = seq::NewId(L"c");
+            clip.Origin = seq::ClipOrigin::Drawn;
+
+            // Named after its first and last chords, spelled in their keys: "Am – E7".
+            auto const nameOf = [this](seq::ChordEvent const& chord)
+            {
+                return seq::ChordName(chord, seq::KeyAt(*m_doc.Harmony, chord.Tick));
+            };
+
+            clip.Name = chords.size() == 1 ? nameOf(chords.front()) : nameOf(chords.front()) + L" \u2013 " + nameOf(chords.back());
+
+            // On Default output, the next free channel there. From here on it's plain MIDI: it
+            // doesn't change when the chords do.
+            auto track = seq::MakeTrack(m_doc, seq::NextName(m_doc, std::wstring{ res::GetString(L"ChordsTrackName") }), false);
+            track.Slots.resize(m_doc.Scenes.size());
+
+            if (auto const output = DefaultOutput(); !output.IsEmpty())
+            {
+                track.Destination.Endpoint = output;
+                track.Destination.Group = 0;
+                track.Destination.Channel = seq::NextFreeChannel(m_doc, output, 0);
+            }
+
+            track.Timeline.push_back(seq::Placement{ clip.Id, chords.front().Tick, 0 });
+
+            auto const trackId = track.Id;
+            auto const tracksBefore = m_doc.Tracks;
+
+            seq::ChangeList changes{};
+            changes.push_back(seq::MakeClipPresenceChange(clip, true));
+            m_doc.Clips.push_back(std::move(clip));
+            m_doc.Tracks.push_back(std::move(track));
+            changes.push_back(seq::MakeTracksChange(tracksBefore, m_doc.Tracks));
+
+            Commit(std::wstring{ res::GetString(L"UndoCopyChordsToTrack") }, std::move(changes));
+            SelectTrack(trackId);
+            PrepareConnectionsAsync();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to copy the chords to a new track.")
     }
 
     xaml::UIElement MainWindow::MakeDefaultOutputSetting()

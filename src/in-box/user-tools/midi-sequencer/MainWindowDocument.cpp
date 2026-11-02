@@ -10,6 +10,7 @@
 
 #include "BackgroundWork.h"
 #include "DocumentFiles.h"
+#include "Harmony.h"
 #include "MidiClipFile.h"
 #include "SampleSequence.h"
 #include "SequenceSerializer.h"
@@ -749,6 +750,15 @@ namespace winrt::midisequencer::implementation
             {
                 changes.push_back(seq::MakeLyricsChange(std::nullopt, imported.Lyrics));
                 m_doc.Lyrics = std::move(imported.Lyrics);
+            }
+
+            // The file's key signatures go on the Key and chords row when it has no keys yet.
+            if (imported.Harmony && !imported.Harmony->Keys.empty() && (!m_doc.Harmony || m_doc.Harmony->Keys.empty()))
+            {
+                auto after = m_doc.Harmony.value_or(seq::HarmonyTrack{});
+                after.Keys = imported.Harmony->Keys;
+                changes.push_back(seq::MakeHarmonyChange(m_doc.Harmony, after));
+                m_doc.Harmony = std::move(after);
             }
 
             changes.push_back(seq::MakeTracksChange(tracksBefore, m_doc.Tracks));

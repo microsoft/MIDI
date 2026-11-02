@@ -715,6 +715,11 @@ namespace winrt::midisequencer::implementation
             add(res::GetString(L"MenuSuggestChords"), L"\uE82F", [weak, from]() { if (auto s = weak.get()) { s->SuggestChords(from); } });
         }
 
+        if (m_doc.Harmony && !m_doc.Harmony->Chords.empty())
+        {
+            add(res::GetString(L"MenuCopyChordsToTrack"), L"\uE8C8", [weak]() { if (auto s = weak.get()) { s->CopyChordsToNewTrack(); } });
+        }
+
         menu.Items().Append(controls::MenuFlyoutSeparator{});
 
         controls::ToggleMenuFlyoutItem numerals{};
