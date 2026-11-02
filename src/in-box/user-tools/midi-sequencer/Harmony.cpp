@@ -476,7 +476,20 @@ namespace midisequencer
     {
         auto const spell = [&](uint8_t pitchClass)
         {
-            auto const flats = key != nullptr ? KeyUsesFlats(key->Root, key->Scale) : DefaultFlat(pitchClass % 12);
+            auto flats = key != nullptr ? KeyUsesFlats(key->Root, key->Scale) : DefaultFlat(pitchClass % 12);
+
+            // A note outside the key is spelled the way its numeral is: ♭II in A minor is B♭,
+            // not A♯, and the raised seventh is G♯.
+            if (key != nullptr)
+            {
+                auto const [prefix, degree] = Degree(pitchClass, *key);
+
+                if (!prefix.empty())
+                {
+                    flats = prefix.front() == L'\u266D';
+                }
+            }
+
             return NoteName(pitchClass, flats);
         };
 

@@ -169,7 +169,7 @@ namespace winrt::midisequencer::implementation
                 promptBox.IsReadOnly(true);
                 promptBox.TextWrapping(xaml::TextWrapping::Wrap);
                 promptBox.AcceptsReturn(true);
-                promptBox.Height(150);
+                promptBox.Height(120);
                 controls::ScrollViewer::SetVerticalScrollBarVisibility(promptBox, controls::ScrollBarVisibility::Auto);
                 panel.Children().Append(promptBox);
 
@@ -216,7 +216,7 @@ namespace winrt::midisequencer::implementation
                 answerBox.PlaceholderText(res::GetString(L"SongAssistantAnswerPlaceholder"));
                 answerBox.TextWrapping(xaml::TextWrapping::Wrap);
                 answerBox.AcceptsReturn(true);
-                answerBox.Height(150);
+                answerBox.Height(120);
                 answerBox.Margin(xaml::Thickness{ 0, 8, 0, 0 });
                 controls::ScrollViewer::SetVerticalScrollBarVisibility(answerBox, controls::ScrollBarVisibility::Auto);
                 panel.Children().Append(answerBox);
@@ -228,7 +228,6 @@ namespace winrt::midisequencer::implementation
                 where.Items().Append(winrt::box_value(res::GetString(L"SongAssistantAddAtPlayhead")));
                 where.SelectedIndex(strong->m_doc.Harmony && !strong->m_doc.Harmony->Chords.empty() ? 1 : 0);
                 where.MaxColumns(2);
-                panel.Children().Append(where);
 
                 controls::StackPanel checkRow{};
                 checkRow.Orientation(controls::Orientation::Horizontal);
@@ -243,13 +242,21 @@ namespace winrt::midisequencer::implementation
                 verdict.VerticalAlignment(xaml::VerticalAlignment::Center);
                 verdict.MaxWidth(400);
                 checkRow.Children().Append(verdict);
+
+                // Check and what it found right under the answer, so they're seen without
+                // scrolling; where it goes after.
                 panel.Children().Append(checkRow);
+                panel.Children().Append(where);
 
                 controls::ContentDialog dialog{};
                 dialog.XamlRoot(strong->Content().XamlRoot());
                 dialog.Title(winrt::box_value(res::GetString(L"SongAssistantTitle")));
 
+                // Wider than a dialog usually is, so the prompt and the answer are easy to read.
+                dialog.Resources().Insert(winrt::box_value(L"ContentDialogMaxWidth"), winrt::box_value(760.0));
+
                 controls::ScrollViewer scroller{};
+                scroller.Padding(xaml::Thickness{ 0, 0, 16, 0 });
                 scroller.Content(panel);
                 dialog.Content(scroller);
                 dialog.PrimaryButtonText(res::GetString(L"SongAssistantApply"));

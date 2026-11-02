@@ -273,6 +273,11 @@ void HarmonySuggestTests::MoreChordsAreBorrowed()
     VERIFY_IS_TRUE(minorMore[0].Type == ChordType::Major);
     VERIFY_IS_TRUE(minorMore[0].Borrowed);
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(10), minorMore[1].Root);
+
+    // ♭II in A minor is spelled B♭, the way its numeral is, not A♯.
+    ChordEvent flatTwo{};
+    flatTwo.Root = minorMore[1].Root;
+    VERIFY_ARE_EQUAL(std::wstring{ L"B\u266D" }, ChordName(flatTwo, &minor));
 }
 
 void HarmonySuggestTests::ProgressionsInMajorAndMinor()
