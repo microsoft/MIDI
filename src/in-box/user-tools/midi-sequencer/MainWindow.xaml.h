@@ -722,6 +722,27 @@ namespace winrt::midisequencer::implementation
         void ShowKeyPicker(_In_ size_t key, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
         std::vector<winrt::hstring> const& KeyScaleNames();
 
+        // "A minor", spelled the way the key is.
+        winrt::hstring KeyDisplayName(_In_ seq::KeyChange const& key);
+
+        // Suggest: fills the empty bars from a tick (after the chord there, if any) with the first
+        // suggestion each time. One undo step. SuggestStartTick is the selected chord, or the
+        // playhead.
+        void SuggestChords(_In_ int64_t from) noexcept;
+        int64_t SuggestStartTick() const noexcept;
+
+        // Fill in the chord picker: a progression (HarmonySuggest.h's ProgressionId) from a tick,
+        // at a rate (ProgressionRate). One undo step.
+        void FillProgression(_In_ int64_t tick, _In_ size_t progression, _In_ size_t rate) noexcept;
+
+        // The chord picker's Next chord, More chords and Progression sections, for the chord at
+        // tick. choose changes that chord; close closes the picker.
+        void AddChordSuggestionSections(
+            _In_ controls::StackPanel const& panel,
+            _In_ int64_t tick,
+            _In_ std::function<void(uint8_t root, seq::ChordType type)> const& choose,
+            _In_ std::function<void()> const& close);
+
         // Default output in Settings: the device the Key and chords row plays on. Its own setting,
         // or the General MIDI Synth when there's none. Empty when neither is there.
         seq::EndpointRef DefaultOutput() const;
@@ -1344,6 +1365,10 @@ namespace winrt::midisequencer::implementation
         size_t m_selectedKey{ SIZE_MAX };
         HarmonyDrag m_harmonyDrag{};
         std::vector<winrt::hstring> m_keyScaleNames{};
+
+        // The chord picker's last progression and rate, so Fill can be used again quickly.
+        size_t m_lastProgression{ 0 };
+        size_t m_lastProgressionRate{ 1 };      // one chord per bar
         std::vector<seq::LyricLine> m_lyricLines{};
         uint64_t m_lyricLinesVersion{ UINT64_MAX };
         void const* m_lyricLinesData{ nullptr };

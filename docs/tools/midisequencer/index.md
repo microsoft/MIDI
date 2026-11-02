@@ -226,6 +226,19 @@ A sequence can have a **Key and chords** row, for writing down the song's key an
 - **Under each chord's name** is its place in the key, as a Roman numeral, like ii7 or V7, when there's room. A chord with notes from outside the key has a star and a warm outline. That isn't a mistake, just something worth seeing. To hide the numerals, right-click the row and turn off **Roman numerals**, or turn it off in Settings.
 - **To hide the row**, right-click it and select **Hide**. The keys and chords stay in the sequence, and come back when you show the row again.
 
+### Help picking chords
+
+Not sure what comes next? The row can help. Its suggestions come from simple music theory rules, not AI, so the same chord always gets the same suggestions.
+
+- **Next chord.** Double-click a chord. The top of the picker shows four or five chords that often come after the one before it, most likely first. Select one to use it. Near the end of a four or eight-bar phrase, the chords that sound like an ending move to the front.
+- **More chords.** Under those are a few chords with more color, like chords borrowed from the minor key when you're in a major key. A star means a chord has notes from outside the key. That's fine; it adds color.
+- **Progressions.** Pick a well-known progression, like I–V–vi–IV or a 12-bar blues, pick how many chords go in a bar, and select **Fill**. It goes on the row from the chord you double-clicked, in the key there, and replaces the chords it covers.
+- **Suggest.** Select the light bulb on the row's header, or right-click the row and select **Suggest chords**. It fills the empty bars after the selected chord, or from the playhead, up to the next chord. When there's no chord after, it fills to the end of the four-bar phrase. Select it again to keep going.
+
+Each of these is one step to undo.
+
+### Hearing the chords
+
 To hear the chords, right-click the row and turn on **Play chords**. They play as the sequence plays, a little softer than your tracks, on **Default output** in Settings. Until you pick a device there, that's the General MIDI Synth, so there's nothing to set up. Play chords is a setting for the app, not for one sequence.
 
 The keys and chords are saved in the sequence file. Generators don't follow them yet.

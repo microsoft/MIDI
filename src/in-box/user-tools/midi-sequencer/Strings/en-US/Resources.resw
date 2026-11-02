@@ -4969,6 +4969,104 @@
   <data name="DefaultOutputNone" xml:space="preserve">
     <value>(None)</value>
   </data>
+  <data name="ChordSuggestNextHeader" xml:space="preserve">
+    <value>Next chord</value>
+  </data>
+  <data name="ChordSuggestAfterFormat" xml:space="preserve">
+    <value>After {0} in {1}</value>
+    <comment>{0} is a chord, like "Am (i)". {1} is a key, like "A minor".</comment>
+  </data>
+  <data name="ChordSuggestStartFormat" xml:space="preserve">
+    <value>Starting in {0}</value>
+    <comment>{0} is a key, like "A minor".</comment>
+  </data>
+  <data name="ChordSuggestNoKey" xml:space="preserve">
+    <value>Add a key to the row to see suggestions.</value>
+  </data>
+  <data name="ChordSuggestMoreHeader" xml:space="preserve">
+    <value>More chords</value>
+  </data>
+  <data name="ChordSuggestBorrowedHelp" xml:space="preserve">
+    <value>Has notes from outside the key. That's fine; it adds color.</value>
+  </data>
+  <data name="ChordSuggestProgressionHeader" xml:space="preserve">
+    <value>Progression</value>
+  </data>
+  <data name="ChordSuggestRateHeader" xml:space="preserve">
+    <value>Rate</value>
+  </data>
+  <data name="ChordSuggestFill" xml:space="preserve">
+    <value>Fill</value>
+  </data>
+  <data name="ChordSuggestFillHelp" xml:space="preserve">
+    <value>Puts the progression on the row from this chord, in the key here. It replaces the chords it covers.</value>
+  </data>
+  <data name="ProgressionRateTwoPerBar" xml:space="preserve">
+    <value>2 per bar</value>
+  </data>
+  <data name="ProgressionRateOnePerBar" xml:space="preserve">
+    <value>1 per bar</value>
+  </data>
+  <data name="ProgressionRateOnePerTwoBars" xml:space="preserve">
+    <value>1 per 2 bars</value>
+  </data>
+  <data name="ProgressionPopOneFiveSixFour" xml:space="preserve">
+    <value>Pop: I–V–vi–IV</value>
+  </data>
+  <data name="ProgressionPopSixFourOneFive" xml:space="preserve">
+    <value>Pop: vi–IV–I–V</value>
+  </data>
+  <data name="ProgressionPopFifties" xml:space="preserve">
+    <value>Pop: I–vi–IV–V (50s)</value>
+  </data>
+  <data name="ProgressionJazzTwoFiveOne" xml:space="preserve">
+    <value>Jazz: ii–V–I</value>
+  </data>
+  <data name="ProgressionJazzTurnaround" xml:space="preserve">
+    <value>Jazz: I–vi–ii–V</value>
+  </data>
+  <data name="ProgressionTwelveBarBlues" xml:space="preserve">
+    <value>Blues: 12-bar</value>
+  </data>
+  <data name="ProgressionTwelveBarBluesSevenths" xml:space="preserve">
+    <value>Blues: 12-bar, all 7ths</value>
+  </data>
+  <data name="ProgressionMinorFall" xml:space="preserve">
+    <value>Minor: i–VI–III–VII</value>
+  </data>
+  <data name="ProgressionMinorOneFourFive" xml:space="preserve">
+    <value>Minor: i–iv–v</value>
+  </data>
+  <data name="ProgressionAndalusian" xml:space="preserve">
+    <value>Minor: Andalusian (i–VII–VI–V)</value>
+  </data>
+  <data name="ProgressionCanon" xml:space="preserve">
+    <value>Classical: Canon (I–V–vi–iii–IV–I–IV–V)</value>
+  </data>
+  <data name="ProgressionCircleOfFifths" xml:space="preserve">
+    <value>Classical: Circle of fifths</value>
+  </data>
+  <data name="HarmonySuggest" xml:space="preserve">
+    <value>Suggest</value>
+  </data>
+  <data name="HarmonySuggestHelp" xml:space="preserve">
+    <value>Fills the empty bars after the selected chord, or from the playhead, with suggested chords.</value>
+  </data>
+  <data name="SuggestNeedsKeyMessage" xml:space="preserve">
+    <value>Add a key to the Key and chords row first, so there's something to suggest from.</value>
+  </data>
+  <data name="SuggestNoRoomMessage" xml:space="preserve">
+    <value>There are no empty bars to fill there.</value>
+  </data>
+  <data name="UndoSuggestChords" xml:space="preserve">
+    <value>Suggest chords</value>
+  </data>
+  <data name="MenuSuggestChords" xml:space="preserve">
+    <value>Suggest chords</value>
+  </data>
+  <data name="UndoFillProgression" xml:space="preserve">
+    <value>Fill chords</value>
+  </data>
   <data name="RomanNumeralsHelp" xml:space="preserve">
     <value>Shows each chord's place in the key, like ii or V7, under its name on the Key and chords row, when there's room.</value>
   </data>

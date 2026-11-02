@@ -5,10 +5,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-// The Key and chords row (Pete's proposal of November 1 2026, revision 2, phase 1): showing and
-// hiding it, its header, picking and dragging chords and keys the way clips are, adding them with
-// a double click, and the chord and key pickers. Suggestions, hearing chords and following the key
-// come in later phases.
+// The Key and chords row (Pete's proposal of November 1 2026, revision 2): showing and hiding it,
+// its header, picking and dragging chords and keys the way clips are, adding them with a double
+// click, and the chord and key pickers. Suggestions are in MainWindowChordSuggest.cpp and hearing
+// the chords in MainWindowChordPlayback.cpp. Following the key comes in a later phase.
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
@@ -237,10 +237,7 @@ namespace winrt::midisequencer::implementation
 
             if (auto const key = seq::KeyAt(*m_doc.Harmony, m_position); key != nullptr)
             {
-                auto const& scales = KeyScaleNames();
-                auto const scaleIndex = static_cast<size_t>(key->Scale);
-                keyText = winrt::hstring{ seq::NoteName(key->Root, seq::KeyUsesFlats(key->Root, key->Scale)) + L" " +
-                    std::wstring{ scaleIndex < scales.size() ? scales[scaleIndex] : winrt::hstring{} } };
+                keyText = KeyDisplayName(*key);
             }
         }
 
@@ -254,6 +251,38 @@ namespace winrt::midisequencer::implementation
         info.Children().Append(sub);
 
         place(info, 4);
+
+        // Suggest: fills empty bars with suggested chords (MainWindowChordSuggest.cpp). Sized like
+        // the M, S and R buttons on the track headers.
+        controls::Button suggest{};
+        suggest.Width(22);
+        suggest.Height(20);
+        suggest.MinWidth(0);
+        suggest.MinHeight(0);
+        suggest.Padding(xaml::Thickness{ 0, 0, 0, 0 });
+        suggest.CornerRadius(xaml::CornerRadius{ 3, 3, 3, 3 });
+        suggest.VerticalAlignment(xaml::VerticalAlignment::Center);
+        suggest.BorderBrush(BrushFor(m_palette.StrokeStrong));
+        suggest.Background(BrushFor(m_palette.Light ? seq::Rgba(0, 0, 0, 0.03) : seq::Rgba(255, 255, 255, 0.04)));
+
+        controls::FontIcon bulb{};
+        bulb.Glyph(L"\uE82F");
+        bulb.FontSize(11);
+        bulb.Foreground(BrushFor(m_palette.Text2));
+        suggest.Content(bulb);
+
+        controls::ToolTipService::SetToolTip(suggest, winrt::box_value(res::GetString(L"HarmonySuggest") + L"\n" + res::GetString(L"HarmonySuggestHelp")));
+        automation::AutomationProperties::SetName(suggest, res::GetString(L"HarmonySuggest"));
+        automation::AutomationProperties::SetHelpText(suggest, res::GetString(L"HarmonySuggestHelp"));
+        suggest.IsEnabled(m_doc.Harmony && !m_doc.Harmony->Keys.empty());
+        suggest.Click([weak = get_weak()](auto&&, auto&&)
+        {
+            if (auto s = weak.get())
+            {
+                s->SuggestChords(s->SuggestStartTick());
+            }
+        });
+        place(suggest, 5);
 
         automation::AutomationProperties::SetName(grid, res::GetString(L"KeyAndChordsRowName"));
         return grid;
@@ -680,6 +709,12 @@ namespace winrt::midisequencer::implementation
 
         add(res::GetString(L"MenuAddKey"), L"\uE710", [weak, tick]() { if (auto s = weak.get()) { s->AddKeyAt(tick); } });
 
+        if (m_doc.Harmony && !m_doc.Harmony->Keys.empty())
+        {
+            auto const from = (!hit.KeyBand && hit.Index != SIZE_MAX) ? m_doc.Harmony->Chords[hit.Index].Tick : tick;
+            add(res::GetString(L"MenuSuggestChords"), L"\uE82F", [weak, from]() { if (auto s = weak.get()) { s->SuggestChords(from); } });
+        }
+
         menu.Items().Append(controls::MenuFlyoutSeparator{});
 
         controls::ToggleMenuFlyoutItem numerals{};
@@ -761,7 +796,42 @@ namespace winrt::midisequencer::implementation
 
         controls::StackPanel panel{};
         panel.Spacing(8);
-        panel.MinWidth(320);
+        panel.MinWidth(340);
+
+        controls::Flyout flyout{};
+        winrt::weak_ref<controls::Flyout> weakFlyout{ flyout };
+
+        // Next chord, More chords and Progression (MainWindowChordSuggest.cpp). Picking one
+        // replaces this chord, drops its bass, and closes the picker. The flyout is held weakly:
+        // its own content holds these callbacks.
+        AddChordSuggestionSections(
+            panel,
+            tick,
+            [weak, tick, weakFlyout](uint8_t root, seq::ChordType type)
+            {
+                if (auto f = weakFlyout.get())
+                {
+                    f.Hide();
+                }
+
+                if (auto s = weak.get())
+                {
+                    s->EditHarmony(res::GetString(L"UndoEditChord"), [tick, root, type](seq::HarmonyTrack& harmony)
+                    {
+                        for (auto& chord : harmony.Chords)
+                        {
+                            if (chord.Tick == tick)
+                            {
+                                chord.Root = root;
+                                chord.Type = type;
+                                chord.Bass.reset();
+                                break;
+                            }
+                        }
+                    });
+                }
+            },
+            [weakFlyout]() { if (auto f = weakFlyout.get()) { f.Hide(); } });
 
         auto const heading = [&panel](winrt::hstring const& text)
         {
@@ -928,7 +998,6 @@ namespace winrt::midisequencer::implementation
             }
         });
 
-        controls::Flyout flyout{};
         flyout.Content(panel);
 
         primitives::FlyoutShowOptions options{};

@@ -175,6 +175,7 @@
     <ClInclude Include="DocumentFiles.h" />
     <ClInclude Include="Lyrics.h" />
     <ClInclude Include="Harmony.h" />
+    <ClInclude Include="HarmonySuggest.h" />
     <ClInclude Include="SequenceProvenance.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -261,6 +262,7 @@
     <ClCompile Include="MainWindowClipLength.cpp" />
     <ClCompile Include="MainWindowHarmony.cpp" />
     <ClCompile Include="MainWindowChordPlayback.cpp" />
+    <ClCompile Include="MainWindowChordSuggest.cpp" />
     <ClCompile Include="ArrangeRendererHarmony.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="MainWindowClipEdits.cpp" />
@@ -436,6 +438,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Harmony.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="HarmonySuggest.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceProvenance.cpp">
