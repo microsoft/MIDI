@@ -486,7 +486,12 @@ namespace midisequencer
         case Gesture::Move:
             m_deltaTicks = static_cast<int64_t>(std::llround(tickDelta / grid) * static_cast<int64_t>(grid));
             // With Scale snap, the note under the pointer lands on the key, and the rest move with it.
-            m_deltaNotes = keepPitch ? 0 : SnapToScale(NoteAtY(point.Y)) - NoteAtY(m_pressPoint.Y);
+            // Only once it's dragged to another row: a click on a note outside the key leaves it.
+            {
+                auto const row = NoteAtY(point.Y);
+                auto const pressed = NoteAtY(m_pressPoint.Y);
+                m_deltaNotes = keepPitch || row == pressed ? 0 : SnapToScale(row) - pressed;
+            }
             return true;
 
         case Gesture::Resize:
