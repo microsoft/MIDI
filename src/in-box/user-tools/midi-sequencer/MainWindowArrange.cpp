@@ -1828,25 +1828,32 @@ namespace winrt::midisequencer::implementation
 
             if (x < -1.0 || x > width)
             {
-                PlayheadLine().Visibility(xaml::Visibility::Collapsed);
-                PlayheadMarker().Visibility(xaml::Visibility::Collapsed);
+                PlayheadGroup().Visibility(xaml::Visibility::Collapsed);
                 return;
             }
 
-            PlayheadLine().Visibility(xaml::Visibility::Visible);
-            PlayheadMarker().Visibility(xaml::Visibility::Visible);
+            PlayheadGroup().Visibility(xaml::Visibility::Visible);
 
-            // On whole physical pixels, so the line keeps its width and brightness as it moves.
+            // The line and its marker sit in one group, placed once in whole physical pixels around
+            // the group's origin; each frame only moves the group, also to a whole pixel. So the
+            // line keeps its width, and the marker stays centered on it (#1324).
             auto const scale = Content().XamlRoot() != nullptr ? Content().XamlRoot().RasterizationScale() : 1.0;
             auto const lineWidth = seq::WholePixels(1.5, scale);
+            auto const lineLeft = seq::SnapToPixel(-lineWidth / 2.0, scale);
+            auto const markerLeft = seq::SnapToPixel(lineLeft + lineWidth / 2.0 - 5.5, scale);
+            auto const height = std::max(0.0, PlayheadLayer().ActualHeight());
 
-            PlayheadLine().Width(lineWidth);
-            PlayheadLine().Height(std::max(0.0, PlayheadLayer().ActualHeight()));
-            controls::Canvas::SetLeft(PlayheadLine(), seq::SnapToPixel(x - lineWidth / 2.0, scale));
-            controls::Canvas::SetTop(PlayheadLine(), 0);
+            if (PlayheadLine().Width() != lineWidth || PlayheadLine().Height() != height || controls::Canvas::GetLeft(PlayheadLine()) != lineLeft)
+            {
+                PlayheadLine().Width(lineWidth);
+                PlayheadLine().Height(height);
+                controls::Canvas::SetLeft(PlayheadLine(), lineLeft);
+                controls::Canvas::SetTop(PlayheadLine(), 0);
+                controls::Canvas::SetLeft(PlayheadMarker(), markerLeft);
+                controls::Canvas::SetTop(PlayheadMarker(), 24);
+            }
 
-            controls::Canvas::SetLeft(PlayheadMarker(), seq::SnapToPixel(x - 5.5, scale));
-            controls::Canvas::SetTop(PlayheadMarker(), 24);
+            PlayheadShift().X(seq::SnapToPixel(x, scale));
         }
         catch (...)
         {

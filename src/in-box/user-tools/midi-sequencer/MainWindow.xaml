@@ -889,10 +889,16 @@
                 </Rectangle.Fill>
             </Rectangle>
 
-            <!-- The playhead, over the ruler and every lane. -->
+            <!-- The playhead, over the ruler and every lane. The line and its marker move as one, with
+                 PlayheadShift, so they can't round apart as it moves (MovePlayheadLine). -->
             <Canvas x:Name="PlayheadLayer" Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" IsHitTestVisible="False">
-                <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
-                <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
+                <Canvas x:Name="PlayheadGroup">
+                    <Canvas.RenderTransform>
+                        <TranslateTransform x:Name="PlayheadShift" />
+                    </Canvas.RenderTransform>
+                    <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
+                    <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
+                </Canvas>
             </Canvas>
 
             <!-- A track's setup, beside the timeline (comp 5). -->
