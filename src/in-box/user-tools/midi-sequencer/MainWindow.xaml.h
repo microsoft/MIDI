@@ -307,6 +307,7 @@ namespace winrt::midisequencer::implementation
         void OnTimelinePinch(_In_ input::ManipulationDeltaRoutedEventArgs const& args, _In_ xaml::UIElement const& canvas);
         void ScrollToTick(_In_ int64_t tick) noexcept;
         void UpdatePlayhead() noexcept;
+        void MovePlayheadLine() noexcept;
         xaml::UIElement MakeHeaderRow(_In_ seq::ArrangeRow const& row);
         xaml::UIElement MakeLaneHeader(_In_ seq::ArrangeRow const& row);
         void SelectTrack(_In_ std::wstring const& trackId) noexcept;
@@ -1620,6 +1621,12 @@ namespace winrt::midisequencer::implementation
         std::unique_ptr<midiapp::FrameTicker> m_frames{};
         void StartFrames() noexcept;
         void StopFrames() noexcept;
+
+        // The playhead line moves on every refresh of the display, in step with it, while frames
+        // run. A fixed 30 ms beat against a 120 Hz or 144 Hz display holds each position for 3 or 4
+        // refreshes by turns, which stutters; at 60 Hz it nearly matches, so it didn't (#1324).
+        winrt::event_token m_renderingToken{};
+        void OnDisplayFrame() noexcept;
         xaml::DispatcherTimer m_serviceTimer{ nullptr };
         xaml::DispatcherTimer m_autosaveTimer{ nullptr };
         winrt::event_token m_closingToken{};

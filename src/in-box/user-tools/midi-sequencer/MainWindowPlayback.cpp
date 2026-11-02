@@ -2239,6 +2239,17 @@ namespace winrt::midisequencer::implementation
             {
                 m_frames->Start();
             }
+
+            if (!m_renderingToken)
+            {
+                m_renderingToken = media::CompositionTarget::Rendering([weak = get_weak()](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->OnDisplayFrame();
+                    }
+                });
+            }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start drawing frames.")
     }
@@ -2248,6 +2259,38 @@ namespace winrt::midisequencer::implementation
         if (m_frames != nullptr)
         {
             m_frames->Stop();
+        }
+
+        if (m_renderingToken)
+        {
+            try
+            {
+                media::CompositionTarget::Rendering(m_renderingToken);
+            }
+            catch (...)
+            {
+            }
+
+            m_renderingToken = {};
+        }
+    }
+
+    void MainWindow::OnDisplayFrame() noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr || !m_engine->IsPlaying())
+            {
+                return;
+            }
+
+            // Where playback is as this frame is drawn. The rest of what playing updates waits for
+            // OnFrame.
+            m_position = m_engine->PositionTick();
+            MovePlayheadLine();
+        }
+        catch (...)
+        {
         }
     }
 }

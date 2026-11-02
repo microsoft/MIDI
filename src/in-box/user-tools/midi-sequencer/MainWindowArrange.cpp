@@ -1811,7 +1811,18 @@ namespace winrt::midisequencer::implementation
         {
             UpdateLyricsBar();
             m_timelineBar.PlayheadMoved(m_position);
+            MovePlayheadLine();
+        }
+        catch (...)
+        {
+        }
+    }
 
+    // Only the line and its marker: cheap enough for every refresh of the display (OnDisplayFrame).
+    void MainWindow::MovePlayheadLine() noexcept
+    {
+        try
+        {
             auto const x = static_cast<double>(m_position) * (m_barWidth / TicksPerFourFourBar) - m_scrollX;
             auto const width = LaneWidth();
 
