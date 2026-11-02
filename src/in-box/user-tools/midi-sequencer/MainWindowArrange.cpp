@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "GeneratorNames.h"
+#include "HarmonyFollow.h"
 #include "SequenceRender.h"
 #include "StringResources.h"
 #include "ThemeCanvas.h"
@@ -3442,6 +3443,9 @@ namespace winrt::midisequencer::implementation
                 seq::RefreshPatternPreview(clip);
             }
 
+            // In the song's key, where there is one (HarmonyFollow.h).
+            seq::StartInSongKey(clip, m_doc, start);
+
             auto const clipId = clip.Id;
             auto const before = m_doc.Tracks;
 
@@ -3861,6 +3865,9 @@ namespace winrt::midisequencer::implementation
                 seq::SetPatternStepCount(*clip.Pattern, static_cast<uint16_t>(std::clamp<int64_t>(length / std::max<int64_t>(1, clip.Pattern->StepTicks), 1, seq::MaximumPatternSteps)));
                 seq::RefreshPatternPreview(clip);
             }
+
+            // In the song's key at the start, where there is one (HarmonyFollow.h).
+            seq::StartInSongKey(clip, m_doc, 0);
 
             auto const clipId = clip.Id;
             auto const before = m_doc.Tracks;

@@ -8,6 +8,7 @@
 #include "SequenceGenerator.h"
 #include "GeneratorKinds.h"
 #include "GeneratorListen.h"
+#include "HarmonyFollow.h"
 
 #include <algorithm>
 #include <array>
@@ -264,7 +265,7 @@ namespace midisequencer
             generator.Scale = ScaleKind::MinorPentatonic;
         }
 
-        if (generator.ArpSource > ArpeggiatorSource::Track)
+        if (generator.ArpSource > ArpeggiatorSource::Chords)
         {
             generator.ArpSource = ArpeggiatorSource::Held;
         }
@@ -521,6 +522,16 @@ namespace midisequencer
         notes.Seed = generator.Seed;
         notes.Origin = ClipOrigin::Generated;
         notes.OriginDetail = generator.OriginDetail;
+
+        // A generator on Song key makes its notes in its own key and scale, which Song key keeps
+        // set to the song's key where it was picked, so the notes follow the key from there.
+        // Chord tones depends on where it plays, so it isn't kept.
+        if (generator.Generator.has_value() && generator.Generator->SongKey && GeneratorUsesKey(generator.Generator->Type))
+        {
+            notes.FollowKey = true;
+            notes.WrittenRoot = static_cast<uint8_t>(generator.Generator->ScaleRoot % 12);
+            notes.WrittenScale = generator.Generator->Scale;
+        }
 
         if (!generator.Generator.has_value() || generator.Length <= 0)
         {

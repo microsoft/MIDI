@@ -169,6 +169,10 @@ namespace midisequencer
 
         constexpr wchar_t KeyJump[] = L"jump";
         constexpr wchar_t KeyRootEnds[] = L"rootEnds";
+        constexpr wchar_t KeySongKey[] = L"songKey";
+        constexpr wchar_t KeyChordTones[] = L"chordTones";
+        constexpr wchar_t KeyFollowKey[] = L"followKey";
+        constexpr wchar_t ValueChordsSource[] = L"chords";
         constexpr wchar_t KeyRule[] = L"rule";
         constexpr wchar_t KeyStart[] = L"start";
         constexpr wchar_t KeyDensity[] = L"density";
@@ -1016,6 +1020,8 @@ namespace midisequencer
 
             generator.LargestJump = static_cast<uint8_t>(ReadInteger(object, KeyJump, 0, 0, 24));
             generator.RootEnds = ReadBool(object, KeyRootEnds, false);
+            generator.SongKey = ReadBool(object, KeySongKey, false);
+            generator.ChordTones = ReadBool(object, KeyChordTones, false);
 
             generator.Rule = static_cast<LifeRule>(NameIndex(LifeRuleNames, ReadRawString(object, KeyRule), 0));
             generator.Scatter = ReadRawString(object, KeyStart).value_or(ValueScatter) != ValueCells;
@@ -1208,7 +1214,13 @@ namespace midisequencer
                 generator.VelocityHigh = clamp16(velocity.GetAt(1).GetNumber());
             }
 
-            generator.ArpSource = ReadRawString(object, KeySource).value_or(ValueHeld) == ValueTrack ? ArpeggiatorSource::Track : ArpeggiatorSource::Held;
+            {
+                auto const source = ReadRawString(object, KeySource).value_or(ValueHeld);
+                generator.ArpSource = source == ValueTrack ? ArpeggiatorSource::Track
+                    : source == ValueChordsSource ? ArpeggiatorSource::Chords
+                    : ArpeggiatorSource::Held;
+            }
+
             generator.ArpTrackId = ReadRawString(object, KeyArpTrack).value_or(L"");
 
             auto const order = ReadRawString(object, KeyOrder).value_or(L"");
@@ -1227,7 +1239,7 @@ namespace midisequencer
             generator.Unknown = UnknownKeys(object, {
                 KeyType, KeyStepTicks, KeyEachPass, KeyChannel, KeyNoteLength, KeyRings, KeyScale, KeyRoot, KeyLow, KeyHigh, KeyBusy, KeyKeep, KeyVelocity,
                 KeySource, KeyArpTrack, KeyOrder, KeyOctaves, KeyLatch,
-                KeyJump, KeyRootEnds, KeyRule, KeyStart, KeyDensity, KeyCells, KeyVoice, KeyBirths, KeyJoin, KeySettled, KeyRestartEvery, KeyDrums,
+                KeyJump, KeyRootEnds, KeySongKey, KeyChordTones, KeyRule, KeyStart, KeyDensity, KeyCells, KeyVoice, KeyBirths, KeyJoin, KeySettled, KeyRestartEvery, KeyDrums,
                 KeyFrom, KeyTune, KeyMemory, KeyLearned, KeyLearnedFrom, KeyText, KeyWeights, KeyMutations, KeySoundsLike, KeyInterval, KeyVoices,
                 KeyAxiom, KeyGrammar, KeyAngle, KeyBells, KeyMethod, KeyHandstrokeGap, KeyVelocityBy, KeyListen, KeyListenId, KeyKeepListening });
 
@@ -1383,6 +1395,23 @@ namespace midisequencer
             clip.Color = ReadColor(object, KeyColor);
             clip.Length = std::max<int64_t>(1, ReadTick(context, object, KeyLength));
             clip.Loop = ReadBool(object, KeyLoop, true);
+
+            if (auto const follow = ReadObject(object, KeyFollowKey); follow != nullptr)
+            {
+                auto const scale = ReadRawString(follow, KeyScale).value_or(L"");
+                auto const named = std::find_if(ScaleNames.begin(), ScaleNames.end(), [&scale](wchar_t const* name) { return scale == name; });
+
+                if (named != ScaleNames.end())
+                {
+                    clip.FollowKey = true;
+                    clip.WrittenScale = static_cast<ScaleKind>(std::distance(ScaleNames.begin(), named));
+                    clip.WrittenRoot = static_cast<uint8_t>(ReadInteger(follow, KeyRoot, 0, 0, 11));
+                }
+                else
+                {
+                    ++context.Skipped;
+                }
+            }
             clip.Seed = static_cast<uint32_t>(ReadInteger(object, KeySeed, 0, 0, 0xFFFFFFFF));
             clip.SeedWords = ReadText(object, KeySeedWords, 64);
 
@@ -1412,7 +1441,7 @@ namespace midisequencer
             clip.Lanes = ReadLanes(context, ReadArray(object, KeyLanes));
 
             clip.Unknown = UnknownKeys(object, {
-                KeyId, KeyKind, KeyName, KeyColor, KeyLength, KeyLoop, KeySeed, KeySeedWords, KeyOrigin, KeySettings, KeyNotes, KeyEvents, KeyLanes });
+                KeyId, KeyKind, KeyName, KeyColor, KeyLength, KeyLoop, KeyFollowKey, KeySeed, KeySeedWords, KeyOrigin, KeySettings, KeyNotes, KeyEvents, KeyLanes });
 
             return true;
         }
@@ -2275,6 +2304,16 @@ namespace midisequencer
                 {
                     members.Bool(KeyRootEnds, true);
                 }
+
+                if (generator.SongKey)
+                {
+                    members.Bool(KeySongKey, true);
+                }
+
+                if (generator.ChordTones)
+                {
+                    members.Bool(KeyChordTones, true);
+                }
             };
 
             if (generator.Type == GeneratorType::Euclidean)
@@ -2317,7 +2356,9 @@ namespace midisequencer
             }
             else if (generator.Type == GeneratorType::Arpeggiator)
             {
-                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack : ValueHeld);
+                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack
+                    : generator.ArpSource == ArpeggiatorSource::Chords ? ValueChordsSource
+                    : ValueHeld);
 
                 if (generator.ArpSource == ArpeggiatorSource::Track)
                 {
@@ -2358,6 +2399,12 @@ namespace midisequencer
 
             members.Integer(KeyLength, clip.Length);
             members.Bool(KeyLoop, clip.Loop);
+
+            if (clip.FollowKey)
+            {
+                members.Raw(KeyFollowKey, std::format(L"{{ \"{}\": {}, \"{}\": \"{}\" }}",
+                    KeyRoot, clip.WrittenRoot % 12, KeyScale, ScaleNames[std::min<size_t>(static_cast<size_t>(clip.WrittenScale), ScaleNames.size() - 1)]));
+            }
 
             if (clip.Seed != 0)
             {

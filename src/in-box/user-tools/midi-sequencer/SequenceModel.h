@@ -350,6 +350,7 @@ namespace midisequencer
     {
         Held = 0,           // the keys held on the track's source, as they're played
         Track = 1,          // the notes another track's timeline plays
+        Chords = 2,         // the chords on the Key and chords row
     };
 
     enum class ArpeggiatorOrder : uint8_t
@@ -460,6 +461,12 @@ namespace midisequencer
         uint8_t LargestJump{ 0 };
         bool RootEnds{ false };
 
+        // Key and chords row (proposal revision 2, section 3). SongKey plays in the song's key
+        // where the row has one, in place of ScaleRoot and Scale, which stay for when it doesn't.
+        // ChordTones moves the notes that start on a beat to the nearest note of the chord playing.
+        bool SongKey{ false };
+        bool ChordTones{ false };
+
         // Life: a board with a column for each step and a row for each note of the key and range
         // (or for each drum), a generation a pass. The edges wrap.
         LifeRule Rule{ LifeRule::Life };
@@ -544,6 +551,14 @@ namespace midisequencer
         std::wstring SeedWords{};
 
         ClipOrigin Origin{ ClipOrigin::Unknown };
+
+        // Follow key (Key and chords proposal, section 3), for notes clips and melodic patterns:
+        // the notes were written in WrittenRoot and WrittenScale, and play moved by scale steps
+        // into the song's key wherever the Key and chords row has a different one. Notes never
+        // change to fit chords.
+        bool FollowKey{ false };
+        uint8_t WrittenRoot{ 0 };
+        ScaleKind WrittenScale{ ScaleKind::Major };
 
         // The file it was imported from, or the device it was recorded from.
         std::wstring OriginDetail{};

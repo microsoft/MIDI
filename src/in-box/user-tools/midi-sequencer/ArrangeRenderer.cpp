@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ArrangeRenderer.h"
+#include "HarmonyFollow.h"
 
 using winrt::Windows::Foundation::Rect;
 
@@ -1280,6 +1281,13 @@ namespace midisequencer
             if (uses != t_useCounts.end() && uses->second > 1)
             {
                 ds.DrawText(L"\uE71B", textX, y0, 10.0f, CaptionHeight, WithAlpha(captionColor, 0.85), m_captionGlyph);
+                textX += 12.0f;
+            }
+
+            // Follows the song's key, so it plays different notes in different places.
+            if (FollowsSongKey(*clip))
+            {
+                ds.DrawText(L"\uE8D6", textX, y0, 10.0f, CaptionHeight, WithAlpha(captionColor, 0.85), m_captionGlyph);
                 textX += 12.0f;
             }
 

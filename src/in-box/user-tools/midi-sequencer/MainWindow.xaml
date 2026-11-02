@@ -1170,6 +1170,14 @@
                         </StackPanel>
                     </Grid>
 
+                    <!-- Follow key, for notes clips and melodic patterns (MainWindowChordFollow.cpp). -->
+                    <ToggleButton x:Name="EditorFollowKeyToggle" x:Uid="EditorFollowKeyToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorFollowKeyClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8D6;" FontSize="12" />
+                            <TextBlock x:Uid="EditorFollowKeyText" />
+                        </StackPanel>
+                    </ToggleButton>
+
                     <Rectangle x:Name="EditorSeparator1" Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
 
                     <StackPanel x:Name="NotesTools" Orientation="Horizontal" Spacing="8">

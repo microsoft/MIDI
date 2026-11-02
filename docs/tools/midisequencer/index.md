@@ -146,7 +146,7 @@ A generator shows all of its settings in the editor. Select **Type** to change w
 
 - **A Euclidean rhythm** draws its rings. Each dot is a step, and the lit dots are the hits. Drag around a ring to turn it, so its hits start later. Scroll over a ring to add or take away hits. The table next to it sets each ring's note, hits (**Pulses**), steps, turn (**Rotate**), velocity and chance. **Preview (2 bars)** shows two bars of the result.
 - **A chance melody** shows its first four passes, with new notes outlined, so you can see how much changes each time round.
-- **An arpeggiator** sets where its notes come from, the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
+- **An arpeggiator** sets where its notes come from (notes you hold, another track, or the chords on the Key and chords row), the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
 - **Life** plays the Game of Life on a board with a column for each step and a row for each note of the key. Draw the first pass's cells on the board, or start with a scatter or a shape such as a glider. Each pass is the next generation: a cell with two or three neighbors lives on, and an empty cell with three is born. The edges wrap, so a glider that walks off the end of the bar comes back in at the start. Select any pass under the board to see it, and **Set as start** to begin there.
 - **Life drums** does the same with a row for each drum. Select a drum's name on the board to change it.
 - **Learn** learns which note tends to follow which (a Markov chain) from a tune, a clip you pick, or words you type, then makes up new melodies in that style, in the key you choose. **Memory** sets how many notes back it remembers. The drawing shows the moves it learned, with this pass's lit. It learns only from what you give it.
@@ -156,7 +156,7 @@ A generator shows all of its settings in the editor. Select **Type** to change w
 - **An L-system** grows a drawing from a short rule, like a plant, and the melody follows the drawing up and down. Pick a shape, or open **Rules** to write your own.
 - **Change ringing** rings bells the way bell towers do, in a new order every row, with methods such as Plain Bob and Grandsire. The drawing is the method's blue line.
 
-The melodies have a **Key and range**. Pick the key and the scale, and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Max interval**, and **Resolve to root**.
+The melodies have a **Key and range**. Pick the key and the scale, or **Song key** to follow the Key and chords row (see [Following the key and chords](#following-the-key-and-chords)), and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Max interval**, and **Resolve to root**.
 
 Life, Learn, Words, Evolve, the infinity series, L-systems, and change ringing also have a **Velocity** section. Its chips pick how loud each note plays. Each generator's own ideas come first, such as **By age** for Life (new cells loudest), **By surprise** for Learn, **As spoken** for Words, and **Handstroke/backstroke** for change ringing. **Steady**, **On the beat**, **Swell**, and **Random** work for all of them. After Learn learns from a clip, **As learned** plays the clip's loud and soft notes. The drawing shows this pass's notes over the range they play in. Drag the top or bottom edge of the band, or drag its middle to move it, or scroll over it to move it 10%.
 
@@ -241,7 +241,19 @@ Each of these is one step to undo.
 
 To hear the chords, right-click the row and turn on **Play chords**. They play as the sequence plays, a little softer than your tracks, on **Default output** in Settings. Until you pick a device there, that's the General MIDI Synth, so there's nothing to set up. Play chords is a setting for the app, not for one sequence.
 
-The keys and chords are saved in the sequence file. Generators don't follow them yet.
+The keys and chords are saved in the sequence file.
+
+### Following the key and chords
+
+Generators and clips can follow the song's key, so a key change carries the whole song with it.
+
+- **Generators.** In a generator's **Key and range**, pick **Song key** at the top of the key list. It plays in the key on the Key and chords row, and takes the scale from there too, wherever the key changes. New generators start on **Song key** when the sequence has a key. Where the row has no key, a generator plays in the key it had before.
+- **Chord tones.** Turn this on in a generator's key settings, and the notes that start on a beat move to the nearest note of the chord playing then. The rest stay in the scale, so the melody fits the chords without sounding stiff.
+- **The arpeggiator** can play the chords on the row. Under where its notes come from, pick **Key and chords row**.
+- **Notes clips and melodic patterns.** Turn on **Follow key** in the clip editor's header. The notes are taken as written in the key where the clip is first placed. Wherever the song is in a different key, they move by scale steps to fit it: E in C major plays as F♯ in D major, and as E♭ in C minor. Notes never change to fit chords. New melodic patterns follow the key when the sequence has one. Notes clips don't, until you turn it on.
+- **Drum patterns, Euclidean rhythms and Life drums never follow.** Drums don't have a key.
+
+A clip that follows the song's key has a small note mark on the timeline, so it's clear why it plays different notes in different places.
 
 ## The clip launcher
 
@@ -324,6 +336,7 @@ This preview doesn't have everything. These are known gaps:
 - Pattern steps can't change a controller or other settings yet, only notes.
 - Lyrics don't have ruby (the small reading text used with Japanese), or two languages at once. Lyrics in an imported MIDI 2.0 clip file play, but they don't show in the Lyrics row.
 - DAWproject export leaves out per-note expressions and polyphonic pressure.
+- The clip editor and a generator's drawing show the notes as written. Where a clip follows the song's key, it plays them moved to fit, which the editor doesn't show yet.
 
 ## Learn more
 

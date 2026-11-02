@@ -127,6 +127,11 @@ namespace winrt::midisequencer::implementation
 
         void OnEditorDrawClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorGhostClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorFollowKeyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // Shows Follow key for a notes clip or a melodic pattern, on when it follows, and off
+        // when the song has no key yet (MainWindowChordFollow.cpp).
+        void UpdateFollowKeyToggle(_In_ seq::Clip const& clip) noexcept;
         void OnEditorAutomationClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorQuantizeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -604,6 +609,23 @@ namespace winrt::midisequencer::implementation
         primitives::ToggleButton MakeChip(_In_ winrt::hstring const& label, _In_ bool on, _In_ std::function<void(bool)> const& toggled);
         void AppendSeparateChip(_In_ controls::StackPanel const& row, _In_ primitives::ToggleButton const& chip);
         void AddKeyAndRange(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit, _In_ bool rules);
+
+        // Following the Key and chords row (MainWindowChordFollow.cpp). A generator's key picker
+        // with Song key first, then the 12 roots; the scale picker beside it is off while it
+        // follows the song.
+        void FillGeneratorKeyPickers(
+            _In_ controls::ComboBox const& key,
+            _In_ controls::ComboBox const& scale,
+            _In_ seq::Clip const& clip,
+            _In_ GeneratorEdit const& edit);
+        xaml::UIElement MakeChordTonesSwitch(_In_ seq::GeneratorSettings const& generator, _In_ GeneratorEdit const& edit);
+
+        // The song's key where a clip is first placed, if the row has one.
+        std::optional<seq::KeyChange> SongKeyForClip(_In_ std::wstring const& clipId) const;
+
+        // Follow key on a notes clip or a melodic pattern: turning it on records the key the
+        // notes are written in, the song's key where the clip is first placed.
+        void SetClipFollowsKey(_In_ std::wstring const& clipId, _In_ bool on) noexcept;
         void AddKeyRules(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
 
         // How loud it plays: the ways it can set each note's velocity, and the range they play in

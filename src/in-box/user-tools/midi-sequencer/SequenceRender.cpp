@@ -6,6 +6,8 @@
 // ============================================================================
 
 #include "SequenceRender.h"
+#include "Harmony.h"
+#include "HarmonyFollow.h"
 #include "Lyrics.h"
 #include "SequenceArpeggiator.h"
 #include "GeneratorListen.h"
@@ -257,9 +259,20 @@ namespace midisequencer
                 Add(messages, maximum, std::min(note.Tick + note.Length, passEnd), RenderedKind::NoteOff, words, 2);
             };
 
+            // Where a tick is in the song, for the Key and chords row (HarmonyFollow.h).
+            auto const songTick = [&options](int64_t tick) { return options.SongTick != nullptr ? (*options.SongTick)(tick) : tick; };
+
+            // Whether this clip plays anything differently for the row, so the rest skip the work.
+            auto const follows = ClipFollowsKey(clip) || (generated && clip.Generator->ChordTones);
+
+            auto const addPlayed = [&](Note const& note)
+            {
+                addNote(follows ? AsPlayed(sequence, clip, note, songTick(note.Tick)) : note);
+            };
+
             if (fromSteps)
             {
-                ForEachPatternNote(clip, passStart, passEnd, pass, windowStart, windowEnd, true, addNote);
+                ForEachPatternNote(clip, passStart, passEnd, pass, windowStart, windowEnd, true, addPlayed);
             }
             else if (generated && clip.Generator->Type == GeneratorType::Arpeggiator)
             {
@@ -272,13 +285,17 @@ namespace midisequencer
                     {
                         messages[i].Arpeggiated = true;
                     }
-                });
+                }, options.SongTick);
             }
             else if (generated)
             {
                 // A generator that listens hears its sources through this same path.
                 ListenContext const listen{ &sequence, options.HearTrack, options.HearEpoch };
-                ForEachGeneratorNote(clip, passStart, passEnd, pass, windowStart, windowEnd, true, addNote, &listen);
+
+                // Song key plays the pass in the key where it starts. Chord tones (in addPlayed)
+                // moves the notes that start a beat to the chord playing then.
+                auto const inKey = ClipInSongKey(sequence, clip, songTick(passStart));
+                ForEachGeneratorNote(inKey ? *inKey : clip, passStart, passEnd, pass, windowStart, windowEnd, true, addPlayed, &listen);
             }
 
             // A note comes out with its end, even when the end is past the window. The engine holds
@@ -304,11 +321,14 @@ namespace midisequencer
 
                 auto const off = std::min(on + std::max<int64_t>(1, it->Length), passEnd);
 
+                // A notes clip that follows the key moves each note into the key where it plays.
+                auto const played = follows ? AsPlayed(sequence, clip, *it, songTick(on)) : *it;
+
                 uint32_t words[2]{};
-                BuildNoteOn(*it, 0, words);
+                BuildNoteOn(played, 0, words);
                 Add(messages, maximum, on, RenderedKind::NoteOn, words, 2);
 
-                BuildNoteOff(*it, 0, words);
+                BuildNoteOff(played, 0, words);
                 Add(messages, maximum, off, RenderedKind::NoteOff, words, 2);
             }
 

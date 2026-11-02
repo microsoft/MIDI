@@ -5067,6 +5067,55 @@
   <data name="UndoFillProgression" xml:space="preserve">
     <value>Fill chords</value>
   </data>
+  <data name="GeneratorSongKey" xml:space="preserve">
+    <value>Song key</value>
+  </data>
+  <data name="GeneratorSongKeyHelp" xml:space="preserve">
+    <value>Song key plays in the key on the Key and chords row, wherever it changes, and takes its scale from there too. Where the row has no key, the clip uses the key and scale it had before.</value>
+  </data>
+  <data name="GeneratorSongKeyNoKey" xml:space="preserve">
+    <value>Song key plays in the key on the Key and chords row. This sequence doesn't have a key yet, so it plays in its own.</value>
+  </data>
+  <data name="GeneratorChordTones" xml:space="preserve">
+    <value>Chord tones</value>
+  </data>
+  <data name="GeneratorChordTonesHelp" xml:space="preserve">
+    <value>Notes that start on a beat move to the nearest note of the chord playing then. The rest stay in the scale.</value>
+  </data>
+  <data name="GeneratorChordTonesNoChords" xml:space="preserve">
+    <value>Notes that start on a beat move to the nearest note of the chord playing then. Add chords to the Key and chords row to hear it.</value>
+  </data>
+  <data name="ArpFromChords" xml:space="preserve">
+    <value>Key and chords row</value>
+  </data>
+  <data name="ArpFromChordsHelp" xml:space="preserve">
+    <value>Each step plays from the chord on the Key and chords row then.</value>
+  </data>
+  <data name="ArpFromChordsNone" xml:space="preserve">
+    <value>Each step plays from the chord on the Key and chords row then. There aren't any chords there yet.</value>
+  </data>
+  <data name="ArpChordsNote" xml:space="preserve">
+    <value>It follows the Key and chords row, so jumping back replays the same notes, and an export writes what you heard.</value>
+  </data>
+  <data name="EditorFollowKeyToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Follow key</value>
+  </data>
+  <data name="EditorFollowKeyText.Text" xml:space="preserve">
+    <value>Follow key</value>
+  </data>
+  <data name="FollowKeyHelp" xml:space="preserve">
+    <value>Moves these notes by scale steps when the song's key changes. They're taken as written in the key where the clip is first placed.</value>
+  </data>
+  <data name="FollowKeyOnFormat" xml:space="preserve">
+    <value>Written in {0}. Where the song's key is different, the notes move by scale steps to fit it.</value>
+    <comment>{0} is a key, like "A minor".</comment>
+  </data>
+  <data name="FollowKeyNoKey" xml:space="preserve">
+    <value>Add a key to the Key and chords row first. Follow key moves these notes when the song's key changes.</value>
+  </data>
+  <data name="UndoFollowKey" xml:space="preserve">
+    <value>Follow key</value>
+  </data>
   <data name="RomanNumeralsHelp" xml:space="preserve">
     <value>Shows each chord's place in the key, like ii or V7, under its name on the Key and chords row, when there's room.</value>
   </data>

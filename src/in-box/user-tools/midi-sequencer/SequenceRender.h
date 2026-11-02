@@ -89,6 +89,11 @@ namespace midisequencer
         // what's heard live. 0 without playback.
         uint64_t HearEpoch{ 0 };
 
+        // Where a rendered tick is in the song, for the Key and chords row. A launched clip renders
+        // on its own clock, past the timeline's loop; playback maps its ticks back. Left out, a
+        // tick is where it is.
+        std::function<int64_t(int64_t)> const* SongTick{ nullptr };
+
         size_t MaximumMessages{ MaximumRenderedMessages };
 
         // The passes through looping clips left for renders that share this count, so a file

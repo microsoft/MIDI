@@ -298,6 +298,8 @@ namespace winrt::midisequencer::implementation
 
             EditorLengthChip().Text(length);
 
+            UpdateFollowKeyToggle(*clip);
+
             auto const uses = seq::CountClipUses(m_doc, clip->Id);
             EditorUsesChip().Visibility(uses > 1 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             EditorUsesText().Text(res::FormatString(L"ClipUsesFormat", uses));
