@@ -129,6 +129,12 @@ namespace winrt::midisequencer::implementation
         void OnEditorDrawClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorGhostClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorFollowKeyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorScaleHighlightClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorScaleSnapClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // Gives the piano roll the song's key and chords where the clip is first placed, for
+        // Scale highlight and Scale snap, and sets their buttons (MainWindowChordFollow.cpp).
+        void UpdateRollScale(_In_ seq::Clip const& clip) noexcept;
 
         // Shows Follow key for a notes clip or a melodic pattern, on when it follows, and off
         // when the song has no key yet (MainWindowChordFollow.cpp).

@@ -133,6 +133,7 @@ namespace winrt::midisequencer::implementation
             // clip again from the sequence.
             m_roll.SetClip(clip, color);
             m_roll.SetMeter(&m_doc.Meter);
+            UpdateRollScale(*clip);
             m_pattern.SetClip(clip, color);
 
             // The lanes under the roll too, so a key pressed before the next drawing finds the clip
@@ -571,6 +572,9 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            // Alt turns Scale snap off for this note.
+            m_roll.SetScaleSnapBypass((args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Menu) == winrt::Windows::System::VirtualKeyModifiers::Menu);
+
             if (m_roll.PointerPressed(position, shift, control, right, doubleClick))
             {
                 InvalidateEditor();
@@ -622,6 +626,7 @@ namespace winrt::midisequencer::implementation
             {
                 // Shift keeps the notes on their pitch while they move.
                 auto const keepPitch = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+                m_roll.SetScaleSnapBypass((args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Menu) == winrt::Windows::System::VirtualKeyModifiers::Menu);
 
                 if (m_roll.PointerMoved(position, keepPitch))
                 {

@@ -205,6 +205,106 @@ namespace winrt::midisequencer::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::UpdateRollScale(seq::Clip const& clip) noexcept
+    {
+        try
+        {
+            auto const& settings = seq::AppSettings::Current();
+            auto const hasKey = m_doc.Harmony && !m_doc.Harmony->Keys.empty();
+
+            EditorScaleHighlightToggle().IsChecked(settings.ScaleHighlight());
+            EditorScaleSnapToggle().IsChecked(settings.ScaleSnap());
+            EditorScaleHighlightToggle().IsEnabled(hasKey);
+            EditorScaleSnapToggle().IsEnabled(hasKey);
+
+            if (!hasKey)
+            {
+                m_roll.SetScale(std::nullopt, settings.ScaleHighlight(), settings.ScaleSnap());
+                return;
+            }
+
+            // Where the clip is first placed; the start of the song when it isn't.
+            int64_t first{ INT64_MAX };
+
+            seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
+            {
+                for (auto const& placement : track.Timeline)
+                {
+                    if (placement.ClipId == clip.Id)
+                    {
+                        first = std::min(first, placement.Tick);
+                    }
+                }
+
+                return true;
+            });
+
+            auto const start = first == INT64_MAX ? 0 : first;
+            auto const key = seq::SongKeyAt(m_doc, start);
+
+            if (!key)
+            {
+                m_roll.SetScale(std::nullopt, settings.ScaleHighlight(), settings.ScaleSnap());
+                return;
+            }
+
+            seq::PianoRoll::RollScale scale{};
+
+            for (auto const note : seq::ScaleNotes(key->Root, key->Scale, 0, 127))
+            {
+                scale.InKey[note % 12] = true;
+            }
+
+            // The chords under the clip's first pass, from its start.
+            for (auto const& chord : m_doc.Harmony->Chords)
+            {
+                auto const from = std::max(chord.Tick, start);
+                auto const to = std::min(chord.Tick + chord.Length, start + clip.Length);
+
+                if (to <= from)
+                {
+                    continue;
+                }
+
+                seq::PianoRoll::RollScale::ChordSpan span{};
+                span.Start = from - start;
+                span.End = to - start;
+
+                for (auto const pc : seq::ChordPitchClasses(chord))
+                {
+                    span.Tones[pc % 12] = true;
+                }
+
+                if (chord.Bass)
+                {
+                    span.Tones[*chord.Bass % 12] = true;
+                }
+
+                scale.Chords.push_back(span);
+            }
+
+            m_roll.SetScale(std::move(scale), settings.ScaleHighlight(), settings.ScaleSnap());
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the song's key in the editor.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditorScaleHighlightClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto const checked = EditorScaleHighlightToggle().IsChecked();
+        seq::AppSettings::Current().ScaleHighlight(checked != nullptr && checked.GetBoolean());
+        RefreshEditor();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditorScaleSnapClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto const checked = EditorScaleSnapToggle().IsChecked();
+        seq::AppSettings::Current().ScaleSnap(checked != nullptr && checked.GetBoolean());
+        RefreshEditor();
+    }
+
+    _Use_decl_annotations_
     void MainWindow::UseFoundKey(int64_t tick, seq::KeyChange key) noexcept
     {
         try

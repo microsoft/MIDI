@@ -1230,6 +1230,15 @@
                                 <TextBlock x:Uid="EditorGhostText" />
                             </StackPanel>
                         </ToggleButton>
+
+                        <!-- The song's key on the rows, and notes kept to it (MainWindowChordFollow.cpp). -->
+                        <ToggleButton x:Name="EditorScaleHighlightToggle" x:Uid="EditorScaleHighlightToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorScaleHighlightClick">
+                            <TextBlock x:Uid="EditorScaleHighlightText" />
+                        </ToggleButton>
+
+                        <ToggleButton x:Name="EditorScaleSnapToggle" x:Uid="EditorScaleSnapToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorScaleSnapClick">
+                            <TextBlock x:Uid="EditorScaleSnapText" />
+                        </ToggleButton>
                     </StackPanel>
 
                     <!-- A pattern clip's settings. Shown instead of the notes tools. -->

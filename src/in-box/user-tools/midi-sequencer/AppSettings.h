@@ -133,6 +133,12 @@ namespace midisequencer
         // MIDI Glass and Windows MIDI Patchbay.
         bool ShowAssistant() const noexcept { return m_showAssistant; }
         void ShowAssistant(_In_ bool value) noexcept;
+
+        // The piano roll's Scale highlight (on by default) and Scale snap (off), from the song's key.
+        bool ScaleHighlight() const noexcept { return m_scaleHighlight; }
+        void ScaleHighlight(_In_ bool value) noexcept;
+        bool ScaleSnap() const noexcept { return m_scaleSnap; }
+        void ScaleSnap(_In_ bool value) noexcept;
         std::wstring const& DefaultOutputName() const noexcept { return m_defaultOutputName; }
         std::wstring const& DefaultOutputId() const noexcept { return m_defaultOutputId; }
         void DefaultOutput(_In_ std::wstring const& name, _In_ std::wstring const& id) noexcept;
@@ -259,6 +265,8 @@ namespace midisequencer
         bool m_showRomanNumerals{ true };
         bool m_playChords{ false };
         bool m_showAssistant{ true };
+        bool m_scaleHighlight{ true };
+        bool m_scaleSnap{ false };
         std::wstring m_defaultOutputName{};
         std::wstring m_defaultOutputId{};
         bool m_showMixer{ false };

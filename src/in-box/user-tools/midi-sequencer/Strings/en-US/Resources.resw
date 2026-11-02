@@ -5222,6 +5222,24 @@
   <data name="MenuFindKey" xml:space="preserve">
     <value>Find key</value>
   </data>
+  <data name="EditorScaleHighlightText.Text" xml:space="preserve">
+    <value>Scale highlight</value>
+  </data>
+  <data name="EditorScaleHighlightToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Scale highlight</value>
+  </data>
+  <data name="EditorScaleHighlightToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Make the rows in the song's key lighter, and tint the notes of each chord under it. It uses the Key and chords row.</value>
+  </data>
+  <data name="EditorScaleSnapText.Text" xml:space="preserve">
+    <value>Scale snap</value>
+  </data>
+  <data name="EditorScaleSnapToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Scale snap</value>
+  </data>
+  <data name="EditorScaleSnapToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Put notes you draw or drag on notes in the song's key. Hold Alt for any note. It uses the Key and chords row.</value>
+  </data>
   <data name="MenuFindKeyLikeliestFormat" xml:space="preserve">
     <value>{0} (most likely)</value>
     <comment>{0} is a key, like "A minor".</comment>

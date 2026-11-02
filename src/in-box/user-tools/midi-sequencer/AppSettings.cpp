@@ -31,6 +31,8 @@ namespace midisequencer
     constexpr wchar_t ValueShowRomanNumerals[] = L"ShowRomanNumerals";
     constexpr wchar_t ValuePlayChords[] = L"PlayChords";
     constexpr wchar_t ValueShowAssistant[] = L"ShowAssistant";
+    constexpr wchar_t ValueScaleHighlight[] = L"ScaleHighlight";
+    constexpr wchar_t ValueScaleSnap[] = L"ScaleSnap";
     constexpr wchar_t ValueDefaultOutputName[] = L"DefaultOutputName";
     constexpr wchar_t ValueDefaultOutputId[] = L"DefaultOutputId";
         constexpr wchar_t ValueShowMixer[] = L"ShowMixer";
@@ -366,6 +368,8 @@ namespace midisequencer
         m_showRomanNumerals = ReadDword(ValueShowRomanNumerals, 1) != 0;
         m_playChords = ReadDword(ValuePlayChords, 0) != 0;
         m_showAssistant = ReadDword(ValueShowAssistant, 1) != 0;
+        m_scaleHighlight = ReadDword(ValueScaleHighlight, 1) != 0;
+        m_scaleSnap = ReadDword(ValueScaleSnap, 0) != 0;
         m_defaultOutputName = ReadString(ValueDefaultOutputName, L"");
         m_defaultOutputId = ReadString(ValueDefaultOutputId, L"");
         m_showMixer = ReadDword(ValueShowMixer, 0) != 0;
@@ -477,6 +481,20 @@ namespace midisequencer
     {
         m_showAssistant = value;
         WriteDword(ValueShowAssistant, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ScaleHighlight(bool value) noexcept
+    {
+        m_scaleHighlight = value;
+        WriteDword(ValueScaleHighlight, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ScaleSnap(bool value) noexcept
+    {
+        m_scaleSnap = value;
+        WriteDword(ValueScaleSnap, value ? 1 : 0);
     }
 
     _Use_decl_annotations_
