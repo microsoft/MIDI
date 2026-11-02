@@ -621,7 +621,7 @@ namespace winrt::midisequencer::implementation
             m_engine->Play(std::max<int64_t>(0, fromTick));
             m_position = std::max<int64_t>(0, fromTick);
 
-            m_frameTimer.Start();
+            StartFrames();
             UpdateTransport();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to play.")
@@ -850,7 +850,7 @@ namespace winrt::midisequencer::implementation
                 ApplyEngineSettings();
             }
 
-            m_frameTimer.Start();
+            StartFrames();
             UpdateTransport();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start recording.")
@@ -1019,7 +1019,7 @@ namespace winrt::midisequencer::implementation
 
             DocumentChanged();
             ApplyEngineSettings();
-            m_frameTimer.Start();
+            StartFrames();
             UpdateTransport();
             InvalidateLaunchers();
         }
@@ -1494,7 +1494,7 @@ namespace winrt::midisequencer::implementation
 
             if (m_engine->IsPlaying())
             {
-                m_frameTimer.Start();
+                StartFrames();
             }
             else
             {
@@ -2229,5 +2229,36 @@ namespace winrt::midisequencer::implementation
     void MainWindow::OnSilenceClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         Silence();
+    }
+
+    void MainWindow::StartFrames() noexcept
+    {
+        try
+        {
+            // The system timer's finest period while frames are drawn, so they come evenly.
+            // Counted by the SDK, so it's shared with anything else in the process that asks.
+            if (!m_finePeriodHeld)
+            {
+                m_finePeriodHeld = midi2::MidiClock::BeginLowLatencySystemTimerPeriod();
+            }
+
+            m_frameTimer.Start();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start drawing frames.")
+    }
+
+    void MainWindow::StopFrames() noexcept
+    {
+        try
+        {
+            m_frameTimer.Stop();
+
+            if (m_finePeriodHeld)
+            {
+                m_finePeriodHeld = false;
+                midi2::MidiClock::EndLowLatencySystemTimerPeriod();
+            }
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to stop drawing frames.")
     }
 }

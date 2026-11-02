@@ -798,7 +798,7 @@ namespace winrt::midisequencer::implementation
 
             if (!playing && !m_recording && !m_slotTake.has_value())
             {
-                m_frameTimer.Stop();
+                StopFrames();
                 UpdateTransport();
                 UpdateClockStatus();
                 InvalidateArrange();
@@ -939,7 +939,7 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            if (m_frameTimer != nullptr) { m_frameTimer.Stop(); }
+            if (m_frameTimer != nullptr) { StopFrames(); }
             if (m_serviceTimer != nullptr) { m_serviceTimer.Stop(); }
             if (m_autosaveTimer != nullptr) { m_autosaveTimer.Stop(); }
 

@@ -1615,6 +1615,13 @@ namespace winrt::midisequencer::implementation
         std::weak_ptr<SoundDialogState> m_soundDialog{};
 
         xaml::DispatcherTimer m_frameTimer{ nullptr };
+
+        // While the frame timer runs, the system timer is held at its finest period, so a 30 ms
+        // timer fires every 30 ms and not at 31 and 47 ms by turns on a PC left at 15.6 ms
+        // (#1324). StartFrames and StopFrames keep the two together.
+        bool m_finePeriodHeld{ false };
+        void StartFrames() noexcept;
+        void StopFrames() noexcept;
         xaml::DispatcherTimer m_serviceTimer{ nullptr };
         xaml::DispatcherTimer m_autosaveTimer{ nullptr };
         winrt::event_token m_closingToken{};
