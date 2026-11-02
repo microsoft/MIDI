@@ -79,6 +79,7 @@ namespace winrt::midisequencer::implementation
         void OnExportDawProjectClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnKeyAndChordsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSequenceInfoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRemoteControlClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnStudioSetupClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -166,6 +167,7 @@ namespace winrt::midisequencer::implementation
         xaml::UIElement MakeStylePicker();
         xaml::UIElement MakeTimelineBarSettings();
         xaml::UIElement MakeAutoSaveSetting();
+        xaml::UIElement MakeRomanNumeralsSetting();
         xaml::UIElement MakeStylePreview(_In_ themeengine::ThemeDefinition const& definition, _In_ bool dark, _In_ std::optional<themeengine::Color> tint);
         void ApplyStrips() noexcept;
         void ColorDialogs() noexcept;
@@ -679,6 +681,46 @@ namespace winrt::midisequencer::implementation
         // The lyrics track (MainWindowLyrics.cpp).
         xaml::UIElement MakeLyricsHeader(_In_ seq::ArrangeRow const& row);
         void AddLyricsMenuItems(_In_ controls::MenuFlyout const& menu);
+
+        // ---- the Key and chords row (MainWindowHarmony.cpp) ----
+
+        struct HarmonyHit
+        {
+            bool KeyBand{ false };
+            size_t Index{ SIZE_MAX };       // the key or chord under the pointer
+            bool OnRightEdge{ false };      // a chord's end, to change its length
+        };
+
+        enum class HarmonyDragKind : uint8_t { None, MoveChord, ResizeChord, MoveKey };
+
+        struct HarmonyDrag
+        {
+            HarmonyDragKind Kind{ HarmonyDragKind::None };
+            bool Pinned{ true };
+            bool Moved{ false };
+            size_t Index{ SIZE_MAX };
+            double StartX{ 0 };
+            int64_t OriginalTick{ 0 };
+            int64_t OriginalLength{ 0 };
+            std::optional<seq::HarmonyTrack> Before{};
+        };
+
+        HarmonyHit HitTestHarmony(_In_ seq::ArrangeRow const& row, _In_ float top, _In_ foundation::Point point) const;
+        xaml::UIElement MakeHarmonyHeader(_In_ seq::ArrangeRow const& row);
+        void ShowHarmonyRow() noexcept;
+        void HideHarmonyRow() noexcept;
+        void EditHarmony(_In_ winrt::hstring const& undoName, _In_ std::function<void(seq::HarmonyTrack&)> const& edit) noexcept;
+        void OnHarmonyPressed(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ input::PointerRoutedEventArgs const& args);
+        void OnHarmonyDragMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnHarmonyDragReleased();
+        void OnHarmonyDoubleTapped(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ foundation::Point point, _In_ int64_t tick);
+        void AddHarmonyMenuItems(_In_ controls::MenuFlyout const& menu, _In_ seq::ArrangeRow const& row, _In_ bool pinned, _In_ foundation::Point point, _In_ int64_t tick);
+        void AddChordAt(_In_ int64_t tick) noexcept;
+        void AddKeyAt(_In_ int64_t tick) noexcept;
+        void DeleteSelectedHarmony() noexcept;
+        void ShowChordPicker(_In_ size_t chord, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void ShowKeyPicker(_In_ size_t key, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        std::vector<winrt::hstring> const& KeyScaleNames();
         void ShowLyricsEditor();
         void ApplyLyrics(_In_ std::optional<seq::LyricsTrack> lyrics, _In_ std::wstring const& undoName);
         void UpdateLyricsBar() noexcept;
@@ -1270,6 +1312,8 @@ namespace winrt::midisequencer::implementation
         winrt::hstring m_textEmptyLane{};
         winrt::hstring m_textClipLane{};
         winrt::hstring m_textEmptyLyrics{};
+        winrt::hstring m_textHarmonyEmpty{};
+        winrt::hstring m_textHarmonyNoKey{};
 
         // The words over the timeline as they're sung, and the lines they fall into, worked out
         // again only when the sequence changes.
@@ -1281,6 +1325,13 @@ namespace winrt::midisequencer::implementation
         // A line with ruby, a syllable at a time with its reading above it.
         controls::StackPanel m_lyricsBarCells{ nullptr };
         bool m_lyricsBarShown{ true };
+
+        // The Key and chords row: what's selected on it, a drag on it, and the scales' names as
+        // its key band writes them ("minor", not "Minor").
+        size_t m_selectedChord{ SIZE_MAX };
+        size_t m_selectedKey{ SIZE_MAX };
+        HarmonyDrag m_harmonyDrag{};
+        std::vector<winrt::hstring> m_keyScaleNames{};
         std::vector<seq::LyricLine> m_lyricLines{};
         uint64_t m_lyricLinesVersion{ UINT64_MAX };
         void const* m_lyricLinesData{ nullptr };

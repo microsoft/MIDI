@@ -4809,4 +4809,152 @@
   <data name="MenuClipLinear" xml:space="preserve">
     <value>Linear</value>
   </data>
+  <data name="MenuKeyAndChords.Text" xml:space="preserve">
+    <value>Key and chords</value>
+  </data>
+  <data name="MenuShowKeyAndChords" xml:space="preserve">
+    <value>Show Key and chords</value>
+  </data>
+  <data name="KeyAndChordsRowName" xml:space="preserve">
+    <value>Key and chords</value>
+  </data>
+  <data name="KeyAndChordsNoKey" xml:space="preserve">
+    <value>(No key)</value>
+  </data>
+  <data name="KeyAndChordsOneChord" xml:space="preserve">
+    <value>1 chord</value>
+  </data>
+  <data name="KeyAndChordsChordCountFormat" xml:space="preserve">
+    <value>{0} chords</value>
+  </data>
+  <data name="HarmonyEmptyHint" xml:space="preserve">
+    <value>Double-click to add a chord</value>
+  </data>
+  <data name="HarmonyNoKeyHint" xml:space="preserve">
+    <value>Double-click to set the key</value>
+  </data>
+  <!-- Scale names as they follow a note in a key's name, such as "A minor" or "D Dorian". -->
+  <data name="KeyScaleMajor" xml:space="preserve">
+    <value>major</value>
+  </data>
+  <data name="KeyScaleMinor" xml:space="preserve">
+    <value>minor</value>
+  </data>
+  <data name="KeyScaleDorian" xml:space="preserve">
+    <value>Dorian</value>
+  </data>
+  <data name="KeyScalePhrygian" xml:space="preserve">
+    <value>Phrygian</value>
+  </data>
+  <data name="KeyScaleLydian" xml:space="preserve">
+    <value>Lydian</value>
+  </data>
+  <data name="KeyScaleMixolydian" xml:space="preserve">
+    <value>Mixolydian</value>
+  </data>
+  <data name="KeyScaleHarmonicMinor" xml:space="preserve">
+    <value>harmonic minor</value>
+  </data>
+  <data name="KeyScaleMajorPentatonic" xml:space="preserve">
+    <value>major pentatonic</value>
+  </data>
+  <data name="KeyScaleMinorPentatonic" xml:space="preserve">
+    <value>minor pentatonic</value>
+  </data>
+  <data name="KeyScaleBlues" xml:space="preserve">
+    <value>blues</value>
+  </data>
+  <data name="KeyScaleChromatic" xml:space="preserve">
+    <value>chromatic</value>
+  </data>
+  <data name="MenuEditKey" xml:space="preserve">
+    <value>Edit key…</value>
+  </data>
+  <data name="MenuDeleteKey" xml:space="preserve">
+    <value>Delete key change</value>
+  </data>
+  <data name="MenuEditChord" xml:space="preserve">
+    <value>Edit chord…</value>
+  </data>
+  <data name="MenuDeleteChord" xml:space="preserve">
+    <value>Delete chord</value>
+  </data>
+  <data name="MenuAddChord" xml:space="preserve">
+    <value>Add chord</value>
+  </data>
+  <data name="MenuAddKey" xml:space="preserve">
+    <value>Add key change</value>
+  </data>
+  <data name="MenuRomanNumerals" xml:space="preserve">
+    <value>Roman numerals</value>
+  </data>
+  <data name="MenuHideKeyAndChords" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="ChordPickerRoot" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="ChordPickerType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="ChordPickerBass" xml:space="preserve">
+    <value>Bass</value>
+  </data>
+  <data name="ChordPickerMore" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="ChordBassRoot" xml:space="preserve">
+    <value>(Root)</value>
+  </data>
+  <data name="KeyPickerRoot" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="KeyPickerScale" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="KeyPickerTranspose" xml:space="preserve">
+    <value>Transpose chords</value>
+  </data>
+  <data name="KeyPickerTransposeHelp" xml:space="preserve">
+    <value>On: changing the root moves the chords in this key along with it.</value>
+  </data>
+  <data name="UndoShowKeyAndChords" xml:space="preserve">
+    <value>Show Key and chords</value>
+  </data>
+  <data name="UndoHideKeyAndChords" xml:space="preserve">
+    <value>Hide Key and chords</value>
+  </data>
+  <data name="UndoAddChord" xml:space="preserve">
+    <value>Add chord</value>
+  </data>
+  <data name="UndoMoveChord" xml:space="preserve">
+    <value>Move chord</value>
+  </data>
+  <data name="UndoResizeChord" xml:space="preserve">
+    <value>Change chord length</value>
+  </data>
+  <data name="UndoEditChord" xml:space="preserve">
+    <value>Change chord</value>
+  </data>
+  <data name="UndoDeleteChord" xml:space="preserve">
+    <value>Delete chord</value>
+  </data>
+  <data name="UndoAddKey" xml:space="preserve">
+    <value>Add key change</value>
+  </data>
+  <data name="UndoEditKey" xml:space="preserve">
+    <value>Change key</value>
+  </data>
+  <data name="UndoDeleteKey" xml:space="preserve">
+    <value>Delete key change</value>
+  </data>
+  <data name="UndoMoveKey" xml:space="preserve">
+    <value>Move key change</value>
+  </data>
+  <data name="RomanNumeralsHeader" xml:space="preserve">
+    <value>Roman numerals</value>
+  </data>
+  <data name="RomanNumeralsHelp" xml:space="preserve">
+    <value>Shows each chord's place in the key, like ii or V7, under its name on the Key and chords row, when there's room.</value>
+  </data>
 </root>

@@ -204,6 +204,8 @@ namespace winrt::midisequencer::implementation
         m_textEmptyLane = res::GetString(L"EmptyLaneHint");
         m_textClipLane = res::GetString(L"ClipLaneCaption");
         m_textEmptyLyrics = res::GetString(L"LyricsEmptyHint");
+        m_textHarmonyEmpty = res::GetString(L"HarmonyEmptyHint");
+        m_textHarmonyNoKey = res::GetString(L"HarmonyNoKeyHint");
 
         auto const make = [](controls::Grid const& host, bool underOthers)
         {
@@ -611,6 +613,13 @@ namespace winrt::midisequencer::implementation
         context.SelectedLanePoint = m_selectedLanePoint;
         context.SelectedTempoPoint = m_selectedTempoPoint;
 
+        context.SelectedChord = m_selectedChord;
+        context.SelectedKey = m_selectedKey;
+        context.ScaleNames = &KeyScaleNames();
+        context.ShowNumerals = seq::AppSettings::Current().ShowRomanNumerals();
+        context.EmptyHarmonyHint = m_textHarmonyEmpty;
+        context.NoKeyHint = m_textHarmonyNoKey;
+
         if (m_clipDrag.Active)
         {
             context.ClipDrag = m_clipDrag.View;
@@ -799,6 +808,11 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Lyrics)
         {
             return MakeLyricsHeader(row);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Harmony)
+        {
+            return MakeHarmonyHeader(row);
         }
 
         controls::Grid grid{};
@@ -2443,6 +2457,15 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (hit.Row->Kind == seq::ArrangeRowKind::Harmony)
+            {
+                OnHarmonyPressed(pinned, *hit.Row, args);
+                return;
+            }
+
+            m_selectedChord = SIZE_MAX;
+            m_selectedKey = SIZE_MAX;
+
             auto const rowTop = static_cast<float>(hit.Row->Top - (pinned ? 0.0 : m_scrollY));
 
             // Tags sit on top of everything else in their row.
@@ -2591,6 +2614,16 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (m_harmonyDrag.Kind != HarmonyDragKind::None)
+            {
+                if (pinned == m_harmonyDrag.Pinned)
+                {
+                    OnHarmonyDragMoved(args);
+                }
+
+                return;
+            }
+
             if (m_razor && !m_clipDrag.Pressed)
             {
                 UpdateRazor(pinned, args.GetCurrentPoint(pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).Position());
@@ -2701,6 +2734,13 @@ namespace winrt::midisequencer::implementation
             if (m_tagDrag.Active)
             {
                 FinishTagDrag();
+                return;
+            }
+
+            if (m_harmonyDrag.Kind != HarmonyDragKind::None)
+            {
+                OnHarmonyDragReleased();
+                (pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).ReleasePointerCaptures();
                 return;
             }
 
@@ -2940,6 +2980,13 @@ namespace winrt::midisequencer::implementation
             {
                 args.Handled(true);
                 ShowLyricsEditor();
+                return;
+            }
+
+            if (hit.Row->Kind == seq::ArrangeRowKind::Harmony)
+            {
+                args.Handled(true);
+                OnHarmonyDoubleTapped(pinned, *hit.Row, position, hit.Tick);
                 return;
             }
 
@@ -3201,6 +3248,15 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Lyrics)
         {
             AddLyricsMenuItems(menu);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Harmony)
+        {
+            AddHarmonyMenuItems(menu, row, true, point, tick);
+        }
+        else if (row.Kind == seq::ArrangeRowKind::Tempo && (!m_doc.Harmony || m_doc.Harmony->Hidden))
+        {
+            add(res::GetString(L"MenuShowKeyAndChords"), L"\uE8D6", [weak]() { if (auto s = weak.get()) { s->ShowHarmonyRow(); } });
         }
 
         add(res::GetString(L"MenuPlayFromHere"), L"\uE768", [weak, snapped]() { if (auto s = weak.get()) { s->Play(snapped); } });

@@ -348,6 +348,8 @@ namespace midisequencer
         m_laneHint = MakeFormat(TextFont, 11.0f, 400);
         m_overlayText = MakeFormat(TextFont, 11.0f, 400);
         m_overlayButton = MakeFormat(TextFont, 12.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
+        m_chordName = MakeFormat(TextFont, 13.0f, 600, canvasText::CanvasVerticalAlignment::Top);
+        m_chordNumeral = MakeFormat(TextFont, 10.0f, 400, canvasText::CanvasVerticalAlignment::Top);
     }
 
     _Use_decl_annotations_
@@ -620,6 +622,10 @@ namespace midisequencer
 
             case ArrangeRowKind::Lyrics:
                 DrawLyricsRow(ds, top, rowHeight, width, context);
+                break;
+
+            case ArrangeRowKind::Harmony:
+                DrawHarmonyRow(ds, top, rowHeight, width, context);
                 break;
 
             default:

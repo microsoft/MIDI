@@ -304,6 +304,9 @@ namespace winrt::midisequencer::implementation
         // Saving by itself (MainWindowAutoSave.cpp).
         panel.Children().Append(MakeAutoSaveSetting());
 
+        // Roman numerals on the Key and chords row (MainWindowHarmony.cpp).
+        panel.Children().Append(MakeRomanNumeralsSetting());
+
         return panel;
     }
 

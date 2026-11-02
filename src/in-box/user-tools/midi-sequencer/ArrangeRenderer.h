@@ -144,6 +144,15 @@ namespace midisequencer
         winrt::hstring EmptyLaneHint{};
         winrt::hstring ClipLaneCaption{};       // over a clip that has its own lane
         winrt::hstring EmptyLyricsHint{};
+
+        // The Key and chords row: what's selected on it, the scales' names for its key band
+        // (in ScaleKind order), whether chords show their Roman numerals, and its hint.
+        size_t SelectedChord{ SIZE_MAX };
+        size_t SelectedKey{ SIZE_MAX };
+        std::vector<winrt::hstring> const* ScaleNames{ nullptr };
+        bool ShowNumerals{ true };
+        winrt::hstring EmptyHarmonyHint{};
+        winrt::hstring NoKeyHint{};
     };
 
     class ArrangeRenderer
@@ -246,6 +255,9 @@ namespace midisequencer
         // The syllables where they're sung, with the one at the playhead lit (ArrangeRendererLyrics.cpp).
         void DrawLyricsRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
 
+        // The keys along the top and the chords under them (ArrangeRendererHarmony.cpp).
+        void DrawHarmonyRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
+
         // A lane's line from one tick to another, where the lane's tick 0 is at `offset` on the
         // timeline. Clipped to the visible width.
         void DrawLaneLine(
@@ -321,6 +333,8 @@ namespace midisequencer
         canvasText::CanvasTextFormat m_meterLabel{ nullptr };
         canvasText::CanvasTextFormat m_laneHint{ nullptr };
         canvasText::CanvasTextFormat m_overlayText{ nullptr };
+        canvasText::CanvasTextFormat m_chordName{ nullptr };
+        canvasText::CanvasTextFormat m_chordNumeral{ nullptr };
         canvasText::CanvasTextFormat m_overlayButton{ nullptr };
 
         std::unordered_map<std::wstring, std::pair<uint8_t, uint8_t>> m_pitchRanges{};

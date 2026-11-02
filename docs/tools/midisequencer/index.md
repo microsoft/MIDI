@@ -216,6 +216,18 @@ When you type the words, put a hyphen between the syllables of a word, like `hap
 
 Lyrics in a Standard MIDI File come in when you import it, including karaoke files (`.kar`). Exporting a Standard MIDI File writes them out again. While the sequence plays, the track that sings sends the words to its device as MIDI 2.0 lyric messages, if the device speaks MIDI 2.0. To use the lyrics in a music player or for subtitles, select **File**, then **Export**, then **LRC lyrics…**.
 
+## Key and chords
+
+A sequence can have a **Key and chords** row, for writing down the song's key and its chords. Select **File**, then **Key and chords**, or right-click **Tempo and meter** and select **Show Key and chords**. The row starts in C major.
+
+- **Keys** run along the top of the row, each one until the next. Double-click a key to change its root and scale. To change key part way through the song, right-click the row and select **Add key change**. When you change a key's root, turn on **Transpose chords** to move the chords in that key along with it.
+- **Chords** sit under the keys. Double-click an empty spot to add a chord there, a bar long, on the key's root. Double-click a chord to change its root, its type and its bass note. More types are under **More**. For a chord like C/E, pick the bass note under **Bass**.
+- **Chords work like clips.** Drag one to move it, and drag its right end to make it longer or shorter. A chord dropped over others shortens them, or splits one it lands inside. Press Delete to remove the selected chord or key. Everything can be undone.
+- **Under each chord's name** is its place in the key, as a Roman numeral, like ii7 or V7, when there's room. A chord with notes from outside the key has a star and a warm outline. That isn't a mistake, just something worth seeing. To hide the numerals, right-click the row and turn off **Roman numerals**, or turn it off in Settings.
+- **To hide the row**, right-click it and select **Hide**. The keys and chords stay in the sequence, and come back when you show the row again.
+
+The keys and chords are saved in the sequence file. They don't play by themselves yet, and generators don't follow them yet.
+
 ## The clip launcher
 
 The launcher plays clips without following the timeline. Select **Launcher** to show it. Select the triangle at a clip's top left to play it on its track, and select it again to stop it. Select the rest of the clip to open it in the editor; it keeps playing, or not, as it was. Double-click an empty slot to make a clip there. A track playing a launched clip shows **Playing a launched clip** across its timeline. That stays after you stop, so the next Play carries on with what each track was playing. Select **Back to timeline** to go back to the timeline, whether or not the sequence is playing. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.

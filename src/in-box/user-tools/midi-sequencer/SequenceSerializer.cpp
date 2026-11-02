@@ -8,6 +8,7 @@
 #include "SequenceSerializer.h"
 #include "GeneratorKinds.h"
 #include "GeneratorListen.h"
+#include "Harmony.h"
 #include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
@@ -2684,11 +2685,30 @@ namespace midisequencer
             }
         }
 
+        sequence.Harmony = ReadHarmonyJson(root, context.Skipped);
+
+        // Keys and chords too, and a chord's length. Scaling also keeps them inside the limits.
+        if (sequence.Harmony.has_value())
+        {
+            for (auto& key : sequence.Harmony->Keys)
+            {
+                key.Tick = ScaleTick(context, static_cast<double>(key.Tick));
+            }
+
+            for (auto& chord : sequence.Harmony->Chords)
+            {
+                chord.Tick = ScaleTick(context, static_cast<double>(chord.Tick));
+                chord.Length = std::max<int64_t>(1, ScaleTick(context, static_cast<double>(chord.Length)));
+            }
+
+            NormalizeHarmony(*sequence.Harmony);
+        }
+
         sequence.TempoRowHeight = static_cast<uint16_t>(ReadInteger(root, KeyTempoHeight, 0, 0, MaximumTrackRowHeight));
 
         sequence.Unknown = UnknownKeys(root, {
             KeyFileVersion, KeyName, midiapp::ProvenanceKey, KeyTicksPerQuarterNote, KeyTempo, KeyMeter,
-            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, KeyCopyright, KeyTempoHeight });
+            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, HarmonyKey, KeyCopyright, KeyTempoHeight });
 
         NormalizeSequence(sequence);
 
@@ -2790,6 +2810,11 @@ namespace midisequencer
         if (sequence.Lyrics)
         {
             root.Raw(LyricsKey, LyricsToJsonText(*sequence.Lyrics));
+        }
+
+        if (sequence.Harmony)
+        {
+            root.Raw(HarmonyKey, HarmonyToJsonText(*sequence.Harmony));
         }
 
         if (!sequence.Scenes.empty())

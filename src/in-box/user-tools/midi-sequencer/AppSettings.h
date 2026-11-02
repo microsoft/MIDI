@@ -120,6 +120,10 @@ namespace midisequencer
         bool ShowLauncher() const noexcept { return m_showLauncher; }
         void ShowLauncher(bool value) noexcept;
 
+        // Roman numerals on the Key and chords row's chords, when they fit.
+        bool ShowRomanNumerals() const noexcept { return m_showRomanNumerals; }
+        void ShowRomanNumerals(bool value) noexcept;
+
         bool ShowMixer() const noexcept { return m_showMixer; }
         void ShowMixer(bool value) noexcept;
 
@@ -239,6 +243,7 @@ namespace midisequencer
         uint8_t m_metronomeNote{ 37 };
 
         bool m_showLauncher{ true };
+        bool m_showRomanNumerals{ true };
         bool m_showMixer{ false };
         bool m_timelineOverview{ true };
         bool m_timelineBarAtTop{ false };

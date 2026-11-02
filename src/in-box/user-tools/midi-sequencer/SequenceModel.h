@@ -763,6 +763,71 @@ namespace midisequencer
         std::wstring RubyLanguage{};
     };
 
+    // ---- key and chords (#1326 follow-up, Pete's proposal of November 1 2026) ----
+
+    // The kinds of chord the picker offers. A chord's name is its root, spelled in the key, then
+    // the suffix for its type (Harmony.h).
+    enum class ChordType : uint8_t
+    {
+        Major = 0,          // C
+        Minor = 1,          // Cm
+        Seventh = 2,        // C7
+        Major7 = 3,         // Cmaj7
+        Minor7 = 4,         // Cm7
+        Diminished = 5,     // Cdim
+        Sus4 = 6,           // Csus4
+        Sus2 = 7,           // Csus2
+        Sixth = 8,          // C6
+        Minor6 = 9,         // Cm6
+        Ninth = 10,         // C9
+        Major9 = 11,        // Cmaj9
+        Minor9 = 12,        // Cm9
+        Add9 = 13,          // Cadd9
+        Augmented = 14,     // Caug
+        Diminished7 = 15,   // Cdim7
+        HalfDiminished = 16, // Cm7♭5
+        SeventhSus4 = 17,   // C7sus4
+        Eleventh = 18,      // C11
+        Thirteenth = 19,    // C13
+    };
+
+    // Where a key starts. It lasts until the next one.
+    struct KeyChange
+    {
+        int64_t Tick{ 0 };
+        uint8_t Root{ 0 };                      // 0 is C
+        ScaleKind Scale{ ScaleKind::Major };
+
+        bool operator==(KeyChange const&) const = default;
+    };
+
+    // A chord on the Key and chords row. Like a clip, it has a start and a length.
+    struct ChordEvent
+    {
+        int64_t Tick{ 0 };
+        int64_t Length{ TicksPerQuarterNote * 4 };
+        uint8_t Root{ 0 };                      // 0 is C
+        ChordType Type{ ChordType::Major };
+        std::optional<uint8_t> Bass{};          // a note other than the root, as in C/E
+
+        bool operator==(ChordEvent const&) const = default;
+    };
+
+    // The optional Key and chords row, pinned under Tempo and meter.
+    struct HarmonyTrack
+    {
+        // Sorted by tick. Empty: no key yet.
+        std::vector<KeyChange> Keys{};
+
+        // Sorted by tick. They don't overlap.
+        std::vector<ChordEvent> Chords{};
+
+        // Hidden keeps the keys and chords; the row just isn't shown.
+        bool Hidden{ false };
+
+        winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
+    };
+
     struct Sequence
     {
         uint32_t FileVersion{ CurrentFileVersion };
@@ -794,6 +859,8 @@ namespace midisequencer
         std::vector<Clip> Clips{};
 
         std::optional<LyricsTrack> Lyrics{};
+
+        std::optional<HarmonyTrack> Harmony{};
 
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };
     };

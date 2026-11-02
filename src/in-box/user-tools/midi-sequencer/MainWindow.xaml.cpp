@@ -454,6 +454,10 @@ namespace winrt::midisequencer::implementation
                 {
                     DeleteSelectedAutomationPoint();
                 }
+                else if (m_selectedChord != SIZE_MAX || m_selectedKey != SIZE_MAX)
+                {
+                    DeleteSelectedHarmony();
+                }
                 else if (!m_roll.Selection().empty() && !m_editorClipId.empty())
                 {
                     ApplyRollEdit(m_roll.DeleteSelection());
