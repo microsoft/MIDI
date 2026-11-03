@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ArrangeRenderer.h"
+#include "HarmonyFollow.h"
 
 using winrt::Windows::Foundation::Rect;
 
@@ -348,6 +349,8 @@ namespace midisequencer
         m_laneHint = MakeFormat(TextFont, 11.0f, 400);
         m_overlayText = MakeFormat(TextFont, 11.0f, 400);
         m_overlayButton = MakeFormat(TextFont, 12.0f, 400, canvasText::CanvasVerticalAlignment::Center, canvasText::CanvasHorizontalAlignment::Center);
+        m_chordName = MakeFormat(TextFont, 13.0f, 600, canvasText::CanvasVerticalAlignment::Top);
+        m_chordNumeral = MakeFormat(TextFont, 10.0f, 400, canvasText::CanvasVerticalAlignment::Top);
     }
 
     _Use_decl_annotations_
@@ -622,6 +625,10 @@ namespace midisequencer
                 DrawLyricsRow(ds, top, rowHeight, width, context);
                 break;
 
+            case ArrangeRowKind::Harmony:
+                DrawHarmonyRow(ds, top, rowHeight, width, context);
+                break;
+
             default:
                 break;
             }
@@ -878,9 +885,22 @@ namespace midisequencer
                 auto const button = BackToTimelineButtonBounds(top, height);
                 auto const buttonFill = colors.Light ? Rgba(255, 255, 255) : Rgba(40, 40, 40, 0.9);
 
+                // Clicked while playing, it goes back at the next launch point: the button stays lit
+                // and says which bar, so the click is seen to have done something.
+                auto const& view = found->second;
+                auto const goingBack = view.Pending && view.PendingMode == TrackPlayMode::Timeline;
+
                 ds.FillRoundedRectangle(button, 4.0f, 4.0f, buttonFill);
-                ds.DrawRoundedRectangle(button.X + 0.5f, button.Y + 0.5f, button.Width - 1.0f, button.Height - 1.0f, 3.5f, 3.5f, colors.StrokeStrong, 1.0f);
+                ds.DrawRoundedRectangle(button.X + 0.5f, button.Y + 0.5f, button.Width - 1.0f, button.Height - 1.0f, 3.5f, 3.5f,
+                    goingBack ? colors.Accent : colors.StrokeStrong, goingBack ? 1.5f : 1.0f);
                 ds.DrawText(context.BackToTimeline, button, colors.Text, m_overlayButton);
+
+                if (goingBack && !context.BarFormat.empty() && context.Doc != nullptr)
+                {
+                    auto const bar = BarPositionAtTick(context.Doc->Meter, view.PendingTick).Bar;
+                    winrt::hstring when{ std::vformat(std::wstring_view{ context.BarFormat }, std::make_wformat_args(bar)) };
+                    ds.DrawText(when, button.X + button.Width + 8.0f, top, MeasureWidth(ds, when, m_overlayText) + 4.0f, height - 1.0f, colors.Text2, m_overlayText);
+                }
 
                 layer.Close();
             }
@@ -1261,6 +1281,13 @@ namespace midisequencer
             if (uses != t_useCounts.end() && uses->second > 1)
             {
                 ds.DrawText(L"\uE71B", textX, y0, 10.0f, CaptionHeight, WithAlpha(captionColor, 0.85), m_captionGlyph);
+                textX += 12.0f;
+            }
+
+            // Follows the song's key, so it plays different notes in different places.
+            if (FollowsSongKey(*clip))
+            {
+                ds.DrawText(L"\uE8D6", textX, y0, 10.0f, CaptionHeight, WithAlpha(captionColor, 0.85), m_captionGlyph);
                 textX += 12.0f;
             }
 

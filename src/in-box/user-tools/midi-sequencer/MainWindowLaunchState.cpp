@@ -44,9 +44,9 @@ namespace winrt::midisequencer::implementation
             InvalidateLaunchers();
             InvalidateArrange();
 
-            if (m_engine != nullptr && m_engine->IsPlaying() && m_frameTimer != nullptr)
+            if (m_engine != nullptr && m_engine->IsPlaying() && m_frames != nullptr)
             {
-                m_frameTimer.Start();
+                StartFrames();
             }
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show what the launcher plays.")

@@ -540,6 +540,11 @@ namespace midisequencer
         notes.Origin = pattern.Origin;
         notes.OriginDetail = pattern.OriginDetail;
 
+        // A melodic pattern that follows the song's key makes notes that do too.
+        notes.FollowKey = pattern.FollowKey;
+        notes.WrittenRoot = pattern.WrittenRoot;
+        notes.WrittenScale = pattern.WrittenScale;
+
         if (!pattern.Pattern.has_value())
         {
             notes.Notes = pattern.Notes;

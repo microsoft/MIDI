@@ -7,8 +7,10 @@
 
 #include "pch.h"
 #include "MainWindow.xaml.h"
+#include "PixelSnap.h"
 
 #include "GeneratorNames.h"
+#include "HarmonyFollow.h"
 #include "SequenceRender.h"
 #include "StringResources.h"
 #include "ThemeCanvas.h"
@@ -204,6 +206,8 @@ namespace winrt::midisequencer::implementation
         m_textEmptyLane = res::GetString(L"EmptyLaneHint");
         m_textClipLane = res::GetString(L"ClipLaneCaption");
         m_textEmptyLyrics = res::GetString(L"LyricsEmptyHint");
+        m_textHarmonyEmpty = res::GetString(L"HarmonyEmptyHint");
+        m_textHarmonyNoKey = res::GetString(L"HarmonyNoKeyHint");
 
         auto const make = [](controls::Grid const& host, bool underOthers)
         {
@@ -611,6 +615,13 @@ namespace winrt::midisequencer::implementation
         context.SelectedLanePoint = m_selectedLanePoint;
         context.SelectedTempoPoint = m_selectedTempoPoint;
 
+        context.SelectedChord = m_selectedChord;
+        context.SelectedKey = m_selectedKey;
+        context.ScaleNames = &KeyScaleNames();
+        context.ShowNumerals = seq::AppSettings::Current().ShowRomanNumerals();
+        context.EmptyHarmonyHint = m_textHarmonyEmpty;
+        context.NoKeyHint = m_textHarmonyNoKey;
+
         if (m_clipDrag.Active)
         {
             context.ClipDrag = m_clipDrag.View;
@@ -799,6 +810,11 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Lyrics)
         {
             return MakeLyricsHeader(row);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Harmony)
+        {
+            return MakeHarmonyHeader(row);
         }
 
         controls::Grid grid{};
@@ -1795,26 +1811,49 @@ namespace winrt::midisequencer::implementation
         {
             UpdateLyricsBar();
             m_timelineBar.PlayheadMoved(m_position);
+            MovePlayheadLine();
+        }
+        catch (...)
+        {
+        }
+    }
 
+    // Only the line and its marker: cheap enough for every refresh of the display (OnDisplayFrame).
+    void MainWindow::MovePlayheadLine() noexcept
+    {
+        try
+        {
             auto const x = static_cast<double>(m_position) * (m_barWidth / TicksPerFourFourBar) - m_scrollX;
             auto const width = LaneWidth();
 
             if (x < -1.0 || x > width)
             {
-                PlayheadLine().Visibility(xaml::Visibility::Collapsed);
-                PlayheadMarker().Visibility(xaml::Visibility::Collapsed);
+                PlayheadGroup().Visibility(xaml::Visibility::Collapsed);
                 return;
             }
 
-            PlayheadLine().Visibility(xaml::Visibility::Visible);
-            PlayheadMarker().Visibility(xaml::Visibility::Visible);
+            PlayheadGroup().Visibility(xaml::Visibility::Visible);
 
-            PlayheadLine().Height(std::max(0.0, PlayheadLayer().ActualHeight()));
-            controls::Canvas::SetLeft(PlayheadLine(), x - 0.75);
-            controls::Canvas::SetTop(PlayheadLine(), 0);
+            // The line and its marker sit in one group, placed once in whole physical pixels around
+            // the group's origin; each frame only moves the group, also to a whole pixel. So the
+            // line keeps its width, and the marker stays centered on it (#1324).
+            auto const scale = Content().XamlRoot() != nullptr ? Content().XamlRoot().RasterizationScale() : 1.0;
+            auto const lineWidth = seq::WholePixels(1.5, scale);
+            auto const lineLeft = seq::SnapToPixel(-lineWidth / 2.0, scale);
+            auto const markerLeft = seq::SnapToPixel(lineLeft + lineWidth / 2.0 - 5.5, scale);
+            auto const height = std::max(0.0, PlayheadLayer().ActualHeight());
 
-            controls::Canvas::SetLeft(PlayheadMarker(), x - 5.5);
-            controls::Canvas::SetTop(PlayheadMarker(), 24);
+            if (PlayheadLine().Width() != lineWidth || PlayheadLine().Height() != height || controls::Canvas::GetLeft(PlayheadLine()) != lineLeft)
+            {
+                PlayheadLine().Width(lineWidth);
+                PlayheadLine().Height(height);
+                controls::Canvas::SetLeft(PlayheadLine(), lineLeft);
+                controls::Canvas::SetTop(PlayheadLine(), 0);
+                controls::Canvas::SetLeft(PlayheadMarker(), markerLeft);
+                controls::Canvas::SetTop(PlayheadMarker(), 24);
+            }
+
+            PlayheadShift().X(seq::SnapToPixel(x, scale));
         }
         catch (...)
         {
@@ -2371,8 +2410,9 @@ namespace winrt::midisequencer::implementation
 
             auto const top = static_cast<float>(row->Top - (pinned ? 0.0 : m_scrollY));
 
-            // A launched clip covers the lane, with a button to go back.
-            if (auto view = m_launchViews.find(row->TrackId); view != m_launchViews.end() && view->second.Mode == seq::TrackPlayMode::Clip)
+            // A track playing a launched clip, or stopped from the launcher, has its lane covered,
+            // with a button to go back. Both draw the button (ArrangeRenderer), so both take it.
+            if (auto view = m_launchViews.find(row->TrackId); view != m_launchViews.end() && view->second.Mode != seq::TrackPlayMode::Timeline)
             {
                 auto const bounds = m_renderer.BackToTimelineButtonBounds(top, static_cast<float>(row->Height));
 
@@ -2441,6 +2481,15 @@ namespace winrt::midisequencer::implementation
                 OnAutomationPressed(pinned, *hit.Row, args);
                 return;
             }
+
+            if (hit.Row->Kind == seq::ArrangeRowKind::Harmony)
+            {
+                OnHarmonyPressed(pinned, *hit.Row, args);
+                return;
+            }
+
+            m_selectedChord = SIZE_MAX;
+            m_selectedKey = SIZE_MAX;
 
             auto const rowTop = static_cast<float>(hit.Row->Top - (pinned ? 0.0 : m_scrollY));
 
@@ -2590,6 +2639,16 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (m_harmonyDrag.Kind != HarmonyDragKind::None)
+            {
+                if (pinned == m_harmonyDrag.Pinned)
+                {
+                    OnHarmonyDragMoved(args);
+                }
+
+                return;
+            }
+
             if (m_razor && !m_clipDrag.Pressed)
             {
                 UpdateRazor(pinned, args.GetCurrentPoint(pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).Position());
@@ -2703,6 +2762,13 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (m_harmonyDrag.Kind != HarmonyDragKind::None)
+            {
+                OnHarmonyDragReleased();
+                (pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).ReleasePointerCaptures();
+                return;
+            }
+
             if (m_clipDrag.Pressed)
             {
                 FinishClipDrag(true);
@@ -2741,6 +2807,13 @@ namespace winrt::midisequencer::implementation
                         break;
                     }
                 }
+            }
+
+            // A clip that doesn't loop takes the new length itself (MainWindowClipLength.cpp).
+            if (FinishClipResize(m_dragTracksBefore))
+            {
+                m_dragTracksBefore.clear();
+                return;
             }
 
             // The tracks as they were when the drag began, and as they are now.
@@ -2935,6 +3008,13 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (hit.Row->Kind == seq::ArrangeRowKind::Harmony)
+            {
+                args.Handled(true);
+                OnHarmonyDoubleTapped(pinned, *hit.Row, position, hit.Tick);
+                return;
+            }
+
             if (hit.Row->Kind == seq::ArrangeRowKind::Tempo)
             {
                 args.Handled(true);
@@ -3080,6 +3160,58 @@ namespace winrt::midisequencer::implementation
         add(res::GetString(L"MenuDuplicateClip"), L"\uE8C8", [weak]() { if (auto s = weak.get()) { s->DuplicateSelectedPlacement(); } });
         add(res::GetString(L"MenuMakeUnique"), L"\uE71B", [weak, trackId, placement]() { if (auto s = weak.get()) { s->MakePlacementUnique(trackId, placement); } }, uses > 1);
 
+        // Whether dragging its end repeats it or makes the clip itself longer (#1326): the same
+        // as Loop in the clip editor's length, here so it's easy to find.
+        if (auto const clip = seq::FindClip(m_doc, clipId); clip != nullptr && clip->Kind == seq::ClipKind::Notes)
+        {
+            for (auto const loop : { true, false })
+            {
+                controls::RadioMenuFlyoutItem item{};
+                item.Text(res::GetString(loop ? L"MenuClipLoop" : L"MenuClipLinear"));
+                item.GroupName(L"ClipLoop");
+                item.IsChecked(clip->Loop == loop);
+                item.Click([weak, clipId, loop](auto&&, auto&&) { if (auto s = weak.get()) { s->SetClipLoop(clipId, loop); } });
+                menu.Items().Append(item);
+            }
+        }
+
+        // Find key (Key and chords proposal, section 4): the likeliest keys for the clip's notes.
+        // Nothing changes unless one is picked.
+        if (auto const clip = seq::FindClip(m_doc, clipId); clip != nullptr && !clip->Notes.empty() &&
+            (clip->Kind == seq::ClipKind::Notes || (clip->Kind == seq::ClipKind::Pattern && clip->Pattern.has_value() && clip->Pattern->Mode == seq::PatternMode::Melodic)))
+        {
+            auto const found = seq::FindKeys(clip->Notes, 3);
+
+            if (!found.empty())
+            {
+                controls::MenuFlyoutSubItem findKey{};
+                findKey.Text(res::GetString(L"MenuFindKey"));
+                controls::FontIcon icon{};
+                icon.Glyph(L"\uE8D6");
+                findKey.Icon(icon);
+
+                auto const at = track->Timeline[placement].Tick;
+
+                for (size_t i = 0; i < found.size(); ++i)
+                {
+                    auto const key = found[i].Key;
+                    auto const name = std::wstring{ KeyDisplayName(key) };
+
+                    controls::MenuFlyoutItem choice{};
+                    choice.Text(i == 0 ? res::FormatString(L"MenuFindKeyLikeliestFormat", name) : winrt::hstring{ name });
+                    choice.Click([weak, at, key](auto&&, auto&&) { if (auto s = weak.get()) { s->UseFoundKey(at, key); } });
+                    findKey.Items().Append(choice);
+                }
+
+                auto const tip = res::GetString(L"MenuFindKeyHelp");
+                controls::ToolTipService::SetToolTip(findKey, winrt::box_value(tip));
+                automation::AutomationProperties::SetHelpText(findKey, tip);
+                menu.Items().Append(findKey);
+            }
+        }
+
+        menu.Items().Append(controls::MenuFlyoutSeparator{});
+
         // Split where it was right-clicked, on the snap grid when that's still inside the clip.
         if (tick >= 0)
         {
@@ -3176,6 +3308,15 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Lyrics)
         {
             AddLyricsMenuItems(menu);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Harmony)
+        {
+            AddHarmonyMenuItems(menu, row, true, point, tick);
+        }
+        else if (row.Kind == seq::ArrangeRowKind::Tempo && (!m_doc.Harmony || m_doc.Harmony->Hidden))
+        {
+            add(res::GetString(L"MenuShowKeyAndChords"), L"\uE8D6", [weak]() { if (auto s = weak.get()) { s->ShowHarmonyRow(); } });
         }
 
         add(res::GetString(L"MenuPlayFromHere"), L"\uE768", [weak, snapped]() { if (auto s = weak.get()) { s->Play(snapped); } });
@@ -3360,6 +3501,9 @@ namespace winrt::midisequencer::implementation
                 seq::SetPatternStepCount(*clip.Pattern, static_cast<uint16_t>(std::clamp<int64_t>(length / std::max<int64_t>(1, clip.Pattern->StepTicks), 1, seq::MaximumPatternSteps)));
                 seq::RefreshPatternPreview(clip);
             }
+
+            // In the song's key, where there is one (HarmonyFollow.h).
+            seq::StartInSongKey(clip, m_doc, start);
 
             auto const clipId = clip.Id;
             auto const before = m_doc.Tracks;
@@ -3772,11 +3916,17 @@ namespace winrt::midisequencer::implementation
                 pattern.has_value() ? seq::MakePatternClip(NextClipName(L"DefaultPatternName"), *pattern) : seq::MakeNotesClip(NextClipName(), length);
             clip.Origin = generator.has_value() ? seq::ClipOrigin::Generated : seq::ClipOrigin::Drawn;
 
+            // A clip made in the launcher goes round while it's launched, as launcher clips do.
+            clip.Loop = true;
+
             if (clip.Pattern.has_value())
             {
                 seq::SetPatternStepCount(*clip.Pattern, static_cast<uint16_t>(std::clamp<int64_t>(length / std::max<int64_t>(1, clip.Pattern->StepTicks), 1, seq::MaximumPatternSteps)));
                 seq::RefreshPatternPreview(clip);
             }
+
+            // In the song's key at the start, where there is one (HarmonyFollow.h).
+            seq::StartInSongKey(clip, m_doc, 0);
 
             auto const clipId = clip.Id;
             auto const before = m_doc.Tracks;

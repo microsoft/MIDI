@@ -28,4 +28,9 @@ public:
     TEST_METHOD(MergingATrackMergesWhereBothPlay);
     TEST_METHOD(MergingATrackFillsAndMergesSlots);
     TEST_METHOD(GhostNotesComeFromUnmutedTracksOnly);
+    TEST_METHOD(DraggingAClipThatDoesntLoopMakesTheClipLonger);
+    TEST_METHOD(DraggingASharedClipOnlyHereMakesASeparateCopy);
+    TEST_METHOD(DraggingASharedClipEverywhereMovesTheWholePlacements);
+    TEST_METHOD(ALoopingClipIsNotResizedThroughAPlacement);
+    TEST_METHOD(NewNotesClipsDontLoop);
 };

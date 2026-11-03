@@ -107,6 +107,10 @@
     <ClInclude Include="DawProjectTests.h" />
     <ClInclude Include="CaptureImportTests.h" />
     <ClInclude Include="LyricsTests.h" />
+    <ClInclude Include="HarmonyTests.h" />
+    <ClInclude Include="HarmonySuggestTests.h" />
+    <ClInclude Include="HarmonyFollowTests.h" />
+    <ClInclude Include="HarmonySongTests.h" />
     <ClInclude Include="SequenceProvenanceTests.h" />
     <ClInclude Include="HostileFileTests.h" />
     <ClInclude Include="ArpeggiatorTests.h" />
@@ -170,6 +174,10 @@
     <ClCompile Include="DawProjectTests.cpp" />
     <ClCompile Include="CaptureImportTests.cpp" />
     <ClCompile Include="LyricsTests.cpp" />
+    <ClCompile Include="HarmonyTests.cpp" />
+    <ClCompile Include="HarmonySuggestTests.cpp" />
+    <ClCompile Include="HarmonyFollowTests.cpp" />
+    <ClCompile Include="HarmonySongTests.cpp" />
     <ClCompile Include="SequenceProvenanceTests.cpp" />
     <ClCompile Include="HostileFileTests.cpp" />
     <ClCompile Include="ArpeggiatorTests.cpp" />
@@ -204,6 +212,10 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\CaptureImport.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\Lyrics.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\LyricData.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\Harmony.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\HarmonySuggest.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\HarmonyFollow.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\HarmonySong.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceMerge.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceEdits.cpp" />

@@ -133,6 +133,7 @@ namespace winrt::midisequencer::implementation
             // clip again from the sequence.
             m_roll.SetClip(clip, color);
             m_roll.SetMeter(&m_doc.Meter);
+            UpdateRollScale(*clip);
             m_pattern.SetClip(clip, color);
 
             // The lanes under the roll too, so a key pressed before the next drawing finds the clip
@@ -246,6 +247,9 @@ namespace winrt::midisequencer::implementation
             PatternTemplatesButton().Visibility(visible(pattern));
             EditorLengthChipFrame().Visibility(visible(!generator));
 
+            // A pattern's length comes from its steps, so only a notes clip's opens to change.
+            EditorLengthButton().IsEnabled(!pattern);
+
             // An arpeggiator's rate sits with its octaves and note length instead (comp 4).
             auto const arpeggiator = generator && clip->Generator->Type == seq::GeneratorType::Arpeggiator;
             GeneratorStepSizeText().Visibility(visible(!arpeggiator));
@@ -294,6 +298,8 @@ namespace winrt::midisequencer::implementation
             }
 
             EditorLengthChip().Text(length);
+
+            UpdateFollowKeyToggle(*clip);
 
             auto const uses = seq::CountClipUses(m_doc, clip->Id);
             EditorUsesChip().Visibility(uses > 1 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -566,6 +572,9 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            // Alt turns Scale snap off for this note.
+            m_roll.SetScaleSnapBypass((args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Menu) == winrt::Windows::System::VirtualKeyModifiers::Menu);
+
             if (m_roll.PointerPressed(position, shift, control, right, doubleClick))
             {
                 InvalidateEditor();
@@ -617,6 +626,7 @@ namespace winrt::midisequencer::implementation
             {
                 // Shift keeps the notes on their pitch while they move.
                 auto const keepPitch = (args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) == winrt::Windows::System::VirtualKeyModifiers::Shift;
+                m_roll.SetScaleSnapBypass((args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Menu) == winrt::Windows::System::VirtualKeyModifiers::Menu);
 
                 if (m_roll.PointerMoved(position, keepPitch))
                 {

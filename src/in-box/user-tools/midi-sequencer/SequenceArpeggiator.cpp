@@ -6,6 +6,8 @@
 // ============================================================================
 
 #include "SequenceArpeggiator.h"
+#include "Harmony.h"
+#include "HarmonyFollow.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
 
@@ -18,6 +20,9 @@ namespace midisequencer
         // A notes clip is searched back from the tick for notes still sounding. A chord is a
         // handful of notes; this many is far more than a long chord under a busy part needs.
         constexpr size_t MaximumNotesLookedBack = 2048;
+
+        // The Chords source's notes have no velocity of their own: about 100 of 127.
+        constexpr uint16_t ChordVelocity = 51400;
 
         // Make notes stops after this many passes of one placement.
         constexpr int64_t MaximumMadePasses = 100000;
@@ -190,8 +195,10 @@ namespace midisequencer
             auto const passStart = placement.Tick + pass * clip->Length;
             auto const passEnd = std::min(end, passStart + clip->Length);
 
-            auto const consider = [&](Note const& note, int64_t start)
+            auto const consider = [&](Note const& written, int64_t start)
             {
+                // As it plays, for a clip that follows the Key and chords row (HarmonyFollow.h).
+                auto const note = AsPlayed(sequence, *clip, written, start);
                 auto const stop = std::min(start + std::max<int64_t>(1, note.Length), passEnd);
 
                 if (start <= tick && tick < stop)
@@ -209,7 +216,8 @@ namespace midisequencer
 
             if (clip->Kind == ClipKind::Generator && clip->Generator.has_value())
             {
-                ForEachGeneratorNote(*clip, passStart, passEnd, static_cast<uint64_t>(pass), passStart, tick + 1, true,
+                auto const inKey = ClipInSongKey(sequence, *clip, passStart);
+                ForEachGeneratorNote(inKey ? *inKey : *clip, passStart, passEnd, static_cast<uint64_t>(pass), passStart, tick + 1, true,
                     [&consider](Note const& note) { consider(note, note.Tick); });
                 continue;
             }
@@ -267,7 +275,8 @@ namespace midisequencer
         int64_t fromTick,
         int64_t toTick,
         ArpeggiatorInput* keys,
-        std::function<void(Note const&)> const& add)
+        std::function<void(Note const&)> const& add,
+        std::function<int64_t(int64_t)> const* songTick)
     {
         if (!IsArpeggiator(clip))
         {
@@ -276,9 +285,15 @@ namespace midisequencer
 
         auto const& generator = *clip.Generator;
         auto const held = generator.ArpSource == ArpeggiatorSource::Held;
+        auto const fromChords = generator.ArpSource == ArpeggiatorSource::Chords;
 
         // The keys aren't there when exporting, so there's nothing to play.
         if (held && keys == nullptr)
+        {
+            return;
+        }
+
+        if (fromChords && (!sequence.Harmony || sequence.Harmony->Chords.empty()))
         {
             return;
         }
@@ -290,7 +305,7 @@ namespace midisequencer
 
         Track const* source{ nullptr };
 
-        if (!held)
+        if (!held && !fromChords)
         {
             source = FindTrack(sequence, generator.ArpTrackId);
 
@@ -331,6 +346,26 @@ namespace midisequencer
                 }
 
                 index = keys->StepsPlayed++;
+            }
+            else if (fromChords)
+            {
+                auto const atSong = songTick != nullptr ? (*songTick)(tick) : tick;
+                auto const playing = ChordAt(*sequence.Harmony, atSong);
+
+                if (playing == nullptr)
+                {
+                    continue;
+                }
+
+                for (auto const number : ChordNotes(*playing))
+                {
+                    chord.push_back(HeldNote{ number, ChordVelocity });
+                }
+
+                // Each chord starts at the start of the order, as a track's chords do. Where it
+                // started, on this pass's clock.
+                auto const chordStart = tick - (atSong - playing->Tick);
+                index = static_cast<uint64_t>(std::max<int64_t>(0, step - StepAtOrAfter(chordStart, passStart, stepTicks)));
             }
             else
             {

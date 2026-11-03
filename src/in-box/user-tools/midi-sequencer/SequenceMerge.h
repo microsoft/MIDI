@@ -86,6 +86,24 @@ namespace midisequencer
         _In_ std::function<std::wstring()> const& newClipId,
         _In_ std::wstring const& rightName);
 
+    // A clip made a new length. One that loops just repeats a different stretch wherever it
+    // plays. One that doesn't loop grows or shrinks, and so does every placement that played all
+    // of it, so each still plays the whole clip. Returns false when there's no such clip.
+    bool ResizeClip(_Inout_ Sequence& sequence, _In_ std::wstring_view clipId, _In_ int64_t length);
+
+    // Dragging the end of a placement whose clip doesn't loop (#1326): the clip itself becomes
+    // that length. With onlyHere, a clip that plays anywhere else is copied first, as copyId named
+    // copyName, and only this placement plays the copy. Returns the clip that changed, the copy
+    // when one was made, or nothing when the placement isn't there or its clip loops.
+    std::optional<Clip> ResizeClipThroughPlacement(
+        _Inout_ Sequence& sequence,
+        _In_ std::wstring_view trackId,
+        _In_ size_t index,
+        _In_ int64_t length,
+        _In_ bool onlyHere,
+        _In_ std::wstring copyId,
+        _In_ std::wstring copyName);
+
     // Merges one track into another and takes the first one out. See the top of this file.
     // Launcher slots: an empty one takes the other track's clip; where both have a different clip,
     // the two become one looping notes clip as long as the longer. Lanes the destination already

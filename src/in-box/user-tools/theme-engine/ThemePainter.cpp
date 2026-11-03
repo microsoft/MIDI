@@ -30,6 +30,9 @@ namespace themeengine
         // Shapes are drawn once into images this many keep, then the oldest go.
         constexpr size_t MaximumShadowImages = 512;
 
+        // Gradients kept to draw again; far more than any one look uses.
+        constexpr size_t MaximumGradients = 256;
+
         // Images up to this size are kept whole for one shape, rather than sliced to stretch.
         constexpr float MaximumWholeImage = 160.0f;
 
@@ -187,6 +190,7 @@ namespace themeengine
     void ThemePainter::Reset() noexcept
     {
         m_shadows.clear();
+        m_gradients.clear();
     }
 
     _Use_decl_annotations_
@@ -200,9 +204,39 @@ namespace themeengine
         std::vector<wgcb::CanvasGradientStop> stops{};
         stops.reserve(layer.Stops.size());
 
+        // A gradient's colors become a texture on the graphics card when it's made, which is slow
+        // and is slower still on some drivers. Parts are drawn again many times a second while a
+        // sequence plays, so each gradient is made once and only moved to where it's drawn.
+        auto key = std::wstring{ layer.Kind == BackgroundKind::Linear ? L"l" : L"r" };
+
         for (auto const& stop : layer.Stops)
         {
-            stops.push_back({ static_cast<float>(std::clamp(stop.Position, 0.0, 1.0)), FilteredColor(stop.Value, filter) });
+            auto const position = static_cast<float>(std::clamp(stop.Position, 0.0, 1.0));
+            auto const color = FilteredColor(stop.Value, filter);
+            stops.push_back({ position, color });
+            key += std::format(L"|{:.4f}:{:02X}{:02X}{:02X}{:02X}", position, color.A, color.R, color.G, color.B);
+        }
+
+        if (creator.Device() != m_gradientDevice)
+        {
+            m_gradients.clear();
+            m_gradientDevice = creator.Device();
+        }
+
+        auto found = m_gradients.find(key);
+
+        if (found == m_gradients.end())
+        {
+            if (m_gradients.size() >= MaximumGradients)
+            {
+                m_gradients.clear();
+            }
+
+            auto const made = layer.Kind == BackgroundKind::Linear
+                ? wgcb::ICanvasBrush{ wgcb::CanvasLinearGradientBrush{ creator, stops } }
+                : wgcb::ICanvasBrush{ wgcb::CanvasRadialGradientBrush{ creator, stops } };
+
+            found = m_gradients.emplace(std::move(key), made).first;
         }
 
         auto const w = static_cast<double>(rect.Width);
@@ -218,7 +252,7 @@ namespace themeengine
             auto const cx = rect.X + w / 2.0;
             auto const cy = rect.Y + h / 2.0;
 
-            wgcb::CanvasLinearGradientBrush brush{ creator, stops };
+            auto const brush = found->second.as<wgcb::CanvasLinearGradientBrush>();
             brush.StartPoint(float2{ static_cast<float>(cx - dx * half), static_cast<float>(cy - dy * half) });
             brush.EndPoint(float2{ static_cast<float>(cx + dx * half), static_cast<float>(cy + dy * half) });
             return brush;
@@ -254,7 +288,7 @@ namespace themeengine
             }
         }
 
-        wgcb::CanvasRadialGradientBrush brush{ creator, stops };
+        auto const brush = found->second.as<wgcb::CanvasRadialGradientBrush>();
         brush.Center(float2{ static_cast<float>(rect.X + cx), static_cast<float>(rect.Y + cy) });
         brush.RadiusX(static_cast<float>(std::max(rx, 0.5)));
         brush.RadiusY(static_cast<float>(std::max(ry, 0.5)));

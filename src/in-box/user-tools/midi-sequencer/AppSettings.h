@@ -25,12 +25,14 @@ namespace midisequencer
         std::wstring EndpointId{};
         std::wstring EndpointName{};
         uint8_t Group{ 0 };
-        bool Clock{ true };
-        bool StartStop{ true };
-        bool SongPosition{ true };
+
+        // Nothing is sent until it's chosen in Studio setup.
+        bool Clock{ false };
+        bool StartStop{ false };
+        bool SongPosition{ false };
 
         // A MIDI 2.0 Set Tempo message at each change. Only sent to a group that speaks MIDI 2.0.
-        bool Tempo{ true };
+        bool Tempo{ false };
 
         // Positive sends later, negative sends earlier.
         int32_t OffsetMilliseconds{ 0 };
@@ -119,6 +121,29 @@ namespace midisequencer
 
         bool ShowLauncher() const noexcept { return m_showLauncher; }
         void ShowLauncher(bool value) noexcept;
+
+        // Roman numerals on the Key and chords row's chords, when they fit.
+        bool ShowRomanNumerals() const noexcept { return m_showRomanNumerals; }
+        void ShowRomanNumerals(_In_ bool value) noexcept;
+
+        // Whether the Key and chords row plays its chords, and the device it, and anything else
+        // without a device of its own, plays on. An empty output means the General MIDI Synth.
+        bool PlayChords() const noexcept { return m_playChords; }
+        void PlayChords(_In_ bool value) noexcept;
+
+        // Shows Ask an AI assistant… on the Key and chords row. On by default, as in Windows
+        // MIDI Glass and Windows MIDI Patchbay.
+        bool ShowAssistant() const noexcept { return m_showAssistant; }
+        void ShowAssistant(_In_ bool value) noexcept;
+
+        // The piano roll's Scale highlight (on by default) and Scale snap (off), from the song's key.
+        bool ScaleHighlight() const noexcept { return m_scaleHighlight; }
+        void ScaleHighlight(_In_ bool value) noexcept;
+        bool ScaleSnap() const noexcept { return m_scaleSnap; }
+        void ScaleSnap(_In_ bool value) noexcept;
+        std::wstring const& DefaultOutputName() const noexcept { return m_defaultOutputName; }
+        std::wstring const& DefaultOutputId() const noexcept { return m_defaultOutputId; }
+        void DefaultOutput(_In_ std::wstring const& name, _In_ std::wstring const& id) noexcept;
 
         bool ShowMixer() const noexcept { return m_showMixer; }
         void ShowMixer(bool value) noexcept;
@@ -239,6 +264,13 @@ namespace midisequencer
         uint8_t m_metronomeNote{ 37 };
 
         bool m_showLauncher{ true };
+        bool m_showRomanNumerals{ true };
+        bool m_playChords{ false };
+        bool m_showAssistant{ true };
+        bool m_scaleHighlight{ true };
+        bool m_scaleSnap{ false };
+        std::wstring m_defaultOutputName{};
+        std::wstring m_defaultOutputId{};
         bool m_showMixer{ false };
         bool m_timelineOverview{ true };
         bool m_timelineBarAtTop{ false };

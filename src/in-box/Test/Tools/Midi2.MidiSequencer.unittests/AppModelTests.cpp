@@ -199,6 +199,7 @@ void AppModelTests::ClipSettingsUndoLeavesTheNotes()
     auto sequence = FolderSequence();
     auto clip = MakeNotesClip(L"Hook", Bar);
     clip.Notes = { testdata::MakeNote(0, 480, 60) };
+    clip.Loop = true;
     sequence.Clips = { clip };
 
     auto after = clip;

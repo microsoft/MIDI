@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "TimelineBar.h"
+#include "PixelSnap.h"
 #include "TimelineBarHost.h"
 #include "ThemeCanvas.h"
 
@@ -43,6 +44,10 @@ namespace midisequencer
         constexpr double VerticalZoomRate = 0.015;
 
         constexpr double KeyZoom = 1.25;
+
+        // While a sequence plays, the bar under and over the playhead is drawn again this often
+        // even when nothing said it changed.
+        constexpr std::chrono::milliseconds LayersRefreshInterval{ 500 };
 
         bool Inside(PaintRect const& rect, foundation::Point const& point, float slop = 0.0f) noexcept
         {
@@ -281,6 +286,7 @@ namespace midisequencer
         {
             if (m_canvas != nullptr)
             {
+                m_layersCurrent = false;
                 m_canvas.Invalidate();
             }
 
@@ -308,7 +314,21 @@ namespace midisequencer
             auto const layout = CurrentLayout(model);
             auto const x = std::round(static_cast<float>(layout.Scale.XAt(static_cast<double>(tick))));
 
-            if (x != m_playheadX)
+            m_playheadTick = tick;
+
+            // A playhead past the end stretches the bar, and the view follows it; then the whole
+            // bar is drawn again. So is the rest of it now and then, for anything that changed
+            // without saying so.
+            auto const& drawn = m_layersLayout;
+
+            if (layout.Scale.Left != drawn.Scale.Left || layout.Scale.Width != drawn.Scale.Width || layout.Scale.Extent != drawn.Scale.Extent ||
+                layout.ViewLeft != drawn.ViewLeft || layout.ViewRight != drawn.ViewRight ||
+                std::chrono::steady_clock::now() - m_layersDrawnAt > LayersRefreshInterval)
+            {
+                m_layersCurrent = false;
+            }
+
+            if (x != m_playheadX || !m_layersCurrent)
             {
                 m_canvas.Invalidate();
             }
@@ -549,28 +569,87 @@ namespace midisequencer
             m_sectionFormat.VerticalAlignment(canvasText::CanvasVerticalAlignment::Top);
         }
 
-        auto const model = CurrentModel();
-        auto const layout = Arrange(model, width, height);
+        auto const dpi = creator.Dpi();
 
-        // A line between the bar and the timeline, where the theme has dividers.
-        if (colors.Divider.A > 0)
+        // The pictures under and over the playhead, drawn again only when something else changed.
+        if (!m_layersCurrent || m_under == nullptr || m_under.Size() != foundation::Size{ width, height } || m_under.Dpi() != dpi || m_under.Device() != creator.Device())
         {
-            ds.FillRectangle(0, m_atTop ? height - 1.0f : 0.0f, width, 1.0f, colors.Divider);
+            auto const model = CurrentModel();
+            auto const layout = Arrange(model, width, height);
+
+            // The playhead goes between the two, and nothing but the view goes over it.
+            auto under = model;
+            under.Playhead = -1;
+            TimelineBarModel const over{};
+
+            if (m_under == nullptr || m_under.Size() != foundation::Size{ width, height } || m_under.Dpi() != dpi || m_under.Device() != creator.Device())
+            {
+                m_under = canvas::CanvasRenderTarget{ creator, width, height, dpi };
+                m_over = canvas::CanvasRenderTarget{ creator, width, height, dpi };
+            }
+
+            {
+                auto const session = m_under.CreateDrawingSession();
+                session.Clear(winrt::Microsoft::UI::Colors::Transparent());
+
+                // A line between the bar and the timeline, where the theme has dividers.
+                if (colors.Divider.A > 0)
+                {
+                    session.FillRectangle(0, m_atTop ? height - 1.0f : 0.0f, width, 1.0f, colors.Divider);
+                }
+
+                DrawToggle(session, creator, layout);
+                DrawKeys(session, creator, layout);
+
+                if (m_overview)
+                {
+                    DrawOverview(session, creator, layout, under, Stage::Under);
+                }
+                else
+                {
+                    DrawPlain(session, creator, layout, under, Stage::Under);
+                }
+            }
+
+            {
+                auto const session = m_over.CreateDrawingSession();
+                session.Clear(winrt::Microsoft::UI::Colors::Transparent());
+
+                if (m_overview)
+                {
+                    DrawOverview(session, creator, layout, over, Stage::Over);
+                }
+                else
+                {
+                    DrawPlain(session, creator, layout, over, Stage::Over);
+                }
+            }
+
+            m_layersCurrent = true;
+            m_layersLayout = layout;
+            m_layersDrawnAt = std::chrono::steady_clock::now();
+            m_playheadTick = model.Playhead;
         }
 
-        DrawToggle(ds, creator, layout);
-        DrawKeys(ds, creator, layout);
+        // Pixel for pixel, as SteadyCanvas does.
+        foundation::Rect const whole{ 0.0f, 0.0f, width, height };
+        ds.DrawImage(m_under, 0.0f, 0.0f, whole, 1.0f, canvas::CanvasImageInterpolation::NearestNeighbor);
+
+        TimelineBarModel playhead{};
+        playhead.Playhead = m_playheadTick;
 
         if (m_overview)
         {
-            DrawOverview(ds, creator, layout, model);
+            DrawOverview(ds, creator, m_layersLayout, playhead, Stage::Playhead);
         }
         else
         {
-            DrawPlain(ds, creator, layout, model);
+            DrawPlain(ds, creator, m_layersLayout, playhead, Stage::Playhead);
         }
 
-        m_playheadX = model.Playhead >= 0 ? std::round(static_cast<float>(layout.Scale.XAt(static_cast<double>(model.Playhead)))) : -1.0f;
+        ds.DrawImage(m_over, 0.0f, 0.0f, whole, 1.0f, canvas::CanvasImageInterpolation::NearestNeighbor);
+
+        m_playheadX = m_playheadTick >= 0 ? std::round(static_cast<float>(m_layersLayout.Scale.XAt(static_cast<double>(m_playheadTick)))) : -1.0f;
     }
 
     _Use_decl_annotations_
@@ -695,7 +774,8 @@ namespace midisequencer
         canvas::CanvasDrawingSession const& ds,
         canvas::ICanvasResourceCreatorWithDpi const& creator,
         Layout const& layout,
-        TimelineBarModel const& model)
+        TimelineBarModel const& model,
+        Stage stage)
     {
         auto const& colors = *m_palette;
         auto const theme = Theme();
@@ -729,10 +809,15 @@ namespace midisequencer
         if (themed)
         {
             auto const well = theme->Part(L"timeline.bar.well");
-            m_painter.Paint(ds, creator, *well, PartRect(*well, track));
+
+            if (stage == Stage::Under)
+            {
+                m_painter.Paint(ds, creator, *well, PartRect(*well, track));
+            }
+
             radius = static_cast<float>(well->CornerRadius(0, PartRect(*well, track).Width, PartRect(*well, track).Height));
         }
-        else
+        else if (stage == Stage::Under)
         {
             ds.FillRoundedRectangle(ToRect(track), radius, radius, colors.Light ? Rgba(0, 0, 0, 0.05) : Rgba(0, 0, 0, 0.24));
             ds.DrawRoundedRectangle(track.X + 0.5f, track.Y + 0.5f, track.Width - 1.0f, track.Height - 1.0f, radius, radius, WithAlpha(colors.Text, 0.10), 1.0f);
@@ -813,14 +898,25 @@ namespace midisequencer
 
             if (model.Playhead >= 0)
             {
-                ds.FillRectangle(x(static_cast<double>(model.Playhead)) - 0.75f, track.Y, 1.5f, track.Height, playheadColor);
+                // On whole physical pixels, so it keeps its width as it moves (PixelSnap.h).
+                auto const scale = ds.Dpi() / 96.0f;
+                auto const lineWidth = WholePixels(1.5f, scale);
+                ds.FillRectangle(SnapToPixel(x(static_cast<double>(model.Playhead)) - lineWidth / 2.0f, scale), track.Y, lineWidth, track.Height, playheadColor);
             }
 
             // what's outside the view, veiled
-            ds.FillRectangle(track.X, track.Y, std::max(0.0f, layout.ViewLeft - track.X), track.Height, veilColor);
-            ds.FillRectangle(layout.ViewRight, track.Y, std::max(0.0f, track.X + track.Width - layout.ViewRight), track.Height, veilColor);
+            if (stage == Stage::Over)
+            {
+                ds.FillRectangle(track.X, track.Y, std::max(0.0f, layout.ViewLeft - track.X), track.Height, veilColor);
+                ds.FillRectangle(layout.ViewRight, track.Y, std::max(0.0f, track.X + track.Width - layout.ViewRight), track.Height, veilColor);
+            }
 
             layer.Close();
+        }
+
+        if (stage != Stage::Over)
+        {
+            return;
         }
 
         // the view: a frame, with a grip at each end to zoom
@@ -872,19 +968,32 @@ namespace midisequencer
         canvas::CanvasDrawingSession const& ds,
         canvas::ICanvasResourceCreatorWithDpi const& creator,
         Layout const& layout,
-        TimelineBarModel const& model)
+        TimelineBarModel const& model,
+        Stage stage)
     {
         auto const& colors = *m_palette;
         auto const theme = Theme();
         auto const& slot = layout.Track;
+        auto const thumbHeight = Metric(L"timelineThumbHeight", 12.0f);
+        auto const middle = slot.Y + slot.Height / 2.0f;
+
+        // The playhead is drawn over everything else here.
+        if (stage != Stage::Under)
+        {
+            if (stage == Stage::Playhead && model.Playhead >= 0)
+            {
+                auto const x = static_cast<float>(layout.Scale.XAt(static_cast<double>(model.Playhead)));
+                ds.FillRoundedRectangle(x - 1.0f, middle - thumbHeight / 2.0f - 1.0f, 2.0f, thumbHeight + 2.0f, 1.0f, 1.0f, colors.Record);
+            }
+
+            return;
+        }
 
         if (!PaintPart(ds, creator, L"timeline.bar.slot", {}, slot))
         {
             ds.FillRoundedRectangle(ToRect(slot), slot.Height / 2.0f, slot.Height / 2.0f, WithAlpha(colors.Text, colors.Light ? 0.08 : 0.10));
         }
 
-        auto const thumbHeight = Metric(L"timelineThumbHeight", 12.0f);
-        auto const middle = slot.Y + slot.Height / 2.0f;
         PaintRect const thumb{ layout.ViewLeft, middle - thumbHeight / 2.0f, layout.ViewRight - layout.ViewLeft, thumbHeight };
 
         auto const hover = m_hover == Hit::View || m_hover == Hit::LeftEnd || m_hover == Hit::RightEnd;
@@ -936,12 +1045,6 @@ namespace midisequencer
                 }
             }
         }
-
-        if (model.Playhead >= 0)
-        {
-            auto const x = static_cast<float>(layout.Scale.XAt(static_cast<double>(model.Playhead)));
-            ds.FillRoundedRectangle(x - 1.0f, middle - thumbHeight / 2.0f - 1.0f, 2.0f, thumbHeight + 2.0f, 1.0f, 1.0f, colors.Record);
-        }
     }
 
     // ---------------------------------------------------------------- input
@@ -984,6 +1087,7 @@ namespace midisequencer
             controls::ToolTipService::SetToolTip(m_host, m_tip);
         }
 
+        m_layersCurrent = false;
         m_canvas.Invalidate();
     }
 
@@ -1030,6 +1134,7 @@ namespace midisequencer
 
             if (hit == Hit::ZoomOut || hit == Hit::ZoomIn || hit == Hit::ZoomFit)
             {
+                m_layersCurrent = false;
                 m_canvas.Invalidate();
                 return;
             }
@@ -1056,6 +1161,7 @@ namespace midisequencer
                 : tick - m_pressView.Start;
 
             m_dragging = true;
+            m_layersCurrent = false;
             m_canvas.Invalidate();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start a drag on the timeline's scroll bar.")
@@ -1158,6 +1264,7 @@ namespace midisequencer
                 args.Handled(true);
             }
 
+            m_layersCurrent = false;
             m_canvas.Invalidate();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to finish a drag on the timeline's scroll bar.")

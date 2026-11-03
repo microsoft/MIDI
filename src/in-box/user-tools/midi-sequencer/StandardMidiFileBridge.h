@@ -46,6 +46,10 @@ namespace midisequencer
         // From lyric events, or the words of a Soft Karaoke file, placed on the track that sings.
         std::optional<LyricsTrack> Lyrics{};
 
+        // From key signature events (FF 59), for the Key and chords row. Keys only: a file has
+        // no standard way to hold chords.
+        std::optional<HarmonyTrack> Harmony{};
+
         std::wstring Title{};
         std::wstring Copyright{};
     };

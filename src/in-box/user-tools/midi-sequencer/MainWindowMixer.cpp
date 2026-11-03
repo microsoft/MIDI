@@ -657,7 +657,7 @@ namespace winrt::midisequencer::implementation
                 if (now - m_mixerEdit.PublishedAt >= PublishEvery)
                 {
                     m_mixerEdit.PublishedAt = now;
-                    m_engine->SetSequence(std::make_shared<seq::Sequence const>(m_doc));
+                    m_engine->SetSequence(PlayableSequence());
                 }
 
                 InvalidateArrange();

@@ -176,9 +176,7 @@ namespace winrt::midisequencer::implementation
                 ShowMixer(true);
             }
 
-            m_frameTimer = xaml::DispatcherTimer{};
-            m_frameTimer.Interval(FrameInterval);
-            m_frameTimer.Tick([weak = get_weak()](auto&&, auto&&)
+            m_frames = std::make_unique<midiapp::FrameTicker>(DispatcherQueue(), std::chrono::duration_cast<std::chrono::microseconds>(FrameInterval), [weak = get_weak()]()
             {
                 if (auto strong = weak.get())
                 {
@@ -454,6 +452,10 @@ namespace winrt::midisequencer::implementation
                 {
                     DeleteSelectedAutomationPoint();
                 }
+                else if (m_selectedChord != SIZE_MAX || m_selectedKey != SIZE_MAX)
+                {
+                    DeleteSelectedHarmony();
+                }
                 else if (!m_roll.Selection().empty() && !m_editorClipId.empty())
                 {
                     ApplyRollEdit(m_roll.DeleteSelection());
@@ -666,6 +668,12 @@ namespace winrt::midisequencer::implementation
 
             for (auto const& output : clockSettings.ClockOutputs())
             {
+                // The General MIDI Synth never gets the clock, whatever was saved.
+                if (IsSynthEndpoint(seq::EndpointRef{ output.EndpointName, output.EndpointId }))
+                {
+                    continue;
+                }
+
                 followerDevices.insert(output.EndpointId.empty() ? output.EndpointName : output.EndpointId);
             }
 
@@ -788,7 +796,7 @@ namespace winrt::midisequencer::implementation
 
             if (!playing && !m_recording && !m_slotTake.has_value())
             {
-                m_frameTimer.Stop();
+                StopFrames();
                 UpdateTransport();
                 UpdateClockStatus();
                 InvalidateArrange();
@@ -929,7 +937,7 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            if (m_frameTimer != nullptr) { m_frameTimer.Stop(); }
+            StopFrames();
             if (m_serviceTimer != nullptr) { m_serviceTimer.Stop(); }
             if (m_autosaveTimer != nullptr) { m_autosaveTimer.Stop(); }
 

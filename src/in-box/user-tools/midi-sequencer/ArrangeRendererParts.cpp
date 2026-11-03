@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ArrangeRenderer.h"
+#include "HarmonyFollow.h"
 
 // The timeline and launcher parts a theme draws as more than a color (Themes\*.json "parts"): the
 // field under the lanes, clips, launcher pads and empty slots, and the loop. Each draws only when
@@ -240,6 +241,13 @@ namespace midisequencer
             if (UseCount(clip.Id) > 1)
             {
                 ds.DrawText(L"\uE71B", textX, y0, 10.0f, captionHeight, PartColor(*style, L"link-color", colors.Text3), ThemedFormat(GlyphFont, 8.0f, 400));
+                textX += 12.0f;
+            }
+
+            // Follows the song's key, so it plays different notes in different places.
+            if (FollowsSongKey(clip))
+            {
+                ds.DrawText(L"\uE8D6", textX, y0, 10.0f, captionHeight, PartColor(*style, L"link-color", colors.Text3), ThemedFormat(GlyphFont, 8.0f, 400));
                 textX += 12.0f;
             }
 

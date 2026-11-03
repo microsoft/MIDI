@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ClipLaneStrip.h"
+#include "PixelSnap.h"
 #include "ArrangeRenderer.h"
 #include "SequenceEdits.h"
 
@@ -632,7 +633,10 @@ namespace midisequencer
 
         if (auto const playhead = roll.Playhead(); playhead >= 0)
         {
-            ds.FillRectangle(static_cast<float>(roll.XAtTick(static_cast<double>(playhead))), top + 1.0f, 1.5f, height - 1.0f, colors.Playhead);
+            // On whole physical pixels, so it keeps its width as it moves (PixelSnap.h).
+            auto const scale = ds.Dpi() / 96.0f;
+            auto const x = SnapToPixel(static_cast<float>(roll.XAtTick(static_cast<double>(playhead))), scale);
+            ds.FillRectangle(x, top + 1.0f, WholePixels(1.5f, scale), height - 1.0f, colors.Playhead);
         }
 
         layer.Close();

@@ -67,6 +67,36 @@ namespace midisequencer
 
         void SetGhosts(_In_ std::vector<Ghost> ghosts) { m_ghosts = std::move(ghosts); }
 
+        // The song's key where the clip plays, from the Key and chords row (proposal section 4).
+        // Highlight draws the rows in the key lighter and the rest darker, and tints the notes of
+        // each chord under it. Snap puts drawn and dragged notes on a note of the key, unless the
+        // bypass is on (Alt held).
+        struct RollScale
+        {
+            struct ChordSpan
+            {
+                int64_t Start{ 0 };                 // from the clip's start
+                int64_t End{ 0 };
+                std::array<bool, 12> Tones{};
+            };
+
+            std::array<bool, 12> InKey{};
+            std::vector<ChordSpan> Chords{};
+        };
+
+        void SetScale(_In_ std::optional<RollScale> scale, _In_ bool highlight, _In_ bool snap)
+        {
+            m_scale = std::move(scale);
+            m_scaleHighlight = highlight;
+            m_scaleSnap = snap;
+        }
+
+        void SetScaleSnapBypass(_In_ bool bypass) noexcept { m_scaleSnapBypass = bypass; }
+
+        // A note number on the nearest note of the key when Scale snap is on, the lower one when
+        // two are as near. Otherwise as it is.
+        int32_t SnapToScale(_In_ int32_t number) const noexcept;
+
         // Where the playhead is, from the clip's start, or -1 to hide it.
         void SetPlayhead(_In_ int64_t tick) noexcept { m_playhead = tick; }
 
@@ -176,6 +206,10 @@ namespace midisequencer
 
         std::vector<Note> m_selected{};
         std::vector<Ghost> m_ghosts{};
+        std::optional<RollScale> m_scale{};
+        bool m_scaleHighlight{ true };
+        bool m_scaleSnap{ false };
+        bool m_scaleSnapBypass{ false };
 
         Gesture m_gesture{ Gesture::None };
         foundation::Point m_pressPoint{};

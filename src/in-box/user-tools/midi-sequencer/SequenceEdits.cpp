@@ -72,6 +72,9 @@ namespace midisequencer
             uint32_t Seed{ 0 };
             std::wstring SeedWords{};
             ClipKind Kind{ ClipKind::Notes };
+            bool FollowKey{ false };
+            uint8_t WrittenRoot{ 0 };
+            ScaleKind WrittenScale{ ScaleKind::Major };
             winrt::Windows::Data::Json::JsonObject Settings{ nullptr };
 
             static ClipSettings From(_In_ Clip const& clip)
@@ -84,6 +87,9 @@ namespace midisequencer
                 settings.Seed = clip.Seed;
                 settings.SeedWords = clip.SeedWords;
                 settings.Kind = clip.Kind;
+                settings.FollowKey = clip.FollowKey;
+                settings.WrittenRoot = clip.WrittenRoot;
+                settings.WrittenScale = clip.WrittenScale;
 
                 if (clip.Settings != nullptr)
                 {
@@ -102,6 +108,9 @@ namespace midisequencer
                 clip.Seed = Seed;
                 clip.SeedWords = SeedWords;
                 clip.Kind = Kind;
+                clip.FollowKey = FollowKey;
+                clip.WrittenRoot = WrittenRoot;
+                clip.WrittenScale = WrittenScale;
                 clip.Settings = Settings == nullptr ? nullptr : winrt::Windows::Data::Json::JsonObject::Parse(Settings.Stringify());
 
                 // A generator's drawn notes depend on its length and seed.
@@ -782,7 +791,10 @@ namespace midisequencer
         clip.Kind = ClipKind::Notes;
         clip.Name = std::move(name);
         clip.Length = std::max<int64_t>(1, length);
-        clip.Loop = true;
+
+        // Dragging its end makes the clip itself longer (#1326). Loop, in the clip editor's length
+        // chip, makes it repeat instead.
+        clip.Loop = false;
         clip.Seed = NewSeed();
         clip.Origin = ClipOrigin::Drawn;
         return clip;

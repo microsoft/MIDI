@@ -80,7 +80,9 @@ namespace midisequencer
 
     // Each note one pass of an arpeggiator plays that starts inside [fromTick, toTick), in step
     // order. keys are the keys held on the track's source; without them, an arpeggiator that
-    // plays held keys plays nothing, which is what an export gets.
+    // plays held keys plays nothing, which is what an export gets. songTick maps a tick to where
+    // it is in the song, for the Chords source (RenderOptions::SongTick); left out, a tick is where
+    // it is.
     void ForEachArpeggiatorNote(
         _In_ Sequence const& sequence,
         _In_ Clip const& clip,
@@ -90,7 +92,8 @@ namespace midisequencer
         _In_ int64_t fromTick,
         _In_ int64_t toTick,
         _Inout_opt_ ArpeggiatorInput* keys,
-        _In_ std::function<void(Note const&)> const& add);
+        _In_ std::function<void(Note const&)> const& add,
+        _In_opt_ std::function<int64_t(int64_t)> const* songTick = nullptr);
 
     bool IsArpeggiator(_In_ Clip const& clip) noexcept;
 

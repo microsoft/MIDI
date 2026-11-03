@@ -10,6 +10,7 @@
 #include "MainWindow.g.h"
 
 #include "AppSettings.h"
+#include "FrameTicker.h"
 #include "NoteRollRenderer.h"
 #include "KeyboardRollRenderer.h"
 #include "midi_sequence_playback_engine.h"
@@ -247,7 +248,10 @@ namespace winrt::midiplayer::implementation
         // A file named on the command line, opened before any endpoint had turned up yet.
         bool m_pendingAutoPlay{ false };
 
-        xaml::DispatcherTimer m_positionTimer{ nullptr };
+        // Note scrolling and the time at an even pace while playing (midi-app-shared\FrameTicker.h):
+        // a DispatcherTimer fires on the system timer's tick, so on a PC left at 15.6 ms it drew at
+        // about 21 frames a second (#1324).
+        std::unique_ptr<midiapp::FrameTicker> m_positionTicker{};
 
         bool m_initialized{ false };
         bool m_startupOptionsApplied{ false };
