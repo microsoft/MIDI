@@ -554,6 +554,11 @@ CMidiXProc::SendMidiMessage(
     RETURN_HR_IF(E_INVALIDARG, (m_MidiOut->DataFormat != MidiDataFormats_ByteStream) && 
                                 (m_MidiOut->DataFormat != MidiDataFormats_UMP));
 
+    // MessageOptionFlags_SeparateUMPs is not a valid option used in combination with
+    // MidiDataFormats_ByteStream
+    RETURN_HR_IF(E_UNEXPECTED, (m_MidiOut->DataFormat == MidiDataFormats_ByteStream) &&
+                                (optionFlags & MessageOptionFlags_SeparateUMPs) == MessageOptionFlags_SeparateUMPs);
+
     if (m_MidiOut->DataFormat == MidiDataFormats_ByteStream)
     {
         RETURN_HR_IF(E_INVALIDARG, length > MAXIMUM_LOOPED_BYTESTREAM_DATASIZE);
@@ -949,6 +954,17 @@ CMidiXProc::ProcessMidiIn()
 
                     PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
                     UINT32 dataSize = header->ByteCount;
+
+                    // Validate that the reported header->ByteCount is within the permitted range.
+                    if (m_MidiIn->DataFormat == MidiDataFormats_ByteStream)
+                    {
+                        RETURN_HR_IF(E_ABORT, dataSize > MAXIMUM_LOOPED_BYTESTREAM_DATASIZE);
+                    }
+                    else
+                    {
+                        RETURN_HR_IF(E_ABORT, dataSize > MAXIMUM_LOOPED_UMP_DATASIZE);
+                    }
+
                     UINT32 totalSize = dataSize + sizeof(LOOPEDDATAFORMAT);
                     ULONG newReadPosition = (readPosition + totalSize) % mappedData->BufferSize;
 
@@ -1183,9 +1199,8 @@ CMidiXProc::ProcessMidiInBatched()
                         break;
                     }
 
-                    PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
-                    PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
-                    UINT32 dataSize = header->ByteCount;
+                    PVOID data = (PVOID)(((BYTE*)mappedData->BufferAddress) + readPosition + sizeof(LOOPEDDATAFORMAT));
+                    UINT32 dataSize = batchedDataSize;
                     HRESULT hr = S_OK;
 
                     if (messageCount > 1)
@@ -1197,14 +1212,29 @@ CMidiXProc::ProcessMidiInBatched()
 
                         for (UINT32 messageIndex = 0; messageIndex < messageCount; messageIndex++)
                         {
+                            // Abort if the start of the header falls outside the primary xproc buffer
+                            RETURN_HR_IF(E_ABORT, copyPosition > mappedData->BufferSize);
+
+                            // The buffer is double mapped, so it's OK for part of the buffer to go past the end, as long as
+                            // it's less than 2x the total buffer size.
+                            RETURN_HR_IF(E_ABORT, copyPosition + sizeof(LOOPEDDATAFORMAT) > (mappedData->BufferSize * 2));
+
                             PLOOPEDDATAFORMAT copyHeader = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + copyPosition);
+                            UINT32 rereadByteCount = copyHeader->ByteCount;
+
+                            // Abort on TOCTOU: a concurrent writer changed ByteCount so it
+                            // would overflow the batch buffer or read past the xproc buffer.
+                            // The buffer is double mapped, so it's OK for part of the buffer to go past the end, as long as
+                            // it's less than 2x the total buffer size.
+                            RETURN_HR_IF(E_ABORT, copiedBytes + rereadByteCount > batchedDataSize ||
+                                copyPosition + sizeof(LOOPEDDATAFORMAT) + rereadByteCount > (mappedData->BufferSize * 2));
 
                             memcpy(batchBuffer.data() + copiedBytes,
                                 ((BYTE*)copyHeader) + sizeof(LOOPEDDATAFORMAT),
-                                copyHeader->ByteCount);
+                                rereadByteCount);
 
-                            copiedBytes += copyHeader->ByteCount;
-                            copyPosition = (copyPosition + copyHeader->ByteCount + sizeof(LOOPEDDATAFORMAT)) % mappedData->BufferSize;
+                            copiedBytes += rereadByteCount;
+                            copyPosition = (copyPosition + rereadByteCount + sizeof(LOOPEDDATAFORMAT)) % mappedData->BufferSize;
                         }
 
                         data = batchBuffer.data();

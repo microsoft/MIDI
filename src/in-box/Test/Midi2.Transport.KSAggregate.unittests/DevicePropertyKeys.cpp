@@ -13,4 +13,5 @@
 #include <cstdint>
 #include <initguid.h>
 #include <devpkey.h>
+#include <climits>
 #include "MidiDefs.h"

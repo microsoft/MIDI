@@ -32,12 +32,10 @@ private:
     HRESULT ExecuteCommandListEntries(
         _Inout_ json::JsonObject const& responseObject);
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection.
     HRESULT ExecuteCommandSetFeedbackProtection(
         _In_ std::map<std::wstring, std::wstring> const& arguments,
         _Inout_ json::JsonObject& responseObject);
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection.
     void AddFeedbackStatusToListEntry(
         _Inout_ json::JsonObject& entryObject,
         _In_ std::shared_ptr<MidiLoopbackDevice> const& device);
@@ -58,8 +56,7 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject);
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackUniqueEndpointNames. A name has to be unique
-    // across every loopback this transport owns, not only within the pair it belongs to.
+    // A name has to be unique across every loopback this transport owns, not only within the pair it belongs to.
     HRESULT ValidateNewEndpointNamesAreUnused(
         _In_ MidiLoopbackDeviceDefinition const& definitionA,
         _In_ MidiLoopbackDeviceDefinition const& definitionB,
@@ -71,14 +68,12 @@ private:
         _In_ std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
         _Inout_ json::JsonObject& responseObject);
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAddRemoveReliability.
     HRESULT ValidateNewUniqueIdentifiersDoNotOverlap(
         _In_ MidiLoopbackDeviceDefinition const& definitionA,
         _In_ MidiLoopbackDeviceDefinition const& definitionB,
         _Inout_ json::JsonObject& responseObject);
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. A second pair under an association id
-    // already in use would replace the first pair in the table and leave its endpoints behind.
+    // A second pair under an association id already in use would replace the first pair in the table and leave its endpoints behind.
     HRESULT ValidateNewAssociationIdIsUnused(
         _In_ MidiLoopbackDeviceDefinition const& definitionA,
         _Inout_ json::JsonObject& responseObject);

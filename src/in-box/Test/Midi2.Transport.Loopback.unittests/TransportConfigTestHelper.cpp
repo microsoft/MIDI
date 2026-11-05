@@ -11,41 +11,24 @@
 using namespace WEX::Common;
 using namespace WEX::Logging;
 
+void ErrorHandler(bool, wil::FailureInfo const& failure) WI_NOEXCEPT
+{
+    // This callback enables us to have wil fallback errors logged into the test output.
+    WCHAR failureString[2048];
+    wil::GetFailureLogString(failureString, _countof(failureString), failure);
+    Log::Comment(String().Format( L"WIL error: %s", failureString));
+}
+
+MODULE_SETUP(ModuleSetup);
+bool ModuleSetup()
+{
+    winrt::init_apartment();
+    wil::SetResultTelemetryFallback(ErrorHandler);
+    return true;
+}
+
 namespace TransportConfigTest
 {
-    namespace
-    {
-        // Nothing else in this test DLL uses COM, so the calling thread has not been
-        // initialized. Without this every CoCreateInstance fails with CO_E_NOTINITIALIZED and
-        // the tests silently skip as though the service were absent.
-        struct ComApartmentScope
-        {
-            ComApartmentScope()
-            {
-                auto hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-
-                // RPC_E_CHANGED_MODE means the thread is already in a different apartment,
-                // which is usable but not ours to undo
-                m_owned = SUCCEEDED(hr);
-            }
-
-            ~ComApartmentScope()
-            {
-                if (m_owned)
-                {
-                    CoUninitialize();
-                }
-            }
-
-            ComApartmentScope(ComApartmentScope const&) = delete;
-            ComApartmentScope& operator=(ComApartmentScope const&) = delete;
-
-        private:
-            bool m_owned{ false };
-        };
-    }
-
-
     std::wstring EscapeJsonString(std::wstring const& value)
     {
         std::wstring result;
@@ -95,9 +78,6 @@ namespace TransportConfigTest
     ServiceConfigResult SendRawServiceConfig(GUID const& transportId, std::wstring const& rawPayload)
     {
         ServiceConfigResult result{ };
-
-        // declared first so it outlives every COM pointer below
-        ComApartmentScope comScope;
 
         try
         {
@@ -191,14 +171,46 @@ namespace TransportConfigTest
 
     bool IsTransportAvailable(GUID const& transportId, std::wstring const& transportIdString)
     {
-        // an empty create section is a no-op the transport still answers
-        auto result = SendTransportConfig(transportId, transportIdString, L"{\"create\":{}}");
-
-        if (!result.CallSucceeded && !result.Message.empty())
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
+        if (SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
         {
-            Log::Comment(String().Format(L"Transport probe failed: %s", result.Message.c_str()));
+            wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+            if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **)&midiSessionTracker)))
+            {
+                if (SUCCEEDED(midiSessionTracker->Initialize()))
+                {
+                    if (midiSessionTracker->VerifyConnectivity())
+                    {
+                        // an empty create section is a no-op the transport still answers
+                        auto result = SendTransportConfig(transportId, transportIdString, L"{\"create\":{}}");
+                        
+                        if (!result.CallSucceeded && !result.Message.empty())
+                        {
+                            Log::Comment(String().Format(L"Transport probe failed: %s", result.Message.c_str()));
+                        }
+                        
+                        return result.CallSucceeded;
+                    }                    
+                    else
+                    {
+                        Log::Comment(String().Format(L"Verify service connectivity failed."));
+                    }
+                }
+                else
+                {
+                    Log::Comment(String().Format(L"IMidiSessionTracker::Initialize failed."));
+                }
+            }
+            else
+            {
+                Log::Comment(String().Format(L"Midi2MidiSrvTransport::Activate for IMidiSessionTracker failed."));
+            }
+        }
+        else
+        {
+           Log::Comment(String().Format(L"CoCreateInstance for Midi2MidiSrvTransport failed."));
         }
 
-        return result.CallSucceeded;
+        return false;
     }
 }

@@ -8,8 +8,7 @@
 
 #pragma once
 
-// Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection. One per loopback pair, with a
-// guard for each direction. Every copy of the device shares it, so feedback in either direction
+// One per loopback pair, with a guard for each direction. Every copy of the device shares it, so feedback in either direction
 // mutes the pair, exactly as the customer's own mute does.
 class MidiLoopbackFeedback
 {

@@ -17,7 +17,6 @@ MidiPingBidiDevice::SendMidiMessage
     LONGLONG /*timestamp*/
 )
 {
-    RETURN_HR_IF_NULL(E_POINTER, m_Callback);
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size != sizeof(internal::PackedPingRequestUmp));
    
@@ -32,7 +31,16 @@ MidiPingBidiDevice::SendMidiMessage
 
     auto newTimestamp = internal::GetCurrentMidiTimestamp();
 
-    return m_Callback->Callback(MessageOptionFlags_None, &responseUmp, sizeof(internal::PackedPingResponseUmp), newTimestamp, m_Context);
+    wil::com_ptr_nothrow<IMidiCallback> callback;
+    LONGLONG context;
+    {
+        auto lock = m_CallbackLock.lock();
+        callback = m_Callback;
+        context = m_Context;
+    }
+
+    RETURN_HR_IF_NULL(E_POINTER, callback.get());
+    return callback->Callback(MessageOptionFlags_None, &responseUmp, sizeof(internal::PackedPingResponseUmp), newTimestamp, context);
 }
 
 _Use_decl_annotations_
@@ -43,6 +51,7 @@ MidiPingBidiDevice::SetCallback
     LONGLONG context
 )
 {
+    auto lock = m_CallbackLock.lock();
     m_Callback = callback;
     m_Context = context;
 }
@@ -50,6 +59,7 @@ MidiPingBidiDevice::SetCallback
 void
 MidiPingBidiDevice::Shutdown()
 {
+    auto lock = m_CallbackLock.lock();
     m_Callback = nullptr;
     m_Context = 0;
 }
