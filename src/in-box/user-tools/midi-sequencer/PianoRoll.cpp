@@ -113,6 +113,7 @@ namespace midisequencer
         {
             m_selected.clear();
             m_gesture = Gesture::None;
+            ClearPreview();
         }
     }
 
@@ -134,6 +135,33 @@ namespace midisequencer
     bool PianoRoll::IsSelected(Note const& note) const noexcept
     {
         auto range = std::equal_range(m_selected.begin(), m_selected.end(), note, NoteOrder);
+        return std::find(range.first, range.second, note) != range.second;
+    }
+
+    _Use_decl_annotations_
+    void PianoRoll::SetPreview(std::vector<Note> removed, std::vector<Note> added)
+    {
+        m_previewRemoved = Sorted(std::move(removed));
+        m_previewAdded = std::move(added);
+        m_hasPreview = true;
+    }
+
+    void PianoRoll::ClearPreview() noexcept
+    {
+        m_previewRemoved.clear();
+        m_previewAdded.clear();
+        m_hasPreview = false;
+    }
+
+    _Use_decl_annotations_
+    bool PianoRoll::IsHiddenByPreview(Note const& note) const noexcept
+    {
+        if (!m_hasPreview)
+        {
+            return false;
+        }
+
+        auto range = std::equal_range(m_previewRemoved.begin(), m_previewRemoved.end(), note, NoteOrder);
         return std::find(range.first, range.second, note) != range.second;
     }
 
@@ -261,6 +289,19 @@ namespace midisequencer
         }
 
         return found;
+    }
+
+    _Use_decl_annotations_
+    std::optional<Note> PianoRoll::NoteAt(Point point) const noexcept
+    {
+        auto const index = NoteIndexAt(point);
+
+        if (index < 0)
+        {
+            return std::nullopt;
+        }
+
+        return m_clip->Notes[static_cast<size_t>(index)];
     }
 
     _Use_decl_annotations_
@@ -1049,7 +1090,7 @@ namespace midisequencer
             auto const selected = IsSelected(*it);
 
             // While a gesture moves notes, they're drawn where they're going.
-            if (moving && selected)
+            if ((moving && selected) || IsHiddenByPreview(*it))
             {
                 continue;
             }
@@ -1062,6 +1103,17 @@ namespace midisequencer
             for (auto const& note : m_gestureNotes)
             {
                 drawNote(PreviewOf(note), true);
+            }
+        }
+
+        if (m_hasPreview)
+        {
+            for (auto const& note : m_previewAdded)
+            {
+                if (static_cast<double>(note.Tick) <= visibleTo && static_cast<double>(note.Tick + note.Length) >= visibleFrom)
+                {
+                    drawNote(note, true);
+                }
             }
         }
 
@@ -1243,7 +1295,7 @@ namespace midisequencer
                 {
                     auto const selected = IsSelected(*it);
 
-                    if (velocityDrag && selected)
+                    if ((velocityDrag && selected) || IsHiddenByPreview(*it))
                     {
                         continue;
                     }
@@ -1256,6 +1308,17 @@ namespace midisequencer
                     for (auto const& note : m_gestureNotes)
                     {
                         drawStem(PreviewOf(note), true);
+                    }
+                }
+
+                if (m_hasPreview)
+                {
+                    for (auto const& note : m_previewAdded)
+                    {
+                        if (static_cast<double>(note.Tick) >= visibleFrom && static_cast<double>(note.Tick) <= visibleTo)
+                        {
+                            drawStem(note, true);
+                        }
                     }
                 }
             }

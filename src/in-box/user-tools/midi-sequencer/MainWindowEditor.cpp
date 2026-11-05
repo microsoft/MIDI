@@ -235,6 +235,7 @@ namespace winrt::midisequencer::implementation
             auto const visible = [](bool show) { return show ? xaml::Visibility::Visible : xaml::Visibility::Collapsed; };
 
             NotesTools().Visibility(visible(!pattern && !generator));
+            NoteToolbar().Visibility(visible(!pattern && !generator));
             PatternTools().Visibility(visible(pattern));
             GeneratorTools().Visibility(visible(generator));
             PatternActions().Visibility(visible(pattern || generator));
@@ -322,6 +323,9 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // The toolbar above the roll says how many notes its tools will change.
+            UpdateNoteToolbar();
+
             auto const body = NoteInspectorBody();
             body.Children().Clear();
 
@@ -568,6 +572,20 @@ namespace winrt::midisequencer::implementation
                     AuditionNote(*key, true);
                     m_editorCanvas.CapturePointer(args.Pointer());
                     args.Handled(true);
+                    return;
+                }
+            }
+
+            // A right click on empty space or on a selected note opens the note tools. On a note
+            // that isn't selected it still deletes that note, as it always has.
+            if (right && m_roll.IsInNotesArea(position))
+            {
+                auto const note = m_roll.NoteAt(position);
+
+                if (!note.has_value() || m_roll.IsNoteSelected(*note))
+                {
+                    args.Handled(true);
+                    ShowNoteToolsContextMenu(position);
                     return;
                 }
             }
@@ -881,30 +899,6 @@ namespace winrt::midisequencer::implementation
             ApplyRollEdit(m_roll.QuantizeSelection(SnapGrid() > 0 ? SnapGrid() : 240));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to quantize.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnTransposeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
-    {
-        try
-        {
-            auto const item = sender.try_as<controls::MenuFlyoutItem>();
-
-            if (item == nullptr)
-            {
-                return;
-            }
-
-            auto const semitones = std::stoi(std::wstring{ winrt::unbox_value_or<winrt::hstring>(item.Tag(), L"0") });
-
-            if (m_roll.Selection().empty())
-            {
-                m_roll.SelectAll();
-            }
-
-            ApplyRollEdit(m_roll.TransposeSelection(semitones));
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to transpose.")
     }
 
     _Use_decl_annotations_

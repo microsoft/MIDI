@@ -144,6 +144,22 @@ namespace midisequencer
         // A drag under way, whose change is kept when it's let go.
         bool InGesture() const noexcept { return m_gesture != Gesture::None; }
 
+        // The note under a point, for the right-click menu.
+        std::optional<Note> NoteAt(_In_ foundation::Point point) const noexcept;
+        bool IsNoteSelected(_In_ Note const& note) const noexcept { return IsSelected(note); }
+        bool IsInNotesArea(_In_ foundation::Point point) const noexcept
+        {
+            return point.X >= RollLeft() && point.Y >= RollTop() && point.Y <= RollBottom();
+        }
+
+        // What a note tool would do, shown before it's applied (MainWindowNoteTools.cpp): the
+        // notes it takes out are hidden and the ones it puts in are drawn selected.
+        void SetPreview(_In_ std::vector<Note> removed, _In_ std::vector<Note> added);
+        void ClearPreview() noexcept;
+        bool HasPreview() const noexcept { return m_hasPreview; }
+
+        std::optional<RollScale> const& Scale() const noexcept { return m_scale; }
+
     private:
         enum class Gesture : uint8_t
         {
@@ -168,6 +184,7 @@ namespace midisequencer
         int64_t VelocityStemAt(_In_ foundation::Point point) const noexcept;
 
         bool IsSelected(_In_ Note const& note) const noexcept;
+        bool IsHiddenByPreview(_In_ Note const& note) const noexcept;
         int64_t Snap(_In_ double tick) const noexcept;
         void ClampView() noexcept;
 
@@ -205,6 +222,9 @@ namespace midisequencer
         double m_topNote{ 72 };
 
         std::vector<Note> m_selected{};
+        std::vector<Note> m_previewRemoved{};   // in NoteOrder
+        std::vector<Note> m_previewAdded{};
+        bool m_hasPreview{ false };
         std::vector<Ghost> m_ghosts{};
         std::optional<RollScale> m_scale{};
         bool m_scaleHighlight{ true };

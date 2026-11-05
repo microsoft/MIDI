@@ -170,6 +170,7 @@
     <ClInclude Include="MixerSlots.h" />
     <ClInclude Include="ClipIcons.h" />
     <ClInclude Include="PatternTemplates.h" />
+    <ClInclude Include="NoteTools.h" />
     <ClInclude Include="DawProject.h" />
     <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="DocumentFiles.h" />
@@ -347,6 +348,10 @@
     <ClCompile Include="PatternTemplates.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="NoteTools.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MainWindowNoteTools.cpp" />
     <ClCompile Include="RecentSequences.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
