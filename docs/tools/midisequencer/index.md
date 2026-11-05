@@ -121,6 +121,20 @@ To cut a clip in two, select the razor (the scissors above the tracks), then sel
 
 To make a clip longer or shorter, drag its right end. What happens depends on whether the clip loops. A **Linear** clip gets longer, with empty bars to draw in, or shorter. A clip set to **Loop** repeats to fill the space you drag out. To choose, right-click the clip and select **Loop** or **Linear**. You can also select the length (like **4 bars**) at the top of the clip editor, which has the Loop switch and lets you type an exact length in bars and beats. New notes clips on the timeline start out linear, and clips you make in the launcher start out looping. If a linear clip plays in more than one place, the sequencer asks whether to change only the one you dragged or every place it plays. Changing only one makes it a separate copy, with "(copy)" added to its name. It loses the link mark that shared clips show, so changing it no longer changes the others.
 
+### Change many notes at once
+
+The bar above the piano roll has tools that change notes for you. They change the notes you selected. If you didn't select any, they change the whole clip. The bar says how many notes are selected, so you always know which it will be. Right-click empty space in the piano roll, or a selected note, to get the same tools there. Right-clicking a note that isn't selected still deletes it.
+
+Tools with settings open a small panel on the right. The piano roll shows what the tool will do as you change the settings, and nothing changes until you select **Apply**. Every tool is one step to undo.
+
+- **Select** picks notes for the other tools: the top note of each chord (usually the melody), the bottom note (usually the bass), every second note, notes on or off the beat, notes in a range of velocities, or notes outside the song's key. **Move to a new track** puts the selected notes in a new clip on a new track that plays to the same device, so you can split a piano part into melody and chords.
+- **Timing** has **Quantize**, with a strength setting that tightens the timing but keeps some of the feel, and swing. **Humanize** adds small changes so a part drawn on the grid sounds played. It changes notes on the beat less than notes between beats. **Groove from another clip** copies the timing and accents of one clip onto another. **Speed up or slow down** pushes notes closer together or further apart as they go. **Ratchet** turns each note into fast repeats, for drum rolls.
+- **Length** has **Legato**, which makes each note last until the next one starts, plus a fixed length and a percent of each note's length. **Clean up** fixes notes that overlap the same note, removes duplicates, and removes very short notes.
+- **Pitch** has semitone and octave steps, and steps by notes of the song's key, so a melody stays in key. **Fit to the chords** moves notes that clash with the chord on the Key and chords row. **Voicing** changes chords: inversions, close and open voicings, drop 2 and drop 3, an extra octave below, and **Smooth voice leading**, which picks the inversion of each chord that moves the least from the one before. **Mirror** turns a melody upside down, and **Reverse** plays it backward.
+- **Velocity** sets, raises, ramps, accents or randomizes velocity. The same panel works for release velocity and for each note's chance of playing.
+
+When two notes with the same number overlap on one channel, the bar shows a warning you can select to fix them. Most instruments stop the sound at the first note off, so the second note gets cut short.
+
 ### Start a pattern from a template
 
 Not sure where to start? **Templates**, at the top of a pattern, has starter patterns, like the presets on a drum machine.

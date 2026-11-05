@@ -2109,24 +2109,6 @@
   <data name="EditorQuantizeSixteenths" xml:space="preserve">
     <value>Quantize to 1/16</value>
   </data>
-  <data name="EditorTransposeButton.Content" xml:space="preserve">
-    <value>Transpose</value>
-  </data>
-  <data name="EditorTransposeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Transpose</value>
-  </data>
-  <data name="TransposeUpOctave.Text" xml:space="preserve">
-    <value>Octave up</value>
-  </data>
-  <data name="TransposeUpSemitone.Text" xml:space="preserve">
-    <value>Semitone up</value>
-  </data>
-  <data name="TransposeDownSemitone.Text" xml:space="preserve">
-    <value>Semitone down</value>
-  </data>
-  <data name="TransposeDownOctave.Text" xml:space="preserve">
-    <value>Octave down</value>
-  </data>
   <data name="EditorKeyboardText.Text" xml:space="preserve">
     <value>MIDI Keyboard</value>
   </data>
@@ -5330,5 +5312,665 @@
   </data>
   <data name="RomanNumeralsHelp" xml:space="preserve">
     <value>Shows each chord's place in the key, like ii or V7, under its name on the Key and chords row, when there's room.</value>
+  </data>
+  <data name="NoteSelectButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Select notes</value>
+  </data>
+  <data name="NoteSelectButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Select notes by what they are: the top or bottom note of each chord, every second note, notes on the beat and more</value>
+  </data>
+  <data name="NoteSelectText.Text" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="NoteTimingButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Timing tools</value>
+  </data>
+  <data name="NoteTimingButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Quantize, humanize, groove, speed up or slow down, and ratchet</value>
+  </data>
+  <data name="NoteTimingText.Text" xml:space="preserve">
+    <value>Timing</value>
+  </data>
+  <data name="NoteLengthButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Length tools</value>
+  </data>
+  <data name="NoteLengthButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Legato, a fixed length, a percent of the length, and clean up</value>
+  </data>
+  <data name="NoteLengthText.Text" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="NotePitchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pitch tools</value>
+  </data>
+  <data name="NotePitchButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Transpose, move by notes of the key, fit to the chords, voicing, mirror and reverse</value>
+  </data>
+  <data name="NotePitchText.Text" xml:space="preserve">
+    <value>Pitch</value>
+  </data>
+  <data name="NoteVelocityButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Velocity tools</value>
+  </data>
+  <data name="NoteVelocityButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Change velocity, release velocity or chance across the notes</value>
+  </data>
+  <data name="NoteVelocityText.Text" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="NoteCleanUpButton.Content" xml:space="preserve">
+    <value>Clean up</value>
+  </data>
+  <data name="NoteCleanUpButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Clean up</value>
+  </data>
+  <data name="NoteCleanUpButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fix overlapping notes, remove duplicates and very short notes</value>
+  </data>
+  <data name="NoteOverlapButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Fix overlapping notes</value>
+  </data>
+  <data name="NoteOverlapButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Two notes with the same number overlap on one channel. Most instruments stop the sound at the first note off, so the second note gets cut short. Click to shorten the first note so it ends where the next one starts.</value>
+  </data>
+  <data name="NoteSelectionNone" xml:space="preserve">
+    <value>No notes selected</value>
+  </data>
+  <data name="NoteSelectionOne" xml:space="preserve">
+    <value>1 note selected</value>
+  </data>
+  <data name="NoteSelectionManyFormat" xml:space="preserve">
+    <value>{0} notes selected</value>
+  </data>
+  <data name="NoteOverlapOne" xml:space="preserve">
+    <value>1 overlapping note: fix</value>
+  </data>
+  <data name="NoteOverlapManyFormat" xml:space="preserve">
+    <value>{0} overlapping notes: fix</value>
+  </data>
+  <data name="NoteMenuGroupSelect" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="NoteMenuGroupTiming" xml:space="preserve">
+    <value>Timing</value>
+  </data>
+  <data name="NoteMenuGroupLength" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="NoteMenuGroupPitch" xml:space="preserve">
+    <value>Pitch</value>
+  </data>
+  <data name="NoteMenuGroupVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="NoteMenuSelectAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="NoteMenuSelectAllKeys" xml:space="preserve">
+    <value>Ctrl+A</value>
+  </data>
+  <data name="NoteMenuSelectNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="NoteMenuSelectNoneKeys" xml:space="preserve">
+    <value>Esc</value>
+  </data>
+  <data name="NoteMenuSelectInvert" xml:space="preserve">
+    <value>Everything else</value>
+  </data>
+  <data name="NoteMenuSelectTop" xml:space="preserve">
+    <value>Top note of each chord</value>
+  </data>
+  <data name="NoteMenuSelectBottom" xml:space="preserve">
+    <value>Bottom note of each chord</value>
+  </data>
+  <data name="NoteMenuSelectSame" xml:space="preserve">
+    <value>Every note with the same number</value>
+  </data>
+  <data name="NoteMenuSelectEverySecond" xml:space="preserve">
+    <value>Every second note</value>
+  </data>
+  <data name="NoteMenuSelectEveryThird" xml:space="preserve">
+    <value>Every third note</value>
+  </data>
+  <data name="NoteMenuSelectEveryFourth" xml:space="preserve">
+    <value>Every fourth note</value>
+  </data>
+  <data name="NoteMenuSelectOnBeat" xml:space="preserve">
+    <value>Notes on the beat</value>
+  </data>
+  <data name="NoteMenuSelectOffBeat" xml:space="preserve">
+    <value>Notes off the beat</value>
+  </data>
+  <data name="NoteMenuSelectVelocity" xml:space="preserve">
+    <value>By velocity...</value>
+  </data>
+  <data name="NoteMenuSelectOutsideKey" xml:space="preserve">
+    <value>Notes outside the key</value>
+  </data>
+  <data name="NoteMenuMoveToTrack" xml:space="preserve">
+    <value>Move to a new track</value>
+  </data>
+  <data name="NoteMenuQuantizeNow" xml:space="preserve">
+    <value>Quantize to the grid</value>
+  </data>
+  <data name="NoteMenuQuantizeKeys" xml:space="preserve">
+    <value>Q</value>
+  </data>
+  <data name="NoteMenuQuantize" xml:space="preserve">
+    <value>Quantize...</value>
+  </data>
+  <data name="NoteMenuHumanize" xml:space="preserve">
+    <value>Humanize...</value>
+  </data>
+  <data name="NoteMenuGroove" xml:space="preserve">
+    <value>Groove from another clip...</value>
+  </data>
+  <data name="NoteMenuTimeFeel" xml:space="preserve">
+    <value>Speed up or slow down...</value>
+  </data>
+  <data name="NoteMenuRatchet" xml:space="preserve">
+    <value>Ratchet...</value>
+  </data>
+  <data name="NoteMenuLegato" xml:space="preserve">
+    <value>Legato...</value>
+  </data>
+  <data name="NoteMenuFixedLength" xml:space="preserve">
+    <value>Fixed length...</value>
+  </data>
+  <data name="NoteMenuPercentLength" xml:space="preserve">
+    <value>Percent of length...</value>
+  </data>
+  <data name="NoteMenuCleanUp" xml:space="preserve">
+    <value>Clean up...</value>
+  </data>
+  <data name="NoteMenuOctaveUp" xml:space="preserve">
+    <value>Octave up</value>
+  </data>
+  <data name="NoteMenuSemitoneUp" xml:space="preserve">
+    <value>Semitone up</value>
+  </data>
+  <data name="NoteMenuSemitoneDown" xml:space="preserve">
+    <value>Semitone down</value>
+  </data>
+  <data name="NoteMenuOctaveDown" xml:space="preserve">
+    <value>Octave down</value>
+  </data>
+  <data name="NoteMenuKeyStepUp" xml:space="preserve">
+    <value>Up a note of the key</value>
+  </data>
+  <data name="NoteMenuKeyStepDown" xml:space="preserve">
+    <value>Down a note of the key</value>
+  </data>
+  <data name="NoteMenuTransposeInKey" xml:space="preserve">
+    <value>Transpose in the key...</value>
+  </data>
+  <data name="NoteMenuFitToChords" xml:space="preserve">
+    <value>Fit to the chords...</value>
+  </data>
+  <data name="NoteMenuVoicing" xml:space="preserve">
+    <value>Voicing</value>
+  </data>
+  <data name="NoteMenuInversionUp" xml:space="preserve">
+    <value>Inversion up</value>
+  </data>
+  <data name="NoteMenuInversionDown" xml:space="preserve">
+    <value>Inversion down</value>
+  </data>
+  <data name="NoteMenuVoiceClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="NoteMenuVoiceOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="NoteMenuDrop2" xml:space="preserve">
+    <value>Drop 2</value>
+  </data>
+  <data name="NoteMenuDrop3" xml:space="preserve">
+    <value>Drop 3</value>
+  </data>
+  <data name="NoteMenuOctaveBelow" xml:space="preserve">
+    <value>Add an octave below</value>
+  </data>
+  <data name="NoteMenuSmoothLeading" xml:space="preserve">
+    <value>Smooth voice leading</value>
+  </data>
+  <data name="NoteMenuMirror" xml:space="preserve">
+    <value>Mirror...</value>
+  </data>
+  <data name="NoteMenuReverse" xml:space="preserve">
+    <value>Reverse</value>
+  </data>
+  <data name="NoteMenuVelocity" xml:space="preserve">
+    <value>Velocity...</value>
+  </data>
+  <data name="NoteMenuReleaseVelocity" xml:space="preserve">
+    <value>Release velocity...</value>
+  </data>
+  <data name="NoteMenuChance" xml:space="preserve">
+    <value>Chance...</value>
+  </data>
+  <data name="NoteMenuDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="NoteMenuDeleteKeys" xml:space="preserve">
+    <value>Del</value>
+  </data>
+  <data name="NoteToolQuantizeTitle" xml:space="preserve">
+    <value>Quantize</value>
+  </data>
+  <data name="NoteToolQuantizeHelp" xml:space="preserve">
+    <value>Moves notes toward the grid. Less than 100% strength tightens the timing but keeps some of the feel.</value>
+  </data>
+  <data name="NoteToolHumanizeTitle" xml:space="preserve">
+    <value>Humanize</value>
+  </data>
+  <data name="NoteToolHumanizeHelp" xml:space="preserve">
+    <value>Adds small changes to timing, velocity and length, so parts drawn on the grid sound played. The same settings always give the same result.</value>
+  </data>
+  <data name="NoteToolGrooveTitle" xml:space="preserve">
+    <value>Groove from another clip</value>
+  </data>
+  <data name="NoteToolGrooveHelp" xml:space="preserve">
+    <value>Takes the timing and accents of another clip, step by step through the bar, and puts them on these notes.</value>
+  </data>
+  <data name="NoteToolGrooveNoClips" xml:space="preserve">
+    <value>There's no other notes clip with notes in it to take a groove from.</value>
+  </data>
+  <data name="NoteToolTimeFeelTitle" xml:space="preserve">
+    <value>Speed up or slow down</value>
+  </data>
+  <data name="NoteToolTimeFeelHelp" xml:space="preserve">
+    <value>Pushes the notes closer together or further apart as they go, like a drummer rushing into a fill. The first note and the end of the last note stay where they are.</value>
+  </data>
+  <data name="NoteToolRatchetTitle" xml:space="preserve">
+    <value>Ratchet</value>
+  </data>
+  <data name="NoteToolRatchetHelp" xml:space="preserve">
+    <value>Turns each note into fast repeats inside its own length. Good for drum rolls and fast hi-hats.</value>
+  </data>
+  <data name="NoteToolLegatoTitle" xml:space="preserve">
+    <value>Legato</value>
+  </data>
+  <data name="NoteToolLegatoHelp" xml:space="preserve">
+    <value>Makes each note last until the next one starts, less the gap.</value>
+  </data>
+  <data name="NoteToolFixedLengthTitle" xml:space="preserve">
+    <value>Fixed length</value>
+  </data>
+  <data name="NoteToolFixedLengthHelp" xml:space="preserve">
+    <value>Gives every note the same length.</value>
+  </data>
+  <data name="NoteToolPercentLengthTitle" xml:space="preserve">
+    <value>Percent of length</value>
+  </data>
+  <data name="NoteToolPercentLengthHelp" xml:space="preserve">
+    <value>Makes notes shorter or longer. 50% makes them staccato.</value>
+  </data>
+  <data name="NoteToolCleanUpTitle" xml:space="preserve">
+    <value>Clean up</value>
+  </data>
+  <data name="NoteToolCleanUpHelp" xml:space="preserve">
+    <value>Fixes things that sound wrong on the wire. Two overlapping notes with the same number cut each other short on most instruments.</value>
+  </data>
+  <data name="NoteToolTransposeInKeyTitle" xml:space="preserve">
+    <value>Transpose in the key</value>
+  </data>
+  <data name="NoteToolTransposeInKeyHelp" xml:space="preserve">
+    <value>Moves notes by notes of the song's key, so a melody stays in key. A note outside the key moves with the key note just below it.</value>
+  </data>
+  <data name="NoteToolFitToChordsTitle" xml:space="preserve">
+    <value>Fit to the chords</value>
+  </data>
+  <data name="NoteToolFitToChordsHelp" xml:space="preserve">
+    <value>Moves notes that aren't in the chord on the Key and chords row to the nearest note that is. Where there's no chord, to the nearest note of the key.</value>
+  </data>
+  <data name="NoteToolMirrorTitle" xml:space="preserve">
+    <value>Mirror</value>
+  </data>
+  <data name="NoteToolMirrorHelp" xml:space="preserve">
+    <value>Turns the melody upside down around a note: what went up goes down.</value>
+  </data>
+  <data name="NoteToolVelocityTitle" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="NoteToolVelocityHelp" xml:space="preserve">
+    <value>How hard each note is played.</value>
+  </data>
+  <data name="NoteToolReleaseVelocityTitle" xml:space="preserve">
+    <value>Release velocity</value>
+  </data>
+  <data name="NoteToolReleaseVelocityHelp" xml:space="preserve">
+    <value>How fast each note is let go. Some instruments change their release sound with it.</value>
+  </data>
+  <data name="NoteToolChanceTitle" xml:space="preserve">
+    <value>Chance</value>
+  </data>
+  <data name="NoteToolChanceHelp" xml:space="preserve">
+    <value>How likely each note is to play on each pass. A ramp down thins a part out toward the end of a loop.</value>
+  </data>
+  <data name="NoteToolSelectVelocityTitle" xml:space="preserve">
+    <value>Select by velocity</value>
+  </data>
+  <data name="NoteToolSelectVelocityHelp" xml:space="preserve">
+    <value>Selects the notes between two velocities, such as the ghost notes in a drum part.</value>
+  </data>
+  <data name="NoteToolGrid" xml:space="preserve">
+    <value>Grid</value>
+  </data>
+  <data name="NoteToolGridQuarter" xml:space="preserve">
+    <value>1/4</value>
+  </data>
+  <data name="NoteToolGridEighth" xml:space="preserve">
+    <value>1/8</value>
+  </data>
+  <data name="NoteToolGridEighthTriplet" xml:space="preserve">
+    <value>1/8 triplet</value>
+  </data>
+  <data name="NoteToolGridSixteenth" xml:space="preserve">
+    <value>1/16</value>
+  </data>
+  <data name="NoteToolGridSixteenthTriplet" xml:space="preserve">
+    <value>1/16 triplet</value>
+  </data>
+  <data name="NoteToolGridThirtySecond" xml:space="preserve">
+    <value>1/32</value>
+  </data>
+  <data name="NoteToolLength" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="NoteToolLengthBar" xml:space="preserve">
+    <value>1 bar</value>
+  </data>
+  <data name="NoteToolLengthHalf" xml:space="preserve">
+    <value>1/2</value>
+  </data>
+  <data name="NoteToolLengthQuarter" xml:space="preserve">
+    <value>1/4</value>
+  </data>
+  <data name="NoteToolLengthEighth" xml:space="preserve">
+    <value>1/8</value>
+  </data>
+  <data name="NoteToolLengthSixteenth" xml:space="preserve">
+    <value>1/16</value>
+  </data>
+  <data name="NoteToolLengthThirtySecond" xml:space="preserve">
+    <value>1/32</value>
+  </data>
+  <data name="NoteToolLengthSixtyFourth" xml:space="preserve">
+    <value>1/64</value>
+  </data>
+  <data name="NoteToolStrength" xml:space="preserve">
+    <value>Strength (%)</value>
+  </data>
+  <data name="NoteToolSwing" xml:space="preserve">
+    <value>Swing (%)</value>
+  </data>
+  <data name="NoteToolKeep" xml:space="preserve">
+    <value>Leave notes this close (% of grid)</value>
+  </data>
+  <data name="NoteToolQuantizeEnds" xml:space="preserve">
+    <value>Put the ends on the grid too</value>
+  </data>
+  <data name="NoteToolTimingMs" xml:space="preserve">
+    <value>Timing (ms)</value>
+  </data>
+  <data name="NoteToolVelocityPercent" xml:space="preserve">
+    <value>Velocity (%)</value>
+  </data>
+  <data name="NoteToolLengthPercent" xml:space="preserve">
+    <value>Length (%)</value>
+  </data>
+  <data name="NoteToolTighterOnBeat" xml:space="preserve">
+    <value>Tighter on the beat</value>
+  </data>
+  <data name="NoteToolTryAnother" xml:space="preserve">
+    <value>Try another</value>
+  </data>
+  <data name="NoteToolTryAnotherHelp" xml:space="preserve">
+    <value>The same amount of change, with different details</value>
+  </data>
+  <data name="NoteToolGrooveClip" xml:space="preserve">
+    <value>Take the groove from</value>
+  </data>
+  <data name="NoteToolGrooveTiming" xml:space="preserve">
+    <value>Timing (%)</value>
+  </data>
+  <data name="NoteToolGrooveVelocity" xml:space="preserve">
+    <value>Accents (%)</value>
+  </data>
+  <data name="NoteToolTimeFeelDirection" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="NoteToolSpeedUp" xml:space="preserve">
+    <value>Speed up</value>
+  </data>
+  <data name="NoteToolSlowDown" xml:space="preserve">
+    <value>Slow down</value>
+  </data>
+  <data name="NoteToolAmount" xml:space="preserve">
+    <value>Amount (%)</value>
+  </data>
+  <data name="NoteToolRepeats" xml:space="preserve">
+    <value>Repeats</value>
+  </data>
+  <data name="NoteToolGate" xml:space="preserve">
+    <value>Each repeat sounds (%)</value>
+  </data>
+  <data name="NoteToolRatchetSpacing" xml:space="preserve">
+    <value>Spacing</value>
+  </data>
+  <data name="NoteToolSpacingEven" xml:space="preserve">
+    <value>Even</value>
+  </data>
+  <data name="NoteToolLastVelocity" xml:space="preserve">
+    <value>Last repeat's velocity (%)</value>
+  </data>
+  <data name="NoteToolLegatoGap" xml:space="preserve">
+    <value>Gap before the next note (ticks, 960 to a quarter note)</value>
+  </data>
+  <data name="NoteToolPercent" xml:space="preserve">
+    <value>Percent of the length</value>
+  </data>
+  <data name="NoteToolCleanOverlaps" xml:space="preserve">
+    <value>Shorten notes the same note overlaps</value>
+  </data>
+  <data name="NoteToolCleanDuplicates" xml:space="preserve">
+    <value>Remove duplicates (the loudest stays)</value>
+  </data>
+  <data name="NoteToolCleanShort" xml:space="preserve">
+    <value>Remove very short notes</value>
+  </data>
+  <data name="NoteToolShortMs" xml:space="preserve">
+    <value>Shorter than (ms)</value>
+  </data>
+  <data name="NoteToolNoKeySemitones" xml:space="preserve">
+    <value>The song has no key yet, so this moves by semitones.</value>
+  </data>
+  <data name="NoteToolSteps" xml:space="preserve">
+    <value>Notes of the key (up or down)</value>
+  </data>
+  <data name="NoteToolFitWhich" xml:space="preserve">
+    <value>Which notes</value>
+  </data>
+  <data name="NoteToolFitAll" xml:space="preserve">
+    <value>All of them</value>
+  </data>
+  <data name="NoteToolFitOnBeats" xml:space="preserve">
+    <value>Only notes on the beat</value>
+  </data>
+  <data name="NoteToolFitLong" xml:space="preserve">
+    <value>Only notes a beat long or longer</value>
+  </data>
+  <data name="NoteToolMirrorAround" xml:space="preserve">
+    <value>Around note number</value>
+  </data>
+  <data name="NoteToolMirrorInKey" xml:space="preserve">
+    <value>By notes of the key</value>
+  </data>
+  <data name="NoteToolValueMode" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="NoteToolModeSet" xml:space="preserve">
+    <value>Set to</value>
+  </data>
+  <data name="NoteToolModeChange" xml:space="preserve">
+    <value>Raise or lower by</value>
+  </data>
+  <data name="NoteToolModeScale" xml:space="preserve">
+    <value>Squeeze or spread</value>
+  </data>
+  <data name="NoteToolModeRamp" xml:space="preserve">
+    <value>Ramp</value>
+  </data>
+  <data name="NoteToolModeAccent" xml:space="preserve">
+    <value>Accent the beats</value>
+  </data>
+  <data name="NoteToolModeRandom" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="NoteToolValueTo" xml:space="preserve">
+    <value>To (%)</value>
+  </data>
+  <data name="NoteToolValueBy" xml:space="preserve">
+    <value>By (%)</value>
+  </data>
+  <data name="NoteToolValueScale" xml:space="preserve">
+    <value>Spread (%; below 100 squeezes)</value>
+  </data>
+  <data name="NoteToolValueFrom" xml:space="preserve">
+    <value>From (%)</value>
+  </data>
+  <data name="NoteToolValueToRamp" xml:space="preserve">
+    <value>To (%)</value>
+  </data>
+  <data name="NoteToolValueAccent" xml:space="preserve">
+    <value>Louder on beats by (%)</value>
+  </data>
+  <data name="NoteToolValueRandom" xml:space="preserve">
+    <value>Up or down by as much as (%)</value>
+  </data>
+  <data name="NoteToolCurve" xml:space="preserve">
+    <value>Curve</value>
+  </data>
+  <data name="NoteToolCurveStraight" xml:space="preserve">
+    <value>Straight</value>
+  </data>
+  <data name="NoteToolCurveFastFirst" xml:space="preserve">
+    <value>Fast at first</value>
+  </data>
+  <data name="NoteToolCurveSlowFirst" xml:space="preserve">
+    <value>Slow at first</value>
+  </data>
+  <data name="NoteToolCurveS" xml:space="preserve">
+    <value>S-curve</value>
+  </data>
+  <data name="NoteToolCurveAmount" xml:space="preserve">
+    <value>Bend (%)</value>
+  </data>
+  <data name="NoteToolLowest" xml:space="preserve">
+    <value>From (%)</value>
+  </data>
+  <data name="NoteToolHighest" xml:space="preserve">
+    <value>To (%)</value>
+  </data>
+  <data name="NoteToolApply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="NoteToolSelect" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="NoteToolCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="NoteToolNoChange" xml:space="preserve">
+    <value>Nothing changes with these settings.</value>
+  </data>
+  <data name="NoteToolChangesFormat" xml:space="preserve">
+    <value>Changes {0} notes.</value>
+  </data>
+  <data name="NoteToolAddsFormat" xml:space="preserve">
+    <value>Adds {0} notes.</value>
+  </data>
+  <data name="NoteToolSelectsFormat" xml:space="preserve">
+    <value>Selects {0} notes.</value>
+  </data>
+  <data name="NoteToolNothingToChange" xml:space="preserve">
+    <value>Nothing to change.</value>
+  </data>
+  <data name="NoteToolNoChords" xml:space="preserve">
+    <value>No chords to change. A chord is notes that start together.</value>
+  </data>
+  <data name="NoteSelectNoneFound" xml:space="preserve">
+    <value>No notes like that here.</value>
+  </data>
+  <data name="MovedNotesClipNameFormat" xml:space="preserve">
+    <value>{0} (part)</value>
+  </data>
+  <data name="MovedNotesToTrackFormat" xml:space="preserve">
+    <value>Moved {0} notes to a new track.</value>
+  </data>
+  <data name="UndoMoveNotesToTrack" xml:space="preserve">
+    <value>Move notes to a new track</value>
+  </data>
+  <data name="UndoNoteQuantize" xml:space="preserve">
+    <value>Quantize</value>
+  </data>
+  <data name="UndoNoteHumanize" xml:space="preserve">
+    <value>Humanize</value>
+  </data>
+  <data name="UndoNoteGroove" xml:space="preserve">
+    <value>Groove</value>
+  </data>
+  <data name="UndoNoteTimeFeel" xml:space="preserve">
+    <value>Speed up or slow down</value>
+  </data>
+  <data name="UndoNoteRatchet" xml:space="preserve">
+    <value>Ratchet</value>
+  </data>
+  <data name="UndoNoteLength" xml:space="preserve">
+    <value>Change note lengths</value>
+  </data>
+  <data name="UndoNoteCleanUp" xml:space="preserve">
+    <value>Clean up notes</value>
+  </data>
+  <data name="UndoNoteFixOverlaps" xml:space="preserve">
+    <value>Fix overlapping notes</value>
+  </data>
+  <data name="UndoNoteTransposeInKey" xml:space="preserve">
+    <value>Transpose in the key</value>
+  </data>
+  <data name="UndoNoteFitToChords" xml:space="preserve">
+    <value>Fit to the chords</value>
+  </data>
+  <data name="UndoNoteVoicing" xml:space="preserve">
+    <value>Change voicing</value>
+  </data>
+  <data name="UndoNoteMirror" xml:space="preserve">
+    <value>Mirror</value>
+  </data>
+  <data name="UndoNoteReverse" xml:space="preserve">
+    <value>Reverse</value>
+  </data>
+  <data name="UndoNoteVelocity" xml:space="preserve">
+    <value>Change velocity</value>
+  </data>
+  <data name="UndoNoteReleaseVelocity" xml:space="preserve">
+    <value>Change release velocity</value>
+  </data>
+  <data name="UndoNoteChance" xml:space="preserve">
+    <value>Change chance</value>
+  </data>
+  <data name="NoteToolSelectsOne" xml:space="preserve">
+    <value>Selects 1 note.</value>
+  </data>
+  <data name="NoteToolChangesOne" xml:space="preserve">
+    <value>Changes 1 note.</value>
+  </data>
+  <data name="NoteToolAddsOne" xml:space="preserve">
+    <value>Adds 1 note.</value>
+  </data>
+  <data name="MovedNoteToTrack" xml:space="preserve">
+    <value>Moved 1 note to a new track.</value>
   </data>
 </root>

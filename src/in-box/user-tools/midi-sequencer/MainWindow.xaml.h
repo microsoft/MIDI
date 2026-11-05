@@ -26,6 +26,7 @@
 #include "HarmonySong.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
+#include "NoteTools.h"
 #include "ClipLaneStrip.h"
 #include "PatternEditor.h"
 #include "SequenceGenerator.h"
@@ -142,7 +143,9 @@ namespace winrt::midisequencer::implementation
         void UpdateFollowKeyToggle(_In_ seq::Clip const& clip) noexcept;
         void OnEditorAutomationClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorQuantizeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNoteToolsMenuOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+        void OnNoteCleanUpClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNoteOverlapClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorKeyboardClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnValuesAsChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnEditorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -164,6 +167,36 @@ namespace winrt::midisequencer::implementation
         void OnSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterCaptureLost(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+
+        // The piano roll's note tools (MainWindowNoteTools.cpp), named here for its helpers.
+        enum class NoteTool : uint8_t
+        {
+            Quantize,
+            Humanize,
+            Groove,
+            TimeFeel,
+            Ratchet,
+            Legato,
+            FixedLength,
+            PercentLength,
+            CleanUp,
+            TransposeInKey,
+            FitToChords,
+            Mirror,
+            Velocity,
+            ReleaseVelocity,
+            Chance,
+            SelectVelocity,
+        };
+
+        enum class NoteMenu : uint8_t
+        {
+            Select,
+            Timing,
+            Length,
+            Pitch,
+            Velocity,
+        };
 
     private:
         // ---- window (MainWindow.xaml.cpp) ----
@@ -541,6 +574,46 @@ namespace winrt::midisequencer::implementation
         bool OnClipLanesKeyDown(_In_ winrt::Windows::System::VirtualKey key, _In_ bool shift, _In_ bool alt);
         void OnEditorContextRequested(_In_ input::ContextRequestedEventArgs const& args);
         void AnnounceClipLanePoint(_In_ seq::Clip const& clip, _In_ size_t lane, _In_ size_t point);
+
+        // ---- the piano roll's note tools (MainWindowNoteTools.cpp, design section 34) ----
+        void UpdateNoteToolbar() noexcept;
+        void FillNoteMenu(_In_ NoteMenu menu, _In_ winrt::Windows::Foundation::Collections::IVector<controls::MenuFlyoutItemBase> const& items);
+        void ShowNoteToolsContextMenu(_In_ foundation::Point position) noexcept;
+        void ShowNoteTool(_In_ NoteTool tool) noexcept;
+        seq::NoteToolContext NoteToolContextFor(_In_ seq::Clip const& clip, _Inout_ seq::TempoMap& tempo) const;
+        std::vector<seq::Note> NoteToolTargets() const;
+        seq::NoteToolResult RunNoteTool(_In_ NoteTool tool, _In_ std::vector<seq::Note> const& notes, _In_ seq::NoteToolContext const& context) const;
+        void ApplyNoteToolResult(_In_ std::wstring name, _In_ seq::NoteToolResult result) noexcept;
+        void PreviewNoteTool(_In_ NoteTool tool, _In_ controls::TextBlock const& summary) noexcept;
+        void SelectNotesWith(_In_ seq::SelectSettings settings) noexcept;
+        void MoveSelectionToNewTrack() noexcept;
+
+        // Each tool's settings, kept while the app runs so a tool opens as it was last used.
+        struct NoteToolSettings
+        {
+            seq::QuantizeSettings Quantize{};
+            seq::HumanizeSettings Humanize{};
+            std::wstring GrooveClipId{};
+            int64_t GrooveGrid{ 240 };
+            seq::GrooveSettings Groove{};
+            seq::TimeFeelSettings TimeFeel{};
+            seq::RatchetSettings Ratchet{};
+            int64_t LegatoGap{ 0 };
+            int64_t FixedLength{ 240 };
+            double LengthPercent{ 50.0 };
+            seq::CleanUpSettings CleanUp{};
+            int32_t TransposeSteps{ 1 };
+            seq::FitWhich Fit{ seq::FitWhich::All };
+            int32_t MirrorAround{ 60 };
+            bool MirrorInKey{ true };
+            seq::ValueSettings Velocity{};
+            seq::ValueSettings Release{ seq::ValueTarget::ReleaseVelocity, seq::ValueMode::Set, 50.0, 50.0 };
+            seq::ValueSettings Chance{ seq::ValueTarget::Chance, seq::ValueMode::Set, 75.0, 25.0 };
+            seq::SelectSettings SelectVelocity{ seq::SelectKind::VelocityRange };
+        };
+
+        NoteToolSettings m_noteTools{};
+        themeengine::PlateLayer m_noteToolPlates{};
 
         // ---- the timeline and launcher from the keyboard (MainWindowKeyboard.cpp) ----
         void HookArrangeKeyboard();
