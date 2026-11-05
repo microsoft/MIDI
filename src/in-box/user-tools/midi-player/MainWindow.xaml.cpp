@@ -89,6 +89,17 @@ namespace winrt::midiplayer::implementation
             InitializeStaticText();
             InitializeWindowChrome();
 
+            {
+                midiapp::ServiceUnavailableStrings serviceStrings{};
+                serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+                serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+                serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+                serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+                // Explains once, at startup, why nothing works when the service can't be used.
+                midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
+            }
+
             m_items = winrt::single_threaded_observable_vector<winrt::midiplayer::QueueItem>();
             m_tracks = winrt::single_threaded_observable_vector<winrt::midiplayer::TrackItem>();
             m_endpoints = winrt::single_threaded_observable_vector<appshared::EndpointChoice>();

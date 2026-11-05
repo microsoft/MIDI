@@ -8,6 +8,7 @@
 #include "GeneratorListen.h"
 
 #include "GeneratorKinds.h"
+#include "HarmonyFollow.h"
 #include "SequenceGenerator.h"
 #include "SequenceRender.h"
 
@@ -117,6 +118,39 @@ namespace midisequencer
                 }
             }
 
+            // The Key and chords row, once, for a source that plays differently because of it.
+            void VisitHarmony()
+            {
+                if (!FirstVisit(L"h:"))
+                {
+                    return;
+                }
+
+                if (!Document.Harmony)
+                {
+                    Print.Add(0);
+                    return;
+                }
+
+                auto const& harmony = *Document.Harmony;
+                Print.Add(harmony.Keys.size());
+
+                for (auto const& key : harmony.Keys)
+                {
+                    Print.Add(static_cast<uint64_t>(key.Tick));
+                    Print.Add((static_cast<uint64_t>(key.Root) << 8) | static_cast<uint64_t>(key.Scale));
+                }
+
+                Print.Add(harmony.Chords.size());
+
+                for (auto const& chord : harmony.Chords)
+                {
+                    Print.Add(static_cast<uint64_t>(chord.Tick));
+                    Print.Add(static_cast<uint64_t>(chord.Length));
+                    Print.Add((static_cast<uint64_t>(chord.Root) << 24) | (static_cast<uint64_t>(chord.Type) << 16) | (chord.Bass ? 0x100u + *chord.Bass : 0u));
+                }
+            }
+
             void VisitTrack(_In_ std::wstring_view id)
             {
                 Tracks = true;
@@ -171,6 +205,16 @@ namespace midisequencer
                 Print.Add(static_cast<uint64_t>(clip->Length));
                 Print.Add(clip->Loop ? 1 : 0);
                 Print.Add(clip->Seed);
+
+                // What the Key and chords row changes about what it plays (HarmonyFollow.h).
+                Print.Add((clip->FollowKey ? 1u : 0u) | (static_cast<uint64_t>(clip->WrittenRoot) << 8) | (static_cast<uint64_t>(clip->WrittenScale) << 16));
+
+                if (FollowsSongKey(*clip) || (clip->Generator.has_value() &&
+                    (clip->Generator->ChordTones || (clip->Generator->Type == GeneratorType::Arpeggiator && clip->Generator->ArpSource == ArpeggiatorSource::Chords))))
+                {
+                    VisitHarmony();
+                }
+
                 Print.Add(clip->Notes.size());
 
                 for (auto const& note : clip->Notes)

@@ -12,6 +12,7 @@
 #include "App.xaml.h"
 #include "Elevation.h"
 #include "LatencyCheckPanel.xaml.h"
+#include "CrashDumpsPanel.xaml.h"
 #include "PopupBackdrop.h"
 #include "SpinButtons.h"
 #include "ReportViewerWindow.xaml.h"
@@ -147,6 +148,9 @@ namespace winrt::miditroubleshooter::implementation
                 winrt::get_self<LatencyCheckPanel>(LatencyPanel())->Initialize(std::move(host));
             }
 
+            // the Crash dumps page, in MainWindowCrashDumps.cpp
+            InitializeCrashDumpsPage();
+
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
@@ -160,6 +164,12 @@ namespace winrt::miditroubleshooter::implementation
                             winrt::get_self<LatencyCheckPanel>(strong->LatencyPanel())->Shutdown();
                         }
                         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to stop the DPC latency check.")
+
+                        try
+                        {
+                            winrt::get_self<CrashDumpsPanel>(strong->CrashDumpsPagePanel())->Shutdown();
+                        }
+                        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to stop the crash dumps page.")
 
                         strong->m_chrome.SavePlacement();
                         strong->m_chrome.Shutdown();
@@ -212,6 +222,8 @@ namespace winrt::miditroubleshooter::implementation
             {
                 winrt::get_self<LatencyCheckPanel>(LatencyPanel())->OpenTraceFile(latencyTrace);
             }
+
+            ApplyCrashStartupOptions();
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }
@@ -313,6 +325,7 @@ namespace winrt::miditroubleshooter::implementation
         if (tag == L"registry")     return native::AppSettings::PageIndexRegistry;
         if (tag == L"drivers")      return native::AppSettings::PageIndexDrivers;
         if (tag == L"dpclatency")   return native::AppSettings::PageIndexLatencyCheck;
+        if (tag == L"crashdumps")   return native::AppSettings::PageIndexCrashDumps;
 
         return native::AppSettings::PageIndexApiMode;
     }
@@ -332,6 +345,7 @@ namespace winrt::miditroubleshooter::implementation
             case native::AppSettings::PageIndexRegistry:    return RegistryNavigationItem();
             case native::AppSettings::PageIndexDrivers:     return DriversNavigationItem();
             case native::AppSettings::PageIndexLatencyCheck: return LatencyCheckNavigationItem();
+            case native::AppSettings::PageIndexCrashDumps:  return CrashDumpsNavigationItem();
             default:                                        return ApiModeNavigationItem();
             }
         }
@@ -385,10 +399,16 @@ namespace winrt::miditroubleshooter::implementation
             RegistryPanel().Visibility(visibility(native::AppSettings::PageIndexRegistry));
             DriversPanel().Visibility(visibility(native::AppSettings::PageIndexDrivers));
             LatencyPanel().Visibility(visibility(native::AppSettings::PageIndexLatencyCheck));
+            CrashDumpsPagePanel().Visibility(visibility(native::AppSettings::PageIndexCrashDumps));
 
             if (pageIndex == native::AppSettings::PageIndexApiMode)
             {
                 LoadApiMode();
+            }
+
+            if (pageIndex == native::AppSettings::PageIndexCrashDumps)
+            {
+                winrt::get_self<CrashDumpsPanel>(CrashDumpsPagePanel())->OnShown();
             }
 
             if (pageIndex == native::AppSettings::PageIndexLatencyCheck)

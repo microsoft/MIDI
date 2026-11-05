@@ -132,6 +132,13 @@ namespace winrt::midibluetoothsetup::implementation
         // time it returns.
         bool VerifyTransportIsUsable() noexcept;
 
+        // Hides the pages and opens the unavailable bar, worded for a missing service or a
+        // missing transport.
+        void ShowTransportUnavailable(_In_ bool const becauseServiceIsUnavailable) noexcept;
+
+        // The part of loading that needs the MIDI service, which is checked first.
+        winrt::fire_and_forget FinishLoadingAsync() noexcept;
+
         // yes / cancel confirmation, used before anything destructive
         foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
 

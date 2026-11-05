@@ -175,7 +175,7 @@ namespace winrt::midisequencer::implementation
 
             m_engine = std::make_unique<seq::PlaybackEngine>(*m_output, clock);
             m_engine->SetDestinationLookup([directory](seq::EndpointRef const& endpoint, uint8_t group) { return directory->Lookup(endpoint, group); });
-            m_engine->SetSequence(std::make_shared<seq::Sequence const>(m_doc));
+            m_engine->SetSequence(PlayableSequence());
             ApplyEngineSettings();
             m_engine->StartThread();
 
@@ -415,6 +415,17 @@ namespace winrt::midisequencer::implementation
                     return true;
                 });
 
+                // The Key and chords row's own chords, when Play chords is on (MainWindowHarmony.cpp).
+                if (auto const chords = ChordsDestination(); !chords.IsEmpty())
+                {
+                    if (std::find(destinations.begin(), destinations.end(), chords) == destinations.end())
+                    {
+                        destinations.push_back(chords);
+                    }
+
+                    sendTo(chords, 0);
+                }
+
                 auto& settings = seq::AppSettings::Current();
 
                 // The device whose clock the sequence follows. Its messages come in with the
@@ -541,6 +552,13 @@ namespace winrt::midisequencer::implementation
             {
                 seq::ClockOutput clock{};
                 clock.Endpoint = seq::EndpointRef{ output.EndpointName, output.EndpointId };
+
+                // Never to the General MIDI Synth, whatever was saved: it doesn't use it.
+                if (IsSynthEndpoint(clock.Endpoint))
+                {
+                    continue;
+                }
+
                 clock.Group = output.Group;
                 clock.OffsetMicroseconds = output.OffsetMilliseconds * 1000;
                 clock.SendClock = output.Clock;
@@ -603,7 +621,7 @@ namespace winrt::midisequencer::implementation
             m_engine->Play(std::max<int64_t>(0, fromTick));
             m_position = std::max<int64_t>(0, fromTick);
 
-            m_frameTimer.Start();
+            StartFrames();
             UpdateTransport();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to play.")
@@ -832,7 +850,7 @@ namespace winrt::midisequencer::implementation
                 ApplyEngineSettings();
             }
 
-            m_frameTimer.Start();
+            StartFrames();
             UpdateTransport();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start recording.")
@@ -1001,7 +1019,7 @@ namespace winrt::midisequencer::implementation
 
             DocumentChanged();
             ApplyEngineSettings();
-            m_frameTimer.Start();
+            StartFrames();
             UpdateTransport();
             InvalidateLaunchers();
         }
@@ -1476,7 +1494,7 @@ namespace winrt::midisequencer::implementation
 
             if (m_engine->IsPlaying())
             {
-                m_frameTimer.Start();
+                StartFrames();
             }
             else
             {
@@ -2211,5 +2229,68 @@ namespace winrt::midisequencer::implementation
     void MainWindow::OnSilenceClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         Silence();
+    }
+
+    void MainWindow::StartFrames() noexcept
+    {
+        try
+        {
+            if (m_frames != nullptr)
+            {
+                m_frames->Start();
+            }
+
+            if (!m_renderingToken)
+            {
+                m_renderingToken = media::CompositionTarget::Rendering([weak = get_weak()](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->OnDisplayFrame();
+                    }
+                });
+            }
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to start drawing frames.")
+    }
+
+    void MainWindow::StopFrames() noexcept
+    {
+        if (m_frames != nullptr)
+        {
+            m_frames->Stop();
+        }
+
+        if (m_renderingToken)
+        {
+            try
+            {
+                media::CompositionTarget::Rendering(m_renderingToken);
+            }
+            catch (...)
+            {
+            }
+
+            m_renderingToken = {};
+        }
+    }
+
+    void MainWindow::OnDisplayFrame() noexcept
+    {
+        try
+        {
+            if (m_engine == nullptr || !m_engine->IsPlaying())
+            {
+                return;
+            }
+
+            // Where playback is as this frame is drawn. The rest of what playing updates waits for
+            // OnFrame.
+            m_position = m_engine->PositionTick();
+            MovePlayheadLine();
+        }
+        catch (...)
+        {
+        }
     }
 }

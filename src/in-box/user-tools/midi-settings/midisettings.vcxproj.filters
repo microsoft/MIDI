@@ -27,6 +27,7 @@
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -47,6 +48,7 @@
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>

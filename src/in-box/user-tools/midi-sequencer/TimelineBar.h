@@ -20,6 +20,7 @@
 #include "ThemeCanvas.h"
 #include "TimelineView.h"
 
+#include <chrono>
 #include <functional>
 #include <optional>
 #include <string>
@@ -144,6 +145,15 @@ namespace midisequencer
             float ViewRight{ 0 };
         };
 
+        // The bar is kept as two pictures, what's under the playhead and what's over it, so a
+        // playhead moving while a sequence plays draws only those and itself, not the whole bar.
+        enum class Stage : uint8_t
+        {
+            Under,
+            Playhead,
+            Over,
+        };
+
         Layout Arrange(_In_ TimelineBarModel const& model, _In_ float width, _In_ float height) const;
         Hit HitTest(_In_ Layout const& layout, _In_ winrt::Windows::Foundation::Point const& point) const noexcept;
         float Metric(_In_ std::wstring_view name, _In_ float fallback) const;
@@ -169,13 +179,15 @@ namespace midisequencer
             _In_ winrt::Microsoft::Graphics::Canvas::CanvasDrawingSession const& ds,
             _In_ winrt::Microsoft::Graphics::Canvas::ICanvasResourceCreatorWithDpi const& creator,
             _In_ Layout const& layout,
-            _In_ TimelineBarModel const& model);
+            _In_ TimelineBarModel const& model,
+            _In_ Stage stage);
 
         void DrawPlain(
             _In_ winrt::Microsoft::Graphics::Canvas::CanvasDrawingSession const& ds,
             _In_ winrt::Microsoft::Graphics::Canvas::ICanvasResourceCreatorWithDpi const& creator,
             _In_ Layout const& layout,
-            _In_ TimelineBarModel const& model);
+            _In_ TimelineBarModel const& model,
+            _In_ Stage stage);
 
         // A theme's part painted in the rectangle, if the theme has it.
         bool PaintPart(
@@ -234,6 +246,16 @@ namespace midisequencer
         // The handlers check this before they touch the bar, which can go before its elements do.
         std::shared_ptr<bool> m_alive{ std::make_shared<bool>(true) };
         float m_playheadX{ -1 };
+
+        // The pictures under and over the playhead, and what they were drawn with. They're drawn
+        // again after any change but the playhead's, and now and then while it plays anyway.
+        winrt::Microsoft::Graphics::Canvas::CanvasRenderTarget m_under{ nullptr };
+        winrt::Microsoft::Graphics::Canvas::CanvasRenderTarget m_over{ nullptr };
+        bool m_layersCurrent{ false };
+        Layout m_layersLayout{};
+        int64_t m_playheadTick{ -1 };
+        std::chrono::steady_clock::time_point m_layersDrawnAt{};
+
         std::wstring m_name{};
     };
 }

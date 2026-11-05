@@ -19,3 +19,7 @@ Each message gets its own line. On the far left is the WinMM timestamp: the time
 Active sensing and clock messages are hidden by default, because they make everything else hard to read. Press the spacebar to show or hide them.
 
 Press escape to exit.
+
+## App provenance
+
+This app was originally coded by Pete Brown. It has been modified and fixed using GitHub Copilot since that time.

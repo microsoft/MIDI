@@ -32,13 +32,6 @@ namespace winrt::midisequencer::implementation
 {
     namespace
     {
-        constexpr std::array<wchar_t const*, 11> ScaleKeys{
-            L"ScaleMajor", L"ScaleMinor", L"ScaleDorian", L"ScalePhrygian", L"ScaleLydian", L"ScaleMixolydian",
-            L"ScaleHarmonicMinor", L"ScaleMajorPentatonic", L"ScaleMinorPentatonic", L"ScaleBlues", L"ScaleChromatic" };
-
-        // The same letters NoteLabel uses.
-        constexpr std::array<wchar_t const*, 12> KeyNames{ L"C", L"C#", L"D", L"D#", L"E", L"F", L"F#", L"G", L"G#", L"A", L"A#", L"B" };
-
         // The ring drawing fits the editor's height, between these.
         constexpr double MinimumRingSize = 160.0;
         constexpr double MaximumRingSize = 380.0;
@@ -558,7 +551,8 @@ namespace winrt::midisequencer::implementation
             }
 
             auto const hintKey =
-                generator.Type == seq::GeneratorType::Arpeggiator ? (generator.ArpSource == seq::ArpeggiatorSource::Held ? L"ArpHeldNote" : L"ArpTrackNote") :
+                generator.Type == seq::GeneratorType::Arpeggiator ? (generator.ArpSource == seq::ArpeggiatorSource::Held ? L"ArpHeldNote" :
+                    generator.ArpSource == seq::ArpeggiatorSource::Chords ? L"ArpChordsNote" : L"ArpTrackNote") :
                 generator.Type == seq::GeneratorType::Euclidean ? (generator.ChangesEachPass ? L"GeneratorChangesHint" : L"GeneratorSameHint") :
                 L"GeneratorRepeatable";
 
@@ -1322,51 +1316,24 @@ namespace winrt::midisequencer::implementation
         controls::ComboBox key{};
         automation::AutomationProperties::SetName(key, res::GetString(L"GeneratorKey"));
 
-        for (auto const name : KeyNames)
-        {
-            key.Items().Append(winrt::box_value(winrt::hstring{ name }));
-        }
-
-        key.SelectedIndex(generator.ScaleRoot % 12);
-        key.SelectionChanged([edit](foundation::IInspectable const& sender, auto&&)
-        {
-            auto const selected = sender.as<controls::ComboBox>().SelectedIndex();
-
-            if (selected >= 0)
-            {
-                edit([selected](seq::GeneratorSettings& edited) { edited.ScaleRoot = static_cast<uint8_t>(selected); });
-            }
-        });
-
         controls::ComboBox scale{};
         automation::AutomationProperties::SetName(scale, res::GetString(L"GeneratorScale"));
 
-        for (auto const name : ScaleKeys)
-        {
-            scale.Items().Append(winrt::box_value(res::GetString(name)));
-        }
-
-        scale.SelectedIndex(static_cast<int32_t>(generator.Scale));
-        scale.SelectionChanged([edit](foundation::IInspectable const& sender, auto&&)
-        {
-            auto const selected = sender.as<controls::ComboBox>().SelectedIndex();
-
-            if (selected >= 0)
-            {
-                edit([selected](seq::GeneratorSettings& edited) { edited.Scale = static_cast<seq::ScaleKind>(selected); });
-            }
-        });
+        // Song key first, then the roots (MainWindowChordFollow.cpp).
+        FillGeneratorKeyPickers(key, scale, clip, edit);
 
         {
             controls::Grid grid{};
             grid.ColumnSpacing(8);
-            AddColumns(grid, { Pixels(76), Star() });
+            AddColumns(grid, { Pixels(110), Star() });
             key.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
             scale.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
             Place(grid, key, 0, 0);
             Place(grid, scale, 0, 1);
             form.Children().Append(grid);
         }
+
+        form.Children().Append(MakeChordTonesSwitch(generator, edit));
 
         auto const numberBox = [&](wchar_t const* nameKey, double minimum, double maximum, double value, std::optional<bool> note, std::function<void(seq::GeneratorSettings&, double)> apply)
         {

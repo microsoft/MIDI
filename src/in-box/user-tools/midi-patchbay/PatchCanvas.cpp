@@ -1290,13 +1290,6 @@ namespace midipatchbay
             groups.push_back(0);
         }
 
-        // A device that declares every group would otherwise make a node taller than the window;
-        // the customer opts into the rest from the node menu.
-        if (!endpoint.ShowAllGroups && !endpoint.IsOsc() && groups.size() > 8)
-        {
-            groups.resize(8);
-        }
-
         for (int side = 0; side < 2; side++)
         {
             bool const isOutput = side == 1;
@@ -1531,7 +1524,8 @@ namespace midipatchbay
                     if (m_callbacks.NodeContextMenuRequested)
                     {
                         m_callbacks.NodeContextMenuRequested(nodeId,
-                            m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer));
+                            m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer),
+                            true);
                     }
                 });
 
@@ -1589,6 +1583,15 @@ namespace midipatchbay
                         args.Handled(true);
 
                         FocusCanvas();
+
+                        // A right button press is for the menu, not the start of a cord.
+                        auto const properties = args.GetCurrentPoint(nullptr).Properties();
+
+                        if (properties.IsRightButtonPressed() || properties.IsBarrelButtonPressed())
+                        {
+                            return;
+                        }
+
                         CancelDrags();
 
                         BeginConnectionDrag(key);
@@ -1596,6 +1599,20 @@ namespace midipatchbay
                 true);
 
             row.Click([this, key](auto&&, auto&&) { OnPortClicked(key); });
+
+            // Handled here, so it never reaches the node, which would select it and open the
+            // inspector. The menu is the node's, without the items that act on the selection.
+            row.RightTapped([this, key](auto&&, input::RightTappedRoutedEventArgs const& args)
+                {
+                    args.Handled(true);
+
+                    if (m_callbacks.NodeContextMenuRequested)
+                    {
+                        m_callbacks.NodeContextMenuRequested(key.NodeId,
+                            m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer),
+                            false);
+                    }
+                });
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to wire up a connection point.")
     }

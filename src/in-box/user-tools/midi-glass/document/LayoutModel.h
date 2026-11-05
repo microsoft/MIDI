@@ -1596,6 +1596,11 @@ namespace glass
         // continuous control is ever limited; rate limiting a note on would be a defect.
         int32_t SendIntervalMilliseconds{ 0 };
 
+        // How the control starts each time the layout opens. A MIDI remote control rule can turn
+        // it on or bring it into view while the layout runs; nothing it does is saved.
+        bool StartsDisabled{ false };
+        bool StartsHidden{ false };
+
         std::vector<ControlMessage> Messages{};
         FeedbackBinding Feedback{};
 
@@ -1671,6 +1676,9 @@ namespace glass
 
         // Names for the groups on this page, by the group id the controls carry.
         std::vector<ControlGroup> Groups{};
+
+        // A sequence that runs each time this page opens while the layout runs. Empty is none.
+        std::wstring OpenSequenceName{};
 
         UnknownFields Unknown{ nullptr };
 
@@ -1748,6 +1756,136 @@ namespace glass
         UnknownFields Unknown{ nullptr };
     };
 
+    // ---- MIDI remote control: incoming messages that run the layout ----
+
+    // Any channel, or any number, in what a rule listens for.
+    constexpr int32_t AnyRemoteChannel = -1;
+    constexpr int32_t AnyRemoteNumber = -1;
+
+    constexpr size_t MaximumRemoteRules = 256;
+
+    // What a rule listens for. A foot controller sends a program change, a control change or a
+    // note for each switch, so those three are what a rule can name.
+    struct RemoteTrigger
+    {
+        // A name in the layout's device table. Empty means any device in it.
+        std::wstring DeviceName{};
+
+        // Note, ControlChange or ProgramChange.
+        MessageKind Kind{ MessageKind::ProgramChange };
+
+        int32_t GroupIndex{ 0 };
+        int32_t ChannelIndex{ 0 };
+
+        // The note, the controller or the program. AnyRemoteNumber matches every one, which is what an
+        // action that takes the number from the message wants.
+        int32_t Number{ 0 };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    // What a rule does when its message arrives.
+    enum class RemoteActionKind
+    {
+        GoToPage = 0,
+        NextPage = 1,
+        PreviousPage = 2,
+
+        // The page the message's number picks: a program change's program, a control change's
+        // value, or a note's number. 0 is the first page.
+        PageFromMessage = 3,
+
+        // As if the control were tapped: a button presses and lets go, a toggle flips.
+        PressControl = 4,
+
+        // Moves the control and sends what it sends, as if a finger put it there.
+        SetControlValue = 5,
+
+        EnableControl = 6,
+        DisableControl = 7,
+        ToggleEnabled = 8,
+
+        ShowControl = 9,
+        HideControl = 10,
+        ToggleShown = 11,
+
+        // Shows the target and hides every other control in its group: the way to keep several
+        // pad grids in one spot and swap which one is in view.
+        ShowOnlyThis = 12,
+
+        PadGrid = 13,
+        SetKeyRoot = 14,
+        SetScale = 15,
+        RunSequence = 16,
+        Panic = 17,
+
+        // Not a kind a file can name: one a newer build wrote, kept as read and never run.
+        Unrecognized = 1000,
+    };
+
+    struct RemoteRule
+    {
+        // Off keeps the rule in the list without it doing anything.
+        bool Enabled{ true };
+
+        RemoteTrigger When{};
+        RemoteActionKind Action{ RemoteActionKind::NextPage };
+
+        std::wstring TargetPageId{};
+
+        // A control, or a group of controls by the group id they carry. One or the other.
+        std::wstring TargetControlId{};
+        std::wstring TargetGroupId{};
+
+        // Takes the value, root or scale from the message rather than from the rule.
+        bool FromMessage{ false };
+
+        // Set control value: 0 to 1.
+        double Value{ 1.0 };
+
+        PadGridFunction PadFunction{ PadGridFunction::OctaveUp };
+        PadGridTargets PadTargets{};
+
+        // Set key root: 0 (C) to 11 (B). Set scale: a MusicalScale.
+        int32_t KeyRoot{ 0 };
+        MusicalScale Scale{ MusicalScale::Major };
+
+        std::wstring SequenceName{};
+
+        // The action's name as the file had it, when this build does not know it.
+        std::wstring UnrecognizedAction{};
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    // Optional: tell the controller which page is showing, so the lights or the bank on a foot
+    // controller follow the screen. Sent each time the page changes while the layout runs.
+    struct PageFeedback
+    {
+        bool Enabled{ false };
+        std::wstring DeviceName{};
+
+        // ProgramChange sends the page's position as the program; ControlChange sends it as the
+        // value of controller Number.
+        MessageKind Kind{ MessageKind::ProgramChange };
+        int32_t GroupIndex{ 0 };
+        int32_t ChannelIndex{ 0 };
+        int32_t Number{ 0 };
+
+        // What the first page sends. Each page after it sends one more.
+        int32_t FirstValue{ 0 };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    struct RemoteControl
+    {
+        std::vector<RemoteRule> Rules{};
+        PageFeedback TellPage{};
+
+        UnknownFields Unknown{ nullptr };
+    };
+
     struct LayoutDocument
     {
         // What wrote this file. An older build keeps a higher number as it found it.
@@ -1810,8 +1948,8 @@ namespace glass
         // The one switch that stops a layout whose faders sit at zero from muting a live desk.
         bool SuppressAllStartupValues{ false };
 
-        // Set when the file came from outside the layouts folder. The first run asks before
-        // sending system exclusive, because arbitrary SysEx can damage a device.
+        // Set when the file came from outside the layouts folder. Whether its system exclusive may
+        // go out doesn't depend on this: SysEx this PC hasn't seen before always asks (SysExReview.h).
         bool IsImported{ false };
 
         // Set when a newer version of the app wrote the file: a higher file version, or a kind of
@@ -1831,6 +1969,9 @@ namespace glass
         int64_t ModifiedTimestamp{ 0 };
 
         TempoSource Tempo{};
+
+        // Incoming MIDI that switches pages and changes controls while the layout runs.
+        RemoteControl Remote{};
 
         std::vector<Page> Pages{};
         std::vector<DeviceEntry> Devices{};

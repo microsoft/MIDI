@@ -534,7 +534,7 @@ Steps can't be connected in a circle at all. Windows MIDI Patchbay won't draw a 
 
 ## Testing a route
 
-Right-click an endpoint, or use **Test** on the toolbar, to open [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), the MIDI keyboard or the [scratch pad]({{ site.baseurl }}/tools/midiscratchpad/) already pointed at that endpoint. Selecting a connection shows a running count of what it has forwarded, and selecting a step shows how much it let through and kept out. That's how you tell "nothing is arriving" apart from "arriving and going nowhere".
+Right-click an endpoint, or use **Test** on the toolbar, to open [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), the MIDI keyboard or the [scratch pad]({{ site.baseurl }}/tools/midiscratchpad/) already pointed at that endpoint. Right-clicking one of its groups opens the same menu without selecting the endpoint, so the details panel stays as it was, and the menu leaves out copy, cut, duplicate and remove. Selecting a connection shows a running count of what it has forwarded, and selecting a step shows how much it let through and kept out. That's how you tell "nothing is arriving" apart from "arriving and going nowhere".
 
 ### Showing live routing
 
@@ -555,3 +555,7 @@ The canvas shows where the first message went. The connections and steps it went
 The messages in a trace go through the patch one after another, the same way they would while it routes. A note off goes where its note on went, and memories start empty and carry from one message to the next. So to see how a footswitch changes where notes go, trace the footswitch message, then a note.
 
 A trace doesn't run generators, and it doesn't wait for a message throttler. What comes after a throttler is shown at once.
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

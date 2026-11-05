@@ -464,7 +464,7 @@ namespace midisequencer
             a.VelocityLow == b.VelocityLow && a.VelocityHigh == b.VelocityHigh && a.VelocityBy == b.VelocityBy &&
             a.ArpSource == b.ArpSource && a.ArpTrackId == b.ArpTrackId && a.ArpOrder == b.ArpOrder &&
             a.ArpOctaves == b.ArpOctaves && a.ArpLatch == b.ArpLatch &&
-            a.LargestJump == b.LargestJump && a.RootEnds == b.RootEnds &&
+            a.LargestJump == b.LargestJump && a.RootEnds == b.RootEnds && a.SongKey == b.SongKey && a.ChordTones == b.ChordTones &&
             a.Rule == b.Rule && a.Scatter == b.Scatter && a.Density == b.Density && a.LifeCells == b.LifeCells &&
             a.Voice == b.Voice && a.Births == b.Births && a.Join == b.Join && a.Settled == b.Settled &&
             a.RestartEvery == b.RestartEvery && a.DrumRows == b.DrumRows &&
@@ -491,6 +491,7 @@ namespace midisequencer
         print.Add(generator.Keep);
         print.Add(generator.LargestJump);
         print.Add(generator.RootEnds ? 1 : 0);
+        print.Add((generator.SongKey ? 2 : 0) | (generator.ChordTones ? 1 : 0));
         print.Add(static_cast<uint64_t>(generator.Rule));
         print.Add(generator.Scatter ? 1 : 0);
         print.Add(generator.Density);

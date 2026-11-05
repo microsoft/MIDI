@@ -155,3 +155,7 @@ midiscratchpad.exe "\\?\swd#midisrv#midiu_bloop_basic_def#{e7cce071-3c03-423f-88
 You can find the endpoint device id for a device using the [MIDI Console]({{ site.baseurl }}/tools/console/) or the [MIDI Settings app]({{ site.baseurl }}/tools/settings/).
 
 A mode given on the command line is remembered, so the next time you open the Scratch Pad without any arguments it opens the same way.
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API originally coded by Pete Brown.

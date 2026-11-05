@@ -432,12 +432,6 @@
     <value>Background color</value>
   </data>
 
-  <data name="ServiceUnavailableTitle" xml:space="preserve">
-    <value>Windows MIDI Services is not available</value>
-  </data>
-  <data name="ServiceUnavailableBody" xml:space="preserve">
-    <value>The MIDI service is not running, so no devices can be reached. Start the service and open this app again.</value>
-  </data>
 
   <data name="CommandLineErrorTooManyEndpoints" xml:space="preserve">
     <value>More than one device id was supplied: {0}</value>
@@ -462,5 +456,17 @@
   </data>
   <data name="CommandLineErrorGeneral" xml:space="preserve">
     <value>The command line could not be read</value>
+  </data>
+  <data name="MidiServiceUnavailableTitle" xml:space="preserve">
+    <value>Windows MIDI Services isn't available</value>
+  </data>
+  <data name="MidiServiceUnavailableLegacyMessage" xml:space="preserve">
+    <value>This PC is set to Legacy API mode, so the MIDI service doesn't run and this app can't use MIDI. To use this app, open MIDI Troubleshooting and Repair, choose Windows MIDI Services on the API mode page, and restart the PC.</value>
+  </data>
+  <data name="MidiServiceUnavailableMessage" xml:space="preserve">
+    <value>The MIDI service couldn't be started, so this app can't use MIDI right now. Check that Windows MIDI Services is installed and that the MIDI service isn't turned off. MIDI Troubleshooting and Repair can help you find the problem.</value>
+  </data>
+  <data name="MidiServiceUnavailableClose" xml:space="preserve">
+    <value>Close</value>
   </data>
 </root>

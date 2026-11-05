@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "ReproLog.h"
+#include "ClientProcesses.h"
 #include "ProcessRunner.h"
 #include "ServiceControl.h"
 #include "StringResources.h"
@@ -286,6 +287,13 @@ namespace miditroubleshooter
 
             result.Log.push_back(res::FormatString(L"CaptureLogWorkingFolderFormat", winrt::hstring{ m_workingFolder }));
 
+            // The in-box apps are the client side of most reports. Which MIDI libraries each one
+            // has loaded is recorded whether or not they are time travel traced.
+            auto const clients = FindRunningInBoxClients();
+
+            WriteTextFile(Combine(m_workingFolder, L"client-processes.txt"), DescribeClientProcesses(clients));
+            result.Log.push_back(res::FormatString(L"CaptureLogClientsFoundFormat", clients.size()));
+
             // Started before the trace, because attaching can restart the service and none of
             // that noise belongs in the ETL.
             if (options.IncludeTimeTravelTrace && !tools.TimeTravelTracer.empty())
@@ -318,6 +326,29 @@ namespace miditroubleshooter
                 else
                 {
                     result.Log.push_back(res::GetString(L"CaptureLogTimeTravelNoService"));
+                }
+
+                // Same recorder, one per app. Only apps already running can be attached to;
+                // an app started after this point is in the ETW trace but not recorded here.
+                for (auto const& client : clients)
+                {
+                    auto const clientArguments = std::format(
+                        L"-ring -out \"{}\" -attach {}", m_workingFolder, client.ProcessId);
+
+                    auto const clientRun = StartAndWatch(
+                        tools.TimeTravelTracer, clientArguments, TimeTravelAttachSettleTime);
+
+                    if (clientRun.Started && (clientRun.StillRunning || clientRun.ExitCode == 0))
+                    {
+                        m_timeTravelTracingStarted = true;
+                        result.Log.push_back(res::FormatString(
+                            L"CaptureLogTimeTravelClientStartedFormat", client.ImageName, client.ProcessId));
+                    }
+                    else
+                    {
+                        result.Log.push_back(res::FormatString(
+                            L"CaptureLogTimeTravelClientFailedFormat", client.ImageName, client.ProcessId));
+                    }
                 }
             }
 

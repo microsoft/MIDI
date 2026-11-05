@@ -397,3 +397,97 @@ void SequenceMergeTests::GhostNotesComeFromUnmutedTracksOnly()
     VERIFY_ARE_EQUAL(size_t{ 1 }, ghosts.size());
     VERIFY_ARE_EQUAL(std::wstring{ L"quiet" }, ghosts[0].TrackId);
 }
+
+void SequenceMergeTests::DraggingAClipThatDoesntLoopMakesTheClipLonger()
+{
+    Sequence sequence{};
+    auto track = MakeTestTrack(L"t", 0xFF8A65, 0);
+    sequence.Clips = { NotesClip(L"a", Bar, false, { testdata::MakeNote(0, 480, 60) }) };
+    track.Timeline = { Placement{ L"a", 0, 0 } };
+    sequence.Tracks = { track };
+
+    auto const changed = ResizeClipThroughPlacement(sequence, L"t", 0, Bar * 4, true, L"copy", L"a (copy)");
+    VERIFY_IS_TRUE(changed.has_value());
+
+    // Played in one place only, so the clip itself changes: no copy, even with onlyHere.
+    VERIFY_ARE_EQUAL(std::wstring{ L"a" }, changed->Id);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Clips.size());
+    VERIFY_ARE_EQUAL(Bar * 4, FindClip(sequence, L"a")->Length);
+    VERIFY_IS_FALSE(FindClip(sequence, L"a")->Loop);
+    VERIFY_ARE_EQUAL(Bar * 4, PlacementLength(sequence, sequence.Tracks[0].Timeline[0]));
+
+    // Shorter again: the notes stay, past the end, so making it longer brings them back.
+    VERIFY_IS_TRUE(ResizeClipThroughPlacement(sequence, L"t", 0, Bar / 4, false, L"copy", L"a (copy)").has_value());
+    VERIFY_ARE_EQUAL(Bar / 4, FindClip(sequence, L"a")->Length);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, FindClip(sequence, L"a")->Notes.size());
+}
+
+void SequenceMergeTests::DraggingASharedClipOnlyHereMakesASeparateCopy()
+{
+    Sequence sequence{};
+    auto track = MakeTestTrack(L"t", 0xFF8A65, 0);
+    sequence.Clips = { NotesClip(L"a", Bar, false, { testdata::MakeNote(0, 480, 60) }) };
+    track.Timeline = { Placement{ L"a", 0, 0 }, Placement{ L"a", Bar * 2, Bar } };
+    sequence.Tracks = { track };
+
+    auto const changed = ResizeClipThroughPlacement(sequence, L"t", 1, Bar * 3, true, L"copy", L"a (copy)");
+    VERIFY_IS_TRUE(changed.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"copy" }, changed->Id);
+    VERIFY_ARE_EQUAL(std::wstring{ L"a (copy)" }, changed->Name);
+
+    // The copy is in the sequence with the notes and the new length; the original is untouched.
+    VERIFY_ARE_EQUAL(size_t{ 2 }, sequence.Clips.size());
+    VERIFY_ARE_EQUAL(Bar * 3, FindClip(sequence, L"copy")->Length);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, FindClip(sequence, L"copy")->Notes.size());
+    VERIFY_ARE_EQUAL(Bar, FindClip(sequence, L"a")->Length);
+
+    auto const& timeline = sequence.Tracks[0].Timeline;
+    VERIFY_ARE_EQUAL(std::wstring{ L"a" }, timeline[0].ClipId);
+    VERIFY_ARE_EQUAL(std::wstring{ L"copy" }, timeline[1].ClipId);
+    VERIFY_ARE_EQUAL(Bar * 2, timeline[1].Tick);
+    VERIFY_ARE_EQUAL(Bar * 3, PlacementLength(sequence, timeline[1]));
+    VERIFY_ARE_EQUAL(Bar, PlacementLength(sequence, timeline[0]));
+}
+
+void SequenceMergeTests::DraggingASharedClipEverywhereMovesTheWholePlacements()
+{
+    Sequence sequence{};
+    auto track = MakeTestTrack(L"t", 0xFF8A65, 0);
+    sequence.Clips = { NotesClip(L"a", Bar, false, {}) };
+
+    // Two that play all of it, and one cut shorter than the clip.
+    track.Timeline = { Placement{ L"a", 0, 0 }, Placement{ L"a", Bar * 2, Bar }, Placement{ L"a", Bar * 4, Bar / 2 } };
+    sequence.Tracks = { track };
+
+    auto const changed = ResizeClipThroughPlacement(sequence, L"t", 0, Bar * 2, false, L"copy", L"a (copy)");
+    VERIFY_IS_TRUE(changed.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"a" }, changed->Id);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Clips.size());
+
+    auto const& timeline = sequence.Tracks[0].Timeline;
+    VERIFY_ARE_EQUAL(Bar * 2, PlacementLength(sequence, timeline[0]));
+    VERIFY_ARE_EQUAL(Bar * 2, PlacementLength(sequence, timeline[1]));
+    VERIFY_ARE_EQUAL(Bar / 2, PlacementLength(sequence, timeline[2]));
+}
+
+void SequenceMergeTests::ALoopingClipIsNotResizedThroughAPlacement()
+{
+    Sequence sequence{};
+    auto track = MakeTestTrack(L"t", 0xFF8A65, 0);
+    sequence.Clips = { NotesClip(L"a", Bar, true, {}) };
+    track.Timeline = { Placement{ L"a", 0, Bar * 4 } };
+    sequence.Tracks = { track };
+
+    VERIFY_IS_FALSE(ResizeClipThroughPlacement(sequence, L"t", 0, Bar * 8, true, L"copy", L"a (copy)").has_value());
+    VERIFY_ARE_EQUAL(Bar, FindClip(sequence, L"a")->Length);
+
+    // Its own length changes only the stretch that repeats; the placement keeps its length.
+    VERIFY_IS_TRUE(ResizeClip(sequence, L"a", Bar * 2));
+    VERIFY_ARE_EQUAL(Bar * 2, FindClip(sequence, L"a")->Length);
+    VERIFY_ARE_EQUAL(Bar * 4, PlacementLength(sequence, sequence.Tracks[0].Timeline[0]));
+}
+
+void SequenceMergeTests::NewNotesClipsDontLoop()
+{
+    VERIFY_IS_FALSE(MakeNotesClip(L"New", Bar).Loop);
+}

@@ -294,6 +294,11 @@ namespace winrt::midiglass::implementation
         RestoreValues();
         m_renderer.ShowCurrentPage(m_document, pageIndex);
 
+        if (m_player != nullptr)
+        {
+            m_player->PageShown(pageIndex);
+        }
+
         auto weak = get_weak();
 
         m_renderer.DescribeValue = [weak](
@@ -386,6 +391,10 @@ namespace winrt::midiglass::implementation
             };
 
         m_input.Attach(m_renderer);
+
+        // After the input is attached, so a control a rule turned off is let go of rather than
+        // left holding a finger it can't release.
+        ApplyControlStates();
 
         // Assistive technology drives the same path a finger does, so a screen reader moving a
         // fader sends exactly what a finger would.

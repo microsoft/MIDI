@@ -101,6 +101,7 @@
 #include "PreviewBuild.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
+#include "MidiServiceAvailability.h"
 
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;

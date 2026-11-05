@@ -127,6 +127,10 @@ namespace midiapp::firewall
         // lets each in, one rule for each, and the program counts as let in only where all of
         // them are.
         std::vector<long> Protocols{ UdpProtocol };
+
+        // Who the rule lets in, in Windows Firewall's terms, like L"LocalSubnet". Empty leaves it
+        // as it is: any address for a new rule.
+        std::wstring RemoteAddresses{};
     };
 
     // Reads Windows Firewall as it is now. Needs no administrator rights, but walks every rule,

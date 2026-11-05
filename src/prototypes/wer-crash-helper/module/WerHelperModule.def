@@ -1,0 +1,6 @@
+; PROTOTYPE. See ..\README.md.
+LIBRARY WerHelperModule
+EXPORTS
+    OutOfProcessExceptionEventCallback
+    OutOfProcessExceptionEventSignatureCallback
+    OutOfProcessExceptionEventDebuggerLaunchCallback

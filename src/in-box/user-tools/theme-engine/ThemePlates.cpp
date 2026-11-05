@@ -627,7 +627,9 @@ namespace themeengine
             return true;
         }
 
-        // Every plate's box, to tell when one moved.
+        // Every plate's box, to tell when one moved. A part that draws nothing, such as text a
+        // style only sets the face of, isn't counted: digits that change width as a sequence plays
+        // would otherwise have every plate drawn again many times a second.
         std::vector<float> Measure() const
         {
             std::vector<float> layout{};
@@ -641,7 +643,10 @@ namespace themeengine
                 {
                     try
                     {
-                        if (!Bounds(element, rect))
+                        auto const draws = Look != nullptr && Look->HasPart(plate->Part) &&
+                            (plate->Options.Decorate || StyleOf(*plate, element)->HasPlate());
+
+                        if (!draws || !Bounds(element, rect))
                         {
                             rect = { -1.0f, -1.0f, 0.0f, 0.0f };
                         }

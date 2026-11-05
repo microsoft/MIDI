@@ -119,6 +119,8 @@ To move a clip, drag it to another time, another track, or another launcher slot
 
 To cut a clip in two, select the razor (the scissors above the tracks), then select the clip where you want the cut. The cut lands on the grid. Press Esc or select the scissors again to put the razor away. You can also right-click a clip and select **Split here**. To join clips, select one, hold Ctrl and select the others on the same track, then right-click and select **Merge clips**. They become one clip, with the same gaps between them.
 
+To make a clip longer or shorter, drag its right end. What happens depends on whether the clip loops. A **Linear** clip gets longer, with empty bars to draw in, or shorter. A clip set to **Loop** repeats to fill the space you drag out. To choose, right-click the clip and select **Loop** or **Linear**. You can also select the length (like **4 bars**) at the top of the clip editor, which has the Loop switch and lets you type an exact length in bars and beats. New notes clips on the timeline start out linear, and clips you make in the launcher start out looping. If a linear clip plays in more than one place, the sequencer asks whether to change only the one you dragged or every place it plays. Changing only one makes it a separate copy, with "(copy)" added to its name. It loses the link mark that shared clips show, so changing it no longer changes the others.
+
 ### Start a pattern from a template
 
 Not sure where to start? **Templates**, at the top of a pattern, has starter patterns, like the presets on a drum machine.
@@ -144,7 +146,7 @@ A generator shows all of its settings in the editor. Select **Type** to change w
 
 - **A Euclidean rhythm** draws its rings. Each dot is a step, and the lit dots are the hits. Drag around a ring to turn it, so its hits start later. Scroll over a ring to add or take away hits. The table next to it sets each ring's note, hits (**Pulses**), steps, turn (**Rotate**), velocity and chance. **Preview (2 bars)** shows two bars of the result.
 - **A chance melody** shows its first four passes, with new notes outlined, so you can see how much changes each time round.
-- **An arpeggiator** sets where its notes come from, the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
+- **An arpeggiator** sets where its notes come from (notes you hold, another track, or the chords on the Key and chords row), the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
 - **Life** plays the Game of Life on a board with a column for each step and a row for each note of the key. Draw the first pass's cells on the board, or start with a scatter or a shape such as a glider. Each pass is the next generation: a cell with two or three neighbors lives on, and an empty cell with three is born. The edges wrap, so a glider that walks off the end of the bar comes back in at the start. Select any pass under the board to see it, and **Set as start** to begin there.
 - **Life drums** does the same with a row for each drum. Select a drum's name on the board to change it.
 - **Learn** learns which note tends to follow which (a Markov chain) from a tune, a clip you pick, or words you type, then makes up new melodies in that style, in the key you choose. **Memory** sets how many notes back it remembers. The drawing shows the moves it learned, with this pass's lit. It learns only from what you give it.
@@ -154,7 +156,7 @@ A generator shows all of its settings in the editor. Select **Type** to change w
 - **An L-system** grows a drawing from a short rule, like a plant, and the melody follows the drawing up and down. Pick a shape, or open **Rules** to write your own.
 - **Change ringing** rings bells the way bell towers do, in a new order every row, with methods such as Plain Bob and Grandsire. The drawing is the method's blue line.
 
-The melodies have a **Key and range**. Pick the key and the scale, and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Max interval**, and **Resolve to root**.
+The melodies have a **Key and range**. Pick the key and the scale, or **Song key** to follow the Key and chords row (see [Following the key and chords](#following-the-key-and-chords)), and drag either end of the lit part of the keyboard to set the range, or drag its middle to move it. Scroll over the keyboard to move the range an octave. A chance melody and Learn can also keep to a **Max interval**, and **Resolve to root**.
 
 Life, Learn, Words, Evolve, the infinity series, L-systems, and change ringing also have a **Velocity** section. Its chips pick how loud each note plays. Each generator's own ideas come first, such as **By age** for Life (new cells loudest), **By surprise** for Learn, **As spoken** for Words, and **Handstroke/backstroke** for change ringing. **Steady**, **On the beat**, **Swell**, and **Random** work for all of them. After Learn learns from a clip, **As learned** plays the clip's loud and soft notes. The drawing shows this pass's notes over the range they play in. Drag the top or bottom edge of the band, or drag its middle to move it, or scroll over it to move it 10%.
 
@@ -214,6 +216,76 @@ When you type the words, put a hyphen between the syllables of a word, like `hap
 
 Lyrics in a Standard MIDI File come in when you import it, including karaoke files (`.kar`). Exporting a Standard MIDI File writes them out again. While the sequence plays, the track that sings sends the words to its device as MIDI 2.0 lyric messages, if the device speaks MIDI 2.0. To use the lyrics in a music player or for subtitles, select **File**, then **Export**, then **LRC lyrics…**.
 
+## Key and chords
+
+A sequence can have a **Key and chords** row, for writing down the song's key and its chords. Select **File**, then **Key and chords**, or right-click **Tempo and meter** and select **Show Key and chords**. The row starts in C major.
+
+- **Keys** run along the top of the row, each one until the next. Double-click a key to change its root and scale. To change key part way through the song, right-click the row and select **Add key change**. When you change a key's root, turn on **Transpose chords** to move the chords in that key along with it.
+- **Chords** sit under the keys. Double-click an empty spot to add a chord there, a bar long, on the key's root. Double-click a chord to change its root, its type and its bass note. More types are under **More**. For a chord like C/E, pick the bass note under **Bass**.
+- **Chords work like clips.** Drag one to move it, and drag its right end to make it longer or shorter. A chord dropped over others shortens them, or splits one it lands inside. Press Delete to remove the selected chord or key. Everything can be undone.
+- **Under each chord's name** is its place in the key, as a Roman numeral, like ii7 or V7, when there's room. A chord with notes from outside the key has a star and a warm outline. That isn't a mistake, just something worth seeing. To hide the numerals, right-click the row and turn off **Roman numerals**, or turn it off in Settings.
+- **To hide the row**, right-click it and select **Hide**. The keys and chords stay in the sequence, and come back when you show the row again.
+
+### Help picking chords
+
+Not sure what comes next? The row can help. Its suggestions come from simple music theory rules, not AI, so the same chord always gets the same suggestions.
+
+- **Next chord.** Double-click a chord. The top of the picker shows four or five chords that often come after the one before it, most likely first. Select one to use it. Near the end of a four or eight-bar phrase, the chords that sound like an ending move to the front.
+- **More chords.** Under those are a few chords with more color, like chords borrowed from the minor key when you're in a major key. A star means a chord has notes from outside the key. That's fine; it adds color.
+- **Progressions.** Pick a well-known progression, like I–V–vi–IV or a 12-bar blues, pick how many chords go in a bar, and select **Fill**. It goes on the row from the chord you double-clicked, in the key there, and replaces the chords it covers.
+- **Suggest.** Select the light bulb on the row's header, or right-click the row and select **Suggest chords**. It fills the empty bars after the selected chord, or from the playhead, up to the next chord. When there's no chord after, it fills to the end of the four-bar phrase. Select it again to keep going.
+
+Each of these is one step to undo.
+
+### Hearing the chords
+
+To hear the chords, right-click the row and turn on **Play chords**. They play as the sequence plays, a little softer than your tracks, on **Default output** in Settings. Until you pick a device there, that's the General MIDI Synth, so there's nothing to set up. Play chords is a setting for the app, not for one sequence.
+
+The keys and chords are saved in the sequence file.
+
+### Following the key and chords
+
+Generators and clips can follow the song's key, so a key change carries the whole song with it.
+
+- **Generators.** In a generator's **Key and range**, pick **Song key** at the top of the key list. It plays in the key on the Key and chords row, and takes the scale from there too, wherever the key changes. New generators start on **Song key** when the sequence has a key. Where the row has no key, a generator plays in the key it had before.
+- **Chord tones.** Turn this on in a generator's key settings, and the notes that start on a beat move to the nearest note of the chord playing then. The rest stay in the scale, so the melody fits the chords without sounding stiff.
+- **The arpeggiator** can play the chords on the row. Under where its notes come from, pick **Key and chords row**.
+- **Notes clips and melodic patterns.** Turn on **Follow key** in the clip editor's header. The notes are taken as written in the key where the clip is first placed. Wherever the song is in a different key, they move by scale steps to fit it: E in C major plays as F♯ in D major, and as E♭ in C minor. Notes never change to fit chords. New melodic patterns follow the key when the sequence has one. Notes clips don't, until you turn it on.
+- **Drum patterns, Euclidean rhythms and Life drums never follow.** Drums don't have a key.
+
+A clip that follows the song's key has a small note mark on the timeline, so it's clear why it plays different notes in different places.
+
+### Ask an AI assistant
+
+An AI assistant can write the chords and the sections for a whole song with you. Right-click the Key and chords row and select **Ask an AI assistant…**.
+
+1. Select **Copy**, and paste the prompt into the AI assistant you use, such as a chat in your web browser. It asks you about the style, the song's sections and how long they are, the key, and how rich the chords should be, one question at a time.
+2. When it gives you the song, copy its whole answer and paste it into **Answer**. Select **Check**. You see what's in it ("8 sections, 64 bars, 31 chords, 1 key change"), or exactly what's wrong, so you can ask the assistant to fix it.
+3. Pick where it goes: in place of the keys, chords and tags there now, or from the bar at the playhead. Then select **Apply**. It's one step to undo.
+
+The assistant writes the key, the chords and the sections, nothing else. Each section becomes a tag on **Tempo and meter**, colored by its kind, such as Verse or Chorus. To hear the chords, turn on **Play chords**, or set generators to **Song key**. Windows MIDI Sequencer never sends anything to an assistant itself. If you'd rather not see it, turn off **AI assistant** in Settings. Assistants follow the [guide for AI assistants]({{ site.baseurl }}/kb/midi-sequencer-key-and-chords-for-agents/).
+
+### Help while writing notes
+
+When the sequence has a key, the piano roll can show it:
+
+- **Scale highlight** (on to start with) makes the rows of notes in the song's key lighter and the rest darker. Under each chord on the Key and chords row, the rows of that chord's notes are tinted, so you can see which notes fit right there.
+- **Scale snap** (off to start with) puts notes you draw or drag onto notes in the key. Hold Alt for any note.
+
+Both use the key where the clip is first placed. Turn them on or off in the clip editor's header.
+
+### Find the key
+
+Not sure what key a part is in? Right-click a notes clip or a melodic pattern on the timeline and point to **Find key**. You see the three keys its notes most likely belong to, the most likely first. It works out which notes sound longest and matches them to the typical shape of each key. Pick one to put it on the Key and chords row where the clip starts. Nothing changes unless you pick one.
+
+### Chords to notes
+
+To turn the chords into notes you can edit, right-click the row and select **Copy chords to new track**. You get a new track on **Default output** with one clip that holds every chord, each for its length, around middle C with the bass note an octave below. After that it's ordinary notes: changing a chord later doesn't change the clip.
+
+### Keys in Standard MIDI Files
+
+Exporting a Standard MIDI File writes each key on the row as a key signature. That kind of file only knows major and minor keys, so a mode such as D Dorian is written as the key signature it shares (no sharps or flats, so it reads back as A minor). Chords aren't written, because a Standard MIDI File has no standard way to hold them. Importing a file brings its key signatures in as keys.
+
 ## The clip launcher
 
 The launcher plays clips without following the timeline. Select **Launcher** to show it. Select the triangle at a clip's top left to play it on its track, and select it again to stop it. Select the rest of the clip to open it in the editor; it keeps playing, or not, as it was. Double-click an empty slot to make a clip there. A track playing a launched clip shows **Playing a launched clip** across its timeline. That stays after you stop, so the next Play carries on with what each track was playing. Select **Back to timeline** to go back to the timeline, whether or not the sequence is playing. **Launch** sets when a launched clip starts: now, or at the next sixteenth note, beat, bar, or more.
@@ -227,7 +299,7 @@ For each device and group, choose whether the sequencer uses it. A group that on
 - **Play to** sends the group its notes and anything else it gets. Turn it off, and the sequencer sends nothing to that group, not even the clock. A device the sequencer uses for nothing else isn't even opened.
 - **Record from** listens to what the group sends. Turn it off, and the sequencer ignores that group, including its clock.
 
-Then choose what else each group it plays to gets:
+Then choose what else each group it plays to gets. All of these start off, so a device gets only notes until you turn them on. Only turn on what a device uses. The General MIDI Synth never gets them: it plays the notes it's sent and doesn't use the clock.
 
 - **Clock** sends MIDI clock, so the device keeps time with the sequence.
 - **Start/Stop** starts, stops and continues the device with the sequence.
@@ -237,7 +309,7 @@ Then choose what else each group it plays to gets:
 
 To see what a group sends, select the eye on its row. That opens Windows MIDI Monitor on that device and group. MIDI Monitor only listens, so it sends the device nothing.
 
-These choices belong to the PC, not the sequence, so every sequence that uses a device gives it the same. To send the clock to a device no track plays to, such as a drum machine that plays its own pattern, select **Add device**. **Other MIDI devices on this PC** lists every other device, so you can look at what any of them is, or watch what it sends.
+These choices belong to the PC, not the sequence, so every sequence that uses a device gives it the same. To send the clock to a device no track plays to, such as a drum machine that plays its own pattern, select **Add device**, pick the device, and turn on what it should get. **Other MIDI devices on this PC** lists every other device, so you can look at what any of them is, or watch what it sends.
 
 ### A device that stops working when an app talks to it
 
@@ -257,7 +329,7 @@ Windows MIDI Keyboard is different. When it opens on a device, it asks the devic
 
 **File**, then **Import**, brings in:
 
-- A **Standard MIDI File** (`.mid` or `.kar`), with each of its tracks as a track. Its lyrics and copyright notice come too.
+- A **Standard MIDI File** (`.mid` or `.kar`), with each of its tracks as a track. Its lyrics and copyright notice come too, and its key signatures become keys on the Key and chords row when the row doesn't have any yet.
 - A **MIDI 2.0 clip file** (`.midi2`).
 - A **DAWproject file** (`.dawproject`), which many DAWs can save. You pick a device for each of its instrument tracks.
 - A **capture** from Windows MIDI Monitor or the `midi` console (`.csv`), with a track for each group.
@@ -295,9 +367,14 @@ This preview doesn't have everything. These are known gaps:
 - Pattern steps can't change a controller or other settings yet, only notes.
 - Lyrics don't have ruby (the small reading text used with Japanese), or two languages at once. Lyrics in an imported MIDI 2.0 clip file play, but they don't show in the Lyrics row.
 - DAWproject export leaves out per-note expressions and polyphonic pressure.
+- The clip editor and a generator's drawing show the notes as written. Where a clip follows the song's key, it plays them moved to fit, which the editor doesn't show yet.
 
 ## Learn more
 
 - [Windows MIDI Glass]({{ site.baseurl }}/tools/midiglass/), to build a control surface for the sequencer
 - [Windows MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), to see what the sequencer sends
 - [Windows MIDI Keyboard]({{ site.baseurl }}/tools/midikeyboard/), to play notes into a track from the screen
+
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

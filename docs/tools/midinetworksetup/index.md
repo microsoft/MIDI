@@ -372,3 +372,7 @@ A few things to check, roughly in order:
 **If an RTP-MIDI device plays extra notes, or notes that don't stop**, turn off **Help other devices recover notes lost on the network** for that device. See [RTP-MIDI](#rtp-midi).
 
 If Network MIDI 2.0 isn't installed or isn't enabled on this PC, the app tells you so when it starts and the rest of the window stays empty. Nothing here will work until that's sorted out.
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API and Transports originally coded by Pete Brown and then modified in the same way.

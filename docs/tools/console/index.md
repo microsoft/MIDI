@@ -1018,3 +1018,7 @@ In legacy mode, Windows MIDI Services isn't running, so every other console comm
 The console is written in C++ using [C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/), and the open source [CLI11](https://github.com/CLIUtils/CLI11), [{fmt}](https://github.com/fmtlib/fmt) and [FTXUI](https://github.com/ArthurSonzogni/FTXUI) libraries.
 
 It uses the same Windows MIDI Services API that other apps use. Its full source code is available [on our GitHub repo](https://aka.ms/midirepo). Pull requests, feature requests and bug reports are welcome. The project is open source, but instead of forking it to make your own version, please consider contributing to the project.
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Console coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API originally coded by Pete Brown and modified in the same way.

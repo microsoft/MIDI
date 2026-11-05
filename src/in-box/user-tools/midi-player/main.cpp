@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "App.xaml.h"
 #include "InstanceHandoff.h"
+#include "CrashHandlerRegistration.h"
 
 // The XAML compiler emits its own wWinMain; we supply this one so startup stays under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail with
@@ -16,6 +17,9 @@
 // from this thread - see PlaybackEngine and BackgroundWork.
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
+    // First, so a crash anywhere after this opens MIDI Troubleshooting and Repair.
+    ::midiapp::RegisterCrashHandler();
+
     // One player per customer. A queue only means anything if there is one of them, and two
     // copies would both be sending to the same output.
     if (!midiapp::SingleInstance::AcquireOrActivateExisting(::midiplayer::InstanceKey))

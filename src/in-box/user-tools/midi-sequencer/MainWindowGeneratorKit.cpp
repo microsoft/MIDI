@@ -17,6 +17,7 @@
 #include "GeneratorDrawings.h"
 #include "GeneratorKinds.h"
 #include "GeneratorNames.h"
+#include "HarmonyFollow.h"
 #include "SequenceGenerator.h"
 #include "StringResources.h"
 
@@ -26,12 +27,6 @@ namespace winrt::midisequencer::implementation
 {
     namespace
     {
-        constexpr std::array<wchar_t const*, 11> ScaleKeys{
-            L"ScaleMajor", L"ScaleMinor", L"ScaleDorian", L"ScalePhrygian", L"ScaleLydian", L"ScaleMixolydian",
-            L"ScaleHarmonicMinor", L"ScaleMajorPentatonic", L"ScaleMinorPentatonic", L"ScaleBlues", L"ScaleChromatic" };
-
-        constexpr std::array<wchar_t const*, 12> KeyNames{ L"C", L"C#", L"D", L"D#", L"E", L"F", L"F#", L"G", L"G#", L"A", L"A#", L"B" };
-
         // The largest jump's choices, in semitones: any, an octave, a fifth, a third, a step.
         constexpr std::array<uint8_t, 5> Jumps{ 0, 12, 7, 4, 2 };
         constexpr std::array<wchar_t const*, 5> JumpKeys{ L"GeneratorJumpAny", L"GeneratorJumpOctave", L"GeneratorJumpFifth", L"GeneratorJumpThird", L"GeneratorJumpStep" };
@@ -521,45 +516,16 @@ namespace winrt::midisequencer::implementation
 
         controls::ComboBox key{};
         key.Style(RootGrid().Resources().Lookup(winrt::box_value(L"SmallComboStyle")).as<xaml::Style>());
-        key.Width(72);
+        key.Width(110);
         automation::AutomationProperties::SetName(key, res::GetString(L"GeneratorKey"));
-
-        for (auto const name : KeyNames)
-        {
-            key.Items().Append(winrt::box_value(winrt::hstring{ name }));
-        }
-
-        key.SelectedIndex(generator.ScaleRoot % 12);
-        key.SelectionChanged([edit](foundation::IInspectable const& sender, auto&&)
-        {
-            auto const selected = sender.as<controls::ComboBox>().SelectedIndex();
-
-            if (selected >= 0)
-            {
-                edit([selected](seq::GeneratorSettings& edited) { edited.ScaleRoot = static_cast<uint8_t>(selected); });
-            }
-        });
 
         controls::ComboBox scale{};
         scale.Style(RootGrid().Resources().Lookup(winrt::box_value(L"SmallComboStyle")).as<xaml::Style>());
         scale.Width(170);
         automation::AutomationProperties::SetName(scale, res::GetString(L"GeneratorScale"));
 
-        for (auto const name : ScaleKeys)
-        {
-            scale.Items().Append(winrt::box_value(res::GetString(name)));
-        }
-
-        scale.SelectedIndex(static_cast<int32_t>(generator.Scale));
-        scale.SelectionChanged([edit](foundation::IInspectable const& sender, auto&&)
-        {
-            auto const selected = sender.as<controls::ComboBox>().SelectedIndex();
-
-            if (selected >= 0)
-            {
-                edit([selected](seq::GeneratorSettings& edited) { edited.Scale = static_cast<seq::ScaleKind>(selected); });
-            }
-        });
+        // Song key first, then the roots (MainWindowChordFollow.cpp).
+        FillGeneratorKeyPickers(key, scale, clip, edit);
 
         controls::StackPanel keyRow{};
         keyRow.Orientation(controls::Orientation::Horizontal);
@@ -567,6 +533,11 @@ namespace winrt::midisequencer::implementation
         keyRow.Children().Append(key);
         keyRow.Children().Append(scale);
         section.Children().Append(keyRow);
+
+        if (seq::GeneratorUsesKey(generator.Type))
+        {
+            section.Children().Append(MakeChordTonesSwitch(generator, edit));
+        }
 
         // The range on a keyboard: drag either end, or the middle to move it all, and scroll to
         // move it an octave.

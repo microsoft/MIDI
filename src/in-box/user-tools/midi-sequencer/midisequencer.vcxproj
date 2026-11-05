@@ -174,6 +174,12 @@
     <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="DocumentFiles.h" />
     <ClInclude Include="Lyrics.h" />
+    <ClInclude Include="Harmony.h" />
+    <ClInclude Include="HarmonySuggest.h" />
+    <ClInclude Include="HarmonyFollow.h" />
+    <ClInclude Include="HarmonySong.h" />
+    <ClInclude Include="PixelSnap.h" />
+    <ClInclude Include="..\midi-app-shared\FrameTicker.h" />
     <ClInclude Include="SequenceProvenance.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -214,6 +220,7 @@
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="..\midi-app-shared\ContentProvenance.h" />
@@ -256,6 +263,14 @@
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowRecordPlayed.cpp" />
     <ClCompile Include="MainWindowLaunchState.cpp" />
+    <ClCompile Include="MainWindowClipLength.cpp" />
+    <ClCompile Include="MainWindowHarmony.cpp" />
+    <ClCompile Include="MainWindowChordPlayback.cpp" />
+    <ClCompile Include="MainWindowChordSuggest.cpp" />
+    <ClCompile Include="MainWindowChordFollow.cpp" />
+    <ClCompile Include="MainWindowChordAssistant.cpp" />
+    <ClCompile Include="..\midi-app-shared\FrameTicker.cpp" />
+    <ClCompile Include="ArrangeRendererHarmony.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="MainWindowClipEdits.cpp" />
     <ClCompile Include="MainWindowGhostNotes.cpp" />
@@ -429,6 +444,18 @@
     <ClCompile Include="LyricData.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Harmony.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="HarmonySuggest.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="HarmonyFollow.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="HarmonySong.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SequenceProvenance.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -449,6 +476,7 @@
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiServiceStatus.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointCatalog.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

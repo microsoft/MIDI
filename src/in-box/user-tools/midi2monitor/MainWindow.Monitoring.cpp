@@ -32,9 +32,14 @@ namespace winrt::midi2monitor::implementation
         {
             if (!midi2::MidiApi::EnsureServiceAvailable())
             {
-                ShowMessageAsync(
-                    res::GetString(L"ServiceUnavailableTitle"),
-                    res::GetString(L"ServiceUnavailableBody"));
+                midiapp::ServiceUnavailableStrings serviceStrings{};
+                serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+                serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+                serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+                serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+                // Checks again on a background thread, so Legacy API mode gets its own wording.
+                midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
                 return;
             }
 

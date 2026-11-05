@@ -484,6 +484,9 @@
                             <MenuFlyoutItem x:Uid="MenuLyrics" Click="OnLyricsClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8BD;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuKeyAndChords" Click="OnKeyAndChordsClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8D6;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                             <MenuFlyoutItem x:Uid="MenuSequenceInfo" Click="OnSequenceInfoClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
@@ -886,10 +889,16 @@
                 </Rectangle.Fill>
             </Rectangle>
 
-            <!-- The playhead, over the ruler and every lane. -->
+            <!-- The playhead, over the ruler and every lane. The line and its marker move as one, with
+                 PlayheadShift, so they can't round apart as it moves (MovePlayheadLine). -->
             <Canvas x:Name="PlayheadLayer" Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" IsHitTestVisible="False">
-                <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
-                <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
+                <Canvas x:Name="PlayheadGroup">
+                    <Canvas.RenderTransform>
+                        <TranslateTransform x:Name="PlayheadShift" />
+                    </Canvas.RenderTransform>
+                    <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
+                    <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
+                </Canvas>
             </Canvas>
 
             <!-- A track's setup, beside the timeline (comp 5). -->
@@ -1145,10 +1154,17 @@
                         <TextBlock x:Name="EditorKindChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </Grid>
 
+                    <!-- Opens the clip's length and loop settings (MainWindowClipLength.cpp). -->
                     <Grid x:Name="EditorLengthChipFrame" Height="22" VerticalAlignment="Center">
                         <Rectangle RadiusX="11" RadiusY="11" StrokeThickness="1" UseLayoutRounding="False"
                                    Fill="{ThemeResource SeqChipBrush}" Stroke="{ThemeResource SeqStrokeStrongBrush}" />
-                        <TextBlock x:Name="EditorLengthChip" FontSize="11" Margin="9,0,9,0" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <Button x:Name="EditorLengthButton" x:Uid="EditorLengthButton" Height="22" MinHeight="0" Padding="9,0,7,0"
+                                Background="Transparent" BorderThickness="0" CornerRadius="11" VerticalAlignment="Center" Click="OnEditorLengthClick">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock x:Name="EditorLengthChip" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="8" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Button>
                     </Grid>
 
                     <Grid x:Name="EditorUsesChip" Height="22" VerticalAlignment="Center">
@@ -1159,6 +1175,14 @@
                             <TextBlock x:Name="EditorUsesText" FontSize="11" Foreground="{ThemeResource SeqAccentTextBrush}" />
                         </StackPanel>
                     </Grid>
+
+                    <!-- Follow key, for notes clips and melodic patterns (MainWindowChordFollow.cpp). -->
+                    <ToggleButton x:Name="EditorFollowKeyToggle" x:Uid="EditorFollowKeyToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorFollowKeyClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8D6;" FontSize="12" />
+                            <TextBlock x:Uid="EditorFollowKeyText" />
+                        </StackPanel>
+                    </ToggleButton>
 
                     <Rectangle x:Name="EditorSeparator1" Width="1" Height="22" Margin="4,0,4,0" Fill="{ThemeResource SeqDividerBrush}" />
 
@@ -1211,6 +1235,15 @@
                                 <FontIcon Glyph="&#xE81E;" FontSize="12" />
                                 <TextBlock x:Uid="EditorGhostText" />
                             </StackPanel>
+                        </ToggleButton>
+
+                        <!-- The song's key on the rows, and notes kept to it (MainWindowChordFollow.cpp). -->
+                        <ToggleButton x:Name="EditorScaleHighlightToggle" x:Uid="EditorScaleHighlightToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorScaleHighlightClick">
+                            <TextBlock x:Uid="EditorScaleHighlightText" />
+                        </ToggleButton>
+
+                        <ToggleButton x:Name="EditorScaleSnapToggle" x:Uid="EditorScaleSnapToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnEditorScaleSnapClick">
+                            <TextBlock x:Uid="EditorScaleSnapText" />
                         </ToggleButton>
                     </StackPanel>
 
@@ -1428,29 +1461,32 @@
               Padding="14,0,14,0"
               BorderThickness="0,1,0,0"
               BorderBrush="{ThemeResource SeqDividerBrush}">
+            <!-- Each piece is centered on its own: in a row with the 22-pixel Devices button, text
+                 left to stretch sits at the top of the row while icons and the button's text sit in
+                 the middle. -->
             <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                    <FontIcon x:Name="ServiceStatusIcon" Glyph="&#xE73E;" FontSize="11" />
-                    <TextBlock x:Name="ServiceStatusText" FontSize="11" />
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                    <FontIcon x:Name="ServiceStatusIcon" Glyph="&#xE73E;" FontSize="11" VerticalAlignment="Center" />
+                    <TextBlock x:Name="ServiceStatusText" FontSize="11" VerticalAlignment="Center" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                    <FontIcon Glyph="&#xE823;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                    <TextBlock x:Name="ClockStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xE823;" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock x:Name="ClockStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </StackPanel>
-                <TextBlock x:Name="ClockOutStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="ClockOutStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 <!-- The devices the sequence uses: opens Studio setup, which lists them. -->
                 <Button x:Name="DevicesStatusButton" x:Uid="DevicesStatusButton" Height="22" MinHeight="0" Padding="5,0,5,0" Margin="-5,0,-5,0"
-                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center" Visibility="Collapsed" Click="OnStudioSetupClick">
-                    <TextBlock x:Name="DevicesStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center" VerticalContentAlignment="Center" Visibility="Collapsed" Click="OnStudioSetupClick">
+                    <TextBlock x:Name="DevicesStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                 </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center" HorizontalAlignment="Right">
-                <StackPanel x:Name="RecordingStatus" Orientation="Horizontal" Spacing="5" Visibility="Collapsed">
-                    <FontIcon Glyph="&#xE7C8;" FontSize="11" Foreground="{ThemeResource SeqRecordTextBrush}" />
-                    <TextBlock x:Name="RecordingStatusText" FontSize="11" Foreground="{ThemeResource SeqRecordTextBrush}" />
+                <StackPanel x:Name="RecordingStatus" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Visibility="Collapsed">
+                    <FontIcon Glyph="&#xE7C8;" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource SeqRecordTextBrush}" />
+                    <TextBlock x:Name="RecordingStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource SeqRecordTextBrush}" />
                 </StackPanel>
-                <TextBlock x:Name="MessageStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                <TextBlock x:Name="SavedStatusText" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="MessageStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="SavedStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
             </StackPanel>
         </Grid>
     </Grid>

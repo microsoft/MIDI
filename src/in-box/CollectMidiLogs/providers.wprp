@@ -89,6 +89,17 @@
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Clock" Name="b66ed50c-069b-55bb-3c25-e6a2d8583a2c" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Player" Name="d73d6253-7040-57b5-91da-fff865d35aed" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualKeyboard" Name="4d757852-a6e6-5490-86d9-4ac9794015e1" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Glass" Name="89ed34c8-8095-561e-2b3e-233b39f39631" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Patchbay" Name="63051d43-f3c0-5fc5-8e54-6ff2ad9480ce" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Sequencer" Name="088f6e81-015a-5c8c-88eb-d409294999bb" Level="5" NonPagedMemory="false" />
+
+    <!-- Client side. The command-line tools (midi, midi1monitor, midi1rtmonitor, mididiag and
+         the rest) have no provider of their own: what they do through Windows MIDI Services
+         shows up in Sdk (Windows.Devices.Midi2), MidiSrvTransport and MidiXproc (the client
+         half of the service connection) and WdmAud2 (WinMM). Windows.Devices.Midi and winmm.dll
+         themselves are not covered by any provider here. The Loader keyword above records which
+         of those libraries each process loaded; a time travel trace of the app is the only way
+         to see their individual calls and results. -->
 
     <EventProvider Id="WPP/usbmidi2.sys" Name="d360bed7-f0d2-4547-aa66-bbfbeb53db7e" Level="5" NonPagedMemory="true">
       <Keywords>
@@ -143,6 +154,9 @@
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Clock" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Player" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualKeyboard" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Glass" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Patchbay" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sequencer" />
             <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sdk" />
             <EventProviderId Value="Microsoft-Windows-Audio" />

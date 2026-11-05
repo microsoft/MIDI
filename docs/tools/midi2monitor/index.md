@@ -155,3 +155,6 @@ You can find the endpoint device id for a device using the [MIDI Console]({{ sit
 
 When you supply a device id this way, MIDI Monitor selects that device, applies the group and channel you asked for, and begins listening on its own. That makes it a convenient thing to launch straight from another app when you want to watch a particular instrument.
 
+## App provenance
+
+This app was coded by AI using GitHub Copilot, guided by Pete Brown.

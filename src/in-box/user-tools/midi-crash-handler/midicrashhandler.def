@@ -1,0 +1,8 @@
+; Copyright (c) Microsoft Corporation and Contributors.
+; Licensed under the MIT License
+; The names WER looks up in a runtime exception module. They must not be decorated.
+LIBRARY midicrashhandler
+EXPORTS
+    OutOfProcessExceptionEventCallback
+    OutOfProcessExceptionEventSignatureCallback
+    OutOfProcessExceptionEventDebuggerLaunchCallback

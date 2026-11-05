@@ -61,15 +61,23 @@ Choose what to include, select **Start capture**, reproduce whatever is going wr
 
 By default the package contains:
 
-- an ETW trace of the MIDI service and the MIDI components in Windows, recorded while you reproduced the problem
-- a time travel trace of the MIDI service, which lets an engineer step backwards through what the service actually did
+- an ETW trace of the MIDI service, the MIDI components in Windows and the Windows MIDI Services apps, recorded while you reproduced the problem
+- a time travel trace of the MIDI service and of any Windows MIDI Services app that's open when you start, which lets an engineer step backwards through what each one actually did
+- a list of the Windows MIDI Services apps that were open, and the MIDI libraries each one had loaded
 - the mididiag and midiksinfo reports
 - ddodiag, dxdiag and an export of the plug and play state
 - a summary of this PC and the state of the MIDI service
 
 A time travel trace makes the package much larger, but it is very often the thing that lets us find a problem from a single capture instead of asking you to reproduce it again, so it's on by default.
 
-Time travel tracing isn't available on every build of Windows, and it can be refused if the service is running with certain security mitigations. If that happens, the capture carries on without it and says so in the log, rather than failing.
+If the problem shows up in one of the Windows MIDI Services apps, such as Windows MIDI Monitor, midi1monitor or midi1rtmonitor, open that app before you select **Start capture**. Only apps that are already open get a time travel trace. An app you open later still shows up in the ETW trace, but with less detail. This only covers the apps that come with Windows MIDI Services. It doesn't record your DAW or other music apps.
+
+The two kinds of trace show different things:
+
+- **The ETW trace** has the events that the MIDI service, the Windows MIDI Services SDK, WinMM's MIDI driver (wdmaud2) and the apps write, plus which libraries each app loaded. It doesn't list every call an app makes into `Windows.Devices.Midi`, `Windows.Devices.Midi2` or WinMM, or what each call returned.
+- **The time travel trace** records everything an app did, including every call into those libraries and its result. An engineer can replay it in WinDbg.
+
+Time travel tracing isn't available on every build of Windows, and it can be refused if the service or an app is running with certain security mitigations. If that happens, the capture carries on without it and says so in the log, rather than failing. A traced app stays slow after the capture, so close it and open it again when you're done.
 
 ## DPC latency check
 
@@ -87,6 +95,23 @@ Choose how long to check, select **Start check**, and use your PC the way you do
 **Open a trace file** checks a trace you saved earlier, or one from Windows Performance Recorder, without administrator rights.
 
 The check changes nothing on your PC, installs no driver, and works on x64 and Arm64. There's much more about what it measures and what to do about it in [Find what makes audio late on your PC (DPC latency)]({{ site.baseurl }}/kb/dpc-latency/).
+
+## Crash dumps
+
+When a Windows MIDI Services app stops unexpectedly, Windows saves a crash dump. It's a snapshot of the app's memory at the moment it crashed, and it shows the developers what went wrong. This page lists the dumps on your PC and helps you share them.
+
+You don't have to come here yourself. When one of the Windows MIDI Services apps crashes, this app opens on the Crash dumps page and says which app stopped. It waits a few seconds while Windows finishes the dump, then offers **Show the crash dump**. It doesn't ask for administrator rights when it opens this way.
+
+**Save a MIDI service dump** saves a memory dump of the MIDI service too. If an app crashed or froze while it was using MIDI, the two dumps together show the developers what each side was doing. Save it straight away, before you restart the service or your PC, because a restart clears what the dump would show. It needs administrator rights, so you'll see a Windows prompt if the app doesn't have them yet.
+
+Under **Saved dumps** you can open the folder, save the dumps you select in one zip file to attach to a GitHub issue, and delete the ones you don't need.
+
+Some things to know:
+
+- The dumps stay on your PC, in `%LOCALAPPDATA%\Microsoft\MIDI\CrashDumps`, with a folder for each app. Nothing is sent from here.
+- Windows keeps the 10 newest dumps for each app and deletes the oldest when it saves a new one. This page does the same for MIDI service dumps.
+- This covers the apps that come with Windows MIDI Services, including the console tools. It doesn't cover your DAW or other music apps.
+- A dump can hold personal information, such as file names, device names and network MIDI passwords. Share it only with the developers who asked for it.
 
 ## Active sessions
 
@@ -159,3 +184,7 @@ Close your MIDI applications before changing a driver. Afterwards, unplug the de
 
 > There is a Plug and Play issue in Windows which can revert your choice after an update, so you may
 > have to repeat this occasionally.
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API originally coded by Pete Brown and modified in the same way.

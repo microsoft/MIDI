@@ -10,6 +10,7 @@
 
 #include "DocumentHandoff.h"
 #include "StringResources.h"
+#include "CrashHandlerRegistration.h"
 
 namespace
 {
@@ -176,6 +177,9 @@ namespace
 // Everything that blocks on the MIDI service is run through BackgroundWork instead.
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
+    // First, so a crash anywhere after this opens MIDI Troubleshooting and Repair.
+    ::midiapp::RegisterCrashHandler();
+
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
     auto const request = ReadLaunchRequest();

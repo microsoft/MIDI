@@ -34,6 +34,13 @@ namespace winrt::midiglass::implementation
 
         static void ActivateLibraryWindow();
 
+        // A layout file was replaced by one from another PC. A window running it offers to load
+        // the new copy rather than swapping the surface in the middle of a performance.
+        static void NotifyLayoutUpdated(_In_ std::wstring const& filePath);
+
+        // Closes the window running this layout and opens it again from the file.
+        static void ReloadRuntimeWindow(_In_ std::wstring const& filePath);
+
     private:
         void OnUnhandledException(
             foundation::IInspectable const& sender,

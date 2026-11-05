@@ -337,10 +337,6 @@ namespace winrt::midibluetoothsetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
-            // A PC which has only ever had a transport package installed has no configuration
-            // file registered, and without one nothing done here can be persisted.
-            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
-
             DevicesListView().ItemsSource(m_devices);
             PeripheralClientsList().ItemsSource(m_peripheralClients);
             PendingClientsList().ItemsSource(m_pendingClients);
@@ -368,12 +364,50 @@ namespace winrt::midibluetoothsetup::implementation
 
             m_loaded = true;
 
+            FinishLoadingAsync();
+        }
+        MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to finish loading the window.")
+    }
+
+    // Everything from here asks the MIDI service, and in Legacy API mode, or with the service
+    // turned off, those calls can hold the UI thread for good. So the service is checked first,
+    // off the UI thread, and the customer is told why nothing works rather than left with a
+    // window that stops responding.
+    winrt::fire_and_forget MainWindow::FinishLoadingAsync() noexcept
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            midiapp::ServiceUnavailableStrings strings{};
+            strings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+            strings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+            strings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+            strings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+            auto const serviceAvailable = co_await midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), strings);
+
+            if (m_closing)
+            {
+                co_return;
+            }
+
+            if (!serviceAvailable)
+            {
+                ShowTransportUnavailable(true);
+                co_return;
+            }
+
+            // A PC which has only ever had a transport package installed has no configuration
+            // file registered, and without one nothing done here can be persisted.
+            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
+
             // Nothing here works without the transport, so the app says so once and stops rather
             // than failing one operation at a time. This has to happen before the saved page is
             // restored, because showing a page is suppressed while the transport is unusable.
             if (!VerifyTransportIsUsable())
             {
-                return;
+                co_return;
             }
 
             auto const pageIndex = native::AppSettings::Current().SelectedPageIndex();
@@ -412,17 +446,31 @@ namespace winrt::midibluetoothsetup::implementation
 
         if (!m_transportUsable)
         {
-            try
-            {
-                TransportUnavailableBar().IsOpen(true);
-                DevicesPanel().Visibility(xaml::Visibility::Collapsed);
-                ThisPcPanel().Visibility(xaml::Visibility::Collapsed);
-                SettingsPanel().Visibility(xaml::Visibility::Collapsed);
-            }
-            MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to show the transport unavailable message.")
+            ShowTransportUnavailable(false);
         }
 
         return m_transportUsable;
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ShowTransportUnavailable(bool const becauseServiceIsUnavailable) noexcept
+    {
+        m_transportUsable = false;
+
+        try
+        {
+            if (becauseServiceIsUnavailable)
+            {
+                TransportUnavailableBar().Title(res::GetString(L"MidiServiceUnavailableTitle"));
+                TransportUnavailableBar().Message(res::GetString(L"ServiceUnavailableBarMessage"));
+            }
+
+            TransportUnavailableBar().IsOpen(true);
+            DevicesPanel().Visibility(xaml::Visibility::Collapsed);
+            ThisPcPanel().Visibility(xaml::Visibility::Collapsed);
+            SettingsPanel().Visibility(xaml::Visibility::Collapsed);
+        }
+        MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to show the transport unavailable message.")
     }
 
     _Use_decl_annotations_

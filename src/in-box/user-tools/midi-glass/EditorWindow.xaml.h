@@ -99,6 +99,12 @@ namespace winrt::midiglass::implementation
         void OnSortKeyboardOrderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRunClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // Sync to device (EditorSync.cpp)
+        void OnSyncToDeviceLoaded(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSyncToDeviceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget SyncToDeviceAsync();
+        void UpdateSyncToDeviceLabel();
+
         // ---- Edit and Try (EditorTryMode.cpp) ----
 
         void OnEditModeChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -260,6 +266,9 @@ namespace winrt::midiglass::implementation
         void OnTargetPageChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnStartsDisabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnStartsHiddenToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnListenRemoteRuleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnLightsFromCenterToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDefaultValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
@@ -669,6 +678,7 @@ namespace winrt::midiglass::implementation
 
         void MarkChanged();
         void SaveNow();
+        bool SysExIsAllowedHere() const noexcept;
         void UpdateSavedChip();
         void UpdateStatusBar();
 
@@ -849,6 +859,43 @@ namespace winrt::midiglass::implementation
         void OnTryFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
         void OnTryGridsChanged(_In_ glass::PadGridStates const& states);
         void ForgetTryKey();
+
+        // ---- MIDI remote control (EditorRemoteControl.cpp) ----
+
+        // The rules pane in layout settings: one card per rule.
+        void RefreshRemoteControlPane();
+        void AddRemoteRuleCards();
+        void AddTellPageSection();
+        controls::Border BuildRemoteRuleCard(_In_ size_t ruleIndex);
+
+        // Changes a copy of the rules, hands it to the document, and rebuilds the pane on the
+        // next tick when the change alters which fields a card shows.
+        void EditRemoteControl(_In_ std::function<void(glass::RemoteControl&)> const& change, _In_ bool rebuild);
+
+        // A rule's message arrived: its card lights for a moment.
+        void OnRemoteRuleHeard(_In_ uint32_t ruleIndex);
+        void SweepRemoteFlashes();
+
+        // Learn for one rule's "when". -1 is off.
+        void SetRemoteLearnRule(_In_ int32_t ruleIndex);
+        bool TryApplyRemoteLearn(_In_ glass::LearnedBinding const& learned);
+
+        // Try mode draws the controls a rule turned off or hid, and Edit mode draws everything.
+        // Also tells the player which page is showing. Called whenever the surface is rebuilt
+        // or the mode changes.
+        void SyncRemoteSurface();
+        void OnTryControlStatesChanged(_In_ std::vector<uint32_t> const& controlIndexes);
+        void ForgetTryControlStates();
+
+        // The "When this page opens" choice on a page's menu in layout settings.
+        void AppendPageOpenMenu(_In_ controls::MenuFlyout const& menu, _In_ size_t pageIndex);
+
+        std::vector<controls::Border> m_remoteRuleCards{};
+        std::vector<uint64_t> m_remoteFlashUntil{};
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_remoteFlashTimer{ nullptr };
+        int32_t m_remoteLearnRule{ -1 };
+        int32_t m_remoteBringIntoView{ -1 };
+        bool m_surfaceStatesShown{ false };
 
         void AppendMonitorRow(_In_ glass::SentMessage const& message);
         void AppendMonitorItem(_In_ glass::SentMessage const& message);
@@ -1107,6 +1154,9 @@ namespace winrt::midiglass::implementation
 
         xaml::DispatcherTimer m_saveTimer{ nullptr };
         bool m_saveFailed{ false };
+
+        // Whether this layout's SysEx is the person's own here (EditorTryMode.cpp).
+        bool m_sysExIsOwn{ false };
 
         // ---- Edit and Try ----
 

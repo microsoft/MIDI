@@ -158,6 +158,7 @@
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\MidiCiAppPresence.h" />
     <ClInclude Include="..\midi-app-shared\MidiCiProgramListQuery.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -187,6 +188,7 @@
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiCiAppPresence.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiCiProgramListQuery.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -93,6 +93,20 @@
                        TextTrimming="CharacterEllipsis"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
+            <!-- A newer copy came from another PC. It loads only when asked, never mid-performance. -->
+            <Button x:Name="UpdateReadyButton"
+                    x:Uid="UpdateReadyButton"
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Visibility="Collapsed"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="OnUpdateReadyClick">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE895;" FontSize="14" />
+                    <TextBlock x:Uid="UpdateReadyLabel" Text="Update ready" />
+                </StackPanel>
+            </Button>
+
             <!-- For this window only, while it runs. The layout's own setting decides how it opens. -->
             <ToggleButton x:Name="KeepOnTopToggle"
                           x:Uid="KeepOnTopToggle"
@@ -182,6 +196,10 @@
                 <MenuFlyout x:Name="ToolbarFlyout"
                             ShouldConstrainToRootBounds="False"
                             Opening="OnToolbarFlyoutOpening">
+                    <MenuFlyoutItem x:Name="ToolbarUpdateItem" x:Uid="ToolbarUpdateReady" Text="Load the update" Visibility="Collapsed" Click="OnUpdateReadyClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE895;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
                     <MenuFlyoutSubItem x:Name="ToolbarPagesItem" x:Uid="ToolbarPages" Text="Pages">
                         <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutSubItem.Icon>
                     </MenuFlyoutSubItem>
@@ -244,6 +262,10 @@
             <FontIcon Glyph="&#xE712;" FontSize="14" />
             <Button.Flyout>
                 <MenuFlyout x:Name="CornerFlyout" Opening="OnCornerFlyoutOpening">
+                    <MenuFlyoutItem x:Name="CornerUpdateItem" x:Uid="CornerUpdateReady" Text="Load the update" Visibility="Collapsed" Click="OnUpdateReadyClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE895;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
                     <MenuFlyoutItem x:Uid="CornerFitToScreen" Text="Fit to screen" Tag="fit" Click="OnCornerMenuClick">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9A6;" /></MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>

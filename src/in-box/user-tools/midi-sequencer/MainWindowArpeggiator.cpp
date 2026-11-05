@@ -121,7 +121,7 @@ namespace winrt::midisequencer::implementation
         form.Children().Append(fromHeld);
 
         auto fromTrack = Choice(res::GetString(L"ArpFromTrack"), Text(res::GetString(L"ArpFromTrackHelp"), secondary));
-        fromTrack.IsChecked(!held);
+        fromTrack.IsChecked(generator.ArpSource == seq::ArpeggiatorSource::Track);
         form.Children().Append(fromTrack);
 
         // The tracks it can follow: any track that plays notes, other than its own.
@@ -151,8 +151,21 @@ namespace winrt::midisequencer::implementation
         });
 
         follow.SelectedIndex(followed);
-        follow.IsEnabled(!held && !trackIds.empty());
+        follow.IsEnabled(generator.ArpSource == seq::ArpeggiatorSource::Track && !trackIds.empty());
         form.Children().Append(follow);
+
+        // The chords on the Key and chords row (MainWindowChordFollow.cpp has the rest of what
+        // follows the row).
+        auto const hasChords = m_doc.Harmony.has_value() && !m_doc.Harmony->Chords.empty();
+        auto fromChords = Choice(res::GetString(L"ArpFromChords"),
+            Text(res::GetString(hasChords ? L"ArpFromChordsHelp" : L"ArpFromChordsNone"), secondary));
+        fromChords.IsChecked(generator.ArpSource == seq::ArpeggiatorSource::Chords);
+        form.Children().Append(fromChords);
+
+        fromChords.Checked([edit](auto&&, auto&&)
+        {
+            edit([](seq::GeneratorSettings& edited) { edited.ArpSource = seq::ArpeggiatorSource::Chords; });
+        });
 
         fromHeld.Checked([edit](auto&&, auto&&)
         {

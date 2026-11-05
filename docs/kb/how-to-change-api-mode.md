@@ -23,7 +23,7 @@ This gives you multi-client support, MIDI loopbacks, Network MIDI 2.0, and Bluet
 
 ## Mode 1: Legacy API mode
 
-This puts your PC back the way it was before Windows MIDI Services, with the same limits and the same behavior. Ports aren't multi-client, new-style and custom port names aren't available, and neither the MIDI service nor `wdmaud2.drv` is used. You lose the built-in loopbacks, Network MIDI 2.0, Bluetooth LE MIDI, and the ability to use USB MIDI 2.0 devices.
+This puts your PC back the way it was before Windows MIDI Services, with the same limits and the same behavior. Ports aren't multi-client, new-style and custom port names aren't available, and neither the MIDI service nor `wdmaud2.drv` is used. You lose the built-in loopbacks, Bluetooth LE MIDI, Network MIDI 2.0, RTP-MIDI, the MIDI 2.0 General MIDI Synth, and the ability to use USB MIDI 2.0 devices.
 
 We made this available for two reasons:
 
@@ -35,8 +35,13 @@ Anyone can use this mode, but it's mainly for DJs who don't need the newer MIDI 
 Here's what you give up:
 
 - More than one application using the same MIDI device at the same time (multi-client)
-- Built-in loopback ports (on x64, use something like loopMIDI or loopBE instead)
-- Network MIDI 2.0, Bluetooth LE MIDI, and other new transports
+- Built-in loopback ports, both the MIDI 2.0 loopbacks and the basic MIDI 1.0 loopbacks (on x64, use something like loopMIDI or loopBE instead)
+- Bluetooth LE MIDI
+- Network MIDI 2.0
+- RTP-MIDI
+- The MIDI 2.0 General MIDI Synth built into Windows MIDI Services
+- Virtual devices that apps create
+- The Windows MIDI Services tools that need the MIDI service, such as MIDI Settings, MIDI Patchbay and MIDI Glass. They open and tell you the service isn't available. The MIDI Troubleshooting and Repair app still works, so you can use it to switch back.
 - MIDI 2.0 devices such as the Montage M, Native Instruments Komplete Kontrol mk3, StudioLogic SL series, Waldorf Iridium family and Roland A88 when they're set to MIDI 2.0 mode. All of those have a MIDI 1.0 mode you can use instead.
 - The new, faster combined MIDI 1.0 and MIDI 2.0 driver
 
@@ -73,7 +78,7 @@ If you don't have the app, and you're comfortable with `regedit`:
 
 ## Important tips
 
-- Don't use the MIDI tools (MIDI Console, MIDI Settings) while you're in Legacy mode. Some of them try to start the service.
+- Most MIDI tools don't work in Legacy mode, because they need the MIDI service. When you open one, it tells you the service isn't available. Use MIDI Troubleshooting and Repair to check or change the mode. It works without the service.
 - Don't use `midicheckservice`.
 - To check that your PC really is in Legacy mode, restart, use a MIDI 1.0 app, and look for `midisrv` in the Services app or on the Details tab of Task Manager. If MIDI is working and `midisrv` is not running, you're in Legacy mode.
 

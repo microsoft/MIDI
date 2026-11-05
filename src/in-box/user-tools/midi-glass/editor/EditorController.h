@@ -53,6 +53,7 @@ namespace glass
         inline constexpr wchar_t RenameGroup[]{ L"EditRenameGroup" };
         inline constexpr wchar_t Lock[]{ L"EditLockControls" };
         inline constexpr wchar_t Unlock[]{ L"EditUnlockControls" };
+        inline constexpr wchar_t RemoteControl[]{ L"EditRemoteControl" };
     }
 
     // The page size is changing. What the grow and shrink dialogs hand back.
@@ -621,6 +622,24 @@ namespace glass
         // How many controls, across every page, have a row that plays this sequence.
         size_t CountControlsUsingSequence(_In_ std::wstring const& name) const;
 
+        // ------------------------------------------------------------------ MIDI remote control
+        // (EditorControllerRemote.cpp)
+
+        // Replaces the layout's rules, and what tells the controller the page, whole. The editor
+        // edits a copy and hands it over; typing into one field is one step, not one a key.
+        bool SetRemoteControl(_In_ RemoteControl const& remote);
+
+        // The sequence a page runs each time it opens while the layout runs. Empty for none.
+        bool SetPageOpenSequence(_In_ size_t pageIndex, _In_ std::wstring const& sequenceName);
+
+        // How a control starts each time the layout opens.
+        bool SetControlStartsDisabled(_In_ std::wstring const& id, _In_ bool startsDisabled);
+        bool SetControlStartsHidden(_In_ std::wstring const& id, _In_ bool startsHidden);
+
+        // A new rule at the end of the list that turns this control on, for the shortcut on a
+        // control's Listens tab. Returns where it went, or -1.
+        int32_t AddRemoteRuleFor(_In_ std::wstring const& controlId);
+
         // ------------------------------------------------------------------ undo
 
         bool CanUndo() const noexcept { return m_undo.CanUndo(); }
@@ -638,6 +657,9 @@ namespace glass
 
         void Commit(_In_ wchar_t const* name);
         void CommitCoalesced(_In_ wchar_t const* name, _In_ std::wstring const& key);
+
+        // Rules and the page feedback follow a device that was renamed.
+        void RenameRemoteDevice(_In_ std::wstring const& oldName, _In_ std::wstring const& newName);
 
         // Anything an undo or a page change can invalidate.
         void DropSelectionOfMissingControls();

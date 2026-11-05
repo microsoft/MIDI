@@ -156,6 +156,7 @@
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
+    <ClInclude Include="..\midi-app-shared\FrameTicker.h" />
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -208,12 +210,14 @@
     <ClCompile Include="MainWindowEmptyState.cpp" />
     <ClCompile Include="MainWindowGmReset.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\FrameTicker.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

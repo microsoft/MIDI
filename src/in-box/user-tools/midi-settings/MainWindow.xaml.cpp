@@ -12,6 +12,7 @@
 #include "App.xaml.h"
 #include "BackgroundWork.h"
 #include "MidiPanic.h"
+#include "MidiServiceAvailability.h"
 #include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "resource.h"
@@ -166,6 +167,15 @@ namespace winrt::midisettings::implementation
 
             StartWatchersAsync();
             StartHealthTimer();
+
+            midiapp::ServiceUnavailableStrings serviceStrings{};
+            serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+            serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+            serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+            serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+            // The ServiceBar stays as well; this explains the reason once, at startup.
+            midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
 
             // Another tool sent the customer here for one thing. Queued rather than shown from
             // inside Loaded, so the window behind the dialog is laid out first.

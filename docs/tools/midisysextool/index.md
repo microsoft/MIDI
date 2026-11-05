@@ -134,3 +134,7 @@ midisysextool.exe "\\?\swd#midisrv#midiu_bloop_basic_def#{e7cce071-3c03-423f-88d
 ```
 
 You can find the endpoint device id for a device using the [MIDI Console]({{ site.baseurl }}/tools/console/) or the [MIDI Settings app]({{ site.baseurl }}/tools/settings/).
+
+## App provenance
+
+This app was ported to C++ by AI from the original C# MIDI Settings app coded by Pete Brown. It has been extensively modified using GitHub Copilot since that time. Underlying API originally coded by Pete Brown and modified in the same way.

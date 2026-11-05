@@ -35,3 +35,7 @@ One session owns the document, the selection, the snap settings and the undo sta
 - **It does not save.** The window owns the auto-save timer and calls `WriteLayoutFile`.
 - **It does not send.** Try mode belongs to `runtime/LivePlayer`, and nothing in this folder knows a device exists.
 - **It does not know about resources.** An undo entry carries a resource key, and the window looks it up.
+
+## EditorControllerRemote
+
+The rules are replaced whole (`SetRemoteControl`), so typing into one field is one undo step. Renaming a device carries the rules and `tellPage` with it. `AddRemoteRuleFor` is the shortcut on a control's Listens tab.

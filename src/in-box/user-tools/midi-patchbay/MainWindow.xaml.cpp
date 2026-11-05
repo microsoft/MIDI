@@ -220,8 +220,8 @@ namespace winrt::midipatchbay::implementation
             callbacks.ConnectionRequested = [this](patchbay::PatchConnection connection)
                 { OnConnectionRequested(std::move(connection)); };
             callbacks.LayoutChanged = [this]() { OnCanvasLayoutChanged(); };
-            callbacks.NodeContextMenuRequested = [this](std::wstring nodeId, foundation::Point position)
-                { ShowNodeMenu(nodeId, position); };
+            callbacks.NodeContextMenuRequested = [this](std::wstring nodeId, foundation::Point position, bool onSelection)
+                { ShowNodeMenu(nodeId, position, onSelection); };
             callbacks.ConnectionRetargetRequested = [this](std::wstring connectionId, patchbay::PatchConnection updated)
                 { OnConnectionRetargetRequested(connectionId, std::move(updated)); };
             callbacks.ViewportChanged = [this]() { UpdateZoomText(CanvasScroller().ZoomFactor()); };

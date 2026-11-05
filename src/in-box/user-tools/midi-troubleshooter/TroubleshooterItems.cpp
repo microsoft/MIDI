@@ -13,6 +13,7 @@
 #include "TransportItem.g.cpp"
 #include "RegistryEntryItem.g.cpp"
 #include "DriverDeviceItem.g.cpp"
+#include "CrashDumpItem.g.cpp"
 
 namespace winrt::miditroubleshooter::implementation
 {

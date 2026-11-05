@@ -13,6 +13,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "MidiServiceAvailability.h"
 #include "PopupBackdrop.h"
 #include "StringResources.h"
 #include "WindowVisibility.h"
@@ -126,6 +127,14 @@ namespace winrt::midiclock::implementation
 
             // The title bar gear is first in tab order, so focus would otherwise start there.
             AddClockButton().Focus(xaml::FocusState::Programmatic);
+
+            midiapp::ServiceUnavailableStrings serviceStrings{};
+            serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+            serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+            serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+            serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+            midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }

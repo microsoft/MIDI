@@ -11,6 +11,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "MidiServiceAvailability.h"
 #include "PopupBackdrop.h"
 #include "SpinButtons.h"
 #include "ProgramChoice.h"
@@ -320,6 +321,14 @@ namespace winrt::midikeyboard::implementation
             // without the player having to click anything first
             FocusKeyboard();
             UpdateComputerKeyState();
+
+            midiapp::ServiceUnavailableStrings serviceStrings{};
+            serviceStrings.Title = res::GetString(L"MidiServiceUnavailableTitle");
+            serviceStrings.LegacyApiModeMessage = res::GetString(L"MidiServiceUnavailableLegacyMessage");
+            serviceStrings.UnavailableMessage = res::GetString(L"MidiServiceUnavailableMessage");
+            serviceStrings.CloseButton = res::GetString(L"MidiServiceUnavailableClose");
+
+            midiapp::EnsureMidiServiceOrExplainAsync(RootGrid().XamlRoot(), serviceStrings);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }

@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "LivePlayer.h"
 #include "PadGrid.h"
+#include "SysExReview.h"
 
 #include <ump_helpers.h>
 
@@ -92,6 +93,7 @@ namespace glass
 
         FollowTempoSource();
         RebuildThrottles();
+        PrepareRemote();
 
         std::weak_ptr<LivePlayer> weak{ shared_from_this() };
 
@@ -278,6 +280,7 @@ namespace glass
 
         FollowTempoSource();
         RebuildThrottles();
+        PrepareRemote();
 
         // A tempo typed into the layout, or a clock no longer followed, reaches the sweeps that
         // are already running. Each keeps the place in its cycle it had reached.
@@ -735,9 +738,25 @@ namespace glass
         if (!enabled && m_outputEnabled)
         {
             StopAllSteps(true);
+
+            // The editor's Try mode opens the page again each time it starts.
+            m_pageOpenPending = m_shownPage < m_document.Pages.size();
         }
 
+        auto const opening = enabled && !m_outputEnabled;
+
         m_outputEnabled = enabled;
+
+        if (opening && m_remoteLive && m_pageOpenPending && !m_sendTable.empty())
+        {
+            try
+            {
+                QueuePageOpened();
+            }
+            catch (...)
+            {
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -918,6 +937,12 @@ namespace glass
                                 // moment later, and a start message sent before that goes
                                 // nowhere at all.
                                 inner->StartClocks();
+
+                                // The first page opened before there was anywhere to send.
+                                if (inner->m_pageOpenPending && inner->m_outputEnabled && inner->m_remoteLive)
+                                {
+                                    inner->RunPageOpened(inner->m_shownPage);
+                                }
                             });
                     }
                 }
@@ -953,9 +978,15 @@ namespace glass
                 continue;
             }
 
+            if (!m_systemExclusiveAllowed && ContainsSystemExclusive(send.Words, send.WordCount))
+            {
+                continue;
+            }
+
             // Zero is now. Measured at a third of a microsecond from the UI thread, which is why
             // this is done in the pointer handler rather than queued to a render tick.
             connection->SendMidiMessagesRaw(0, send.WordCount, send.Words);
+            NoteSentForEcho(send.DestinationIndex, send.Words, send.WordCount);
 
             if (Sent)
             {
@@ -983,6 +1014,15 @@ namespace glass
         {
             return;
         }
+
+        // A control that is off or hidden starts nothing, but the end of a gesture still goes
+        // out, so a pitch wheel let go as a rule turns it off doesn't leave the synth bent.
+        if (!isFinal && !TakesInput(controlIndex))
+        {
+            return;
+        }
+
+        RememberValue(controlIndex, value);
 
         if (PickFromSwitch(controlIndex, value))
         {
@@ -1028,7 +1068,7 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::ValueYChanged(uint32_t controlIndex, double value, bool isFinal)
     {
-        if (controlIndex >= m_throttlesY.size())
+        if (controlIndex >= m_throttlesY.size() || (!isFinal && !TakesInput(controlIndex)))
         {
             return;
         }
@@ -1092,7 +1132,7 @@ namespace glass
             return;
         }
 
-        if (key < 0)
+        if (key < 0 || !TakesInput(controlIndex))
         {
             return;
         }
@@ -1170,7 +1210,7 @@ namespace glass
     {
         auto* const entry = FindPadControl(controlIndex);
 
-        if (entry == nullptr)
+        if (entry == nullptr || !TakesInput(controlIndex))
         {
             return;
         }
@@ -1245,6 +1285,15 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::Switched(uint32_t controlIndex, bool isOn, double velocity)
     {
+        // A control that is off or out of sight starts nothing. Letting go still goes through,
+        // so whatever it was holding ends.
+        if (isOn && !TakesInput(controlIndex))
+        {
+            return;
+        }
+
+        RememberValue(controlIndex, isOn ? 1.0 : 0.0);
+
         // A clock is running or it is not, and pressing it is what changes which.
         if (m_clocks != nullptr)
         {
@@ -1385,6 +1434,11 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::Touched(uint32_t controlIndex, bool isTouched)
     {
+        if (isTouched && !TakesInput(controlIndex))
+        {
+            return;
+        }
+
         // A control that springs back when let go has not turned anything by doing so.
         if (!isTouched && m_engine.HasRelativeRows(controlIndex) && controlIndex < m_relativeBase.size())
         {
@@ -1500,6 +1554,30 @@ namespace glass
             return;
         }
 
+        // Held back: only what isn't SysEx goes, in order. Rare, so the copy costs nothing that
+        // matters, and the path a finger takes without SysEx is unchanged.
+        std::vector<uint32_t> kept{};
+
+        if (!m_systemExclusiveAllowed && ContainsSystemExclusive(words, wordCount))
+        {
+            try
+            {
+                kept = WithoutSystemExclusive(words, wordCount);
+            }
+            catch (...)
+            {
+                return;
+            }
+
+            if (kept.empty())
+            {
+                return;
+            }
+
+            words = kept.data();
+            wordCount = static_cast<uint32_t>(kept.size());
+        }
+
         try
         {
             // A dump is thousands of packets and a connection has its own limit on how many
@@ -1528,6 +1606,7 @@ namespace glass
                 }
 
                 connection->SendMidiMessagesRaw(0, bite, const_cast<uint32_t*>(words) + offset);
+                NoteSentForEcho(destinationIndex, words + offset, bite);
 
                 if (Sent)
                 {
@@ -1606,9 +1685,15 @@ namespace glass
 
             auto const& connection = m_sendTable[static_cast<size_t>(send.DestinationIndex)];
 
+            if (!m_systemExclusiveAllowed && ContainsSystemExclusive(send.Words, send.WordCount))
+            {
+                continue;
+            }
+
             if (connection != nullptr && send.WordCount != 0)
             {
                 connection->SendMidiMessagesRaw(0, send.WordCount, send.Words);
+                NoteSentForEcho(send.DestinationIndex, send.Words, send.WordCount);
                 sent++;
             }
         }
@@ -1655,7 +1740,7 @@ namespace glass
         auto const learning = m_learning.load();
         auto const tempoDevice = m_tempoDeviceIndex.load();
 
-        if (!learning && !FeedbackMoved && !ActivitySeen && tempoDevice < 0)
+        if (!learning && !FeedbackMoved && !ActivitySeen && tempoDevice < 0 && !m_hasRemoteRules.load())
         {
             return;
         }
@@ -1678,6 +1763,7 @@ namespace glass
         std::vector<uint32_t> lit{};
         std::vector<std::pair<uint32_t, ListenerState>> latched{};
         std::vector<uint32_t> ticks{};
+        std::vector<RemoteHit> remoteHits{};
 
         // Only the last tempo of a burst matters; the ones before it are already out of date.
         std::optional<double> followed{};
@@ -1753,6 +1839,8 @@ namespace glass
                 }
             }
 
+            CollectRemoteHits(destinationIndex, words + position, length, remoteHits);
+
             if (tempoDevice >= 0 && destinationIndex == tempoDevice && IsTimingClock(words[position]))
             {
                 std::lock_guard guard{ m_clockMeterLock };
@@ -1767,14 +1855,14 @@ namespace glass
         }
 
         if (moves.empty() && captures.empty() && lit.empty() && latched.empty() && ticks.empty() &&
-            !followed.has_value())
+            !followed.has_value() && remoteHits.empty())
         {
             return;
         }
 
         std::weak_ptr<LivePlayer> weak{ weak_from_this() };
 
-        m_dispatcher.TryEnqueue([weak, moves, captures, lit, latched, ticks, followed]()
+        m_dispatcher.TryEnqueue([weak, moves, captures, lit, latched, ticks, followed, remoteHits]()
             {
                 auto strong = weak.lock();
 
@@ -1842,6 +1930,18 @@ namespace glass
                 if (followed.has_value())
                 {
                     strong->ApplyFollowedTempo(*followed);
+                }
+
+                // After the feedback, so a rule that moves a control lands on top of it.
+                if (!remoteHits.empty())
+                {
+                    try
+                    {
+                        strong->RunRemoteHits(remoteHits);
+                    }
+                    catch (...)
+                    {
+                    }
                 }
             });
     }

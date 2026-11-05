@@ -154,6 +154,7 @@
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -184,6 +185,7 @@
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
     <ClCompile Include="..\midi-app-shared\MonitorLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

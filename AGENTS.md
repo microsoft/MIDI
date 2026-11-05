@@ -74,10 +74,9 @@ Check your work with `build/check_en_us_spelling.ps1 -Path <file or folder>`.
 Read [.github/skills/midi-contributing/SKILL.md](.github/skills/midi-contributing/SKILL.md) before
 you edit any source file. The rules that get broken most often:
 
-1. **Changes to code that ships in Windows must be wrapped in a servicing gate (KIR)**, with the
-   original behavior preserved exactly when the gate is disabled. The trigger is where the file
-   lives, not how small the diff is. Where the branch goes — call site, a net-new function, in
-   place, or a net-new class chosen at the factory — depends on the shape of the change.
+1. **Changes to code that ships in Windows must be wrapped in a servicing gate (KIR).** The
+   trigger is where the file lives, not how small the diff is. All the gate rules are in
+   [.github/skills/midi-contributing/references/kir-servicing.md](.github/skills/midi-contributing/references/kir-servicing.md).
 2. **SAL-annotate every function parameter**, and use `_Use_decl_annotations_` with bare parameters
    in the `.cpp` when the declaration is in a header.
 3. **User-facing strings go in resource files** (`.resw` or `.rc`), never inline in code.
@@ -112,15 +111,16 @@ drafting an issue or a test plan. The three rules that get broken most often:
 The issue form requires AI-generated analysis to be tagged **"AI Generated Content"**, and the
 "personal observation" field must be the reporter's own words. Do not write that field for them.
 
-## Making Windows MIDI Glass layouts and themes, and Windows MIDI Patchbay patches
+## Making Windows MIDI Glass layouts and themes, Windows MIDI Patchbay patches, and Windows MIDI Sequencer song plans
 
-When someone asks you to design a Windows MIDI Glass layout or theme, or a Windows MIDI Patchbay patch, read the matching guide from start to finish before you write anything. Each guide says what to ask, gives the whole file format with a working example, and has a script that checks the finished file.
+When someone asks you to design a Windows MIDI Glass layout or theme, a Windows MIDI Patchbay patch, or the key, chords and sections of a song for Windows MIDI Sequencer, read the matching guide from start to finish before you write anything. Each guide says what to ask, gives the whole file format with a working example, and has a script that checks the finished file.
 
 | To make | Read | Published at |
 | --- | --- | --- |
 | A Windows MIDI Glass layout (`.midilayout`) | [docs/kb/midi-glass-layouts-for-agents.md](docs/kb/midi-glass-layouts-for-agents.md) | https://microsoft.github.io/MIDI/kb/midi-glass-layouts-for-agents/ |
 | A Windows MIDI Glass theme (`.miditheme`) | [docs/kb/midi-glass-themes.md](docs/kb/midi-glass-themes.md) | https://microsoft.github.io/MIDI/kb/midi-glass-themes/ |
 | A Windows MIDI Patchbay patch (`.midipatch`) | [docs/kb/midi-patchbay-patches-for-agents.md](docs/kb/midi-patchbay-patches-for-agents.md) | https://microsoft.github.io/MIDI/kb/midi-patchbay-patches-for-agents/ |
+| A Windows MIDI Sequencer song plan (Key and chords row) | [docs/kb/midi-sequencer-key-and-chords-for-agents.md](docs/kb/midi-sequencer-key-and-chords-for-agents.md) | https://microsoft.github.io/MIDI/kb/midi-sequencer-key-and-chords-for-agents/ |
 
 The rules that get broken most often:
 
@@ -131,4 +131,4 @@ The rules that get broken most often:
 5. **Say what the app can't do.** Don't build something that only looks like the feature the person asked for.
 6. **Check the file with the guide's script, and show the person a mockup or a plain-words plan** before you hand it over.
 
-If you change what Windows MIDI Glass or Windows MIDI Patchbay reads from or writes to these files, update the matching guide in the same change.
+If you change what Windows MIDI Glass, Windows MIDI Patchbay or Windows MIDI Sequencer reads from or writes to these files, update the matching guide in the same change.

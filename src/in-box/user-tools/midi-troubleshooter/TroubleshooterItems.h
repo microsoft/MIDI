@@ -12,6 +12,7 @@
 #include "TransportItem.g.h"
 #include "RegistryEntryItem.g.h"
 #include "DriverDeviceItem.g.h"
+#include "CrashDumpItem.g.h"
 
 // The service health pages refresh on a timer, so every row type raises property changed
 // rather than being replaced. Nothing here throws: a failing notification must never take
@@ -302,10 +303,46 @@ namespace winrt::miditroubleshooter::implementation
         bool m_canUseClassic{ false };
         bool m_isBusy{ false };
     };
+
+    struct CrashDumpItem : CrashDumpItemT<CrashDumpItem>
+    {
+        CrashDumpItem() = default;
+
+        winrt::hstring Path() const noexcept { return m_path; }
+        winrt::hstring Title() const noexcept { return m_title; }
+        winrt::hstring DetailText() const noexcept { return m_detailText; }
+        winrt::hstring FileName() const noexcept { return m_fileName; }
+        winrt::hstring AccessibleName() const noexcept { return m_accessibleName; }
+
+        void Initialize(
+            _In_ winrt::hstring const& path,
+            _In_ winrt::hstring const& title,
+            _In_ winrt::hstring const& detailText,
+            _In_ winrt::hstring const& fileName,
+            _In_ winrt::hstring const& accessibleName) noexcept
+        {
+            m_path = path;
+            m_title = title;
+            m_detailText = detailText;
+            m_fileName = fileName;
+            m_accessibleName = accessibleName;
+        }
+
+    private:
+        winrt::hstring m_path{};
+        winrt::hstring m_title{};
+        winrt::hstring m_detailText{};
+        winrt::hstring m_fileName{};
+        winrt::hstring m_accessibleName{};
+    };
 }
 
 namespace winrt::miditroubleshooter::factory_implementation
 {
+    struct CrashDumpItem : CrashDumpItemT<CrashDumpItem, implementation::CrashDumpItem>
+    {
+    };
+
     struct SessionConnectionItem : SessionConnectionItemT<SessionConnectionItem, implementation::SessionConnectionItem>
     {
     };

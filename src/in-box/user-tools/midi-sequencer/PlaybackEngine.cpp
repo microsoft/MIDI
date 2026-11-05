@@ -962,6 +962,11 @@ namespace midisequencer
             // Its listeners hear on its own clock.
             launchedOptions.HearTrack = &m_hearLaunched;
 
+            // The Key and chords row is on the timeline's clock, so a launched clip that follows
+            // it looks there with its ticks wrapped as they'll be sent.
+            std::function<int64_t(int64_t)> const songTick = [this](int64_t tick) { return Wrap(tick); };
+            launchedOptions.SongTick = &songTick;
+
             RenderTrack(*m_sequence, launched, fromUnwrapped, toUnwrapped, messages, launchedOptions);
 
             for (auto& message : messages)

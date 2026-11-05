@@ -259,6 +259,7 @@ namespace winrt::midiglass::implementation
             { L"pages", PagesPane(), NavPages() },
             { L"outputs", OutputsPane(), NavOutputs() },
             { L"behavior", SettingsBehaviorPane(), NavBehavior() },
+            { L"remote", RemoteControlPane(), NavRemote() },
             { L"name", NamePane(), NavName() },
             { L"accessibility", AccessibilityPane(), NavAccessibility() },
         };
@@ -290,6 +291,10 @@ namespace winrt::midiglass::implementation
         else if (m_settingsPane == L"behavior")
         {
             RefreshBehaviorPane();
+        }
+        else if (m_settingsPane == L"remote")
+        {
+            RefreshRemoteControlPane();
         }
         else if (m_settingsPane == L"name")
         {

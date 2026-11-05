@@ -87,10 +87,6 @@ namespace glass
         constexpr float HatchSpacing = 9.0f;
         constexpr float HatchThickness = 2.0f;
 
-        // How far down a control goes when the device it sends to is not here. Struck through
-        // and dimmed, never hidden: a layout with a missing device still has to be editable.
-        constexpr float UnavailableOpacity = 0.55f;
-
         // A ribbon's light when nobody is touching it. Still readable as a position, clearly
         // not the same thing as a finger being on the control.
         constexpr float RibbonRestOpacity = 0.45f;
@@ -4674,6 +4670,8 @@ namespace glass
 
     void SurfaceRenderer::Teardown()
     {
+        m_itemStates.clear();
+
         for (auto const& element : m_elements)
         {
             if (element != nullptr)
@@ -6532,7 +6530,17 @@ namespace glass
         try
         {
             visual.Unavailable.IsVisible(unavailable);
-            visual.Root.Opacity(unavailable ? UnavailableOpacity : 1.0f);
+
+            if (m_itemStates.size() != m_visuals.size())
+            {
+                m_itemStates.assign(m_visuals.size(), 0);
+            }
+
+            // Bit 0: the device is missing. The look comes from every state the item is in.
+            m_itemStates[itemIndex] = static_cast<uint8_t>(
+                unavailable ? (m_itemStates[itemIndex] | 0x1) : (m_itemStates[itemIndex] & ~0x1));
+
+            ApplyItemLook(itemIndex);
         }
         catch (...)
         {

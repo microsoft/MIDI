@@ -409,7 +409,7 @@ namespace winrt::midipatchbay::implementation
 
         void ShowEndpointPalette(_In_ xaml::FrameworkElement const& anchor) noexcept;
         void ShowTestMenu(_In_ xaml::FrameworkElement const& anchor) noexcept;
-        void ShowNodeMenu(_In_ std::wstring const& nodeId, _In_ foundation::Point const& position) noexcept;
+        void ShowNodeMenu(_In_ std::wstring const& nodeId, _In_ foundation::Point const& position, _In_ bool includeEditItems) noexcept;
 
         // Without a point, the node goes in the middle of what is in view.
         void AddEndpointToPatch(

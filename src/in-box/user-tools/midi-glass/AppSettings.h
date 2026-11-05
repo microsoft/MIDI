@@ -83,6 +83,10 @@ namespace midiglass
         std::wstring TimestampServer() const noexcept;
         void TimestampServer(_In_ std::wstring const& value) noexcept;
 
+        // The paired PC the last layout was sent to, by its key hash in hex, for "Sync to <name>".
+        std::wstring SyncDeviceKey() const noexcept;
+        void SyncDeviceKey(_In_ std::wstring const& value) noexcept;
+
         // The designer keeps its own window placement and its own pane sizes. It is a different
         // window doing a different job, so sharing the library's would make opening one move the
         // other.

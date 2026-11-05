@@ -462,6 +462,98 @@ namespace midisequencer
         return added;
     }
 
+    namespace
+    {
+        void FollowClipLength(_Inout_ std::vector<Track>& tracks, _In_ std::wstring_view clipId, _In_ int64_t oldLength, _In_ int64_t newLength)
+        {
+            for (auto& track : tracks)
+            {
+                for (auto& placement : track.Timeline)
+                {
+                    if (placement.ClipId == clipId && (placement.Length <= 0 || placement.Length == oldLength))
+                    {
+                        placement.Length = newLength;
+                    }
+                }
+
+                FollowClipLength(track.Children, clipId, oldLength, newLength);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    bool ResizeClip(Sequence& sequence, std::wstring_view clipId, int64_t length)
+    {
+        auto const clip = FindClip(sequence, clipId);
+
+        if (clip == nullptr)
+        {
+            return false;
+        }
+
+        auto const oldLength = clip->Length;
+        clip->Length = std::max<int64_t>(1, length);
+
+        if (!clip->Loop)
+        {
+            FollowClipLength(sequence.Tracks, clipId, oldLength, clip->Length);
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    std::optional<Clip> ResizeClipThroughPlacement(
+        Sequence& sequence,
+        std::wstring_view trackId,
+        size_t index,
+        int64_t length,
+        bool onlyHere,
+        std::wstring copyId,
+        std::wstring copyName)
+    {
+        auto track = FindTrack(sequence, trackId);
+
+        if (track == nullptr || track->IsFolder || index >= track->Timeline.size())
+        {
+            return std::nullopt;
+        }
+
+        auto const clip = FindClip(sequence, track->Timeline[index].ClipId);
+
+        if (clip == nullptr || clip->Loop)
+        {
+            return std::nullopt;
+        }
+
+        length = std::max<int64_t>(1, length);
+
+        if (onlyHere && CountClipUses(sequence, clip->Id) > 1)
+        {
+            auto copy = *clip;
+            copy.Id = std::move(copyId);
+            copy.Name = std::move(copyName);
+            copy.Length = length;
+            copy.Settings = clip->Settings != nullptr ? winrt::Windows::Data::Json::JsonObject::Parse(clip->Settings.Stringify()) : nullptr;
+            copy.Unknown = clip->Unknown != nullptr ? winrt::Windows::Data::Json::JsonObject::Parse(clip->Unknown.Stringify()) : nullptr;
+
+            // Adding the copy can move the clips, so the track is found again after.
+            sequence.Clips.push_back(copy);
+            track = FindTrack(sequence, trackId);
+            track->Timeline[index].ClipId = copy.Id;
+            track->Timeline[index].Length = length;
+            return copy;
+        }
+
+        auto const id = clip->Id;
+        ResizeClip(sequence, id, length);
+
+        // This placement takes the length even when it had been cut shorter than the clip.
+        track = FindTrack(sequence, trackId);
+        track->Timeline[index].Length = length;
+        return *FindClip(sequence, id);
+    }
+
     _Use_decl_annotations_
     TrackMerge MergeTrackInto(
         Sequence& sequence,

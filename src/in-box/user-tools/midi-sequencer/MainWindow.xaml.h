@@ -19,9 +19,11 @@
 #include "StudioSetup.h"
 #include "TrackSound.h"
 #include "EndpointDirectory.h"
+#include "FrameTicker.h"
 #include "DawProject.h"
 #include "GeneratorKinds.h"
 #include "GeneratorView.h"
+#include "HarmonySong.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
 #include "ClipLaneStrip.h"
@@ -79,6 +81,7 @@ namespace winrt::midisequencer::implementation
         void OnExportDawProjectClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnExportLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLyricsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnKeyAndChordsClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSequenceInfoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRemoteControlClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnStudioSetupClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -97,6 +100,7 @@ namespace winrt::midisequencer::implementation
         void OnSnapChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnCaptureClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnBackToTimelineClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorLengthClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSilenceClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnUndoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnRedoClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -125,6 +129,17 @@ namespace winrt::midisequencer::implementation
 
         void OnEditorDrawClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorGhostClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorFollowKeyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorScaleHighlightClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnEditorScaleSnapClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // Gives the piano roll the song's key and chords where the clip is first placed, for
+        // Scale highlight and Scale snap, and sets their buttons (MainWindowChordFollow.cpp).
+        void UpdateRollScale(_In_ seq::Clip const& clip) noexcept;
+
+        // Shows Follow key for a notes clip or a melodic pattern, on when it follows, and off
+        // when the song has no key yet (MainWindowChordFollow.cpp).
+        void UpdateFollowKeyToggle(_In_ seq::Clip const& clip) noexcept;
         void OnEditorAutomationClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorQuantizeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -165,6 +180,7 @@ namespace winrt::midisequencer::implementation
         xaml::UIElement MakeStylePicker();
         xaml::UIElement MakeTimelineBarSettings();
         xaml::UIElement MakeAutoSaveSetting();
+        xaml::UIElement MakeRomanNumeralsSetting();
         xaml::UIElement MakeStylePreview(_In_ themeengine::ThemeDefinition const& definition, _In_ bool dark, _In_ std::optional<themeengine::Color> tint);
         void ApplyStrips() noexcept;
         void ColorDialogs() noexcept;
@@ -291,6 +307,7 @@ namespace winrt::midisequencer::implementation
         void OnTimelinePinch(_In_ input::ManipulationDeltaRoutedEventArgs const& args, _In_ xaml::UIElement const& canvas);
         void ScrollToTick(_In_ int64_t tick) noexcept;
         void UpdatePlayhead() noexcept;
+        void MovePlayheadLine() noexcept;
         xaml::UIElement MakeHeaderRow(_In_ seq::ArrangeRow const& row);
         xaml::UIElement MakeLaneHeader(_In_ seq::ArrangeRow const& row);
         void SelectTrack(_In_ std::wstring const& trackId) noexcept;
@@ -361,6 +378,15 @@ namespace winrt::midisequencer::implementation
         void DeleteSelectedPlacement() noexcept;
         void DuplicateSelectedPlacement() noexcept;
         void MakePlacementUnique(_In_ std::wstring const& trackId, _In_ size_t placement) noexcept;
+
+        // A clip's own length and whether it loops (MainWindowClipLength.cpp, #1326). Dragging the
+        // end of a clip that doesn't loop changes the clip; when it plays elsewhere too, the person
+        // is asked whether to change only this one, as its own copy, or all of them.
+        bool FinishClipResize(_In_ std::vector<seq::Track> before) noexcept;
+        winrt::fire_and_forget AskHowToResizeClip(_In_ std::vector<seq::Track> before, _In_ std::wstring trackId, _In_ size_t placement, _In_ int64_t length);
+        void ApplyClipResize(_In_ std::vector<seq::Track> const& before, _In_ std::wstring const& trackId, _In_ size_t placement, _In_ int64_t length, _In_ bool onlyHere) noexcept;
+        void SetEditorClipLength(_In_ int64_t length) noexcept;
+        void SetClipLoop(_In_ std::wstring const& clipId, _In_ bool loop) noexcept;
         void AddTagAt(_In_ std::wstring const& trackId, _In_ int64_t tick) noexcept;
         void RenameClip(_In_ std::wstring const& clipId) noexcept;
         void AddScene() noexcept;
@@ -592,6 +618,27 @@ namespace winrt::midisequencer::implementation
         primitives::ToggleButton MakeChip(_In_ winrt::hstring const& label, _In_ bool on, _In_ std::function<void(bool)> const& toggled);
         void AppendSeparateChip(_In_ controls::StackPanel const& row, _In_ primitives::ToggleButton const& chip);
         void AddKeyAndRange(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit, _In_ bool rules);
+
+        // Following the Key and chords row (MainWindowChordFollow.cpp). A generator's key picker
+        // with Song key first, then the 12 roots; the scale picker beside it is off while it
+        // follows the song.
+        void FillGeneratorKeyPickers(
+            _In_ controls::ComboBox const& key,
+            _In_ controls::ComboBox const& scale,
+            _In_ seq::Clip const& clip,
+            _In_ GeneratorEdit const& edit);
+        xaml::UIElement MakeChordTonesSwitch(_In_ seq::GeneratorSettings const& generator, _In_ GeneratorEdit const& edit);
+
+        // The song's key where a clip is first placed, if the row has one.
+        std::optional<seq::KeyChange> SongKeyForClip(_In_ std::wstring const& clipId) const;
+
+        // Follow key on a notes clip or a melodic pattern: turning it on records the key the
+        // notes are written in, the song's key where the clip is first placed.
+        void SetClipFollowsKey(_In_ std::wstring const& clipId, _In_ bool on) noexcept;
+
+        // Find key on a clip's menu: puts the picked key on the Key and chords row where the clip
+        // starts, showing the row if needed. One undo step.
+        void UseFoundKey(_In_ int64_t tick, _In_ seq::KeyChange key) noexcept;
         void AddKeyRules(_In_ controls::StackPanel const& panel, _In_ seq::Clip const& clip, _In_ GeneratorEdit const& edit);
 
         // How loud it plays: the ways it can set each note's velocity, and the range they play in
@@ -669,6 +716,97 @@ namespace winrt::midisequencer::implementation
         // The lyrics track (MainWindowLyrics.cpp).
         xaml::UIElement MakeLyricsHeader(_In_ seq::ArrangeRow const& row);
         void AddLyricsMenuItems(_In_ controls::MenuFlyout const& menu);
+
+        // ---- the Key and chords row (MainWindowHarmony.cpp) ----
+
+        struct HarmonyHit
+        {
+            bool KeyBand{ false };
+            size_t Index{ SIZE_MAX };       // the key or chord under the pointer
+            bool OnRightEdge{ false };      // a chord's end, to change its length
+        };
+
+        enum class HarmonyDragKind : uint8_t { None, MoveChord, ResizeChord, MoveKey };
+
+        struct HarmonyDrag
+        {
+            HarmonyDragKind Kind{ HarmonyDragKind::None };
+            bool Pinned{ true };
+            bool Moved{ false };
+            size_t Index{ SIZE_MAX };
+            double StartX{ 0 };
+            int64_t OriginalTick{ 0 };
+            int64_t OriginalLength{ 0 };
+            std::optional<seq::HarmonyTrack> Before{};
+        };
+
+        HarmonyHit HitTestHarmony(_In_ seq::ArrangeRow const& row, _In_ float top, _In_ foundation::Point point) const;
+        xaml::UIElement MakeHarmonyHeader(_In_ seq::ArrangeRow const& row);
+        void ShowHarmonyRow() noexcept;
+        void HideHarmonyRow() noexcept;
+        void EditHarmony(_In_ winrt::hstring const& undoName, _In_ std::function<void(seq::HarmonyTrack&)> const& edit) noexcept;
+        void OnHarmonyPressed(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ input::PointerRoutedEventArgs const& args);
+        void OnHarmonyDragMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnHarmonyDragReleased();
+        void OnHarmonyDoubleTapped(_In_ bool pinned, _In_ seq::ArrangeRow const& row, _In_ foundation::Point point, _In_ int64_t tick);
+        void AddHarmonyMenuItems(_In_ controls::MenuFlyout const& menu, _In_ seq::ArrangeRow const& row, _In_ bool pinned, _In_ foundation::Point point, _In_ int64_t tick);
+        void AddChordAt(_In_ int64_t tick) noexcept;
+        void AddKeyAt(_In_ int64_t tick) noexcept;
+        void DeleteSelectedHarmony() noexcept;
+        void ShowChordPicker(_In_ size_t chord, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        void ShowKeyPicker(_In_ size_t key, _In_ xaml::UIElement const& anchor, _In_ foundation::Point point);
+        std::vector<winrt::hstring> const& KeyScaleNames();
+
+        // "A minor", spelled the way the key is.
+        winrt::hstring KeyDisplayName(_In_ seq::KeyChange const& key);
+
+        // Suggest: fills the empty bars from a tick (after the chord there, if any) with the first
+        // suggestion each time. One undo step. SuggestStartTick is the selected chord, or the
+        // playhead.
+        void SuggestChords(_In_ int64_t from) noexcept;
+        int64_t SuggestStartTick() const noexcept;
+
+        // Fill in the chord picker: a progression (HarmonySuggest.h's ProgressionId) from a tick,
+        // at a rate (ProgressionRate). One undo step.
+        void FillProgression(_In_ int64_t tick, _In_ size_t progression, _In_ size_t rate) noexcept;
+
+        // The chord picker's Next chord, More chords and Progression sections, for the chord at
+        // tick. choose changes that chord; close closes the picker.
+        void AddChordSuggestionSections(
+            _In_ controls::StackPanel const& panel,
+            _In_ int64_t tick,
+            _In_ std::function<void(uint8_t root, seq::ChordType type)> const& choose,
+            _In_ std::function<void()> const& close);
+
+        // Default output in Settings: the device the Key and chords row plays on. Its own setting,
+        // or the General MIDI Synth when there's none. Empty when neither is there.
+        seq::EndpointRef DefaultOutput() const;
+
+        // Whether a device is the General MIDI Synth. It plays the notes it's sent and doesn't use
+        // clock, start and stop, song position or tempo, so the sequencer never sends it those:
+        // clock to it made playback lag (#1324; Pete, November 1 2026).
+        bool IsSynthEndpoint(_In_ seq::EndpointRef const& endpoint) const;
+
+        // Where the row's chords go while Play chords is on and there are chords; empty otherwise.
+        seq::EndpointRef ChordsDestination() const;
+
+        // The sequence as the engine plays it: the document, plus a track for the row's chords
+        // when Play chords is on.
+        std::shared_ptr<seq::Sequence const> PlayableSequence() const;
+        xaml::UIElement MakeDefaultOutputSetting();
+
+        // Copy chords to new track on the row's menu: every chord as one notes clip on a new
+        // track on Default output. One undo step.
+        void CopyChordsToNewTrack() noexcept;
+
+        // Ask an AI assistant on the Key and chords row (MainWindowChordAssistant.cpp): the
+        // prompt, the dialog that reads the answer back, and putting the song on the row and the
+        // tags, in place of what's there or from the playhead. One undo step.
+        winrt::hstring BuildSongPrompt();
+        winrt::hstring DescribeSongProblem(_In_ seq::SongReadResult const& result);
+        void ShowSongAssistant() noexcept;
+        void ApplySongPlan(_In_ seq::SongPlan const& plan, _In_ int64_t start, _In_ bool replace) noexcept;
+        xaml::UIElement MakeAssistantSetting();
         void ShowLyricsEditor();
         void ApplyLyrics(_In_ std::optional<seq::LyricsTrack> lyrics, _In_ std::wstring const& undoName);
         void UpdateLyricsBar() noexcept;
@@ -1260,6 +1398,8 @@ namespace winrt::midisequencer::implementation
         winrt::hstring m_textEmptyLane{};
         winrt::hstring m_textClipLane{};
         winrt::hstring m_textEmptyLyrics{};
+        winrt::hstring m_textHarmonyEmpty{};
+        winrt::hstring m_textHarmonyNoKey{};
 
         // The words over the timeline as they're sung, and the lines they fall into, worked out
         // again only when the sequence changes.
@@ -1271,6 +1411,17 @@ namespace winrt::midisequencer::implementation
         // A line with ruby, a syllable at a time with its reading above it.
         controls::StackPanel m_lyricsBarCells{ nullptr };
         bool m_lyricsBarShown{ true };
+
+        // The Key and chords row: what's selected on it, a drag on it, and the scales' names as
+        // its key band writes them ("minor", not "Minor").
+        size_t m_selectedChord{ SIZE_MAX };
+        size_t m_selectedKey{ SIZE_MAX };
+        HarmonyDrag m_harmonyDrag{};
+        std::vector<winrt::hstring> m_keyScaleNames{};
+
+        // The chord picker's last progression and rate, so Fill can be used again quickly.
+        size_t m_lastProgression{ 0 };
+        size_t m_lastProgressionRate{ 1 };      // one chord per bar
         std::vector<seq::LyricLine> m_lyricLines{};
         uint64_t m_lyricLinesVersion{ UINT64_MAX };
         void const* m_lyricLinesData{ nullptr };
@@ -1465,7 +1616,17 @@ namespace winrt::midisequencer::implementation
         std::map<std::wstring, std::vector<midiapp::ProgramListEntry>> m_deviceSounds{};
         std::weak_ptr<SoundDialogState> m_soundDialog{};
 
-        xaml::DispatcherTimer m_frameTimer{ nullptr };
+        // Frames while the sequence plays, at an even pace (FrameTicker.h, #1324). StartFrames and
+        // StopFrames start and stop it.
+        std::unique_ptr<midiapp::FrameTicker> m_frames{};
+        void StartFrames() noexcept;
+        void StopFrames() noexcept;
+
+        // The playhead line moves on every refresh of the display, in step with it, while frames
+        // run. A fixed 30 ms beat against a 120 Hz or 144 Hz display holds each position for 3 or 4
+        // refreshes by turns, which stutters; at 60 Hz it nearly matches, so it didn't (#1324).
+        winrt::event_token m_renderingToken{};
+        void OnDisplayFrame() noexcept;
         xaml::DispatcherTimer m_serviceTimer{ nullptr };
         xaml::DispatcherTimer m_autosaveTimer{ nullptr };
         winrt::event_token m_closingToken{};

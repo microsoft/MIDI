@@ -503,6 +503,8 @@ namespace winrt::midiglass::implementation
                 menu.Items().Append(item);
             }
 
+            AppendPageOpenMenu(menu, index);
+
             menu.Items().Append(controls::MenuFlyoutSeparator{});
 
             {

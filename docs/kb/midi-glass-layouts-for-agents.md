@@ -318,6 +318,45 @@ foreach ($page in $layout.pages) {
     }
 }
 
+$remoteActions = 'goToPage', 'nextPage', 'previousPage', 'pageFromMessage', 'pressControl', 'setControlValue', 'enableControl', 'disableControl', 'toggleEnabled', 'showControl', 'hideControl', 'toggleShown', 'showOnlyThis', 'padGrid', 'setKeyRoot', 'setScale', 'runSequence', 'panic'
+$allControls = @($layout.pages | ForEach-Object { $_.controls })
+$groupIds = @($allControls | ForEach-Object { $_.controlGroup } | Where-Object { $_ })
+foreach ($page in $layout.pages) { if ($page.openSequence -and $page.openSequence -cnotin $sequences) { $problems.Add("Page '$($page.name)' runs '$($page.openSequence)' when it opens, which isn't in sequences.") } }
+$ruleNumber = 0
+foreach ($r in $layout.remoteControl.rules) {
+    $ruleNumber++
+    $where = "Remote control rule $ruleNumber"
+    $w = $r.when
+    if ($null -eq $w) { $problems.Add("$where has no 'when', so it listens for program change 0 from any device.") }
+    elseif ($w.device -and $w.device -cnotin $devices) { $problems.Add("$where listens to '$($w.device)', which isn't in devices, so it never runs.") }
+    if ($w.kind -and $w.kind -cnotin 'programChange', 'controlChange', 'note') { $problems.Add("$where listens for '$($w.kind)'. A rule can only listen for programChange, controlChange or note.") }
+    if (($w.group ?? 0) -notin 0..15 -or ($w.channel ?? 0) -notin 0..15 -or ($w.number ?? 0) -notin 0..127) { $problems.Add("$where needs a group and a channel from 0 to 15, and a number from 0 to 127. The file counts from 0.") }
+    if ($r.do -cnotin $remoteActions) { $problems.Add("$where does '$($r.do)', which isn't an action. Windows MIDI Glass keeps it but never runs it, and won't save changes to the layout."); continue }
+    if ($r.do -ceq 'goToPage') { if ($r.page -cnotin $pageIds) { $problems.Add("$where goes to a page that isn't in the layout.") } elseif ($r.page -cin $bandIds) { $problems.Add("$where goes to a band, which shows on every page.") } }
+    if ($r.do -cin 'pressControl', 'setControlValue', 'enableControl', 'disableControl', 'toggleEnabled', 'showControl', 'hideControl', 'toggleShown', 'showOnlyThis') {
+        if ($r.controlGroup) { if ($r.controlGroup -cnotin $groupIds) { $problems.Add("$where names the group '$($r.controlGroup)', which no control is in.") } }
+        elseif ($r.control -cnotin $controlIds) { $problems.Add("$where names the control '$($r.control)', which isn't in the layout.") }
+        elseif ($r.do -ceq 'showOnlyThis' -and -not ($allControls | Where-Object { $_.id -ceq $r.control } | Select-Object -First 1).controlGroup) { $problems.Add("$where shows only '$($r.control)', which isn't in a group, so nothing else is hidden.") }
+    }
+    if ($r.do -ceq 'padGrid' -and $r.function -cnotin $padFunctions) { $problems.Add("$where has the pad grid function '$($r.function)', which isn't a choice.") }
+    foreach ($t in @($r.targets)) { if ($null -ne $t -and $t -cnotin $gridIds) { $problems.Add("$where targets '$t', which isn't the id of a pad grid or a fretboard.") } }
+    if ($r.do -ceq 'setKeyRoot' -and -not $r.fromMessage -and $null -ne $r.key -and ($r.key -cnotin $keys -or $r.key -ceq 'none')) { $problems.Add("$where sets the root '$($r.key)', which isn't a choice, so it sets C.") }
+    if ($r.do -ceq 'setScale' -and -not $r.fromMessage -and $null -ne $r.scale -and $r.scale -cnotin $scales) { $problems.Add("$where sets the scale '$($r.scale)', which isn't a choice, so it sets major.") }
+    if ($r.do -ceq 'runSequence' -and $r.sequence -cnotin $sequences) { $problems.Add("$where runs a sequence that isn't in the layout.") }
+    if ($null -ne $r.value -and ($r.value -lt 0 -or $r.value -gt 1)) { $problems.Add("$where has a value outside 0 to 1.") }
+}
+$tell = $layout.remoteControl.tellPage
+if ($tell -and $tell.enabled -ne $false) {
+    if ($tell.device -cnotin $devices) { $problems.Add("tellPage sends to '$($tell.device)', which isn't in devices, so the controller is never told the page.") }
+    if ($tell.kind -and $tell.kind -cnotin 'programChange', 'controlChange') { $problems.Add("tellPage sends '$($tell.kind)'. It can send programChange or controlChange.") }
+    if (($tell.firstValue ?? 0) + @($layout.pages | Where-Object { -not $_.sharedBand }).Count - 1 -gt 127) { $problems.Add("tellPage's firstValue plus the number of pages goes past 127, so the last pages aren't told.") }
+}
+foreach ($c in $allControls) {
+    if (-not $c.startsHidden -and -not $c.startsDisabled) { continue }
+    $reached = @($layout.remoteControl.rules | Where-Object { $_.control -ceq $c.id -or ($c.controlGroup -and $_.controlGroup -ceq $c.controlGroup) })
+    if ($reached.Count -eq 0) { $problems.Add("'$($c.label)' ($($c.id)) starts turned off or hidden, and no remote control rule reaches it, so it stays that way.") }
+}
+
 $sourceTypes = 'digitalCreation', 'digitalCapture', 'trainedAlgorithmicMedia', 'compositeWithTrainedAlgorithmicMedia', 'compositeSynthetic', 'composite', 'algorithmicMedia'
 $oversight = 'fully_autonomous', 'prompt_guided', 'human_validated'
 $p = $layout.provenance
@@ -456,6 +495,7 @@ Tell the customer about these before they find out on their own.
 - **No logic.** No conditions, no variables, and no scripts.
 - **Mackie Control is partial.** Windows MIDI Glass doesn't speak HUI, doesn't answer the handshake some DAWs use to find a surface, and doesn't show the DAW's meters, V-Pot rings, or display text.
 - **Saved, but not working yet.** The layout's `publishesVirtualDevice` is kept in the file but doesn't do anything yet, so leave it out.
+- **Remote control hears only the devices in `devices`.** A layout doesn't appear to other apps as a MIDI device, so a foot controller or another app has to be listed in `devices` even when the layout sends it nothing. A rule listens for a program change, a control change, or a note, and nothing else. It can't open another layout or a set list, and can't tap a tempo.
 
 ## The layout file
 
@@ -585,6 +625,7 @@ The tables below list every setting. **If left out** is what Windows MIDI Glass 
 | `toolbarWindow`, `alwaysOnTop`, `seeThrough` | `true`, `false` | `false` | For a floating toolbar. See the [floating toolbar article]({{ site.baseurl }}/kb/midi-glass-floating-toolbars/). |
 | `isFavorite` | `true`, `false` | `false` | Leave it out. Older versions kept a layout's star in the file. Windows MIDI Glass now keeps favorites on each PC, so a layout someone shares doesn't arrive starred. |
 | `tempo` | object | 120 beats a minute | `{ "kind": "internal", "beatsPerMinute": 120 }`. LFO and Steps controls run at this tempo. A beat clock keeps its own. To follow the MIDI clock a device sends, write `{ "kind": "followIncomingClock", "beatsPerMinute": 120, "device": "DAW" }` with a name from `devices`. They run at `beatsPerMinute` until the clock arrives, then at the clock's tempo, and keep the last tempo if the clock stops. |
+| `remoteControl` | object | none | Incoming MIDI that runs the layout while it plays: rules that switch pages, press controls, turn them on and off, show and hide them, and change pad grids, plus an optional message that tells the controller which page is showing. See [MIDI remote control](#midi-remote-control). |
 | `devices` | list | none | The device table. See [Devices](#devices). |
 | `pages` | list | none | At least one page. See [Pages](#pages). |
 | `sequences` | list | none | See [Sequences](#sequences). |
@@ -617,6 +658,7 @@ Windows MIDI Glass compares the name in `match` with each device's own name and 
 | `hueSlot` | -1 to 5 | 0 | The page's color slot. |
 | `controls` | list | none | The controls, drawn in order: the first one is at the back. |
 | `controlGroups` | list | none | Names for groups of controls that select and move together in the editor: `[ { "id": "strip-1", "name": "Strip 1" } ]`. Optional. |
+| `openSequence` | a sequence name | none | A sequence that runs each time the page opens while the layout runs, the first page included. |
 | `sharedBand` | `true`, `false` | `false` | `true` makes the page a band: while the layout runs, its controls show on top of every other page, so transport buttons, panic, and page tabs only have to be built once. A band isn't in the page list, so don't give it a page tab. Leave room for its controls on every other page. |
 
 ### Controls
@@ -641,6 +683,8 @@ These keys work on every kind of control.
 | `returnsToDefault` | `true`, `false` | `false` | Springs back to `defaultValue` when let go, like a pitch wheel. |
 | `sendsValueOnStart` | `true`, `false` | `false` | Sends `defaultValue` when the layout opens, to put a device in a known state. |
 | `sendIntervalMilliseconds` | 0 to 10000 | 0 | The least time between two sends while the control moves. 0 is no limit. A small number, such as 10, can help a MIDI 1.0 device on a DIN cable keep up. |
+| `startsDisabled` | `true`, `false` | `false` | The control starts turned off until a [remote control](#midi-remote-control) rule turns it on. A control that's off is drawn faint, ignores touch, and sends nothing, but still follows what it listens for. |
+| `startsHidden` | `true`, `false` | `false` | The control starts out of sight until a [remote control](#midi-remote-control) rule shows it. The editor always shows it. |
 | `lightsFromCenter` | `true`, `false` | `false` | Lights from the middle out, like a pan knob. Knobs and faders. |
 | `drag` | `vertical`, `horizontal`, `circular` | `vertical` | Which way a finger moves to turn a knob up. |
 | `velocityFromTouch` | `true`, `false` | `false` | A pad hit softly plays softly, on hardware that reports pressure. Pads. |
@@ -1106,9 +1150,89 @@ The `provenance` block says who made the layout, with what, and from what. Windo
 
 Windows MIDI Glass removes characters that can disguise a name, such as direction overrides and zero-width spaces, and cuts names at 256 characters. A key it doesn't know inside the block is kept and written back.
 
+### MIDI remote control {#midi-remote-control}
+
+A foot controller, or any other device in `devices`, can run the layout while it plays. `remoteControl` holds a list of rules. Each rule listens for one message and does one thing when it arrives. Rules work while the layout runs and in the editor's Try mode, and they only reach what the layout already holds.
+
+This one turns the layout's pages with program changes, swaps two pad grids stacked in one spot, steps the grids through their scales, and tells the controller which page is showing so its lights follow:
+
+```json
+"remoteControl": {
+  "rules": [
+    { "when": { "device": "Foot", "kind": "programChange", "group": 0, "anyChannel": true, "anyNumber": true }, "do": "pageFromMessage" },
+    { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 20 }, "do": "showOnlyThis", "control": "square-grid" },
+    { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 21 }, "do": "showOnlyThis", "control": "hex-grid" },
+    { "when": { "device": "Foot", "kind": "controlChange", "group": 0, "channel": 0, "number": 22 }, "do": "padGrid", "function": "nextScale" }
+  ],
+  "tellPage": { "enabled": true, "device": "Foot", "kind": "programChange", "group": 0, "channel": 0, "firstValue": 0 }
+}
+```
+
+`square-grid` and `hex-grid` sit in the same spot and share a `controlGroup`, and `hex-grid` has `"startsHidden": true`.
+
+What a rule listens for, in `when`:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `device` | a name from `devices` | any device in `devices` | Where the message comes from. |
+| `kind` | `programChange`, `controlChange`, `note` | `programChange` | The kind of message. |
+| `group` | 0 to 15 | 0 | The group, counted from 0. |
+| `channel` | 0 to 15 | 0 | The channel, counted from 0. |
+| `anyChannel` | `true` | `false` | Any channel, instead of `channel`. |
+| `number` | 0 to 127 | 0 | The program, the controller, or the note, counted from 0. |
+| `anyNumber` | `true` | `false` | Any number, instead of `number`. Use it with `pageFromMessage`. |
+
+A note counts only as a note on. A control change counts only when its value is above 0, so letting go of a foot switch doesn't run the rule twice. A rule that takes its value from the message counts every control change, 0 included.
+
+What a rule does:
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `enabled` | `true`, `false` | `true` | `false` keeps the rule without it doing anything. |
+| `do` | an action below | required | What happens. |
+| `page` | a page id | none | For `goToPage`. Not a band. |
+| `control` | a control id | none | The control a control action works on. |
+| `controlGroup` | a `controlGroup` id | none | Instead of `control`: every control in that group. |
+| `fromMessage` | `true`, `false` | `false` | For `setControlValue`, `setKeyRoot`, and `setScale`: take the value, the root, or the scale from the message. |
+| `value` | 0 to 1 | 1 | For `setControlValue`. 0.5 is the middle. |
+| `function` | a pad grid function | none | For `padGrid`. The same names as a [grid button](#grid-buttons). |
+| `targets` | a list of pad grid or fretboard ids | every grid | For `padGrid`, `setKeyRoot`, and `setScale`. |
+| `key` | `c`, `cSharp`, `d`, `dSharp`, `e`, `f`, `fSharp`, `g`, `gSharp`, `a`, `aSharp`, `b` | `c` | For `setKeyRoot`. |
+| `scale` | a scale name, as in [pad grids](#settings-for-some-kinds-of-control) | `major` | For `setScale`. |
+| `sequence` | a sequence name | none | For `runSequence`. |
+
+| Action | What it does |
+| --- | --- |
+| `goToPage` | Shows the page named in `page`. |
+| `nextPage`, `previousPage` | Shows the next or the previous page. Stops at the last and the first page. A band isn't counted. |
+| `pageFromMessage` | Shows the page the message picks: program 0, a control change value of 0, or note 0 is the first page, 1 the second, and so on. A band isn't counted. |
+| `pressControl` | Presses the control as if it were tapped. A button presses and lets go, a toggle flips, a switch moves to its next position, and a knob or a fader is touched and let go. |
+| `setControlValue` | Moves the control to `value`, or to the message's value, and sends what the control sends. |
+| `enableControl`, `disableControl`, `toggleEnabled` | Turns the control on or off. |
+| `showControl`, `hideControl`, `toggleShown` | Shows or hides the control. |
+| `showOnlyThis` | Shows `control` and hides every other control in its `controlGroup`. Stack several pad grids in one group to swap which one is in view. |
+| `padGrid` | Changes pad grids the way a grid button does, with `function`. |
+| `setKeyRoot` | Sets the root of the pad grids that have a key, the way a root picker does. From the message, 0, 12, 24 and so on are C. |
+| `setScale` | Sets the scale of the pad grids that have a key. From the message, 0 is the first scale in the scale list, `major`. |
+| `runSequence` | Runs the sequence named in `sequence`. |
+| `panic` | Stops every note on every device the app is playing. |
+
+`tellPage` is optional. Each time the page changes, the layout sends the page's place in the page list, so the lights or the bank on a controller follow the screen.
+
+| Key | Values | If left out | What it does |
+| --- | --- | --- | --- |
+| `enabled` | `true`, `false` | `true` | Whether it sends. |
+| `device` | a name from `devices` | none | Where it sends. |
+| `kind` | `programChange`, `controlChange` | `programChange` | A program change sends the page as the program. A control change sends it as the value of controller `number`. |
+| `group`, `channel` | 0 to 15 | 0 | Counted from 0. |
+| `number` | 0 to 127 | 0 | The controller, for `controlChange`. |
+| `firstValue` | 0 to 127 | 0 | What the first page sends. Each page after it sends one more. A band isn't counted. |
+
+> **For agents:** A rule only hears devices in `devices`, so add the foot controller there even when the layout sends it nothing. Ask the customer what each switch sends, or have them press **Learn** on the rule in Windows MIDI Glass. Count programs, channels, and groups from 0. A control that starts turned off or hidden needs a rule that turns it on or shows it, or it stays that way. Windows MIDI Glass ignores a message for a moment after the layout sent that same message to that device, so a controller that sends back what it hears can't start a loop.
+
 ### Limits
 
-Windows MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024 controls on a page, 32 rows on a control, 32 devices, and 256 sequences of up to 512 steps. Text is cut off at 1,024 characters. Anything past a limit is dropped.
+Windows MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024 controls on a page, 32 rows on a control, 32 devices, 256 sequences of up to 512 steps, and 256 remote control rules. Text is cut off at 1,024 characters. Anything past a limit is dropped.
 
 ## Mistakes that are easy to miss
 
@@ -1138,6 +1262,8 @@ Windows MIDI Glass reads a layout up to 16 megabytes, with up to 64 pages, 1,024
 > - A control's `kind` is misspelled, such as `xypad` or `slider`. Windows MIDI Glass shows it as an outline that does nothing, and won't save changes to the layout.
 > - A picture is named by a path. Only a plain file name, of a file next to the layout, is used.
 > - A control is set to send its value when the layout opens, and it's a volume at 0, which mutes the device the moment the layout opens.
+> - A remote control rule listens to a foot controller that isn't in `devices`, so it never runs.
+> - A control starts hidden or turned off and no remote control rule reaches it, so it never comes back.
 > - The layout depends on something in [What Windows MIDI Glass can't do](#what-midi-glass-cant-do).
 > - There's no `provenance` block, or it names you as the author, or it says `digitalCreation` for a layout an AI made.
 > - A changed layout you hand over again has a new `provenance.id`, so it arrives beside the old one instead of replacing it.

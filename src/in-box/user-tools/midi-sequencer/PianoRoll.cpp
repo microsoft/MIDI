@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "PianoRoll.h"
+#include "PixelSnap.h"
 
 using winrt::Windows::Foundation::Point;
 using winrt::Windows::Foundation::Rect;
@@ -154,6 +155,32 @@ namespace midisequencer
     int32_t PianoRoll::NoteAtY(double y) const noexcept
     {
         return static_cast<int32_t>(std::ceil(m_topNote - (y - RollTop()) / m_rowHeight));
+    }
+
+    _Use_decl_annotations_
+    int32_t PianoRoll::SnapToScale(int32_t number) const noexcept
+    {
+        if (!m_scale || !m_scaleSnap || m_scaleSnapBypass)
+        {
+            return number;
+        }
+
+        auto const inKey = [this](int32_t candidate) { return candidate >= 0 && candidate <= 127 && m_scale->InKey[static_cast<size_t>(candidate % 12)]; };
+
+        for (int32_t distance = 0; distance < 12; ++distance)
+        {
+            if (inKey(number - distance))
+            {
+                return number - distance;
+            }
+
+            if (inKey(number + distance))
+            {
+                return number + distance;
+            }
+        }
+
+        return number;
     }
 
     void PianoRoll::ClampView() noexcept
@@ -419,7 +446,7 @@ namespace midisequencer
 
         if (m_tool == RollTool::Draw || doubleClick)
         {
-            auto const number = std::clamp(NoteAtY(point.Y), 0, 127);
+            auto const number = std::clamp(SnapToScale(NoteAtY(point.Y)), 0, 127);
 
             m_drawing = Note{};
             m_drawing.Tick = std::max<int64_t>(0, Snap(TickAtX(point.X)));
@@ -459,7 +486,13 @@ namespace midisequencer
         {
         case Gesture::Move:
             m_deltaTicks = static_cast<int64_t>(std::llround(tickDelta / grid) * static_cast<int64_t>(grid));
-            m_deltaNotes = keepPitch ? 0 : NoteAtY(point.Y) - NoteAtY(m_pressPoint.Y);
+            // With Scale snap, the note under the pointer lands on the key, and the rest move with it.
+            // Only once it's dragged to another row: a click on a note outside the key leaves it.
+            {
+                auto const row = NoteAtY(point.Y);
+                auto const pressed = NoteAtY(m_pressPoint.Y);
+                m_deltaNotes = keepPitch || row == pressed ? 0 : SnapToScale(row) - pressed;
+            }
             return true;
 
         case Gesture::Resize:
@@ -765,11 +798,47 @@ namespace midisequencer
                 continue;
             }
 
-            ds.FillRectangle(RollLeft(), top, width - RollLeft(), bottom - top, IsBlackKey(note) ? colors.RollBlackKeyRow : colors.RollWhiteKeyRow);
+            // With Scale highlight, the rows in the song's key are the light ones.
+            auto const light = m_scale && m_scaleHighlight ? m_scale->InKey[static_cast<size_t>(note % 12)] : !IsBlackKey(note);
+            ds.FillRectangle(RollLeft(), top, width - RollLeft(), bottom - top, light ? colors.RollWhiteKeyRow : colors.RollBlackKeyRow);
 
             if (note % 12 == 0 && y + m_rowHeight <= RollBottom())
             {
                 ds.FillRectangle(RollLeft(), std::floor(y + static_cast<float>(m_rowHeight)) - 1.0f, width - RollLeft(), 1.0f, colors.RollOctaveLine);
+            }
+        }
+
+        // The notes of the chord playing, tinted under it.
+        if (m_scale && m_scaleHighlight)
+        {
+            auto const tint = WithAlpha(colors.Accent, colors.Light ? 0.10 : 0.14);
+
+            for (auto const& chord : m_scale->Chords)
+            {
+                auto const left = std::max(static_cast<float>(XAtTick(static_cast<double>(chord.Start))), RollLeft());
+                auto const right = std::min(static_cast<float>(XAtTick(static_cast<double>(chord.End))), width);
+
+                if (right <= left)
+                {
+                    continue;
+                }
+
+                for (auto note = firstNote; note >= lastNote; --note)
+                {
+                    if (!chord.Tones[static_cast<size_t>(note % 12)])
+                    {
+                        continue;
+                    }
+
+                    auto const y = static_cast<float>(YAtNote(note));
+                    auto const top = std::max(y, RollTop());
+                    auto const bottom = std::min(y + static_cast<float>(m_rowHeight), RollBottom());
+
+                    if (bottom > top)
+                    {
+                        ds.FillRectangle(left, top, right - left, bottom - top, tint);
+                    }
+                }
             }
         }
 
@@ -806,8 +875,11 @@ namespace midisequencer
 
             if (m_playhead >= 0)
             {
-                auto const x = static_cast<float>(XAtTick(static_cast<double>(m_playhead)));
-                ds.FillRectangle(x, RollTop(), 1.5f, RollBottom() - RollTop(), colors.Playhead);
+                // On whole physical pixels, so it keeps its width as it moves (PixelSnap.h).
+                auto const scale = ds.Dpi() / 96.0f;
+                auto const lineWidth = WholePixels(1.5f, scale);
+                auto const x = SnapToPixel(static_cast<float>(XAtTick(static_cast<double>(m_playhead))), scale);
+                ds.FillRectangle(x, RollTop(), lineWidth, RollBottom() - RollTop(), colors.Playhead);
             }
 
             layer.Close();

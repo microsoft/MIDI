@@ -86,6 +86,13 @@ namespace glass
             return;
         }
 
+        // A fretboard that is off or out of sight starts nothing; a finger lifting still ends
+        // its string.
+        if ((touch.Phase == FretTouchPhase::Down || touch.Phase == FretTouchPhase::Strum) && !TakesInput(controlIndex))
+        {
+            return;
+        }
+
         std::array<StringAction, MaximumStringActions> actions{};
         uint32_t count{ 0 };
 
@@ -119,7 +126,7 @@ namespace glass
     {
         auto const* const entry = FindFretControl(controlIndex);
 
-        if (entry == nullptr || entry->ControlId.empty())
+        if (entry == nullptr || entry->ControlId.empty() || !TakesInput(controlIndex))
         {
             return;
         }

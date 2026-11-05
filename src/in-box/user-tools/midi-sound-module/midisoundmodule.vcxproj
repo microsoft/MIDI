@@ -153,6 +153,7 @@
     <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
@@ -183,6 +184,7 @@
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiServiceStatus.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <!-- Parses Property Exchange headers with Windows.Data.Json, so it is kept out of the engine

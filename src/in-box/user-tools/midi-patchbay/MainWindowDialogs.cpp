@@ -971,7 +971,7 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::ShowNodeMenu(std::wstring const& nodeId, foundation::Point const& position) noexcept
+    void MainWindow::ShowNodeMenu(std::wstring const& nodeId, foundation::Point const& position, bool includeEditItems) noexcept
     {
         try
         {
@@ -1007,9 +1007,16 @@ namespace winrt::midipatchbay::implementation
                 };
 
             // Copy, cut, duplicate and remove act on everything selected, which is what a
-            // right click on part of a selection means.
-            auto const addEditItems = [&addItem, &addSeparator]()
+            // right click on part of a selection means. A right click on a group leaves the
+            // selection alone, so they would act on something else, and are left out.
+            auto const addEditItems = [&addItem, &addSeparator, includeEditItems]()
                 {
+                    if (!includeEditItems)
+                    {
+                        return;
+                    }
+
+                    addSeparator();
                     addItem(resources::GetString(L"ActionCopy"), [](MainWindow& window) { window.CopySelection(); });
                     addItem(resources::GetString(L"ActionCut"), [](MainWindow& window) { window.CutSelection(); });
                     addItem(resources::GetString(L"ActionDuplicate"), [](MainWindow& window) { window.DuplicateSelection(); });
@@ -1026,7 +1033,6 @@ namespace winrt::midipatchbay::implementation
                 {
                     addItem(resources::GetString(L"ActionEditAnnotation"),
                         [blockId](MainWindow& window) { window.FocusAnnotationText(blockId); });
-                    addSeparator();
                     addEditItems();
                 }
                 else
@@ -1054,7 +1060,6 @@ namespace winrt::midipatchbay::implementation
                         });
 
                     menu.Items().Append(bypassItem);
-                    addSeparator();
                     addEditItems();
                 }
             }
@@ -1111,7 +1116,6 @@ namespace winrt::midipatchbay::implementation
                         });
                 }
 
-                addSeparator();
                 addEditItems();
             }
             else

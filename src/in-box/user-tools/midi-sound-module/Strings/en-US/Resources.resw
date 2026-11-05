@@ -541,4 +541,16 @@ The list is in {1}. Fix the file, or move it somewhere else to start with no syn
     <value>Synth {0} in the file has the same id as another synth.</value>
     <comment>{0} counts the synths in the file from 1.</comment>
   </data>
+  <data name="MidiServiceUnavailableTitle" xml:space="preserve">
+    <value>Windows MIDI Services isn't available</value>
+  </data>
+  <data name="MidiServiceUnavailableLegacyMessage" xml:space="preserve">
+    <value>This PC is set to Legacy API mode, so the MIDI service doesn't run and this app can't use MIDI. To use this app, open MIDI Troubleshooting and Repair, choose Windows MIDI Services on the API mode page, and restart the PC.</value>
+  </data>
+  <data name="MidiServiceUnavailableMessage" xml:space="preserve">
+    <value>The MIDI service couldn't be started, so this app can't use MIDI right now. Check that Windows MIDI Services is installed and that the MIDI service isn't turned off. MIDI Troubleshooting and Repair can help you find the problem.</value>
+  </data>
+  <data name="MidiServiceUnavailableClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
 </root>

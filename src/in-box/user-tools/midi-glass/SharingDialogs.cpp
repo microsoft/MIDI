@@ -818,8 +818,35 @@ namespace midiglass::sharing
                 opened.Problem = midiapp::ContentPackProblem::TooBig;
             }
 
+            co_await wil::resume_foreground(dispatcher);
+
+            co_await ImportOpenedPackAsync(root, std::move(opened), PackImportOptions{}, std::move(installed));
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to import the pack.")
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncAction ImportOpenedPackAsync(
+        xaml::XamlRoot root,
+        midiapp::OpenedContentPack opened,
+        PackImportOptions options,
+        std::function<void(ImportOutcome, std::wstring const&)> installed)
+    {
+        auto const dispatcher = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+        try
+        {
+            co_await winrt::resume_background();
+
             glass::PackSummary summary{};
             auto const described = opened.Succeeded() && glass::SummarizePack(opened, summary);
+
+            // A layout made before layouts carried an id is matched by the caller instead.
+            if (described && summary.ExistingPath.empty() && !options.ExistingPathOverride.empty() &&
+                summary.Kind == midiapp::ContentPackKind::GlassLayout)
+            {
+                summary.ExistingPath = options.ExistingPathOverride;
+            }
 
             auto const existingSigner = summary.ExistingPath.empty() ? std::wstring{} : SignerOf(summary.ExistingPath);
 
@@ -843,6 +870,11 @@ namespace midiglass::sharing
             controls::StackPanel panel{};
             panel.Spacing(12.0);
             panel.Width(DialogWidth);
+
+            if (!options.FromDevice.empty())
+            {
+                panel.Children().Append(Paragraph(resources::FormatString(L"SyncImportFromFormat", options.FromDevice), 13.0));
+            }
 
             if (trusted != nullptr)
             {
@@ -903,6 +935,14 @@ namespace midiglass::sharing
                         13.0,
                         L"SystemFillColorCautionBrush"));
                 }
+
+                if (options.ChangedHere)
+                {
+                    panel.Children().Append(Paragraph(
+                        resources::FormatString(L"SyncImportChangedHereFormat", options.FromDevice),
+                        13.0,
+                        L"SystemFillColorCautionBrush"));
+                }
             }
             else if (nameTaken)
             {
@@ -937,7 +977,11 @@ namespace midiglass::sharing
                 dialog.PrimaryButtonText(resources::GetString(nameTaken ? L"ImportKeepBothAction" : L"ImportAction"));
             }
 
-            auto const answer = co_await dialog.ShowAsync();
+            // Already agreed to, for this layout from this PC, since Glass started, and not changed
+            // here since: replaced without asking again.
+            auto const preApproved = options.AlreadyApproved && sameItem && !isTheme && !options.ChangedHere;
+
+            auto const answer = preApproved ? controls::ContentDialogResult::Primary : co_await dialog.ShowAsync();
 
             if (answer == controls::ContentDialogResult::None)
             {
@@ -992,9 +1036,19 @@ namespace midiglass::sharing
                 co_return;
             }
 
+            if (answer == controls::ContentDialogResult::Primary && options.Approved)
+            {
+                options.Approved();
+            }
+
             if (installed)
             {
                 installed(isTheme ? ImportOutcome::Theme : ImportOutcome::Layout, result.Path);
+            }
+
+            if (options.Quiet)
+            {
+                co_return;
             }
 
             co_await ShowNoticeAsync(

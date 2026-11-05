@@ -24,6 +24,7 @@ namespace midiglass
         constexpr wchar_t ValueFavoritesMoved[] = L"FavoritesMoved";
         constexpr wchar_t ValueSigningThumbprint[] = L"PackSigningThumbprint";
         constexpr wchar_t ValueTimestampServer[] = L"PackTimestampServer";
+        constexpr wchar_t ValueSyncDeviceKey[] = L"SyncDeviceKey";
 
         constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
         constexpr wchar_t ValueEditorY[] = L"EditorWindowY";
@@ -486,5 +487,16 @@ namespace midiglass
     void AppSettings::TimestampServer(std::wstring const& value) noexcept
     {
         WriteString(ValueTimestampServer, value);
+    }
+
+    std::wstring AppSettings::SyncDeviceKey() const noexcept
+    {
+        return ReadString(ValueSyncDeviceKey, {});
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SyncDeviceKey(std::wstring const& value) noexcept
+    {
+        WriteString(ValueSyncDeviceKey, value);
     }
 }

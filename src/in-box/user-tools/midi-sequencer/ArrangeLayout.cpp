@@ -179,6 +179,17 @@ namespace midisequencer
             layout.Pinned.push_back(lyrics);
         }
 
+        if (sequence.Harmony && !sequence.Harmony->Hidden)
+        {
+            ArrangeRow harmony{};
+            harmony.Kind = ArrangeRowKind::Harmony;
+            harmony.Height = HarmonyRowHeight;
+            harmony.Pinned = true;
+            harmony.Top = layout.PinnedHeight;
+            layout.PinnedHeight += HarmonyRowHeight;
+            layout.Pinned.push_back(harmony);
+        }
+
         Walker walker{ layout };
         walker.Visit(sequence.Tracks, 0, true, std::wstring{}, false, false);
 

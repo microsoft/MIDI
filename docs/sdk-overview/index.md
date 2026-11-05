@@ -44,3 +44,7 @@ Agent guidance is not always discovered automatically, so it is worth naming the
 | [`.github/instructions/en-us-spelling.instructions.md`](https://github.com/microsoft/MIDI/blob/main/.github/instructions/en-us-spelling.instructions.md) | This project ships in en-US; en-GB spellings are defects |
 
 If you are building an application or a library rather than contributing here, the two porting articles above are written to be read by an agent as well as by a person. [aka.ms/MidiLibraryPorting](https://aka.ms/MidiLibraryPorting) is a stable link you can hand to a coding assistant directly.
+
+## API provenance
+
+The Windows MIDI Services WinRT API was written by Pete Brown with partner input. It has since been updated using GitHub Copilot, to add support for new transports and features, and fix bugs.
