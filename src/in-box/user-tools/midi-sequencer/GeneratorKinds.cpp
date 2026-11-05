@@ -220,6 +220,10 @@ namespace midisequencer
         case GeneratorType::Arpeggiator:
             return generator.ArpOrder == ArpeggiatorOrder::Random;
 
+        case GeneratorType::Strum:
+            // Only the hand's drift is random.
+            return generator.StrumHand > 0;
+
         case GeneratorType::Life:
         case GeneratorType::LifeDrums:
             // A drawn start plays the same whatever the seed, until cells are added.
@@ -472,7 +476,12 @@ namespace midisequencer
             a.LearnedFrom == b.LearnedFrom && a.Text == b.Text && a.Weights == b.Weights && a.Mutations == b.Mutations && a.SoundsLike == b.SoundsLike &&
             a.Interval == b.Interval && a.Voices == b.Voices && a.Axiom == b.Axiom && a.Grammar == b.Grammar &&
             a.Angle == b.Angle && a.Bells == b.Bells && a.Method == b.Method && a.HandstrokeGap == b.HandstrokeGap &&
-            a.ListenTo == b.ListenTo && a.ListenId == b.ListenId && a.KeepListening == b.KeepListening;
+            a.ListenTo == b.ListenTo && a.ListenId == b.ListenId && a.KeepListening == b.KeepListening &&
+            a.Instrument == b.Instrument && a.StrumPattern == b.StrumPattern && a.StrumSpreadMs == b.StrumSpreadMs && a.StrumInTicks == b.StrumInTicks &&
+            a.StrumSpreadTicks == b.StrumSpreadTicks && a.StrumCurve == b.StrumCurve && a.StrumBend == b.StrumBend && a.StrumLand == b.StrumLand &&
+            a.StrumKeepBass == b.StrumKeepBass && a.StrumRing == b.StrumRing && a.StrumTilt == b.StrumTilt && a.StrumHand == b.StrumHand &&
+            a.StrumBurst == b.StrumBurst && a.StrumBurstCurve == b.StrumBurstCurve && a.StrumMute == b.StrumMute &&
+            a.StrumMuteKey == b.StrumMuteKey && a.StrumOpenKey == b.StrumOpenKey;
     }
 
     _Use_decl_annotations_
@@ -557,6 +566,15 @@ namespace midisequencer
 
         // How long a step is: the velocity shapes that follow the beat count in it.
         print.Add(static_cast<uint64_t>(generator.StepTicks));
+
+        // A Strum's settings.
+        print.Add(static_cast<uint64_t>(generator.Instrument));
+        print.Add(generator.StrumPattern);
+        print.Add((static_cast<uint64_t>(generator.StrumSpreadMs) << 32) | (static_cast<uint64_t>(generator.StrumSpreadTicks) << 16) | (generator.StrumInTicks ? 1u : 0u));
+        print.Add((static_cast<uint64_t>(generator.StrumCurve) << 56) | (static_cast<uint64_t>(generator.StrumBend) << 48) | (static_cast<uint64_t>(generator.StrumLand) << 40) |
+            (static_cast<uint64_t>(static_cast<uint8_t>(generator.StrumTilt)) << 32) | (static_cast<uint64_t>(generator.StrumHand) << 24) | (static_cast<uint64_t>(generator.StrumBurst) << 16) |
+            (static_cast<uint64_t>(generator.StrumBurstCurve) << 8) | (generator.StrumKeepBass ? 2u : 0u) | (generator.StrumRing ? 1u : 0u));
+        print.Add((static_cast<uint64_t>(generator.StrumMute) << 16) | (static_cast<uint64_t>(generator.StrumMuteKey) << 8) | generator.StrumOpenKey);
         return print.Value;
     }
 

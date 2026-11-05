@@ -13,6 +13,7 @@
 #include "MainWindow.xaml.h"
 
 #include "SequenceArpeggiator.h"
+#include "SequenceStrum.h"
 #include "StringResources.h"
 
 namespace res = ::midisequencer::resources;
@@ -334,7 +335,7 @@ namespace winrt::midisequencer::implementation
         {
             auto const clip = seq::FindClip(m_doc, m_editorClipId);
 
-            if (clip == nullptr || !seq::IsArpeggiator(*clip))
+            if (clip == nullptr || !seq::PlaysAlong(*clip))
             {
                 return;
             }
@@ -366,7 +367,7 @@ namespace winrt::midisequencer::implementation
 
             if (made.empty())
             {
-                ShowMessage(res::GetString(L"ArpNothingPlaced"));
+                ShowMessage(res::GetString(seq::IsStrum(arpeggiator) ? L"StrumNothingPlaced" : L"ArpNothingPlaced"));
                 return;
             }
 

@@ -12,6 +12,7 @@
 #include "Lyrics.h"
 #include "SequenceGenerator.h"
 #include "SequencePattern.h"
+#include "SequenceStrum.h"
 #include "TrackSound.h"
 
 #include <algorithm>
@@ -142,9 +143,9 @@ namespace midisequencer
             L"majorPentatonic", L"minorPentatonic", L"blues", L"chromatic" };
 
         // The generators of design section 28, and their settings, as written in the file.
-        constexpr std::array<wchar_t const*, 11> GeneratorTypeNames{
+        constexpr std::array<wchar_t const*, 12> GeneratorTypeNames{
             L"euclidean", L"chanceMelody", L"arpeggiator", L"life", L"lifeDrums", L"learn", L"words",
-            L"evolve", L"infinity", L"lSystem", L"changeRinging" };
+            L"evolve", L"infinity", L"lSystem", L"changeRinging", L"strum" };
 
         constexpr std::array<wchar_t const*, 3> LifeRuleNames{ L"life", L"highLife", L"seeds" };
         constexpr std::array<wchar_t const*, 3> LifeVoiceNames{ L"lowest", L"highest", L"all" };
@@ -199,6 +200,31 @@ namespace midisequencer
         constexpr wchar_t KeyBells[] = L"bells";
         constexpr wchar_t KeyMethod[] = L"method";
         constexpr wchar_t KeyHandstrokeGap[] = L"handstrokeGap";
+
+        // A Strum generator (SequenceStrum.h).
+        constexpr wchar_t KeyInstrument[] = L"instrument";
+        constexpr wchar_t KeyStrumPattern[] = L"pattern";
+        constexpr wchar_t KeySpreadMs[] = L"spreadMs";
+        constexpr wchar_t KeySpreadTicks[] = L"spreadTicks";
+        constexpr wchar_t KeySpreadIn[] = L"spreadIn";
+        constexpr wchar_t KeyCurve[] = L"curve";
+        constexpr wchar_t KeyBend[] = L"bend";
+        constexpr wchar_t KeyLands[] = L"lands";
+        constexpr wchar_t KeyKeepBass[] = L"keepBass";
+        constexpr wchar_t KeyRing[] = L"ring";
+        constexpr wchar_t KeyTilt[] = L"tilt";
+        constexpr wchar_t KeyHand[] = L"hand";
+        constexpr wchar_t KeyBurst[] = L"burst";
+        constexpr wchar_t KeyBurstCurve[] = L"burstCurve";
+        constexpr wchar_t KeyMuted[] = L"muted";
+        constexpr wchar_t KeyMuteKey[] = L"muteKey";
+        constexpr wchar_t KeyOpenKey[] = L"openKey";
+        constexpr wchar_t ValueTicks[] = L"ticks";
+        constexpr wchar_t ValueMs[] = L"ms";
+        constexpr std::array<wchar_t const*, 4> InstrumentNames{ L"guitar", L"ukulele", L"piano", L"asWritten" };
+        constexpr std::array<wchar_t const*, 5> StrumShapeNames{ L"even", L"speedingUp", L"slowingDown", L"ease", L"rake" };
+        constexpr std::array<wchar_t const*, 3> StrumLandsNames{ L"first", L"middle", L"last" };
+        constexpr std::array<wchar_t const*, 2> StrumMutingNames{ L"short", L"keySwitch" };
         constexpr wchar_t KeySeedWords[] = L"seedWords";
         constexpr wchar_t ValueScatter[] = L"scatter";
         constexpr wchar_t ValueCells[] = L"cells";
@@ -1234,6 +1260,32 @@ namespace midisequencer
             generator.ArpOctaves = static_cast<uint8_t>(ReadInteger(object, KeyOctaves, 1, 1, 4));
             generator.ArpLatch = ReadBool(object, KeyLatch, false);
 
+            if (generator.Type == GeneratorType::Strum)
+            {
+                // Keys held on a source aren't a Strum's to play.
+                if (generator.ArpSource == ArpeggiatorSource::Held)
+                {
+                    generator.ArpSource = ArpeggiatorSource::Chords;
+                }
+
+                generator.Instrument = static_cast<StrumInstrument>(NameIndex(InstrumentNames, ReadRawString(object, KeyInstrument), 0));
+                generator.StrumPattern = CleanStrumPattern(ReadRawString(object, KeyStrumPattern).value_or(generator.StrumPattern));
+                generator.StrumSpreadMs = static_cast<uint16_t>(ReadInteger(object, KeySpreadMs, generator.StrumSpreadMs, 0, MaximumStrumSpreadMs));
+                generator.StrumSpreadTicks = static_cast<uint16_t>(ReadInteger(object, KeySpreadTicks, generator.StrumSpreadTicks, 0, MaximumStrumSpreadTicks));
+                generator.StrumInTicks = ReadRawString(object, KeySpreadIn).value_or(ValueMs) == ValueTicks;
+                generator.StrumCurve = static_cast<StrumShape>(NameIndex(StrumShapeNames, ReadRawString(object, KeyCurve), static_cast<size_t>(StrumShape::SpeedingUp)));
+                generator.StrumBend = static_cast<uint8_t>(ReadInteger(object, KeyBend, generator.StrumBend, 0, 100));
+                generator.StrumLand = static_cast<StrumLands>(NameIndex(StrumLandsNames, ReadRawString(object, KeyLands), 0));
+                generator.StrumKeepBass = ReadBool(object, KeyKeepBass, false);
+                generator.StrumRing = ReadBool(object, KeyRing, true);
+                generator.StrumTilt = static_cast<int8_t>(ReadInteger(object, KeyTilt, generator.StrumTilt, -50, 50));
+                generator.StrumHand = static_cast<uint8_t>(ReadInteger(object, KeyHand, generator.StrumHand, 0, 100));
+                generator.StrumBurst = static_cast<uint8_t>(ReadInteger(object, KeyBurst, generator.StrumBurst, 2, 12));
+                generator.StrumBurstCurve = static_cast<StrumShape>(NameIndex(StrumShapeNames, ReadRawString(object, KeyBurstCurve), static_cast<size_t>(StrumShape::SpeedingUp)));
+                generator.StrumMute = static_cast<StrumMuting>(NameIndex(StrumMutingNames, ReadRawString(object, KeyMuted), 0));
+                generator.StrumMuteKey = static_cast<uint8_t>(ReadInteger(object, KeyMuteKey, generator.StrumMuteKey, 0, 127));
+                generator.StrumOpenKey = static_cast<uint8_t>(ReadInteger(object, KeyOpenKey, generator.StrumOpenKey, 0, 127));
+            }
             ReadSectionTwentyEight(context, object, generator);
 
             generator.Unknown = UnknownKeys(object, {
@@ -1241,7 +1293,9 @@ namespace midisequencer
                 KeySource, KeyArpTrack, KeyOrder, KeyOctaves, KeyLatch,
                 KeyJump, KeyRootEnds, KeySongKey, KeyChordTones, KeyRule, KeyStart, KeyDensity, KeyCells, KeyVoice, KeyBirths, KeyJoin, KeySettled, KeyRestartEvery, KeyDrums,
                 KeyFrom, KeyTune, KeyMemory, KeyLearned, KeyLearnedFrom, KeyText, KeyWeights, KeyMutations, KeySoundsLike, KeyInterval, KeyVoices,
-                KeyAxiom, KeyGrammar, KeyAngle, KeyBells, KeyMethod, KeyHandstrokeGap, KeyVelocityBy, KeyListen, KeyListenId, KeyKeepListening });
+                KeyAxiom, KeyGrammar, KeyAngle, KeyBells, KeyMethod, KeyHandstrokeGap, KeyVelocityBy, KeyListen, KeyListenId, KeyKeepListening,
+                KeyInstrument, KeyStrumPattern, KeySpreadMs, KeySpreadTicks, KeySpreadIn, KeyCurve, KeyBend, KeyLands, KeyKeepBass, KeyRing, KeyTilt, KeyHand,
+                KeyBurst, KeyBurstCurve, KeyMuted, KeyMuteKey, KeyOpenKey });
 
             return generator;
         }
@@ -1333,6 +1387,13 @@ namespace midisequencer
                 note.AttributeType = static_cast<uint8_t>(ClampedField(fields, 6, 0, 0xFF));
                 note.AttributeData = static_cast<uint16_t>(ClampedField(fields, 7, 0, 0xFFFF));
                 note.Chance = static_cast<uint8_t>(ClampedField(fields, 8, 100, 100));
+
+                // Where the piano roll's Strum moved it from, which can be either way.
+                if (fields.Size() > 9 && IsType(fields.GetAt(9), mjson::JsonValueType::Number))
+                {
+                    auto const offset = fields.GetAt(9).GetNumber();
+                    note.StrumOffset = std::isfinite(offset) ? static_cast<int32_t>(std::clamp(std::round(offset), -static_cast<double>(TicksPerQuarterNote * 4), static_cast<double>(TicksPerQuarterNote * 4))) : 0;
+                }
 
                 clip.Notes.push_back(note);
                 ++context.TotalNotes;
@@ -1991,10 +2052,12 @@ namespace midisequencer
             if (note.ReleaseVelocity != 0) last = 5;
             if (note.AttributeType != 0 || note.AttributeData != 0) last = 7;
             if (note.Chance != 100) last = 8;
+            if (note.StrumOffset != 0) last = 9;
 
             if (last >= 5) { out += L", "; AppendInteger(out, note.ReleaseVelocity); }
             if (last >= 7) { out += L", "; AppendInteger(out, note.AttributeType); out += L", "; AppendInteger(out, note.AttributeData); }
             if (last >= 8) { out += L", "; AppendInteger(out, note.Chance); }
+            if (last >= 9) { out += L", "; AppendInteger(out, note.StrumOffset); }
 
             out += L"]";
         }
@@ -2371,6 +2434,38 @@ namespace midisequencer
                 if (generator.ArpLatch)
                 {
                     members.Bool(KeyLatch, true);
+                }
+            }
+            else if (generator.Type == GeneratorType::Strum)
+            {
+                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack : ValueChordsSource);
+
+                if (generator.ArpSource == ArpeggiatorSource::Track)
+                {
+                    members.Text(KeyArpTrack, generator.ArpTrackId);
+                }
+
+                members.Text(KeyInstrument, InstrumentNames[std::min<size_t>(static_cast<size_t>(generator.Instrument), InstrumentNames.size() - 1)]);
+                members.Text(KeyStrumPattern, generator.StrumPattern);
+                members.Text(KeySpreadIn, generator.StrumInTicks ? ValueTicks : ValueMs);
+                members.Integer(KeySpreadMs, generator.StrumSpreadMs);
+                members.Integer(KeySpreadTicks, generator.StrumSpreadTicks);
+                members.Text(KeyCurve, StrumShapeNames[std::min<size_t>(static_cast<size_t>(generator.StrumCurve), StrumShapeNames.size() - 1)]);
+                members.Integer(KeyBend, generator.StrumBend);
+                members.Text(KeyLands, StrumLandsNames[std::min<size_t>(static_cast<size_t>(generator.StrumLand), StrumLandsNames.size() - 1)]);
+                members.Bool(KeyKeepBass, generator.StrumKeepBass);
+                members.Bool(KeyRing, generator.StrumRing);
+                members.Integer(KeyTilt, generator.StrumTilt);
+                members.Integer(KeyHand, generator.StrumHand);
+                members.Integer(KeyBurst, generator.StrumBurst);
+                members.Text(KeyBurstCurve, StrumShapeNames[std::min<size_t>(static_cast<size_t>(generator.StrumBurstCurve), StrumShapeNames.size() - 1)]);
+                members.Raw(KeyVelocity, std::format(L"[{}, {}]", generator.VelocityLow, generator.VelocityHigh));
+
+                if (generator.StrumMute == StrumMuting::KeySwitch)
+                {
+                    members.Text(KeyMuted, StrumMutingNames[1]);
+                    members.Integer(KeyMuteKey, generator.StrumMuteKey);
+                    members.Integer(KeyOpenKey, generator.StrumOpenKey);
                 }
             }
             else

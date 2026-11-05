@@ -18,6 +18,7 @@
 #include "GeneratorNames.h"
 #include "GeneratorView.h"
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "StringResources.h"
 #include "NoteNames.h"
 
@@ -477,6 +478,10 @@ namespace winrt::midisequencer::implementation
                 AddArpeggiatorSettings(body, generator, edit);
                 break;
 
+            case seq::GeneratorType::Strum:
+                AddStrumSettings(body, generator, edit);
+                break;
+
             case seq::GeneratorType::Life:
             case seq::GeneratorType::LifeDrums:
                 AddLifeSettings(body, *clip, edit);
@@ -553,6 +558,7 @@ namespace winrt::midisequencer::implementation
             auto const hintKey =
                 generator.Type == seq::GeneratorType::Arpeggiator ? (generator.ArpSource == seq::ArpeggiatorSource::Held ? L"ArpHeldNote" :
                     generator.ArpSource == seq::ArpeggiatorSource::Chords ? L"ArpChordsNote" : L"ArpTrackNote") :
+                generator.Type == seq::GeneratorType::Strum ? (generator.ArpSource == seq::ArpeggiatorSource::Track ? L"StrumTrackNote" : L"StrumChordsNote") :
                 generator.Type == seq::GeneratorType::Euclidean ? (generator.ChangesEachPass ? L"GeneratorChangesHint" : L"GeneratorSameHint") :
                 L"GeneratorRepeatable";
 

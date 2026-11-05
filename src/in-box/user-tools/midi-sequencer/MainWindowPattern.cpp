@@ -10,6 +10,7 @@
 
 #include "GeneratorListen.h"
 #include "SequencePattern.h"
+#include "SequenceStrum.h"
 #include "StringResources.h"
 
 namespace res = ::midisequencer::resources;
@@ -941,8 +942,8 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
-            // What an arpeggiator plays depends on where it plays, so it has its own.
-            if (seq::IsArpeggiator(*clip))
+            // What an arpeggiator or a Strum plays depends on where it plays, so they have their own.
+            if (seq::PlaysAlong(*clip))
             {
                 MakeNotesFromArpeggiator();
                 return;

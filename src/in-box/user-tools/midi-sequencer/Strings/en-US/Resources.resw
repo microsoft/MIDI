@@ -5973,4 +5973,286 @@
   <data name="MovedNoteToTrack" xml:space="preserve">
     <value>Moved 1 note to a new track.</value>
   </data>
+  <data name="GeneratorTypeStrum" xml:space="preserve">
+    <value>Strum</value>
+  </data>
+  <data name="GeneratorAboutStrum" xml:space="preserve">
+    <value>Strums the chords on the Key and chords row, or another track's, the way a guitar, a ukulele or a piano plays them.</value>
+  </data>
+  <data name="DefaultStrumName" xml:space="preserve">
+    <value>Strum</value>
+  </data>
+  <data name="StrumNothingPlaced" xml:space="preserve">
+    <value>Make notes works where this Strum is on this track's timeline, and it isn't on it.</value>
+  </data>
+  <data name="StrumChordsNote" xml:space="preserve">
+    <value>It follows the Key and chords row, so jumping back replays the same strums, and an export writes what you heard.</value>
+  </data>
+  <data name="StrumTrackNote" xml:space="preserve">
+    <value>It strums what the other track plays, so jumping back replays the same strums, and an export writes what you heard.</value>
+  </data>
+  <data name="StrumChordsFrom" xml:space="preserve">
+    <value>Chords from</value>
+  </data>
+  <data name="StrumFromChords" xml:space="preserve">
+    <value>The Key and chords row</value>
+  </data>
+  <data name="StrumFromChordsHelp" xml:space="preserve">
+    <value>Each stroke plays the chord on the row at that moment. Change a chord there and the part changes with it.</value>
+  </data>
+  <data name="StrumFromTrack" xml:space="preserve">
+    <value>Another track</value>
+  </data>
+  <data name="StrumFromTrackHelp" xml:space="preserve">
+    <value>Each stroke plays the chord that track is playing then.</value>
+  </data>
+  <data name="StrumInstrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="StrumInstrumentGuitar" xml:space="preserve">
+    <value>Guitar</value>
+  </data>
+  <data name="StrumInstrumentUkulele" xml:space="preserve">
+    <value>Ukulele</value>
+  </data>
+  <data name="StrumInstrumentPiano" xml:space="preserve">
+    <value>Piano</value>
+  </data>
+  <data name="StrumInstrumentAsWritten" xml:space="preserve">
+    <value>As written</value>
+  </data>
+  <data name="StrumInstrumentGuitarHelp" xml:space="preserve">
+    <value>Each chord as a real guitar shape in standard tuning, as low on the neck as a hand can hold it. Strings it can't use are muted below the bass.</value>
+  </data>
+  <data name="StrumInstrumentUkuleleHelp" xml:space="preserve">
+    <value>Each chord as a ukulele shape, G C E A, all four strings. A down stroke starts on the high G string, as on a real ukulele.</value>
+  </data>
+  <data name="StrumInstrumentPianoHelp" xml:space="preserve">
+    <value>The bass in the left hand and the chord close together in the right, rolled like a harp or a pianist's arpeggiated chord.</value>
+  </data>
+  <data name="StrumInstrumentAsWrittenHelp" xml:space="preserve">
+    <value>The chord's notes as they are: the Key and chords row's chord, or the other track's own notes, lowest first.</value>
+  </data>
+  <data name="StrumStyle" xml:space="preserve">
+    <value>Start from a style</value>
+  </data>
+  <data name="StrumStyleOwn" xml:space="preserve">
+    <value>Your own pattern</value>
+  </data>
+  <data name="StrumStyleFolk" xml:space="preserve">
+    <value>Folk</value>
+  </data>
+  <data name="StrumStylePop" xml:space="preserve">
+    <value>Pop eighths</value>
+  </data>
+  <data name="StrumStyleBallad" xml:space="preserve">
+    <value>Ballad</value>
+  </data>
+  <data name="StrumStyleChucks" xml:space="preserve">
+    <value>Muted chucks</value>
+  </data>
+  <data name="StrumStyleReggae" xml:space="preserve">
+    <value>Reggae off-beat</value>
+  </data>
+  <data name="StrumStyleFunk" xml:space="preserve">
+    <value>Funk sixteenths</value>
+  </data>
+  <data name="StrumStyleTremolo" xml:space="preserve">
+    <value>Tremolo</value>
+  </data>
+  <data name="StrumStyleRasgueado" xml:space="preserve">
+    <value>Flamenco rasgueado</value>
+  </data>
+  <data name="StrumStyleBuild" xml:space="preserve">
+    <value>Build-up</value>
+  </data>
+  <data name="StrumPattern" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="StrumPatternHelp" xml:space="preserve">
+    <value>A letter for each step. D strums down and U up; d and u are softer. x is a muted stroke. R is a rasgueado, fingers flicked down one after another. T is tremolo, fast strokes filling the step. - lets the strings ring.</value>
+  </data>
+  <data name="StrumStep" xml:space="preserve">
+    <value>Each letter is</value>
+  </data>
+  <data name="StrumShape" xml:space="preserve">
+    <value>Strum shape</value>
+  </data>
+  <data name="StrumShapeEven" xml:space="preserve">
+    <value>Even</value>
+  </data>
+  <data name="StrumShapeSpeedingUp" xml:space="preserve">
+    <value>Speeding up</value>
+  </data>
+  <data name="StrumShapeSlowingDown" xml:space="preserve">
+    <value>Slowing down</value>
+  </data>
+  <data name="StrumShapeEase" xml:space="preserve">
+    <value>Ease</value>
+  </data>
+  <data name="StrumShapeRake" xml:space="preserve">
+    <value>Rake</value>
+  </data>
+  <data name="StrumShapeEvenHelp" xml:space="preserve">
+    <value>The same time between every note, like a machine.</value>
+  </data>
+  <data name="StrumShapeSpeedingUpHelp" xml:space="preserve">
+    <value>Less time between the later notes, as a hand speeds up across the strings. Sounds the most like a real strum.</value>
+  </data>
+  <data name="StrumShapeSlowingDownHelp" xml:space="preserve">
+    <value>More time between the later notes, like a lazy strum running out of steam.</value>
+  </data>
+  <data name="StrumShapeEaseHelp" xml:space="preserve">
+    <value>Slow at the start, quick in the middle, and slow at the end.</value>
+  </data>
+  <data name="StrumShapeRakeHelp" xml:space="preserve">
+    <value>A slow drag across the first strings, then the rest all at once.</value>
+  </data>
+  <data name="StrumCurveName" xml:space="preserve">
+    <value>Strum curve</value>
+  </data>
+  <data name="StrumCurveHelp" xml:space="preserve">
+    <value>Drag sideways to change how long a strum takes. The shape stays the same.</value>
+  </data>
+  <data name="StrumSpreadMs" xml:space="preserve">
+    <value>Strum time (ms)</value>
+  </data>
+  <data name="StrumSpreadTicks" xml:space="preserve">
+    <value>Strum time (ticks)</value>
+  </data>
+  <data name="StrumSpreadMsFormat" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+  <data name="StrumSpreadTicksFormat" xml:space="preserve">
+    <value>{0} ticks</value>
+  </data>
+  <data name="StrumMeasure" xml:space="preserve">
+    <value>Measure the strum in</value>
+  </data>
+  <data name="StrumMeasureMs" xml:space="preserve">
+    <value>Milliseconds</value>
+  </data>
+  <data name="StrumMeasureTicks" xml:space="preserve">
+    <value>Ticks (changes with the tempo)</value>
+  </data>
+  <data name="StrumMeasureHelp" xml:space="preserve">
+    <value>A hand takes the same time to cross the strings at any tempo, so milliseconds sound natural. Ticks make strums shorter as the tempo goes up.</value>
+  </data>
+  <data name="StrumBend" xml:space="preserve">
+    <value>Bend (%)</value>
+  </data>
+  <data name="StrumLands" xml:space="preserve">
+    <value>On the beat</value>
+  </data>
+  <data name="StrumLandsFirst" xml:space="preserve">
+    <value>First note</value>
+  </data>
+  <data name="StrumLandsMiddle" xml:space="preserve">
+    <value>Middle of the strum</value>
+  </data>
+  <data name="StrumLandsLast" xml:space="preserve">
+    <value>Last note</value>
+  </data>
+  <data name="StrumLandsHelp" xml:space="preserve">
+    <value>Players start a strum a little early so its middle lands on the beat. First note starts exactly on the beat.</value>
+  </data>
+  <data name="StrumTilt" xml:space="preserve">
+    <value>Louder first strings (%)</value>
+  </data>
+  <data name="StrumTiltHelp" xml:space="preserve">
+    <value>Above 0 makes the first strings a stroke hits louder. Below 0 makes the last ones louder.</value>
+  </data>
+  <data name="StrumHand" xml:space="preserve">
+    <value>Loose hand (%)</value>
+  </data>
+  <data name="StrumHandHelp" xml:space="preserve">
+    <value>Small changes in timing and loudness from stroke to stroke, so it doesn't sound like a machine. Tighter on the beat.</value>
+  </data>
+  <data name="StrumRing" xml:space="preserve">
+    <value>Let strings ring</value>
+  </data>
+  <data name="StrumRingHelp" xml:space="preserve">
+    <value>On, each string sounds until the next stroke that hits it, a muted stroke, or the next chord. Off, notes last the note length.</value>
+  </data>
+  <data name="StrumKeepBass" xml:space="preserve">
+    <value>Keep the bass on the beat</value>
+  </data>
+  <data name="StrumKeepBassHelp" xml:space="preserve">
+    <value>The lowest note plays on the beat and the rest strum after it, like a pianist's left hand.</value>
+  </data>
+  <data name="StrumVelocityNormal" xml:space="preserve">
+    <value>Strokes (%)</value>
+  </data>
+  <data name="StrumVelocitySoft" xml:space="preserve">
+    <value>Soft strokes (%)</value>
+  </data>
+  <data name="StrumBurst" xml:space="preserve">
+    <value>Strokes in R and T</value>
+  </data>
+  <data name="StrumBurstHelp" xml:space="preserve">
+    <value>How many strokes a rasgueado (R) or tremolo (T) plays in its step.</value>
+  </data>
+  <data name="StrumBurstCurve" xml:space="preserve">
+    <value>R speed</value>
+  </data>
+  <data name="StrumMuted" xml:space="preserve">
+    <value>Muted strokes</value>
+  </data>
+  <data name="StrumMutedShort" xml:space="preserve">
+    <value>Short and quiet</value>
+  </data>
+  <data name="StrumMutedKeySwitch" xml:space="preserve">
+    <value>Key switch</value>
+  </data>
+  <data name="StrumMutedShortHelp" xml:space="preserve">
+    <value>A muted stroke (x) plays the chord very short and quiet. This works with any instrument.</value>
+  </data>
+  <data name="StrumMutedKeySwitchHelp" xml:space="preserve">
+    <value>Before a muted stroke it plays the mute key, and before the next open stroke the open key, for instruments with a muted sound on a key switch. Check your instrument's manual for its keys. On anything else, those keys play as notes.</value>
+  </data>
+  <data name="StrumMuteKey" xml:space="preserve">
+    <value>Mute key</value>
+  </data>
+  <data name="StrumOpenKey" xml:space="preserve">
+    <value>Open key</value>
+  </data>
+  <data name="StrumDirection" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="StrumDirectionDown" xml:space="preserve">
+    <value>Down (lowest note first)</value>
+  </data>
+  <data name="StrumDirectionUp" xml:space="preserve">
+    <value>Up (highest note first)</value>
+  </data>
+  <data name="StrumDirectionByBeat" xml:space="preserve">
+    <value>Down on the beat, up off it</value>
+  </data>
+  <data name="StrumDirectionRandom" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="StrumLoose" xml:space="preserve">
+    <value>Loose (%)</value>
+  </data>
+  <data name="NoteMenuStrum" xml:space="preserve">
+    <value>Strum...</value>
+  </data>
+  <data name="NoteMenuRemoveStrum" xml:space="preserve">
+    <value>Remove strum</value>
+  </data>
+  <data name="NoteToolStrumTitle" xml:space="preserve">
+    <value>Strum</value>
+  </data>
+  <data name="NoteToolStrumHelp" xml:space="preserve">
+    <value>Spreads the notes of each chord a few milliseconds apart, like a hand across strings. Pick a shape, then drag the curve to set how long it takes.</value>
+  </data>
+  <data name="NoteToolStrumNote" xml:space="preserve">
+    <value>Strumming again replaces the last strum. Remove strum puts the notes back where they were.</value>
+  </data>
+  <data name="UndoNoteStrum" xml:space="preserve">
+    <value>Strum</value>
+  </data>
+  <data name="UndoNoteRemoveStrum" xml:space="preserve">
+    <value>Remove strum</value>
+  </data>
 </root>

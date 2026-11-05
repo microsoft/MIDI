@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "NoteTools.h"
+#include "SequenceStrum.h"
 
 #include <algorithm>
 #include <cmath>
@@ -109,13 +110,19 @@ namespace midisequencer
             return static_cast<uint16_t>(std::clamp<double>(std::round(value), QuietestVelocity, 65535.0));
         }
 
-        // The changed notes of a one-for-one edit.
-        NoteToolResult Changes(std::vector<Note> const& before, std::vector<Note> const& after)
+        // The changed notes of a one-for-one edit. A note another tool moves in time isn't where a
+        // strum put it any more, so it forgets the strum, unless the tool is the strum.
+        NoteToolResult Changes(std::vector<Note> const& before, std::vector<Note> after, bool keepStrum = false)
         {
             NoteToolResult result{};
 
             for (size_t i = 0; i < before.size() && i < after.size(); ++i)
             {
+                if (!keepStrum && after[i].Tick != before[i].Tick)
+                {
+                    after[i].StrumOffset = 0;
+                }
+
                 if (before[i] != after[i])
                 {
                     result.Removed.push_back(before[i]);
@@ -951,6 +958,144 @@ namespace midisequencer
         }
 
         return Changes(notes, after);
+    }
+
+    // ---------------------------------------------------------------- strum
+
+    namespace
+    {
+        // Where a note was before a strum moved it.
+        Note Unstrummed(Note note) noexcept
+        {
+            note.Tick -= note.StrumOffset;
+            note.Length = std::max<int64_t>(1, note.Length + note.StrumOffset);
+            note.StrumOffset = 0;
+            return note;
+        }
+    }
+
+    _Use_decl_annotations_
+    NoteToolResult Strum(std::vector<Note> const& notes, NoteToolContext const& context, StrumSettings const& settings)
+    {
+        auto const before = Sorted(notes);
+        std::vector<Note> after{};
+
+        for (auto const& note : before)
+        {
+            after.push_back(Unstrummed(note));
+        }
+
+        // The chords, as indexes into the notes, found where the notes were before any strum.
+        std::vector<size_t> order(after.size());
+        std::iota(order.begin(), order.end(), size_t{ 0 });
+        std::stable_sort(order.begin(), order.end(), [&after](size_t a, size_t b) { return NoteOrder(after[a], after[b]); });
+
+        std::vector<std::vector<size_t>> chords{};
+
+        for (auto const index : order)
+        {
+            if (!chords.empty())
+            {
+                auto const first = after[chords.back().front()].Tick;
+
+                if (after[index].Tick - first <= std::max<int64_t>(0, TicksForMs(context, first, ChordWindowMs)))
+                {
+                    chords.back().push_back(index);
+                    continue;
+                }
+            }
+
+            chords.push_back({ index });
+        }
+
+        auto const bend = std::clamp(settings.Bend, 0.0, 1.0);
+        auto const tilt = std::clamp(settings.Tilt, -0.5, 0.5);
+        auto const loose = std::clamp(settings.Loose, 0.0, 1.0);
+        std::mt19937 random{ settings.Seed };
+
+        for (auto& chord : chords)
+        {
+            // Two draws for every note of every chord, whichever settings are on, so changing one
+            // doesn't change what the others did.
+            std::vector<double> wobbles{};
+
+            for (size_t i = 0; i < chord.size() * 2; ++i)
+            {
+                wobbles.push_back(Wobble(random));
+            }
+
+            if (chord.size() < 2)
+            {
+                continue;
+            }
+
+            std::stable_sort(chord.begin(), chord.end(), [&after](size_t a, size_t b) { return after[a].Number < after[b].Number; });
+
+            auto const start = after[chord.front()].Tick;
+
+            // The bass stays on the beat; the rest strum.
+            std::vector<size_t> strummed(chord.begin() + (settings.KeepBass ? 1 : 0), chord.end());
+
+            auto down = true;
+
+            switch (settings.Direction)
+            {
+            case StrumDirection::Up: down = false; break;
+            case StrumDirection::ByBeat: down = IsOnBeat(context, start); break;
+            case StrumDirection::Random: down = wobbles.front() >= 0; break;
+            case StrumDirection::Down:
+            default: break;
+            }
+
+            if (!down)
+            {
+                std::reverse(strummed.begin(), strummed.end());
+            }
+
+            auto const spread = static_cast<double>(settings.InTicks ? std::max<int64_t>(0, settings.SpreadTicks) : std::max<int64_t>(0, TicksForMs(context, start, std::max(0.0, settings.SpreadMs))));
+            auto const shift = settings.Lands == StrumLands::Middle ? -spread * StrumCurve(settings.Shape, 0.5, bend)
+                : settings.Lands == StrumLands::Last ? -spread
+                : 0.0;
+
+            for (size_t j = 0; j < strummed.size(); ++j)
+            {
+                auto& note = after[strummed[j]];
+                auto const x = strummed.size() > 1 ? static_cast<double>(j) / static_cast<double>(strummed.size() - 1) : 0.0;
+                auto const jitter = wobbles[j * 2 + 1] * loose * spread * 0.15;
+                auto const offset = std::llround(spread * StrumCurve(settings.Shape, x, bend) + shift + jitter);
+
+                auto const base = note.Tick;
+                note.Tick = std::max<int64_t>(0, base + offset);
+                note.StrumOffset = static_cast<int32_t>(note.Tick - base);
+                note.Length = std::max<int64_t>(1, note.Length - note.StrumOffset);
+
+                if (tilt != 0.0)
+                {
+                    note.Velocity = ClampVelocity(static_cast<double>(note.Velocity) * (1.0 + tilt * (1.0 - 2.0 * x)));
+                }
+            }
+        }
+
+        return Changes(before, after, true);
+    }
+
+    _Use_decl_annotations_
+    NoteToolResult RemoveStrum(std::vector<Note> const& notes)
+    {
+        std::vector<Note> after{};
+
+        for (auto const& note : notes)
+        {
+            after.push_back(note.StrumOffset != 0 ? Unstrummed(note) : note);
+        }
+
+        return Changes(notes, after, true);
+    }
+
+    _Use_decl_annotations_
+    size_t CountStrummed(std::vector<Note> const& notes) noexcept
+    {
+        return static_cast<size_t>(std::count_if(notes.begin(), notes.end(), [](Note const& note) { return note.StrumOffset != 0; }));
     }
 
     // ---------------------------------------------------------------- values

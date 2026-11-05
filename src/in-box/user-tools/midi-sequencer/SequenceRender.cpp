@@ -12,6 +12,7 @@
 #include "SequenceArpeggiator.h"
 #include "GeneratorListen.h"
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "SequencePattern.h"
 
 #include <algorithm>
@@ -286,6 +287,10 @@ namespace midisequencer
                         messages[i].Arpeggiated = true;
                     }
                 }, options.SongTick);
+            }
+            else if (generated && clip.Generator->Type == GeneratorType::Strum)
+            {
+                ForEachStrumNote(sequence, clip, passStart, passEnd, pass, windowStart, windowEnd, addNote, options.SongTick);
             }
             else if (generated)
             {

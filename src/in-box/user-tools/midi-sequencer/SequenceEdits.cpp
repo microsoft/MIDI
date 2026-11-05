@@ -9,6 +9,7 @@
 #include "GeneratorKinds.h"
 #include "SequenceArpeggiator.h"
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "SequencePattern.h"
 
 #include <algorithm>
@@ -839,7 +840,8 @@ namespace midisequencer
         clip.Origin = ClipOrigin::Generated;
         clip.Generator = IsSectionTwentyEightGenerator(type) ? MakeSectionTwentyEightGenerator(type) :
             type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() :
-            type == GeneratorType::Arpeggiator ? MakeArpeggiatorGenerator() : MakeEuclideanGenerator();
+            type == GeneratorType::Arpeggiator ? MakeArpeggiatorGenerator() :
+            type == GeneratorType::Strum ? MakeStrumGenerator() : MakeEuclideanGenerator();
         clip.Generator->Type = type;
         RefreshGeneratorPreview(clip);
         return clip;

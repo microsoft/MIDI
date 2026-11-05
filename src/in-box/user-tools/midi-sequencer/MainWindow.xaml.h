@@ -187,6 +187,7 @@ namespace winrt::midisequencer::implementation
             ReleaseVelocity,
             Chance,
             SelectVelocity,
+            Strum,
         };
 
         enum class NoteMenu : uint8_t
@@ -610,6 +611,7 @@ namespace winrt::midisequencer::implementation
             seq::ValueSettings Release{ seq::ValueTarget::ReleaseVelocity, seq::ValueMode::Set, 50.0, 50.0 };
             seq::ValueSettings Chance{ seq::ValueTarget::Chance, seq::ValueMode::Set, 75.0, 25.0 };
             seq::SelectSettings SelectVelocity{ seq::SelectKind::VelocityRange };
+            seq::StrumSettings Strum{};
         };
 
         NoteToolSettings m_noteTools{};
@@ -753,6 +755,24 @@ namespace winrt::midisequencer::implementation
         // The arpeggiator (MainWindowArpeggiator.cpp): its settings, Make notes, and the keys
         // played on the sources of tracks it plays from.
         void AddArpeggiatorSettings(_In_ controls::StackPanel const& body, _In_ seq::GeneratorSettings const& generator, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
+
+        // ---- Strum (MainWindowStrum.cpp) ----
+        // The curve a strum's notes follow: dragging it sideways changes how long a strum takes,
+        // in milliseconds or ticks, and keeps its shape. changed comes during the drag, committed
+        // once at the end.
+        struct StrumCurveState
+        {
+            seq::StrumShape Shape{ seq::StrumShape::SpeedingUp };
+            double Bend{ 0.5 };
+            double Spread{ 35.0 };
+            double MostSpread{ 150.0 };
+            bool Ticks{ false };
+            size_t Strings{ 6 };
+            bool Dragging{ false };
+        };
+
+        canvasXaml::CanvasControl MakeStrumCurve(_In_ std::shared_ptr<StrumCurveState> const& state, _In_ std::function<void(double)> const& changed, _In_ std::function<void(double)> const& committed);
+        void AddStrumSettings(_In_ controls::StackPanel const& body, _In_ seq::GeneratorSettings const& generator, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
         void MakeNotesFromArpeggiator() noexcept;
         void UpdateArpeggiatorRoutes() noexcept;
         std::vector<std::wstring> FeedArpeggiators(_In_ std::wstring const& endpointId, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;

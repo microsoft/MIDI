@@ -104,7 +104,8 @@ namespace midisequencer
     // open whether the track is armed or not.
     bool TrackHasHeldKeysArpeggiator(_In_ Sequence const& sequence, _In_ Track const& track);
 
-    // An ordinary notes clip holding what an arpeggiator that plays another track's notes plays
-    // in one placement, from the placement's start. Notes are only there for that kind.
+    // An ordinary notes clip holding what an arpeggiator that plays another track's notes or the
+    // Key and chords row, or a Strum (SequenceStrum.h), plays in one placement, from the
+    // placement's start. Nothing for an arpeggiator that plays held keys.
     Clip MakeNotesFromArpeggiator(_In_ Sequence const& sequence, _In_ Clip const& arpeggiator, _In_ Placement const& placement);
 }

@@ -111,7 +111,7 @@ There are three kinds of clips:
 
 - **Notes clips** hold notes you draw, type, record or import. The piano roll edits them. **B** turns on drawing, and **Q** moves notes onto the grid. Hold Shift while you drag notes to move them in time without changing their pitch. Select **Other tracks** to see, faintly in their own colors, the notes the other unmuted tracks are playing at the same time. Solo doesn't hide them.
 - **Pattern clips** are step sequences, for drums or for melodies. Each lane has its own number of steps, so lanes can drift against each other and come back together. Steps can have a chance, or play only on some passes. **Swing** pushes every second step later. To change the order of the lanes, drag a lane by its name. **Make notes** turns a pattern into a notes clip that plays the same thing.
-- **Generator clips** make their notes as they play. A **Euclidean rhythm** spreads hits as evenly as it can over a number of steps. A **Chance melody** picks notes from a scale. An **Arpeggiator** plays the notes you hold, or another track's notes, one after another. Eight more grow, learn, and spell their notes: **Life**, **Life drums**, **Learn**, **Words**, **Evolve**, the **Infinity series**, **L-system**, and **Change ringing**.
+- **Generator clips** make their notes as they play. A **Euclidean rhythm** spreads hits as evenly as it can over a number of steps. A **Chance melody** picks notes from a scale. An **Arpeggiator** plays the notes you hold, or another track's notes, one after another. A **Strum** strums the chords on the Key and chords row, or another track's, the way a guitar, a ukulele or a piano plays them. Eight more grow, learn, and spell their notes: **Life**, **Life drums**, **Learn**, **Words**, **Evolve**, the **Infinity series**, **L-system**, and **Change ringing**.
 
 Right-click the timeline or an empty launcher slot to make any of them. The generators are under **New generator**.
 
@@ -132,6 +132,7 @@ Tools with settings open a small panel on the right. The piano roll shows what t
 - **Length** has **Legato**, which makes each note last until the next one starts, plus a fixed length and a percent of each note's length. **Clean up** fixes notes that overlap the same note, removes duplicates, and removes very short notes.
 - **Pitch** has semitone and octave steps, and steps by notes of the song's key, so a melody stays in key. **Fit to the chords** moves notes that clash with the chord on the Key and chords row. **Voicing** changes chords: inversions, close and open voicings, drop 2 and drop 3, an extra octave below, and **Smooth voice leading**, which picks the inversion of each chord that moves the least from the one before. **Mirror** turns a melody upside down, and **Reverse** plays it backward.
 - **Velocity** sets, raises, ramps, accents or randomizes velocity. The same panel works for release velocity and for each note's chance of playing.
+- **Strum**, under **Timing**, spreads the notes of each chord a few milliseconds apart, like a hand across strings. Pick a shape and drag the curve, or type the time. Choose the direction (or down on the beat and up off it), which note lands on the beat, and whether the bass stays on the beat. Each note's end stays where it was. Strumming again replaces the last strum, and **Remove strum** puts the notes back where they were.
 
 When two notes with the same number overlap on one channel, the bar shows a warning you can select to fix them. Most instruments stop the sound at the first note off, so the second note gets cut short.
 
@@ -161,6 +162,7 @@ A generator shows all of its settings in the editor. Select **Type** to change w
 - **A Euclidean rhythm** draws its rings. Each dot is a step, and the lit dots are the hits. Drag around a ring to turn it, so its hits start later. Scroll over a ring to add or take away hits. The table next to it sets each ring's note, hits (**Pulses**), steps, turn (**Rotate**), velocity and chance. **Preview (2 bars)** shows two bars of the result.
 - **A chance melody** shows its first four passes, with new notes outlined, so you can see how much changes each time round.
 - **An arpeggiator** sets where its notes come from (notes you hold, another track, or the chords on the Key and chords row), the order it plays them in, how fast it goes (**Rate**), and how many octaves it climbs.
+- **A Strum** is described in [Strum](#strum) below.
 - **Life** plays the Game of Life on a board with a column for each step and a row for each note of the key. Draw the first pass's cells on the board, or start with a scatter or a shape such as a glider. Each pass is the next generation: a cell with two or three neighbors lives on, and an empty cell with three is born. The edges wrap, so a glider that walks off the end of the bar comes back in at the start. Select any pass under the board to see it, and **Set as start** to begin there.
 - **Life drums** does the same with a row for each drum. Select a drum's name on the board to change it.
 - **Learn** learns which note tends to follow which (a Markov chain) from a tune, a clip you pick, or words you type, then makes up new melodies in that style, in the key you choose. **Memory** sets how many notes back it remembers. The drawing shows the moves it learned, with this pass's lit. It learns only from what you give it.
@@ -177,6 +179,20 @@ Life, Learn, Words, Evolve, the infinity series, L-systems, and change ringing a
 Learn, Life, Life drums, Evolve, and change ringing can **Listen to** another clip or a whole track, even one that's a generator. Pick it from the list, and they learn from it straight away: Learn learns its melody, Life drops a pass of its notes onto the board as new cells, Evolve starts from it and gets a **Similarity** slider, and change ringing rings its most played notes as its bells. Turn on **Keep listening**, and each pass hears what the source played during the pass before, so it changes as the source does. A clip is heard as if both started together, and a track is heard where the listener plays. Two clips can even listen to each other, each a pass behind.
 
 A generator plays the same notes on every pass, unless you set **Each pass** to **Changes**. The ones that grow, learn, and spell start out changing. The **Seed** is where its chances start. The same seed always plays the same way. You can type words as the seed, such as "Midnight drive," and the same words play the same way on any PC. To hear something different, select the button next to the seed to pick a new one.
+
+### Strum
+
+A Strum generator plays chords the way a player strums them. Make one from **New generator**. It's in the **Plays along** group, with the arpeggiator.
+
+- **Chords from.** It plays the chord on the **Key and chords row** at each moment, or the chord another track is playing.
+- **Instrument.** It turns each chord into a shape a real instrument plays. **Guitar** uses standard tuning and the lowest shape on the neck a hand can hold, with strings it can't use muted below the bass, so C is the open C chord and F is the barre chord. **Ukulele** uses all four strings, and a down stroke starts on the high G string, as on a real ukulele. **Piano** puts the bass in the left hand and the chord in the right. **As written** plays the chord's notes as they are.
+- **Pattern.** A letter for each step: **D** strums down and **U** up (the top strings only, as a real up stroke does), **d** and **u** are softer, **x** is a muted stroke, **R** is a flamenco rasgueado (fingers flicked down one after another), **T** is tremolo (fast strokes that fill the step), and **-** lets the strings ring. **Start from a style** fills in a pattern: folk, pop, ballad, muted chucks, reggae, funk, tremolo, rasgueado, and a build-up.
+- **Strum shape.** How the time between the notes of a strum changes. **Speeding up** sounds most like a hand. Drag the curve sideways to change how long a strum takes; the shape stays the same. The time is in milliseconds, so a strum sounds the same at any tempo. Pick **Ticks** if you want strums to get shorter as the tempo goes up.
+- **On the beat.** Players start a strum a little early so its middle lands on the beat. Pick **First note**, **Middle of the strum**, or **Last note**.
+- **Feel.** **Louder first strings** leans each strum louder at one end. **Loose hand** adds small changes from stroke to stroke, so it doesn't sound like a machine. **Let strings ring** keeps each string sounding until something stops it. **Keep the bass on the beat** strums everything but the lowest note.
+- **Muted strokes** play short and quiet, which works on any instrument. If your instrument has a muted sound on a key switch, pick **Key switch** and enter its keys. The Strum plays the mute key before a muted stroke and the open key before the next open one. On an instrument without them, those keys play as notes.
+
+**Make notes** turns the Strum into ordinary notes you can edit, one clip for each place it plays.
 
 ## Recording
 
@@ -264,6 +280,7 @@ Generators and clips can follow the song's key, so a key change carries the whol
 - **Generators.** In a generator's **Key and range**, pick **Song key** at the top of the key list. It plays in the key on the Key and chords row, and takes the scale from there too, wherever the key changes. New generators start on **Song key** when the sequence has a key. Where the row has no key, a generator plays in the key it had before.
 - **Chord tones.** Turn this on in a generator's key settings, and the notes that start on a beat move to the nearest note of the chord playing then. The rest stay in the scale, so the melody fits the chords without sounding stiff.
 - **The arpeggiator** can play the chords on the row. Under where its notes come from, pick **Key and chords row**.
+- **A Strum** plays the chords on the row unless you pick another track. Change a chord on the row and the strummed part changes with it.
 - **Notes clips and melodic patterns.** Turn on **Follow key** in the clip editor's header. The notes are taken as written in the key where the clip is first placed. Wherever the song is in a different key, they move by scale steps to fit it: E in C major plays as F♯ in D major, and as E♭ in C minor. Notes never change to fit chords. New melodic patterns follow the key when the sequence has one. Notes clips don't, until you turn it on.
 - **Drum patterns, Euclidean rhythms and Life drums never follow.** Drums don't have a key.
 

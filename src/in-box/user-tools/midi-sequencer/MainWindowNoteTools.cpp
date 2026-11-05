@@ -136,6 +136,7 @@ namespace winrt::midisequencer::implementation
             case Tool::Velocity: return L"UndoNoteVelocity";
             case Tool::ReleaseVelocity: return L"UndoNoteReleaseVelocity";
             case Tool::Chance: return L"UndoNoteChance";
+            case Tool::Strum: return L"UndoNoteStrum";
             case Tool::SelectVelocity:
             default: return L"UndoEditNotes";
             }
@@ -163,6 +164,7 @@ namespace winrt::midisequencer::implementation
             case Tool::Velocity: return { L"NoteToolVelocityTitle", L"NoteToolVelocityHelp" };
             case Tool::ReleaseVelocity: return { L"NoteToolReleaseVelocityTitle", L"NoteToolReleaseVelocityHelp" };
             case Tool::Chance: return { L"NoteToolChanceTitle", L"NoteToolChanceHelp" };
+            case Tool::Strum: return { L"NoteToolStrumTitle", L"NoteToolStrumHelp" };
             case Tool::SelectVelocity:
             default: return { L"NoteToolSelectVelocityTitle", L"NoteToolSelectVelocityHelp" };
             }
@@ -389,6 +391,12 @@ namespace winrt::midisequencer::implementation
             add(items, L"NoteMenuGroove", hasNotes, tool(NoteTool::Groove));
             add(items, L"NoteMenuTimeFeel", hasNotes, tool(NoteTool::TimeFeel));
             add(items, L"NoteMenuRatchet", hasNotes, tool(NoteTool::Ratchet));
+            items.Append(controls::MenuFlyoutSeparator{});
+            add(items, L"NoteMenuStrum", hasNotes, tool(NoteTool::Strum));
+            add(items, L"NoteMenuRemoveStrum", seq::CountStrummed(NoteToolTargets()) > 0, now(L"UndoNoteRemoveStrum", [](MainWindow&, std::vector<seq::Note> const& notes, seq::NoteToolContext const&)
+            {
+                return seq::RemoveStrum(notes);
+            }));
             break;
 
         case NoteMenu::Length:
@@ -631,6 +639,9 @@ namespace winrt::midisequencer::implementation
 
         case NoteTool::Chance:
             return seq::SetValues(notes, context, settings.Chance);
+
+        case NoteTool::Strum:
+            return seq::Strum(notes, context, settings.Strum);
 
         case NoteTool::SelectVelocity:
         default:
@@ -1276,6 +1287,102 @@ namespace winrt::midisequencer::implementation
 
                 // The mode change sets a new starting value, which the box has to show.
                 (*firstBox).Value(values.First);
+                break;
+            }
+
+            case NoteTool::Strum:
+            {
+                auto const& strum = m_noteTools.Strum;
+                auto const shapeKeys = std::vector<wchar_t const*>{ L"StrumShapeEven", L"StrumShapeSpeedingUp", L"StrumShapeSlowingDown", L"StrumShapeEase", L"StrumShapeRake" };
+
+                // The curve has a string for each note of the biggest chord it strums.
+                seq::TempoMap curveTempo{};
+                size_t strings{ 3 };
+
+                for (auto const& chord : seq::FindChords(NoteToolTargets(), NoteToolContextFor(*clip, curveTempo), 30.0))
+                {
+                    strings = std::max(strings, chord.size());
+                }
+
+                auto curve = std::make_shared<StrumCurveState>();
+                curve->Shape = strum.Shape;
+                curve->Bend = strum.Bend;
+                curve->Ticks = strum.InTicks;
+                curve->Spread = strum.InTicks ? static_cast<double>(strum.SpreadTicks) : strum.SpreadMs;
+                curve->MostSpread = strum.InTicks ? 240.0 : 150.0;
+                curve->Strings = std::min<size_t>(strings, 8);
+
+                auto const spreadBox = std::make_shared<controls::NumberBox>(nullptr);
+                auto const canvas = std::make_shared<canvasXaml::CanvasControl>(nullptr);
+
+                choice(L"StrumShape", shapeKeys, static_cast<int32_t>(strum.Shape), [curve, canvas](NoteToolSettings& s, int32_t i)
+                {
+                    s.Strum.Shape = static_cast<seq::StrumShape>(i);
+                    curve->Shape = s.Strum.Shape;
+                    if (*canvas != nullptr) { (*canvas).Invalidate(); }
+                });
+
+                // Dragging the curve shows the strum in the roll as it goes.
+                auto const setSpread = [curve](NoteToolSettings& s, double value)
+                {
+                    if (curve->Ticks) { s.Strum.SpreadTicks = std::llround(value); } else { s.Strum.SpreadMs = value; }
+                    curve->Spread = value;
+                };
+
+                *canvas = MakeStrumCurve(curve, [weak, setSpread, refresh](double value)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        setSpread(strong->m_noteTools, value);
+                        refresh();
+                    }
+                }, [spreadBox](double value)
+                {
+                    if (*spreadBox != nullptr) { (*spreadBox).Value(value); }
+                });
+                place(*canvas, true);
+
+                *spreadBox = number(strum.InTicks ? L"StrumSpreadTicks" : L"StrumSpreadMs", 0, strum.InTicks ? 960 : 500, curve->Spread, 1, [setSpread, canvas](NoteToolSettings& s, double v)
+                {
+                    setSpread(s, v);
+                    if (*canvas != nullptr) { (*canvas).Invalidate(); }
+                });
+
+                number(L"StrumBend", 0, 100, strum.Bend * 100.0, 5, [curve, canvas](NoteToolSettings& s, double v)
+                {
+                    s.Strum.Bend = v / 100.0;
+                    curve->Bend = s.Strum.Bend;
+                    if (*canvas != nullptr) { (*canvas).Invalidate(); }
+                });
+
+                // Changing what the spread is measured in changes the box and the curve with it.
+                choice(L"StrumMeasure", { L"StrumMeasureMs", L"StrumMeasureTicks" }, strum.InTicks ? 1 : 0, [curve, canvas, spreadBox](NoteToolSettings& s, int32_t i)
+                {
+                    s.Strum.InTicks = i == 1;
+                    curve->Ticks = s.Strum.InTicks;
+                    curve->MostSpread = s.Strum.InTicks ? 240.0 : 150.0;
+                    curve->Spread = s.Strum.InTicks ? static_cast<double>(s.Strum.SpreadTicks) : s.Strum.SpreadMs;
+
+                    if (*spreadBox != nullptr)
+                    {
+                        auto const key = s.Strum.InTicks ? L"StrumSpreadTicks" : L"StrumSpreadMs";
+                        (*spreadBox).Header(winrt::box_value(res::GetString(key)));
+                        automation::AutomationProperties::SetName(*spreadBox, res::GetString(key));
+                        (*spreadBox).Maximum(s.Strum.InTicks ? 960 : 500);
+                        (*spreadBox).Value(curve->Spread);
+                    }
+
+                    if (*canvas != nullptr) { (*canvas).Invalidate(); }
+                });
+                choice(L"StrumDirection", { L"StrumDirectionDown", L"StrumDirectionUp", L"StrumDirectionByBeat", L"StrumDirectionRandom" }, static_cast<int32_t>(strum.Direction),
+                    [](NoteToolSettings& s, int32_t i) { s.Strum.Direction = static_cast<seq::StrumDirection>(i); });
+                choice(L"StrumLands", { L"StrumLandsFirst", L"StrumLandsMiddle", L"StrumLandsLast" }, static_cast<int32_t>(strum.Lands),
+                    [](NoteToolSettings& s, int32_t i) { s.Strum.Lands = static_cast<seq::StrumLands>(i); });
+                number(L"StrumTilt", -50, 50, strum.Tilt * 100.0, 5, [](NoteToolSettings& s, double v) { s.Strum.Tilt = v / 100.0; });
+                number(L"StrumLoose", 0, 100, strum.Loose * 100.0, 5, [](NoteToolSettings& s, double v) { s.Strum.Loose = v / 100.0; });
+                check(L"StrumKeepBass", strum.KeepBass, [](NoteToolSettings& s, bool v) { s.Strum.KeepBass = v; });
+                reroll([](NoteToolSettings& s) { ++s.Strum.Seed; });
+                addText(res::GetString(L"NoteToolStrumNote"));
                 break;
             }
 

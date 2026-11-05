@@ -215,6 +215,43 @@ namespace midisequencer
     // Back to front, inside the time the notes take.
     NoteToolResult Reverse(_In_ std::vector<Note> const& notes);
 
+    // ---- strum (the strum proposal; SequenceStrum.h has the shapes) ----
+
+    enum class StrumDirection : uint8_t
+    {
+        Down = 0,           // lowest note first
+        Up = 1,             // highest note first
+        ByBeat = 2,         // down on the beat, up off it, the way a hand moves
+        Random = 3,
+    };
+
+    struct StrumSettings
+    {
+        double SpreadMs{ 35.0 };            // first note to last
+        bool InTicks{ false };              // so the spread changes with the tempo
+        int64_t SpreadTicks{ 60 };
+        StrumShape Shape{ StrumShape::SpeedingUp };
+        double Bend{ 0.5 };                 // 0 to 1
+        StrumDirection Direction{ StrumDirection::Down };
+        StrumLands Lands{ StrumLands::First };
+        bool KeepBass{ false };             // the lowest note stays on the beat
+        double Tilt{ 0.0 };                 // -0.5 to 0.5: positive makes the first notes louder
+        double Loose{ 0.0 };                // 0 to 1: small differences from strum to strum
+        uint32_t Seed{ 1 };
+    };
+
+    // Spreads the notes of each chord (notes that start within 30 ms of each other) along the
+    // shape. It starts from where the notes were before any earlier strum, so strumming again
+    // replaces the last strum rather than adding to it. Every note's end stays where it was. Each
+    // note keeps how far its start moved in StrumOffset, which Remove strum uses.
+    NoteToolResult Strum(_In_ std::vector<Note> const& notes, _In_ NoteToolContext const& context, _In_ StrumSettings const& settings);
+
+    // Puts strummed notes back where they were before the strum. Velocity changes stay.
+    NoteToolResult RemoveStrum(_In_ std::vector<Note> const& notes);
+
+    // How many of the notes a strum moved.
+    size_t CountStrummed(_In_ std::vector<Note> const& notes) noexcept;
+
     // ---- velocity, release velocity and chance ----
 
     enum class ValueTarget : uint8_t

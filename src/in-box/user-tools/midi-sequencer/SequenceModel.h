@@ -77,6 +77,10 @@ namespace midisequencer
         uint16_t AttributeData{ 0 };
         uint8_t Chance{ 100 };          // percent
 
+        // How far the piano roll's Strum moved the note's start, in ticks. Strum keeps the end where
+        // it was, so Remove strum puts both back exactly. 0 for a note that isn't strummed.
+        int32_t StrumOffset{ 0 };
+
         bool operator==(Note const&) const = default;
     };
 
@@ -260,6 +264,10 @@ namespace midisequencer
         Infinity = 8,           // Per Nørgård's infinity series
         LSystem = 9,            // a rewrite rule, grown like a plant and read as a melody
         ChangeRinging = 10,     // bell ringers' methods
+
+        // Strum (Pete, November 5 2026): the chords on the Key and chords row, or another track's,
+        // voiced for an instrument and played on a pattern of strokes.
+        Strum = 11,
     };
 
     // Which cells are born and which stay, as a Life rule's neighbor counts.
@@ -360,6 +368,44 @@ namespace midisequencer
         UpAndDown = 2,
         AsHeld = 3,         // the order the keys went down, or the notes started
         Random = 4,
+    };
+
+    // What a Strum generator voices its chords for. As written plays the chord's notes as they
+    // are: the Key and chords row's close position, or the other track's own notes.
+    enum class StrumInstrument : uint8_t
+    {
+        Guitar = 0,
+        Ukulele = 1,
+        Piano = 2,
+        AsWritten = 3,
+    };
+
+    // How the time between the notes of a strum changes from the first note to the last, as a
+    // hand does: Speeding up leaves less time between later notes.
+    enum class StrumShape : uint8_t
+    {
+        Even = 0,
+        SpeedingUp = 1,
+        SlowingDown = 2,
+        Ease = 3,           // slow, then quick, then slow
+        Rake = 4,           // a slow drag over the first strings, then the rest at once
+    };
+
+    // Which note of a strum lands on the beat. Players start a strum a little early, so its
+    // middle lands on time.
+    enum class StrumLands : uint8_t
+    {
+        First = 0,
+        Middle = 1,
+        Last = 2,
+    };
+
+    // How a muted stroke (x in a pattern) plays: short and quiet, which works on anything, or
+    // with a key switch for an instrument that has a muted sound.
+    enum class StrumMuting : uint8_t
+    {
+        Short = 0,
+        KeySwitch = 1,
     };
 
     // A ring of a Euclidean rhythm: Pulses spread as evenly as they go over Steps, turned by
@@ -521,6 +567,28 @@ namespace midisequencer
         uint8_t Bells{ 6 };                 // 4 to 8
         RingingMethod Method{ RingingMethod::PlainBob };
         bool HandstrokeGap{ true };         // a step's rest before every other row, as towers ring
+
+        // Strum (SequenceStrum.h): chords from the Key and chords row or another track (ArpSource
+        // and ArpTrackId), voiced for Instrument and played on StrumPattern, a character a step:
+        // D down, U up, d and u softer, x muted, R a rasgueado, T tremolo, and - to let it ring.
+        // Normal strokes play at VelocityHigh and soft ones at VelocityLow.
+        StrumInstrument Instrument{ StrumInstrument::Guitar };
+        std::wstring StrumPattern{ L"D-DU-UDU" };
+        uint16_t StrumSpreadMs{ 35 };       // first note to last, 0 to 500
+        bool StrumInTicks{ false };         // spread in ticks, so it changes with the tempo
+        uint16_t StrumSpreadTicks{ 60 };    // 0 to 960
+        StrumShape StrumCurve{ StrumShape::SpeedingUp };
+        uint8_t StrumBend{ 50 };            // how strongly the shape bends, 0 to 100
+        StrumLands StrumLand{ StrumLands::First };
+        bool StrumKeepBass{ false };        // the lowest note on the beat, as a pianist's left hand
+        bool StrumRing{ true };             // a string sounds until something stops it
+        int8_t StrumTilt{ 10 };             // -50 to 50: positive makes the first strings louder
+        uint8_t StrumHand{ 20 };            // 0 to 100: small timing and velocity drift
+        uint8_t StrumBurst{ 4 };            // strokes in an R or a T, 2 to 12
+        StrumShape StrumBurstCurve{ StrumShape::SpeedingUp };
+        StrumMuting StrumMute{ StrumMuting::Short };
+        uint8_t StrumMuteKey{ 24 };         // the key switches, for KeySwitch
+        uint8_t StrumOpenKey{ 26 };
 
         // Keys this version doesn't know, kept as written.
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };

@@ -251,8 +251,9 @@ namespace winrt::midisequencer::implementation
             // A pattern's length comes from its steps, so only a notes clip's opens to change.
             EditorLengthButton().IsEnabled(!pattern);
 
-            // An arpeggiator's rate sits with its octaves and note length instead (comp 4).
-            auto const arpeggiator = generator && clip->Generator->Type == seq::GeneratorType::Arpeggiator;
+            // An arpeggiator's rate sits with its octaves and note length instead (comp 4), and a
+            // Strum's with its pattern.
+            auto const arpeggiator = generator && (clip->Generator->Type == seq::GeneratorType::Arpeggiator || clip->Generator->Type == seq::GeneratorType::Strum);
             GeneratorStepSizeText().Visibility(visible(!arpeggiator));
             GeneratorStepSizeCombo().Visibility(visible(!arpeggiator));
 
