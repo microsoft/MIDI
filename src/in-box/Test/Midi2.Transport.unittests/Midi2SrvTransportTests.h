@@ -102,4 +102,3 @@ private:
     HRESULT WaitForWinmmDeviceCount(std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiInDevices, std::vector<std::unique_ptr<MIDIU_DEVICE>> &midiOutDevices, UINT& numInDevices, UINT& numOutDevices, UINT expectedInCount, UINT expectedOutCount);
 };
 
-

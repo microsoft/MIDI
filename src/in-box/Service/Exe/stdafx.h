@@ -141,3 +141,4 @@ class CMidiDevicePipe;
 #endif
 
 EXTERN_C DECLSPEC_IMPORT ULONG RtlRandomEx(_Inout_ PULONG Seed);
+
