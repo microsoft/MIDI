@@ -52,7 +52,7 @@ private:
     std::wstring m_endpointDeviceId{};
 
     std::mutex m_callbackMutex;
-    wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
+    IMidiCallback* m_callback{ nullptr };
     LONGLONG m_context{ 0 };
 
     std::priority_queue<ScheduledUmpMessage2, std::vector<ScheduledUmpMessage2>, ScheduledUmpMessage2Comparer>
