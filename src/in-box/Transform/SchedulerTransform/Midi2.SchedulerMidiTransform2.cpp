@@ -92,9 +92,6 @@ CMidi2SchedulerMidiTransform2::Initialize(
         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    m_callback = callback;
-    m_context = context;
-
     m_maxForwardSchedulingTicks = MIDI_OUTGOING_MESSAGE_QUEUE_MAX_FUTURE_SCHEDULING_SECONDS * m_timestampFrequency;
 
     m_sendPathLatencyTicks = MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
@@ -136,6 +133,9 @@ CMidi2SchedulerMidiTransform2::Initialize(
     m_dueMessages.reserve(MIDI_SCHEDULER_MAX_MESSAGES_TO_PROCESS_AT_ONCE);
 
     ReadDeviceLatency();
+
+    m_callback = callback;
+    m_context = context;
 
     m_queueWorkerThread = std::thread(&CMidi2SchedulerMidiTransform2::QueueWorker, this);
 
