@@ -238,7 +238,7 @@ CMidi2SchedulerMidiTransform2::SendMidiMessageNow(
         {
             std::scoped_lock<std::mutex> lock(m_callbackMutex);
             callback = m_callback;
-            context = m_context
+            context = m_context;
         }
 
         if (callback != nullptr && data != nullptr)
