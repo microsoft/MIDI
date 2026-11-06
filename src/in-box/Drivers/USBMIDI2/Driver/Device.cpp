@@ -50,6 +50,7 @@ Environment:
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
 #include "Feature_Servicing_MIDI2USBSystemRealTimeCin.h"
 #include "Feature_Servicing_MIDI2USBCableMaskDirection.h"
+#include "Feature_Servicing_MIDI2USBRejectedPacketAdvance.h"
 
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
@@ -2239,8 +2240,16 @@ Return Value:
                     &pDeviceContext->midi1IsInSysex[cbl_num],
                     &umpPacket))
                 {
-                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! USB MIDI 1.0 Packet not processed, parsing error %lu", pReceivedWords[receivedIndex]);
-                    receivedIndex++;    // skip the data
+                    if (Feature_Servicing_MIDI2USBRejectedPacketAdvance_IsEnabled())
+                    {
+                        // The conversion call already advanced past the rejected packet.
+                        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! USB MIDI 1.0 Packet not processed, parsing error %lu", pReceivedWords[receivedIndex - 1]);
+                    }
+                    else
+                    {
+                        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! USB MIDI 1.0 Packet not processed, parsing error %lu", pReceivedWords[receivedIndex]);
+                        receivedIndex++;    // skip the data
+                    }
                     continue;
                 }
 

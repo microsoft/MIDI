@@ -170,6 +170,11 @@ CMidi2SchedulerMidiTransform2::Shutdown()
     {
         m_stopRequested = true;
 
+        {
+            std::scoped_lock<std::mutex> lock(m_callbackMutex);
+            m_callback = nullptr;
+        }
+
         if (m_stopEvent)
         {
             SetEvent(m_stopEvent.get());
@@ -179,8 +184,6 @@ CMidi2SchedulerMidiTransform2::Shutdown()
         {
             m_queueWorkerThread.join();
         }
-
-        m_callback = nullptr;
 
         {
             std::scoped_lock<std::mutex> lock(m_queueMutex);
@@ -229,11 +232,15 @@ CMidi2SchedulerMidiTransform2::SendMidiMessageNow(
 {
     try
     {
-        if (m_callback != nullptr && data != nullptr)
         {
-            RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, size, timestamp, m_context));
+            std::scoped_lock<std::mutex> lock(m_callbackMutex);
 
-            return S_OK;
+            if (m_callback != nullptr && data != nullptr)
+            {
+                RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, size, timestamp, m_context));
+
+                return S_OK;
+            }
         }
 
         TraceLoggingWrite(
@@ -365,6 +372,9 @@ CMidi2SchedulerMidiTransform2::SendMidiMessage(
 
         {
             std::scoped_lock<std::mutex> lock(m_queueMutex);
+
+            // If we've been shut down, do not add anything to the queue.
+            if (m_stopRequested) return S_OK;
 
             // All or nothing, so a refused buffer can be retried without sending any of it twice.
             if (m_messageQueue.size() + messageCount <= MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
