@@ -869,6 +869,29 @@ SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, _
 
     }
 
+    if (Feature_Servicing_MIDI2KSAPinChangesWhileOpen::IsEnabled())
+    {
+        if (SUCCEEDED(creationContext->MidiPort->hr))
+        {
+            PCWSTR deviceInterfaceId = creationContext->MidiPort->DeviceInterfaceId.get();
+            // SwDeviceInterfaceRegister uses the process heap; a zero-byte allocation
+            // can be non-null but unreadable under page heap.
+            SIZE_T cbDeviceInterfaceId = deviceInterfaceId ?
+                HeapSize(GetProcessHeap(), 0, deviceInterfaceId) : 0;
+            size_t cbLength = 0;
+
+            if (cbDeviceInterfaceId == static_cast<SIZE_T>(-1) ||
+                cbDeviceInterfaceId < 2 * sizeof(WCHAR) ||
+                cbDeviceInterfaceId % sizeof(WCHAR) != 0 ||
+                FAILED(StringCbLengthW(deviceInterfaceId, cbDeviceInterfaceId, &cbLength)) ||
+                cbLength == 0)
+            {
+                creationContext->MidiPort->hr = HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+                LOG_IF_FAILED(creationContext->MidiPort->hr);
+            }
+        }
+    }
+
     if (SUCCEEDED(creationContext->MidiPort->hr))
     {
         // success, mark the port as created
