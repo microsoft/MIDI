@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2RejectedPacketAdvance
+class Feature_Servicing_MIDI2USBRejectedPacketAdvance
 {
 public:
     static bool IsEnabled()
@@ -17,7 +17,7 @@ public:
     }
 };
 
-inline bool Feature_Servicing_MIDI2RejectedPacketAdvance_IsEnabled()
+inline bool Feature_Servicing_MIDI2USBRejectedPacketAdvance_IsEnabled()
 {
     return true;
 }
