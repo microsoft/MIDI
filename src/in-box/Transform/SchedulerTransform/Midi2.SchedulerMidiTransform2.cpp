@@ -232,15 +232,20 @@ CMidi2SchedulerMidiTransform2::SendMidiMessageNow(
 {
     try
     {
+        wil::com_ptr_nothrow<IMidiCallback> callback;
+        LONGLONG context;
+
         {
             std::scoped_lock<std::mutex> lock(m_callbackMutex);
+            callback = m_callback;
+            context = m_context
+        }
 
-            if (m_callback != nullptr && data != nullptr)
-            {
-                RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, size, timestamp, m_context));
-
-                return S_OK;
-            }
+        if (callback != nullptr && data != nullptr)
+        {
+            RETURN_IF_FAILED(callback->Callback(optionFlags, data, size, timestamp, context));
+        
+            return S_OK;
         }
 
         TraceLoggingWrite(
