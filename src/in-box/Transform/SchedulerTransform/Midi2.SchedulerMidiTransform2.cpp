@@ -170,11 +170,6 @@ CMidi2SchedulerMidiTransform2::Shutdown()
     {
         m_stopRequested = true;
 
-        {
-            std::scoped_lock<std::mutex> lock(m_callbackMutex);
-            m_callback = nullptr;
-        }
-
         if (m_stopEvent)
         {
             SetEvent(m_stopEvent.get());
@@ -183,6 +178,11 @@ CMidi2SchedulerMidiTransform2::Shutdown()
         if (m_queueWorkerThread.joinable())
         {
             m_queueWorkerThread.join();
+        }
+
+        {
+            std::scoped_lock<std::mutex> lock(m_callbackMutex);
+            m_callback = nullptr;
         }
 
         {
