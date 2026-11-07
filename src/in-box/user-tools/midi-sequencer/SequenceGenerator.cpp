@@ -279,7 +279,7 @@ namespace midisequencer
         generator.ArpOctaves = std::clamp<uint8_t>(generator.ArpOctaves, 1, 4);
 
         // A Strum's settings, which a file can hold anything in.
-        if (generator.Instrument > StrumInstrument::AsWritten) { generator.Instrument = StrumInstrument::Guitar; }
+        if (generator.Instrument > StrumInstrument::Harp) { generator.Instrument = StrumInstrument::Guitar; }
         if (generator.StrumCurve > StrumShape::Rake) { generator.StrumCurve = StrumShape::SpeedingUp; }
         if (generator.StrumBurstCurve > StrumShape::Rake) { generator.StrumBurstCurve = StrumShape::SpeedingUp; }
         if (generator.StrumLand > StrumLands::Last) { generator.StrumLand = StrumLands::First; }
@@ -293,11 +293,8 @@ namespace midisequencer
         generator.StrumBurst = std::clamp<uint8_t>(generator.StrumBurst, 2, 12);
         generator.StrumMuteKey &= 0x7F;
         generator.StrumOpenKey &= 0x7F;
-
-        if (generator.Type == GeneratorType::Strum && generator.ArpSource == ArpeggiatorSource::Held)
-        {
-            generator.ArpSource = ArpeggiatorSource::Chords;
-        }
+        generator.StrumCapo = std::min<uint8_t>(generator.StrumCapo, 9);
+        generator.StrumPosition = std::min<uint8_t>(generator.StrumPosition, 9);
 
         if (generator.ArpTrackId.size() > 128)
         {

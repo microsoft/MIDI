@@ -6070,7 +6070,7 @@
     <value>Pattern</value>
   </data>
   <data name="StrumPatternHelp" xml:space="preserve">
-    <value>A letter for each step. D strums down and U up; d and u are softer. x is a muted stroke. R is a rasgueado, fingers flicked down one after another. T is tremolo, fast strokes filling the step. - lets the strings ring.</value>
+    <value>A letter for each step. D strums down and U up; d and u are softer. x is a muted stroke. R is a rasgueado, fingers flicked down one after another. T is tremolo, fast strokes filling the step. B plucks the bass with the thumb, between the two lowest strings by turns, and 1 to 4 pluck a string counted from the top. P plucks the bass and the top string together. G and g are a glissando up and down every string. - lets the strings ring.</value>
   </data>
   <data name="StrumStep" xml:space="preserve">
     <value>Each letter is</value>
@@ -6254,5 +6254,116 @@
   </data>
   <data name="UndoNoteRemoveStrum" xml:space="preserve">
     <value>Remove strum</value>
+  </data>
+  <data name="NoteStrumToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Strum by dragging</value>
+  </data>
+  <data name="NoteStrumToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Drag on a chord to strum it. Drag right to make the strum take longer, with its last note under the pointer, and up to strum up. The shape comes from Timing, Strum.</value>
+  </data>
+  <data name="NoteStrumText.Text" xml:space="preserve">
+    <value>Strum</value>
+  </data>
+  <data name="NoteMenuGlide" xml:space="preserve">
+    <value>Glide into each note...</value>
+  </data>
+  <data name="NoteMenuVibrato" xml:space="preserve">
+    <value>Vibrato...</value>
+  </data>
+  <data name="NoteMenuRemoveBends" xml:space="preserve">
+    <value>Remove glide and vibrato</value>
+  </data>
+  <data name="NoteToolGlideTitle" xml:space="preserve">
+    <value>Glide</value>
+  </data>
+  <data name="NoteToolGlideHelp" xml:space="preserve">
+    <value>Each note slides in from the pitch of the note before it, like a slide guitar or a singer.</value>
+  </data>
+  <data name="NoteToolVibratoTitle" xml:space="preserve">
+    <value>Vibrato</value>
+  </data>
+  <data name="NoteToolVibratoHelp" xml:space="preserve">
+    <value>Each long note wavers in pitch after a moment, getting stronger, the way a singer or a violinist plays it.</value>
+  </data>
+  <data name="NoteToolGlideTime" xml:space="preserve">
+    <value>Slide time (ms)</value>
+  </data>
+  <data name="NoteToolGlideJoined" xml:space="preserve">
+    <value>Only between notes that touch or overlap</value>
+  </data>
+  <data name="NoteToolBendRange" xml:space="preserve">
+    <value>Your instrument's bend range (semitones)</value>
+  </data>
+  <data name="NoteToolSendRange" xml:space="preserve">
+    <value>Send the bend range to the instrument</value>
+  </data>
+  <data name="NoteToolVibratoDepth" xml:space="preserve">
+    <value>Depth (cents)</value>
+  </data>
+  <data name="NoteToolVibratoRate" xml:space="preserve">
+    <value>Speed (times a second)</value>
+  </data>
+  <data name="NoteToolVibratoDelay" xml:space="preserve">
+    <value>Starts after (ms)</value>
+  </data>
+  <data name="NoteToolVibratoFade" xml:space="preserve">
+    <value>Fades in over (ms)</value>
+  </data>
+  <data name="NoteToolVibratoShortest" xml:space="preserve">
+    <value>Only notes longer than (ms)</value>
+  </data>
+  <data name="NoteToolMidi2Note" xml:space="preserve">
+    <value>This uses MIDI 2.0 per-note pitch bend, so each note bends on its own. Only MIDI 2.0 instruments hear it; a MIDI 1.0 instrument plays the notes without it. Set the bend range to match your instrument, or send it.</value>
+  </data>
+  <data name="NoteToolBendsFormat" xml:space="preserve">
+    <value>Adds {0} pitch bend messages and takes away {1}.</value>
+  </data>
+  <data name="UndoNoteGlide" xml:space="preserve">
+    <value>Glide</value>
+  </data>
+  <data name="UndoNoteVibrato" xml:space="preserve">
+    <value>Vibrato</value>
+  </data>
+  <data name="UndoNoteRemoveBends" xml:space="preserve">
+    <value>Remove glide and vibrato</value>
+  </data>
+  <data name="StrumFromHeld" xml:space="preserve">
+    <value>Keys you hold</value>
+  </data>
+  <data name="StrumLatchHelp" xml:space="preserve">
+    <value>On, it keeps strumming the last keys you held after you let go, until you play new ones.</value>
+  </data>
+  <data name="StrumHeldNote" xml:space="preserve">
+    <value>It strums the keys you hold as you play them. Record or Capture keeps what it plays.</value>
+  </data>
+  <data name="StrumHeldMakeNotes" xml:space="preserve">
+    <value>A Strum that plays the keys you hold has no notes to keep until you play it. Record or Capture keeps what it plays.</value>
+  </data>
+  <data name="StrumInstrumentHarp" xml:space="preserve">
+    <value>Harp</value>
+  </data>
+  <data name="StrumInstrumentHarpHelp" xml:space="preserve">
+    <value>Every note of the chord from low G to high G, as a harp with its pedals set to the chord. Try G and g in the pattern for glissandos.</value>
+  </data>
+  <data name="StrumCapo" xml:space="preserve">
+    <value>Capo (fret)</value>
+  </data>
+  <data name="StrumCapoHelp" xml:space="preserve">
+    <value>Plays the shapes as if a capo were on this fret, so open strings sound higher.</value>
+  </data>
+  <data name="StrumPosition" xml:space="preserve">
+    <value>Neck position (fret)</value>
+  </data>
+  <data name="StrumPositionHelp" xml:space="preserve">
+    <value>The shapes stay near this fret. 0 picks the lowest shapes, mostly open chords. Higher numbers give barre shapes further up the neck.</value>
+  </data>
+  <data name="StrumStyleTravis" xml:space="preserve">
+    <value>Travis picking</value>
+  </data>
+  <data name="StrumStyleArpeggio" xml:space="preserve">
+    <value>Fingerpicked arpeggio</value>
+  </data>
+  <data name="StrumStyleGlissando" xml:space="preserve">
+    <value>Harp glissando</value>
   </data>
 </root>

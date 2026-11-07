@@ -36,4 +36,8 @@ public:
     TEST_METHOD(MakeNotesBakesTheStrum);
     TEST_METHOD(StrumSettingsRoundTrip);
     TEST_METHOD(PianoRollStrumRedoesAndComesBack);
+    TEST_METHOD(FingerpickingPlucksStrings);
+    TEST_METHOD(HarpGlissandoFillsTheStep);
+    TEST_METHOD(CapoAndPositionMoveShapes);
+    TEST_METHOD(StrumsKeysHeldLive);
 };

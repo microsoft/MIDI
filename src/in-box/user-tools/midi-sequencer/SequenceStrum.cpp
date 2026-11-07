@@ -62,6 +62,7 @@ namespace midisequencer
             switch (c)
             {
             case L'D': case L'd': case L'U': case L'u': case L'x': case L'X': case L'R': case L'T':
+            case L'B': case L'P': case L'1': case L'2': case L'3': case L'4': case L'G': case L'g':
                 return true;
             default:
                 return false;
@@ -101,12 +102,17 @@ namespace midisequencer
             return classes;
         }
 
-        // The best shape on a fretted instrument: the lowest on the neck a hand can hold, with as
-        // few strings muted as it can. Fails (empty) when no shape holds every note of the chord,
+        // The best shape on a fretted instrument: the nearest the position on the neck a hand can
+        // hold, with as few strings muted as it can. Frets count from the capo, if there is one. Fails (empty) when no shape holds every note of the chord,
         // or all but one of a chord of five notes or more.
         template <size_t N>
-        std::vector<StrungNote> FrettedShape(_In_ std::array<uint8_t, N> const& tuning, _In_ std::vector<uint8_t> const& classes, _In_ std::optional<uint8_t> bass, _In_ size_t mostMuted)
+        std::vector<StrungNote> FrettedShape(_In_ std::array<uint8_t, N> tuning, _In_ std::vector<uint8_t> const& classes, _In_ std::optional<uint8_t> bass, _In_ size_t mostMuted, _In_ uint8_t capo, _In_ uint8_t nearFret)
         {
+            for (auto& open : tuning)
+            {
+                open = static_cast<uint8_t>(open + capo);
+            }
+
             std::array<bool, 12> inChord{};
 
             for (auto const pc : classes)
@@ -231,7 +237,7 @@ namespace midisequencer
                                 }
                             }
 
-                            auto const score = static_cast<double>(unisons) * 2.0 + static_cast<double>(first) * 2.0 + (fretted ? static_cast<double>(minimum) : 0.0) +
+                            auto const score = static_cast<double>(unisons) * 2.0 + static_cast<double>(first) * 2.0 + static_cast<double>(std::abs((fretted ? minimum : 0) - static_cast<int32_t>(nearFret))) +
                                 (fretted ? static_cast<double>(maximum - minimum) : 0.0) - static_cast<double>(opens) * 0.4 + static_cast<double>(missing) * 3.0;
 
                             if (score < bestScore)
@@ -304,12 +310,35 @@ namespace midisequencer
         }
 
         // An instrument's voicing of a chord's notes, worked out afresh.
-        std::vector<StrungNote> VoiceClasses(_In_ StrumInstrument instrument, _In_ std::vector<uint8_t> const& classes, _In_ uint8_t bass)
+        std::vector<StrungNote> VoiceClasses(_In_ StrumInstrument instrument, _In_ std::vector<uint8_t> const& classes, _In_ uint8_t bass, _In_ uint8_t capo, _In_ uint8_t nearFret)
         {
             switch (instrument)
             {
+            case StrumInstrument::Harp:
+            {
+                // Every string whose note is in the chord, as the pedals set to the chord leave them.
+                std::array<bool, 12> inChord{};
+
+                for (auto const pc : classes)
+                {
+                    inChord[pc] = true;
+                }
+
+                std::vector<StrungNote> strings{};
+
+                for (uint8_t number = 43; number <= 79; ++number)
+                {
+                    if (inChord[number % 12])
+                    {
+                        strings.push_back(StrungNote{ static_cast<uint8_t>(strings.size()), number });
+                    }
+                }
+
+                return strings;
+            }
+
             case StrumInstrument::Guitar:
-                if (auto shape = FrettedShape(GuitarTuning, classes, bass, 2); !shape.empty())
+                if (auto shape = FrettedShape(GuitarTuning, classes, bass, 2, capo, nearFret); !shape.empty())
                 {
                     return shape;
                 }
@@ -318,7 +347,7 @@ namespace midisequencer
                 return TwoHands(classes, bass, 40, 52);
 
             case StrumInstrument::Ukulele:
-                if (auto shape = FrettedShape(UkuleleTuning, classes, std::nullopt, 0); !shape.empty())
+                if (auto shape = FrettedShape(UkuleleTuning, classes, std::nullopt, 0, capo, nearFret); !shape.empty())
                 {
                     return shape;
                 }
@@ -369,9 +398,11 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
-    std::vector<StrungNote> VoiceChord(StrumInstrument instrument, std::vector<uint8_t> const& pitchClasses, uint8_t bass, std::vector<uint8_t> const& notes)
+    std::vector<StrungNote> VoiceChord(StrumInstrument instrument, std::vector<uint8_t> const& pitchClasses, uint8_t bass, std::vector<uint8_t> const& notes, uint8_t capo, uint8_t position)
     {
         bass %= 12;
+        capo = std::min<uint8_t>(capo, 9);
+        position = std::min<uint8_t>(position, 9);
 
         if (instrument == StrumInstrument::AsWritten)
         {
@@ -401,7 +432,7 @@ namespace midisequencer
         static std::mutex cacheLock{};
         static std::map<uint32_t, std::vector<StrungNote>> cache{};
 
-        uint32_t key = (static_cast<uint32_t>(instrument) << 20) | (static_cast<uint32_t>(bass) << 16);
+        uint32_t key = (static_cast<uint32_t>(position) << 28) | (static_cast<uint32_t>(capo) << 24) | (static_cast<uint32_t>(instrument) << 20) | (static_cast<uint32_t>(bass) << 16);
 
         for (auto const pc : classes)
         {
@@ -417,12 +448,12 @@ namespace midisequencer
             }
         }
 
-        auto voiced = VoiceClasses(instrument, classes, bass);
+        auto voiced = VoiceClasses(instrument, classes, bass, capo, position);
 
         {
             std::scoped_lock lock{ cacheLock };
 
-            // 4 instruments, 12 basses and 4096 sets of notes at most; far fewer in practice.
+            // Instruments, capos, positions, basses and sets of notes; far fewer in practice.
             if (cache.size() >= 4096)
             {
                 cache.clear();
@@ -455,6 +486,8 @@ namespace midisequencer
         case StrumInstrument::Ukulele:
         case StrumInstrument::Piano:
             return string >= 1;         // all but the G string, or the left hand
+        case StrumInstrument::Harp:
+            return true;
         default:
             return static_cast<size_t>(string) >= voicedStrings / 3;
         }
@@ -485,6 +518,9 @@ namespace midisequencer
             { L"StrumStyleTremolo", L"TTTT", TicksPerQuarterNote, true, 50, 8, StrumShape::Even },
             { L"StrumStyleRasgueado", L"R-DUR-DU", TicksPerQuarterNote / 2, true, 50, 4, StrumShape::SpeedingUp },
             { L"StrumStyleBuild", L"DDDDRRRR", TicksPerQuarterNote / 2, true, 50, 3, StrumShape::SpeedingUp },
+            { L"StrumStyleTravis", L"B3B2B3B1", TicksPerQuarterNote / 2, true, 50, 4, StrumShape::SpeedingUp },
+            { L"StrumStyleArpeggio", L"B3214123", TicksPerQuarterNote / 2, true, 50, 4, StrumShape::SpeedingUp },
+            { L"StrumStyleGlissando", L"G--g", TicksPerQuarterNote, true, 50, 4, StrumShape::SpeedingUp },
         };
 
         return styles;
@@ -536,7 +572,8 @@ namespace midisequencer
         int64_t fromTick,
         int64_t toTick,
         std::function<void(Note const&)> const& add,
-        std::function<int64_t(int64_t)> const* songTick)
+        std::function<int64_t(int64_t)> const* songTick,
+        ArpeggiatorInput* keys)
     {
         if (!IsStrum(clip))
         {
@@ -551,17 +588,29 @@ namespace midisequencer
             return;
         }
 
-        // Keys held on a source aren't a Strum's to play, so anything but a track is the row.
-        auto const fromChords = generator.ArpSource != ArpeggiatorSource::Track;
+        auto const held = generator.ArpSource == ArpeggiatorSource::Held;
+        auto const fromTrack = generator.ArpSource == ArpeggiatorSource::Track;
+        auto const fromChords = !held && !fromTrack;
+
+        // The keys aren't there when exporting, so there's nothing to play.
+        if (held && keys == nullptr)
+        {
+            return;
+        }
 
         if (fromChords && (!sequence.Harmony || sequence.Harmony->Chords.empty()))
         {
             return;
         }
 
+        if (held)
+        {
+            keys->Used = true;
+        }
+
         Track const* source{ nullptr };
 
-        if (!fromChords)
+        if (fromTrack)
         {
             source = FindTrack(sequence, generator.ArpTrackId);
 
@@ -635,6 +684,20 @@ namespace midisequencer
             std::vector<uint8_t> numbers{};
             uint8_t bass{ 0 };
 
+            auto const fromNotes = [&](std::vector<HeldNote> const& notes)
+            {
+                uint8_t lowest{ 127 };
+
+                for (auto const& note : notes)
+                {
+                    classes.push_back(note.Number % 12);
+                    numbers.push_back(note.Number);
+                    lowest = std::min(lowest, note.Number);
+                }
+
+                bass = lowest % 12;
+            };
+
             if (fromChords)
             {
                 auto const atSong = toSong(tick);
@@ -651,6 +714,17 @@ namespace midisequencer
                 numbers = ChordNotes(*playing);
                 voiced.End = tick + (playing->Tick + playing->Length - atSong);
             }
+            else if (held)
+            {
+                auto const& down = generator.ArpLatch ? keys->Latched : keys->Held;
+
+                if (down.empty())
+                {
+                    return voiced;
+                }
+
+                fromNotes(down);
+            }
             else
             {
                 auto const sounding = NotesSoundingAt(sequence, *source, tick);
@@ -660,30 +734,90 @@ namespace midisequencer
                     return voiced;
                 }
 
-                uint8_t lowest{ 127 };
-
-                for (auto const& held : sounding.Notes)
-                {
-                    classes.push_back(held.Number % 12);
-                    numbers.push_back(held.Number);
-                    lowest = std::min(lowest, held.Number);
-                }
-
-                bass = lowest % 12;
+                fromNotes(sounding.Notes);
             }
 
-            voiced.Strings = VoiceChord(generator.Instrument, classes, bass, numbers);
+            voiced.Strings = VoiceChord(generator.Instrument, classes, bass, numbers, generator.StrumCapo, generator.StrumPosition);
             return voiced;
         };
 
-        // The next stroke after a step that strikes or stops a string.
-        auto const nextHit = [&](int64_t step, uint8_t string, size_t voicedStrings) -> int64_t
+        // The thumb goes between the two lowest strings by turns, counted through the pass.
+        auto const patternThumbs = static_cast<int64_t>(std::count_if(pattern.begin(), pattern.end(), [](wchar_t c) { return c == L'B' || c == L'P'; }));
+
+        auto const thumbAt = [&](int64_t step, size_t strings) -> size_t
+        {
+            auto const into = static_cast<size_t>(step) % pattern.size();
+            auto const before = (step / static_cast<int64_t>(pattern.size())) * patternThumbs +
+                std::count_if(pattern.begin(), pattern.begin() + static_cast<std::ptrdiff_t>(into), [](wchar_t c) { return c == L'B' || c == L'P'; });
+            return strings > 1 && before % 2 == 1 ? 1 : 0;
+        };
+
+        // Which of a chord's strings a step's letter plays: indexes into its strings, in the order
+        // they're struck.
+        auto const struck = [&](wchar_t c, int64_t step, std::vector<StrungNote> const& strings, bool down) -> std::vector<size_t>
+        {
+            std::vector<size_t> which{};
+            auto const size = strings.size();
+
+            switch (c)
+            {
+            case L'B':
+                which.push_back(thumbAt(step, size));
+                break;
+
+            case L'P':
+                which.push_back(thumbAt(step, size));
+
+                if (size - 1 != which.front())
+                {
+                    which.push_back(size - 1);
+                }
+                break;
+
+            case L'1': case L'2': case L'3': case L'4':
+            {
+                auto const fromTop = static_cast<size_t>(c - L'0');
+
+                if (fromTop <= size)
+                {
+                    which.push_back(size - fromTop);
+                }
+                break;
+            }
+
+            default:
+                for (size_t i = 0; i < size; ++i)
+                {
+                    which.push_back(i);
+                }
+
+                if (!down)
+                {
+                    std::reverse(which.begin(), which.end());
+                    std::erase_if(which, [&](size_t i) { return !UpStrokeHits(generator.Instrument, strings[i].String, size); });
+                }
+                break;
+            }
+
+            return which;
+        };
+
+        // The next step after this one that strikes or stops a string, assuming the same chord.
+        auto const nextHit = [&](int64_t step, size_t index, std::vector<StrungNote> const& strings) -> int64_t
         {
             for (auto later = step + 1; later < steps && later <= step + RingLookahead; ++later)
             {
                 auto const c = pattern[static_cast<size_t>(later) % pattern.size()];
 
-                if (IsStroke(c) && (!IsUpStroke(c) || UpStrokeHits(generator.Instrument, string, voicedStrings)))
+                if (!IsStroke(c))
+                {
+                    continue;
+                }
+
+                // A muted stroke stops every string.
+                auto const which = IsMuted(c) ? std::vector<size_t>{ index } : struck(c, later, strings, !IsUpStroke(c));
+
+                if (std::find(which.begin(), which.end(), index) != which.end())
                 {
                     return passStart + later * stepTicks;
                 }
@@ -697,8 +831,9 @@ namespace midisequencer
             int64_t At{ 0 };            // from the step's start
             bool Down{ true };
             double Velocity{ 0 };
-            double Spread{ 1.0 };
+            double Spread{ 1.0 };       // of the strum time
             bool Muted{ false };
+            int64_t Across{ 0 };        // a glissando's own time, in place of the strum time
         };
 
         auto const normal = static_cast<double>(generator.VelocityHigh);
@@ -732,6 +867,15 @@ namespace midisequencer
             case L'x':
             case L'X': strokes.push_back({ 0, true, soft * 0.7, 0.5, true }); break;
 
+            // A thumb, a finger or a pinch: the strings together, no strum.
+            case L'B':
+            case L'P': strokes.push_back({ 0, true, normal, 0.0, false }); break;
+            case L'1': case L'2': case L'3': case L'4': strokes.push_back({ 0, true, normal * 0.85, 0.0, false }); break;
+
+            // A glissando: every string, filling most of the step.
+            case L'G': strokes.push_back({ 0, true, normal * 0.8, 0.0, false, stepTicks * 9 / 10 }); break;
+            case L'g': strokes.push_back({ 0, false, normal * 0.8, 0.0, false, stepTicks * 9 / 10 }); break;
+
             case L'R':
                 // Fingers flicked down one after another, closer together or further apart as
                 // they go, the last the loudest.
@@ -762,50 +906,45 @@ namespace midisequencer
             {
                 auto const& stroke = strokes[si];
 
-                std::vector<StrungNote> hit{};
+                // A glissando down runs every string from the top; any other up stroke hits the top
+                // strings only.
+                auto which = struck(c, step, chord.Strings, stroke.Down || c == L'g');
 
-                if (stroke.Down)
+                if (c == L'g')
                 {
-                    hit = chord.Strings;
-                }
-                else
-                {
-                    for (auto it = chord.Strings.rbegin(); it != chord.Strings.rend(); ++it)
-                    {
-                        if (UpStrokeHits(generator.Instrument, it->String, chord.Strings.size()))
-                        {
-                            hit.push_back(*it);
-                        }
-                    }
+                    std::reverse(which.begin(), which.end());
                 }
 
-                if (hit.empty())
+                if (which.empty())
                 {
                     continue;
                 }
 
                 // Keep bass leaves the lowest string on the beat and spreads the rest.
-                auto const keptBass = generator.StrumKeepBass && stroke.Down && hit.size() > 1;
-                auto const spreadOver = keptBass ? hit.size() - 1 : hit.size();
-                auto const strokeSpread = static_cast<double>(spread) * stroke.Spread;
+                auto const keptBass = generator.StrumKeepBass && stroke.Down && stroke.Across == 0 && which.size() > 1;
+                auto const spreadOver = keptBass ? which.size() - 1 : which.size();
+                auto const strokeSpread = stroke.Across > 0 ? static_cast<double>(stroke.Across) : static_cast<double>(spread) * stroke.Spread;
+                auto const shape = stroke.Across > 0 ? StrumShape::Even : generator.StrumCurve;
 
-                auto const shift = generator.StrumLand == StrumLands::Middle ? -std::llround(strokeSpread * StrumCurve(generator.StrumCurve, 0.5, bend))
+                auto const shift = stroke.Across > 0 ? 0
+                    : generator.StrumLand == StrumLands::Middle ? -std::llround(strokeSpread * StrumCurve(shape, 0.5, bend))
                     : generator.StrumLand == StrumLands::Last ? -std::llround(strokeSpread)
                     : 0;
 
                 // The next stroke in a burst stops what this one started.
                 auto const burstNext = si + 1 < strokes.size() ? std::optional<int64_t>{ strokeTick + strokes[si + 1].At } : std::nullopt;
 
-                for (size_t j = 0; j < hit.size(); ++j)
+                for (size_t j = 0; j < which.size(); ++j)
                 {
-                    auto const& string = hit[j];
+                    auto const index = which[j];
+                    auto const& string = chord.Strings[index];
                     auto const bassNote = keptBass && j == 0;
                     auto const place = bassNote ? 0 : (keptBass ? j - 1 : j);
                     auto const x = spreadOver > 1 ? static_cast<double>(place) / static_cast<double>(spreadOver - 1) : 0.0;
 
-                    auto const purpose = static_cast<uint64_t>(step) * 4096 + si * 64 + string.String;
+                    auto const purpose = static_cast<uint64_t>(step) * 4096 + si * 64 + index;
                     auto const drift = std::llround(Drift(clip.Seed, rollPass, purpose) * hand * static_cast<double>(ticksForMs(strokeTick, DriftMs)));
-                    auto const offset = bassNote ? 0 : std::llround(strokeSpread * StrumCurve(generator.StrumCurve, x, bend)) + shift;
+                    auto const offset = bassNote ? 0 : std::llround(strokeSpread * StrumCurve(shape, x, bend)) + shift;
 
                     auto start = strokeTick + stroke.At + offset + drift;
                     start = std::max(start, passStart);
@@ -826,7 +965,7 @@ namespace midisequencer
                     }
                     else if (generator.StrumRing)
                     {
-                        auto end = burstNext.has_value() ? *burstNext : nextHit(step, string.String, chord.Strings.size());
+                        auto end = burstNext.has_value() ? *burstNext : nextHit(step, index, chord.Strings);
                         end = std::min({ end, chord.End, passEnd });
                         length = std::max<int64_t>(1, end - start);
                     }
@@ -903,7 +1042,6 @@ namespace midisequencer
             }
         }
     }
-
     _Use_decl_annotations_
     bool IsStrum(Clip const& clip) noexcept
     {

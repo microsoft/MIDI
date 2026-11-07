@@ -27,6 +27,7 @@
 #include "Lyrics.h"
 #include "PianoRoll.h"
 #include "NoteTools.h"
+#include "NoteExpression.h"
 #include "ClipLaneStrip.h"
 #include "PatternEditor.h"
 #include "SequenceGenerator.h"
@@ -146,6 +147,7 @@ namespace winrt::midisequencer::implementation
         void OnNoteToolsMenuOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
         void OnNoteCleanUpClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnNoteOverlapClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNoteStrumToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorKeyboardClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnValuesAsChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnEditorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -188,6 +190,8 @@ namespace winrt::midisequencer::implementation
             Chance,
             SelectVelocity,
             Strum,
+            Glide,
+            Vibrato,
         };
 
         enum class NoteMenu : uint8_t
@@ -587,6 +591,11 @@ namespace winrt::midisequencer::implementation
         void ApplyNoteToolResult(_In_ std::wstring name, _In_ seq::NoteToolResult result) noexcept;
         void PreviewNoteTool(_In_ NoteTool tool, _In_ controls::TextBlock const& summary) noexcept;
         void SelectNotesWith(_In_ seq::SelectSettings settings) noexcept;
+
+        // Glide and vibrato change the clip's events, not its notes (NoteExpression.h).
+        static bool IsExpressionTool(_In_ NoteTool tool) noexcept { return tool == NoteTool::Glide || tool == NoteTool::Vibrato; }
+        seq::ExpressionResult RunExpression(_In_ NoteTool tool) const;
+        void ApplyExpression(_In_ std::wstring name, _In_ seq::ExpressionResult result) noexcept;
         void MoveSelectionToNewTrack() noexcept;
 
         // Each tool's settings, kept while the app runs so a tool opens as it was last used.
@@ -612,9 +621,29 @@ namespace winrt::midisequencer::implementation
             seq::ValueSettings Chance{ seq::ValueTarget::Chance, seq::ValueMode::Set, 75.0, 25.0 };
             seq::SelectSettings SelectVelocity{ seq::SelectKind::VelocityRange };
             seq::StrumSettings Strum{};
+            seq::GlideSettings Glide{};
+            seq::VibratoSettings Vibrato{};
         };
 
         NoteToolSettings m_noteTools{};
+
+        // The Strum tool's drag on a chord: right sets how long the strum takes, with its last note
+        // under the pointer, and up makes it an up strum. Applied when it's let go.
+        struct StrumDrag
+        {
+            bool Active{ false };
+            std::vector<seq::Note> Targets{};
+            int64_t ChordStart{ 0 };
+            float PressY{ 0 };
+            seq::NoteToolResult Result{};
+            seq::StrumSettings Settings{};
+        };
+
+        StrumDrag m_strumDrag{};
+        bool StrumDragPressed(_In_ foundation::Point position) noexcept;
+        void StrumDragMoved(_In_ foundation::Point position) noexcept;
+        void StrumDragReleased() noexcept;
+        void UseRollTool(_In_ seq::RollTool tool) noexcept;
         themeengine::PlateLayer m_noteToolPlates{};
 
         // ---- the timeline and launcher from the keyboard (MainWindowKeyboard.cpp) ----

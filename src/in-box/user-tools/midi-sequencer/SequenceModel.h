@@ -378,6 +378,7 @@ namespace midisequencer
         Ukulele = 1,
         Piano = 2,
         AsWritten = 3,
+        Harp = 4,           // the chord's notes over four octaves, as a harp with its pedals set to the chord
     };
 
     // How the time between the notes of a strum changes from the first note to the last, as a
@@ -570,7 +571,9 @@ namespace midisequencer
 
         // Strum (SequenceStrum.h): chords from the Key and chords row or another track (ArpSource
         // and ArpTrackId), voiced for Instrument and played on StrumPattern, a character a step:
-        // D down, U up, d and u softer, x muted, R a rasgueado, T tremolo, and - to let it ring.
+        // D down, U up, d and u softer, x muted, R a rasgueado, T tremolo, B the thumb on the bass,
+        // 1 to 4 a finger on a string from the top, P a pinch, G and g a glissando up and down, and
+        // - to let it ring. Held plays the keys held on the track's source, as the arpeggiator can.
         // Normal strokes play at VelocityHigh and soft ones at VelocityLow.
         StrumInstrument Instrument{ StrumInstrument::Guitar };
         std::wstring StrumPattern{ L"D-DU-UDU" };
@@ -589,6 +592,8 @@ namespace midisequencer
         StrumMuting StrumMute{ StrumMuting::Short };
         uint8_t StrumMuteKey{ 24 };         // the key switches, for KeySwitch
         uint8_t StrumOpenKey{ 26 };
+        uint8_t StrumCapo{ 0 };             // frets, 0 to 9, for a guitar or a ukulele
+        uint8_t StrumPosition{ 0 };         // the fret shapes stay near, 0 for as low as they go
 
         // Keys this version doesn't know, kept as written.
         winrt::Windows::Data::Json::JsonObject Unknown{ nullptr };

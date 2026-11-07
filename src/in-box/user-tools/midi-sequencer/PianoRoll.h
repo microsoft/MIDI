@@ -21,6 +21,7 @@ namespace midisequencer
     {
         Select = 0,
         Draw = 1,
+        Strum = 2,          // a drag on a chord strums it (MainWindowNoteTools.cpp handles it)
     };
 
     // What a gesture changed. The window applies it as one undo step.
@@ -169,6 +170,7 @@ namespace midisequencer
             Draw,
             Band,
             Velocity,
+            VelocityLine,       // Ctrl+drag in the velocity lane: a straight line the notes under it follow
             Scroll,
         };
 
@@ -194,6 +196,10 @@ namespace midisequencer
         void DrawGhosts(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawNotes(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawVelocityLane(_In_ canvas::CanvasDrawingSession const& ds);
+
+        // The velocity a velocity line gives a note at a tick, or nothing outside the line.
+        std::optional<uint16_t> LineVelocity(_In_ int64_t tick) const noexcept;
+        bool InLineScope(_In_ Note const& note) const noexcept { return m_selected.empty() || IsSelected(note); }
 
         // Where a note is drawn while a gesture moves or stretches it.
         Note PreviewOf(_In_ Note const& note) const noexcept;

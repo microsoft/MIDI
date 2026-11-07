@@ -141,6 +141,9 @@ namespace midisequencer
     std::unique_ptr<SequenceChange> MakeTrackLanesChange(_In_ std::wstring trackId, _In_ std::vector<AutomationLane> before, _In_ std::vector<AutomationLane> after);
     std::unique_ptr<SequenceChange> MakeClipLanesChange(_In_ std::wstring clipId, _In_ std::vector<AutomationLane> before, _In_ std::vector<AutomationLane> after);
 
+    // A clip's other messages, such as the Per-Note Pitch Bend of glide and vibrato (NoteExpression.h).
+    std::unique_ptr<SequenceChange> MakeClipEventsChange(_In_ std::wstring clipId, _In_ std::vector<ClipEvent> before, _In_ std::vector<ClipEvent> after);
+
     // ---- tempo and meter ----
 
     // The tempo from a tick on: changes the tempo change at that tick, or adds one. A ramp from

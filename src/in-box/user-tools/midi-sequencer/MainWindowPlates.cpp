@@ -245,6 +245,8 @@ namespace winrt::midisequencer::implementation
             {
                 m_noteToolPlates.Add(button, L"button.subtle", OnStates());
             }
+
+            m_noteToolPlates.Add(NoteStrumToggle(), L"button.subtle", OnStates());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to set up the style's plates.")
     }

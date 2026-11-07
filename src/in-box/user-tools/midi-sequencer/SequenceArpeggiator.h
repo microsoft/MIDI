@@ -97,7 +97,7 @@ namespace midisequencer
 
     bool IsArpeggiator(_In_ Clip const& clip) noexcept;
 
-    // An arpeggiator that plays the keys held on its track's source.
+    // An arpeggiator or a Strum that plays the keys held on its track's source.
     bool PlaysHeldKeys(_In_ Clip const& clip) noexcept;
 
     // Whether a track has one on its timeline or in a launcher slot, so its source has to be

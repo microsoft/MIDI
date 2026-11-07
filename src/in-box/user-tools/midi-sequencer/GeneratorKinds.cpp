@@ -481,7 +481,7 @@ namespace midisequencer
             a.StrumSpreadTicks == b.StrumSpreadTicks && a.StrumCurve == b.StrumCurve && a.StrumBend == b.StrumBend && a.StrumLand == b.StrumLand &&
             a.StrumKeepBass == b.StrumKeepBass && a.StrumRing == b.StrumRing && a.StrumTilt == b.StrumTilt && a.StrumHand == b.StrumHand &&
             a.StrumBurst == b.StrumBurst && a.StrumBurstCurve == b.StrumBurstCurve && a.StrumMute == b.StrumMute &&
-            a.StrumMuteKey == b.StrumMuteKey && a.StrumOpenKey == b.StrumOpenKey;
+            a.StrumMuteKey == b.StrumMuteKey && a.StrumOpenKey == b.StrumOpenKey && a.StrumCapo == b.StrumCapo && a.StrumPosition == b.StrumPosition;
     }
 
     _Use_decl_annotations_
@@ -574,7 +574,8 @@ namespace midisequencer
         print.Add((static_cast<uint64_t>(generator.StrumCurve) << 56) | (static_cast<uint64_t>(generator.StrumBend) << 48) | (static_cast<uint64_t>(generator.StrumLand) << 40) |
             (static_cast<uint64_t>(static_cast<uint8_t>(generator.StrumTilt)) << 32) | (static_cast<uint64_t>(generator.StrumHand) << 24) | (static_cast<uint64_t>(generator.StrumBurst) << 16) |
             (static_cast<uint64_t>(generator.StrumBurstCurve) << 8) | (generator.StrumKeepBass ? 2u : 0u) | (generator.StrumRing ? 1u : 0u));
-        print.Add((static_cast<uint64_t>(generator.StrumMute) << 16) | (static_cast<uint64_t>(generator.StrumMuteKey) << 8) | generator.StrumOpenKey);
+        print.Add((static_cast<uint64_t>(generator.StrumCapo) << 32) | (static_cast<uint64_t>(generator.StrumPosition) << 24) |
+            (static_cast<uint64_t>(generator.StrumMute) << 16) | (static_cast<uint64_t>(generator.StrumMuteKey) << 8) | generator.StrumOpenKey);
         return print.Value;
     }
 

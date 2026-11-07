@@ -342,7 +342,7 @@ namespace winrt::midisequencer::implementation
 
             if (seq::PlaysHeldKeys(*clip))
             {
-                ShowMessage(res::GetString(L"ArpHeldMakeNotes"));
+                ShowMessage(res::GetString(seq::IsStrum(*clip) ? L"StrumHeldMakeNotes" : L"ArpHeldMakeNotes"));
                 return;
             }
 

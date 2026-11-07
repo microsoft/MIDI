@@ -308,6 +308,7 @@ namespace winrt::midisequencer::implementation
             EditorUsesText().Text(res::FormatString(L"ClipUsesFormat", uses));
 
             EditorDrawToggle().IsChecked(m_roll.Tool() == seq::RollTool::Draw);
+            NoteStrumToggle().IsChecked(m_roll.Tool() == seq::RollTool::Strum);
 
             auto const grid = SnapGrid();
             EditorQuantizeButton().Content(winrt::box_value(grid > 0 ? res::GetString(L"EditorQuantizeToGrid") : res::GetString(L"EditorQuantizeSixteenths")));
@@ -591,6 +592,18 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            // The Strum tool: a drag on a chord strums it.
+            if (!right && m_roll.Tool() == seq::RollTool::Strum && m_roll.IsInNotesArea(position))
+            {
+                if (StrumDragPressed(position))
+                {
+                    m_editorCanvas.CapturePointer(args.Pointer());
+                }
+
+                args.Handled(true);
+                return;
+            }
+
             // Alt turns Scale snap off for this note.
             m_roll.SetScaleSnapBypass((args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Menu) == winrt::Windows::System::VirtualKeyModifiers::Menu);
 
@@ -623,6 +636,12 @@ namespace winrt::midisequencer::implementation
             if (OnClipLanesMoved(position))
             {
                 ShowEditorSizing(false);
+                return;
+            }
+
+            if (m_strumDrag.Active)
+            {
+                StrumDragMoved(position);
                 return;
             }
 
@@ -699,6 +718,14 @@ namespace winrt::midisequencer::implementation
 
             if (OnClipLanesReleased(args.GetCurrentPoint(m_editorCanvas).Position()))
             {
+                return;
+            }
+
+            if (m_strumDrag.Active)
+            {
+                StrumDragMoved(args.GetCurrentPoint(m_editorCanvas).Position());
+                m_editorCanvas.ReleasePointerCaptures();
+                StrumDragReleased();
                 return;
             }
 
@@ -860,8 +887,7 @@ namespace winrt::midisequencer::implementation
                 break;
 
             case VirtualKey::B:
-                m_roll.SetTool(m_roll.Tool() == seq::RollTool::Draw ? seq::RollTool::Select : seq::RollTool::Draw);
-                EditorDrawToggle().IsChecked(m_roll.Tool() == seq::RollTool::Draw);
+                UseRollTool(m_roll.Tool() == seq::RollTool::Draw ? seq::RollTool::Select : seq::RollTool::Draw);
                 break;
 
             default:
@@ -884,7 +910,7 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::OnEditorDrawClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
-        m_roll.SetTool(EditorDrawToggle().IsChecked().GetBoolean() ? seq::RollTool::Draw : seq::RollTool::Select);
+        UseRollTool(EditorDrawToggle().IsChecked().GetBoolean() ? seq::RollTool::Draw : seq::RollTool::Select);
     }
 
     _Use_decl_annotations_

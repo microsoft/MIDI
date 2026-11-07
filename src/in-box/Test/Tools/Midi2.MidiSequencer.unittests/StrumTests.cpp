@@ -62,10 +62,10 @@ namespace
         return clip;
     }
 
-    std::vector<Note> Play(Sequence const& sequence, Clip const& clip, int64_t from = 0, int64_t to = Bar)
+    std::vector<Note> Play(Sequence const& sequence, Clip const& clip, int64_t from = 0, int64_t to = Bar, ArpeggiatorInput* keys = nullptr)
     {
         std::vector<Note> notes{};
-        ForEachStrumNote(sequence, clip, 0, clip.Length, 0, from, to, [&notes](Note const& note) { notes.push_back(note); });
+        ForEachStrumNote(sequence, clip, 0, clip.Length, 0, from, to, [&notes](Note const& note) { notes.push_back(note); }, nullptr, keys);
         std::stable_sort(notes.begin(), notes.end(), ByTimeThenNote);
         return notes;
     }
@@ -520,4 +520,99 @@ void StrumTests::PianoRollStrumRedoesAndComesBack()
     QuantizeSettings quantize{};
     auto const quantized = Applied(down, Quantize(down, context, quantize));
     VERIFY_ARE_EQUAL(size_t{ 0 }, CountStrummed(quantized));
+}
+
+void StrumTests::FingerpickingPlucksStrings()
+{
+    auto const sequence = SongWithChord();
+    auto clip = StrumClip(L"B3B2");
+    clip.Generator->StepTicks = TicksPerQuarterNote / 2;
+
+    // C is x32010: the thumb on C, then E by turns; the fingers count from the top.
+    auto const notes = Play(sequence, clip, 0, TicksPerQuarterNote * 2);
+    SameNumbers(Numbers(notes), { 48, 55, 52, 60 });
+    VERIFY_ARE_EQUAL(int64_t{ 480 }, notes[1].Tick);
+
+    // A pinch plays the thumb and the top string together.
+    auto const pinch = Play(sequence, StrumClip(L"P"), 0, TicksPerQuarterNote);
+    SameNumbers(Numbers(pinch), { 48, 64 });
+    VERIFY_ARE_EQUAL(pinch[0].Tick, pinch[1].Tick);
+}
+
+void StrumTests::HarpGlissandoFillsTheStep()
+{
+    auto const sequence = SongWithChord();
+    auto clip = StrumClip(L"G---");
+    clip.Generator->Instrument = StrumInstrument::Harp;
+
+    // Every C, E and G from G2 to G5, spread over most of the beat.
+    auto const up = Play(sequence, clip, 0, TicksPerQuarterNote);
+    SameNumbers(Numbers(up), { 43, 48, 52, 55, 60, 64, 67, 72, 76, 79 });
+    VERIFY_ARE_EQUAL(int64_t{ 0 }, up.front().Tick);
+    VERIFY_ARE_EQUAL(int64_t{ 864 }, up.back().Tick);
+
+    clip.Generator->StrumPattern = L"g---";
+    auto const down = Play(sequence, clip, 0, TicksPerQuarterNote);
+    VERIFY_ARE_EQUAL(uint8_t{ 79 }, down.front().Number, L"a glissando down starts at the top");
+}
+
+void StrumTests::CapoAndPositionMoveShapes()
+{
+    auto const open = Guitar({ 0, 4, 7 }, 0);
+    auto const capo = Numbers(VoiceChord(StrumInstrument::Guitar, { 0, 4, 7 }, 0, {}, 3, 0));
+    auto const up = Numbers(VoiceChord(StrumInstrument::Guitar, { 0, 4, 7 }, 0, {}, 0, 8));
+
+    for (auto const& shape : { capo, up })
+    {
+        VERIFY_IS_FALSE(shape == open);
+        VERIFY_ARE_EQUAL(0, shape.front() % 12, L"C is still the bass");
+
+        for (auto const number : shape)
+        {
+            VERIFY_IS_TRUE(number % 12 == 0 || number % 12 == 4 || number % 12 == 7);
+        }
+    }
+
+    // With a capo on the third fret, no string sounds below it.
+    auto const shape = VoiceChord(StrumInstrument::Guitar, { 0, 4, 7 }, 0, {}, 3, 0);
+    constexpr std::array<int32_t, 6> tuning{ 40, 45, 50, 55, 59, 64 };
+
+    for (auto const& string : shape)
+    {
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(static_cast<int32_t>(string.Number), tuning[string.String] + 3);
+    }
+
+    // Up the neck, it's the barre shape on the eighth fret, with C on the top string.
+    VERIFY_ARE_EQUAL(72, up.back());
+}
+
+void StrumTests::StrumsKeysHeldLive()
+{
+    Sequence sequence{};
+    auto clip = StrumClip(L"D");
+    clip.Generator->ArpSource = ArpeggiatorSource::Held;
+
+    VERIFY_IS_TRUE(Play(sequence, clip).empty(), L"nothing to play without the keys, as an export");
+
+    ArpeggiatorInput keys{};
+    keys.Press(64, 40000);
+    keys.Press(57, 40000);
+    keys.Press(60, 40000);
+
+    auto const notes = Play(sequence, clip, 0, TicksPerQuarterNote, &keys);
+    SameNumbers(Numbers(notes), { 45, 52, 57, 60, 64 });
+    VERIFY_IS_TRUE(keys.Used);
+    VERIFY_IS_TRUE(PlaysHeldKeys(clip));
+
+    // Latched, it keeps strumming the last keys after they go up.
+    keys.Release(64);
+    keys.Release(57);
+    keys.Release(60);
+    VERIFY_IS_TRUE(Play(sequence, clip, 0, TicksPerQuarterNote, &keys).empty());
+
+    clip.Generator->ArpLatch = true;
+    VERIFY_ARE_EQUAL(size_t{ 5 }, Play(sequence, clip, 0, TicksPerQuarterNote, &keys).size());
+
+    // Make notes has nothing to keep.
+    VERIFY_IS_TRUE(MakeNotesFromArpeggiator(sequence, clip, Placement{ clip.Id, 0, 0 }).Notes.empty());
 }

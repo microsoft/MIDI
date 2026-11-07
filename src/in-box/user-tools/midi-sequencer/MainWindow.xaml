@@ -1389,6 +1389,11 @@
 
                         <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
 
+                        <!-- Drag on a chord to strum it (MainWindowNoteTools.cpp). -->
+                        <ToggleButton x:Name="NoteStrumToggle" x:Uid="NoteStrumToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnNoteStrumToggleClick">
+                            <TextBlock x:Uid="NoteStrumText" />
+                        </ToggleButton>
+
                         <Rectangle x:Name="NoteToolsSeparator" Width="1" Height="20" Margin="2,0,2,0" Fill="{ThemeResource SeqDividerBrush}" />
 
                         <Button x:Name="NoteSelectButton" x:Uid="NoteSelectButton" Style="{StaticResource SubtleSmallButtonStyle}">

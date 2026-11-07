@@ -1199,4 +1199,18 @@ namespace midisequencer
         PlaceAtBars(meter, later);
         return true;
     }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeClipEventsChange(std::wstring clipId, std::vector<ClipEvent> before, std::vector<ClipEvent> after)
+    {
+        auto const cost = sizeof(SequenceChange) + (before.size() + after.size()) * sizeof(ClipEvent);
+
+        return std::make_unique<SnapshotChange<std::vector<ClipEvent>>>(
+            [clipId](Sequence& sequence) -> std::vector<ClipEvent>*
+            {
+                auto const clip = FindClip(sequence, clipId);
+                return clip != nullptr ? &clip->Events : nullptr;
+            },
+            std::move(before), std::move(after), cost);
+    }
 }

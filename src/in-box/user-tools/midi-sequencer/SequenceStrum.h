@@ -21,6 +21,10 @@
 //   x  a muted stroke: short and quiet, or a key switch
 //   R  a rasgueado: fingers flicked down one after another inside the step, faster or slower
 //   T  tremolo: fast down and up strokes filling the step
+//   B  the thumb on the bass, between the two lowest strings by turns, as in Travis picking
+//   1 to 4  a finger on a string, counted from the top
+//   P  a pinch: the thumb's bass and the top string together
+//   G  a glissando up every string, filling the step       g  one down
 //   -  nothing new; what's sounding rings on (any other character does the same)
 //
 // The same curves shape the piano roll's Strum tool (NoteTools.h).
@@ -38,6 +42,8 @@
 
 namespace midisequencer
 {
+    struct ArpeggiatorInput;
+
     inline constexpr size_t MaximumStrumPattern = 64;
     inline constexpr uint16_t MaximumStrumSpreadMs = 500;
     inline constexpr uint16_t MaximumStrumSpreadTicks = TicksPerQuarterNote;
@@ -58,14 +64,17 @@ namespace midisequencer
 
     // A chord as an instrument plays it: the strings that sound, in the order a down stroke hits
     // them. bass is the pitch class that has to be lowest (a guitar's or a piano's bass); notes
-    // are used as they are for As written. A guitar picks the lowest shape on the neck a hand can
-    // hold, with any strings it can't use muted below the bass. A ukulele uses all four strings.
-    // Nothing when there's nothing to voice.
+    // are used as they are for As written. A guitar picks the shape nearest position on the neck
+    // (0 for as low as it goes) that a hand can hold, with any strings it can't use muted below
+    // the bass. A ukulele uses all four strings. capo raises both by that many frets. A harp
+    // plays every note of the chord from G2 to G5. Nothing when there's nothing to voice.
     std::vector<StrungNote> VoiceChord(
         _In_ StrumInstrument instrument,
         _In_ std::vector<uint8_t> const& pitchClasses,
         _In_ uint8_t bass,
-        _In_ std::vector<uint8_t> const& notes);
+        _In_ std::vector<uint8_t> const& notes,
+        _In_ uint8_t capo = 0,
+        _In_ uint8_t position = 0);
 
     // How many strings the instrument has, and how many from the top an up stroke hits.
     uint8_t InstrumentStrings(_In_ StrumInstrument instrument) noexcept;
@@ -94,7 +103,8 @@ namespace midisequencer
 
     // Each note one pass of a Strum plays that starts inside [fromTick, toTick). songTick maps a
     // tick to where it is in the song, for the Key and chords row (RenderOptions::SongTick); left
-    // out, a tick is where it is.
+    // out, a tick is where it is. keys are the keys held on the track's source, for a Strum that
+    // plays them; without them it plays nothing, which is what an export gets.
     void ForEachStrumNote(
         _In_ Sequence const& sequence,
         _In_ Clip const& clip,
@@ -104,7 +114,8 @@ namespace midisequencer
         _In_ int64_t fromTick,
         _In_ int64_t toTick,
         _In_ std::function<void(Note const&)> const& add,
-        _In_opt_ std::function<int64_t(int64_t)> const* songTick = nullptr);
+        _In_opt_ std::function<int64_t(int64_t)> const* songTick = nullptr,
+        _Inout_opt_ ArpeggiatorInput* keys = nullptr);
 
     bool IsStrum(_In_ Clip const& clip) noexcept;
 

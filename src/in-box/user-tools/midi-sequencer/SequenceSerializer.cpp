@@ -221,7 +221,9 @@ namespace midisequencer
         constexpr wchar_t KeyOpenKey[] = L"openKey";
         constexpr wchar_t ValueTicks[] = L"ticks";
         constexpr wchar_t ValueMs[] = L"ms";
-        constexpr std::array<wchar_t const*, 4> InstrumentNames{ L"guitar", L"ukulele", L"piano", L"asWritten" };
+        constexpr std::array<wchar_t const*, 5> InstrumentNames{ L"guitar", L"ukulele", L"piano", L"asWritten", L"harp" };
+        constexpr wchar_t KeyCapo[] = L"capo";
+        constexpr wchar_t KeyPosition[] = L"position";
         constexpr std::array<wchar_t const*, 5> StrumShapeNames{ L"even", L"speedingUp", L"slowingDown", L"ease", L"rake" };
         constexpr std::array<wchar_t const*, 3> StrumLandsNames{ L"first", L"middle", L"last" };
         constexpr std::array<wchar_t const*, 2> StrumMutingNames{ L"short", L"keySwitch" };
@@ -1262,12 +1264,6 @@ namespace midisequencer
 
             if (generator.Type == GeneratorType::Strum)
             {
-                // Keys held on a source aren't a Strum's to play.
-                if (generator.ArpSource == ArpeggiatorSource::Held)
-                {
-                    generator.ArpSource = ArpeggiatorSource::Chords;
-                }
-
                 generator.Instrument = static_cast<StrumInstrument>(NameIndex(InstrumentNames, ReadRawString(object, KeyInstrument), 0));
                 generator.StrumPattern = CleanStrumPattern(ReadRawString(object, KeyStrumPattern).value_or(generator.StrumPattern));
                 generator.StrumSpreadMs = static_cast<uint16_t>(ReadInteger(object, KeySpreadMs, generator.StrumSpreadMs, 0, MaximumStrumSpreadMs));
@@ -1285,6 +1281,8 @@ namespace midisequencer
                 generator.StrumMute = static_cast<StrumMuting>(NameIndex(StrumMutingNames, ReadRawString(object, KeyMuted), 0));
                 generator.StrumMuteKey = static_cast<uint8_t>(ReadInteger(object, KeyMuteKey, generator.StrumMuteKey, 0, 127));
                 generator.StrumOpenKey = static_cast<uint8_t>(ReadInteger(object, KeyOpenKey, generator.StrumOpenKey, 0, 127));
+                generator.StrumCapo = static_cast<uint8_t>(ReadInteger(object, KeyCapo, 0, 0, 9));
+                generator.StrumPosition = static_cast<uint8_t>(ReadInteger(object, KeyPosition, 0, 0, 9));
             }
             ReadSectionTwentyEight(context, object, generator);
 
@@ -1295,7 +1293,7 @@ namespace midisequencer
                 KeyFrom, KeyTune, KeyMemory, KeyLearned, KeyLearnedFrom, KeyText, KeyWeights, KeyMutations, KeySoundsLike, KeyInterval, KeyVoices,
                 KeyAxiom, KeyGrammar, KeyAngle, KeyBells, KeyMethod, KeyHandstrokeGap, KeyVelocityBy, KeyListen, KeyListenId, KeyKeepListening,
                 KeyInstrument, KeyStrumPattern, KeySpreadMs, KeySpreadTicks, KeySpreadIn, KeyCurve, KeyBend, KeyLands, KeyKeepBass, KeyRing, KeyTilt, KeyHand,
-                KeyBurst, KeyBurstCurve, KeyMuted, KeyMuteKey, KeyOpenKey });
+                KeyBurst, KeyBurstCurve, KeyMuted, KeyMuteKey, KeyOpenKey, KeyCapo, KeyPosition });
 
             return generator;
         }
@@ -2438,7 +2436,14 @@ namespace midisequencer
             }
             else if (generator.Type == GeneratorType::Strum)
             {
-                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack : ValueChordsSource);
+                members.Text(KeySource, generator.ArpSource == ArpeggiatorSource::Track ? ValueTrack
+                    : generator.ArpSource == ArpeggiatorSource::Held ? ValueHeld
+                    : ValueChordsSource);
+
+                if (generator.ArpLatch)
+                {
+                    members.Bool(KeyLatch, true);
+                }
 
                 if (generator.ArpSource == ArpeggiatorSource::Track)
                 {
@@ -2460,6 +2465,16 @@ namespace midisequencer
                 members.Integer(KeyBurst, generator.StrumBurst);
                 members.Text(KeyBurstCurve, StrumShapeNames[std::min<size_t>(static_cast<size_t>(generator.StrumBurstCurve), StrumShapeNames.size() - 1)]);
                 members.Raw(KeyVelocity, std::format(L"[{}, {}]", generator.VelocityLow, generator.VelocityHigh));
+
+                if (generator.StrumCapo != 0)
+                {
+                    members.Integer(KeyCapo, generator.StrumCapo);
+                }
+
+                if (generator.StrumPosition != 0)
+                {
+                    members.Integer(KeyPosition, generator.StrumPosition);
+                }
 
                 if (generator.StrumMute == StrumMuting::KeySwitch)
                 {

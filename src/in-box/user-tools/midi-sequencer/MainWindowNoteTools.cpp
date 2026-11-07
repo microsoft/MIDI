@@ -137,6 +137,8 @@ namespace winrt::midisequencer::implementation
             case Tool::ReleaseVelocity: return L"UndoNoteReleaseVelocity";
             case Tool::Chance: return L"UndoNoteChance";
             case Tool::Strum: return L"UndoNoteStrum";
+            case Tool::Glide: return L"UndoNoteGlide";
+            case Tool::Vibrato: return L"UndoNoteVibrato";
             case Tool::SelectVelocity:
             default: return L"UndoEditNotes";
             }
@@ -165,6 +167,8 @@ namespace winrt::midisequencer::implementation
             case Tool::ReleaseVelocity: return { L"NoteToolReleaseVelocityTitle", L"NoteToolReleaseVelocityHelp" };
             case Tool::Chance: return { L"NoteToolChanceTitle", L"NoteToolChanceHelp" };
             case Tool::Strum: return { L"NoteToolStrumTitle", L"NoteToolStrumHelp" };
+            case Tool::Glide: return { L"NoteToolGlideTitle", L"NoteToolGlideHelp" };
+            case Tool::Vibrato: return { L"NoteToolVibratoTitle", L"NoteToolVibratoHelp" };
             case Tool::SelectVelocity:
             default: return { L"NoteToolSelectVelocityTitle", L"NoteToolSelectVelocityHelp" };
             }
@@ -471,6 +475,20 @@ namespace winrt::midisequencer::implementation
             {
                 return seq::Reverse(notes);
             }));
+
+            // MIDI 2.0: each note bends on its own.
+            items.Append(controls::MenuFlyoutSeparator{});
+            add(items, L"NoteMenuGlide", hasNotes, tool(NoteTool::Glide));
+            add(items, L"NoteMenuVibrato", hasNotes, tool(NoteTool::Vibrato));
+
+            auto const bends = clip != nullptr && std::any_of(clip->Events.begin(), clip->Events.end(), [](seq::ClipEvent const& event) { return seq::PerNotePitchBendOf(event).has_value(); });
+            add(items, L"NoteMenuRemoveBends", hasNotes && bends, [](MainWindow& window)
+            {
+                if (auto const found = seq::FindClip(window.m_doc, window.m_editorClipId); found != nullptr)
+                {
+                    window.ApplyExpression(std::wstring{ res::GetString(L"UndoNoteRemoveBends") }, seq::RemovePerNoteBend(found->Events, window.NoteToolTargets()));
+                }
+            });
             break;
         }
 
@@ -707,6 +725,15 @@ namespace winrt::midisequencer::implementation
             seq::TempoMap tempo{};
             auto const context = NoteToolContextFor(*clip, tempo);
 
+            if (IsExpressionTool(tool))
+            {
+                auto const result = RunExpression(tool);
+                summary.Text(res::FormatString(L"NoteToolBendsFormat", result.Added, result.Removed));
+                m_roll.ClearPreview();
+                InvalidateEditor();
+                return;
+            }
+
             if (tool == NoteTool::SelectVelocity)
             {
                 auto const picked = seq::SelectNotes(clip->Notes, m_roll.Selection(), context, m_noteTools.SelectVelocity);
@@ -828,6 +855,53 @@ namespace winrt::midisequencer::implementation
             ShowMessage(selection.size() == 1 ? res::GetString(L"MovedNoteToTrack") : res::FormatString(L"MovedNotesToTrackFormat", selection.size()));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to move the notes to a new track.")
+    }
+
+// ---------------------------------------------------------------- glide and vibrato
+
+    _Use_decl_annotations_
+    seq::ExpressionResult MainWindow::RunExpression(NoteTool tool) const
+    {
+        auto const clip = seq::FindClip(m_doc, m_editorClipId);
+
+        if (clip == nullptr)
+        {
+            return {};
+        }
+
+        seq::TempoMap tempo{};
+        auto const context = NoteToolContextFor(*clip, tempo);
+
+        return tool == NoteTool::Glide
+            ? seq::Glide(clip->Events, NoteToolTargets(), context, m_noteTools.Glide)
+            : seq::Vibrato(clip->Events, NoteToolTargets(), context, m_noteTools.Vibrato);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ApplyExpression(std::wstring name, seq::ExpressionResult result) noexcept
+    {
+        try
+        {
+            auto const clip = seq::FindClip(m_doc, m_editorClipId);
+
+            if (clip == nullptr)
+            {
+                return;
+            }
+
+            if (result.Added == 0 && result.Removed == 0)
+            {
+                ShowMessage(res::GetString(L"NoteToolNothingToChange"));
+                return;
+            }
+
+            seq::ChangeList changes{};
+            changes.push_back(seq::MakeClipEventsChange(clip->Id, clip->Events, std::move(result.Events)));
+            m_undo.ApplyAndCommit(m_doc, name, std::move(changes));
+            DocumentChanged();
+            RefreshEditor();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to change the clip's pitch bends.")
     }
 
     // ---------------------------------------------------------------- a tool's panel
@@ -1386,6 +1460,31 @@ namespace winrt::midisequencer::implementation
                 break;
             }
 
+            case NoteTool::Glide:
+            {
+                auto const& glide = m_noteTools.Glide;
+                number(L"NoteToolGlideTime", 1, 2000, glide.TimeMs, 5, [](NoteToolSettings& s, double v) { s.Glide.TimeMs = v; });
+                number(L"NoteToolBendRange", 1, 96, glide.RangeSemitones, 1, [](NoteToolSettings& s, double v) { s.Glide.RangeSemitones = v; });
+                check(L"NoteToolGlideJoined", glide.OnlyJoined, [](NoteToolSettings& s, bool v) { s.Glide.OnlyJoined = v; });
+                check(L"NoteToolSendRange", glide.SendRange, [](NoteToolSettings& s, bool v) { s.Glide.SendRange = v; });
+                addText(res::GetString(L"NoteToolMidi2Note"));
+                break;
+            }
+
+            case NoteTool::Vibrato:
+            {
+                auto const& vibrato = m_noteTools.Vibrato;
+                number(L"NoteToolVibratoDepth", 0, 200, vibrato.DepthCents, 5, [](NoteToolSettings& s, double v) { s.Vibrato.DepthCents = v; });
+                number(L"NoteToolVibratoRate", 0.5, 20, vibrato.RateHz, 0.5, [](NoteToolSettings& s, double v) { s.Vibrato.RateHz = v; });
+                number(L"NoteToolVibratoDelay", 0, 2000, vibrato.DelayMs, 10, [](NoteToolSettings& s, double v) { s.Vibrato.DelayMs = v; });
+                number(L"NoteToolVibratoFade", 0, 2000, vibrato.FadeInMs, 10, [](NoteToolSettings& s, double v) { s.Vibrato.FadeInMs = v; });
+                number(L"NoteToolVibratoShortest", 0, 4000, vibrato.ShortestMs, 10, [](NoteToolSettings& s, double v) { s.Vibrato.ShortestMs = v; });
+                number(L"NoteToolBendRange", 0.5, 96, vibrato.RangeSemitones, 0.5, [](NoteToolSettings& s, double v) { s.Vibrato.RangeSemitones = v; });
+                check(L"NoteToolSendRange", vibrato.SendRange, [](NoteToolSettings& s, bool v) { s.Vibrato.SendRange = v; });
+                addText(res::GetString(L"NoteToolMidi2Note"));
+                break;
+            }
+
             case NoteTool::SelectVelocity:
                 number(L"NoteToolLowest", 0, 100, m_noteTools.SelectVelocity.Low, 1, [](NoteToolSettings& s, double v) { s.SelectVelocity.Low = v; });
                 number(L"NoteToolHighest", 0, 100, m_noteTools.SelectVelocity.High, 1, [](NoteToolSettings& s, double v) { s.SelectVelocity.High = v; });
@@ -1423,6 +1522,10 @@ namespace winrt::midisequencer::implementation
                     if (tool == NoteTool::SelectVelocity)
                     {
                         strong->SelectNotesWith(strong->m_noteTools.SelectVelocity);
+                    }
+                    else if (IsExpressionTool(tool))
+                    {
+                        strong->ApplyExpression(std::wstring{ res::GetString(UndoNameKey(tool)) }, strong->RunExpression(tool));
                     }
                     else if (auto const found = seq::FindClip(strong->m_doc, strong->m_editorClipId); found != nullptr)
                     {
@@ -1485,5 +1588,156 @@ namespace winrt::midisequencer::implementation
             refresh();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show a note tool.")
+    }
+
+    // ---------------------------------------------------------------- strumming by dragging
+
+    void MainWindow::UseRollTool(seq::RollTool tool) noexcept
+    {
+        try
+        {
+            m_roll.SetTool(tool);
+            EditorDrawToggle().IsChecked(tool == seq::RollTool::Draw);
+            NoteStrumToggle().IsChecked(tool == seq::RollTool::Strum);
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to change the piano roll's tool.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNoteStrumToggleClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto const checked = NoteStrumToggle().IsChecked();
+        UseRollTool(checked != nullptr && checked.GetBoolean() ? seq::RollTool::Strum : seq::RollTool::Select);
+    }
+
+    _Use_decl_annotations_
+    bool MainWindow::StrumDragPressed(foundation::Point position) noexcept
+    {
+        try
+        {
+            // A drag the window lost track of (the pointer captured elsewhere) is dropped.
+            if (m_strumDrag.Active)
+            {
+                m_strumDrag = StrumDrag{};
+                m_roll.ClearPreview();
+            }
+
+            auto const clip = seq::FindClip(m_doc, m_editorClipId);
+            auto const pressed = m_roll.NoteAt(position);
+
+            if (clip == nullptr || !pressed.has_value())
+            {
+                return false;
+            }
+
+            seq::TempoMap tempo{};
+            auto const context = NoteToolContextFor(*clip, tempo);
+
+            // Where a note was before any strum, which is where its chord is.
+            auto const baseOf = [](seq::Note const& note) { return note.Tick - note.StrumOffset; };
+            auto const chordStart = baseOf(*pressed);
+
+            StrumDrag drag{};
+            drag.Active = true;
+            drag.PressY = position.Y;
+            drag.ChordStart = chordStart;
+            drag.Settings = m_noteTools.Strum;
+            drag.Settings.InTicks = true;
+
+            // The selection, when the chord pressed is in it; otherwise the chord pressed: the notes
+            // that start within 30 ms of it.
+            if (m_roll.IsNoteSelected(*pressed) && m_roll.Selection().size() > 1)
+            {
+                drag.Targets = m_roll.Selection();
+            }
+            else
+            {
+                auto const songStart = context.ClipStart + chordStart;
+                auto const window = context.Tempo != nullptr
+                    ? context.Tempo->TickAtSeconds(context.Tempo->SecondsAtTick(songStart) + 0.030) - songStart
+                    : static_cast<int64_t>(std::llround(0.030 * 2.0 * static_cast<double>(seq::TicksPerQuarterNote)));
+
+                for (auto const& note : clip->Notes)
+                {
+                    auto const base = baseOf(note);
+
+                    if (base >= chordStart - window && base <= chordStart + window)
+                    {
+                        drag.Targets.push_back(note);
+                    }
+                }
+            }
+
+            m_strumDrag = std::move(drag);
+            StrumDragMoved(position);
+            return true;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::StrumDragMoved(foundation::Point position) noexcept
+    {
+        try
+        {
+            auto const clip = seq::FindClip(m_doc, m_editorClipId);
+
+            if (!m_strumDrag.Active || clip == nullptr)
+            {
+                return;
+            }
+
+            auto& drag = m_strumDrag;
+            drag.Settings.SpreadTicks = std::max<int64_t>(0, std::llround(m_roll.TickAtX(position.X)) - drag.ChordStart);
+
+            // Dragged up by more than a few pixels, it's an up strum.
+            drag.Settings.Direction = position.Y < drag.PressY - 6.0f ? seq::StrumDirection::Up
+                : drag.Settings.Direction == seq::StrumDirection::Up ? seq::StrumDirection::Down : drag.Settings.Direction;
+
+            seq::TempoMap tempo{};
+            drag.Result = seq::Strum(drag.Targets, NoteToolContextFor(*clip, tempo), drag.Settings);
+            m_roll.SetPreview(drag.Result.Removed, drag.Result.Added);
+            InvalidateEditor();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the strum.")
+    }
+
+    void MainWindow::StrumDragReleased() noexcept
+    {
+        try
+        {
+            if (!m_strumDrag.Active)
+            {
+                return;
+            }
+
+            auto drag = std::move(m_strumDrag);
+            m_strumDrag = StrumDrag{};
+            m_roll.ClearPreview();
+
+            // The panel opens with what was dragged, in its own measure.
+            m_noteTools.Strum.SpreadTicks = drag.Settings.SpreadTicks;
+            m_noteTools.Strum.Direction = drag.Settings.Direction;
+
+            if (auto const clip = seq::FindClip(m_doc, m_editorClipId); clip != nullptr && !m_doc.Tempo.empty())
+            {
+                seq::TempoMap const tempo{ m_doc.Tempo };
+                auto const start = FirstPlacement(m_doc, clip->Id) + drag.ChordStart;
+                m_noteTools.Strum.SpreadMs = (tempo.SecondsAtTick(start + drag.Settings.SpreadTicks) - tempo.SecondsAtTick(start)) * 1000.0;
+            }
+
+            if (drag.Result.Empty())
+            {
+                InvalidateEditor();
+                return;
+            }
+
+            ApplyNoteToolResult(std::wstring{ res::GetString(L"UndoNoteStrum") }, std::move(drag.Result));
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to strum.")
     }
 }

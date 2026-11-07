@@ -30,7 +30,7 @@ namespace winrt::midisequencer::implementation
         constexpr float CurveTop = 10.0f;
         constexpr float CurveBottom = 10.0f;
 
-        constexpr std::array<wchar_t const*, 4> InstrumentKeys{ L"StrumInstrumentGuitar", L"StrumInstrumentUkulele", L"StrumInstrumentPiano", L"StrumInstrumentAsWritten" };
+        constexpr std::array<wchar_t const*, 5> InstrumentKeys{ L"StrumInstrumentGuitar", L"StrumInstrumentUkulele", L"StrumInstrumentPiano", L"StrumInstrumentAsWritten", L"StrumInstrumentHarp" };
         constexpr std::array<wchar_t const*, 5> ShapeKeys{ L"StrumShapeEven", L"StrumShapeSpeedingUp", L"StrumShapeSlowingDown", L"StrumShapeEase", L"StrumShapeRake" };
 
         controls::TextBlock Text(winrt::hstring const& text, media::Brush const& brush, double size = 12)
@@ -295,7 +295,7 @@ namespace winrt::midisequencer::implementation
 
         auto const hasChords = m_doc.Harmony.has_value() && !m_doc.Harmony->Chords.empty();
         auto fromChords = Choice(res::GetString(L"StrumFromChords"), Text(res::GetString(hasChords ? L"StrumFromChordsHelp" : L"ArpFromChordsNone"), secondary));
-        fromChords.IsChecked(generator.ArpSource != seq::ArpeggiatorSource::Track);
+        fromChords.IsChecked(generator.ArpSource == seq::ArpeggiatorSource::Chords);
         form.Children().Append(fromChords);
 
         auto fromTrack = Choice(res::GetString(L"StrumFromTrack"), Text(res::GetString(L"StrumFromTrackHelp"), secondary));
@@ -326,6 +326,33 @@ namespace winrt::midisequencer::implementation
         follow.Margin(xaml::Thickness{ 28, -4, 0, 0 });
         follow.IsEnabled(generator.ArpSource == seq::ArpeggiatorSource::Track && !trackIds.empty());
         form.Children().Append(follow);
+
+        // The keys held on the track's source, as the arpeggiator can play them.
+        auto const track = EditorTrack();
+        auto const sourceText = track != nullptr && !track->Source.Endpoint.IsEmpty() ? winrt::hstring{ DescribeSource(*track) } : res::GetString(L"ArpNoSource");
+        auto fromHeld = Choice(res::GetString(L"StrumFromHeld"), Text(sourceText, secondary));
+        fromHeld.IsChecked(generator.ArpSource == seq::ArpeggiatorSource::Held);
+        form.Children().Append(fromHeld);
+
+        fromHeld.Checked([edit](auto&&, auto&&)
+        {
+            edit([](seq::GeneratorSettings& edited) { edited.ArpSource = seq::ArpeggiatorSource::Held; });
+        });
+
+        controls::ToggleSwitch latch{};
+        latch.Header(winrt::box_value(res::GetString(L"ArpLatch")));
+        latch.IsOn(generator.ArpLatch);
+        latch.IsEnabled(generator.ArpSource == seq::ArpeggiatorSource::Held);
+        latch.Margin(xaml::Thickness{ 28, -4, 0, 0 });
+        automation::AutomationProperties::SetName(latch, res::GetString(L"ArpLatch"));
+        automation::AutomationProperties::SetHelpText(latch, res::GetString(L"StrumLatchHelp"));
+        controls::ToolTipService::SetToolTip(latch, winrt::box_value(res::GetString(L"StrumLatchHelp")));
+        latch.Toggled([edit](foundation::IInspectable const& sender, auto&&)
+        {
+            auto const on = sender.as<controls::ToggleSwitch>().IsOn();
+            edit([on](seq::GeneratorSettings& edited) { edited.ArpLatch = on; });
+        });
+        form.Children().Append(latch);
 
         fromChords.Checked([edit](auto&&, auto&&)
         {
@@ -384,6 +411,39 @@ namespace winrt::midisequencer::implementation
 
         form.Children().Append(instruments);
         form.Children().Append(Text(res::GetString(std::wstring{ InstrumentKeys[std::min<size_t>(static_cast<size_t>(generator.Instrument), InstrumentKeys.size() - 1)] } + L"Help"), secondary));
+
+        // A capo, and where on the neck the shapes stay, for the fretted instruments.
+        auto const fretted = generator.Instrument == seq::StrumInstrument::Guitar || generator.Instrument == seq::StrumInstrument::Ukulele;
+        auto neck = Row();
+        auto capo = Number(L"StrumCapo", 0, 9, generator.StrumCapo, 120);
+        capo.IsEnabled(fretted);
+        controls::ToolTipService::SetToolTip(capo, winrt::box_value(res::GetString(L"StrumCapoHelp")));
+        automation::AutomationProperties::SetHelpText(capo, res::GetString(L"StrumCapoHelp"));
+        neck.Children().Append(capo);
+
+        auto position = Number(L"StrumPosition", 0, 9, generator.StrumPosition, 150);
+        position.IsEnabled(fretted);
+        controls::ToolTipService::SetToolTip(position, winrt::box_value(res::GetString(L"StrumPositionHelp")));
+        automation::AutomationProperties::SetHelpText(position, res::GetString(L"StrumPositionHelp"));
+        neck.Children().Append(position);
+        form.Children().Append(neck);
+
+        auto const neckEdit = [&edit](controls::NumberBox const& box, bool isCapo)
+        {
+            box.ValueChanged([edit, isCapo](controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const& args)
+            {
+                auto const value = args.NewValue();
+
+                if (std::isfinite(value) && value != args.OldValue())
+                {
+                    auto const frets = static_cast<uint8_t>(std::clamp(std::lround(value), 0L, 9L));
+                    edit([frets, isCapo](seq::GeneratorSettings& edited) { (isCapo ? edited.StrumCapo : edited.StrumPosition) = frets; });
+                }
+            });
+        };
+
+        neckEdit(capo, true);
+        neckEdit(position, false);
 
         // ---- the pattern, from a style or typed
 
@@ -511,7 +571,7 @@ namespace winrt::midisequencer::implementation
         curve->Ticks = generator.StrumInTicks;
         curve->Spread = generator.StrumInTicks ? generator.StrumSpreadTicks : generator.StrumSpreadMs;
         curve->MostSpread = generator.StrumInTicks ? 240.0 : 150.0;
-        curve->Strings = seq::InstrumentStrings(generator.Instrument) > 0 ? seq::InstrumentStrings(generator.Instrument) : 4;
+        curve->Strings = generator.Instrument == seq::StrumInstrument::Harp ? 8 : seq::InstrumentStrings(generator.Instrument) > 0 ? seq::InstrumentStrings(generator.Instrument) : 4;
 
         auto const inTicks = generator.StrumInTicks;
         play.Children().Append(MakeStrumCurve(curve, nullptr, [edit, inTicks](double spread)

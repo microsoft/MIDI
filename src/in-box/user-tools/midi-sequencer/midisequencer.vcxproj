@@ -172,6 +172,7 @@
     <ClInclude Include="PatternTemplates.h" />
     <ClInclude Include="NoteTools.h" />
     <ClInclude Include="SequenceStrum.h" />
+    <ClInclude Include="NoteExpression.h" />
     <ClInclude Include="DawProject.h" />
     <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="DocumentFiles.h" />
@@ -357,6 +358,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainWindowStrum.cpp" />
+    <ClCompile Include="NoteExpression.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="RecentSequences.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

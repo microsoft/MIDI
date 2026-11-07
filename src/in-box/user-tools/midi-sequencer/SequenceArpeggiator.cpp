@@ -413,7 +413,7 @@ namespace midisequencer
     _Use_decl_annotations_
     bool PlaysHeldKeys(Clip const& clip) noexcept
     {
-        return IsArpeggiator(clip) && clip.Generator->ArpSource == ArpeggiatorSource::Held;
+        return PlaysAlong(clip) && clip.Generator->ArpSource == ArpeggiatorSource::Held;
     }
 
     _Use_decl_annotations_

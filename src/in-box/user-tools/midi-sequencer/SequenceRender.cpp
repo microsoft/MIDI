@@ -290,7 +290,19 @@ namespace midisequencer
             }
             else if (generated && clip.Generator->Type == GeneratorType::Strum)
             {
-                ForEachStrumNote(sequence, clip, passStart, passEnd, pass, windowStart, windowEnd, addNote, options.SongTick);
+                // Played from keys held, it's recorded as it plays, as an arpeggiator's notes are.
+                auto const fromKeys = PlaysHeldKeys(clip);
+
+                ForEachStrumNote(sequence, clip, passStart, passEnd, pass, windowStart, windowEnd, [&](Note const& note)
+                {
+                    auto const first = messages.size();
+                    addNote(note);
+
+                    for (auto i = first; fromKeys && i < messages.size(); ++i)
+                    {
+                        messages[i].Arpeggiated = true;
+                    }
+                }, options.SongTick, options.Arpeggiator);
             }
             else if (generated)
             {
