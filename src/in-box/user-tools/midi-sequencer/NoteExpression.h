@@ -16,9 +16,10 @@
 //   centered at 0x80000000.
 // - 7.4.13: the bend's range, up and down, is Registered Controller bank 0, index 7, shared by
 //   every note on the channel, "a 7.25 fixed-point unsigned value that specifies an interval in
-//   units of 100 Cents". This code writes it that way: semitones in the top 7 bits. (The example
-//   in 7.4.13.3 gives 0x0C000000 as 1200 cents, which would be 8 integer bits. The definition is
-//   followed, and sending the range is off unless asked for.)
+//   units of 100 Cents". Figure 68 shows it: 7 bits of units of 100 cents, then 25 bits of
+//   fraction, so 12 semitones is 0x18000000. (The example in 7.4.13.3 gives 0x0C000000 as 1200
+//   cents, which is half that; it's a mistake in the spec. A device built from the example would
+//   bend twice as far, so sending the range is off unless asked for.)
 // - Appendix D: the default translation to MIDI 1.0 doesn't carry Per-Note Pitch Bend, so a MIDI
 //   1.0 instrument doesn't hear these.
 //
