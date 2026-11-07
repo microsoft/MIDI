@@ -59,6 +59,13 @@ namespace winrt::miditroubleshooter::implementation
         try
         {
             m_overview.ApiModeName = ApiModeName(mode);
+            m_overview.LegacyApiMode = mode == native::ApiMode::Legacy;
+
+            // the pages about the MIDI service say why they're empty
+            for (auto const& bar : { LegacySessionsBar(), LegacyTransportsBar(), LegacyServiceBar() })
+            {
+                bar.IsOpen(m_overview.LegacyApiMode);
+            }
             m_overview.ApiModeDetail = res::GetString(
                 mode == native::ApiMode::Legacy ? L"OverviewApiModeLegacyDetail" :
                 mode == native::ApiMode::Hybrid ? L"OverviewApiModeHybridDetail" :
@@ -67,6 +74,12 @@ namespace winrt::miditroubleshooter::implementation
             UpdateOverview();
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to summarize the API mode.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnGoToApiModeClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        NavigateToTag(L"apimode");
     }
 
     _Use_decl_annotations_

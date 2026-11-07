@@ -228,11 +228,14 @@ namespace winrt::miditroubleshooter::implementation
             auto const& devices = m_overview.DeviceCounts;
             auto const& crashes = m_overview.CrashCounts;
 
+            // Legacy MIDI mode doesn't use the service, so its state is never a problem then.
+            auto const legacy = m_overview.LegacyApiMode;
+
             SetNavigationDot(ServiceNavigationItem(),
-                service.Known && (!service.Installed || service.Disabled) ? 2 : 0);
+                !legacy && service.Known && (!service.Installed || service.Disabled) ? 2 : 0);
 
             SetNavigationDot(TransportsNavigationItem(),
-                !transports.Known ? 0 :
+                legacy || !transports.Known ? 0 :
                 transports.AwaitingRestart ? 1 :
                 transports.Problems > 0 ? 2 : 0);
 

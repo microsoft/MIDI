@@ -2536,7 +2536,7 @@ Every application using MIDI loses its connections when the service restarts, so
     <value>Multi-client MIDI, loopbacks, Network MIDI 2.0 and Bluetooth LE MIDI are on.</value>
   </data>
   <data name="OverviewApiModeLegacyDetail" xml:space="preserve">
-    <value>Windows uses the MIDI stack from before Windows MIDI Services.</value>
+    <value>Windows uses the MIDI stack from before Windows MIDI Services. Multi-client MIDI, loopbacks, Network MIDI 2.0, Bluetooth LE MIDI and MIDI 2.0 devices are off.</value>
   </data>
   <data name="OverviewApiModeHybridDetail" xml:space="preserve">
     <value>Not recommended for most people. Old and new apps see different devices.</value>
@@ -2837,5 +2837,32 @@ Every application using MIDI loses its connections when the service restarts, so
   </data>
   <data name="RegistryGroupOneCorrect" xml:space="preserve">
     <value>Correct</value>
+  </data>
+  <data name="OverviewApiModeLegacyLink" xml:space="preserve">
+    <value>Change the API mode</value>
+  </data>
+  <data name="OverviewLegacyNotUsedValue" xml:space="preserve">
+    <value>Not used</value>
+  </data>
+  <data name="OverviewLegacyServiceDetail" xml:space="preserve">
+    <value>Legacy MIDI mode doesn't use the MIDI service.</value>
+  </data>
+  <data name="OverviewLegacyTransportsDetail" xml:space="preserve">
+    <value>Legacy MIDI mode doesn't load the MIDI service's transports.</value>
+  </data>
+  <data name="OverviewLegacySessionsDetail" xml:space="preserve">
+    <value>In Legacy MIDI mode, apps use MIDI without the MIDI service, so they aren't listed.</value>
+  </data>
+  <data name="OverviewHeroLegacyMessage" xml:space="preserve">
+    <value>This PC is in Legacy MIDI mode, so the MIDI service checks are skipped.</value>
+  </data>
+  <data name="LegacyModePageBar.Title" xml:space="preserve">
+    <value>Not used in Legacy MIDI mode</value>
+  </data>
+  <data name="LegacyModePageBar.Message" xml:space="preserve">
+    <value>This PC uses the MIDI stack from before Windows MIDI Services, which doesn't use the MIDI service. There's nothing to show here until you change the API mode back.</value>
+  </data>
+  <data name="LegacyModeChangeApiModeButton.Content" xml:space="preserve">
+    <value>Change the API mode</value>
   </data>
 </root>

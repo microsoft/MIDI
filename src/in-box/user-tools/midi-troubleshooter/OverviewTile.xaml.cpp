@@ -200,6 +200,7 @@ namespace winrt::miditroubleshooter::implementation
             case 0:  state = L"Ok"; break;
             case 1:  state = L"Warning"; break;
             case 2:  state = L"Error"; break;
+            case 4:  state = L"Neutral"; break;
             case 5:  state = L"NotChecked"; break;
             default: state = L"Info"; break;
             }

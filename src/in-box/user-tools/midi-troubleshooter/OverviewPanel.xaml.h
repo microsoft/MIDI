@@ -80,6 +80,9 @@ namespace winrt::miditroubleshooter::implementation
 
         winrt::hstring ApiModeName{};
         winrt::hstring ApiModeDetail{};
+
+        // Legacy MIDI mode doesn't use the MIDI service, so its cards are shown as not used
+        bool LegacyApiMode{ false };
     };
 
     struct OverviewPanel : OverviewPanelT<OverviewPanel>
@@ -121,12 +124,16 @@ namespace winrt::miditroubleshooter::implementation
         void ApplySessions(_In_ OverviewState const& state) noexcept;
         void ApplyCrashes(_In_ OverviewState const& state, _Inout_ std::vector<Issue>& issues) noexcept;
         void ApplyApiModeAndChecks(_In_ OverviewState const& state) noexcept;
-        void ApplyIssues(_In_ std::vector<Issue> const& issues, _In_ bool allKnown) noexcept;
+        void ApplyIssues(_In_ std::vector<Issue> const& issues, _In_ bool allKnown, _In_ bool legacyMode) noexcept;
 
         // puts the cards in as many columns as fit
         void LayoutTiles(_In_ uint32_t columns) noexcept;
 
         uint32_t m_tileColumns{ 0 };
+
+        // Legacy MIDI mode changes the order of the cards
+        bool m_legacy{ false };
+        bool m_tilesLaidOutForLegacy{ false };
 
         Host m_host{};
 

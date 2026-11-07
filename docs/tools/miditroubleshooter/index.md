@@ -34,6 +34,8 @@ The app opens on the **Overview**. It runs every check from the other pages in t
 
 The DPC latency check takes a minute and records a trace, so it never runs by itself. Its card links to the page where you can start it.
 
+In Legacy MIDI mode, the API mode card comes first, says what Legacy mode turns off, and links to the API mode page. The MIDI service, Transports and Active sessions cards turn gray and say they aren't used, because Legacy mode doesn't use the MIDI service. A stopped service isn't reported as a problem. Those three pages stay in the menu and show a note saying the same thing.
+
 ## API mode
 
 Windows can run MIDI in one of three modes. This page shows which one this PC is using, explains what each one gives you and takes away, and lets you change it.

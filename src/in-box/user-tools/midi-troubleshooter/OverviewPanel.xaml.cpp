@@ -53,6 +53,22 @@ namespace winrt::miditroubleshooter::implementation
             MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to set a tile pill.")
         }
 
+        // a gray card for something Legacy MIDI mode doesn't use
+        void ShowNotUsedInLegacyMode(
+            _In_ miditroubleshooter::OverviewTile const& tile,
+            _In_ std::wstring_view const detailKey) noexcept
+        {
+            try
+            {
+                tile.Severity(SeverityNeutral);
+                tile.PillText({});
+                tile.Value(res::GetString(L"OverviewLegacyNotUsedValue"));
+                tile.ValueSuffix({});
+                tile.Detail(res::GetString(detailKey));
+            }
+            MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show a card that Legacy mode doesn't use.")
+        }
+
         // A star column of zero width collapses, so an empty segment takes no space.
         xaml::GridLength Share(_In_ uint32_t const count) noexcept
         {
@@ -112,12 +128,13 @@ namespace winrt::miditroubleshooter::implementation
     {
         try
         {
-            if (columns == m_tileColumns || columns == 0)
+            if ((columns == m_tileColumns && m_legacy == m_tilesLaidOutForLegacy) || columns == 0)
             {
                 return;
             }
 
             m_tileColumns = columns;
+            m_tilesLaidOutForLegacy = m_legacy;
 
             auto const grid = TilesGrid();
 
@@ -131,15 +148,27 @@ namespace winrt::miditroubleshooter::implementation
                 grid.ColumnDefinitions().Append(column);
             }
 
-            // the reading order of the cards stays the same whatever the number of columns
-            miditroubleshooter::OverviewTile const tiles[]
+            // The reading order of the cards stays the same whatever the number of columns. In
+            // Legacy MIDI mode the API mode card leads, and the cards about the MIDI service,
+            // which that mode doesn't use, go last.
+            miditroubleshooter::OverviewTile const normalOrder[]
             {
                 ServiceTile(), TransportsTile(), RegistryTile(),
                 DevicesTile(), SessionsTile(), CrashTile(),
                 ApiModeTile(), MmcssTile(), DpcTile(),
             };
 
-            auto const rows = (static_cast<uint32_t>(std::size(tiles)) + columns - 1) / columns;
+            miditroubleshooter::OverviewTile const legacyOrder[]
+            {
+                ApiModeTile(), RegistryTile(), DevicesTile(),
+                MmcssTile(), CrashTile(), DpcTile(),
+                ServiceTile(), TransportsTile(), SessionsTile(),
+            };
+
+            auto const* const tiles = m_legacy ? legacyOrder : normalOrder;
+            constexpr uint32_t tileCount = static_cast<uint32_t>(std::size(normalOrder));
+
+            auto const rows = (tileCount + columns - 1) / columns;
 
             for (uint32_t i = 0; i < rows; i++)
             {
@@ -148,7 +177,7 @@ namespace winrt::miditroubleshooter::implementation
                 grid.RowDefinitions().Append(row);
             }
 
-            for (uint32_t i = 0; i < std::size(tiles); i++)
+            for (uint32_t i = 0; i < tileCount; i++)
             {
                 controls::Grid::SetRow(tiles[i], static_cast<int32_t>(i / columns));
                 controls::Grid::SetColumn(tiles[i], static_cast<int32_t>(i % columns));
@@ -163,6 +192,12 @@ namespace winrt::miditroubleshooter::implementation
         try
         {
             std::vector<Issue> issues{};
+
+            if (m_legacy != state.LegacyApiMode)
+            {
+                m_legacy = state.LegacyApiMode;
+                LayoutTiles(m_tileColumns == 0 ? 3 : m_tileColumns);
+            }
 
             ApplyService(state, issues);
             ApplyTransports(state, issues);
@@ -179,7 +214,7 @@ namespace winrt::miditroubleshooter::implementation
                 state.DeviceCounts.Known &&
                 state.CrashCounts.Known;
 
-            ApplyIssues(issues, allKnown);
+            ApplyIssues(issues, allKnown, state.LegacyApiMode);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the overview.")
     }
@@ -191,6 +226,13 @@ namespace winrt::miditroubleshooter::implementation
         {
             auto const tile = ServiceTile();
             auto const& service = state.MidiService;
+
+            // Legacy MIDI mode doesn't use the service, so a stopped or disabled one is expected.
+            if (state.LegacyApiMode)
+            {
+                ShowNotUsedInLegacyMode(tile, L"OverviewLegacyServiceDetail");
+                return;
+            }
 
             if (!service.Known)
             {
@@ -252,6 +294,15 @@ namespace winrt::miditroubleshooter::implementation
         {
             auto const tile = TransportsTile();
             auto const& transports = state.TransportCounts;
+
+            if (state.LegacyApiMode)
+            {
+                ShowNotUsedInLegacyMode(tile, L"OverviewLegacyTransportsDetail");
+                TransportsExtra().Visibility(xaml::Visibility::Collapsed);
+                return;
+            }
+
+            TransportsExtra().Visibility(xaml::Visibility::Visible);
 
             if (!transports.Known)
             {
@@ -465,6 +516,12 @@ namespace winrt::miditroubleshooter::implementation
             auto const tile = SessionsTile();
             auto const& sessions = state.SessionCounts;
 
+            if (state.LegacyApiMode)
+            {
+                ShowNotUsedInLegacyMode(tile, L"OverviewLegacySessionsDetail");
+                return;
+            }
+
             if (!sessions.Known)
             {
                 ShowChecking(tile);
@@ -535,8 +592,10 @@ namespace winrt::miditroubleshooter::implementation
         {
             auto const api = ApiModeTile();
 
-            api.Severity(SeverityInfo);
-            api.PillText({});
+            // In Legacy MIDI mode this card leads the page and offers the way back.
+            api.Severity(state.LegacyApiMode ? SeverityWarning : SeverityInfo);
+            SetPill(api, SeverityNeutral, state.LegacyApiMode ? L"OverviewPillLegacyMode" : L"");
+            api.LinkText(res::GetString(state.LegacyApiMode ? L"OverviewApiModeLegacyLink" : L"OverviewApiModeLink"));
             api.Value(state.ApiModeName.empty() ? res::GetString(L"OverviewChecking") : state.ApiModeName);
             api.ValueSuffix({});
             api.Detail(state.ApiModeDetail);
@@ -554,7 +613,7 @@ namespace winrt::miditroubleshooter::implementation
     }
 
     _Use_decl_annotations_
-    void OverviewPanel::ApplyIssues(std::vector<Issue> const& issues, bool const allKnown) noexcept
+    void OverviewPanel::ApplyIssues(std::vector<Issue> const& issues, bool const allKnown, bool const legacyMode) noexcept
     {
         try
         {
@@ -564,6 +623,7 @@ namespace winrt::miditroubleshooter::implementation
             // The service is polled every few seconds; rebuilding identical rows would flicker
             // and take keyboard focus away from a link.
             std::wstring signature{ allKnown ? L"1" : L"0" };
+            signature += legacyMode ? L"L" : L"";
 
             for (auto const& issue : issues)
             {
@@ -585,7 +645,10 @@ namespace winrt::miditroubleshooter::implementation
             {
                 banner.Severity(allKnown ? SeverityOk : SeverityNeutral);
                 banner.Title(res::GetString(allKnown ? L"OverviewHeroAllGood" : L"OverviewHeroChecking"));
-                banner.Message(res::GetString(allKnown ? L"OverviewHeroAllGoodMessage" : L"OverviewHeroCheckingMessage"));
+                banner.Message(res::GetString(
+                    !allKnown ? L"OverviewHeroCheckingMessage" :
+                    legacyMode ? L"OverviewHeroLegacyMessage" :
+                    L"OverviewHeroAllGoodMessage"));
                 banner.Chips(nullptr);
                 return;
             }
