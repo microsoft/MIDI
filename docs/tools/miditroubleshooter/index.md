@@ -162,6 +162,8 @@ If the PC is in Legacy MIDI mode, no changes are offered. Legacy mode deliberate
 
 There's a full description of what belongs here in [Required registry entries]({{ site.baseurl }}/kb/required-registry-entries/).
 
+The page also checks the two Windows settings that music apps use to get priority: the **Audio** and **Pro Audio** tasks of the Multimedia Class Scheduler Service (MMCSS). Tweak guides and "optimizer" apps sometimes change them, and a bad value can stop some apps from getting any MIDI input. Each task gets a marker: green if Windows can use it and it has the Windows defaults, amber if it works but someone changed it, and red if Windows can't use it. It also shows the `MaxThreads` value, which changes how many threads each app can register with MMCSS. Windows doesn't set it, so it's amber if someone has. Repair doesn't change any of these. [MIDI apps get no input after Windows tweaks]({{ site.baseurl }}/kb/mmcss-task-settings/) explains how to put them back.
+
 ## Drivers
 
 Two jobs on this page.

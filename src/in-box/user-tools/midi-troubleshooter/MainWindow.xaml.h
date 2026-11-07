@@ -247,6 +247,9 @@ namespace winrt::miditroubleshooter::implementation
         collections::IObservableVector<miditroubleshooter::RegistryEntryItem> m_transportRegistryEntries{
             winrt::single_threaded_observable_vector<miditroubleshooter::RegistryEntryItem>() };
 
+        collections::IObservableVector<miditroubleshooter::RegistryEntryItem> m_mmcssTaskEntries{
+            winrt::single_threaded_observable_vector<miditroubleshooter::RegistryEntryItem>() };
+
         collections::IObservableVector<miditroubleshooter::DriverDeviceItem> m_driverDevices{
             winrt::single_threaded_observable_vector<miditroubleshooter::DriverDeviceItem>() };
 

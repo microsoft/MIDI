@@ -1216,6 +1216,39 @@ Every application using MIDI loses its connections when the service restarts, so
   <data name="RegistryTransportsHeader.Text" xml:space="preserve">
     <value>Registered transports</value>
   </data>
+  <data name="RegistryMmcssHeader.Text" xml:space="preserve">
+    <value>Multimedia Class Scheduler (MMCSS)</value>
+  </data>
+  <data name="RegistryMmcssDescription.Text" xml:space="preserve">
+    <value>Windows settings that music apps use to get priority, and the limit on how many threads each app can register. Tweak guides and optimizer apps sometimes change them. Repair doesn't change these.</value>
+  </data>
+  <data name="RegistryValueNotSet" xml:space="preserve">
+    <value>(not set)</value>
+  </data>
+  <data name="RegistryCommentMmcssMaxThreadsNotSetFormat" xml:space="preserve">
+    <value>Not set, which is the Windows default. Each app can register up to {0} threads with MMCSS.</value>
+  </data>
+  <data name="RegistryCommentMmcssMaxThreadsSetFormat" xml:space="preserve">
+    <value>Changes how many threads each app can register with MMCSS. Windows doesn't set this, and it's best left unset. Without it, each app can register up to {0}.</value>
+  </data>
+  <data name="RegistryMmcssLearnMoreLink.Content" xml:space="preserve">
+    <value>How to put the MMCSS task settings back</value>
+  </data>
+  <data name="RegistryCommentMmcssOk" xml:space="preserve">
+    <value>Windows can use this task, and its settings are the Windows defaults.</value>
+  </data>
+  <data name="RegistryCommentMmcssChangedFormat" xml:space="preserve">
+    <value>Windows can use this task, but its settings aren't the Windows defaults ({0}). A tweak guide or optimizer app may have changed them.</value>
+  </data>
+  <data name="RegistryCommentMmcssUnusableFormat" xml:space="preserve">
+    <value>Windows can't use this task (error {0}), most likely because a setting is out of range. Apps that ask for it can open MIDI ports but may get no MIDI input. Put back the Windows defaults ({1}), then restart Windows.</value>
+  </data>
+  <data name="RegistryCommentMmcssNeedsRestartFormat" xml:space="preserve">
+    <value>The settings are the Windows defaults, but Windows still can't use this task (error {0}). Windows reads these settings only when it starts, so restart Windows.</value>
+  </data>
+  <data name="RegistryMmcssProblemsFound" xml:space="preserve">
+    <value>Windows can't use an MMCSS task that MIDI apps need. See the MMCSS section below.</value>
+  </data>
   <data name="RegistryScanning" xml:space="preserve">
     <value>Reading the registry...</value>
   </data>

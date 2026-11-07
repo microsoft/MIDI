@@ -99,6 +99,7 @@ namespace winrt::miditroubleshooter::implementation
             Drivers32WowItemsControl().ItemsSource(m_drivers32WowEntries);
             ServiceRootItemsControl().ItemsSource(m_serviceRootEntries);
             RegistryTransportsItemsControl().ItemsSource(m_transportRegistryEntries);
+            MmcssTasksItemsControl().ItemsSource(m_mmcssTaskEntries);
             DriversListView().ItemsSource(m_driverDevices);
 
             m_elevated = ::winrt::miditroubleshooter::implementation::App::IsElevated();

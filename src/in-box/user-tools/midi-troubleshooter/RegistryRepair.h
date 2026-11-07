@@ -96,6 +96,9 @@ namespace miditroubleshooter
         std::vector<RegistryEntryInfo> ServiceRootEntries{};
         std::vector<TransportRegistrationInfo> Transports{};
 
+        // Reported only. These are Windows settings, not MIDI ones, so Repair leaves them alone.
+        std::vector<RegistryEntryInfo> MmcssTaskEntries{};
+
         RegistryRepairPlan Plan{};
     };
 

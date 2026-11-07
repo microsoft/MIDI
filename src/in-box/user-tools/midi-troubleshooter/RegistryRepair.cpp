@@ -9,6 +9,7 @@
 #include "RegistryRepair.h"
 #include "StringResources.h"
 #include "SystemInfo.h"
+#include "MmcssTasks.h"
 
 namespace miditroubleshooter
 {
@@ -567,6 +568,7 @@ namespace miditroubleshooter
 
             ScanServiceRoot(scan.ServiceRootEntries);
             ScanTransports(scan.Transports);
+            scan.MmcssTaskEntries = ScanMmcssTasks();
 
             // In legacy mode midisrv and wdmaud2.drv are deliberately out of the picture, so
             // rewriting these entries would break the customer's chosen configuration.
