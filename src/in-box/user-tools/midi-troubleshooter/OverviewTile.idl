@@ -13,7 +13,7 @@ namespace miditroubleshooter
     {
         OverviewTile();
 
-        // the colored top edge and icon: 0 OK, 1 warning, 2 error, 3 information, 5 not checked
+        // the colored top edge and icon: 0 OK, 1 warning, 2 error, 3 information, 4 not used, 5 not checked
         Int32 Severity;
         String Glyph;
         String Label;

@@ -46,6 +46,9 @@ namespace winrt::miditroubleshooter::implementation
         void OnApiModeSelectionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnApplyApiModeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // the "Change the API mode" button on the pages Legacy MIDI mode doesn't use
+        void OnGoToApiModeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         // Diagnostics
         winrt::fire_and_forget OnRunMidiDiagClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRunMidiKsInfoClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

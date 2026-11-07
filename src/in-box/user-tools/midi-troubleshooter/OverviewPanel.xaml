@@ -80,7 +80,7 @@
 
                 <local:OverviewTile x:Name="TransportsTile" Grid.Row="0" Grid.Column="1" Glyph="&#xE968;" Tag="transports" LinkClick="OnTileLinkClick">
                     <local:OverviewTile.Extra>
-                        <StackPanel Spacing="6">
+                        <StackPanel x:Name="TransportsExtra" Spacing="6">
                             <Grid x:Name="TransportsBar" Height="6" ColumnSpacing="2" CornerRadius="3">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition x:Name="TransportsBarInboxColumn" Width="1*" />

@@ -59,6 +59,13 @@
                         <Setter Target="IconGlyph.Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                     </VisualState.Setters>
                 </VisualState>
+                <VisualState x:Name="Neutral">
+                    <VisualState.Setters>
+                        <Setter Target="TopEdge.Background" Value="{ThemeResource ControlStrongFillColorDisabledBrush}" />
+                        <Setter Target="IconBox.Background" Value="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <Setter Target="IconGlyph.Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
                 <VisualState x:Name="NotChecked">
                     <VisualState.Setters>
                         <Setter Target="TopEdge.Background" Value="{ThemeResource TileNotCheckedBrush}" />

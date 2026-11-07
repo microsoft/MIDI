@@ -815,6 +815,13 @@
                             </Button>
                         </Grid>
 
+                        <InfoBar x:Name="LegacySessionsBar" x:Uid="LegacyModePageBar" Severity="Informational" IsOpen="False" IsClosable="False"
+                                 Title="Not used in Legacy MIDI mode"
+                                 Message="This PC uses the MIDI stack from before Windows MIDI Services, which doesn't use the MIDI service. There's nothing to show here until you change the API mode back.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="LegacyModeChangeApiModeButton" Content="Change the API mode" Click="OnGoToApiModeClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
                         <local:SummaryBanner x:Name="SessionsSummary" Glyph="&#xE7EE;" />
 
                         <ItemsControl x:Name="SessionsListView" x:Uid="SessionsListView">
@@ -935,6 +942,13 @@
                             </Button>
                         </Grid>
 
+                        <InfoBar x:Name="LegacyTransportsBar" x:Uid="LegacyModePageBar" Severity="Informational" IsOpen="False" IsClosable="False"
+                                 Title="Not used in Legacy MIDI mode"
+                                 Message="This PC uses the MIDI stack from before Windows MIDI Services, which doesn't use the MIDI service. There's nothing to show here until you change the API mode back.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="LegacyModeChangeApiModeButton" Content="Change the API mode" Click="OnGoToApiModeClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
                         <StackPanel Spacing="8">
                             <local:SummaryBanner x:Name="TransportsSummary">
                                 <local:SummaryBanner.Chips>
@@ -1013,6 +1027,13 @@
                             </Button>
                         </Grid>
 
+                        <InfoBar x:Name="LegacyServiceBar" x:Uid="LegacyModePageBar" Severity="Informational" IsOpen="False" IsClosable="False"
+                                 Title="Not used in Legacy MIDI mode"
+                                 Message="This PC uses the MIDI stack from before Windows MIDI Services, which doesn't use the MIDI service. There's nothing to show here until you change the API mode back.">
+                            <InfoBar.ActionButton>
+                                <Button x:Uid="LegacyModeChangeApiModeButton" Content="Change the API mode" Click="OnGoToApiModeClick" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
                         <Border Style="{StaticResource CardStyle}">
                             <Grid ColumnSpacing="12" RowSpacing="4">
                                 <Grid.ColumnDefinitions>
