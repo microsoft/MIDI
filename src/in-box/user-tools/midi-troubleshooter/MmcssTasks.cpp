@@ -88,13 +88,17 @@ namespace miditroubleshooter
 
         // Registry value names and data are shown as they appear in the registry, so they are
         // not localized.
-        void AppendSetting(_Inout_ std::wstring& text, _In_ wchar_t const* const name, _In_ std::wstring const& value) noexcept
+        void AppendSetting(
+            _Inout_ std::wstring& text,
+            _In_ wchar_t const* const name,
+            _In_ std::wstring const& value,
+            _In_ wchar_t const* const separator = L", ") noexcept
         {
             try
             {
                 if (!text.empty())
                 {
-                    text += L", ";
+                    text += separator;
                 }
 
                 text += name;
@@ -166,10 +170,11 @@ namespace miditroubleshooter
                     clockRate = TryReadDword(key.get(), ValueClockRate);
                 }
 
-                AppendSetting(entry.Value, ValuePriority, priority.has_value() ? std::to_wstring(*priority) : missing);
-                AppendSetting(entry.Value, ValueSchedulingCategory, schedulingCategory.value_or(missing));
-                AppendSetting(entry.Value, ValueSfioPriority, sfioPriority.value_or(missing));
-                AppendSetting(entry.Value, ValueClockRate, clockRate.has_value() ? std::to_wstring(*clockRate) : missing);
+                // one setting per line, so the value column reads as a list
+                AppendSetting(entry.Value, ValuePriority, priority.has_value() ? std::to_wstring(*priority) : missing, L"\n");
+                AppendSetting(entry.Value, ValueSchedulingCategory, schedulingCategory.value_or(missing), L"\n");
+                AppendSetting(entry.Value, ValueSfioPriority, sfioPriority.value_or(missing), L"\n");
+                AppendSetting(entry.Value, ValueClockRate, clockRate.has_value() ? std::to_wstring(*clockRate) : missing, L"\n");
 
                 auto const matchesDefaults =
                     priority == defaults.Priority &&

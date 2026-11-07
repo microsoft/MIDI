@@ -15,7 +15,7 @@
             <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12" />
+            <Setter Property="Padding" Value="20,16,20,16" />
         </Style>
 
         <Style x:Key="CrashCardTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
@@ -33,14 +33,14 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer Padding="16,12,16,16">
-        <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
-            <TextBlock x:Uid="CrashDumpsPageTitle" Text="Crash dumps"
-                       AutomationProperties.HeadingLevel="Level1"
-                       Style="{ThemeResource SubtitleTextBlockStyle}" />
-            <TextBlock x:Uid="CrashDumpsPageDescription"
-                       Text="When a MIDI app stops unexpectedly, Windows saves a crash dump."
-                       Style="{StaticResource CrashBodyTextStyle}" />
+    <ScrollViewer Padding="{StaticResource PageContentPadding}">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="CrashDumpsPageTitle" Text="Crash dumps" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock x:Uid="CrashDumpsPageDescription"
+                           Text="When a MIDI app stops unexpectedly, Windows saves a crash dump."
+                           Style="{StaticResource PageDescriptionStyle}" />
+            </StackPanel>
 
             <!-- Shown when another MIDI app has just crashed and Windows opened this page. Title
                  and Message are set from code, because they name the app and change as Windows

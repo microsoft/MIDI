@@ -15,7 +15,7 @@
             <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12" />
+            <Setter Property="Padding" Value="20,16,20,16" />
         </Style>
 
         <Style x:Key="LatencyCardTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
@@ -39,23 +39,22 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer x:Name="RootScroller" Padding="16,12,16,16">
-        <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
-            <TextBlock x:Uid="LatencyPageTitle" Text="DPC latency check"
-                       AutomationProperties.HeadingLevel="Level1"
-                       Style="{ThemeResource SubtitleTextBlockStyle}" />
-            <TextBlock x:Uid="LatencyPageDescription"
-                       Text="Finds what on your PC holds up audio and MIDI."
-                       Style="{StaticResource LatencyBodyTextStyle}" />
+    <ScrollViewer x:Name="RootScroller" Padding="{StaticResource PageContentPadding}">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock x:Uid="LatencyPageTitle" Text="DPC latency check" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock x:Uid="LatencyPageDescription"
+                           Text="Finds what on your PC holds up audio and MIDI."
+                           Style="{StaticResource PageDescriptionStyle}" />
+                <HyperlinkButton x:Uid="LatencyLearnMoreLink"
+                                 Content="Read about DPC latency and this check"
+                                 NavigateUri="https://microsoft.github.io/MIDI/kb/dpc-latency/"
+                                 Style="{StaticResource PageLinkStyle}" />
+            </StackPanel>
 
             <InfoBar x:Uid="LatencyNotBenchmarkBar" IsOpen="True" IsClosable="False" Severity="Informational"
                      Title="This isn't a benchmark"
                      Message="Use it when you already hear clicks, pops or dropouts." />
-
-            <HyperlinkButton x:Uid="LatencyLearnMoreLink"
-                             Content="Read about DPC latency and this check"
-                             NavigateUri="https://microsoft.github.io/MIDI/kb/dpc-latency/"
-                             Padding="0" />
 
             <!-- ================================ Options ================================ -->
             <Border Style="{StaticResource LatencyCardStyle}">

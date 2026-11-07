@@ -22,12 +22,29 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring const& endpointDeviceId,
         winrt::hstring const& displayName,
         winrt::hstring const& countText,
-        winrt::hstring const& connectedSinceText) noexcept
+        winrt::hstring const& connectedSinceText,
+        winrt::hstring const& kindText,
+        winrt::hstring const& glyph,
+        winrt::hstring const& copyAccessibleName) noexcept
     {
         UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId");
         UpdateField(m_displayName, displayName, L"DisplayName");
         UpdateField(m_countText, countText, L"CountText");
         UpdateField(m_connectedSinceText, connectedSinceText, L"ConnectedSinceText");
+        UpdateField(m_kindText, kindText, L"KindText");
+        UpdateField(m_glyph, glyph, L"Glyph");
+        UpdateField(m_copyAccessibleName, copyAccessibleName, L"CopyAccessibleName");
+    }
+
+    _Use_decl_annotations_
+    void SessionItem::UpdateCard(
+        winrt::hstring const& detailText,
+        winrt::hstring const& glyph,
+        int32_t const connectionPillSeverity) noexcept
+    {
+        UpdateField(m_detailText, detailText, L"DetailText");
+        UpdateField(m_glyph, glyph, L"Glyph");
+        UpdateField(m_connectionPillSeverity, connectionPillSeverity, L"ConnectionPillSeverity");
     }
 
     _Use_decl_annotations_
@@ -56,6 +73,7 @@ namespace winrt::miditroubleshooter::implementation
         UpdateField(m_values.RowAccessibleName, values.RowAccessibleName, L"RowAccessibleName");
         UpdateField(m_values.ToggleText, values.ToggleText, L"ToggleText");
         UpdateField(m_values.ToggleAccessibleName, values.ToggleAccessibleName, L"ToggleAccessibleName");
+        UpdateField(m_values.Glyph, values.Glyph, L"Glyph");
 
         if (UpdateField(m_values.Description, values.Description, L"Description"))
         {
@@ -80,6 +98,7 @@ namespace winrt::miditroubleshooter::implementation
             RaisePropertyChanged(L"CautionVisibility");
             RaisePropertyChanged(L"CriticalVisibility");
             RaisePropertyChanged(L"NeutralVisibility");
+            RaisePropertyChanged(L"PillSeverity");
         }
 
         if (m_values.RegistryKeyName != values.RegistryKeyName)
@@ -92,6 +111,7 @@ namespace winrt::miditroubleshooter::implementation
 
         m_values.Enabled = values.Enabled;
         m_values.Loaded = values.Loaded;
+        m_values.Preview = values.Preview;
     }
 
     _Use_decl_annotations_

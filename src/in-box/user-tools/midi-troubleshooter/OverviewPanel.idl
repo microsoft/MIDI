@@ -1,0 +1,17 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace miditroubleshooter
+{
+    // The Overview page: a dashboard of every check on the other pages. A control of its own,
+    // so the main window only hosts it and feeds it results.
+    [default_interface]
+    runtimeclass OverviewPanel : Microsoft.UI.Xaml.Controls.UserControl
+    {
+        OverviewPanel();
+    }
+}
