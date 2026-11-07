@@ -111,6 +111,42 @@
                 </Grid>
             </DataTemplate>
 
+            <!-- MMCSS tasks: the settings line is too long for the shared row's Auto value column,
+                 so the settings and the comment go under each other in one wide column. -->
+            <DataTemplate x:Key="MmcssTaskTemplate" x:DataType="local:RegistryEntryItem">
+                <Grid Margin="0,2,0,8" ColumnSpacing="8"
+                      AutomationProperties.Name="{x:Bind Name, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="230" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Grid.Column="0" Glyph="&#xE73E;" FontSize="12" VerticalAlignment="Top" Margin="0,3,0,0"
+                              Visibility="{x:Bind OkVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                    <FontIcon Grid.Column="0" Glyph="&#xE7BA;" FontSize="12" VerticalAlignment="Top" Margin="0,3,0,0"
+                              Visibility="{x:Bind WarningVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                    <FontIcon Grid.Column="0" Glyph="&#xEA39;" FontSize="12" VerticalAlignment="Top" Margin="0,3,0,0"
+                              Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+
+                    <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}"
+                               VerticalAlignment="Top"
+                               Style="{StaticResource PropertyValueStyle}" />
+
+                    <StackPanel Grid.Column="2" Spacing="2">
+                        <TextBlock Text="{x:Bind Value, Mode=OneWay}"
+                                   Style="{StaticResource PropertyValueStyle}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{x:Bind Comment, Mode=OneWay}"
+                                   Style="{StaticResource PropertyLabelStyle}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
             <!-- Transports get their own template: the class id and module path are far too long
                  for the shared row, and every row is its own Grid, so an Auto column would be
                  measured per item and the values would not line up down the page. -->
@@ -1121,6 +1157,22 @@
                                            Style="{StaticResource SectionHeaderTextStyle}" />
                                 <ItemsControl x:Name="RegistryTransportsItemsControl"
                                               ItemTemplate="{StaticResource RegistryTransportTemplate}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="RegistryMmcssHeader"
+                                           Text="Multimedia Class Scheduler (MMCSS)"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <TextBlock x:Uid="RegistryMmcssDescription"
+                                           Text="Windows settings that music apps use to get priority, and the limit on how many threads each app can register. Tweak guides and optimizer apps sometimes change them. Repair doesn't change these."
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <HyperlinkButton x:Uid="RegistryMmcssLearnMoreLink"
+                                                 Content="How to put the MMCSS task settings back"
+                                                 NavigateUri="https://microsoft.github.io/MIDI/kb/mmcss-task-settings/"
+                                                 Padding="0" />
+                                <ItemsControl x:Name="MmcssTasksItemsControl"
+                                              ItemTemplate="{StaticResource MmcssTaskTemplate}" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

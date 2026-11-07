@@ -53,6 +53,11 @@ namespace winrt::miditroubleshooter::implementation
             FillEntries(m_drivers32Entries, scan.Drivers32Entries);
             FillEntries(m_drivers32WowEntries, scan.Drivers32WowEntries);
             FillEntries(m_serviceRootEntries, scan.ServiceRootEntries);
+            FillEntries(m_mmcssTaskEntries, scan.MmcssTaskEntries);
+
+            auto const mmcssProblemCount = static_cast<uint32_t>(std::count_if(
+                scan.MmcssTaskEntries.begin(), scan.MmcssTaskEntries.end(),
+                [](native::RegistryEntryInfo const& entry) { return entry.Severity == native::EntrySeverity::Error; }));
 
             // Transports are shown here as plain entries: this page is about what the registry
             // says, while the service health page is about what actually loaded.
@@ -90,18 +95,29 @@ namespace winrt::miditroubleshooter::implementation
 
             RepairRegistryButton().IsEnabled(scan.Plan.AnyChanges() && m_elevated);
 
+            winrt::hstring status{};
+
             if (scan.LegacyMode)
             {
-                RegistryStatusText().Text(res::GetString(L"RegistryLegacyModeNoChanges"));
+                status = res::GetString(L"RegistryLegacyModeNoChanges");
             }
-            else if (changeCount == 0)
+            else if (changeCount == 0 && mmcssProblemCount == 0)
             {
-                RegistryStatusText().Text(res::GetString(L"RegistryHealthy"));
+                status = res::GetString(L"RegistryHealthy");
             }
-            else
+            else if (changeCount > 0)
             {
-                RegistryStatusText().Text(res::FormatString(L"RegistryProblemsFoundFormat", changeCount));
+                status = res::FormatString(L"RegistryProblemsFoundFormat", changeCount);
             }
+
+            // Repair doesn't touch the MMCSS tasks, so they get their own sentence.
+            if (mmcssProblemCount > 0)
+            {
+                auto const mmcssStatus = res::GetString(L"RegistryMmcssProblemsFound");
+                status = status.empty() ? mmcssStatus : status + L" " + mmcssStatus;
+            }
+
+            RegistryStatusText().Text(status);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the registry scan.")
     }
