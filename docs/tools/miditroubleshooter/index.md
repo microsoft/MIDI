@@ -23,6 +23,17 @@ Most of what it does needs administrator rights, so it asks for them when it sta
 3. **Diagnostics** and **Capture repro log** collect the reports and traces that support will ask for.
 4. **The other pages** show the state of the MIDI service, its transports, the registry, and the drivers, and fix the common problems.
 
+## Overview
+
+The app opens on the **Overview**. It runs every check from the other pages in the background as soon as the app starts, and shows the results as colored cards: the MIDI service, the transports, the registry, the USB MIDI devices and their drivers, the apps using MIDI, recent crashes, the API mode and the MMCSS settings. Each card fills in when its check finishes, and each one links to the page with the details.
+
+- **Green** means healthy, **yellow** means worth a look, and **red** means something is broken. **Blue** cards are information only.
+- The Transports card splits the transports that are part of Windows from the preview transports installed in Program Files. The Devices card does the same for the new MIDI driver, the classic driver and vendor drivers.
+- The banner at the top lists everything that needs attention, with a link to the page that fixes it. When the list is empty, it says so.
+- Pages with a problem also get a small yellow or red dot in the navigation, so you can see them from anywhere in the app.
+
+The DPC latency check takes a minute and records a trace, so it never runs by itself. Its card links to the page where you can start it.
+
 ## API mode
 
 Windows can run MIDI in one of three modes. This page shows which one this PC is using, explains what each one gives you and takes away, and lets you change it.
@@ -115,7 +126,7 @@ Some things to know:
 
 ## Active sessions
 
-Every application currently connected to the MIDI service, with the process it belongs to and when it started. Expand one to see which endpoints and MIDI 1.0 ports it has open, how many times each is open, and since when.
+Every application currently connected to the MIDI service, with the process it belongs to and when it started. Expand one to see which endpoints and MIDI 1.0 ports it has open, what kind of transport each one uses, how many times each is open, and since when. The copy button on each row copies the endpoint's device id, which support sometimes asks for.
 
 ![The applications connected to the MIDI service and what each has open]({{ site.baseurl }}/assets/images/miditroubleshooter-sessions.png)
 
@@ -125,7 +136,7 @@ This page is purely informational; there is nothing to change here. It's for ans
 
 Transports are the pieces of the MIDI service that talk to a particular kind of device: USB, Network MIDI 2.0, Bluetooth LE, the loopbacks and so on.
 
-This page lists everything registered on the PC. Each transport has a pill that shows its state:
+This page lists everything registered on the PC, in two groups: the transports that are part of Windows, and the preview transports installed in Program Files. A summary at the top says whether they all loaded. Each transport has a tag that shows its state:
 
 - **Enabled and loaded**: the MIDI service is using it.
 - **Enabled but not loaded**: it should be running, but it isn't. The line under its name says why. A transport that is registered but didn't load is the reason a whole class of device can go missing at once.
@@ -154,7 +165,7 @@ The state of the MIDI service itself: whether it's running, how it's set to star
 
 Windows MIDI Services relies on a small number of registry values, and third-party installers, driver uninstallers and "MIDI port reordering" utilities are known to break them. When they're wrong, MIDI either stops working entirely or silently falls back to the old stack.
 
-This page shows what's actually there, with a green, amber or red marker against each value and a plain description of what it's for. If anything is wrong, **Repair these entries** lists exactly what it would change, asks you to confirm, and then makes only those changes. Windows has to be restarted afterwards, because the audio and MIDI services read these values when they start.
+This page shows what's actually there, in groups you can open and close, with a green, amber or red marker against each value and a plain description of what it's for. A group with a problem opens by itself. A summary at the top says whether anything needs repair. If anything does, **Repair** lists exactly what it would change, asks you to confirm, and then makes only those changes. Windows has to be restarted afterwards, because the audio and MIDI services read these values when they start.
 
 ![The registry values Windows MIDI Services depends on]({{ site.baseurl }}/assets/images/miditroubleshooter-registry.png)
 
@@ -178,7 +189,7 @@ Bluetooth LE MIDI is now built into Windows MIDI Services, so the KORG BLE-MIDI 
 
 ### Switching between the MIDI class drivers
 
-Windows has two class drivers a class-compliant USB MIDI device can use: the new combined MIDI 1.0 and MIDI 2.0 driver, and the older USB Audio class driver. Each device is listed with the driver it's using now and buttons to switch it to the other one, which saves the trip through Device Manager described in [How to switch between MIDI class drivers]({{ site.baseurl }}/kb/how-to-switch-between-class-drivers/).
+Windows has two class drivers a class-compliant USB MIDI device can use: the new combined MIDI 1.0 and MIDI 2.0 driver, and the older USB Audio class driver. Each device is listed with the driver it's using now and a button for each class driver. The button for the driver the device already uses is turned off and says **Using new MIDI driver** or **Using classic driver**, so you can see the current state at a glance. This saves the trip through Device Manager described in [How to switch between MIDI class drivers]({{ site.baseurl }}/kb/how-to-switch-between-class-drivers/).
 
 Devices that can only be audio are left out of the list, but the list is not a guarantee that everything on it is a MIDI device. Windows offers the MIDI class driver for any USB audio device, and forcing it onto one that can't use it may stop that device working or make the PC stop responding until it is restarted. Only change the driver for a device you know is a MIDI device.
 

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="miditroubleshooter.StatusPill"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:miditroubleshooter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    IsTabStop="False">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="PreviewPillForegroundBrush" Color="#C3A6FF" />
+                    <SolidColorBrush x:Key="PreviewPillBackgroundBrush" Color="#2EC3A6FF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PreviewPillForegroundBrush" Color="#6A3DA8" />
+                    <SolidColorBrush x:Key="PreviewPillBackgroundBrush" Color="#1F6A3DA8" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="PreviewPillForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PreviewPillBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid x:Name="PillRoot" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="SeverityStates">
+                <VisualState x:Name="Ok">
+                    <VisualState.Setters>
+                        <Setter Target="PillShape.Fill" Value="{ThemeResource SystemFillColorSuccessBackgroundBrush}" />
+                        <Setter Target="PillGlyph.Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+                        <Setter Target="PillText.Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+                        <Setter Target="PillGlyph.Glyph" Value="&#xE73E;" />
+                        <Setter Target="PillGlyph.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Warning">
+                    <VisualState.Setters>
+                        <Setter Target="PillShape.Fill" Value="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                        <Setter Target="PillGlyph.Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+                        <Setter Target="PillText.Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+                        <Setter Target="PillGlyph.Glyph" Value="&#xE7BA;" />
+                        <Setter Target="PillGlyph.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Error">
+                    <VisualState.Setters>
+                        <Setter Target="PillShape.Fill" Value="{ThemeResource SystemFillColorCriticalBackgroundBrush}" />
+                        <Setter Target="PillGlyph.Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                        <Setter Target="PillText.Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                        <Setter Target="PillGlyph.Glyph" Value="&#xEA39;" />
+                        <Setter Target="PillGlyph.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Info">
+                    <VisualState.Setters>
+                        <Setter Target="PillShape.Fill" Value="{ThemeResource SystemFillColorAttentionBackgroundBrush}" />
+                        <Setter Target="PillText.Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        <Setter Target="PillGlyph.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Neutral">
+                    <VisualState.Setters>
+                        <Setter Target="PillShape.Fill" Value="{ThemeResource ControlFillColorSecondaryBrush}" />
+                        <Setter Target="PillText.Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <Setter Target="PillGlyph.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Preview">
+                    <VisualState.Setters>
+                        <Setter Target="PillShape.Fill" Value="{ThemeResource PreviewPillBackgroundBrush}" />
+                        <Setter Target="PillText.Foreground" Value="{ThemeResource PreviewPillForegroundBrush}" />
+                        <Setter Target="PillGlyph.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <!-- A shape, not a Border: a Border snaps its corner radius to whole pixels along with its
+             bounds, so at 125% scaling the arc comes out stepped. -->
+        <Rectangle x:Name="PillShape" RadiusX="12" RadiusY="12" UseLayoutRounding="False"
+                   Fill="{ThemeResource ControlFillColorSecondaryBrush}" />
+
+        <StackPanel Orientation="Horizontal" Spacing="6" Padding="10,0,10,0" VerticalAlignment="Center">
+            <FontIcon x:Name="PillGlyph" FontSize="12" Visibility="Collapsed" VerticalAlignment="Center"
+                      AutomationProperties.AccessibilityView="Raw" />
+            <TextBlock x:Name="PillText" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                       TextWrapping="NoWrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>

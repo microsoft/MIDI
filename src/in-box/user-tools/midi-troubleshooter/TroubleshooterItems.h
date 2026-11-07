@@ -70,12 +70,18 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring DisplayName() const noexcept { return m_displayName; }
         winrt::hstring CountText() const noexcept { return m_countText; }
         winrt::hstring ConnectedSinceText() const noexcept { return m_connectedSinceText; }
+        winrt::hstring KindText() const noexcept { return m_kindText; }
+        winrt::hstring Glyph() const noexcept { return m_glyph; }
+        winrt::hstring CopyAccessibleName() const noexcept { return m_copyAccessibleName; }
 
         void Update(
-            winrt::hstring const& endpointDeviceId,
-            winrt::hstring const& displayName,
-            winrt::hstring const& countText,
-            winrt::hstring const& connectedSinceText) noexcept;
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ winrt::hstring const& displayName,
+            _In_ winrt::hstring const& countText,
+            _In_ winrt::hstring const& connectedSinceText,
+            _In_ winrt::hstring const& kindText,
+            _In_ winrt::hstring const& glyph,
+            _In_ winrt::hstring const& copyAccessibleName) noexcept;
 
         MIDI_TSHOOT_OBSERVABLE_ITEM()
 
@@ -83,6 +89,9 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring m_displayName{};
         winrt::hstring m_countText{};
         winrt::hstring m_connectedSinceText{};
+        winrt::hstring m_kindText{};
+        winrt::hstring m_glyph{};
+        winrt::hstring m_copyAccessibleName{};
     };
 
     struct SessionItem : SessionItemT<SessionItem>
@@ -94,6 +103,9 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring ProcessText() const noexcept { return m_processText; }
         winrt::hstring StartedText() const noexcept { return m_startedText; }
         winrt::hstring ConnectionCountText() const noexcept { return m_connectionCountText; }
+        winrt::hstring DetailText() const noexcept { return m_detailText; }
+        winrt::hstring Glyph() const noexcept { return m_glyph; }
+        int32_t ConnectionPillSeverity() const noexcept { return m_connectionPillSeverity; }
 
         collections::IObservableVector<miditroubleshooter::SessionConnectionItem> Connections() const noexcept
         {
@@ -107,7 +119,17 @@ namespace winrt::miditroubleshooter::implementation
             winrt::hstring const& startedText,
             winrt::hstring const& connectionCountText) noexcept;
 
+        // the parts of the redesigned card that are not in the original row
+        void UpdateCard(
+            _In_ winrt::hstring const& detailText,
+            _In_ winrt::hstring const& glyph,
+            _In_ int32_t connectionPillSeverity) noexcept;
+
         MIDI_TSHOOT_OBSERVABLE_ITEM()
+
+        winrt::hstring m_detailText{};
+        winrt::hstring m_glyph{};
+        int32_t m_connectionPillSeverity{ 4 };
 
         winrt::hstring m_sessionId{};
         winrt::hstring m_title{};
@@ -154,6 +176,11 @@ namespace winrt::miditroubleshooter::implementation
 
             bool Enabled{ true };
             bool Loaded{ false };
+
+            // installed outside System32, which in practice means a preview from Program Files
+            bool Preview{ false };
+
+            winrt::hstring Glyph{};
         };
 
         winrt::hstring TransportId() const noexcept { return m_values.TransportId; }
@@ -167,6 +194,19 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring RowAccessibleName() const noexcept { return m_values.RowAccessibleName; }
         winrt::hstring ToggleText() const noexcept { return m_values.ToggleText; }
         winrt::hstring ToggleAccessibleName() const noexcept { return m_values.ToggleAccessibleName; }
+        winrt::hstring Glyph() const noexcept { return m_values.Glyph; }
+
+        // StatusPill.Severity values: 0 OK, 1 warning, 2 error, 4 neutral
+        int32_t PillSeverity() const noexcept
+        {
+            switch (m_values.StateSeverity)
+            {
+            case Severity::Ok:      return 0;
+            case Severity::Warning: return 1;
+            case Severity::Error:   return 2;
+            default:                return 4;
+            }
+        }
 
         bool CanToggle() const noexcept { return !m_values.RegistryKeyName.empty() && !m_isBusy; }
 
@@ -209,6 +249,7 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring RegistryKeyName() const noexcept { return m_values.RegistryKeyName; }
         bool TransportEnabled() const noexcept { return m_values.Enabled; }
         bool TransportLoaded() const noexcept { return m_values.Loaded; }
+        bool IsPreview() const noexcept { return m_values.Preview; }
 
         void Update(_In_ Values const& values) noexcept;
 
@@ -238,6 +279,20 @@ namespace winrt::miditroubleshooter::implementation
             return m_detail.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
         }
 
+        winrt::hstring TagText() const noexcept { return m_tagText; }
+        int32_t TagSeverity() const noexcept { return m_tagSeverity; }
+
+        xaml::Visibility TagVisibility() const noexcept
+        {
+            return m_tagText.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
+
+        void SetTag(_In_ winrt::hstring const& text, _In_ int32_t const severity) noexcept
+        {
+            m_tagText = text;
+            m_tagSeverity = severity;
+        }
+
         xaml::Visibility OkVisibility() const noexcept { return m_okVisibility; }
         xaml::Visibility WarningVisibility() const noexcept { return m_warningVisibility; }
         xaml::Visibility ErrorVisibility() const noexcept { return m_errorVisibility; }
@@ -255,6 +310,8 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring m_value{};
         winrt::hstring m_comment{};
         winrt::hstring m_detail{};
+        winrt::hstring m_tagText{};
+        int32_t m_tagSeverity{ 4 };
 
         xaml::Visibility m_okVisibility{ xaml::Visibility::Visible };
         xaml::Visibility m_warningVisibility{ xaml::Visibility::Collapsed };
@@ -270,6 +327,26 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring DetailText() const noexcept { return m_detailText; }
         winrt::hstring DriverText() const noexcept { return m_driverText; }
         winrt::hstring ProblemText() const noexcept { return m_problemText; }
+        winrt::hstring DriverName() const noexcept { return m_driverName; }
+        int32_t DriverPillSeverity() const noexcept { return m_driverPillSeverity; }
+        winrt::hstring DriverDetail() const noexcept { return m_driverDetail; }
+        winrt::hstring UmpButtonText() const noexcept { return m_umpButtonText; }
+        winrt::hstring ClassicButtonText() const noexcept { return m_classicButtonText; }
+
+        // the parts of the redesigned card that are not in the original row
+        void SetDriverCard(
+            _In_ winrt::hstring const& driverName,
+            _In_ int32_t const driverPillSeverity,
+            _In_ winrt::hstring const& driverDetail,
+            _In_ winrt::hstring const& umpButtonText,
+            _In_ winrt::hstring const& classicButtonText) noexcept
+        {
+            m_driverName = driverName;
+            m_driverPillSeverity = driverPillSeverity;
+            m_driverDetail = driverDetail;
+            m_umpButtonText = umpButtonText;
+            m_classicButtonText = classicButtonText;
+        }
 
         bool CanUseUniversalMidiPacketDriver() const noexcept { return m_canUseUmp; }
         bool CanUseClassicDriver() const noexcept { return m_canUseClassic; }
@@ -298,6 +375,11 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring m_detailText{};
         winrt::hstring m_driverText{};
         winrt::hstring m_problemText{};
+        winrt::hstring m_driverName{};
+        winrt::hstring m_driverDetail{};
+        winrt::hstring m_umpButtonText{};
+        winrt::hstring m_classicButtonText{};
+        int32_t m_driverPillSeverity{ 4 };
 
         bool m_canUseUmp{ false };
         bool m_canUseClassic{ false };

@@ -44,12 +44,29 @@ namespace winrt::miditroubleshooter::implementation
             m_settingApiModeSelection = false;
 
             SystemInfoApiModeValue().Text(ApiModeName(mode));
+            SummarizeApiModeForOverview(mode);
 
             ApiModeStatusText().Text(res::FormatString(L"ApiModeCurrentFormat", ApiModeName(mode)));
 
             ApplyApiModeButton().IsEnabled(false);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to read the current API mode.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SummarizeApiModeForOverview(native::ApiMode const mode) noexcept
+    {
+        try
+        {
+            m_overview.ApiModeName = ApiModeName(mode);
+            m_overview.ApiModeDetail = res::GetString(
+                mode == native::ApiMode::Legacy ? L"OverviewApiModeLegacyDetail" :
+                mode == native::ApiMode::Hybrid ? L"OverviewApiModeHybridDetail" :
+                L"OverviewApiModeServicesDetail");
+
+            UpdateOverview();
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to summarize the API mode.")
     }
 
     _Use_decl_annotations_

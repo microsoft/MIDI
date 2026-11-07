@@ -60,9 +60,35 @@ namespace winrt::miditroubleshooter::implementation
             midiapp::MakeLiveStatusRegion(MidiDiagStatusText());
             midiapp::MakeLiveStatusRegion(MidiKsInfoStatusText());
             midiapp::MakeLiveStatusRegion(CaptureStatusText());
-            midiapp::MakeLiveStatusRegion(SessionsStatusText());
-            midiapp::MakeLiveStatusRegion(TransportsStatusText());
             midiapp::MakeLiveStatusRegion(TransportsActionText());
+
+            // These lines only say something during and after an action. Empty, they would
+            // still take a line of space between the summary and the list.
+            for (auto const& block : { RegistryStatusText(), TransportsActionText() })
+            {
+                block.Visibility(xaml::Visibility::Collapsed);
+
+                block.RegisterPropertyChangedCallback(controls::TextBlock::TextProperty(),
+                    [](xaml::DependencyObject const& sender, xaml::DependencyProperty const&)
+                    {
+                        if (auto const text = sender.try_as<controls::TextBlock>())
+                        {
+                            text.Visibility(text.Text().empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+                        }
+                    });
+            }
+
+            // an idle ring still takes its space, so it is shown only while it spins
+            TransportsProgressRing().Visibility(xaml::Visibility::Collapsed);
+
+            TransportsProgressRing().RegisterPropertyChangedCallback(controls::ProgressRing::IsActiveProperty(),
+                [](xaml::DependencyObject const& sender, xaml::DependencyProperty const&)
+                {
+                    if (auto const ring = sender.try_as<controls::ProgressRing>())
+                    {
+                        ring.Visibility(ring.IsActive() ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+                    }
+                });
             midiapp::MakeLiveStatusRegion(ServiceStatusText());
             midiapp::MakeLiveStatusRegion(RegistryStatusText());
             midiapp::MakeLiveStatusRegion(DriversStatusText());
@@ -95,6 +121,7 @@ namespace winrt::miditroubleshooter::implementation
 
             SessionsListView().ItemsSource(m_sessions);
             TransportsListView().ItemsSource(m_transports);
+            TransportsPreviewListView().ItemsSource(m_previewTransports);
             Drivers32ItemsControl().ItemsSource(m_drivers32Entries);
             Drivers32WowItemsControl().ItemsSource(m_drivers32WowEntries);
             ServiceRootItemsControl().ItemsSource(m_serviceRootEntries);
@@ -152,6 +179,9 @@ namespace winrt::miditroubleshooter::implementation
             // the Crash dumps page, in MainWindowCrashDumps.cpp
             InitializeCrashDumpsPage();
 
+            // the Overview page, in MainWindowOverview.cpp
+            InitializeOverviewPage();
+
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
@@ -192,7 +222,9 @@ namespace winrt::miditroubleshooter::implementation
 
             LoadApiMode();
 
-            auto pageIndex = native::AppSettings::Current().SelectedPageIndex();
+            // The Overview is the starting page, so the first thing a customer sees is whether
+            // anything needs attention.
+            auto pageIndex = native::AppSettings::PageIndexOverview;
 
             auto const& startPage = App::StartupOptions().StartPage;
             auto const& latencyTrace = App::StartupOptions().LatencyTracePath;
@@ -225,6 +257,9 @@ namespace winrt::miditroubleshooter::implementation
             }
 
             ApplyCrashStartupOptions();
+
+            // every check the Overview shows, in the background
+            RunStartupChecks();
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }
@@ -318,6 +353,7 @@ namespace winrt::miditroubleshooter::implementation
     _Use_decl_annotations_
     uint32_t MainWindow::PageIndexForTag(winrt::hstring const& tag) noexcept
     {
+        if (tag == L"apimode")      return native::AppSettings::PageIndexApiMode;
         if (tag == L"diagnostics")  return native::AppSettings::PageIndexDiagnostics;
         if (tag == L"capture")      return native::AppSettings::PageIndexCaptureLog;
         if (tag == L"sessions")     return native::AppSettings::PageIndexSessions;
@@ -328,7 +364,7 @@ namespace winrt::miditroubleshooter::implementation
         if (tag == L"dpclatency")   return native::AppSettings::PageIndexLatencyCheck;
         if (tag == L"crashdumps")   return native::AppSettings::PageIndexCrashDumps;
 
-        return native::AppSettings::PageIndexApiMode;
+        return native::AppSettings::PageIndexOverview;
     }
 
     _Use_decl_annotations_
@@ -347,7 +383,8 @@ namespace winrt::miditroubleshooter::implementation
             case native::AppSettings::PageIndexDrivers:     return DriversNavigationItem();
             case native::AppSettings::PageIndexLatencyCheck: return LatencyCheckNavigationItem();
             case native::AppSettings::PageIndexCrashDumps:  return CrashDumpsNavigationItem();
-            default:                                        return ApiModeNavigationItem();
+            case native::AppSettings::PageIndexApiMode:     return ApiModeNavigationItem();
+            default:                                        return OverviewNavigationItem();
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to resolve a navigation item.")
@@ -391,6 +428,7 @@ namespace winrt::miditroubleshooter::implementation
                     return pageIndex == index ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
                 };
 
+            OverviewPagePanel().Visibility(visibility(native::AppSettings::PageIndexOverview));
             ApiModePanel().Visibility(visibility(native::AppSettings::PageIndexApiMode));
             DiagnosticsPanel().Visibility(visibility(native::AppSettings::PageIndexDiagnostics));
             CapturePanel().Visibility(visibility(native::AppSettings::PageIndexCaptureLog));
@@ -443,7 +481,8 @@ namespace winrt::miditroubleshooter::implementation
 
     bool MainWindow::ServiceHealthPageVisible() const noexcept
     {
-        return m_currentPageIndex == native::AppSettings::PageIndexSessions ||
+        return m_currentPageIndex == native::AppSettings::PageIndexOverview ||
+            m_currentPageIndex == native::AppSettings::PageIndexSessions ||
             m_currentPageIndex == native::AppSettings::PageIndexTransports ||
             m_currentPageIndex == native::AppSettings::PageIndexService;
     }

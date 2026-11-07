@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace miditroubleshooter
+{
+    // One card on the Overview page.
+    [default_interface]
+    runtimeclass OverviewTile : Microsoft.UI.Xaml.Controls.UserControl
+    {
+        OverviewTile();
+
+        // the colored top edge and icon: 0 OK, 1 warning, 2 error, 3 information, 5 not checked
+        Int32 Severity;
+        String Glyph;
+        String Label;
+
+        // the tag at the top right, hidden when PillText is empty
+        Int32 PillSeverity;
+        String PillText;
+
+        // the large value, with smaller text after it; CompactValue suits words rather than numbers
+        String Value;
+        String ValueSuffix;
+        Boolean CompactValue;
+
+        String Detail;
+        String LinkText;
+
+        // optional extra content between the value and the detail, such as a split bar
+        Microsoft.UI.Xaml.UIElement Extra;
+
+        event Windows.Foundation.TypedEventHandler<OverviewTile, Object> LinkClick;
+    }
+}

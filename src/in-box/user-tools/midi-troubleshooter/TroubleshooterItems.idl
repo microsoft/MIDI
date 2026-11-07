@@ -20,6 +20,11 @@ namespace miditroubleshooter
         String DisplayName{ get; };
         String CountText{ get; };
         String ConnectedSinceText{ get; };
+
+        // the kind of transport, read from the endpoint id, and a matching icon
+        String KindText{ get; };
+        String Glyph{ get; };
+        String CopyAccessibleName{ get; };
     }
 
     // One application connected to the MIDI service.
@@ -33,6 +38,11 @@ namespace miditroubleshooter
         String ProcessText{ get; };
         String StartedText{ get; };
         String ConnectionCountText{ get; };
+
+        // the process and start time on one line, an icon, and the connection tag's StatusPill severity
+        String DetailText{ get; };
+        String Glyph{ get; };
+        Int32 ConnectionPillSeverity{ get; };
 
         Windows.Foundation.Collections.IObservableVector<SessionConnectionItem> Connections{ get; };
     }
@@ -54,6 +64,10 @@ namespace miditroubleshooter
         String StateText{ get; };
         String ReasonText{ get; };
         String RowAccessibleName{ get; };
+
+        // StatusPill severity for StateText, and an icon for the kind of transport
+        Int32 PillSeverity{ get; };
+        String Glyph{ get; };
 
         // the Enable or Disable button, which the built-in transports do not have
         String ToggleText{ get; };
@@ -87,6 +101,11 @@ namespace miditroubleshooter
         String Detail{ get; };
         Microsoft.UI.Xaml.Visibility DetailVisibility{ get; };
 
+        // an optional StatusPill, such as where a transport is installed
+        String TagText{ get; };
+        Int32 TagSeverity{ get; };
+        Microsoft.UI.Xaml.Visibility TagVisibility{ get; };
+
         Microsoft.UI.Xaml.Visibility OkVisibility{ get; };
         Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ErrorVisibility{ get; };
@@ -103,6 +122,15 @@ namespace miditroubleshooter
         String DetailText{ get; };
         String DriverText{ get; };
         String ProblemText{ get; };
+
+        // the driver in use as a short tag (StatusPill severity), and its file and version
+        String DriverName{ get; };
+        Int32 DriverPillSeverity{ get; };
+        String DriverDetail{ get; };
+
+        // "Use ..." or, for the driver already in use, "Using ..."
+        String UmpButtonText{ get; };
+        String ClassicButtonText{ get; };
 
         Boolean CanUseUniversalMidiPacketDriver{ get; };
         Boolean CanUseClassicDriver{ get; };

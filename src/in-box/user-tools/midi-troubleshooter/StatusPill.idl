@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace miditroubleshooter
+{
+    // A small rounded status tag, used on every page so the same state always looks the same.
+    // Severity: 0 OK (green), 1 warning (yellow), 2 error (red), 3 information (accent),
+    // 4 neutral (gray), 5 preview (purple). The colors come from visual states, so they follow
+    // the theme when the customer switches it.
+    [default_interface]
+    runtimeclass StatusPill : Microsoft.UI.Xaml.Controls.UserControl
+    {
+        StatusPill();
+
+        Int32 Severity;
+        String Text;
+    }
+}

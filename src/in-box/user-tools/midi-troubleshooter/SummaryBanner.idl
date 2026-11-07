@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace miditroubleshooter
+{
+    // The card at the top of a page that says, before any detail, whether things are OK.
+    // Severity uses the StatusPill values (0 OK, 1 warning, 2 error, 3 information, 4 neutral).
+    // Chips sits under the message and Action at the right; both are optional.
+    [default_interface]
+    runtimeclass SummaryBanner : Microsoft.UI.Xaml.Controls.UserControl
+    {
+        SummaryBanner();
+
+        Int32 Severity;
+        String Title;
+        String Message;
+
+        // overrides the glyph the severity would otherwise show
+        String Glyph;
+
+        Microsoft.UI.Xaml.UIElement Chips;
+        Microsoft.UI.Xaml.UIElement Action;
+    }
+}
