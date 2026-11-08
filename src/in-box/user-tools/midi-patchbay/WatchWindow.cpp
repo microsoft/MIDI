@@ -45,18 +45,19 @@ namespace midipatchbay
 
         constexpr std::chrono::milliseconds TickInterval{ 50 };
 
-        // The same colors as the Windows MIDI Monitor's message name chiclets, by
-        // midiapp::UmpMessageTypeColorIndex. They read on light and dark alike.
+        // The same colors as the Windows MIDI Monitor's message name chiclets (MonitorStyles.xaml),
+        // by midiapp::UmpMessageTypeColorIndex, with near black text. They read on light and
+        // dark alike.
         constexpr std::array<winrt::Windows::UI::Color, 8> ChicletColors
         {
-            winrt::Windows::UI::Color{ 0xFF, 0x6E, 0x76, 0x81 },
-            winrt::Windows::UI::Color{ 0xFF, 0xB4, 0x69, 0x1A },
-            winrt::Windows::UI::Color{ 0xFF, 0x2A, 0x6B, 0xB8 },
-            winrt::Windows::UI::Color{ 0xFF, 0x6B, 0x4B, 0xB5 },
-            winrt::Windows::UI::Color{ 0xFF, 0x2E, 0x8B, 0x57 },
-            winrt::Windows::UI::Color{ 0xFF, 0x1F, 0x8A, 0x8A },
-            winrt::Windows::UI::Color{ 0xFF, 0xA4, 0x3E, 0x85 },
-            winrt::Windows::UI::Color{ 0xFF, 0x5A, 0x64, 0x72 },
+            winrt::Windows::UI::Color{ 0xFF, 0x8A, 0x8A, 0x8A },
+            winrt::Windows::UI::Color{ 0xFF, 0xE8, 0xA3, 0x3D },
+            winrt::Windows::UI::Color{ 0xFF, 0x4C, 0xC2, 0xFF },
+            winrt::Windows::UI::Color{ 0xFF, 0x3F, 0xD1, 0xA6 },
+            winrt::Windows::UI::Color{ 0xFF, 0xC3, 0x8B, 0xFF },
+            winrt::Windows::UI::Color{ 0xFF, 0xFF, 0x8F, 0xB1 },
+            winrt::Windows::UI::Color{ 0xFF, 0xB9, 0xB9, 0x6A },
+            winrt::Windows::UI::Color{ 0xFF, 0x8A, 0x8A, 0x8A },
         };
 
         // Each window's number and its connection's dot share one of these.
@@ -209,8 +210,8 @@ namespace midipatchbay
               <TextBlock Grid.Column="1" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
               <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
                 <TextBlock FontSize="12" FontFamily="Consolas" FontWeight="SemiBold" />
-                <Border CornerRadius="2" Padding="4,0,4,1" HorizontalAlignment="Left">
-                  <TextBlock FontSize="10" Foreground="White" />
+                <Border CornerRadius="3" Padding="5,0,5,1" HorizontalAlignment="Left">
+                  <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="Black" />
                 </Border>
               </StackPanel>
               <TextBlock Grid.Column="3" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />

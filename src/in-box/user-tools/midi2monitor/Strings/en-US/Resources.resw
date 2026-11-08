@@ -786,7 +786,7 @@ Examples
     <value>Find an endpoint or group</value>
   </data>
   <data name="OnlySendingToggle.Header" xml:space="preserve">
-    <value>Sending only</value>
+    <value>Show only active or checked</value>
   </data>
   <data name="SourcesSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Sources width</value>
@@ -986,6 +986,6 @@ Examples
     <value>Activity lights</value>
   </data>
   <data name="SettingsShowActivityDescription.Text" xml:space="preserve">
-    <value>While listening, this opens every endpoint, not only the ones you're watching, so the Sources list can light up the ones sending messages. Turn it off if listening is slow to start on a PC with many devices.</value>
+    <value>In advanced mode, this opens every endpoint, not only the ones you're watching, so the Sources list can light up the ones sending messages. Turn it off if advanced mode is slow to open on a PC with many devices.</value>
   </data>
 </root>

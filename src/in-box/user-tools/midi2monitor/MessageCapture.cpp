@@ -85,12 +85,16 @@ namespace midi2monitor
             return S_OK;
         }
 
-        if (!m_enabled.load(std::memory_order_relaxed))
+        // Advanced mode's connections are open before listening starts, so the activity lights
+        // work then too. Nothing is kept until listening starts.
+        auto const enabled = m_enabled.load(std::memory_order_relaxed);
+        auto const advanced = m_advanced.load(std::memory_order_relaxed);
+
+        if (!enabled && !advanced)
         {
             return S_OK;
         }
 
-        auto const advanced = m_advanced.load(std::memory_order_relaxed);
         auto const groupFilter = m_groupFilter.load(std::memory_order_relaxed);
         auto const channelFilter = m_channelFilter.load(std::memory_order_relaxed);
         auto const batchId = m_batchId.fetch_add(1, std::memory_order_relaxed);
@@ -172,7 +176,7 @@ namespace midi2monitor
                 }
             }
 
-            if (keep)
+            if (keep && enabled)
             {
                 if (m_staged.size() >= MaximumStagedMessages)
                 {

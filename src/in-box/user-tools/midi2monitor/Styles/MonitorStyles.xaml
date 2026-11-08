@@ -34,26 +34,27 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <!-- Message type chiclets. Deliberately theme independent: these are mid tone fills with a
-         near white glyph, which reads correctly in both light and dark, and they are resolved
-         from code so they must not depend on the active theme dictionary. -->
-    <SolidColorBrush x:Key="MidiMessageType0BackgroundBrush" Color="#FF6E7681" />
-    <SolidColorBrush x:Key="MidiMessageType1BackgroundBrush" Color="#FFB4691A" />
-    <SolidColorBrush x:Key="MidiMessageType2BackgroundBrush" Color="#FF2A6BB8" />
-    <SolidColorBrush x:Key="MidiMessageType3BackgroundBrush" Color="#FF6B4BB5" />
-    <SolidColorBrush x:Key="MidiMessageType4BackgroundBrush" Color="#FF2E8B57" />
-    <SolidColorBrush x:Key="MidiMessageType5BackgroundBrush" Color="#FF1F8A8A" />
-    <SolidColorBrush x:Key="MidiMessageType6BackgroundBrush" Color="#FFA43E85" />
-    <SolidColorBrush x:Key="MidiMessageType7BackgroundBrush" Color="#FF5A6472" />
+    <!-- Message type chiclets, in the comps' colors (src\prototypes\midi-monitor\design):
+         bright mid tones with near black text, which reads in both themes. Theme independent,
+         because they're resolved from code. Windows MIDI Patchbay's watch windows use the same
+         colors. Order: utility, system, MIDI 1.0, MIDI 2.0, data, flex, stream, other. -->
+    <SolidColorBrush x:Key="MidiMessageType0BackgroundBrush" Color="#FF8A8A8A" />
+    <SolidColorBrush x:Key="MidiMessageType1BackgroundBrush" Color="#FFE8A33D" />
+    <SolidColorBrush x:Key="MidiMessageType2BackgroundBrush" Color="#FF4CC2FF" />
+    <SolidColorBrush x:Key="MidiMessageType3BackgroundBrush" Color="#FF3FD1A6" />
+    <SolidColorBrush x:Key="MidiMessageType4BackgroundBrush" Color="#FFC38BFF" />
+    <SolidColorBrush x:Key="MidiMessageType5BackgroundBrush" Color="#FFFF8FB1" />
+    <SolidColorBrush x:Key="MidiMessageType6BackgroundBrush" Color="#FFB9B96A" />
+    <SolidColorBrush x:Key="MidiMessageType7BackgroundBrush" Color="#FF8A8A8A" />
 
-    <SolidColorBrush x:Key="MidiMessageType0ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType1ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType2ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType3ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType4ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType5ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType6ForegroundBrush" Color="#FFFFFFFF" />
-    <SolidColorBrush x:Key="MidiMessageType7ForegroundBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="MidiMessageType0ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType1ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType2ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType3ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType4ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType5ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType6ForegroundBrush" Color="#FF000000" />
+    <SolidColorBrush x:Key="MidiMessageType7ForegroundBrush" Color="#FF000000" />
 
     <!-- Batch striping. Low alpha gray works over either theme's list background. -->
     <SolidColorBrush x:Key="MidiRowBackgroundBrush" Color="Transparent" />
