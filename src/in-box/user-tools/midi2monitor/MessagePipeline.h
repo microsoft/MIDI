@@ -52,6 +52,19 @@ namespace midi2monitor
 
         void Filter(uint8_t groupNumber, uint8_t channelNumber) noexcept;
 
+        // Advanced mode. See MessageCapture for what slots and group masks mean.
+        void Advanced(_In_ bool value) noexcept { m_capture->Advanced(value); }
+        void MapConnection(_In_ GUID const& connectionId, _In_ uint16_t slot) noexcept { m_capture->MapConnection(connectionId, slot); }
+        void UnmapConnection(_In_ GUID const& connectionId) noexcept { m_capture->UnmapConnection(connectionId); }
+        void SlotGroups(_In_ uint16_t slot, _In_ uint32_t groupMask) noexcept { m_capture->SlotGroups(slot, groupMask); }
+        uint64_t LastActivity(_In_ uint16_t slot, _In_ uint8_t index) const noexcept { return m_capture->LastActivity(slot, index); }
+
+        void PostMessageFilter(_In_ ::midiapp::MessageFilter const& filter) noexcept;
+        void PostFoldRepeats(_In_ bool value) noexcept;
+
+        // Rows whose repeat count went up since the last call, by sequence, with the new count.
+        std::vector<std::pair<uint64_t, uint32_t>> TakeFoldUpdates() noexcept;
+
         void PostClear() noexcept;
         void PostNotice(winrt::hstring const& text) noexcept;
         void PostHiddenTraits(MessageTraits traits) noexcept;
@@ -71,7 +84,9 @@ namespace midi2monitor
             Clear,
             Notice,
             HiddenTraits,
-            Capacity
+            Capacity,
+            MessageFilter,
+            FoldRepeats
         };
 
         struct Command
@@ -79,6 +94,7 @@ namespace midi2monitor
             CommandKind Kind{ CommandKind::Clear };
             winrt::hstring Text{};
             uint32_t Value{ 0 };
+            ::midiapp::MessageFilter Filter{};
         };
 
         void WorkerLoop() noexcept;

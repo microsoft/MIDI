@@ -19,6 +19,58 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
+    void MessageCapture::MapConnection(GUID const& connectionId, uint16_t slot) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::mutex> guard{ m_stagingLock };
+
+            for (auto& entry : m_connections)
+            {
+                if (entry.first == connectionId)
+                {
+                    entry.second = slot;
+                    return;
+                }
+            }
+
+            m_connections.emplace_back(connectionId, slot);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    _Use_decl_annotations_
+    void MessageCapture::UnmapConnection(GUID const& connectionId) noexcept
+    {
+        std::lock_guard<std::mutex> guard{ m_stagingLock };
+
+        std::erase_if(m_connections, [&connectionId](auto const& entry) { return entry.first == connectionId; });
+    }
+
+    _Use_decl_annotations_
+    void MessageCapture::SlotGroups(uint16_t slot, uint32_t groupMask) noexcept
+    {
+        if (slot < MaximumSourceSlots)
+        {
+            m_slotMasks[slot].store(groupMask, std::memory_order_relaxed);
+        }
+    }
+
+    _Use_decl_annotations_
+    uint64_t MessageCapture::LastActivity(uint16_t slot, uint8_t index) const noexcept
+    {
+        if (slot >= MaximumSourceSlots || index > 16)
+        {
+            return 0;
+        }
+
+        return m_activity[slot][index].load(std::memory_order_relaxed);
+    }
+
+    _Use_decl_annotations_
     HRESULT MessageCapture::MessagesReceived(
         GUID sessionId,
         GUID connectionId,
@@ -27,7 +79,6 @@ namespace midi2monitor
         UINT32 const* messages)
     {
         UNREFERENCED_PARAMETER(sessionId);
-        UNREFERENCED_PARAMETER(connectionId);
 
         if (messages == nullptr || wordCount == 0)
         {
@@ -39,6 +90,7 @@ namespace midi2monitor
             return S_OK;
         }
 
+        auto const advanced = m_advanced.load(std::memory_order_relaxed);
         auto const groupFilter = m_groupFilter.load(std::memory_order_relaxed);
         auto const channelFilter = m_channelFilter.load(std::memory_order_relaxed);
         auto const batchId = m_batchId.fetch_add(1, std::memory_order_relaxed);
@@ -46,6 +98,28 @@ namespace midi2monitor
         // Written straight into the staging buffer. The only work done here is bit masking, and
         // the worker's Drain is an O(1) swap, so this never blocks the service thread for long.
         std::lock_guard<std::mutex> guard{ m_stagingLock };
+
+        uint16_t slot{ NoSourceSlot };
+
+        if (advanced)
+        {
+            for (auto const& entry : m_connections)
+            {
+                if (entry.first == connectionId)
+                {
+                    slot = entry.second;
+                    break;
+                }
+            }
+
+            // a connection that is closing, or one this window doesn't know about
+            if (slot >= MaximumSourceSlots)
+            {
+                return S_OK;
+            }
+        }
+
+        auto const slotMask = advanced ? m_slotMasks[slot].load(std::memory_order_relaxed) : 0u;
 
         uint32_t position{ 0 };
 
@@ -65,7 +139,23 @@ namespace midi2monitor
 
             bool keep{ true };
 
-            if (groupFilter != 0)
+            if (advanced)
+            {
+                // activity is noted whether or not the group is kept, so the lights can say
+                // which endpoints and groups are sending before anyone checks them
+                m_activity[slot][16].store(timestamp, std::memory_order_relaxed);
+
+                if (info.HasGroup)
+                {
+                    m_activity[slot][info.GroupIndex & 0x0F].store(timestamp, std::memory_order_relaxed);
+                    keep = (slotMask & (1u << (info.GroupIndex & 0x0F))) != 0;
+                }
+                else
+                {
+                    keep = slotMask != 0;
+                }
+            }
+            else if (groupFilter != 0)
             {
                 keep = info.HasGroup && (info.GroupIndex + 1) == groupFilter;
 
@@ -90,6 +180,7 @@ namespace midi2monitor
                     captured.Timestamp = timestamp;
                     captured.WordCount = messageWordCount;
                     captured.BatchId = batchId;
+                    captured.SourceSlot = slot;
 
                     for (uint8_t i = 0; i < messageWordCount; i++)
                     {

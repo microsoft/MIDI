@@ -25,10 +25,14 @@ namespace midi2monitor
     {
         m_records.clear();
         m_visibleSequences.clear();
+        m_lastVisibleBySource.clear();
+        m_foldUpdates.clear();
         m_firstSequence = m_nextSequence;
         m_totalMessageCount = 0;
         m_realTimeMessageCount = 0;
         m_droppedMessageCount = 0;
+        m_hiddenMessageCount = 0;
+        m_foldedMessageCount = 0;
         m_generation++;
     }
 
@@ -45,6 +49,60 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
+    void MessageStore::Filter(::midiapp::MessageFilter const& filter) noexcept
+    {
+        try
+        {
+            if (::midiapp::FilterSignature(filter) == ::midiapp::FilterSignature(m_filter))
+            {
+                return;
+            }
+        }
+        catch (...)
+        {
+            // compare failed; rebuild anyway
+        }
+
+        m_filter = filter;
+        RebuildVisible();
+    }
+
+    _Use_decl_annotations_
+    void MessageStore::FoldRepeats(bool value) noexcept
+    {
+        if (m_foldRepeats == value)
+        {
+            return;
+        }
+
+        m_foldRepeats = value;
+        RebuildVisible();
+    }
+
+    std::vector<std::pair<uint64_t, uint32_t>> MessageStore::TakeFoldUpdates() noexcept
+    {
+        std::vector<std::pair<uint64_t, uint32_t>> updates{};
+
+        try
+        {
+            updates.reserve(m_foldUpdates.size());
+
+            for (auto const& entry : m_foldUpdates)
+            {
+                updates.push_back(entry);
+            }
+        }
+        catch (...)
+        {
+            updates.clear();
+        }
+
+        m_foldUpdates.clear();
+
+        return updates;
+    }
+
+    _Use_decl_annotations_
     bool MessageStore::IsVisible(MessageRecord const& record) const noexcept
     {
         if (record.Kind != RecordKind::MidiMessage)
@@ -52,21 +110,117 @@ namespace midi2monitor
             return true;
         }
 
-        return (static_cast<uint8_t>(record.Traits) & static_cast<uint8_t>(m_hiddenTraits)) == 0;
+        if ((static_cast<uint8_t>(record.Traits) & static_cast<uint8_t>(m_hiddenTraits)) != 0)
+        {
+            return false;
+        }
+
+        return m_filter.Allows(record.Words.data(), record.WordCount);
+    }
+
+    _Use_decl_annotations_
+    MessageRecord* MessageStore::RecordAt(uint64_t sequence) noexcept
+    {
+        if (sequence < m_firstSequence)
+        {
+            return nullptr;
+        }
+
+        auto const position = static_cast<size_t>(sequence - m_firstSequence);
+
+        if (position >= m_records.size())
+        {
+            return nullptr;
+        }
+
+        return &m_records[position];
+    }
+
+    _Use_decl_annotations_
+    bool MessageStore::TryFold(MessageRecord& record) noexcept
+    {
+        if (!m_foldRepeats || record.Kind != RecordKind::MidiMessage)
+        {
+            return false;
+        }
+
+        auto const last = m_lastVisibleBySource.find(record.SourceSlot);
+
+        if (last == m_lastVisibleBySource.end())
+        {
+            return false;
+        }
+
+        auto* const target = RecordAt(last->second);
+
+        if (target == nullptr ||
+            target->Kind != RecordKind::MidiMessage ||
+            target->WordCount != record.WordCount ||
+            !std::equal(record.Words.begin(), record.Words.begin() + record.WordCount, target->Words.begin()))
+        {
+            return false;
+        }
+
+        target->RepeatCount++;
+        record.Folded = true;
+
+        try
+        {
+            m_foldUpdates[target->Sequence] = target->RepeatCount;
+        }
+        catch (...)
+        {
+            // the row shows the new count the next time it is drawn
+        }
+
+        return true;
     }
 
     void MessageStore::RebuildVisible() noexcept
     {
         m_visibleSequences.clear();
+        m_lastVisibleBySource.clear();
+        m_foldUpdates.clear();
+        m_hiddenMessageCount = 0;
+        m_foldedMessageCount = 0;
 
-        for (auto const& record : m_records)
+        for (auto& record : m_records)
         {
-            if (IsVisible(record))
+            record.Folded = false;
+            record.RepeatCount = 0;
+        }
+
+        for (auto& record : m_records)
+        {
+            if (!IsVisible(record))
             {
-                m_visibleSequences.push_back(record.Sequence);
+                m_hiddenMessageCount++;
+                continue;
+            }
+
+            if (TryFold(record))
+            {
+                m_foldedMessageCount++;
+                continue;
+            }
+
+            m_visibleSequences.push_back(record.Sequence);
+
+            if (record.Kind == RecordKind::MidiMessage)
+            {
+                try
+                {
+                    m_lastVisibleBySource[record.SourceSlot] = record.Sequence;
+                }
+                catch (...)
+                {
+                    // this source just doesn't fold into this row
+                }
             }
         }
 
+        // a full rebuild already shows every count
+        m_foldUpdates.clear();
         m_generation++;
     }
 
@@ -114,13 +268,38 @@ namespace midi2monitor
             m_firstSequence = sequence;
         }
 
-        auto const visible = IsVisible(record);
+        auto visible = IsVisible(record);
+
+        if (!visible)
+        {
+            m_hiddenMessageCount++;
+        }
+        else if (TryFold(record))
+        {
+            m_foldedMessageCount++;
+            visible = false;
+        }
+
+        auto const isMessage = record.Kind == RecordKind::MidiMessage;
+        auto const slot = record.SourceSlot;
 
         m_records.push_back(std::move(record));
 
         if (visible)
         {
             m_visibleSequences.push_back(sequence);
+
+            if (isMessage)
+            {
+                try
+                {
+                    m_lastVisibleBySource[slot] = sequence;
+                }
+                catch (...)
+                {
+                    // this source just doesn't fold into this row
+                }
+            }
         }
 
         EvictOverflow();
@@ -200,6 +379,8 @@ namespace midi2monitor
         snapshot.TotalMessageCount = m_totalMessageCount;
         snapshot.RealTimeMessageCount = m_realTimeMessageCount;
         snapshot.DroppedMessageCount = m_droppedMessageCount;
+        snapshot.HiddenMessageCount = m_hiddenMessageCount;
+        snapshot.FoldedMessageCount = m_foldedMessageCount;
         snapshot.Generation = m_generation;
         snapshot.VisibleEvictedCount = m_visibleEvictedCount;
 

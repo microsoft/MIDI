@@ -59,6 +59,17 @@
     <SolidColorBrush x:Key="MidiRowBackgroundBrush" Color="Transparent" />
     <SolidColorBrush x:Key="MidiRowAlternateBackgroundBrush" Color="#16808080" />
 
+    <!-- Advanced mode: one color for each source, used as a bar beside its rows and as a swatch
+         in the Sources list. Mid tones, so they read over both themes. -->
+    <SolidColorBrush x:Key="MidiSource0Brush" Color="#FF3AA6E0" />
+    <SolidColorBrush x:Key="MidiSource1Brush" Color="#FFE88A3A" />
+    <SolidColorBrush x:Key="MidiSource2Brush" Color="#FF8B6FE0" />
+    <SolidColorBrush x:Key="MidiSource3Brush" Color="#FF4CAF50" />
+    <SolidColorBrush x:Key="MidiSource4Brush" Color="#FFE06C93" />
+    <SolidColorBrush x:Key="MidiSource5Brush" Color="#FFC9A227" />
+    <SolidColorBrush x:Key="MidiSource6Brush" Color="#FF26A69A" />
+    <SolidColorBrush x:Key="MidiSource7Brush" Color="#FFB0B8C4" />
+
     <!-- Font sizes are deliberately absent: the table inherits its size from the list, so the
          zoom control can scale it at runtime. -->
     <Style x:Key="MidiMonitorCellTextStyle" TargetType="TextBlock">

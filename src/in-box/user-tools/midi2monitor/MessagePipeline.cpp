@@ -116,6 +116,24 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
+    void MessagePipeline::PostMessageFilter(::midiapp::MessageFilter const& filter) noexcept
+    {
+        PostCommand(Command{ CommandKind::MessageFilter, {}, 0, filter });
+    }
+
+    _Use_decl_annotations_
+    void MessagePipeline::PostFoldRepeats(bool value) noexcept
+    {
+        PostCommand(Command{ CommandKind::FoldRepeats, {}, value ? 1u : 0u });
+    }
+
+    std::vector<std::pair<uint64_t, uint32_t>> MessagePipeline::TakeFoldUpdates() noexcept
+    {
+        std::unique_lock<std::shared_mutex> guard{ m_storeLock };
+        return m_store.TakeFoldUpdates();
+    }
+
+    _Use_decl_annotations_
     void MessagePipeline::PostCommand(Command&& command) noexcept
     {
         try
@@ -213,6 +231,7 @@ namespace midi2monitor
             record.BatchId = captured.BatchId;
             record.Words = captured.Words;
             record.WordCount = captured.WordCount;
+            record.SourceSlot = captured.SourceSlot;
             record.Kind = RecordKind::MidiMessage;
 
             auto const info = InspectMessage(captured.Words[0]);
@@ -304,6 +323,14 @@ namespace midi2monitor
 
                 case CommandKind::Capacity:
                     m_store.Capacity(command.Value);
+                    break;
+
+                case CommandKind::MessageFilter:
+                    m_store.Filter(command.Filter);
+                    break;
+
+                case CommandKind::FoldRepeats:
+                    m_store.FoldRepeats(command.Value != 0);
                     break;
                 }
             }

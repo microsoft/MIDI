@@ -130,6 +130,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="MessageCapture.h" />
+    <ClInclude Include="SourceTable.h" />
     <ClInclude Include="MessagePipeline.h" />
     <ClInclude Include="MessageStore.h" />
     <ClInclude Include="MessageListSource.h" />
@@ -154,6 +155,7 @@
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
+    <ClInclude Include="..\midi-app-shared\MessageFilter.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
@@ -187,6 +189,7 @@
     <ClCompile Include="MainWindow.Clipboard.cpp" />
     <ClCompile Include="MainWindow.Export.cpp" />
     <ClCompile Include="MainWindow.Commands.cpp" />
+    <ClCompile Include="SourceTable.cpp" />
     <ClCompile Include="SettingsDialog.xaml.cpp">
       <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </ClCompile>
@@ -195,6 +198,9 @@
     <ClCompile Include="MonitorColumn.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
+    <ClCompile Include="..\midi-app-shared\MessageFilter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />

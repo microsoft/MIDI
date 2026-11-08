@@ -28,6 +28,10 @@ namespace midi2monitor
         static bool AutoHideWhenNarrow() noexcept;
         static void AutoHideWhenNarrow(bool value) noexcept;
 
+        // Which mode's columns to show. See IsColumnInMode.
+        static bool AdvancedMode() noexcept;
+        static void AdvancedMode(_In_ bool value) noexcept;
+
         // "0,1,2,-3,4,5,6" style string; a leading minus means the column is hidden
         static std::wstring Serialize();
         static void Deserialize(std::wstring const& value);

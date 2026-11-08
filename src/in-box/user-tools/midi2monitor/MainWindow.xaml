@@ -427,6 +427,7 @@
                         <TextBlock x:Name="ChannelHeaderText" x:Uid="ColumnHeaderChannel" Text="Channel" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
                         <TextBlock x:Name="DecodedHeaderText" x:Uid="ColumnHeaderDecoded" Text="Details" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
                         <TextBlock x:Name="DeltaHeaderText" x:Uid="ColumnHeaderDelta" Text="Since last" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="SourceHeaderText" x:Uid="ColumnHeaderSource" Text="From" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
                     </local:MessageRowPanel>
                 </Border>
 
@@ -591,20 +592,66 @@
 
                                     <TextBlock Text="{x:Bind GroupText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
                                     <TextBlock Text="{x:Bind ChannelText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
-                                    <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                        <Run Text="{x:Bind Detail0Label}" />
-                                        <Run Text="{x:Bind Detail0Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                        <Run Text="{x:Bind Detail1Label}" />
-                                        <Run Text="{x:Bind Detail1Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                        <Run Text="{x:Bind Detail2Label}" />
-                                        <Run Text="{x:Bind Detail2Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                        <Run Text="{x:Bind Detail3Label}" />
-                                        <Run Text="{x:Bind Detail3Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                    </TextBlock>
+                                    <Grid ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                            <Run Text="{x:Bind Detail0Label}" />
+                                            <Run Text="{x:Bind Detail0Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                            <Run Text="{x:Bind Detail1Label}" />
+                                            <Run Text="{x:Bind Detail1Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                            <Run Text="{x:Bind Detail2Label}" />
+                                            <Run Text="{x:Bind Detail2Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                            <Run Text="{x:Bind Detail3Label}" />
+                                            <Run Text="{x:Bind Detail3Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                        </TextBlock>
+                                        <!-- repeats folded onto this row -->
+                                        <Border Grid.Column="1"
+                                                Visibility="{x:Bind RepeatVisibility, Mode=OneWay}"
+                                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="9"
+                                                Padding="7,0,7,1"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind RepeatText, Mode=OneWay}"
+                                                       FontSize="{x:Bind ChicletFontSize}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                        </Border>
+                                    </Grid>
                                     <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}">
                                         <Run Text="{x:Bind DeltaText}" />
                                         <Run Text="{x:Bind DeltaUnit}" Foreground="{ThemeResource MidiTimeUnitBrush}" />
                                     </TextBlock>
+
+                                    <!-- From, advanced mode only: the source's color, its name and the group -->
+                                    <Grid ColumnSpacing="8" Padding="6,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Rectangle Width="3"
+                                                   Height="18"
+                                                   RadiusX="1.5"
+                                                   RadiusY="1.5"
+                                                   VerticalAlignment="Center"
+                                                   Fill="{x:Bind SourceBrush}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{x:Bind SourceText}"
+                                                   FontSize="{x:Bind RowFontSize}"
+                                                   MaxWidth="150"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{x:Bind SourceGroupText}"
+                                                   FontSize="{x:Bind ChicletFontSize}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
                                 </local:MessageRowPanel>
 
                                 <Border Visibility="{x:Bind NoticeVisibility}"

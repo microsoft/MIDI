@@ -683,4 +683,36 @@ Examples
   <data name="SettingsAskBeforeClearCheckBox.Content" xml:space="preserve">
     <value>Ask before clearing all entries</value>
   </data>
+
+  <!-- ============================ Advanced mode: rows ============================ -->
+  <data name="ColumnHeaderSource.Text" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="ColumnHeaderSourceText" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="SourceGroupNamedFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>A group in the From column. {0} is the group number, 1 through 16, {1} is the group's name from the device.</comment>
+  </data>
+  <data name="SourceDescriptionFormat" xml:space="preserve">
+    <value>{0}, group {1}</value>
+    <comment>Where a message came from, for copying and saving. {0} is the endpoint name, {1} the group as the From column shows it.</comment>
+  </data>
+  <data name="RowAccessibleSourceFormat" xml:space="preserve">
+    <value>{0}, from {1} group {2}</value>
+    <comment>Builds up what a screen reader says for one message row. {0} what has been said so far, {1} the endpoint name, {2} the group.</comment>
+  </data>
+  <data name="RepeatCountFormat" xml:space="preserve">
+    <value>×{0} repeats</value>
+    <comment>Shown on a row when the same message arrived again and was counted here instead of getting its own row. {0} is how many more times.</comment>
+  </data>
+  <data name="StatusHiddenMessagesFormat" xml:space="preserve">
+    <value>Hidden by filter: {0}</value>
+    <comment>{0} is how many captured messages the filter, or the Clock and Active Sensing buttons, are hiding</comment>
+  </data>
+  <data name="StatusFoldedMessagesFormat" xml:space="preserve">
+    <value>Repeats folded: {0}</value>
+    <comment>{0} is how many messages were counted on the row before them instead of getting a row</comment>
+  </data>
 </root>

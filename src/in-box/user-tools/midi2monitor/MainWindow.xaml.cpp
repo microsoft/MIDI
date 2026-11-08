@@ -476,13 +476,20 @@ namespace winrt::midi2monitor::implementation
                 L"ColumnHeaderGroupText",
                 L"ColumnHeaderChannelText",
                 L"ColumnHeaderDecodedText",
-                L"ColumnHeaderDeltaText"
+                L"ColumnHeaderDeltaText",
+                L"ColumnHeaderSourceText"
             };
 
             m_columns.Clear();
 
             for (auto const& entry : native::ColumnLayoutState::Entries())
             {
+                // each mode has a column the other doesn't
+                if (!native::IsColumnInMode(entry.Id, native::ColumnLayoutState::AdvancedMode()))
+                {
+                    continue;
+                }
+
                 auto const index = static_cast<size_t>(entry.Id);
 
                 m_columns.Append(winrt::make<MonitorColumn>(
@@ -880,7 +887,14 @@ namespace winrt::midi2monitor::implementation
             }
 
             auto const index = static_cast<int32_t>(std::distance(entries.begin(), position));
-            auto const target = index + offset;
+            auto target = index + offset;
+
+            // step over the column this mode leaves out, or the move looks like it did nothing
+            while (target >= 0 && target < static_cast<int32_t>(entries.size()) &&
+                !native::IsColumnInMode(entries[static_cast<size_t>(target)].Id, native::ColumnLayoutState::AdvancedMode()))
+            {
+                target += offset;
+            }
 
             if (target < 0 || target >= static_cast<int32_t>(entries.size()))
             {
