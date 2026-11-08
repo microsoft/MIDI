@@ -2672,6 +2672,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
+#include "Feature_Servicing_MIDI2TimestampRounding.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -2749,6 +2750,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled(),     L"MIDI2WinMMUnprepareAfterDeviceRemoval (let apps unprepare winmm buffers after a device is removed)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2TimestampRounding::IsEnabled(),                    L"MIDI2TimestampRounding (keep incoming midi 1.0 driver timestamps precise, and stop winmm dropping input that lands just before the port was started)");
 
     
 #endif    
