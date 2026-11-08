@@ -947,7 +947,7 @@ void MidiTransportTestsBase::TestMidiTransportCreateInvalidParams(REFIID iid, Mi
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
-        
+    
     DWORD mmcssTaskId {0};
     TRANSPORTCREATIONPARAMS transportCreationParams { optionsFlag, dataFormat, TEST_APPID };
     std::wstring midiInInstanceId;
