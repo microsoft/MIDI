@@ -21,6 +21,7 @@ namespace midisequencer
     {
         Select = 0,
         Draw = 1,
+        Strum = 2,          // a drag on a chord strums it (MainWindowNoteTools.cpp handles it)
     };
 
     // What a gesture changed. The window applies it as one undo step.
@@ -144,6 +145,22 @@ namespace midisequencer
         // A drag under way, whose change is kept when it's let go.
         bool InGesture() const noexcept { return m_gesture != Gesture::None; }
 
+        // The note under a point, for the right-click menu.
+        std::optional<Note> NoteAt(_In_ foundation::Point point) const noexcept;
+        bool IsNoteSelected(_In_ Note const& note) const noexcept { return IsSelected(note); }
+        bool IsInNotesArea(_In_ foundation::Point point) const noexcept
+        {
+            return point.X >= RollLeft() && point.Y >= RollTop() && point.Y <= RollBottom();
+        }
+
+        // What a note tool would do, shown before it's applied (MainWindowNoteTools.cpp): the
+        // notes it takes out are hidden and the ones it puts in are drawn selected.
+        void SetPreview(_In_ std::vector<Note> removed, _In_ std::vector<Note> added);
+        void ClearPreview() noexcept;
+        bool HasPreview() const noexcept { return m_hasPreview; }
+
+        std::optional<RollScale> const& Scale() const noexcept { return m_scale; }
+
     private:
         enum class Gesture : uint8_t
         {
@@ -153,6 +170,7 @@ namespace midisequencer
             Draw,
             Band,
             Velocity,
+            VelocityLine,       // Ctrl+drag in the velocity lane: a straight line the notes under it follow
             Scroll,
         };
 
@@ -168,6 +186,7 @@ namespace midisequencer
         int64_t VelocityStemAt(_In_ foundation::Point point) const noexcept;
 
         bool IsSelected(_In_ Note const& note) const noexcept;
+        bool IsHiddenByPreview(_In_ Note const& note) const noexcept;
         int64_t Snap(_In_ double tick) const noexcept;
         void ClampView() noexcept;
 
@@ -177,6 +196,10 @@ namespace midisequencer
         void DrawGhosts(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawNotes(_In_ canvas::CanvasDrawingSession const& ds);
         void DrawVelocityLane(_In_ canvas::CanvasDrawingSession const& ds);
+
+        // The velocity a velocity line gives a note at a tick, or nothing outside the line.
+        std::optional<uint16_t> LineVelocity(_In_ int64_t tick) const noexcept;
+        bool InLineScope(_In_ Note const& note) const noexcept { return m_selected.empty() || IsSelected(note); }
 
         // Where a note is drawn while a gesture moves or stretches it.
         Note PreviewOf(_In_ Note const& note) const noexcept;
@@ -205,6 +228,9 @@ namespace midisequencer
         double m_topNote{ 72 };
 
         std::vector<Note> m_selected{};
+        std::vector<Note> m_previewRemoved{};   // in NoteOrder
+        std::vector<Note> m_previewAdded{};
+        bool m_hasPreview{ false };
         std::vector<Ghost> m_ghosts{};
         std::optional<RollScale> m_scale{};
         bool m_scaleHighlight{ true };

@@ -290,6 +290,7 @@ Then tell them what they can do next, since the plan has no notes:
 - Right-click the row and select **Copy chords to new track** to turn the chords into notes they can edit.
 - Set a generator's key to **Song key**, so its melody follows the key, wherever it changes.
 - Set an arpeggiator's notes to come from the **Key and chords row**.
+- Add a **Strum** generator, which strums the chords on the row like a guitar, a ukulele or a piano, on a pattern they pick.
 
 Also tell them what they asked for that the plan can't do, and what you did instead.
 
@@ -310,7 +311,7 @@ Nothing is half applied. If any check fails, nothing changes, and the dialog say
 
 Tell the person about these before they find out on their own.
 
-- **A song plan has no notes, drums, clips, or loops.** It writes only the key, the chords, and the sections. The person can turn the chords into music with **Copy chords to new track**, **Play chords**, generators set to **Song key**, and the arpeggiator reading the **Key and chords row**.
+- **A song plan has no notes, drums, clips, or loops.** It writes only the key, the chords, and the sections. The person can turn the chords into music with **Copy chords to new track**, **Play chords**, generators set to **Song key**, the arpeggiator reading the **Key and chords row**, and a **Strum** generator, which strums the row's chords.
 - **No tempo changes.** The song plays at the tempo the sequence already has. A `tempo` in the plan is ignored. The person changes tempo on **Tempo and meter**.
 - **No meter changes inside the song.** The whole plan uses one meter, and it has to be the sequence's meter where the song goes. The song also can't run across a place where the sequence changes meter. To put a 3/4 bridge in a 4/4 song, write the parts before and after the bridge as their own plans in 4/4, and the bridge as a plan in 3/4. The person adds each one at the playhead, starting at the bar where it goes.
 - **No lyrics.** Windows MIDI Sequencer has lyrics, but a song plan can't write them.

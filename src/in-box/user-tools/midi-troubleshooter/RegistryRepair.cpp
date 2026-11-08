@@ -9,6 +9,7 @@
 #include "RegistryRepair.h"
 #include "StringResources.h"
 #include "SystemInfo.h"
+#include "MmcssTasks.h"
 
 namespace miditroubleshooter
 {
@@ -536,6 +537,40 @@ namespace miditroubleshooter
         return false;
     }
 
+    _Use_decl_annotations_
+    bool IsPreviewModulePath(std::wstring const& modulePath) noexcept
+    {
+        try
+        {
+            if (modulePath.find(L'\\') == std::wstring::npos)
+            {
+                return false;
+            }
+
+            wchar_t expanded[MAX_PATH * 2]{};
+            auto const expandedLength = ::ExpandEnvironmentStringsW(modulePath.c_str(), expanded, ARRAYSIZE(expanded));
+
+            if (expandedLength == 0 || expandedLength > ARRAYSIZE(expanded))
+            {
+                return false;
+            }
+
+            wchar_t systemFolder[MAX_PATH]{};
+            auto const length = ::GetSystemDirectoryW(systemFolder, ARRAYSIZE(systemFolder));
+
+            if (length == 0 || length >= ARRAYSIZE(systemFolder))
+            {
+                return false;
+            }
+
+            return _wcsnicmp(expanded, systemFolder, length) != 0 || expanded[length] != L'\\';
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
     RegistryScan ScanRegistry() noexcept
     {
         RegistryScan scan{};
@@ -567,6 +602,7 @@ namespace miditroubleshooter
 
             ScanServiceRoot(scan.ServiceRootEntries);
             ScanTransports(scan.Transports);
+            scan.MmcssTaskEntries = ScanMmcssTasks();
 
             // In legacy mode midisrv and wdmaud2.drv are deliberately out of the picture, so
             // rewriting these entries would break the customer's chosen configuration.

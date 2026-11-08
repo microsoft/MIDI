@@ -36,6 +36,7 @@ namespace midisequencer
         Infinity = 11,
         LSystem = 12,           // a branching stem
         ChangeRinging = 13,     // a bell
+        Strum = 14,             // strings and a stroke across them
     };
 
     ClipIcon IconFor(_In_ Clip const& clip) noexcept;

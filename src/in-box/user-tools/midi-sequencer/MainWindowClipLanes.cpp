@@ -521,6 +521,17 @@ namespace winrt::midisequencer::implementation
 
             auto const clip = seq::FindClip(m_doc, m_editorClipId);
 
+            // The note tools, unless a point on one of the clip's lanes is picked, or no notes are
+            // and the lanes are there to add a point to.
+            auto const lanePicked = ShowsLanes(clip) && !clip->Lanes.empty() && m_clipLanes.HasSelection();
+
+            if (!lanePicked && (!ShowsLanes(clip) || !m_roll.Selection().empty()))
+            {
+                args.Handled(true);
+                ShowNoteToolsContextMenu(foundation::Point{ static_cast<float>(m_editorCanvas.ActualWidth() / 2.0), static_cast<float>(NotesEditorRollHeight() / 2.0f) });
+                return;
+            }
+
             if (!ShowsLanes(clip))
             {
                 return;

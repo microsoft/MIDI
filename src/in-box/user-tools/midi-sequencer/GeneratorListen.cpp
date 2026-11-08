@@ -210,7 +210,7 @@ namespace midisequencer
                 Print.Add((clip->FollowKey ? 1u : 0u) | (static_cast<uint64_t>(clip->WrittenRoot) << 8) | (static_cast<uint64_t>(clip->WrittenScale) << 16));
 
                 if (FollowsSongKey(*clip) || (clip->Generator.has_value() &&
-                    (clip->Generator->ChordTones || (clip->Generator->Type == GeneratorType::Arpeggiator && clip->Generator->ArpSource == ArpeggiatorSource::Chords))))
+                    (clip->Generator->ChordTones || ((clip->Generator->Type == GeneratorType::Arpeggiator || clip->Generator->Type == GeneratorType::Strum) && clip->Generator->ArpSource == ArpeggiatorSource::Chords))))
                 {
                     VisitHarmony();
                 }
@@ -262,7 +262,7 @@ namespace midisequencer
 
                     Print.Add((static_cast<uint64_t>(generator.ArpSource) << 24) | (static_cast<uint64_t>(generator.ArpOrder) << 16) | (static_cast<uint64_t>(generator.ArpOctaves) << 8) | (generator.ArpLatch ? 1 : 0));
 
-                    if (generator.Type == GeneratorType::Arpeggiator && generator.ArpSource == ArpeggiatorSource::Track)
+                    if ((generator.Type == GeneratorType::Arpeggiator || generator.Type == GeneratorType::Strum) && generator.ArpSource == ArpeggiatorSource::Track)
                     {
                         VisitTrack(generator.ArpTrackId);
                     }

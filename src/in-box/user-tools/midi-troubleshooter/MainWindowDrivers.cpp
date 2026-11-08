@@ -61,16 +61,51 @@ namespace winrt::miditroubleshooter::implementation
             }
         }
 
+        // the short tag for the driver a device uses, and its StatusPill severity
+        winrt::hstring DriverShortName(_In_ native::HardwareDeviceInfo const& device) noexcept
+        {
+            switch (device.CurrentDriver)
+            {
+            case native::DeviceDriverKind::UniversalMidiPacket: return res::GetString(L"DriverShortUmp");
+            case native::DeviceDriverKind::ClassicUsbAudio:     return res::GetString(L"DriverShortClassic");
+            case native::DeviceDriverKind::UsbAudio2:           return res::GetString(L"DriverShortUsbAudio2");
+            case native::DeviceDriverKind::Vendor:              return res::GetString(L"DriverShortVendor");
+            default:                                            return res::GetString(L"DriverShortUnknown");
+            }
+        }
+
+        int32_t DriverPillSeverity(_In_ native::HardwareDeviceInfo const& device) noexcept
+        {
+            switch (device.CurrentDriver)
+            {
+            case native::DeviceDriverKind::UniversalMidiPacket: return 3;
+            case native::DeviceDriverKind::Vendor:              return 5;
+            default:                                            return 4;
+            }
+        }
+
         void ApplyKorgPackageCard(
             _In_ std::vector<native::DriverPackageInfo> const& packages,
             _In_ controls::Button const& button,
             _In_ controls::TextBlock const& status,
+            _In_ miditroubleshooter::StatusPill const& pill,
             _In_ std::wstring_view const notInstalledKey,
             _In_ bool const elevated) noexcept
         {
             try
             {
                 button.IsEnabled(!packages.empty() && elevated);
+
+                pill.Severity(packages.empty() ? 0 : 1);
+                pill.Text(res::GetString(packages.empty() ? L"KorgPillNotInstalled" : L"KorgPillInstalled"));
+
+                // Uninstall is the page's main job only when there is something to uninstall.
+                auto const styleKey = winrt::box_value(packages.empty() ? L"DefaultButtonStyle" : L"AccentButtonStyle");
+
+                if (auto const style = xaml::Application::Current().Resources().TryLookup(styleKey))
+                {
+                    button.Style(style.as<xaml::Style>());
+                }
 
                 if (packages.empty())
                 {
@@ -371,12 +406,23 @@ namespace winrt::miditroubleshooter::implementation
             {
                 auto item = winrt::make<DriverDeviceItem>();
 
+                auto const infName = device.DriverInfName.empty() ?
+                    res::GetString(L"ValueUnknown") : winrt::hstring{ device.DriverInfName };
+                auto const version = device.DriverVersion.empty() ?
+                    res::GetString(L"ValueUnknown") : winrt::hstring{ device.DriverVersion };
+
                 auto const driverText = res::FormatString(L"DriverCurrentFormat",
-                    DriverDescription(device),
-                    device.DriverInfName.empty() ?
-                        res::GetString(L"ValueUnknown") : winrt::hstring{ device.DriverInfName },
-                    device.DriverVersion.empty() ?
-                        res::GetString(L"ValueUnknown") : winrt::hstring{ device.DriverVersion });
+                    DriverDescription(device), infName, version);
+
+                auto const onUmp = device.CurrentDriver == native::DeviceDriverKind::UniversalMidiPacket;
+                auto const onClassic = device.CurrentDriver == native::DeviceDriverKind::ClassicUsbAudio;
+
+                // Vendor drivers say who made them; the two class drivers need no more than their name.
+                auto const driverDetail = device.CurrentDriver == native::DeviceDriverKind::Vendor ?
+                    res::FormatString(L"DriverDetailVendorFormat",
+                        device.DriverProvider.empty() ? res::GetString(L"ValueUnknown") : winrt::hstring{ device.DriverProvider },
+                        infName, version) :
+                    res::FormatString(L"DriverDetailFormat", infName, version);
 
                 winrt::get_self<DriverDeviceItem>(item)->Initialize(
                     winrt::hstring{ device.InstanceId },
@@ -387,8 +433,16 @@ namespace winrt::miditroubleshooter::implementation
                     device.HasProblem ?
                         res::FormatString(L"DriverProblemFormat", static_cast<uint32_t>(device.ProblemCode)) :
                         winrt::hstring{},
-                    device.CanUseUniversalMidiPacketDriver,
-                    device.CanUseClassicDriver);
+                    // the driver already in use is not something to switch to
+                    device.CanUseUniversalMidiPacketDriver && !onUmp,
+                    device.CanUseClassicDriver && !onClassic);
+
+                winrt::get_self<DriverDeviceItem>(item)->SetDriverCard(
+                    DriverShortName(device),
+                    DriverPillSeverity(device),
+                    driverDetail,
+                    res::GetString(onUmp ? L"UsingUmpDriverText" : L"UseUmpDriverText"),
+                    res::GetString(onClassic ? L"UsingClassicDriverText" : L"UseClassicDriverText"));
 
                 m_driverDevices.Append(item);
             }
@@ -397,18 +451,51 @@ namespace winrt::miditroubleshooter::implementation
             m_korgBlePackages = korgBlePackages;
 
             ApplyKorgPackageCard(
-                korgUsbPackages, RemoveKorgDriverButton(), KorgDriverStatusText(),
+                korgUsbPackages, RemoveKorgDriverButton(), KorgDriverStatusText(), KorgUsbPill(),
                 L"KorgDriverNotInstalled", m_elevated);
 
             ApplyKorgPackageCard(
-                korgBlePackages, RemoveKorgBleDriverButton(), KorgBleDriverStatusText(),
+                korgBlePackages, RemoveKorgBleDriverButton(), KorgBleDriverStatusText(), KorgBlePill(),
                 L"KorgBleDriverNotInstalled", m_elevated);
 
             DriversStatusText().Text(devices.empty() ?
                 res::GetString(L"DriversNoDevices") :
                 res::FormatString(L"DriversDeviceCountFormat", static_cast<uint32_t>(devices.size())));
+
+            SummarizeDevicesForOverview(devices, !korgUsbPackages.empty(), !korgBlePackages.empty());
+            UpdateOverview();
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the driver devices.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SummarizeDevicesForOverview(
+        std::vector<native::HardwareDeviceInfo> const& devices,
+        bool const korgUsbInstalled,
+        bool const korgBleInstalled) noexcept
+    {
+        auto& summary = m_overview.DeviceCounts;
+
+        summary = {};
+        summary.Known = true;
+        summary.Total = static_cast<uint32_t>(devices.size());
+        summary.KorgUsbInstalled = korgUsbInstalled;
+        summary.KorgBleInstalled = korgBleInstalled;
+
+        for (auto const& device : devices)
+        {
+            switch (device.CurrentDriver)
+            {
+            case native::DeviceDriverKind::UniversalMidiPacket: summary.NewDriver++; break;
+            case native::DeviceDriverKind::ClassicUsbAudio:     summary.ClassicDriver++; break;
+            default:                                            summary.OtherDriver++; break;
+            }
+
+            if (device.HasProblem)
+            {
+                summary.WithProblems++;
+            }
+        }
     }
 
     _Use_decl_annotations_

@@ -9,6 +9,7 @@
 #include "Harmony.h"
 #include "HarmonyFollow.h"
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "SequencePattern.h"
 
 #include <algorithm>
@@ -178,7 +179,7 @@ namespace midisequencer
         {
             auto const clip = FindClip(sequence, placement.ClipId);
 
-            if (clip == nullptr || clip->Length <= 0 || IsArpeggiator(*clip))
+            if (clip == nullptr || clip->Length <= 0 || PlaysAlong(*clip))
             {
                 continue;
             }
@@ -412,7 +413,7 @@ namespace midisequencer
     _Use_decl_annotations_
     bool PlaysHeldKeys(Clip const& clip) noexcept
     {
-        return IsArpeggiator(clip) && clip.Generator->ArpSource == ArpeggiatorSource::Held;
+        return PlaysAlong(clip) && clip.Generator->ArpSource == ArpeggiatorSource::Held;
     }
 
     _Use_decl_annotations_
@@ -446,7 +447,7 @@ namespace midisequencer
         auto const span = std::max<int64_t>(1, arpeggiator.Loop ? length : std::min(length, arpeggiator.Length));
         notes.Length = span;
 
-        if (!IsArpeggiator(arpeggiator) || PlaysHeldKeys(arpeggiator))
+        if (!PlaysAlong(arpeggiator) || PlaysHeldKeys(arpeggiator))
         {
             return notes;
         }
@@ -458,13 +459,21 @@ namespace midisequencer
             auto const passStart = placement.Tick + pass * passLength;
             auto const passEnd = std::min(placement.Tick + span, passStart + passLength);
 
-            ForEachArpeggiatorNote(sequence, arpeggiator, passStart, passEnd, static_cast<uint64_t>(pass), passStart, passEnd, nullptr,
-                [&notes, &placement](Note const& note)
-                {
-                    auto made = note;
-                    made.Tick -= placement.Tick;
-                    notes.Notes.push_back(made);
-                });
+            auto const keep = [&notes, &placement](Note const& note)
+            {
+                auto made = note;
+                made.Tick -= placement.Tick;
+                notes.Notes.push_back(made);
+            };
+
+            if (IsStrum(arpeggiator))
+            {
+                ForEachStrumNote(sequence, arpeggiator, passStart, passEnd, static_cast<uint64_t>(pass), passStart, passEnd, keep);
+            }
+            else
+            {
+                ForEachArpeggiatorNote(sequence, arpeggiator, passStart, passEnd, static_cast<uint64_t>(pass), passStart, passEnd, nullptr, keep);
+            }
         }
 
         // The clip's lanes go round with each pass, as they did.

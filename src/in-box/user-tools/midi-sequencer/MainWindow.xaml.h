@@ -26,6 +26,8 @@
 #include "HarmonySong.h"
 #include "Lyrics.h"
 #include "PianoRoll.h"
+#include "NoteTools.h"
+#include "NoteExpression.h"
 #include "ClipLaneStrip.h"
 #include "PatternEditor.h"
 #include "SequenceGenerator.h"
@@ -142,7 +144,10 @@ namespace winrt::midisequencer::implementation
         void UpdateFollowKeyToggle(_In_ seq::Clip const& clip) noexcept;
         void OnEditorAutomationClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorQuantizeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
-        void OnTransposeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNoteToolsMenuOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+        void OnNoteCleanUpClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNoteOverlapClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnNoteStrumToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnEditorKeyboardClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnValuesAsChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
         void OnEditorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -164,6 +169,39 @@ namespace winrt::midisequencer::implementation
         void OnSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
         void OnSplitterCaptureLost(_In_ foundation::IInspectable const& sender, _In_ input::PointerRoutedEventArgs const& args);
+
+        // The piano roll's note tools (MainWindowNoteTools.cpp), named here for its helpers.
+        enum class NoteTool : uint8_t
+        {
+            Quantize,
+            Humanize,
+            Groove,
+            TimeFeel,
+            Ratchet,
+            Legato,
+            FixedLength,
+            PercentLength,
+            CleanUp,
+            TransposeInKey,
+            FitToChords,
+            Mirror,
+            Velocity,
+            ReleaseVelocity,
+            Chance,
+            SelectVelocity,
+            Strum,
+            Glide,
+            Vibrato,
+        };
+
+        enum class NoteMenu : uint8_t
+        {
+            Select,
+            Timing,
+            Length,
+            Pitch,
+            Velocity,
+        };
 
     private:
         // ---- window (MainWindow.xaml.cpp) ----
@@ -542,6 +580,72 @@ namespace winrt::midisequencer::implementation
         void OnEditorContextRequested(_In_ input::ContextRequestedEventArgs const& args);
         void AnnounceClipLanePoint(_In_ seq::Clip const& clip, _In_ size_t lane, _In_ size_t point);
 
+        // ---- the piano roll's note tools (MainWindowNoteTools.cpp, design section 34) ----
+        void UpdateNoteToolbar() noexcept;
+        void FillNoteMenu(_In_ NoteMenu menu, _In_ winrt::Windows::Foundation::Collections::IVector<controls::MenuFlyoutItemBase> const& items);
+        void ShowNoteToolsContextMenu(_In_ foundation::Point position) noexcept;
+        void ShowNoteTool(_In_ NoteTool tool) noexcept;
+        seq::NoteToolContext NoteToolContextFor(_In_ seq::Clip const& clip, _Inout_ seq::TempoMap& tempo) const;
+        std::vector<seq::Note> NoteToolTargets() const;
+        seq::NoteToolResult RunNoteTool(_In_ NoteTool tool, _In_ std::vector<seq::Note> const& notes, _In_ seq::NoteToolContext const& context) const;
+        void ApplyNoteToolResult(_In_ std::wstring name, _In_ seq::NoteToolResult result) noexcept;
+        void PreviewNoteTool(_In_ NoteTool tool, _In_ controls::TextBlock const& summary) noexcept;
+        void SelectNotesWith(_In_ seq::SelectSettings settings) noexcept;
+
+        // Glide and vibrato change the clip's events, not its notes (NoteExpression.h).
+        static bool IsExpressionTool(_In_ NoteTool tool) noexcept { return tool == NoteTool::Glide || tool == NoteTool::Vibrato; }
+        seq::ExpressionResult RunExpression(_In_ NoteTool tool) const;
+        void ApplyExpression(_In_ std::wstring name, _In_ seq::ExpressionResult result) noexcept;
+        void MoveSelectionToNewTrack() noexcept;
+
+        // Each tool's settings, kept while the app runs so a tool opens as it was last used.
+        struct NoteToolSettings
+        {
+            seq::QuantizeSettings Quantize{};
+            seq::HumanizeSettings Humanize{};
+            std::wstring GrooveClipId{};
+            int64_t GrooveGrid{ 240 };
+            seq::GrooveSettings Groove{};
+            seq::TimeFeelSettings TimeFeel{};
+            seq::RatchetSettings Ratchet{};
+            int64_t LegatoGap{ 0 };
+            int64_t FixedLength{ 240 };
+            double LengthPercent{ 50.0 };
+            seq::CleanUpSettings CleanUp{};
+            int32_t TransposeSteps{ 1 };
+            seq::FitWhich Fit{ seq::FitWhich::All };
+            int32_t MirrorAround{ 60 };
+            bool MirrorInKey{ true };
+            seq::ValueSettings Velocity{};
+            seq::ValueSettings Release{ seq::ValueTarget::ReleaseVelocity, seq::ValueMode::Set, 50.0, 50.0 };
+            seq::ValueSettings Chance{ seq::ValueTarget::Chance, seq::ValueMode::Set, 75.0, 25.0 };
+            seq::SelectSettings SelectVelocity{ seq::SelectKind::VelocityRange };
+            seq::StrumSettings Strum{};
+            seq::GlideSettings Glide{};
+            seq::VibratoSettings Vibrato{};
+        };
+
+        NoteToolSettings m_noteTools{};
+
+        // The Strum tool's drag on a chord: right sets how long the strum takes, with its last note
+        // under the pointer, and up makes it an up strum. Applied when it's let go.
+        struct StrumDrag
+        {
+            bool Active{ false };
+            std::vector<seq::Note> Targets{};
+            int64_t ChordStart{ 0 };
+            float PressY{ 0 };
+            seq::NoteToolResult Result{};
+            seq::StrumSettings Settings{};
+        };
+
+        StrumDrag m_strumDrag{};
+        bool StrumDragPressed(_In_ foundation::Point position) noexcept;
+        void StrumDragMoved(_In_ foundation::Point position) noexcept;
+        void StrumDragReleased() noexcept;
+        void UseRollTool(_In_ seq::RollTool tool) noexcept;
+        themeengine::PlateLayer m_noteToolPlates{};
+
         // ---- the timeline and launcher from the keyboard (MainWindowKeyboard.cpp) ----
         void HookArrangeKeyboard();
         std::vector<seq::ArrangeRow const*> KeyboardRows(_In_ bool tracksOnly) const;
@@ -680,6 +784,24 @@ namespace winrt::midisequencer::implementation
         // The arpeggiator (MainWindowArpeggiator.cpp): its settings, Make notes, and the keys
         // played on the sources of tracks it plays from.
         void AddArpeggiatorSettings(_In_ controls::StackPanel const& body, _In_ seq::GeneratorSettings const& generator, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
+
+        // ---- Strum (MainWindowStrum.cpp) ----
+        // The curve a strum's notes follow: dragging it sideways changes how long a strum takes,
+        // in milliseconds or ticks, and keeps its shape. changed comes during the drag, committed
+        // once at the end.
+        struct StrumCurveState
+        {
+            seq::StrumShape Shape{ seq::StrumShape::SpeedingUp };
+            double Bend{ 0.5 };
+            double Spread{ 35.0 };
+            double MostSpread{ 150.0 };
+            bool Ticks{ false };
+            size_t Strings{ 6 };
+            bool Dragging{ false };
+        };
+
+        canvasXaml::CanvasControl MakeStrumCurve(_In_ std::shared_ptr<StrumCurveState> const& state, _In_ std::function<void(double)> const& changed, _In_ std::function<void(double)> const& committed);
+        void AddStrumSettings(_In_ controls::StackPanel const& body, _In_ seq::GeneratorSettings const& generator, _In_ std::function<void(std::function<void(seq::GeneratorSettings&)>)> const& edit);
         void MakeNotesFromArpeggiator() noexcept;
         void UpdateArpeggiatorRoutes() noexcept;
         std::vector<std::wstring> FeedArpeggiators(_In_ std::wstring const& endpointId, _In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount) noexcept;
@@ -812,6 +934,29 @@ namespace winrt::midisequencer::implementation
         void UpdateLyricsBar() noexcept;
 
         // About this sequence (MainWindowProvenance.cpp).
+        // ---- the Meter row (MainWindowMeterRow.cpp) ----
+
+        struct MeterDrag
+        {
+            bool Active{ false };
+            bool Pinned{ true };
+            bool Moved{ false };
+            size_t Index{ SIZE_MAX };
+            double StartX{ 0 };
+            int64_t ToBar{ 0 };
+            int64_t ToTick{ 0 };
+        };
+
+        void ShowMeterRow(_In_ bool show) noexcept;
+        xaml::UIElement MakeMeterHeader(_In_ seq::ArrangeRow const& row);
+        size_t HitTestMeter(_In_ foundation::Point point) const noexcept;
+        void OnMeterPressed(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
+        void OnMeterDragMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnMeterDragReleased() noexcept;
+        void OnMeterDoubleTapped(_In_ foundation::Point point, _In_ int64_t tick);
+        void DeleteSelectedMeter() noexcept;
+        void AddMeterMenuItems(_In_ controls::MenuFlyout const& menu, _In_ foundation::Point point, _In_ int64_t tick);
+
         void ShowSequenceInfo();
         void StampProvenance() noexcept;
         void PromptForTempo(_In_ int64_t tick, _In_ std::optional<size_t> index);
@@ -1417,6 +1562,8 @@ namespace winrt::midisequencer::implementation
         size_t m_selectedChord{ SIZE_MAX };
         size_t m_selectedKey{ SIZE_MAX };
         HarmonyDrag m_harmonyDrag{};
+        size_t m_selectedMeter{ SIZE_MAX };
+        MeterDrag m_meterDrag{};
         std::vector<winrt::hstring> m_keyScaleNames{};
 
         // The chord picker's last progression and rate, so Fill can be used again quickly.

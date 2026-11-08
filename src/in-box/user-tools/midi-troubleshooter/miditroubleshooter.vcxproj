@@ -134,6 +134,7 @@
     <ClInclude Include="Elevation.h" />
     <ClInclude Include="ProcessRunner.h" />
     <ClInclude Include="RegistryRepair.h" />
+    <ClInclude Include="MmcssTasks.h" />
     <ClInclude Include="ReportFile.h" />
     <ClInclude Include="ReproLog.h" />
     <ClInclude Include="ClientProcesses.h" />
@@ -156,6 +157,18 @@
     </ClInclude>
     <ClInclude Include="LatencyCheckPanel.xaml.h">
       <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="StatusPill.xaml.h">
+      <DependentUpon>StatusPill.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="SummaryBanner.xaml.h">
+      <DependentUpon>SummaryBanner.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="OverviewTile.xaml.h">
+      <DependentUpon>OverviewTile.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="OverviewPanel.xaml.h">
+      <DependentUpon>OverviewPanel.xaml</DependentUpon>
     </ClInclude>
     <ClInclude Include="CrashDumpsPanel.xaml.h">
       <DependentUpon>CrashDumpsPanel.xaml</DependentUpon>
@@ -203,6 +216,7 @@
     <ClCompile Include="Elevation.cpp" />
     <ClCompile Include="ProcessRunner.cpp" />
     <ClCompile Include="RegistryRepair.cpp" />
+    <ClCompile Include="MmcssTasks.cpp" />
     <ClCompile Include="ReportFile.cpp" />
     <ClCompile Include="ReproLog.cpp" />
     <ClCompile Include="ClientProcesses.cpp" />
@@ -246,6 +260,19 @@
     <ClCompile Include="LatencyCheckPanelResults.cpp">
       <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="StatusPill.xaml.cpp">
+      <DependentUpon>StatusPill.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="SummaryBanner.xaml.cpp">
+      <DependentUpon>SummaryBanner.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="OverviewTile.xaml.cpp">
+      <DependentUpon>OverviewTile.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="OverviewPanel.xaml.cpp">
+      <DependentUpon>OverviewPanel.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowOverview.cpp" />
     <ClCompile Include="CrashDumpsPanel.xaml.cpp">
       <DependentUpon>CrashDumpsPanel.xaml</DependentUpon>
     </ClCompile>
@@ -313,6 +340,18 @@
     <Midl Include="LatencyCheckPanel.idl">
       <DependentUpon>LatencyCheckPanel.xaml</DependentUpon>
     </Midl>
+    <Midl Include="StatusPill.idl">
+      <DependentUpon>StatusPill.xaml</DependentUpon>
+    </Midl>
+    <Midl Include="SummaryBanner.idl">
+      <DependentUpon>SummaryBanner.xaml</DependentUpon>
+    </Midl>
+    <Midl Include="OverviewTile.idl">
+      <DependentUpon>OverviewTile.xaml</DependentUpon>
+    </Midl>
+    <Midl Include="OverviewPanel.idl">
+      <DependentUpon>OverviewPanel.xaml</DependentUpon>
+    </Midl>
     <Midl Include="CrashDumpsPanel.idl">
       <DependentUpon>CrashDumpsPanel.xaml</DependentUpon>
     </Midl>
@@ -328,6 +367,18 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="LatencyCheckPanel.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="StatusPill.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SummaryBanner.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="OverviewTile.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="OverviewPanel.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Include="CrashDumpsPanel.xaml">

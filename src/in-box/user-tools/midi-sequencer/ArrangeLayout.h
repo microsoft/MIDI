@@ -35,11 +35,15 @@ namespace midisequencer
 
         // The Key and chords row, pinned under Tempo and meter (and lyrics) when shown.
         Harmony = 6,
+
+        // The Meter row, pinned straight under Tempo and meter when shown (design section 37).
+        Meter = 7,
     };
 
     // Row heights from the comps (seq.css).
     inline constexpr double TempoRowHeight = 44.0;
     inline constexpr double LyricsRowHeight = 36.0;
+    inline constexpr double MeterRowHeight = 26.0;
 
     // The Key and chords row: a band for the keys on top, the chord blocks under it.
     inline constexpr double HarmonyRowHeight = 58.0;

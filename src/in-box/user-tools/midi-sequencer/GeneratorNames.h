@@ -16,15 +16,15 @@
 
 namespace midisequencer
 {
-    inline constexpr std::array<wchar_t const*, 11> GeneratorTypeKeys{
+    inline constexpr std::array<wchar_t const*, 12> GeneratorTypeKeys{
         L"GeneratorTypeEuclidean", L"GeneratorTypeChanceMelody", L"GeneratorTypeArpeggiator", L"GeneratorTypeLife",
         L"GeneratorTypeLifeDrums", L"GeneratorTypeLearn", L"GeneratorTypeWords", L"GeneratorTypeEvolve",
-        L"GeneratorTypeInfinity", L"GeneratorTypeLSystem", L"GeneratorTypeChangeRinging" };
+        L"GeneratorTypeInfinity", L"GeneratorTypeLSystem", L"GeneratorTypeChangeRinging", L"GeneratorTypeStrum" };
 
-    inline constexpr std::array<wchar_t const*, 11> GeneratorAboutKeys{
+    inline constexpr std::array<wchar_t const*, 12> GeneratorAboutKeys{
         L"GeneratorAboutEuclidean", L"GeneratorAboutMelody", L"GeneratorAboutArpeggiator", L"GeneratorAboutLife",
         L"GeneratorAboutLifeDrums", L"GeneratorAboutLearn", L"GeneratorAboutWords", L"GeneratorAboutEvolve",
-        L"GeneratorAboutInfinity", L"GeneratorAboutLSystem", L"GeneratorAboutChangeRinging" };
+        L"GeneratorAboutInfinity", L"GeneratorAboutLSystem", L"GeneratorAboutChangeRinging", L"GeneratorAboutStrum" };
 
     // The picker's groups, and the menus' order: rhythms, melodies, then what plays along.
     inline constexpr std::array<GeneratorType, 2> RhythmGenerators{ GeneratorType::Euclidean, GeneratorType::LifeDrums };
@@ -33,7 +33,7 @@ namespace midisequencer
         GeneratorType::ChanceMelody, GeneratorType::Life, GeneratorType::Learn, GeneratorType::Words,
         GeneratorType::Evolve, GeneratorType::Infinity, GeneratorType::LSystem, GeneratorType::ChangeRinging };
 
-    inline constexpr std::array<GeneratorType, 1> PlayAlongGenerators{ GeneratorType::Arpeggiator };
+    inline constexpr std::array<GeneratorType, 2> PlayAlongGenerators{ GeneratorType::Arpeggiator, GeneratorType::Strum };
 
     constexpr wchar_t const* GeneratorTypeKey(GeneratorType type) noexcept
     {
@@ -46,10 +46,10 @@ namespace midisequencer
     }
 
     // What a new clip of each type is called, before a number: "Euclid 2", "Life 3".
-    inline constexpr std::array<wchar_t const*, 11> GeneratorClipNameKeys{
+    inline constexpr std::array<wchar_t const*, 12> GeneratorClipNameKeys{
         L"DefaultEuclidName", L"DefaultMelodyName", L"DefaultArpName", L"DefaultLifeName", L"DefaultLifeDrumsName",
         L"DefaultLearnName", L"DefaultWordsName", L"DefaultEvolveName", L"DefaultInfinityName", L"DefaultLSystemName",
-        L"DefaultRingingName" };
+        L"DefaultRingingName", L"DefaultStrumName" };
 
     constexpr wchar_t const* GeneratorClipNameKey(GeneratorType type) noexcept
     {

@@ -45,8 +45,8 @@ namespace miditroubleshooter
             MinimumRefreshIntervalSeconds,
             MaximumRefreshIntervalSeconds);
 
-        auto const page = ReadDword(ValueSelectedPageIndex, PageIndexApiMode);
-        m_selectedPageIndex = page > PageIndexMaximum ? PageIndexApiMode : page;
+        auto const page = ReadDword(ValueSelectedPageIndex, PageIndexOverview);
+        m_selectedPageIndex = page > PageIndexMaximum ? PageIndexOverview : page;
 
         m_lastCaptureFolder = ReadString(ValueLastCaptureFolder, std::wstring{});
 
@@ -69,7 +69,7 @@ namespace miditroubleshooter
 
     void AppSettings::SelectedPageIndex(uint32_t value) noexcept
     {
-        m_selectedPageIndex = value > PageIndexMaximum ? PageIndexApiMode : value;
+        m_selectedPageIndex = value > PageIndexMaximum ? PageIndexOverview : value;
         WriteDword(ValueSelectedPageIndex, m_selectedPageIndex);
     }
 

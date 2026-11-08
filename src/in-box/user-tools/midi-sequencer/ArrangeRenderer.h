@@ -153,6 +153,11 @@ namespace midisequencer
         bool ShowNumerals{ true };
         winrt::hstring EmptyHarmonyHint{};
         winrt::hstring NoKeyHint{};
+
+        // The Meter row: the selected change, and one being dragged, drawn where it would go.
+        size_t SelectedMeter{ SIZE_MAX };
+        size_t DraggedMeter{ SIZE_MAX };
+        int64_t DraggedMeterTick{ 0 };
     };
 
     class ArrangeRenderer
@@ -257,6 +262,9 @@ namespace midisequencer
 
         // The keys along the top and the chords under them (ArrangeRendererHarmony.cpp).
         void DrawHarmonyRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
+
+        // The Meter row (ArrangeRendererMeter.cpp): a flag at each meter change, the first one too.
+        void DrawMeterRow(_In_ canvas::CanvasDrawingSession const& ds, _In_ float top, _In_ float height, _In_ float width, _In_ ArrangeDrawContext const& context);
 
         // A lane's line from one tick to another, where the lane's tick 0 is at `offset` on the
         // timeline. Clipped to the visible width.

@@ -44,12 +44,42 @@ namespace winrt::miditroubleshooter::implementation
             m_settingApiModeSelection = false;
 
             SystemInfoApiModeValue().Text(ApiModeName(mode));
+            SummarizeApiModeForOverview(mode);
 
             ApiModeStatusText().Text(res::FormatString(L"ApiModeCurrentFormat", ApiModeName(mode)));
 
             ApplyApiModeButton().IsEnabled(false);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to read the current API mode.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SummarizeApiModeForOverview(native::ApiMode const mode) noexcept
+    {
+        try
+        {
+            m_overview.ApiModeName = ApiModeName(mode);
+            m_overview.LegacyApiMode = mode == native::ApiMode::Legacy;
+
+            // the pages about the MIDI service say why they're empty
+            for (auto const& bar : { LegacySessionsBar(), LegacyTransportsBar(), LegacyServiceBar() })
+            {
+                bar.IsOpen(m_overview.LegacyApiMode);
+            }
+            m_overview.ApiModeDetail = res::GetString(
+                mode == native::ApiMode::Legacy ? L"OverviewApiModeLegacyDetail" :
+                mode == native::ApiMode::Hybrid ? L"OverviewApiModeHybridDetail" :
+                L"OverviewApiModeServicesDetail");
+
+            UpdateOverview();
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to summarize the API mode.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnGoToApiModeClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        NavigateToTag(L"apimode");
     }
 
     _Use_decl_annotations_

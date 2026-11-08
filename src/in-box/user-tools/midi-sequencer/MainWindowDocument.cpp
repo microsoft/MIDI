@@ -1466,7 +1466,7 @@ namespace winrt::midisequencer::implementation
     {
         return m_laneDrag != LaneDrag::None || m_rulerDragging || m_loopGrab != LoopGrab::None || m_trackDrag.Active ||
             m_clipDrag.Pressed || m_tagDrag.Active || m_rowResize.Active || m_pointDrag.What != PointDrag::Kind::None ||
-            m_harmonyDrag.Kind != HarmonyDragKind::None ||
+            m_harmonyDrag.Kind != HarmonyDragKind::None || m_meterDrag.Active ||
             m_ringDrag.Active || m_rangeDrag.Active || m_velocityDrag.Active || m_lifePaint.Active ||
             m_roll.InGesture() || m_pattern.InGesture() || m_clipLanes.InGesture();
     }
