@@ -162,4 +162,12 @@ namespace midisequencer
 
     // Later meter changes stay at their bars. The first meter can't be removed.
     bool RemoveMeterChange(_Inout_ std::vector<MeterChange>& meter, _In_ size_t index);
+
+    // Moves a meter change, not the first, to the start of another bar. The other changes keep
+    // their bar numbers, as SetMeterAt and RemoveMeterChange leave them. Notes stay where they are
+    // in time. False when nothing moves.
+    bool MoveMeterChange(_Inout_ std::vector<MeterChange>& meter, _In_ size_t index, _In_ int64_t toBar);
+
+    // Showing or hiding the Meter row.
+    std::unique_ptr<SequenceChange> MakeMeterRowChange(_In_ bool before, _In_ bool after);
 }

@@ -32,5 +32,7 @@ public:
     TEST_METHOD(LaneEditsUndo);
     TEST_METHOD(TempoEdits);
     TEST_METHOD(MeterEditsKeepLaterBars);
+    TEST_METHOD(MeterChangesMoveToABar);
+    TEST_METHOD(TheMeterRowShowsAndSaves);
     TEST_METHOD(LaneRowsFollowTheirTrack);
 };

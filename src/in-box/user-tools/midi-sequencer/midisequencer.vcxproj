@@ -274,6 +274,8 @@
     <ClCompile Include="MainWindowChordAssistant.cpp" />
     <ClCompile Include="..\midi-app-shared\FrameTicker.cpp" />
     <ClCompile Include="ArrangeRendererHarmony.cpp" />
+    <ClCompile Include="ArrangeRendererMeter.cpp" />
+    <ClCompile Include="MainWindowMeterRow.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="MainWindowClipEdits.cpp" />
     <ClCompile Include="MainWindowGhostNotes.cpp" />

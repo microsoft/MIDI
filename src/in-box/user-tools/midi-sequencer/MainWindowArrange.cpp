@@ -617,6 +617,9 @@ namespace winrt::midisequencer::implementation
 
         context.SelectedChord = m_selectedChord;
         context.SelectedKey = m_selectedKey;
+        context.SelectedMeter = m_selectedMeter;
+        context.DraggedMeter = m_meterDrag.Active && m_meterDrag.Moved ? m_meterDrag.Index : SIZE_MAX;
+        context.DraggedMeterTick = m_meterDrag.ToTick;
         context.ScaleNames = &KeyScaleNames();
         context.ShowNumerals = seq::AppSettings::Current().ShowRomanNumerals();
         context.EmptyHarmonyHint = m_textHarmonyEmpty;
@@ -815,6 +818,11 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Harmony)
         {
             return MakeHarmonyHeader(row);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Meter)
+        {
+            return MakeMeterHeader(row);
         }
 
         controls::Grid grid{};
@@ -2488,6 +2496,14 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (hit.Row->Kind == seq::ArrangeRowKind::Meter)
+            {
+                OnMeterPressed(pinned, args);
+                return;
+            }
+
+            m_selectedMeter = SIZE_MAX;
+
             m_selectedChord = SIZE_MAX;
             m_selectedKey = SIZE_MAX;
 
@@ -2649,6 +2665,16 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (m_meterDrag.Active)
+            {
+                if (pinned == m_meterDrag.Pinned)
+                {
+                    OnMeterDragMoved(args);
+                }
+
+                return;
+            }
+
             if (m_razor && !m_clipDrag.Pressed)
             {
                 UpdateRazor(pinned, args.GetCurrentPoint(pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).Position());
@@ -2765,6 +2791,13 @@ namespace winrt::midisequencer::implementation
             if (m_harmonyDrag.Kind != HarmonyDragKind::None)
             {
                 OnHarmonyDragReleased();
+                (pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).ReleasePointerCaptures();
+                return;
+            }
+
+            if (m_meterDrag.Active)
+            {
+                OnMeterDragReleased();
                 (pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).ReleasePointerCaptures();
                 return;
             }
@@ -3012,6 +3045,13 @@ namespace winrt::midisequencer::implementation
             {
                 args.Handled(true);
                 OnHarmonyDoubleTapped(pinned, *hit.Row, position, hit.Tick);
+                return;
+            }
+
+            if (hit.Row->Kind == seq::ArrangeRowKind::Meter)
+            {
+                args.Handled(true);
+                OnMeterDoubleTapped(position, hit.Tick);
                 return;
             }
 
@@ -3317,6 +3357,15 @@ namespace winrt::midisequencer::implementation
         else if (row.Kind == seq::ArrangeRowKind::Tempo && (!m_doc.Harmony || m_doc.Harmony->Hidden))
         {
             add(res::GetString(L"MenuShowKeyAndChords"), L"\uE8D6", [weak]() { if (auto s = weak.get()) { s->ShowHarmonyRow(); } });
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Meter)
+        {
+            AddMeterMenuItems(menu, point, tick);
+        }
+        else if (row.Kind == seq::ArrangeRowKind::Tempo && !m_doc.ShowMeterRow)
+        {
+            add(res::GetString(L"MenuShowMeterRow"), L"\uE7C1", [weak]() { if (auto s = weak.get()) { s->ShowMeterRow(true); } });
         }
 
         add(res::GetString(L"MenuPlayFromHere"), L"\uE768", [weak, snapped]() { if (auto s = weak.get()) { s->Play(snapped); } });

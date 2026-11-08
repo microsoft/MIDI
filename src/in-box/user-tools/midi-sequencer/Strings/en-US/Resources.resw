@@ -1655,6 +1655,33 @@
   <data name="UndoChangeMeter" xml:space="preserve">
     <value>Change meter</value>
   </data>
+  <data name="MeterRowName" xml:space="preserve">
+    <value>Meter</value>
+  </data>
+  <data name="MeterRowOneChange" xml:space="preserve">
+    <value>1 change</value>
+  </data>
+  <data name="MeterRowChangeCountFormat" xml:space="preserve">
+    <value>{0} changes</value>
+  </data>
+  <data name="MeterRowHelp" xml:space="preserve">
+    <value>A flag at each meter change. Drag a flag to another bar, double-click to change a meter or add one, and press Delete to remove one. Notes keep their time when bar lines move.</value>
+  </data>
+  <data name="MenuShowMeterRow" xml:space="preserve">
+    <value>Show Meter row</value>
+  </data>
+  <data name="MenuHideMeterRow" xml:space="preserve">
+    <value>Hide Meter row</value>
+  </data>
+  <data name="UndoShowMeterRow" xml:space="preserve">
+    <value>Show Meter row</value>
+  </data>
+  <data name="UndoHideMeterRow" xml:space="preserve">
+    <value>Hide Meter row</value>
+  </data>
+  <data name="UndoMoveMeter" xml:space="preserve">
+    <value>Move meter change</value>
+  </data>
 
   <!-- ==================================== Prompts ==================================== -->
   <data name="DialogOk" xml:space="preserve">
