@@ -230,6 +230,15 @@ namespace winrt::midipatchbay::implementation
             callbacks.EndpointDropped = [this](std::wstring endpointDeviceId, foundation::Point point)
                 { OnEndpointDropped(endpointDeviceId, point); };
             callbacks.BlockActivated = [this](std::wstring blockId) { ShowBlockDialogAsync(blockId); };
+            callbacks.ConnectionContextMenuRequested = [this](std::wstring connectionId, foundation::Point position)
+                { ShowConnectionMenu(connectionId, position); };
+            callbacks.WatchMarkClicked = [this](uint32_t number)
+                {
+                    if (m_watchWindows != nullptr)
+                    {
+                        m_watchWindows->BringForward(number);
+                    }
+                };
 
             m_canvas.Initialize(CanvasScroller(), CanvasSurface(), MinimapSurface(), std::move(callbacks));
 
@@ -283,6 +292,7 @@ namespace winrt::midipatchbay::implementation
                     if (auto strong = weak.get())
                     {
                         strong->m_closing = true;
+                        strong->CloseWatchWindows();
                         strong->StopLearning();
                         strong->StopControllerLearn();
                         strong->ShowLiveRouting(false);
@@ -396,6 +406,14 @@ namespace winrt::midipatchbay::implementation
                 if (control)
                 {
                     DuplicateSelection();
+                }
+                break;
+
+            case VirtualKey::M:
+                handled = control;
+                if (control)
+                {
+                    WatchSelection();
                 }
                 break;
 
@@ -592,6 +610,7 @@ namespace winrt::midipatchbay::implementation
                     UpdatePatchHeader();
                     UpdateMessages();
                     UpdateInspectorActivity();
+                    RefreshWatchWindows();
                 }
                 break;
 
@@ -1253,6 +1272,8 @@ namespace winrt::midipatchbay::implementation
 
             m_canvas.Rebuild(patch, patchbay::PatchLibrary::Current().LiveEndpoints(), Analysis());
             m_canvas.RefreshStatus(m_activity);
+
+            RefreshWatchWindows();
 
             auto const isEmpty = patch == nullptr || (patch->Endpoints.empty() && patch->Blocks.empty());
 

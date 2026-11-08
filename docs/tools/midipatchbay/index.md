@@ -556,6 +556,20 @@ The messages in a trace go through the patch one after another, the same way the
 
 A trace doesn't run generators, and it doesn't wait for a message throttler. What comes after a throttler is shown at once.
 
+### Watching a connection
+
+Right-click a connection and select **Watch messages**, or select it and press **Ctrl+M**. A small window opens and lists every message that goes along that connection, as it goes. It shows the time, the message in hex with its name, and a description of it, the same way [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) does. Messages from **Trace messages…** show up there too, marked **Test**, so you can watch a test without a device plugged in.
+
+Right-click a step or an endpoint and select **Watch everything out of this** to watch all of its connections out at once. That window has a **Went to** column, so you can tell where each message went.
+
+- Open as many as you like. Each window has a number and a color, and its connection shows a dot with the same number. Click the dot to bring that window to the front.
+- The windows stay on top of everything else, so they don't get lost behind the editor. Select the pin in a window's title bar to turn that off.
+- **Pause** stops adding messages so you can read them, but keeps counting. **Clear** empties the list. **Clock** and **Active Sensing** messages are hidden until you turn them on, because they'd crowd out everything else.
+- The count says how many messages went along the connection. If messages came faster than the window could keep up, some are dropped and counted. Routing never slows down for a window.
+- A window keeps the last 5,000 messages. Right-click a message to copy it.
+- Muting or removing the connection doesn't close its window, so you keep what it already showed. Undo brings the connection back, and the window picks up again.
+- The windows close when you close the patch's editor window, and they aren't saved with the patch.
+
 ## App provenance
 
 This app was coded by AI using GitHub Copilot, guided by Pete Brown.

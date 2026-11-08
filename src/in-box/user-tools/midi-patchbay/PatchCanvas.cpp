@@ -2158,6 +2158,12 @@ namespace midipatchbay
                     CancelDrags();
                     Select(CanvasSelectionKind::Connection, connectionId);
 
+                    // A right click opens the connection's menu, and picks nothing up.
+                    if (args.GetCurrentPoint(m_surface).Properties().IsRightButtonPressed())
+                    {
+                        return;
+                    }
+
                     // Grabbing a cord picks up whichever end is nearer, so it can be dropped on
                     // a different connection point.
                     auto const position = args.GetCurrentPoint(m_surface).Position();
@@ -2182,6 +2188,18 @@ namespace midipatchbay
                             BeginRetargetDrag(connectionId,
                                 distanceTo(sourcePoint.value()) <= distanceTo(destinationPoint.value()));
                         }
+                    }
+                });
+
+            visual.HitArea.RightTapped([this, connectionId](auto&&, input::RightTappedRoutedEventArgs const& args)
+                {
+                    args.Handled(true);
+                    Select(CanvasSelectionKind::Connection, connectionId);
+
+                    if (m_callbacks.ConnectionContextMenuRequested)
+                    {
+                        m_callbacks.ConnectionContextMenuRequested(connectionId,
+                            m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer));
                     }
                 });
 

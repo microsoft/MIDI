@@ -313,5 +313,6 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the connections.")
 
         RedrawAnswerPaths();
+        RedrawWatchMarks();
     }
 }

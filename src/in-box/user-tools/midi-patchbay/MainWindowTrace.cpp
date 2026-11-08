@@ -529,6 +529,7 @@ namespace winrt::midipatchbay::implementation
             m_trace = patchbay::TracePatch(*current, m_traceSourceId, grouped);
             m_traceIndex = 0;
 
+            FeedTraceToWatchWindows();
             ShowTraceStep();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to trace the messages.")

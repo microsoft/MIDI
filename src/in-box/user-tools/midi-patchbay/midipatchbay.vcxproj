@@ -171,6 +171,8 @@
     <ClInclude Include="CiFileStore.h" />
     <ClInclude Include="RouteEngine.h" />
     <ClInclude Include="SendQueue.h" />
+    <ClInclude Include="MessageWatch.h" />
+    <ClInclude Include="WatchWindow.h" />
     <ClInclude Include="SpinGuard.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -190,6 +192,7 @@
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
@@ -311,6 +314,7 @@
     <ClCompile Include="MessageText.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
     <ClCompile Include="PatchCanvasCords.cpp" />
+    <ClCompile Include="PatchCanvasWatch.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
     <ClCompile Include="PatchLibrary.cpp" />
     <ClCompile Include="PatchModel.cpp" />
@@ -322,6 +326,9 @@
     <ClCompile Include="ControllerStepRunner.cpp" />
     <ClCompile Include="ControllerText.cpp" />
     <ClCompile Include="ConverterText.cpp" />
+    <ClCompile Include="MessageWatch.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SendQueue.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -343,6 +350,8 @@
     <ClCompile Include="MainWindowControllerSteps.cpp" />
     <ClCompile Include="MainWindowConverterSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />
+    <ClCompile Include="MainWindowWatch.cpp" />
+    <ClCompile Include="WatchWindow.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />
     <ClCompile Include="MainWindowGenerators.cpp" />
@@ -355,6 +364,7 @@
     <ClCompile Include="LibraryWindowDialogs.cpp" />
     <ClCompile Include="LibraryWindowTiles.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />

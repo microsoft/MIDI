@@ -109,6 +109,7 @@
     <ClInclude Include="PatchFolderMoveTests.h" />
     <ClInclude Include="SendQueueTests.h" />
     <ClInclude Include="CordPathTests.h" />
+    <ClInclude Include="MessageWatchTests.h" />
     <!-- shared by source with midipatchbay, so the patch model is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MessageFilter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageTransform.h" />
@@ -135,6 +136,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchFolderMove.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\SendQueue.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\CordPath.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageWatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
@@ -161,6 +163,7 @@
     <ClCompile Include="PatchFolderMoveTests.cpp" />
     <ClCompile Include="SendQueueTests.cpp" />
     <ClCompile Include="CordPathTests.cpp" />
+    <ClCompile Include="MessageWatchTests.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MessageFilter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageTransform.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ProcessingBlock.cpp" />
@@ -168,6 +171,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchLayout.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\RouteGraph.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageWatch.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\StatefulBlocks.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\LogicSteps.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ControllerSteps.cpp" />
