@@ -196,6 +196,7 @@ html, body {
 .tr .d b { color: var(--text); font-weight: 400; }
 .tr .d i { color: #9fd8ff; font-style: normal; }
 .tr .dl { color: var(--text3); text-align: right; }
+.rep { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; margin-left: 8px; border-radius: 9px; background: var(--accent-dim); color: var(--accent); font-size: 11px; font-weight: 600; }
 .words { display: flex; flex-direction: column; justify-content: center; gap: 1px; line-height: 13px; }
 .words .w { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
 .words .nm { font-size: 10px; height: 13px; display: inline-flex; align-items: center; padding: 0 5px; border-radius: 3px; color: #000; font-weight: 600; width: max-content; }

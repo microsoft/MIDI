@@ -96,6 +96,13 @@ function fill(table) {
     const selected = table.dataset.sel ? table.dataset.sel.split(",").map(Number) : [];
     const names = table.dataset.names !== "off";
 
+    // data-repeat="1:234" puts a "234 repeats" count on the second row
+    const repeats = {};
+    (table.dataset.repeat || "").split(",").filter(Boolean).forEach(pair => {
+        const [row, count] = pair.split(":");
+        repeats[Number(row)] = count;
+    });
+
     sourceMap = {};
     (table.dataset.map || "").split(",").filter(Boolean).forEach(pair => {
         const [from, to] = pair.split(":");
@@ -128,6 +135,12 @@ function fill(table) {
             tr.append(cell(row[0].replace("2,", ""), "t"), wordsCell(row, names), cell(row[6] || TYPE[row[2]].name, "d"));
         } else {
             tr.append(cell(row[0].replace("2,", ""), "t"), cell(CORD_TARGETS[shown % 2 === 0 ? 0 : 1], "d"), wordsCell(row, names), cell(row[6] || TYPE[row[2]].name, "d"));
+        }
+
+        if (repeats[shown] !== undefined) {
+            const details = tr.querySelectorAll(".d");
+            const target = details[details.length - 1];
+            target.innerHTML += ` <span class="rep">&times;${repeats[shown]} repeats</span>`;
         }
 
         table.appendChild(tr);

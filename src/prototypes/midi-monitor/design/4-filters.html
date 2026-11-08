@@ -2,7 +2,7 @@
 <html lang="en-us">
 <head>
 <meta charset="utf-8">
-<meta name="size" content="1300,1060">
+<meta name="size" content="1300,1420">
 <title>4. Advanced mode filters</title>
 <link rel="stylesheet" href="mon.css">
 <script src="mon.js"></script>
@@ -89,8 +89,14 @@
       </div>
 
       <div class="msep"></div>
-      <div class="hstack" data-mark="5"><span class="check sm"><span class="cb">&#xE73E;</span>Hide messages that only differ in time from the one before</span></div>
+      <div class="hstack" data-mark="5"><span class="check sm"><span class="cb">&#xE73E;</span>Fold repeated messages into one row, with a count</span></div>
     </div>
+  </div>
+
+  <p class="caption-above"><b>With "Fold repeated messages" on.</b> The Modulation wheel held still sent the same value 234 more times. Those messages don't get rows; the row they repeat counts them, and the count keeps going up while they arrive.</p>
+  <div class="window" style="width:1240px">
+    <div class="msgs layer" data-rows="advanced" data-count="4" data-only="a" data-names="off" data-repeat="1:234" data-mark="6" style="margin:12px"></div>
+    <div class="statusrow"><span>Total: 1,430</span><span>Hidden by filter: 3,410</span><span data-mark="7" style="margin-left:6px">Repeats folded: 234</span></div>
   </div>
 
   <ol class="callouts">
@@ -98,7 +104,9 @@
     <li><b>Channels</b> as 16 buttons, numbered from 1 like everywhere else on screen. "All" turns all 16 back on. In advanced mode this replaces the single Channel picker from simple mode, because a picker can only hold one.</li>
     <li><b>System messages</b>, one box each. Clock and Active Sensing here are the same switches as the two buttons in the status bar, so turning one off in either place shows in both.</li>
     <li><b>Note range</b>, the Patchbay's note filter, for note on, note off, poly pressure and the MIDI 2.0 per-note messages. Everything else ignores it.</li>
-    <li><b>A Monitor-only extra</b>: hide repeats (same words as the message before from the same source). Useful for controllers that send the same value over and over. Not a Patchbay filter, so it sits below a line. Easy to drop if you'd rather keep the list exactly the Patchbay's. The filter is saved with advanced mode, and comes back next time.</li>
+    <li><b>A Monitor-only extra: fold repeats.</b> A message with exactly the same data as the one before it from the same source doesn't get a row of its own. It's counted on the row it repeats instead. Useful for controllers that send the same value over and over. Not a Patchbay filter, so it sits below a line. Saved with advanced mode, like the other filters.</li>
+    <li><b>The count is on the row</b>, so you can see where repeats were folded and how many. Each one still keeps its own time: Save to File and copy write every folded message out in full, with its own timestamp. Turning the option off brings them back as rows.</li>
+    <li><b>The status bar adds up the folded messages</b>, next to Hidden by filter, so the total always matches what was received.</li>
   </ol>
 </div>
 </body>
