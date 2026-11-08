@@ -98,6 +98,10 @@ namespace midi2monitor
         bool SourcesPaneOpen() const noexcept { return m_sourcesPaneOpen; }
         void SourcesPaneOpen(_In_ bool value) noexcept;
 
+        // The Sources list's width as last dragged, in view pixels. 0 means the default.
+        uint32_t SourcesPaneWidth() const noexcept { return m_sourcesPaneWidth; }
+        void SourcesPaneWidth(_In_ uint32_t value) noexcept;
+
         static constexpr uint32_t MinimumRetainedMessageCount = 100;
         static constexpr uint32_t MaximumRetainedMessageCount = 500000;
         static constexpr uint32_t DefaultRetainedMessageCount = 10000;
@@ -139,5 +143,6 @@ namespace midi2monitor
         bool m_showEndpointActivity{ true };
         bool m_onlySendingEndpoints{ false };
         bool m_sourcesPaneOpen{ true };
+        uint32_t m_sourcesPaneWidth{ 0 };
     };
 }

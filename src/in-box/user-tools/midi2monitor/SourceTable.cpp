@@ -164,7 +164,15 @@ namespace midi2monitor
                 return {};
             }
 
-            auto const name = GroupName(slot, groupNumber);
+            auto name = GroupName(slot, groupNumber);
+
+            // a group named after its endpoint: the From column already says the name
+            auto const endpoint = EndpointName(slot);
+
+            if (::CompareStringOrdinal(name.c_str(), -1, endpoint.c_str(), -1, TRUE) == CSTR_EQUAL)
+            {
+                name = {};
+            }
 
             return name.empty()
                 ? winrt::hstring{ std::format(L"{}", groupNumber) }

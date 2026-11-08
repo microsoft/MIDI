@@ -33,6 +33,7 @@ namespace midi2monitor
         constexpr wchar_t ValueShowEndpointActivity[] = L"ShowEndpointActivity";
         constexpr wchar_t ValueOnlySendingEndpoints[] = L"OnlySendingEndpoints";
         constexpr wchar_t ValueSourcesPaneOpen[] = L"SourcesPaneOpen";
+        constexpr wchar_t ValueSourcesPaneWidth[] = L"SourcesPaneWidth";
 
         // Generous: 256 endpoints of a few hundred characters each. A longer value isn't ours.
         constexpr size_t MaximumSourcesLength = 256 * 1024;
@@ -95,6 +96,13 @@ namespace midi2monitor
         m_showEndpointActivity = ReadDword(ValueShowEndpointActivity, 1) != 0;
         m_onlySendingEndpoints = ReadDword(ValueOnlySendingEndpoints, 0) != 0;
         m_sourcesPaneOpen = ReadDword(ValueSourcesPaneOpen, 1) != 0;
+        m_sourcesPaneWidth = ReadDword(ValueSourcesPaneWidth, 0);
+
+        // a width this window never drags to isn't one it saved
+        if (m_sourcesPaneWidth > 2000)
+        {
+            m_sourcesPaneWidth = 0;
+        }
 
         m_advancedSources = ReadString(ValueAdvancedSources, L"");
 
@@ -182,6 +190,13 @@ namespace midi2monitor
     {
         m_sourcesPaneOpen = value;
         WriteDword(ValueSourcesPaneOpen, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SourcesPaneWidth(uint32_t value) noexcept
+    {
+        m_sourcesPaneWidth = value;
+        WriteDword(ValueSourcesPaneWidth, value);
     }
 
     _Use_decl_annotations_

@@ -788,6 +788,9 @@ Examples
   <data name="OnlySendingToggle.Header" xml:space="preserve">
     <value>Sending only</value>
   </data>
+  <data name="SourcesSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Sources width</value>
+  </data>
   <data name="SourcesShowGroupsFormat" xml:space="preserve">
     <value>Show the groups of {0}</value>
     <comment>{0} is the endpoint name</comment>

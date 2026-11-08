@@ -130,7 +130,7 @@ While MIDI Monitor is listening, a green light shows next to every device and gr
 
 The lights work by listening to every device, not only the ones you checked. On a PC with a lot of MIDI devices that can make listening slow to start. If it does, turn off **Activity lights** in Settings, and MIDI Monitor opens only the devices you checked.
 
-The button at the left of the toolbar hides and shows **Sources**. In a narrow window, **Sources** opens over the messages instead of beside them, and the groups you're watching show as small tags in the toolbar. Select the **x** on a tag to stop watching that group, or **+ Add** to open **Sources**.
+The button at the left of the toolbar hides and shows **Sources**. To make the list wider or narrower, drag its right edge. MIDI Monitor remembers the width. In a narrow window, **Sources** opens over the messages instead of beside them, and the groups you're watching show as small tags in the toolbar. Select the **x** on a tag to stop watching that group, or **+ Add** to open **Sources**.
 
 ### Where each message came from
 

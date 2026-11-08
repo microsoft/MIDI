@@ -48,7 +48,8 @@ namespace midi2monitor
         case MonitorColumnId::Channel:   return { 64.0, false, true, 1 };
         case MonitorColumnId::Decoded:   return { 220.0, true, true, -1 };
         case MonitorColumnId::Delta:     return { 120.0, false, true, 0 };
-        case MonitorColumnId::Source:    return { 220.0, false, true, 5 };
+        // never dropped: in advanced mode it's what tells the rows apart
+        case MonitorColumnId::Source:    return { 200.0, false, true, -1 };
         default:                         return { 80.0, false, true, 0 };
         }
     }

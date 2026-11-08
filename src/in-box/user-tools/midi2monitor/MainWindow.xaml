@@ -480,6 +480,34 @@
                 </Border>
             </Grid>
         </Border>
+
+        <!-- Drags the Sources list wider or narrower. It fills the gap beside the list, so it
+             never covers the list's scroll bar, and only shows itself under the pointer.
+             MainWindow.Advanced.cpp places it. -->
+        <Border x:Name="SourcesSplitter"
+                x:Uid="SourcesSplitter"
+                Grid.Row="2"
+                Width="8"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Left"
+                Canvas.ZIndex="11"
+                Visibility="Collapsed"
+                Background="Transparent"
+                PointerPressed="OnSourcesSplitterPressed"
+                PointerMoved="OnSourcesSplitterMoved"
+                PointerReleased="OnSourcesSplitterReleased"
+                PointerCaptureLost="OnSourcesSplitterReleased"
+                PointerEntered="OnSourcesSplitterEntered"
+                PointerExited="OnSourcesSplitterExited">
+            <Rectangle x:Name="SourcesSplitterLine"
+                       Width="2"
+                       RadiusX="1"
+                       RadiusY="1"
+                       Margin="0,8,0,8"
+                       HorizontalAlignment="Center"
+                       Opacity="0"
+                       Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+        </Border>
         <Border Grid.Row="2"
                 x:Name="MessagesCard"
                 Margin="12,0,12,8"
@@ -822,7 +850,7 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{x:Bind SourceText}"
                                                    FontSize="{x:Bind RowFontSize}"
-                                                   MaxWidth="150"
+                                                   MaxWidth="130"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Grid.Column="2"

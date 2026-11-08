@@ -33,7 +33,14 @@ namespace winrt::midi2monitor::implementation
         // Below this width the Sources list goes over the messages instead of beside them.
         constexpr double NarrowLayoutWidth = 900.0;
 
-        constexpr double SourcesPaneWidth = 284.0;
+        // The Sources list's width, which the splitter beside it changes. Whatever it's dragged
+        // to, the messages keep enough room to read.
+        constexpr double DefaultSourcesPaneWidth = 284.0;
+        constexpr double MinimumSourcesPaneWidth = 220.0;
+        constexpr double MaximumSourcesPaneWidth = 640.0;
+        constexpr double MinimumMessagesWidth = 420.0;
+        constexpr double SourcesPaneLeft = 12.0;
+        constexpr double SourcesPaneGap = 8.0;
 
         // How often the lights are checked, and how long a light stays on after a message.
         constexpr int64_t ActivityTimerMilliseconds = 250;
@@ -81,6 +88,19 @@ namespace winrt::midi2monitor::implementation
             OnlySendingToggle().IsOn(settings.OnlySendingEndpoints());
             SourcesPaneToggle().IsChecked(settings.SourcesPaneOpen());
             m_suppressSourceEvents = false;
+
+            m_sourcesPaneWidth = settings.SourcesPaneWidth() == 0
+                ? DefaultSourcesPaneWidth
+                : std::clamp(static_cast<double>(settings.SourcesPaneWidth()), MinimumSourcesPaneWidth, MaximumSourcesPaneWidth);
+
+            SourcesCard().Width(m_sourcesPaneWidth);
+
+            // ProtectedCursor is not on the projected type, but the interface carrying it is.
+            if (auto const element = SourcesSplitter().try_as<xaml::IUIElementProtected>())
+            {
+                element.ProtectedCursor(winrt::Microsoft::UI::Input::InputSystemCursor::Create(
+                    winrt::Microsoft::UI::Input::InputSystemCursorShape::SizeWestEast));
+            }
 
             m_advancedConnections.Start(
                 m_pipeline.CaptureObject(),
@@ -253,6 +273,7 @@ namespace winrt::midi2monitor::implementation
             if (!m_advancedMode)
             {
                 SourcesCard().Visibility(xaml::Visibility::Collapsed);
+                SourcesSplitter().Visibility(xaml::Visibility::Collapsed);
                 MessagesCard().Margin(messagesMargin);
                 return;
             }
@@ -271,11 +292,28 @@ namespace winrt::midi2monitor::implementation
             auto const toggled = SourcesPaneToggle().IsChecked();
             auto const open = toggled != nullptr && toggled.Value();
 
+            // a window made narrower than the list was dragged to keeps room for the messages,
+            // and a window made wide again gets the dragged width back
+            auto paneWidth = m_sourcesPaneWidth;
+
+            if (width > 0)
+            {
+                auto const room = (std::max)(MinimumSourcesPaneWidth, width - SourcesPaneLeft - SourcesPaneGap - MinimumMessagesWidth);
+                paneWidth = (std::min)(paneWidth, room);
+            }
+
+            SourcesCard().Width(paneWidth);
+
             SourcesCard().Visibility(open ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            // the splitter fills the gap on the list's right, over the messages when it's open
+            // over them
+            SourcesSplitter().Visibility(open ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            SourcesSplitter().Margin(xaml::ThicknessHelper::FromLengths(SourcesPaneLeft + paneWidth, 0, 0, 8));
 
             if (open && !narrow)
             {
-                messagesMargin.Left = 12 + SourcesPaneWidth + 8;
+                messagesMargin.Left = SourcesPaneLeft + paneWidth + SourcesPaneGap;
             }
 
             MessagesCard().Margin(messagesMargin);
@@ -749,5 +787,113 @@ namespace winrt::midi2monitor::implementation
             ApplySourcesSearchAndActivity();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change which endpoints are shown.")
+    }
+
+    // ------------------------------------------------------------------------------------
+    // The splitter beside the Sources list
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnSourcesSplitterPressed(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args)
+    {
+        try
+        {
+            auto const element = sender.try_as<xaml::UIElement>();
+
+            if (element == nullptr)
+            {
+                return;
+            }
+
+            // against the window, not the splitter: the splitter moves under the pointer
+            auto const point = args.GetCurrentPoint(RootGrid());
+
+            m_sourcesSplitterStartX = point.Position().X;
+            m_sourcesSplitterStartWidth = SourcesCard().ActualWidth();
+            m_sourcesSplitterPointerId = point.PointerId();
+            m_draggingSourcesSplitter = element.CapturePointer(args.Pointer());
+
+            args.Handled(true);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to start resizing the sources.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSourcesSplitterMoved(foundation::IInspectable const&, xaml::Input::PointerRoutedEventArgs const& args)
+    {
+        if (!m_draggingSourcesSplitter)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const point = args.GetCurrentPoint(RootGrid());
+
+            if (point.PointerId() != m_sourcesSplitterPointerId)
+            {
+                return;
+            }
+
+            auto const delta = static_cast<double>(point.Position().X) - m_sourcesSplitterStartX;
+            auto const room = RootGrid().ActualWidth() - SourcesPaneLeft - SourcesPaneGap - MinimumMessagesWidth;
+            auto const maximum = (std::max)(MinimumSourcesPaneWidth, (std::min)(MaximumSourcesPaneWidth, room));
+
+            m_sourcesPaneWidth = std::clamp(m_sourcesSplitterStartWidth + delta, MinimumSourcesPaneWidth, maximum);
+
+            UpdateAdvancedLayout();
+
+            args.Handled(true);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to resize the sources.")
+    }
+
+    // Also the capture being lost, such as to another window, which ends the drag the same way.
+    _Use_decl_annotations_
+    void MainWindow::OnSourcesSplitterReleased(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args)
+    {
+        try
+        {
+            if (auto const element = sender.try_as<xaml::UIElement>())
+            {
+                element.ReleasePointerCapture(args.Pointer());
+            }
+
+            if (!m_draggingSourcesSplitter)
+            {
+                return;
+            }
+
+            m_draggingSourcesSplitter = false;
+            SourcesSplitterLine().Opacity(0);
+
+            // every window opens with the width last dragged to
+            native::AppSettings::Current().SourcesPaneWidth(static_cast<uint32_t>(std::lround(m_sourcesPaneWidth)));
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to finish resizing the sources.")
+    }
+
+    // Hidden until the pointer is over it, then a line shows where it is.
+    _Use_decl_annotations_
+    void MainWindow::OnSourcesSplitterEntered(foundation::IInspectable const&, xaml::Input::PointerRoutedEventArgs const&)
+    {
+        try
+        {
+            SourcesSplitterLine().Opacity(1);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to highlight the sources splitter.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSourcesSplitterExited(foundation::IInspectable const&, xaml::Input::PointerRoutedEventArgs const&)
+    {
+        try
+        {
+            if (!m_draggingSourcesSplitter)
+            {
+                SourcesSplitterLine().Opacity(0);
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to clear the sources splitter highlight.")
     }
 }

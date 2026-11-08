@@ -56,6 +56,11 @@ namespace winrt::midi2monitor::implementation
         void OnFilterButtonClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnSourcesSearchChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
         void OnOnlySendingToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSourcesSplitterPressed(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnSourcesSplitterMoved(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnSourcesSplitterReleased(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnSourcesSplitterEntered(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnSourcesSplitterExited(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
 
         // called by the settings dialog
         void ApplyActivitySetting() noexcept;
@@ -279,6 +284,11 @@ namespace winrt::midi2monitor::implementation
         bool m_suppressSourceEvents{ false };
         bool m_usingSavedSources{ true };
         bool m_narrowLayout{ false };
+        bool m_draggingSourcesSplitter{ false };
+        double m_sourcesPaneWidth{ 284.0 };
+        uint32_t m_sourcesSplitterPointerId{ 0 };
+        double m_sourcesSplitterStartX{ 0 };
+        double m_sourcesSplitterStartWidth{ 0 };
         std::vector<SourceRow> m_sourceRows{};
         std::map<std::wstring, SourceChoice> m_sourceChoices{};
         ::midi2monitor::AdvancedConnections m_advancedConnections{};

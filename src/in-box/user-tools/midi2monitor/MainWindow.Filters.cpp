@@ -333,7 +333,12 @@ namespace winrt::midi2monitor::implementation
 
             heading.Children().Append(title);
             heading.Children().Append(showEverything);
-            panel.Children().Append(heading);
+            // the heading stays in place above the part that scrolls
+            controls::StackPanel top{};
+            top.Width(FilterFlyoutWidth);
+            top.Spacing(4);
+            top.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 12, 8));
+            top.Children().Append(heading);
 
             controls::TextBlock help{};
             help.Text(res::GetString(L"FilterHelp"));
@@ -342,7 +347,7 @@ namespace winrt::midi2monitor::implementation
                 .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
             help.Foreground(xaml::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
-            panel.Children().Append(help);
+            top.Children().Append(help);
 
             // a check box whose change runs the given update, then applies the filter
             auto const makeCheck = [weak](wchar_t const* key, bool isChecked, std::function<void(MainWindow&, bool)> update)
@@ -624,14 +629,27 @@ namespace winrt::midi2monitor::implementation
                     window.m_pipeline.PostFoldRepeats(value);
                 }));
 
+            // Short enough to fit in the window below the toolbar, so nothing is cut off at the
+            // bottom; the part under the heading scrolls when it can't all show.
+            auto const windowHeight = RootGrid().ActualHeight();
+            auto const scrollHeight = (std::max)(200.0, (windowHeight > 0 ? windowHeight - 220.0 : 620.0));
+
             controls::ScrollViewer scroller{};
             scroller.Content(panel);
-            scroller.MaxHeight(620);
+            scroller.MaxHeight((std::min)(620.0, scrollHeight));
             scroller.VerticalScrollBarVisibility(controls::ScrollBarVisibility::Auto);
             scroller.Padding(xaml::ThicknessHelper::FromLengths(0, 0, 12, 0));
 
+            controls::Grid layout{};
+            layout.RowDefinitions().Append(controls::RowDefinition{});
+            layout.RowDefinitions().Append(controls::RowDefinition{});
+            layout.RowDefinitions().GetAt(0).Height(xaml::GridLengthHelper::Auto());
+            controls::Grid::SetRow(scroller, 1);
+            layout.Children().Append(top);
+            layout.Children().Append(scroller);
+
             controls::Flyout flyout{};
-            flyout.Content(scroller);
+            flyout.Content(layout);
             flyout.Placement(controls::Primitives::FlyoutPlacementMode::BottomEdgeAlignedLeft);
 
             // the flyout's width comes from its presenter's MaxWidth, which is narrower than this
@@ -639,6 +657,10 @@ namespace winrt::midi2monitor::implementation
             presenterStyle.BasedOn(xaml::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"DefaultFlyoutPresenterStyle")).as<xaml::Style>());
             presenterStyle.Setters().Append(xaml::Setter{ xaml::FrameworkElement::MaxWidthProperty(), winrt::box_value(FilterFlyoutWidth + 64) });
+
+            // its own scrolling would move the heading away with the rest
+            presenterStyle.Setters().Append(xaml::Setter{ controls::ScrollViewer::VerticalScrollModeProperty(), winrt::box_value(controls::ScrollMode::Disabled) });
+            presenterStyle.Setters().Append(xaml::Setter{ controls::ScrollViewer::VerticalScrollBarVisibilityProperty(), winrt::box_value(controls::ScrollBarVisibility::Disabled) });
             flyout.FlyoutPresenterStyle(presenterStyle);
 
             midiapp::UseMenuBackdrop(flyout);

@@ -384,7 +384,13 @@ namespace winrt::midi2monitor::implementation
                 }
 
                 auto const groupNumber = static_cast<uint8_t>(groupIndex + 1);
-                auto const groupName = native::SourceTable::GroupName(row.Slot, groupNumber);
+                auto groupName = native::SourceTable::GroupName(row.Slot, groupNumber);
+
+                // many devices name their only group after themselves, which says nothing new
+                if (::CompareStringOrdinal(groupName.c_str(), -1, row.Name.c_str(), -1, TRUE) == CSTR_EQUAL)
+                {
+                    groupName = {};
+                }
 
                 controls::Grid groupGrid{};
                 groupGrid.Height(GroupRowHeight);
