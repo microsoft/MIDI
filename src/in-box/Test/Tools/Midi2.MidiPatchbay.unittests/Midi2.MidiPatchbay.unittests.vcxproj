@@ -110,7 +110,7 @@
     <ClInclude Include="SendQueueTests.h" />
     <ClInclude Include="CordPathTests.h" />
     <!-- shared by source with midipatchbay, so the patch model is tested exactly as it ships -->
-    <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageFilter.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\MessageFilter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\MessageTransform.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\ProcessingBlock.h" />
     <ClInclude Include="..\..\..\user-tools\midi-patchbay\PatchDocument.h" />
@@ -161,7 +161,7 @@
     <ClCompile Include="PatchFolderMoveTests.cpp" />
     <ClCompile Include="SendQueueTests.cpp" />
     <ClCompile Include="CordPathTests.cpp" />
-    <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageFilter.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\MessageFilter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\MessageTransform.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\ProcessingBlock.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-patchbay\PatchDocument.cpp" />

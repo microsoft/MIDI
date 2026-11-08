@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace midipatchbay
+namespace midiapp
 {
     namespace
     {

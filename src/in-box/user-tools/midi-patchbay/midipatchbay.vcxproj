@@ -132,7 +132,7 @@
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="CordPath.h" />
     <ClInclude Include="DialogParts.h" />
-    <ClInclude Include="MessageFilter.h" />
+    <ClInclude Include="..\midi-app-shared\MessageFilter.h" />
     <ClInclude Include="MessageText.h" />
     <ClInclude Include="MessageTransform.h" />
     <ClInclude Include="PatchCanvas.h" />
@@ -230,7 +230,7 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <!-- The patch model is free of pch.h and XAML so the unit tests compile it exactly as it ships. -->
-    <ClCompile Include="MessageFilter.cpp">
+    <ClCompile Include="..\midi-app-shared\MessageFilter.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MessageTransform.cpp">
