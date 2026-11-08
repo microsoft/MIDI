@@ -217,6 +217,11 @@ namespace midi2monitor
                     // this source just doesn't fold into this row
                 }
             }
+            else
+            {
+                // nothing folds across a notice, such as listening stopping and starting
+                m_lastVisibleBySource.clear();
+            }
         }
 
         // a full rebuild already shows every count
@@ -230,6 +235,21 @@ namespace midi2monitor
 
         while (m_records.size() > m_capacity)
         {
+            // the counts are of what is kept, so what leaves comes off them
+            auto const& oldest = m_records.front();
+
+            if (oldest.Kind == RecordKind::MidiMessage)
+            {
+                if (oldest.Folded)
+                {
+                    m_foldedMessageCount -= (m_foldedMessageCount > 0) ? 1 : 0;
+                }
+                else if (!IsVisible(oldest))
+                {
+                    m_hiddenMessageCount -= (m_hiddenMessageCount > 0) ? 1 : 0;
+                }
+            }
+
             m_records.pop_front();
             m_firstSequence++;
             evicted = true;
@@ -299,6 +319,11 @@ namespace midi2monitor
                 {
                     // this source just doesn't fold into this row
                 }
+            }
+            else
+            {
+                // nothing folds across a notice, such as listening stopping and starting
+                m_lastVisibleBySource.clear();
             }
         }
 

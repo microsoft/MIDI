@@ -372,13 +372,19 @@
   --channel, -c number   Optional. The channel number, 1 through 16, to monitor.
                          Only valid when a group is also supplied.
 
+  --simple, --advanced   Optional. Open in simple or advanced mode, for this window
+                         only. Without either, the mode you used last is used.
+                         An endpoint supplied in advanced mode is watched without
+                         changing your saved sources.
+
   --help, -h, -?         Show this help.
 
 Examples
 
   midi2monitor.exe
   midi2monitor.exe "\\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}"
-  midi2monitor.exe "\\?\SWD#MIDISRV#..." --group 1 --channel 10</value>
+  midi2monitor.exe "\\?\SWD#MIDISRV#..." --group 1 --channel 10
+  midi2monitor.exe --advanced</value>
   </data>
   <data name="CommandLineErrorTitle" xml:space="preserve">
     <value>That command line could not be used</value>
@@ -442,6 +448,9 @@ Examples
   </data>
   <data name="ExportHeaderGroup" xml:space="preserve">
     <value>Group</value>
+  </data>
+  <data name="ExportHeaderSource" xml:space="preserve">
+    <value>From</value>
   </data>
   <data name="ExportHeaderChannel" xml:space="preserve">
     <value>Channel</value>
@@ -714,5 +723,266 @@ Examples
   <data name="StatusFoldedMessagesFormat" xml:space="preserve">
     <value>Repeats folded: {0}</value>
     <comment>{0} is how many messages were counted on the row before them instead of getting a row</comment>
+  </data>
+
+  <!-- ============================ Advanced mode: window ============================ -->
+  <data name="AdvancedModeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Advanced mode</value>
+  </data>
+  <data name="AdvancedModeToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Advanced mode (Ctrl+Shift+A)</value>
+  </data>
+  <data name="EmptyStateBodySimple" xml:space="preserve">
+    <value>Pick a device above and select Start listening. Play a note or move a control, and the messages will appear here.</value>
+  </data>
+  <data name="EmptyStateBodyAdvanced" xml:space="preserve">
+    <value>Check one or more groups in Sources and select Start listening. Messages from all of them show here, each marked with where it came from.</value>
+  </data>
+  <data name="AdvancedListeningNoticeFormat" xml:space="preserve">
+    <value>Listening to {0} groups on {1} endpoints</value>
+    <comment>A note in the message list when listening starts in advanced mode. {0} is the number of groups, {1} the number of endpoints.</comment>
+  </data>
+  <data name="SourceOpenFailedNoticeFormat" xml:space="preserve">
+    <value>Couldn't listen to {0}. It may have been unplugged, or it may not accept another connection right now.</value>
+    <comment>{0} is the endpoint name</comment>
+  </data>
+  <data name="SessionSourcesInfoBar.Title" xml:space="preserve">
+    <value>Opened by another app</value>
+  </data>
+  <data name="SessionSourcesInfoFormat" xml:space="preserve">
+    <value>Watching {0}. Your saved sources are set aside, and nothing you change in this window changes them.</value>
+    <comment>{0} is the endpoint another app asked the Monitor to watch</comment>
+  </data>
+  <data name="AddToSavedSourcesButton.Content" xml:space="preserve">
+    <value>Add to my sources</value>
+  </data>
+  <data name="SwitchToSavedSourcesButton.Content" xml:space="preserve">
+    <value>Switch to my sources</value>
+  </data>
+  <data name="SourcesPaneToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show sources</value>
+  </data>
+  <data name="SourcesPaneToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show or hide the list of sources</value>
+  </data>
+  <data name="FilterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="FilterButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose which messages to show</value>
+  </data>
+  <data name="FilterButtonText.Text" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+
+  <!-- ============================ Advanced mode: Sources ============================ -->
+  <data name="SourcesHeader.Text" xml:space="preserve">
+    <value>Sources</value>
+  </data>
+  <data name="SourcesSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Find an endpoint or group</value>
+  </data>
+  <data name="SourcesSearchBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Find an endpoint or group</value>
+  </data>
+  <data name="OnlySendingToggle.Header" xml:space="preserve">
+    <value>Only show endpoints that are sending</value>
+  </data>
+  <data name="SourcesShowGroupsFormat" xml:space="preserve">
+    <value>Show the groups of {0}</value>
+    <comment>{0} is the endpoint name</comment>
+  </data>
+  <data name="SourcesHideGroupsFormat" xml:space="preserve">
+    <value>Hide the groups of {0}</value>
+    <comment>{0} is the endpoint name</comment>
+  </data>
+  <data name="SourcesGroupAccessibleFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>What a screen reader says for a group's check box. {0} is the endpoint name, {1} the group, such as "Group 1".</comment>
+  </data>
+  <data name="SourcesNamedGroupAccessibleFormat" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+    <comment>What a screen reader says for a group's check box. {0} is the endpoint name, {1} the group, such as "Group 1", {2} the group's name from the device.</comment>
+  </data>
+  <data name="SourcesSummaryNone" xml:space="preserve">
+    <value>Nothing checked yet</value>
+  </data>
+  <data name="SourcesSummaryFormat" xml:space="preserve">
+    <value>{0} groups on {1} endpoints</value>
+    <comment>{0} is the number of checked groups, {1} the number of endpoints they're on</comment>
+  </data>
+
+  <!-- ============================ Advanced mode: Filter ============================ -->
+  <data name="FilterTitle" xml:space="preserve">
+    <value>Show these messages</value>
+  </data>
+  <data name="FilterShowEverything" xml:space="preserve">
+    <value>Show everything</value>
+  </data>
+  <data name="FilterHelp" xml:space="preserve">
+    <value>Hidden messages are still captured. Change a filter and they come back.</value>
+  </data>
+  <data name="FilterMessageTypesHeader" xml:space="preserve">
+    <value>Message types</value>
+  </data>
+  <data name="FilterTypeUtility" xml:space="preserve">
+    <value>Utility</value>
+  </data>
+  <data name="FilterTypeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="FilterTypeMidi1" xml:space="preserve">
+    <value>MIDI 1.0 channel voice</value>
+  </data>
+  <data name="FilterTypeMidi2" xml:space="preserve">
+    <value>MIDI 2.0 channel voice</value>
+  </data>
+  <data name="FilterTypeSysEx7" xml:space="preserve">
+    <value>SysEx 7</value>
+  </data>
+  <data name="FilterTypeData128" xml:space="preserve">
+    <value>SysEx 8 and mixed data</value>
+  </data>
+  <data name="FilterTypeFlexData" xml:space="preserve">
+    <value>Flex data</value>
+  </data>
+  <data name="FilterTypeStream" xml:space="preserve">
+    <value>UMP stream</value>
+  </data>
+  <data name="FilterChannelsHeader" xml:space="preserve">
+    <value>Channels</value>
+  </data>
+  <data name="FilterChannelsAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="FilterChannelAccessibleFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+    <comment>{0} is the channel number, 1 through 16</comment>
+  </data>
+  <data name="FilterChannelRunFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+    <comment>A run of channels, such as "1 to 4". {0} is the first channel, {1} the last.</comment>
+  </data>
+  <data name="FilterVoiceHeader" xml:space="preserve">
+    <value>Channel voice messages</value>
+  </data>
+  <data name="FilterVoiceNoteOn" xml:space="preserve">
+    <value>Note on</value>
+  </data>
+  <data name="FilterVoiceNoteOff" xml:space="preserve">
+    <value>Note off</value>
+  </data>
+  <data name="FilterVoicePolyPressure" xml:space="preserve">
+    <value>Poly pressure</value>
+  </data>
+  <data name="FilterVoiceControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="FilterVoiceProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="FilterVoiceChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="FilterVoicePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="FilterVoicePerNote" xml:space="preserve">
+    <value>Per-note (MIDI 2.0)</value>
+  </data>
+  <data name="FilterVoiceRpnNrpn" xml:space="preserve">
+    <value>RPN and NRPN (MIDI 2.0)</value>
+  </data>
+  <data name="FilterSystemHeader" xml:space="preserve">
+    <value>System messages</value>
+  </data>
+  <data name="FilterSystemTimeCode" xml:space="preserve">
+    <value>Time code</value>
+  </data>
+  <data name="FilterSystemSongPosition" xml:space="preserve">
+    <value>Song position</value>
+  </data>
+  <data name="FilterSystemSongSelect" xml:space="preserve">
+    <value>Song select</value>
+  </data>
+  <data name="FilterSystemTuneRequest" xml:space="preserve">
+    <value>Tune request</value>
+  </data>
+  <data name="FilterSystemTransport" xml:space="preserve">
+    <value>Start, Continue, Stop</value>
+  </data>
+  <data name="FilterSystemReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="FilterSystemClock" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="FilterSystemActiveSensing" xml:space="preserve">
+    <value>Active Sensing</value>
+  </data>
+  <data name="FilterNotesHeader" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="FilterNotesLimit" xml:space="preserve">
+    <value>Only notes from</value>
+  </data>
+  <data name="FilterNotesTo" xml:space="preserve">
+    <value>to</value>
+  </data>
+  <data name="FilterNotesLowest" xml:space="preserve">
+    <value>Lowest note to show</value>
+  </data>
+  <data name="FilterNotesHighest" xml:space="preserve">
+    <value>Highest note to show</value>
+  </data>
+  <data name="FilterFoldRepeats" xml:space="preserve">
+    <value>Fold repeated messages into one row, with a count</value>
+  </data>
+  <data name="ChipRemoveFormat" xml:space="preserve">
+    <value>Remove "{0}"</value>
+    <comment>The close button on a chip. {0} is what the chip says.</comment>
+  </data>
+  <data name="ChipAddSource" xml:space="preserve">
+    <value>+ Add</value>
+  </data>
+  <data name="ChipClockHidden" xml:space="preserve">
+    <value>Clock hidden</value>
+  </data>
+  <data name="ChipActiveSensingHidden" xml:space="preserve">
+    <value>Active Sensing hidden</value>
+  </data>
+  <data name="ChipMessageTypesHidden" xml:space="preserve">
+    <value>Some message types hidden</value>
+  </data>
+  <data name="ChipNoChannels" xml:space="preserve">
+    <value>No channels</value>
+  </data>
+  <data name="ChipChannelsFormat" xml:space="preserve">
+    <value>Channels {0}</value>
+    <comment>{0} is a list of channels, such as "1 to 4, 10"</comment>
+  </data>
+  <data name="ChipVoiceHidden" xml:space="preserve">
+    <value>Some channel messages hidden</value>
+  </data>
+  <data name="ChipSystemHidden" xml:space="preserve">
+    <value>Some system messages hidden</value>
+  </data>
+  <data name="ChipNotesFormat" xml:space="preserve">
+    <value>Notes {0} to {1}</value>
+    <comment>{0} and {1} are note names with numbers, such as "C3 (60)"</comment>
+  </data>
+  <data name="ChipRepeatsFolded" xml:space="preserve">
+    <value>Repeats folded</value>
+  </data>
+
+  <!-- ============================ Advanced mode: Settings ============================ -->
+  <data name="SettingsAdvancedHeader.Text" xml:space="preserve">
+    <value>Advanced mode</value>
+  </data>
+  <data name="SettingsShowActivityCheckBox.Content" xml:space="preserve">
+    <value>Show which endpoints are sending</value>
+  </data>
+  <data name="SettingsShowActivityDescription.Text" xml:space="preserve">
+    <value>While listening, this opens every endpoint, not only the ones you're watching, so the Sources list can light up the ones sending messages. Turn it off if listening is slow to start on a PC with many devices.</value>
   </data>
 </root>

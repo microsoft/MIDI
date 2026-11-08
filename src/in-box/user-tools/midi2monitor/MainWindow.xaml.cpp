@@ -99,6 +99,7 @@ namespace winrt::midi2monitor::implementation
         InitializeControlsFromSettings();
         InitializePipeline();
         BuildChannelList();
+        InitializeAdvancedMode();
         StartEndpointWatcher();
 
         UpdateCommandStates();
@@ -249,6 +250,7 @@ namespace winrt::midi2monitor::implementation
         UpdateTitleBarInsets();
         UpdateCaptureButtonLayout();
         UpdateStatusBarLayout();
+        UpdateAdvancedLayout();
     }
 
     void MainWindow::UpdateStatusBarLayout() noexcept
@@ -571,6 +573,9 @@ namespace winrt::midi2monitor::implementation
 
             m_listSource->Refresh();
 
+            // repeats folded onto rows already on screen
+            m_listSource->ApplyFoldUpdates(m_pipeline.TakeFoldUpdates());
+
             if (wasAtEnd)
             {
                 ScrollMessageListToEnd();
@@ -689,6 +694,23 @@ namespace winrt::midi2monitor::implementation
                 DroppedCountText().Visibility(xaml::Visibility::Collapsed);
             }
 
+            // advanced mode says how much the filter and folding are keeping off the list
+            auto const showHidden = m_advancedMode && snapshot.HiddenMessageCount > 0;
+            auto const showFolded = m_advancedMode && snapshot.FoldedMessageCount > 0;
+
+            HiddenCountText().Visibility(showHidden ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            FoldedCountText().Visibility(showFolded ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (showHidden)
+            {
+                HiddenCountText().Text(res::FormatString(L"StatusHiddenMessagesFormat", snapshot.HiddenMessageCount));
+            }
+
+            if (showFolded)
+            {
+                FoldedCountText().Text(res::FormatString(L"StatusFoldedMessagesFormat", snapshot.FoldedMessageCount));
+            }
+
             ClearButton().IsEnabled(snapshot.VisibleCount > 0 || snapshot.TotalMessageCount > 0);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the status line.")
@@ -715,6 +737,9 @@ namespace winrt::midi2monitor::implementation
         }
 
         m_pipeline.PostHiddenTraits(traits);
+
+        // advanced mode shows these two as filter chips
+        RebuildChips();
     }
 
     _Use_decl_annotations_

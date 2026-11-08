@@ -10,6 +10,7 @@
 #include "MainWindow.g.h"
 
 #include "AppSettings.h"
+#include "AdvancedConnections.h"
 #include "MessageListSource.h"
 #include "MessagePipeline.h"
 
@@ -45,6 +46,19 @@ namespace winrt::midi2monitor::implementation
         void OnClearCaptureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnClearAcceleratorInvoked(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnCopyAcceleratorInvoked(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+
+        // advanced mode (MainWindow.Advanced.cpp, MainWindow.Sources.cpp, MainWindow.Filters.cpp)
+        void OnAdvancedModeToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnAdvancedModeAcceleratorInvoked(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnAddToSavedSourcesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSwitchToSavedSourcesClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSourcesPaneToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnFilterButtonClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSourcesSearchChanged(_In_ foundation::IInspectable const& sender, _In_ controls::TextChangedEventArgs const& args);
+        void OnOnlySendingToggled(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
+        // called by the settings dialog
+        void ApplyActivitySetting() noexcept;
 
         void OnMessagesContextRequested(xaml::UIElement const& sender, xaml::Input::ContextRequestedEventArgs const& args);
         void OnMessagesContextFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
@@ -124,6 +138,72 @@ namespace winrt::midi2monitor::implementation
         void SaveSimpleSelection() noexcept;
         bool ShouldRememberSelection() noexcept;
 
+        // ---------------- advanced mode ----------------
+
+        // One endpoint in the Sources list, and the controls that show it.
+        struct SourceRowGroup
+        {
+            uint8_t GroupNumber{ 0 };
+            controls::Grid Row{ nullptr };
+            controls::CheckBox Check{ nullptr };
+            xaml::Shapes::Ellipse Light{ nullptr };
+            xaml::Shapes::Rectangle Swatch{ nullptr };
+        };
+
+        struct SourceRow
+        {
+            std::wstring EndpointDeviceId{};
+            winrt::hstring Name{};
+            uint16_t Slot{ 0xFFFF };
+            std::array<bool, 16> Declared{};
+            bool Expanded{ false };
+            bool Sending{ false };
+
+            controls::Grid Row{ nullptr };
+            controls::CheckBox Check{ nullptr };
+            controls::Button Expander{ nullptr };
+            xaml::Shapes::Ellipse Light{ nullptr };
+            std::vector<SourceRowGroup> Groups{};
+        };
+
+        // The groups being listened to, by lowercase endpoint id. Endpoints that aren't here now
+        // keep their entry, so a device unplugged for a while comes back checked.
+        struct SourceChoice
+        {
+            std::wstring EndpointDeviceId{};
+            uint32_t GroupMask{ 0 };
+        };
+
+        void InitializeAdvancedMode() noexcept;
+        void ApplyMode(_In_ bool advanced, _In_ bool remember) noexcept;
+        void UpdateAdvancedLayout() noexcept;
+        void LoadSavedSources() noexcept;
+        void PersistSources() noexcept;
+        void UseSessionSources(_In_ std::wstring const& endpointDeviceId, _In_ std::optional<uint8_t> groupNumber) noexcept;
+        uint32_t AllGroupsMask(_In_ SourceRow const& row) const noexcept;
+        uint32_t GroupMaskFor(_In_ std::wstring const& endpointDeviceId) const noexcept;
+        void SetGroupMask(_In_ std::wstring const& endpointDeviceId, _In_ uint32_t mask) noexcept;
+        size_t CheckedGroupCount() const noexcept;
+
+        void RefreshSourcesList() noexcept;
+        void BuildSourceRow(_Inout_ SourceRow& row) noexcept;
+        void UpdateSourceRowStates() noexcept;
+        void ApplySourcesSearchAndActivity() noexcept;
+        void OnSourceCheckChanged(_In_ std::wstring const& endpointDeviceId, _In_ uint8_t groupNumber, _In_ bool isChecked) noexcept;
+        void ToggleSourceExpanded(_In_ std::wstring const& endpointDeviceId) noexcept;
+        void PushSlotMasks() noexcept;
+        void UpdateDesiredConnections() noexcept;
+        void UpdateSourcesSummary() noexcept;
+        void RefreshActivityLights() noexcept;
+
+        void StartAdvancedListening() noexcept;
+        void StopAdvancedListening(_In_ bool addNotice) noexcept;
+
+        void LoadMessageFilter() noexcept;
+        void ApplyMessageFilter() noexcept;
+        void BuildFilterFlyout() noexcept;
+        void RebuildChips() noexcept;
+
         void OnPipelineContentChanged() noexcept;
         void RefreshMessageList() noexcept;
         void UpdateStatusLine() noexcept;
@@ -186,6 +266,19 @@ namespace winrt::midi2monitor::implementation
         bool m_suppressZoomHandling{ false };
         bool m_clearConfirmationOpen{ false };
         winrt::hstring m_monitoredEndpointName{};
+
+        bool m_advancedMode{ false };
+        bool m_advancedListening{ false };
+        bool m_suppressModeToggle{ false };
+        bool m_suppressSourceEvents{ false };
+        bool m_usingSavedSources{ true };
+        bool m_narrowLayout{ false };
+        std::vector<SourceRow> m_sourceRows{};
+        std::map<std::wstring, SourceChoice> m_sourceChoices{};
+        ::midi2monitor::AdvancedConnections m_advancedConnections{};
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_activityTimer{ nullptr };
+        ::midiapp::MessageFilter m_messageFilter{};
+        controls::Flyout m_filterFlyout{ nullptr };
     };
 }
 

@@ -15,6 +15,7 @@
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator Modifiers="Control" Key="L" Invoked="OnClearAcceleratorInvoked" />
             <KeyboardAccelerator Modifiers="Control" Key="C" Invoked="OnCopyAcceleratorInvoked" />
+            <KeyboardAccelerator Modifiers="Control,Shift" Key="A" Invoked="OnAdvancedModeAcceleratorInvoked" />
         </Grid.KeyboardAccelerators>
 
         <Grid.Resources>
@@ -113,6 +114,21 @@
                     <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
                 </StackPanel.Resources>
+
+                <ToggleButton x:Name="AdvancedModeToggle"
+                              x:Uid="AdvancedModeToggle"
+                              Width="46"
+                              Height="32"
+                              MinWidth="0"
+                              MinHeight="0"
+                              Padding="0"
+                              CornerRadius="0"
+                              Checked="OnAdvancedModeToggled"
+                              Unchecked="OnAdvancedModeToggled">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              Glyph="&#xE9E9;"
+                              FontSize="14" />
+                </ToggleButton>
 
                 <Button x:Name="SettingsButton"
                         x:Uid="SettingsButton"
@@ -299,7 +315,171 @@
             </Grid>
         </Border>
 
-        <!-- ============================== Middle: the messages ============================== -->
+        <!-- ============================ Middle: the messages ============================ -->
+        <!-- Advanced mode's top: why the sources look different (when another app opened this
+             window), then listening, the filter and its chips. Replaces HeaderCard. -->
+        <StackPanel x:Name="AdvancedHeaderPanel"
+                    Grid.Row="1"
+                    Margin="12,4,12,8"
+                    Spacing="8"
+                    Visibility="Collapsed">
+            <InfoBar x:Name="SessionSourcesInfoBar"
+                     x:Uid="SessionSourcesInfoBar"
+                     Severity="Informational"
+                     IsOpen="False"
+                     IsClosable="True">
+                <InfoBar.Content>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                        <Button x:Name="AddToSavedSourcesButton"
+                                x:Uid="AddToSavedSourcesButton"
+                                Content="Add to my sources"
+                                Click="OnAddToSavedSourcesClick" />
+                        <Button x:Name="SwitchToSavedSourcesButton"
+                                x:Uid="SwitchToSavedSourcesButton"
+                                Content="Switch to my sources"
+                                Click="OnSwitchToSavedSourcesClick" />
+                    </StackPanel>
+                </InfoBar.Content>
+            </InfoBar>
+
+            <Border x:Name="AdvancedToolbarCard"
+                    Padding="8"
+                    CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ToggleButton x:Name="SourcesPaneToggle"
+                                  x:Uid="SourcesPaneToggle"
+                                  Grid.Column="0"
+                                  Padding="8,0,8,0"
+                                  MinWidth="0"
+                                  Height="32"
+                                  VerticalAlignment="Center"
+                                  Checked="OnSourcesPaneToggled"
+                                  Unchecked="OnSourcesPaneToggled">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE700;" FontSize="14" />
+                    </ToggleButton>
+
+                    <Button x:Name="AdvancedCaptureButton"
+                            Grid.Column="1"
+                            MinWidth="150"
+                            Height="32"
+                            VerticalAlignment="Center"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="OnCaptureButtonClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon x:Name="AdvancedCaptureButtonIcon"
+                                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      Glyph="&#xE768;"
+                                      FontSize="14" />
+                            <TextBlock x:Name="AdvancedCaptureButtonText" Text="Start listening" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="FilterButton"
+                            x:Uid="FilterButton"
+                            Grid.Column="2"
+                            Height="32"
+                            VerticalAlignment="Center"
+                            Click="OnFilterButtonClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE71C;" FontSize="14" />
+                            <TextBlock x:Uid="FilterButtonText" Text="Filter" />
+                            <Border x:Name="FilterCountBadge"
+                                    Visibility="Collapsed"
+                                    MinWidth="18"
+                                    Height="18"
+                                    Padding="5,0,5,0"
+                                    CornerRadius="9"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                <TextBlock x:Name="FilterCountText"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                            </Border>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- one chip for each filter rule, and in a narrow window one for each source.
+                         Built in code. -->
+                    <ScrollViewer Grid.Column="3"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Enabled"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  VerticalScrollMode="Disabled">
+                        <StackPanel x:Name="ChipsPanel" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- Advanced mode's Sources: every endpoint, its groups under it, a check box on each.
+             The rows are built in code (MainWindow.Sources.cpp). Beside the messages in a wide
+             window, over them in a narrow one. -->
+        <Border x:Name="SourcesCard"
+                Grid.Row="2"
+                Width="284"
+                Margin="12,0,0,8"
+                HorizontalAlignment="Left"
+                Canvas.ZIndex="10"
+                Visibility="Collapsed"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid RowSpacing="8" Padding="0,12,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Uid="SourcesHeader"
+                           Text="Sources"
+                           Margin="12,0,12,0"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                <TextBox x:Name="SourcesSearchBox"
+                         x:Uid="SourcesSearchBox"
+                         Grid.Row="1"
+                         Margin="12,0,12,0"
+                         PlaceholderText="Find an endpoint or group"
+                         TextChanged="OnSourcesSearchChanged" />
+
+                <ScrollViewer Grid.Row="2"
+                              Padding="4,0,4,0"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="SourcesListPanel" />
+                </ScrollViewer>
+
+                <Border Grid.Row="3"
+                        Padding="12,8,12,10"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="OnlySendingToggle"
+                                      x:Uid="OnlySendingToggle"
+                                      Header="Only show endpoints that are sending"
+                                      Toggled="OnOnlySendingToggled" />
+                        <TextBlock x:Name="SourcesSummaryText"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
         <Border Grid.Row="2"
                 x:Name="MessagesCard"
                 Margin="12,0,12,8"
@@ -686,7 +866,8 @@
                                Text="Nothing to show yet"
                                HorizontalAlignment="Center"
                                Style="{ThemeResource SubtitleTextBlockStyle}" />
-                    <TextBlock x:Uid="EmptyStateBody"
+                    <TextBlock x:Name="EmptyStateBody"
+                               x:Uid="EmptyStateBody"
                                Text="Pick a device above and select Start listening. Play a note or move a control, and the messages will appear here."
                                HorizontalAlignment="Center"
                                TextAlignment="Center"
@@ -718,6 +899,16 @@
                            VerticalAlignment="Center"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                <TextBlock x:Name="HiddenCountText"
+                           Visibility="Collapsed"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="FoldedCountText"
+                           Visibility="Collapsed"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                 <Border Width="1"
                         Height="18"

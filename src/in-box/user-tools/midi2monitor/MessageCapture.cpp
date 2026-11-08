@@ -100,23 +100,30 @@ namespace midi2monitor
         std::lock_guard<std::mutex> guard{ m_stagingLock };
 
         uint16_t slot{ NoSourceSlot };
+        bool mapped{ false };
+
+        for (auto const& entry : m_connections)
+        {
+            if (entry.first == connectionId)
+            {
+                slot = entry.second;
+                mapped = true;
+                break;
+            }
+        }
 
         if (advanced)
         {
-            for (auto const& entry : m_connections)
-            {
-                if (entry.first == connectionId)
-                {
-                    slot = entry.second;
-                    break;
-                }
-            }
-
             // a connection that is closing, or one this window doesn't know about
             if (slot >= MaximumSourceSlots)
             {
                 return S_OK;
             }
+        }
+        else if (mapped)
+        {
+            // an advanced mode connection still closing after a switch to simple mode
+            return S_OK;
         }
 
         auto const slotMask = advanced ? m_slotMasks[slot].load(std::memory_order_relaxed) : 0u;

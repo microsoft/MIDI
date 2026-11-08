@@ -70,6 +70,34 @@ namespace midi2monitor
         uint8_t LastChannelNumber() const noexcept { return m_lastChannelNumber; }
         void LastSimpleSelection(_In_ std::wstring const& endpointDeviceId, _In_ uint8_t groupNumber, _In_ uint8_t channelNumber) noexcept;
 
+        // ---------------- advanced mode ----------------
+
+        bool AdvancedMode() const noexcept { return m_advancedMode; }
+        void AdvancedMode(_In_ bool value) noexcept;
+
+        // The groups to listen to, one endpoint a line: the endpoint device id, a tab, and the
+        // groups as a hex mask where bit 0 is group 1.
+        std::wstring AdvancedSources() const noexcept { return m_advancedSources; }
+        void AdvancedSources(_In_ std::wstring const& value) noexcept;
+
+        // The shared message filter as JSON, written and read with FilterToJson and FilterFromJson.
+        std::wstring AdvancedFilter() const noexcept { return m_advancedFilter; }
+        void AdvancedFilter(_In_ std::wstring const& value) noexcept;
+
+        bool FoldRepeats() const noexcept { return m_foldRepeats; }
+        void FoldRepeats(_In_ bool value) noexcept;
+
+        // Opens every endpoint while listening, so the Sources list can say which are sending.
+        // Off for a PC with so many endpoints that opening them all is slow.
+        bool ShowEndpointActivity() const noexcept { return m_showEndpointActivity; }
+        void ShowEndpointActivity(_In_ bool value) noexcept;
+
+        bool OnlySendingEndpoints() const noexcept { return m_onlySendingEndpoints; }
+        void OnlySendingEndpoints(_In_ bool value) noexcept;
+
+        bool SourcesPaneOpen() const noexcept { return m_sourcesPaneOpen; }
+        void SourcesPaneOpen(_In_ bool value) noexcept;
+
         static constexpr uint32_t MinimumRetainedMessageCount = 100;
         static constexpr uint32_t MaximumRetainedMessageCount = 500000;
         static constexpr uint32_t DefaultRetainedMessageCount = 10000;
@@ -104,5 +132,12 @@ namespace midi2monitor
         std::wstring m_lastEndpointDeviceId{};
         uint8_t m_lastGroupNumber{ 0 };
         uint8_t m_lastChannelNumber{ 0 };
+        bool m_advancedMode{ false };
+        std::wstring m_advancedSources{};
+        std::wstring m_advancedFilter{};
+        bool m_foldRepeats{ false };
+        bool m_showEndpointActivity{ true };
+        bool m_onlySendingEndpoints{ false };
+        bool m_sourcesPaneOpen{ true };
     };
 }

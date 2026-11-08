@@ -26,6 +26,17 @@ namespace midi2monitor
         constexpr wchar_t ValueLastEndpoint[] = L"LastEndpointDeviceId";
         constexpr wchar_t ValueLastGroup[] = L"LastGroupNumber";
         constexpr wchar_t ValueLastChannel[] = L"LastChannelNumber";
+        constexpr wchar_t ValueAdvancedMode[] = L"AdvancedMode";
+        constexpr wchar_t ValueAdvancedSources[] = L"AdvancedSources";
+        constexpr wchar_t ValueAdvancedFilter[] = L"AdvancedFilter";
+        constexpr wchar_t ValueFoldRepeats[] = L"FoldRepeats";
+        constexpr wchar_t ValueShowEndpointActivity[] = L"ShowEndpointActivity";
+        constexpr wchar_t ValueOnlySendingEndpoints[] = L"OnlySendingEndpoints";
+        constexpr wchar_t ValueSourcesPaneOpen[] = L"SourcesPaneOpen";
+
+        // Generous: 256 endpoints of a few hundred characters each. A longer value isn't ours.
+        constexpr size_t MaximumSourcesLength = 256 * 1024;
+        constexpr size_t MaximumFilterLength = 16 * 1024;
 
         // Endpoint ids are a few hundred characters at most. A longer value read back isn't one.
         constexpr size_t MaximumEndpointIdLength = 1024;
@@ -78,6 +89,99 @@ namespace midi2monitor
 
         m_lastGroupNumber = static_cast<uint8_t>(group <= 16 ? group : 0);
         m_lastChannelNumber = static_cast<uint8_t>(channel <= 16 ? channel : 0);
+
+        m_advancedMode = ReadDword(ValueAdvancedMode, 0) != 0;
+        m_foldRepeats = ReadDword(ValueFoldRepeats, 0) != 0;
+        m_showEndpointActivity = ReadDword(ValueShowEndpointActivity, 1) != 0;
+        m_onlySendingEndpoints = ReadDword(ValueOnlySendingEndpoints, 0) != 0;
+        m_sourcesPaneOpen = ReadDword(ValueSourcesPaneOpen, 1) != 0;
+
+        m_advancedSources = ReadString(ValueAdvancedSources, L"");
+
+        if (m_advancedSources.size() > MaximumSourcesLength)
+        {
+            m_advancedSources.clear();
+        }
+
+        m_advancedFilter = ReadString(ValueAdvancedFilter, L"");
+
+        if (m_advancedFilter.size() > MaximumFilterLength)
+        {
+            m_advancedFilter.clear();
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AdvancedMode(bool value) noexcept
+    {
+        m_advancedMode = value;
+        WriteDword(ValueAdvancedMode, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AdvancedSources(std::wstring const& value) noexcept
+    {
+        try
+        {
+            if (value == m_advancedSources)
+            {
+                return;
+            }
+
+            m_advancedSources = value;
+            WriteString(ValueAdvancedSources, value);
+        }
+        catch (...)
+        {
+            // kept in memory only; written the next time it changes
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AdvancedFilter(std::wstring const& value) noexcept
+    {
+        try
+        {
+            if (value == m_advancedFilter)
+            {
+                return;
+            }
+
+            m_advancedFilter = value;
+            WriteString(ValueAdvancedFilter, value);
+        }
+        catch (...)
+        {
+            // kept in memory only; written the next time it changes
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::FoldRepeats(bool value) noexcept
+    {
+        m_foldRepeats = value;
+        WriteDword(ValueFoldRepeats, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ShowEndpointActivity(bool value) noexcept
+    {
+        m_showEndpointActivity = value;
+        WriteDword(ValueShowEndpointActivity, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::OnlySendingEndpoints(bool value) noexcept
+    {
+        m_onlySendingEndpoints = value;
+        WriteDword(ValueOnlySendingEndpoints, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SourcesPaneOpen(bool value) noexcept
+    {
+        m_sourcesPaneOpen = value;
+        WriteDword(ValueSourcesPaneOpen, value ? 1u : 0u);
     }
 
     _Use_decl_annotations_

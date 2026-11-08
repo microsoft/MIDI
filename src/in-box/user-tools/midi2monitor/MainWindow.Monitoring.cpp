@@ -170,6 +170,11 @@ namespace winrt::midi2monitor::implementation
             }
 
             EndpointComboBox().SelectedIndex(selectedIndex);
+
+            if (m_advancedMode)
+            {
+                RefreshSourcesList();
+            }
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to refresh the endpoint list.")
     }
@@ -368,8 +373,8 @@ namespace winrt::midi2monitor::implementation
             ApplyFilterToPipeline();
 
             // started here rather than at launch, so the group and channel filters are already
-            // in place for the first message
-            if (m_startupMonitorPending && !m_monitoring && !m_connecting)
+            // in place for the first message. Advanced mode starts once its Sources list is built.
+            if (m_startupMonitorPending && !m_monitoring && !m_connecting && !m_advancedMode)
             {
                 m_startupMonitorPending = false;
                 StartMonitoring();
@@ -504,6 +509,13 @@ namespace winrt::midi2monitor::implementation
 
     void MainWindow::StartMonitoring() noexcept
     {
+        if (m_advancedMode)
+        {
+            StartAdvancedListening();
+            return;
+        }
+
+        m_pipeline.Advanced(false);
         StartMonitoringAsync();
     }
 
@@ -613,7 +625,17 @@ namespace winrt::midi2monitor::implementation
     {
         try
         {
+            // stopped, or switched to advanced mode, while this was connecting: let it go
+            auto const abandoned = !m_connecting || m_advancedMode;
+
             m_connecting = false;
+
+            if (abandoned && failureBodyKey.empty())
+            {
+                TearDownConnectionAsync(session, connection, connectionRaw);
+                UpdateCommandStates();
+                return;
+            }
 
             if (!failureBodyKey.empty())
             {
@@ -696,6 +718,12 @@ namespace winrt::midi2monitor::implementation
     _Use_decl_annotations_
     void MainWindow::StopMonitoring(bool addNotice) noexcept
     {
+        if (m_advancedListening)
+        {
+            StopAdvancedListening(addNotice);
+            return;
+        }
+
         try
         {
             m_pipeline.CaptureEnabled(false);
@@ -757,6 +785,24 @@ namespace winrt::midi2monitor::implementation
             }
 
             EndpointComboBox().IsEnabled(!m_monitoring && !m_connecting);
+
+            // advanced mode's own button, which needs a checked group rather than a device
+            AdvancedCaptureButton().IsEnabled(m_advancedListening || CheckedGroupCount() > 0);
+            AdvancedCaptureButtonIcon().Glyph(m_advancedListening ? L"\uE71A" : L"\uE768");
+            AdvancedCaptureButtonText().Text(res::GetString(m_advancedListening ? L"StopMonitoringButtonText" : L"StartMonitoringButtonText"));
+            winrt::Microsoft::UI::Xaml::Automation::AutomationProperties::SetName(
+                AdvancedCaptureButton(), res::GetString(m_advancedListening ? L"StopMonitoringButtonName" : L"StartMonitoringButtonName"));
+
+            if (m_advancedListening)
+            {
+                AdvancedCaptureButton().Style(nullptr);
+            }
+            else
+            {
+                AdvancedCaptureButton().Style(
+                    xaml::Application::Current().Resources()
+                        .Lookup(winrt::box_value(L"AccentButtonStyle")).as<xaml::Style>());
+            }
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the command states.")
     }

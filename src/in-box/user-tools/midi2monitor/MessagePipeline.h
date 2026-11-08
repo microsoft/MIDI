@@ -36,6 +36,10 @@ namespace midi2monitor
             return m_callbackInterface.get();
         }
 
+        // For advanced mode's connection thread, which may outlive the window by a moment while
+        // it closes its connections, so it holds a reference of its own.
+        winrt::com_ptr<MessageCapture> CaptureObject() const noexcept { return m_capture; }
+
         // Raised on the capture worker thread, already coalesced. The handler is responsible
         // for marshaling to the UI thread, and calls AcknowledgeContentChanged when it runs.
         void ContentChangedHandler(std::function<void()> handler) noexcept;

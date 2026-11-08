@@ -131,6 +131,7 @@
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="MessageCapture.h" />
     <ClInclude Include="SourceTable.h" />
+    <ClInclude Include="AdvancedConnections.h" />
     <ClInclude Include="MessagePipeline.h" />
     <ClInclude Include="MessageStore.h" />
     <ClInclude Include="MessageListSource.h" />
@@ -190,6 +191,10 @@
     <ClCompile Include="MainWindow.Export.cpp" />
     <ClCompile Include="MainWindow.Commands.cpp" />
     <ClCompile Include="SourceTable.cpp" />
+    <ClCompile Include="AdvancedConnections.cpp" />
+    <ClCompile Include="MainWindow.Advanced.cpp" />
+    <ClCompile Include="MainWindow.Sources.cpp" />
+    <ClCompile Include="MainWindow.Filters.cpp" />
     <ClCompile Include="SettingsDialog.xaml.cpp">
       <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </ClCompile>

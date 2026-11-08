@@ -53,6 +53,7 @@ namespace winrt::midi2monitor::implementation
             UpdateBackgroundColorState();
             RetentionNumberBox().Value(static_cast<double>(settings.RetainedMessageCount()));
             AskBeforeClearCheckBox().IsChecked(settings.AskBeforeClear());
+            ShowActivityCheckBox().IsChecked(settings.ShowEndpointActivity());
 
             // Its spin buttons pop up for a finger or a pen, not for the mouse.
             midiapp::UseTouchSpinButtons(RetentionNumberBox());
@@ -263,5 +264,27 @@ namespace winrt::midi2monitor::implementation
             native::AppSettings::Current().AskBeforeClear(isChecked != nullptr && isChecked.Value());
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the clear confirmation setting.")
+    }
+
+    _Use_decl_annotations_
+    void SettingsDialog::OnShowActivityChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        if (m_initializing)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const isChecked = ShowActivityCheckBox().IsChecked();
+
+            native::AppSettings::Current().ShowEndpointActivity(isChecked != nullptr && isChecked.Value());
+
+            if (m_owner != nullptr)
+            {
+                winrt::get_self<MainWindow>(m_owner)->ApplyActivitySetting();
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to change the activity setting.")
     }
 }
