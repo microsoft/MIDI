@@ -1,0 +1,255 @@
+/* PROTOTYPE. Styles for the Windows MIDI Monitor comps (advanced mode, clear confirmation) and the
+   MIDI Patchbay connection monitor window. Approximates the WinUI 3 dark theme with the same tokens
+   as the MIDI Settings, MIDI Patchbay and MIDI Sequencer comps. Nothing here is product code. */
+
+:root {
+    --bg: #202020;
+    --layer: rgba(58, 58, 58, 0.30);
+    --card: rgba(255, 255, 255, 0.0512);
+    --card-strong: rgba(255, 255, 255, 0.0837);
+    --stroke: rgba(255, 255, 255, 0.0698);
+    --stroke-strong: rgba(255, 255, 255, 0.14);
+    --divider: rgba(255, 255, 255, 0.0837);
+    --control: rgba(255, 255, 255, 0.0605);
+    --control-stroke: rgba(255, 255, 255, 0.093);
+    --text: #FFFFFF;
+    --text2: rgba(255, 255, 255, 0.786);
+    --text3: rgba(255, 255, 255, 0.5442);
+    --text-disabled: rgba(255, 255, 255, 0.3628);
+    --accent: #60CDFF;
+    --accent-dim: rgba(96, 205, 255, 0.14);
+    --on-accent: #000000;
+    --caution: #FCE100;
+    --caution-bg: #433519;
+    --success: #6CCB5F;
+    --info-bg: #262f37;
+    --mark: #FFB547;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.52);
+    --dialog-shadow: 0 32px 64px rgba(0, 0, 0, 0.56), 0 2px 21px rgba(0, 0, 0, 0.40);
+
+    /* message type chiclets, close to the app's MonitorPalette */
+    --mt-util: #8A8A8A;
+    --mt-sys: #E8A33D;
+    --mt-m1: #4CC2FF;
+    --mt-sx7: #C38BFF;
+    --mt-m2: #3FD1A6;
+    --mt-flex: #FF8FB1;
+    --mt-stream: #B9B96A;
+
+    /* one color for each source in advanced mode */
+    --src1: #4CC2FF;
+    --src2: #F7A75C;
+    --src3: #A78BFA;
+    --src4: #6CCB5F;
+    --src5: #FF8FB1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #101010;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+.gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-style: normal; font-weight: normal; line-height: 1; }
+.mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+.spacer { flex: 1; }
+.hstack { display: flex; align-items: center; gap: 8px; }
+.vstack { display: flex; flex-direction: column; gap: 8px; }
+
+/* ----------------------------------------------------------------- page */
+
+.page { width: 1300px; padding: 16px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.page.wide { width: 1600px; }
+.row { display: flex; gap: 20px; align-items: flex-start; }
+
+.caption-above { font-size: 13px; color: var(--text3); line-height: 1.5; max-width: 1240px; margin: 0 0 -4px 2px; }
+.caption-above b { color: var(--text); font-weight: 600; }
+
+.callouts { margin: 0 0 0 2px; padding: 0 0 0 22px; font-size: 12px; color: var(--text3); line-height: 1.55; max-width: 1240px; columns: 2; column-gap: 36px; }
+.callouts.one { columns: 1; }
+.callouts li { margin-bottom: 5px; break-inside: avoid; }
+.callouts li::marker { color: var(--mark); font-weight: 700; }
+.callouts b { color: var(--text2); font-weight: 600; }
+
+[data-mark] { position: relative; }
+[data-mark]::before {
+    content: attr(data-mark);
+    position: absolute; top: -9px; left: -9px;
+    width: 20px; height: 20px; border-radius: 10px;
+    background: var(--mark); color: #000;
+    font: 700 11px/20px "Segoe UI", sans-serif; text-align: center;
+    box-shadow: 0 0 0 2px #101010; z-index: 40;
+}
+
+/* the part that is new, outlined so it can be found */
+.new { outline: 1.5px dashed var(--mark); outline-offset: 2px; }
+
+/* marks that would be cut off by the window edge, or sit on a heading */
+.cap[data-mark]::before { top: 6px; left: -24px; }
+.ff [data-mark]::before { top: -3px; left: -28px; }
+
+/* ----------------------------------------------------------------- window */
+
+.window {
+    position: relative;
+    background: var(--bg);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.titlebar { height: 40px; display: flex; align-items: center; flex: 0 0 auto; position: relative; }
+.titlebar img, .titlebar .appglyph { width: 16px; height: 16px; margin: 0 10px 0 16px; }
+.titlebar .appglyph { font-size: 16px; color: var(--accent); }
+.titlebar .title { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlebar .preview { position: absolute; left: 50%; transform: translateX(-50%); height: 18px; padding: 0 9px; border-radius: 9px; border: 1px solid var(--caution); background: var(--caution-bg); color: var(--caution); font-size: 10px; font-weight: 600; line-height: 16px; }
+.cap { width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: "Segoe Fluent Icons"; font-size: 14px; color: var(--text); align-self: flex-start; }
+.cap.on { background: rgba(255, 255, 255, 0.0605); color: var(--accent); }
+.sys { display: flex; align-self: flex-start; }
+.sys div { width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: "Segoe Fluent Icons"; font-size: 10px; color: var(--text); }
+
+.cardx { background: var(--card); border: 1px solid var(--stroke); border-radius: 8px; }
+.layer { background: var(--layer); border: 1px solid var(--stroke); border-radius: 8px; }
+
+/* ----------------------------------------------------------------- controls */
+
+.lbl { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.combo { height: 32px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); border-bottom-color: rgba(255,255,255,.16); padding: 0 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; overflow: hidden; }
+.combo .chev { margin-left: auto; font-family: "Segoe Fluent Icons"; font-size: 12px; color: var(--text2); }
+.btn { height: 32px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; white-space: nowrap; }
+.btn.sm { height: 28px; font-size: 12px; padding: 0 10px; }
+.btn.accent { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.btn.subtle { background: transparent; border-color: transparent; }
+.btn.icon { padding: 0; width: 32px; }
+.btn.sm.icon { width: 28px; }
+.btn .gl { font-size: 14px; }
+.btn.sm .gl { font-size: 13px; }
+.btn.toggled { background: var(--accent); color: #000; border-color: transparent; }
+.badge { min-width: 18px; height: 18px; border-radius: 9px; background: var(--accent); color: #000; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; padding: 0 5px; }
+.kbd { font-size: 11px; color: var(--text3); }
+.field { height: 32px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); border-bottom-color: rgba(255,255,255,.16); padding: 0 10px; display: flex; align-items: center; font-size: 14px; color: var(--text3); }
+.field .gl { margin-left: auto; font-size: 13px; color: var(--text2); }
+
+.check { display: flex; align-items: center; gap: 10px; font-size: 14px; min-height: 28px; }
+.check .cb { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(255,255,255,.6); flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-family: "Segoe Fluent Icons"; font-size: 12px; color: transparent; }
+.check.on .cb { background: var(--accent); border-color: var(--accent); color: #000; }
+.check.mixed .cb { background: var(--accent); border-color: var(--accent); }
+.check.mixed .cb::after { content: ""; width: 8px; height: 2px; background: #000; }
+.check.sm { font-size: 13px; min-height: 24px; gap: 8px; }
+.check.sm .cb { width: 18px; height: 18px; font-size: 11px; }
+
+.toggle { width: 40px; height: 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,.6); position: relative; flex: 0 0 auto; }
+.toggle::after { content: ""; position: absolute; left: 4px; top: 4px; width: 10px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.8); }
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle.on::after { left: 24px; background: #000; }
+
+.chip { height: 26px; border-radius: 13px; background: var(--card-strong); border: 1px solid var(--stroke-strong); padding: 0 6px 0 10px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+.chip .x { font-family: "Segoe Fluent Icons"; font-size: 9px; color: var(--text3); width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+.chip .sw { width: 8px; height: 8px; border-radius: 4px; }
+.chip.add { padding: 0 10px; background: transparent; border-style: dashed; color: var(--text2); }
+
+/* ----------------------------------------------------------------- flyouts, menus, dialogs */
+
+.flyout { position: absolute; background: #2C2C2C; border: 1px solid rgba(0,0,0,.2); outline: 1px solid rgba(255,255,255,.08); border-radius: 8px; box-shadow: var(--dialog-shadow); z-index: 30; }
+.menu { padding: 4px 0; min-width: 260px; }
+.mi { height: 32px; margin: 0 4px; padding: 0 12px; border-radius: 4px; display: flex; align-items: center; gap: 12px; font-size: 14px; white-space: nowrap; }
+.mi .gl { width: 16px; font-size: 15px; color: var(--text2); }
+.mi .acc { margin-left: auto; padding-left: 24px; font-size: 12px; color: var(--text3); }
+.mi.hover { background: rgba(255,255,255,.0605); }
+.msep { height: 1px; background: var(--divider); margin: 4px 0; }
+
+.smoke { position: absolute; inset: 0; background: rgba(0,0,0,.30); z-index: 25; }
+.dialog { position: absolute; background: #2B2B2B; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; box-shadow: var(--dialog-shadow); z-index: 30; overflow: hidden; }
+.dlg-body { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.dlg-title { font-size: 20px; font-weight: 600; line-height: 28px; }
+.dlg-text { font-size: 14px; line-height: 20px; color: var(--text); }
+.dlg-foot { background: #202020; border-top: 1px solid var(--divider); padding: 24px; display: flex; gap: 8px; }
+.dlg-foot .btn { flex: 1; }
+
+.infobar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 6px; background: var(--info-bg); border: 1px solid var(--stroke); font-size: 13px; }
+.infobar .ico { width: 16px; height: 16px; border-radius: 8px; background: var(--accent); color: #000; font-family: "Segoe Fluent Icons"; font-size: 10px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.infobar b { font-weight: 600; }
+
+/* ----------------------------------------------------------------- monitor body */
+
+.header-card { margin: 4px 12px 8px; padding: 14px; display: flex; gap: 14px; align-items: flex-end; }
+.header-card .pick { display: flex; flex-direction: column; }
+
+.msgs { margin: 0 12px 8px; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: visible; position: relative; }
+.th, .tr { display: grid; align-items: center; column-gap: 12px; padding: 0 12px; font-size: 12px; }
+.th { height: 34px; border-bottom: 1px solid var(--divider); color: var(--text2); font-weight: 600; flex: 0 0 auto; }
+.tr { height: 30px; flex: 0 0 auto; }
+.tr.alt { background: rgba(255,255,255,.022); }
+.tr.sel { background: rgba(96,205,255,.12); }
+.tr .n { color: var(--text3); text-align: right; }
+.tr .t { color: var(--text2); }
+.tr .d { color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr .d b { color: var(--text); font-weight: 400; }
+.tr .d i { color: #9fd8ff; font-style: normal; }
+.tr .dl { color: var(--text3); text-align: right; }
+.words { display: flex; flex-direction: column; justify-content: center; gap: 1px; line-height: 13px; }
+.words .w { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+.words .nm { font-size: 10px; height: 13px; display: inline-flex; align-items: center; padding: 0 5px; border-radius: 3px; color: #000; font-weight: 600; width: max-content; }
+.tr.tall { height: 42px; }
+
+.src { display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
+.src .bar { width: 3px; height: 22px; border-radius: 2px; flex: 0 0 auto; }
+.src .ep { color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+.src .gp { color: var(--text3); font-size: 11px; }
+
+.statusrow { margin: 0 14px 12px; height: 28px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text2); position: relative; flex: 0 0 auto; }
+.statusrow .div { width: 1px; height: 18px; background: var(--divider); }
+.statusrow .center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.zoom { display: flex; align-items: center; gap: 6px; }
+.slider { width: 120px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.35); position: relative; }
+.slider::before { content: ""; position: absolute; left: 0; top: 0; height: 4px; width: 34%; background: var(--accent); border-radius: 2px; }
+.slider::after { content: ""; position: absolute; left: calc(34% - 10px); top: -8px; width: 20px; height: 20px; border-radius: 10px; background: #454545; box-shadow: inset 0 0 0 5px #454545, inset 0 0 0 10px var(--accent); }
+
+/* ----------------------------------------------------------------- sources pane */
+
+.sources { width: 284px; flex: 0 0 auto; margin: 0 0 8px 12px; display: flex; flex-direction: column; overflow: visible; }
+.sources .head { padding: 12px 12px 8px; display: flex; align-items: center; gap: 8px; }
+.sources .head .t { font-size: 14px; font-weight: 600; }
+.sources .search { margin: 0 12px 8px; }
+.tree { flex: 1; overflow: hidden; padding: 0 4px; }
+.tn { height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border-radius: 4px; font-size: 13px; white-space: nowrap; }
+.tn.child { padding-left: 34px; height: 28px; }
+.tn .exp { width: 16px; font-family: "Segoe Fluent Icons"; font-size: 9px; color: var(--text2); text-align: center; }
+.tn .nm { overflow: hidden; text-overflow: ellipsis; }
+.tn .nm small { color: var(--text3); font-size: 11px; margin-left: 4px; }
+.tn .sw { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+.tn .end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.tn .led { width: 7px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.18); flex: 0 0 auto; }
+.tn .led.on { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.tn .img { width: 26px; height: 18px; border-radius: 3px; background: linear-gradient(135deg, #3b3b3b, #2a2a2a); border: 1px solid var(--stroke); flex: 0 0 auto; font-family: "Segoe Fluent Icons"; font-size: 11px; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+.tn.hover { background: rgba(255,255,255,.04); }
+.tn.dim { color: var(--text3); }
+.sources .foot { border-top: 1px solid var(--divider); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text2); }
+
+.toolbar { margin: 0 12px 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.toolbar .sep { width: 1px; height: 20px; background: var(--divider); margin: 0 2px; }
+
+/* ----------------------------------------------------------------- filter flyout */
+
+.ff { width: 560px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ff h4 { margin: 0; font-size: 14px; font-weight: 600; }
+.ff .help { font-size: 12px; color: var(--text3); line-height: 16px; margin-top: -8px; }
+.ff .sect { display: flex; flex-direction: column; gap: 6px; }
+.ff .sect .t { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+.ff .sect .t .lnk { margin-left: auto; color: var(--accent); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 12px; }
+.chgrid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; }
+.chgrid div { height: 28px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.chgrid div.on { background: var(--accent); color: #000; border-color: transparent; }
+.range { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.range .combo { width: 96px; height: 28px; font-size: 13px; }

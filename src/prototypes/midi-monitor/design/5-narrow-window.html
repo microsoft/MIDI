@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,960">
+<title>5. Advanced mode in a narrow window</title>
+<link rel="stylesheet" href="mon.css">
+<script src="mon.js"></script>
+<style>
+    .twocol { display: flex; height: 330px; }
+    .twocol .col { display: flex; flex-direction: column; padding: 8px 4px; overflow: hidden; }
+    .twocol .col + .col { border-left: 1px solid var(--divider); }
+    .pickrow { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 4px; font-size: 13px; white-space: nowrap; margin: 0 4px; }
+    .pickrow.sel { background: rgba(255,255,255,.06); position: relative; }
+    .pickrow.sel::before { content: ""; position: absolute; left: 0; top: 9px; width: 3px; height: 16px; border-radius: 2px; background: var(--accent); }
+    .pickrow small { color: var(--text3); font-size: 11px; }
+    .pickrow .end { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .pickrow .led { width: 7px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.18); }
+    .pickrow .led.on { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .pickhead { font-size: 12px; color: var(--text3); padding: 4px 14px 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>5. The same sources in a narrow window.</b> Below about 900 pixels wide, or when the Sources pane is hidden, the pane folds into a bar of chips above the messages. Add opens a flyout with the endpoints on the left and the chosen endpoint's groups on the right. This is the "pop-up" version, and it's why I'd make it the fallback rather than the main way in.</p>
+
+  <div class="row">
+  <div class="window" style="width:820px; height:820px">
+    <div class="titlebar">
+      <img src="appicon.ico" alt="">
+      <div class="title">Windows MIDI Monitor</div>
+      <div class="spacer"></div>
+      <div class="cap on">&#xE9E9;</div>
+      <div class="cap">&#xE713;</div>
+      <div class="cap">&#xE718;</div>
+      <div class="sys"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar cardx" style="row-gap:8px" data-mark="1">
+      <span class="btn sm subtle icon"><span class="gl">&#xE700;</span></span>
+      <span class="chip"><span class="sw" style="background:var(--src1)"></span>MiniLab 3 &middot; 1 MIDI<span class="x">&#xE8BB;</span></span>
+      <span class="chip"><span class="sw" style="background:var(--src2)"></span>MiniLab 3 &middot; 2 DIN Thru<span class="x">&#xE8BB;</span></span>
+      <span class="chip"><span class="sw" style="background:var(--src3)"></span>Studio Mac &middot; 1 Logic Out<span class="x">&#xE8BB;</span></span>
+      <span class="chip"><span class="sw" style="background:var(--src4)"></span>DAW Loopback (A) &middot; 1<span class="x">&#xE8BB;</span></span>
+      <span class="chip add" data-mark="2"><span class="gl" style="font-size:11px">&#xE710;</span>Add</span>
+    </div>
+    <div class="toolbar cardx">
+      <span class="btn accent sm" style="min-width:130px"><span class="gl">&#xE71A;</span>Stop listening</span>
+      <span class="btn sm"><span class="gl">&#xE71C;</span>Filter<span class="badge">3</span></span>
+    </div>
+
+    <div class="msgs layer" data-rows="advanced" data-count="12" data-names="off" style="opacity:.55"></div>
+
+    <div class="flyout" style="left:300px; top:150px; width:500px">
+      <div style="padding:12px 12px 8px"><div class="field" style="height:30px; font-size:13px">Find an endpoint or group<span class="gl">&#xE721;</span></div></div>
+      <div class="twocol">
+        <div class="col" style="width:250px">
+          <div class="pickhead">Endpoints</div>
+          <div class="pickrow">MiniLab 3<span class="end"><span class="led on"></span><small>2 of 3</small></span></div>
+          <div class="pickrow">Studio Mac <small>Network</small><span class="end"><span class="led on"></span><small>1 of 2</small></span></div>
+          <div class="pickrow">DAW Loopback (A)<span class="end"><span class="led on"></span><small>1 of 1</small></span></div>
+          <div class="pickrow sel">Roland TR-8S<span class="end"><span class="led on"></span></span></div>
+          <div class="pickrow">Bass Station II<span class="end"><span class="led"></span></span></div>
+          <div class="pickrow">General MIDI Synth<span class="end"><span class="led"></span></span></div>
+          <div class="pickrow">DAW Loopback (B)<span class="end"><span class="led"></span></span></div>
+        </div>
+        <div class="col" style="flex:1">
+          <div class="pickhead">Roland TR-8S groups</div>
+          <div class="pickrow"><span class="check sm"><span class="cb">&#xE73E;</span>All groups</span></div>
+          <div class="pickrow"><span class="check sm on"><span class="cb">&#xE73E;</span>Group 1 <small>&nbsp;TR-8S</small></span><span class="end"><span class="led on"></span></span></div>
+          <div class="pickrow"><span class="check sm"><span class="cb">&#xE73E;</span>Group 2 <small>&nbsp;TR-8S CTRL</small></span><span class="end"><span class="led"></span></span></div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--divider); padding:12px; display:flex; gap:8px; justify-content:flex-end"><span class="btn sm subtle">Done</span></div>
+    </div>
+  </div>
+
+  <ol class="callouts one" style="width:420px; margin-top:40px">
+    <li><b>One chip for each checked group</b>, in the source's color. The x takes it out. The button at the start brings the full Sources pane back as an overlay. The chips wrap to a second line rather than scroll, so you never lose sight of one.</li>
+    <li><b>Add</b> opens a two-column flyout, not a dialog: it closes when you click away and you can keep watching while you pick. Endpoints on the left, with the same activity lights and a count of what's already checked. The groups of the endpoint you're on are on the right. Checking a group adds its chip right away. Searching matches endpoint and group names together, so typing "logic" finds "Studio Mac &middot; Logic Out" directly.</li>
+  </ol>
+  </div>
+</div>
+</body>
+</html>

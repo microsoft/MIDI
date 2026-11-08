@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1220">
+<title>6. Opened by another app</title>
+<link rel="stylesheet" href="mon.css">
+<script src="mon.js"></script>
+<style>
+    .body { display: flex; flex: 1; min-height: 0; }
+    .main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .main .msgs, .main .toolbar { margin-left: 8px; }
+    .rules { border-collapse: collapse; font-size: 13px; width: 1240px; }
+    .rules th, .rules td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--divider); vertical-align: top; line-height: 1.45; }
+    .rules th { color: var(--text2); font-weight: 600; font-size: 12px; }
+    .rules td:first-child { color: var(--text); width: 260px; }
+    .rules td { color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>6. Opened by another app.</b> MIDI Settings, Network MIDI Setup, Bluetooth MIDI Setup and MIDI Sequencer open the Monitor with one endpoint on the command line, and so can a script. In advanced mode, that window watches the endpoint it was asked to watch, and sets your saved sources aside without changing them.</p>
+
+  <div class="window" style="width:1240px; height:640px">
+    <div class="titlebar">
+      <img src="appicon.ico" alt="">
+      <div class="title">Windows MIDI Monitor</div>
+      <div class="spacer"></div>
+      <div class="cap on">&#xE9E9;</div>
+      <div class="cap">&#xE713;</div>
+      <div class="cap">&#xE718;</div>
+      <div class="sys"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+
+    <div class="infobar" style="margin:0 12px 8px" data-mark="1">
+      <span class="ico">&#xE946;</span>
+      <span>Opened to watch <b>Roland TR-8S</b>. Your saved sources are set aside, and nothing you do in this window changes them.</span>
+      <span class="spacer"></span>
+      <span class="btn sm" data-mark="2">Add to my sources</span>
+      <span class="btn sm">Switch to my sources</span>
+    </div>
+
+    <div class="body">
+      <div class="sources cardx" style="width:250px">
+        <div class="head"><span class="t">Sources</span></div>
+        <div class="tree">
+          <div class="tn"><span class="exp">&#xE70D;</span><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="img">&#xE8D6;</span><span class="nm">Roland TR-8S</span><span class="end"><span class="led on"></span></span></div>
+          <div class="tn child"><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="nm">Group 1 <small>TR-8S</small></span><span class="end"><span class="led on"></span><span class="sw" style="background:var(--src1)"></span></span></div>
+          <div class="tn child"><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="nm">Group 2 <small>TR-8S CTRL</small></span><span class="end"><span class="led"></span><span class="sw" style="background:var(--src2)"></span></span></div>
+          <div class="tn"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE765;</span><span class="nm">MiniLab 3</span><span class="end"><span class="led on"></span></span></div>
+          <div class="tn"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE839;</span><span class="nm">Studio Mac <small>Network</small></span><span class="end"><span class="led"></span></span></div>
+          <div class="tn"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE895;</span><span class="nm">DAW Loopback (A)</span><span class="end"><span class="led"></span></span></div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="toolbar cardx">
+          <span class="btn accent" style="min-width:150px"><span class="gl">&#xE71A;</span>Stop listening</span>
+          <span class="sep"></span>
+          <span class="btn" data-mark="3"><span class="gl">&#xE71C;</span>Filter<span class="badge">2</span></span>
+          <span class="chip">Clock hidden<span class="x">&#xE8BB;</span></span>
+          <span class="chip">Active Sensing hidden<span class="x">&#xE8BB;</span></span>
+        </div>
+        <div class="msgs layer" data-rows="advanced" data-count="10" data-only="a,b" data-map="a:e,b:f" data-names="off"></div>
+      </div>
+    </div>
+  </div>
+
+  <table class="rules">
+    <tr><th>When a window opens with an endpoint on the command line</th><th>What happens</th></tr>
+    <tr><td>Mode</td><td>Opens in the mode you used last. Simple mode picks that endpoint (and the group and channel, when they're given), the way it does today. Advanced mode checks that endpoint's groups and nothing else. Two new switches, <span class="mono">--simple</span> and <span class="mono">--advanced</span>, let a tool ask for one, without changing the mode you'll get next time.</td></tr>
+    <tr><td>Your saved sources</td><td>Set aside, not changed. Checking and unchecking in this window only affects this window. <b>Add to my sources</b> adds what's checked here to your saved list. <b>Switch to my sources</b> swaps this window over to your saved list, and from then on it saves like any other window.</td></tr>
+    <tr><td>Filters, columns, zoom, order, theme</td><td>Shared, and saved as usual. They're about how you like to read messages, not about what you're watching, so a tool opening the Monitor has no reason to override them.</td></tr>
+    <tr><td>Switching mode in this window</td><td>Saved as usual: it's something you did, not something the tool did.</td></tr>
+    <tr><td>Several windows open at once</td><td>Each one keeps its own sources while it's open. A window that is using your saved sources saves them when they change, so the last change made wins, the way the column layout already works.</td></tr>
+    <tr><td>Starting without a command line</td><td>Opens in the last mode, with your saved sources (advanced) or the device you watched last (simple). Simple mode doesn't remember the device today; I'd add that too, under the same rule.</td></tr>
+  </table>
+
+  <ol class="callouts">
+    <li><b>An info bar says why the sources look different.</b> Without it, someone who opened MIDI Settings, clicked Monitor, and then saw their carefully chosen list replaced would assume it was lost. It stays until you close it or click one of its buttons.</li>
+    <li><b>The two ways out.</b> Keep what the tool asked for alongside your usual list, or go back to your usual list. Doing nothing is the third way, and it's safe: close the window and your saved list is still there next time.</li>
+    <li><b>Filters still apply.</b> Your saved filter (here, Clock and Active Sensing hidden) carries over, since it's about how you read messages. The chips show it, so nothing is hidden without saying so.</li>
+  </ol>
+</div>
+</body>
+</html>
