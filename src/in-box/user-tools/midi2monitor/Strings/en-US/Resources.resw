@@ -690,7 +690,7 @@ Examples
     <value>Ctrl+L</value>
   </data>
   <data name="SettingsAskBeforeClearCheckBox.Content" xml:space="preserve">
-    <value>Ask before clearing all entries</value>
+    <value>Clear confirmation</value>
   </data>
 
   <!-- ============================ Advanced mode: rows ============================ -->
@@ -754,13 +754,13 @@ Examples
     <comment>{0} is the endpoint another app asked the Monitor to watch</comment>
   </data>
   <data name="AddToSavedSourcesButton.Content" xml:space="preserve">
-    <value>Add to my sources</value>
+    <value>Add to saved sources</value>
   </data>
   <data name="SwitchToSavedSourcesButton.Content" xml:space="preserve">
-    <value>Switch to my sources</value>
+    <value>Use saved sources</value>
   </data>
   <data name="SourcesPaneToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Show sources</value>
+    <value>Sources</value>
   </data>
   <data name="SourcesPaneToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Show or hide the list of sources</value>
@@ -786,7 +786,7 @@ Examples
     <value>Find an endpoint or group</value>
   </data>
   <data name="OnlySendingToggle.Header" xml:space="preserve">
-    <value>Only show endpoints that are sending</value>
+    <value>Sending only</value>
   </data>
   <data name="SourcesShowGroupsFormat" xml:space="preserve">
     <value>Show the groups of {0}</value>
@@ -814,10 +814,10 @@ Examples
 
   <!-- ============================ Advanced mode: Filter ============================ -->
   <data name="FilterTitle" xml:space="preserve">
-    <value>Show these messages</value>
+    <value>Filter</value>
   </data>
   <data name="FilterShowEverything" xml:space="preserve">
-    <value>Show everything</value>
+    <value>Clear filters</value>
   </data>
   <data name="FilterHelp" xml:space="preserve">
     <value>Hidden messages are still captured. Change a filter and they come back.</value>
@@ -924,7 +924,7 @@ Examples
     <value>Notes</value>
   </data>
   <data name="FilterNotesLimit" xml:space="preserve">
-    <value>Only notes from</value>
+    <value>Note range</value>
   </data>
   <data name="FilterNotesTo" xml:space="preserve">
     <value>to</value>
@@ -936,7 +936,7 @@ Examples
     <value>Highest note to show</value>
   </data>
   <data name="FilterFoldRepeats" xml:space="preserve">
-    <value>Fold repeated messages into one row, with a count</value>
+    <value>Fold repeats</value>
   </data>
   <data name="ChipRemoveFormat" xml:space="preserve">
     <value>Remove "{0}"</value>
@@ -980,7 +980,7 @@ Examples
     <value>Advanced mode</value>
   </data>
   <data name="SettingsShowActivityCheckBox.Content" xml:space="preserve">
-    <value>Show which endpoints are sending</value>
+    <value>Activity lights</value>
   </data>
   <data name="SettingsShowActivityDescription.Text" xml:space="preserve">
     <value>While listening, this opens every endpoint, not only the ones you're watching, so the Sources list can light up the ones sending messages. Turn it off if listening is slow to start on a PC with many devices.</value>

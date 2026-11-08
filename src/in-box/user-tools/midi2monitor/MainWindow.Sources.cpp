@@ -32,12 +32,77 @@ namespace winrt::midi2monitor::implementation
     {
         constexpr double EndpointRowHeight = 32.0;
         constexpr double GroupRowHeight = 28.0;
-        constexpr double GroupIndent = 26.0;
         constexpr double LightSize = 7.0;
         constexpr double SwatchSize = 10.0;
+        constexpr double RowFontSize = 13.0;
+        constexpr double DetailFontSize = 11.0;
+
+        // The chevron's column. A group's check box lines up with its endpoint's picture, under
+        // the endpoint's check box text, so the groups read as belonging to it.
+        constexpr double ExpanderWidth = 24.0;
+        constexpr double CheckBoxBoxWidth = 28.0;
+        constexpr double GroupIndent = ExpanderWidth + CheckBoxBoxWidth;
+
+        constexpr double ThumbnailWidth = 26.0;
+        constexpr double ThumbnailHeight = 18.0;
 
         constexpr wchar_t GlyphCollapsed[] = L"\uE76C";
         constexpr wchar_t GlyphExpanded[] = L"\uE70D";
+
+        media::Brush Lookup(_In_ wchar_t const* key)
+        {
+            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+        }
+
+        // The endpoint's picture from MIDI Settings, or an icon for the kind of endpoint, in a
+        // small frame, as the comps draw it.
+        xaml::FrameworkElement MakeThumbnail(_In_ winrt::hstring const& imagePath, _In_ winrt::hstring const& transportCode)
+        {
+            controls::Border frame{};
+            frame.Width(ThumbnailWidth);
+            frame.Height(ThumbnailHeight);
+            frame.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(3));
+            frame.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+            frame.BorderBrush(Lookup(L"CardStrokeColorDefaultBrush"));
+            frame.Background(Lookup(L"ControlFillColorSecondaryBrush"));
+            frame.VerticalAlignment(xaml::VerticalAlignment::Center);
+            frame.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 8, 0));
+
+            if (!imagePath.empty())
+            {
+                try
+                {
+                    media::Imaging::BitmapImage bitmap{};
+                    bitmap.UriSource(foundation::Uri{ L"file:///" + imagePath });
+
+                    controls::Image image{};
+                    image.Source(bitmap);
+                    image.Stretch(media::Stretch::Uniform);
+                    frame.Child(image);
+
+                    return frame;
+                }
+                catch (...)
+                {
+                    // a bad picture falls back to the icon
+                }
+            }
+
+            std::wstring const code{ transportCode };
+
+            controls::FontIcon icon{};
+            icon.FontSize(11);
+            icon.Foreground(Lookup(L"TextFillColorSecondaryBrush"));
+            icon.Glyph(
+                (code == L"LOOP" || code == L"APP") ? L"\uE895" :
+                (code.starts_with(L"NET") || code == L"RTP") ? L"\uE839" :
+                (code == L"BLE" || code == L"BLE1") ? L"\uE702" :
+                L"\uE8D6");
+
+            frame.Child(icon);
+
+            return frame;
+        }
 
         bool ContainsText(_In_ std::wstring_view haystack, _In_ std::wstring_view needle) noexcept
         {
@@ -55,6 +120,7 @@ namespace winrt::midi2monitor::implementation
         controls::TextBlock MakeLabel(_In_ winrt::hstring const& text, _In_ winrt::hstring const& detail)
         {
             controls::TextBlock label{};
+            label.FontSize(RowFontSize);
             label.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
             label.TextWrapping(xaml::TextWrapping::NoWrap);
             label.VerticalAlignment(xaml::VerticalAlignment::Center);
@@ -67,13 +133,23 @@ namespace winrt::midi2monitor::implementation
             {
                 xaml::Documents::Run extra{};
                 extra.Text(L"  " + detail);
-                extra.FontSize(11);
-                extra.Foreground(xaml::Application::Current().Resources()
-                    .Lookup(winrt::box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+                extra.FontSize(DetailFontSize);
+                extra.Foreground(Lookup(L"TextFillColorTertiaryBrush"));
                 label.Inlines().Append(extra);
             }
 
             return label;
+        }
+
+        // WinUI's check box is sized for a form. The list's are smaller, the way the comps draw them.
+        void MakeCompact(_Inout_ controls::CheckBox const& check)
+        {
+            check.MinWidth(0);
+            check.MinHeight(0);
+            check.Padding(xaml::ThicknessHelper::FromLengths(8, 0, 0, 0));
+            check.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+            check.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+            check.VerticalAlignment(xaml::VerticalAlignment::Center);
         }
 
         xaml::Shapes::Ellipse MakeLight()
@@ -120,6 +196,20 @@ namespace winrt::midi2monitor::implementation
                 row.Name = device.Name();
                 row.Declared = midiapp::DeclaredGroups(device);
                 row.Slot = native::SourceTable::SlotFor(row.EndpointDeviceId, row.Name);
+
+                try
+                {
+                    if (auto const userInfo = device.GetUserSuppliedInfo())
+                    {
+                        row.ImagePath = midiapp::ResolveEndpointImagePath(userInfo.ImageFileName());
+                    }
+
+                    row.TransportCode = device.GetTransportSuppliedInfo().TransportCode();
+                }
+                catch (...)
+                {
+                    // no picture: the row shows an icon for the kind of device instead
+                }
 
                 // checked endpoints start open, so their groups show without a click
                 row.Expanded = expanded.contains(row.EndpointDeviceId) || GroupMaskFor(row.EndpointDeviceId) != 0;
@@ -191,20 +281,25 @@ namespace winrt::midi2monitor::implementation
 
             controls::Grid grid{};
             grid.Height(EndpointRowHeight);
-            grid.Padding(xaml::ThicknessHelper::FromLengths(4, 0, 4, 0));
+            grid.Padding(xaml::ThicknessHelper::FromLengths(4, 0, 6, 0));
             grid.ColumnDefinitions().Append(controls::ColumnDefinition{});
             grid.ColumnDefinitions().Append(controls::ColumnDefinition{});
             grid.ColumnDefinitions().Append(controls::ColumnDefinition{});
-            grid.ColumnDefinitions().GetAt(0).Width(xaml::GridLengthHelper::FromPixels(24));
+            grid.ColumnDefinitions().Append(controls::ColumnDefinition{});
+            grid.ColumnDefinitions().GetAt(0).Width(xaml::GridLengthHelper::FromPixels(ExpanderWidth));
             grid.ColumnDefinitions().GetAt(1).Width(xaml::GridLengthHelper::FromValueAndType(1, xaml::GridUnitType::Star));
             grid.ColumnDefinitions().GetAt(2).Width(xaml::GridLengthHelper::Auto());
 
+            // the same width as a group's color square, so every light lines up
+            grid.ColumnDefinitions().GetAt(3).Width(xaml::GridLengthHelper::FromPixels(SwatchSize + 4));
+
             controls::Button expander{};
-            expander.Width(24);
-            expander.Height(24);
+            expander.Width(ExpanderWidth);
+            expander.Height(ExpanderWidth);
             expander.Padding(xaml::ThicknessHelper::FromUniformLength(0));
             expander.MinWidth(0);
             expander.MinHeight(0);
+            expander.VerticalAlignment(xaml::VerticalAlignment::Center);
             expander.BorderThickness(xaml::ThicknessHelper::FromUniformLength(0));
             expander.Background(media::SolidColorBrush{ winrt::Windows::UI::Colors::Transparent() });
 
@@ -228,10 +323,24 @@ namespace winrt::midi2monitor::implementation
             auto const hasGroups = std::any_of(row.Declared.begin(), row.Declared.end(), [](bool value) { return value; });
             expander.Visibility(hasGroups ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
+            // the picture and the name are the check box's own content, so a click on either
+            // checks it
+            controls::Grid content{};
+            content.ColumnDefinitions().Append(controls::ColumnDefinition{});
+            content.ColumnDefinitions().Append(controls::ColumnDefinition{});
+            content.ColumnDefinitions().GetAt(0).Width(xaml::GridLengthHelper::Auto());
+            content.ColumnDefinitions().GetAt(1).Width(xaml::GridLengthHelper::FromValueAndType(1, xaml::GridUnitType::Star));
+
+            auto const thumbnail = MakeThumbnail(row.ImagePath, row.TransportCode);
+            auto const name = MakeLabel(row.Name, {});
+            controls::Grid::SetColumn(name, 1);
+
+            content.Children().Append(thumbnail);
+            content.Children().Append(name);
+
             controls::CheckBox check{};
-            check.MinWidth(0);
-            check.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            check.Content(MakeLabel(row.Name, {}));
+            MakeCompact(check);
+            check.Content(content);
             automation::AutomationProperties::SetName(check, row.Name);
             controls::Grid::SetColumn(check, 1);
 
@@ -279,7 +388,7 @@ namespace winrt::midi2monitor::implementation
 
                 controls::Grid groupGrid{};
                 groupGrid.Height(GroupRowHeight);
-                groupGrid.Padding(xaml::ThicknessHelper::FromLengths(4 + GroupIndent, 0, 4, 0));
+                groupGrid.Padding(xaml::ThicknessHelper::FromLengths(4 + GroupIndent, 0, 6, 0));
                 groupGrid.ColumnDefinitions().Append(controls::ColumnDefinition{});
                 groupGrid.ColumnDefinitions().Append(controls::ColumnDefinition{});
                 groupGrid.ColumnDefinitions().Append(controls::ColumnDefinition{});
@@ -290,8 +399,7 @@ namespace winrt::midi2monitor::implementation
                 auto const groupLabel = res::FormatString(L"GroupChoiceFormat", groupNumber);
 
                 controls::CheckBox groupCheck{};
-                groupCheck.MinWidth(0);
-                groupCheck.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                MakeCompact(groupCheck);
                 groupCheck.Content(MakeLabel(groupLabel, groupName));
                 automation::AutomationProperties::SetName(groupCheck, groupName.empty()
                     ? res::FormatString(L"SourcesGroupAccessibleFormat", std::wstring{ row.Name }, std::wstring{ groupLabel })

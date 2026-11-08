@@ -12,6 +12,9 @@
 #include "MainWindow.xaml.h"
 
 #include "App.xaml.h"
+#include "PopupBackdrop.h"
+
+#include <winrt/Windows.UI.ViewManagement.h>
 
 namespace native = ::midi2monitor;
 
@@ -19,6 +22,24 @@ namespace winrt::midi2monitor::implementation
 {
     namespace
     {
+        constexpr wchar_t DialogTopKey[]{ L"ContentDialogTopOverlay" };
+        constexpr wchar_t DialogButtonsKey[]{ L"ContentDialogBackground" };
+
+        void SetAppBrush(_In_ xaml::ResourceDictionary const& resources, _In_ wchar_t const* key, _In_ winrt::Windows::UI::Color color)
+        {
+            auto const boxed = winrt::box_value(key);
+
+            // recolored in place, so a dialog that is open changes with it
+            if (auto const brush = resources.TryLookup(boxed).try_as<media::SolidColorBrush>(); brush != nullptr && resources.HasKey(boxed))
+            {
+                brush.Color(color);
+            }
+            else
+            {
+                resources.Insert(boxed, media::SolidColorBrush{ color });
+            }
+        }
+
         // A text box keeps its own Ctrl+C and Ctrl+L, so a comment being typed copies its text
         // rather than the selected rows.
         bool IsTextEntryFocused(_In_ xaml::XamlRoot const& root) noexcept
@@ -117,5 +138,37 @@ namespace winrt::midi2monitor::implementation
                 SelectedChannelNumber());
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to remember the selected device.")
+    }
+
+    void MainWindow::ColorDialogs() noexcept
+    {
+        try
+        {
+            auto const resources = xaml::Application::Current().Resources();
+
+            // high contrast keeps WinUI's own colors
+            if (winrt::Windows::UI::ViewManagement::AccessibilitySettings{}.HighContrast())
+            {
+                for (auto const key : { DialogTopKey, DialogButtonsKey })
+                {
+                    if (resources.HasKey(winrt::box_value(key)))
+                    {
+                        resources.Remove(winrt::box_value(key));
+                    }
+                }
+
+                return;
+            }
+
+            auto const dark = RootGrid().ActualTheme() == xaml::ElementTheme::Dark;
+            auto const surface = midiapp::details::MenuColorOver(midiapp::details::WindowColor(dark), dark);
+
+            // the part with the buttons is a shade deeper than the rest, as WinUI's is
+            auto const buttons = midiapp::details::Mix(surface, winrt::Windows::UI::Color{ 255, 0, 0, 0 }, dark ? 0.18 : 0.035);
+
+            SetAppBrush(resources, DialogTopKey, surface);
+            SetAppBrush(resources, DialogButtonsKey, buttons);
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to color the dialogs.")
     }
 }

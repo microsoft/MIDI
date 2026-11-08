@@ -76,7 +76,7 @@ Commands that don't apply to what you've selected are grayed out, so if **Copy a
 
 **Select All SysEx 7** picks out every SysEx message in the capture in one go. If you've just asked a synth to dump a patch and want only that, this saves a lot of scrolling.
 
-**Clear All Entries** empties the list so you can start a fresh observation. You can also press **Ctrl+L**, or select **Clear** next to **Save to File** at the bottom of the window. MIDI Monitor asks before it clears, because clearing can't be undone. If you'd rather it didn't ask, check **Don't ask me again** in that question. To have it ask again, turn on **Ask before clearing all entries** in Settings.
+**Clear All Entries** empties the list so you can start a fresh observation. You can also press **Ctrl+L**, or select **Clear** next to **Save to File** at the bottom of the window. MIDI Monitor asks before it clears, because clearing can't be undone. If you'd rather it didn't ask, check **Don't ask me again** in that question. To have it ask again, turn on **Clear confirmation** in Settings.
 
 **Ctrl+C** copies the selected messages as UMP words, the same as **Copy as UMP words**.
 
@@ -126,9 +126,9 @@ In advanced mode the device, group and channel lists are replaced by a **Sources
 
 Each checked group gets its own color. The color shows next to the group in **Sources**, and as a bar beside every message from that group.
 
-While MIDI Monitor is listening, a green light shows next to every device and group that has sent something in the last second, whether it's checked or not. That's the quickest way to find which device and group your keyboard is really using. Turn on **Only show endpoints that are sending** at the bottom of the list to hide everything that's quiet. The box at the top of the list finds a device or group by name.
+While MIDI Monitor is listening, a green light shows next to every device and group that has sent something in the last second, whether it's checked or not. That's the quickest way to find which device and group your keyboard is really using. Turn on **Sending only** at the bottom of the list to hide everything that's quiet. The box at the top of the list finds a device or group by name.
 
-The lights work by listening to every device, not only the ones you checked. On a PC with a lot of MIDI devices that can make listening slow to start. If it does, turn off **Show which endpoints are sending** in Settings, and MIDI Monitor opens only the devices you checked.
+The lights work by listening to every device, not only the ones you checked. On a PC with a lot of MIDI devices that can make listening slow to start. If it does, turn off **Activity lights** in Settings, and MIDI Monitor opens only the devices you checked.
 
 The button at the left of the toolbar hides and shows **Sources**. In a narrow window, **Sources** opens over the messages instead of beside them, and the groups you're watching show as small tags in the toolbar. Select the **x** on a tag to stop watching that group, or **+ Add** to open **Sources**.
 
@@ -140,17 +140,17 @@ Advanced mode adds a **From** column, with the device name and the group. It tak
 
 **Filter** in the toolbar has the same choices as a filter step in [Windows MIDI Patchbay]({{ site.baseurl }}/tools/midipatchbay/): message types, channels, kinds of channel message, system messages, and a range of notes. Everything starts turned on, which means "show it". Changes take effect as you click.
 
-Each part of the filter that's hiding something shows as a tag next to **Filter**, such as **Channels 1 to 4**. Select the **x** on a tag to undo that part. **Show everything** at the top of the filter undoes all of it.
+Each part of the filter that's hiding something shows as a tag next to **Filter**, such as **Channels 1 to 4**. Select the **x** on a tag to undo that part. **Clear filters** at the top of the filter undoes all of it.
 
 A filter only hides messages. They're still captured, and they come back when you change the filter. The bottom of the window says how many are hidden. **Save to File** still saves all of them.
 
 The **Clock** and **Active Sensing** choices in the filter are the same as the two buttons at the bottom of the window. Changing one changes the other.
 
-**Fold repeated messages into one row, with a count** is for controllers that send the same message over and over. When a message is exactly the same as the last one shown from the same group, it doesn't get a row of its own. The row it repeats shows a count instead, such as **×234 repeats**, and the count goes up as more arrive. Each one still keeps its own time, and **Save to File** writes every one of them out.
+**Fold repeats** is for controllers that send the same message over and over. When a message is exactly the same as the last one shown from the same group, it doesn't get a row of its own. The row it repeats shows a count instead, such as **×234 repeats**, and the count goes up as more arrive. Each one still keeps its own time, and **Save to File** writes every one of them out.
 
 ### When another app opens MIDI Monitor
 
-MIDI Settings, Network MIDI Setup, Bluetooth MIDI Setup and MIDI Sequencer can open MIDI Monitor to watch one device. If that happens in advanced mode, MIDI Monitor watches that device and sets your own list of sources aside without changing it. A message at the top says so. Select **Add to my sources** to add that device to your list, or **Switch to my sources** to go back to your list. If you do neither, your list is still there the next time you open MIDI Monitor.
+MIDI Settings, Network MIDI Setup, Bluetooth MIDI Setup and MIDI Sequencer can open MIDI Monitor to watch one device. If that happens in advanced mode, MIDI Monitor watches that device and sets your own list of sources aside without changing it. A message at the top says so. Select **Add to saved sources** to add that device to your list, or **Use saved sources** to go back to your list. If you do neither, your list is still there the next time you open MIDI Monitor.
 
 Your filter, columns, zoom and colors stay the same however MIDI Monitor was opened.
 
@@ -175,9 +175,9 @@ Tick **Use a custom background color** to pick your own color for the window. It
 
 **Messages to keep** sets how many messages are held before the oldest start being discarded. The default of 10,000 is plenty for normal use. Raise it if you're capturing a long session, and bear in mind that a larger number uses more memory.
 
-**Ask before clearing all entries** turns the clear question back on after you've checked **Don't ask me again**.
+**Clear confirmation** turns the clear question back on after you've checked **Don't ask me again**.
 
-**Show which endpoints are sending** turns the activity lights in advanced mode on or off. See [Choosing what to watch](#choosing-what-to-watch).
+**Activity lights** turns the activity lights in advanced mode on or off. See [Choosing what to watch](#choosing-what-to-watch).
 
 **Reset the columns to their defaults** puts the message list back the way it started.
 

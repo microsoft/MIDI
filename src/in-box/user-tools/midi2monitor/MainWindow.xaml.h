@@ -60,6 +60,10 @@ namespace winrt::midi2monitor::implementation
         // called by the settings dialog
         void ApplyActivitySetting() noexcept;
 
+        // Content dialogs take the window's color, a shade deeper where the buttons are, the way
+        // the context menus take it. Called when the theme or the window color changes.
+        void ColorDialogs() noexcept;
+
         void OnMessagesContextRequested(xaml::UIElement const& sender, xaml::Input::ContextRequestedEventArgs const& args);
         void OnMessagesContextFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
         void OnSelectAllClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -154,6 +158,8 @@ namespace winrt::midi2monitor::implementation
         {
             std::wstring EndpointDeviceId{};
             winrt::hstring Name{};
+            winrt::hstring ImagePath{};
+            winrt::hstring TransportCode{};
             uint16_t Slot{ 0xFFFF };
             std::array<bool, 16> Declared{};
             bool Expanded{ false };

@@ -332,11 +332,11 @@
                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
                         <Button x:Name="AddToSavedSourcesButton"
                                 x:Uid="AddToSavedSourcesButton"
-                                Content="Add to my sources"
+                                Content="Add to saved sources"
                                 Click="OnAddToSavedSourcesClick" />
                         <Button x:Name="SwitchToSavedSourcesButton"
                                 x:Uid="SwitchToSavedSourcesButton"
-                                Content="Switch to my sources"
+                                Content="Use saved sources"
                                 Click="OnSwitchToSavedSourcesClick" />
                     </StackPanel>
                 </InfoBar.Content>
@@ -471,7 +471,7 @@
                     <StackPanel Spacing="4">
                         <ToggleSwitch x:Name="OnlySendingToggle"
                                       x:Uid="OnlySendingToggle"
-                                      Header="Only show endpoints that are sending"
+                                      Header="Sending only"
                                       Toggled="OnOnlySendingToggled" />
                         <TextBlock x:Name="SourcesSummaryText"
                                    Style="{ThemeResource CaptionTextBlockStyle}"

@@ -104,7 +104,7 @@
                            ValueChanged="OnRetentionChanged" />
                 <CheckBox x:Name="AskBeforeClearCheckBox"
                           x:Uid="SettingsAskBeforeClearCheckBox"
-                          Content="Ask before clearing all entries"
+                          Content="Clear confirmation"
                           Checked="OnAskBeforeClearChanged"
                           Unchecked="OnAskBeforeClearChanged" />
             </StackPanel>
@@ -115,7 +115,7 @@
                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                 <CheckBox x:Name="ShowActivityCheckBox"
                           x:Uid="SettingsShowActivityCheckBox"
-                          Content="Show which endpoints are sending"
+                          Content="Activity lights"
                           Checked="OnShowActivityChanged"
                           Unchecked="OnShowActivityChanged" />
                 <TextBlock x:Uid="SettingsShowActivityDescription"

@@ -219,6 +219,17 @@ namespace winrt::midi2monitor::implementation
 
             // the shared chrome does not know about the palette or the list rows
             native::MonitorPalette::Invalidate();
+
+            // dialogs take the window's color, and follow the theme when Windows changes it
+            ColorDialogs();
+
+            RootGrid().ActualThemeChanged([weak = get_weak()](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ColorDialogs();
+                    }
+                });
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to set up the window chrome.")
     }
@@ -237,11 +248,13 @@ namespace winrt::midi2monitor::implementation
     void MainWindow::ApplyBackdrop() noexcept
     {
         m_chrome.ApplyBackdrop();
+        ColorDialogs();
     }
 
     void MainWindow::ApplyBackgroundColor() noexcept
     {
         m_chrome.ApplyBackgroundColor();
+        ColorDialogs();
     }
 
     _Use_decl_annotations_
@@ -1076,6 +1089,7 @@ namespace winrt::midi2monitor::implementation
             content.Children().Append(dontAsk);
 
             dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.RequestedTheme(RootGrid().ActualTheme());
             dialog.Title(winrt::box_value(res::GetString(L"ClearConfirmTitle")));
             dialog.Content(content);
             dialog.PrimaryButtonText(res::GetString(L"ClearConfirmPrimary"));
@@ -1164,6 +1178,7 @@ namespace winrt::midi2monitor::implementation
             controls::ContentDialog dialog{};
 
             dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.RequestedTheme(RootGrid().ActualTheme());
             dialog.Title(winrt::box_value(title));
             dialog.CloseButtonText(res::GetString(L"CommonClose"));
 
@@ -1224,6 +1239,7 @@ namespace winrt::midi2monitor::implementation
             controls::ContentDialog dialog{};
 
             dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.RequestedTheme(RootGrid().ActualTheme());
             dialog.Title(winrt::box_value(res::GetString(L"CommandLineHelpTitle")));
             dialog.CloseButtonText(res::GetString(L"CommonClose"));
 
