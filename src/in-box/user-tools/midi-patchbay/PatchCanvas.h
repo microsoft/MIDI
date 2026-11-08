@@ -90,6 +90,13 @@ namespace midipatchbay
 
             // A block was double-clicked, which opens its settings.
             std::function<void(std::wstring)> BlockActivated{};
+
+            // A connection was right-clicked. The point is relative to the scroll viewer, like a
+            // node's.
+            std::function<void(std::wstring, foundation::Point)> ConnectionContextMenuRequested{};
+
+            // The numbered dot of a window watching a connection was clicked, by window number.
+            std::function<void(uint32_t)> WatchMarkClicked{};
         };
 
         void Initialize(
@@ -171,6 +178,17 @@ namespace midipatchbay
         // "endpoint id|replies" for a responder's answers to that endpoint. Ends lit along a link
         // light up too.
         void LightUp(_In_ std::vector<std::wstring> const& ids) noexcept;
+
+        // A connection a monitor window watches: the window's number and color, drawn as a dot
+        // on the line. Defined in PatchCanvasWatch.cpp.
+        struct WatchMark
+        {
+            std::wstring ConnectionId{};
+            uint32_t Number{ 0 };
+            winrt::Windows::UI::Color Color{};
+        };
+
+        void SetWatchMarks(_In_ std::vector<WatchMark> marks) noexcept;
 
         // Nodes grow from here to fit their longest name.
         static constexpr double MinimumNodeWidth = 252.0;
@@ -306,6 +324,9 @@ namespace midipatchbay
 
         // Defined in PatchCanvasCords.cpp, with the rest of how the lines are planned and drawn.
         void RedrawConnections() noexcept;
+
+        // Puts each window's dot on its line. After the lines, in PatchCanvasWatch.cpp.
+        void RedrawWatchMarks() noexcept;
 
         // Where every endpoint and step sits, which the lines go around, and the id of each.
         std::vector<CordRect> NodeBounds(_Out_ std::vector<std::wstring>& nodeIds) const;
@@ -480,5 +501,14 @@ namespace midipatchbay
 
         bool m_initialized{ false };
         bool m_shuttingDown{ false };
+
+        // The windows' dots, in the overlay so a rebuild of the lines leaves them alone.
+        struct WatchDotVisual
+        {
+            WatchMark Mark{};
+            controls::Grid Root{ nullptr };
+        };
+
+        std::vector<WatchDotVisual> m_watchDots{};
     };
 }

@@ -11,6 +11,7 @@
 
 #include "MidiMessageDecoder.h"
 #include "MonitorPalette.h"
+#include "SourceTable.h"
 #include "TimestampFormatter.h"
 
 namespace midi2native = ::midi2monitor;
@@ -97,6 +98,53 @@ namespace winrt::midi2monitor::implementation
 
         m_messageNameBackground = midi2native::MonitorPalette::MessageTypeBackground(colorIndex);
         m_messageNameForeground = midi2native::MonitorPalette::MessageTypeForeground(colorIndex);
+
+        m_repeatCount = record.RepeatCount;
+
+        if (record.SourceSlot != midi2native::NoSourceSlot)
+        {
+            auto const group = record.HasGroup ? record.GroupNumber : uint8_t{ 0 };
+
+            m_sourceText = midi2native::SourceTable::EndpointName(record.SourceSlot);
+            m_sourceGroupText = midi2native::SourceTable::GroupText(record.SourceSlot, group);
+            m_sourceBrush = midi2native::MonitorPalette::SourceBrush(
+                midi2native::SourceTable::ColorIndex(record.SourceSlot, group));
+        }
+    }
+
+    winrt::hstring MidiMessageViewModel::RepeatText() const noexcept
+    {
+        try
+        {
+            if (m_repeatCount == 0)
+            {
+                return {};
+            }
+
+            return midi2native::resources::FormatString(L"RepeatCountFormat", m_repeatCount);
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiMessageViewModel::RepeatCount(uint32_t value) noexcept
+    {
+        if (m_repeatCount == value)
+        {
+            return;
+        }
+
+        m_repeatCount = value;
+
+        try
+        {
+            m_propertyChanged(*this, xaml::Data::PropertyChangedEventArgs{ L"RepeatText" });
+            m_propertyChanged(*this, xaml::Data::PropertyChangedEventArgs{ L"RepeatVisibility" });
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to raise the repeat count change notification.")
     }
 
     _Use_decl_annotations_

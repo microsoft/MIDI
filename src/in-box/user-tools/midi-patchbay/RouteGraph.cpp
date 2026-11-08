@@ -1104,9 +1104,7 @@ namespace midipatchbay
         uint32_t copy[MaximumWordsPerMessage]{};
         std::copy_n(words, wordCount, copy);
 
-        switch (stage.Kind)
-        {
-        case RouteStageKind::Leaf:
+        if (stage.Kind == RouteStageKind::Leaf)
         {
             auto const& leaf = graph.Leaves[stage.Index];
 
@@ -1115,10 +1113,15 @@ namespace midipatchbay
             {
                 copy[0] = internal::GetFirstWordWithNewGroup(copy[0], static_cast<uint8_t>(leaf.DestinationGroupIndex));
             }
+        }
 
+        sink.LinkCarried(edge.LinkCell, copy, wordCount);
+
+        switch (stage.Kind)
+        {
+        case RouteStageKind::Leaf:
             sink.Send(stage.Index, copy, wordCount);
             return;
-        }
 
         case RouteStageKind::Throttle:
             sink.CountBlock(stage.Cell, true);

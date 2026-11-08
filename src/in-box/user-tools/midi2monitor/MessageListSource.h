@@ -30,6 +30,10 @@ namespace midi2monitor
 
         bool TryGetSequence(uint32_t index, uint64_t& sequence) noexcept;
 
+        // Rows whose repeat count went up. Rows already made are told; the rest read the new count
+        // when they're made.
+        void ApplyFoldUpdates(_In_ std::vector<std::pair<uint64_t, uint32_t>> const& updates) noexcept;
+
         foundation::IInspectable GetAt(uint32_t index);
         uint32_t Size() const noexcept { return static_cast<uint32_t>(m_count); }
         collections::IVectorView<foundation::IInspectable> GetView();

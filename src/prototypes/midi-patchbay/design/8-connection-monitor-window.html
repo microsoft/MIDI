@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Patchbay - 8 - the connection monitor window</title>
+<link rel="stylesheet" href="../../midi-monitor/design/mon.css">
+<style>
+    .mon { border: 0; border-radius: 8px; box-shadow: var(--shadow); background: transparent; display: block; }
+    .stack { display: flex; flex-direction: column; gap: 8px; }
+    .state-cap { font-size: 12px; color: var(--text2); }
+    .state-cap b { color: var(--text); font-weight: 600; }
+    .pinwrap { position: relative; }
+    .p { position: absolute; width: 20px; height: 20px; border-radius: 10px; background: var(--mark); color: #000; font: 700 11px/20px "Segoe UI", sans-serif; text-align: center; box-shadow: 0 0 0 2px #101010; z-index: 5; }
+    h3 { margin: 6px 0 -6px 2px; font-size: 14px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page wide">
+  <p class="caption-above"><b>8. The connection monitor window.</b> Compact, because there will often be two or three open next to the canvas. It reads the same as the Windows MIDI Monitor: the same words, the same message names and colors, and the same description of each message, from code the two apps share.</p>
+
+  <div class="row" style="gap:28px">
+    <div class="pinwrap" style="margin-left:22px">
+      <iframe class="mon" src="_connection-monitor-window.html?v=live" style="width:640px; height:440px"></iframe>
+      <span class="p" style="left:-26px; top:6px">1</span>
+      <span class="p" style="left:-26px; top:40px">2</span>
+      <span class="p" style="left:-26px; top:82px">3</span>
+      <span class="p" style="left:-26px; top:118px">4</span>
+      <span class="p" style="left:530px; top:-12px">5</span>
+    </div>
+
+    <ol class="callouts one" style="width:820px; margin-top:4px">
+      <li><b>Title</b>: the window's number and color (matching the dot on the connection), then "From &rarr; To". In Alt+Tab it reads "Impact LX Mini &rarr; Message type filter &ndash; Studio Rig".</li>
+      <li><b>From and To</b> spell out the connection, groups included, using the names on the canvas. A rename on the canvas updates it. On the right: Routing, Not routing, Muted or Removed.</li>
+      <li><b>Pause, Clear, Clock, Active Sensing.</b> Pause stops adding rows but keeps counting, so you can read without the list moving. Clear asks nothing: this list is short-lived. Clock and Active Sensing start hidden, as in the Monitor, because a clock on a connection drowns everything else. The count on the right includes hidden and dropped messages.</li>
+      <li><b>Time, Message, Details.</b> Time is the message's own timestamp, in milliseconds since the window opened, so a message scheduled for later shows when it will play. Message is the UMP words and the message name chiclet. Details is the Monitor's description: note names, velocities, controller names, tempo and so on. Right-click a row to copy it, the same choices as the Monitor. The window keeps the last 5,000 messages.</li>
+      <li><b>Always on top</b> is on by default for these windows, so they don't fall behind the editor the moment you click the canvas. Minimize and close only: no maximize, it isn't that kind of window.</li>
+    </ol>
+  </div>
+
+  <h3>States</h3>
+  <div class="row" style="gap:20px">
+    <div class="stack"><iframe class="mon" src="_connection-monitor-window.html?v=trace" style="width:480px; height:300px"></iframe><div class="state-cap"><b>Testing.</b> Messages from Test (the patch's trace) show here too, marked Test, even when the patch isn't routing. Nothing is sent to a device by a test, so the tag keeps the two apart.</div></div>
+    <div class="stack"><iframe class="mon" src="_connection-monitor-window.html?v=idle" style="width:480px; height:300px"></iframe><div class="state-cap"><b>Nothing yet.</b> Says how to get messages here, instead of an empty table.</div></div>
+    <div class="stack"><iframe class="mon" src="_connection-monitor-window.html?v=removed" style="width:480px; height:300px"></iframe><div class="state-cap"><b>Removed.</b> The window stays with what it captured, and says why nothing new arrives. Undo brings the connection back, and the window picks up where it left off.</div></div>
+  </div>
+
+  <h3>How it would work</h3>
+  <ol class="callouts" style="list-style:disc">
+    <li><b>No cost when nobody watches.</b> Routing runs on the service's callback thread with no locks and no allocation, and that has to stay true. Each connection gets a slot for a watcher. When the slot is empty, the cost is one check. When a window is watching, the message is copied into a fixed-size buffer and the window collects it about 20 times a second. If the window falls behind, the oldest copies are dropped and counted ("12 dropped"); routing never waits for a window.</li>
+    <li><b>Test feeds the same windows.</b> The patch trace already knows which connections each test message went along, so it hands those messages to any window watching those connections, marked as Test.</li>
+    <li><b>Shared description code.</b> The Monitor's message describer moves to the code the tools already share, and both apps use it. It would take plain UMP words instead of a Monitor row, and the label words ("Note", "Velocity", "Controller"...) stay in each app's own string resources, as the repository requires, with the Patchbay getting a copy of the Monitor's. The Patchbay's own short descriptions for the trace stay as they are.</li>
+    <li><b>Windows belong to their patch's editor.</b> Closing the editor closes its watch windows. A patch whose editor is closed but which keeps routing (routing runs from the tray too) has no watch windows. Watch windows aren't saved with the patch, so opening a patch never opens a stack of windows you'd forgotten about.</li>
+  </ol>
+</div>
+</body>
+</html>

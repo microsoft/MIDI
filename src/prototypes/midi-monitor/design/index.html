@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1000">
+<title>Windows MIDI Monitor: advanced mode design comps</title>
+<link rel="stylesheet" href="mon.css">
+<style>
+    h1 { font-size: 22px; margin: 6px 0 0 0; }
+    h2 { font-size: 16px; margin: 10px 0 -4px 0; }
+    p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0; max-width: 1180px; }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 1240px; }
+    a.item { display: block; text-decoration: none; color: var(--text); border-radius: 8px; border: 1px solid var(--stroke-strong); background: var(--card); padding: 14px 16px; }
+    a.item .n { font-size: 14px; font-weight: 600; }
+    a.item .d { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+    ol.q { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 1180px; margin: 0; padding-left: 22px; }
+    ol.q b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Windows MIDI Monitor: advanced mode</h1>
+  <p>Comps for a "don't ask me again" on clearing, a clear shortcut, and an advanced mode that watches several groups on several endpoints at once. Simple mode stays as it is. These are HTML: open any page in a browser, or run <span class="mono">capture.ps1</span> for pictures in <span class="mono">shots</span>. Nothing here is built. The matching MIDI Patchbay connection monitor is pages 7 and 8 in <span class="mono">src\prototypes\midi-patchbay\design</span>.</p>
+  <div class="list">
+    <a class="item" href="1-simple-mode.html"><div class="n">1. Simple mode, with a clear shortcut</div><div class="d">Ctrl+L, a Clear button, and the button that switches modes.</div></a>
+    <a class="item" href="2-clear-confirmation.html"><div class="n">2. Don't ask me again</div><div class="d">The clear confirmation, and the setting that turns the question back on.</div></a>
+    <a class="item" href="3-advanced-mode.html"><div class="n">3. Advanced mode</div><div class="d">Sources list with activity lights, a From column, filter chips.</div></a>
+    <a class="item" href="4-filters.html"><div class="n">4. Filters</div><div class="d">The MIDI Patchbay's filter choices, as a flyout.</div></a>
+    <a class="item" href="5-narrow-window.html"><div class="n">5. A narrow window</div><div class="d">Sources fold into chips, with an Add flyout.</div></a>
+    <a class="item" href="6-opened-by-another-app.html"><div class="n">6. Opened by another app</div><div class="d">A command-line launch sets your saved sources aside without changing them.</div></a>
+  </div>
+
+  <h2>Decisions (Pete, Nov 8 2026)</h2>
+  <ol class="q">
+    <li><b>Activity lights</b>: on by default, with a setting to turn them off (page 2), because opening every endpoint is expensive on a PC with many devices.</li>
+    <li><b>Ctrl+L</b> clears. Prior art: Chrome and Edge DevTools console, bash, zsh, PowerShell.</li>
+    <li><b>Simple mode remembers</b> the last device, group and channel. A command-line launch doesn't overwrite them.</li>
+  </ol>
+
+  <h2>Still open</h2>
+  <ol class="q">
+    <li><b>Repeats</b> (Pete, Nov 8): only useful when the list says how many were hidden. Changed to "fold repeated messages into one row, with a count" on page 4.</li>
+    <li><b>Sharing the Patchbay filter code.</b> The Monitor's filters would use the Patchbay's filter type (which is plain code with no UI), moved into the code the tools share, so both apps agree on what each box means.</li>
+  </ol>
+</div>
+</body>
+</html>

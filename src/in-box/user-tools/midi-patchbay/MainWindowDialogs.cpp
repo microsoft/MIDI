@@ -1123,6 +1123,8 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
+            AddWatchNodeItem(menu, nodeId);
+
             primitives::FlyoutShowOptions options{};
 
             options.Position(position);

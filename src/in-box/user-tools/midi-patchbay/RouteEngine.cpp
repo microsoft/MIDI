@@ -289,6 +289,11 @@ namespace midipatchbay
         void CountLink(_In_ uint32_t cell) noexcept override;
         void CountBlock(_In_ uint32_t cell, _In_ bool passed) noexcept override;
 
+        void LinkCarried(
+            _In_ uint32_t cell,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint8_t wordCount) noexcept override;
+
         void Send(
             _In_ uint32_t leaf,
             _In_reads_(wordCount) uint32_t const* words,
@@ -493,6 +498,14 @@ namespace midipatchbay
         RouteGraph Graph{};
 
         std::unique_ptr<Counters[]> Cells{};
+
+        // One for each cell. Empty unless a connection monitor window watches that link, which
+        // makes an unwatched link cost one check. Set under the engine's publish lock.
+        std::unique_ptr<std::atomic<WatchFan const*>[]> Watches{};
+
+        // Every fan this graph has had. A routing thread can still be reading one that was
+        // replaced, so they all go with the graph and never before.
+        std::vector<std::unique_ptr<WatchFan>> WatchFans{};
 
         // Sized once, before anything takes their addresses.
         std::vector<Leaf> Leaves{};
@@ -1031,6 +1044,16 @@ namespace midipatchbay
         }
     }
 
+    // A window watching the link gets a copy. Never waits: a full buffer drops it.
+    _Use_decl_annotations_
+    void RouteEngine::Context::LinkCarried(uint32_t cell, uint32_t const* words, uint8_t wordCount) noexcept
+    {
+        if (auto const* fan = Owner->Watches[cell].load(std::memory_order_acquire))
+        {
+            fan->Deliver(Timestamp, words, wordCount);
+        }
+    }
+
     _Use_decl_annotations_
     void RouteEngine::Context::Send(uint32_t leafIndex, uint32_t const* words, uint8_t wordCount) noexcept
     {
@@ -1224,7 +1247,180 @@ namespace midipatchbay
     {
         std::scoped_lock guard{ m_publishLock };
 
+        if (runtime != nullptr)
+        {
+            InstallWatchesLocked(*runtime);
+        }
+
         return std::exchange(m_runtime, std::move(runtime));
+    }
+
+    _Use_decl_annotations_
+    void RouteEngine::InstallWatchesLocked(Runtime& runtime) noexcept
+    {
+        try
+        {
+            auto const& cells = runtime.Graph.Cells;
+
+            if (runtime.Watches == nullptr || cells.empty())
+            {
+                return;
+            }
+
+            std::unordered_map<std::wstring_view, uint32_t> cellOf{};
+
+            for (size_t i = 0; i < cells.size(); i++)
+            {
+                cellOf.emplace(cells[i], static_cast<uint32_t>(i));
+            }
+
+            std::unordered_map<uint32_t, std::unique_ptr<WatchFan>> fans{};
+
+            for (auto const& watch : m_watches)
+            {
+                for (size_t link = 0; link < watch.Cells.size(); link++)
+                {
+                    auto const found = cellOf.find(watch.Cells[link]);
+
+                    if (found == cellOf.end())
+                    {
+                        continue;
+                    }
+
+                    auto& fan = fans[found->second];
+
+                    if (fan == nullptr)
+                    {
+                        fan = std::make_unique<WatchFan>();
+                    }
+
+                    fan->Add(WatchTarget{ watch.Buffer, watch.Lease, static_cast<uint16_t>(link) });
+                }
+            }
+
+            // Made whole before routing can see them, then swapped in one link at a time.
+            runtime.WatchFans.reserve(runtime.WatchFans.size() + fans.size());
+
+            for (size_t i = 0; i < cells.size(); i++)
+            {
+                auto& slot = runtime.Watches[i];
+                auto const found = fans.find(static_cast<uint32_t>(i));
+
+                if (found == fans.end())
+                {
+                    if (slot.load(std::memory_order_relaxed) != nullptr)
+                    {
+                        slot.store(nullptr, std::memory_order_release);
+                    }
+
+                    continue;
+                }
+
+                WatchFan const* fan = found->second.get();
+
+                runtime.WatchFans.push_back(std::move(found->second));
+                slot.store(fan, std::memory_order_release);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to point the links at the windows watching them.")
+    }
+
+    _Use_decl_annotations_
+    WatchLease RouteEngine::StartWatching(std::vector<std::wstring> const& cells) noexcept
+    {
+        std::scoped_lock guard{ m_publishLock };
+
+        try
+        {
+            WatchBuffer* buffer{ nullptr };
+
+            if (!m_freeWatchBuffers.empty())
+            {
+                buffer = m_freeWatchBuffers.back();
+                m_freeWatchBuffers.pop_back();
+            }
+            else
+            {
+                buffer = m_watchBuffers.emplace_back(std::make_unique<WatchBuffer>()).get();
+            }
+
+            Watch watch{};
+            watch.Id = m_nextWatchId++;
+            watch.Buffer = buffer;
+            watch.Lease = buffer->Lease();
+            watch.Cells = cells;
+
+            m_watches.push_back(std::move(watch));
+
+            auto const& added = m_watches.back();
+            WatchLease const lease{ added.Id, added.Buffer, added.Lease };
+
+            if (m_runtime != nullptr)
+            {
+                InstallWatchesLocked(*m_runtime);
+            }
+
+            return lease;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start watching a connection.")
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    void RouteEngine::ChangeWatching(uint32_t id, std::vector<std::wstring> const& cells) noexcept
+    {
+        std::scoped_lock guard{ m_publishLock };
+
+        try
+        {
+            auto const found = std::find_if(m_watches.begin(), m_watches.end(),
+                [id](Watch const& watch) { return watch.Id == id; });
+
+            if (found == m_watches.end() || found->Cells == cells)
+            {
+                return;
+            }
+
+            found->Cells = cells;
+
+            if (m_runtime != nullptr)
+            {
+                InstallWatchesLocked(*m_runtime);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change what a window watches.")
+    }
+
+    _Use_decl_annotations_
+    void RouteEngine::StopWatching(uint32_t id) noexcept
+    {
+        std::scoped_lock guard{ m_publishLock };
+
+        try
+        {
+            auto const found = std::find_if(m_watches.begin(), m_watches.end(),
+                [id](Watch const& watch) { return watch.Id == id; });
+
+            if (found == m_watches.end())
+            {
+                return;
+            }
+
+            auto* const buffer = found->Buffer;
+
+            m_watches.erase(found);
+
+            if (m_runtime != nullptr)
+            {
+                InstallWatchesLocked(*m_runtime);
+            }
+
+            // A graph that is being replaced can still put a copy or two in it. The next
+            // window's lease keeps those out of its list.
+            m_freeWatchBuffers.push_back(buffer);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to stop watching a connection.")
     }
 
     _Use_decl_annotations_
@@ -1373,6 +1569,7 @@ namespace midipatchbay
             auto const& routes = runtime.Graph;
 
             runtime.Cells = std::make_unique<Counters[]>((std::max)(routes.Cells.size(), size_t{ 1 }));
+            runtime.Watches = std::make_unique<std::atomic<WatchFan const*>[]>((std::max)(routes.Cells.size(), size_t{ 1 }));
             runtime.Leaves.resize(routes.Leaves.size());
 
             // Each stateful step keeps its state from the graph before, when it is still there.

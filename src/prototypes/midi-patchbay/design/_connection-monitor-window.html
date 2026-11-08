@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>Connection monitor window (fragment)</title>
+<!-- PROTOTYPE. One MIDI Patchbay connection monitor window, filling the frame it is shown in.
+     7-connection-monitor.html and 8-connection-monitor-window.html show it in iframes.
+     ?v=live | port | trace | idle | removed -->
+<link rel="stylesheet" href="../../midi-monitor/design/mon.css">
+<script src="../../midi-monitor/design/mon.js"></script>
+<style>
+    html, body { background: transparent; overflow: hidden; }
+    .window { position: absolute; inset: 0; border-radius: 8px; }
+    .titlebar { height: 32px; }
+    .titlebar .appglyph { margin: 0 8px 0 12px; font-size: 14px; }
+    .titlebar .tag { width: 18px; height: 18px; border-radius: 9px; font-size: 11px; font-weight: 700; color: #000; display: flex; align-items: center; justify-content: center; margin: 0 8px 0 12px; flex: 0 0 auto; }
+    .cap { height: 32px; width: 40px; font-size: 12px; }
+    .sys div { height: 32px; width: 40px; }
+    .route { margin: 0 10px 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; font-size: 12px; white-space: nowrap; overflow: hidden; }
+    .route .k { color: var(--text3); }
+    .route .ep { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+    .route .arrow { font-family: "Segoe Fluent Icons"; font-size: 11px; color: var(--text2); }
+    .route .state { margin-left: auto; display: flex; align-items: center; gap: 6px; color: var(--text2); flex: 0 0 auto; }
+    .route .dot { width: 7px; height: 7px; border-radius: 4px; background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .route .dot.off { background: rgba(255,255,255,.3); box-shadow: none; }
+    .bar { margin: 0 10px 8px; display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text2); }
+    .msgs { margin: 0 10px 8px; }
+    .th, .tr { padding: 0 10px; column-gap: 10px; }
+    .tr.trace .t::after { content: "Test"; margin-left: 6px; font-size: 10px; padding: 1px 5px; border-radius: 3px; background: var(--accent-dim); color: var(--accent); }
+    .empty { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text2); font-size: 13px; text-align: center; padding: 0 30px; }
+    .empty .gl { font-size: 28px; color: var(--text3); }
+    .warn { margin: 0 10px 8px; padding: 8px 10px; border-radius: 6px; background: var(--caution-bg); color: var(--text); font-size: 12px; display: flex; align-items: center; gap: 8px; }
+    .warn .gl { color: var(--caution); }
+</style>
+</head>
+<body>
+<div class="window" id="w">
+  <div class="titlebar">
+    <span class="tag" id="tag" style="background:var(--src1)">1</span>
+    <div class="title" id="title">Impact LX Mini &rarr; Message type filter</div>
+    <div class="spacer"></div>
+    <div class="cap on">&#xE718;</div>
+    <div class="sys"><div>&#xE921;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="route cardx" id="route">
+    <span class="k">From</span><span class="ep">Impact LX Mini</span><span class="k">Group 1 &middot; MIDI1</span>
+    <span class="arrow">&#xE72A;</span>
+    <span class="k">To</span><span class="ep">Message type filter</span>
+    <span class="state" id="state"><span class="dot"></span>Routing</span>
+  </div>
+
+  <div id="warn"></div>
+
+  <div class="bar">
+    <span class="btn sm subtle icon" title="Pause (Space)"><span class="gl">&#xE769;</span></span>
+    <span class="btn sm subtle icon" title="Clear (Ctrl+L)"><span class="gl">&#xE74D;</span></span>
+    <span class="btn sm subtle icon" title="Show Clock messages"><span class="gl">&#xE823;</span></span>
+    <span class="btn sm subtle icon" title="Show Active Sensing messages"><span class="gl">&#xEA8F;</span></span>
+    <span class="spacer"></span>
+    <span id="count">1,284 messages &middot; 0 dropped</span>
+  </div>
+
+  <div class="msgs layer" id="table" data-rows="cord" data-count="9" data-only="a" data-names="on"></div>
+</div>
+
+<script>
+    const v = new URLSearchParams(location.search).get("v") || "live";
+    const $ = id => document.getElementById(id);
+
+    if (v === "port") {
+        $("tag").style.background = "var(--src2)";
+        $("tag").textContent = "2";
+        $("title").innerHTML = "Out of Message type filter";
+        $("route").innerHTML = '<span class="k">Everything out of</span><span class="ep">Message type filter</span><span class="k">2 connections</span><span class="state"><span class="dot"></span>Routing</span>';
+        $("table").dataset.rows = "cordport";
+        $("table").dataset.count = "8";
+        $("count").innerHTML = "806 messages &middot; 0 dropped";
+    }
+
+    if (v === "trace") {
+        $("state").innerHTML = '<span class="dot off"></span>Not routing';
+        $("table").dataset.count = "4";
+        $("count").innerHTML = "4 messages from Test";
+    }
+
+    if (v === "idle") {
+        $("state").innerHTML = '<span class="dot off"></span>Not routing';
+        $("table").remove();
+        document.querySelector(".bar").style.visibility = "hidden";
+        const e = document.createElement("div");
+        e.className = "empty";
+        e.innerHTML = '<span class="gl">&#xE7B3;</span><div>Nothing has gone along this connection yet.</div><div style="color:var(--text3); font-size:12px">Turn on Routing, or use Test, and messages show here as they pass.</div>';
+        $("w").appendChild(e);
+    }
+
+    if (v === "removed") {
+        $("state").innerHTML = '<span class="dot off"></span>Removed';
+        $("warn").innerHTML = '<div class="warn"><span class="gl">&#xE7BA;</span>This connection was removed from the patch. The messages it carried are kept until you close this window.</div>';
+        $("table").dataset.count = "6";
+    }
+
+    // rows that came from Test are marked, so they can't be mistaken for live traffic
+    document.addEventListener("DOMContentLoaded", () => {
+        if (v === "trace") {
+            document.querySelectorAll(".tr").forEach(r => r.classList.add("trace"));
+        }
+    });
+</script>
+</body>
+</html>

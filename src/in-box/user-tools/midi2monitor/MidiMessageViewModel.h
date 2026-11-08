@@ -75,7 +75,12 @@ namespace winrt::midi2monitor::implementation
                 }
             }
 
-            if (!m_groupText.empty())
+            if (!m_sourceText.empty())
+            {
+                text = ::midi2monitor::resources::FormatString(
+                    L"RowAccessibleSourceFormat", text, std::wstring{ m_sourceText }, std::wstring{ m_sourceGroupText });
+            }
+            else if (!m_groupText.empty())
             {
                 text = ::midi2monitor::resources::FormatString(
                     L"RowAccessibleGroupFormat", text, std::wstring{ m_groupText });
@@ -128,6 +133,16 @@ namespace winrt::midi2monitor::implementation
 
         xaml::Visibility CommentGlyphVisibility() const noexcept { return VisibleWhen(!m_comment.empty()); }
 
+        winrt::hstring SourceText() const noexcept { return m_sourceText; }
+        winrt::hstring SourceGroupText() const noexcept { return m_sourceGroupText; }
+        media::Brush SourceBrush() const noexcept { return m_sourceBrush; }
+
+        winrt::hstring RepeatText() const noexcept;
+        xaml::Visibility RepeatVisibility() const noexcept { return VisibleWhen(m_repeatCount > 0); }
+
+        // a repeat was folded onto this row since it was made
+        void RepeatCount(_In_ uint32_t value) noexcept;
+
         winrt::event_token PropertyChanged(xaml::Data::PropertyChangedEventHandler const& handler)
         {
             return m_propertyChanged.add(handler);
@@ -162,6 +177,10 @@ namespace winrt::midi2monitor::implementation
         winrt::hstring m_messageName{};
         winrt::hstring m_noticeText{};
         winrt::hstring m_comment{};
+        winrt::hstring m_sourceText{};
+        winrt::hstring m_sourceGroupText{};
+        uint32_t m_repeatCount{ 0 };
+        media::Brush m_sourceBrush{ nullptr };
 
         std::array<winrt::hstring, 4> m_detailLabels{};
         std::array<winrt::hstring, 4> m_detailValues{};

@@ -19,6 +19,7 @@
 #include "PatchTrace.h"
 #include "RouteEngine.h"
 #include "ThemeBrushes.h"
+#include "WatchWindow.h"
 
 namespace winrt::midipatchbay::implementation
 {
@@ -401,6 +402,24 @@ namespace winrt::midipatchbay::implementation
         // "Iridium, group 3" or a step's name, for either end of a link.
         winrt::hstring DescribeLinkEnd(_In_ std::wstring const& nodeId, _In_ int32_t groupIndex, _In_ bool isSource) noexcept;
 
+        // ---- connection monitor windows, in MainWindowWatch.cpp ----
+        void ShowConnectionMenu(_In_ std::wstring const& connectionId, _In_ foundation::Point const& position) noexcept;
+        void WatchConnection(_In_ std::wstring const& connectionId) noexcept;
+        void WatchNode(_In_ std::wstring const& nodeId) noexcept;
+
+        // Ctrl+M: the selected connection, or everything out of the selected step or endpoint.
+        void WatchSelection() noexcept;
+
+        // After anything that changes the patch, its names or its routing.
+        void RefreshWatchWindows() noexcept;
+        void FeedTraceToWatchWindows() noexcept;
+        void CloseWatchWindows() noexcept;
+
+        // "Watch output", at the top of a step's or endpoint's menu.
+        void AddWatchNodeItem(_In_ controls::MenuFlyout const& menu, _In_ std::wstring const& nodeId) noexcept;
+        ::midipatchbay::WatchPatchState CurrentWatchState() noexcept;
+        std::shared_ptr<::midipatchbay::WatchWindows> WatchWindowList() noexcept;
+
         // ---- dialogs and menus, in MainWindowDialogs.cpp ----
         // True ticks the dialog's startup box, for the Start automatically switch on a temporary patch.
         winrt::fire_and_forget ShowSavePatchDialogAsync(_In_ bool startAutomatically = false);
@@ -443,6 +462,9 @@ namespace winrt::midipatchbay::implementation
         // ---- state ----
         midiapp::WindowChrome m_chrome{};
         ::midipatchbay::PatchCanvas m_canvas{};
+
+        // Made the first time a connection is watched. Closed with this window.
+        std::shared_ptr<::midipatchbay::WatchWindows> m_watchWindows{};
 
         // The patch's SessionKey in the library. Cleared when the patch goes away.
         std::wstring m_patchKey{};

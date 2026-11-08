@@ -99,6 +99,7 @@ namespace winrt::midi2monitor::implementation
         InitializeControlsFromSettings();
         InitializePipeline();
         BuildChannelList();
+        InitializeAdvancedMode();
         StartEndpointWatcher();
 
         UpdateCommandStates();
@@ -218,6 +219,17 @@ namespace winrt::midi2monitor::implementation
 
             // the shared chrome does not know about the palette or the list rows
             native::MonitorPalette::Invalidate();
+
+            // dialogs take the window's color, and follow the theme when Windows changes it
+            ColorDialogs();
+
+            RootGrid().ActualThemeChanged([weak = get_weak()](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ColorDialogs();
+                    }
+                });
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to set up the window chrome.")
     }
@@ -236,11 +248,13 @@ namespace winrt::midi2monitor::implementation
     void MainWindow::ApplyBackdrop() noexcept
     {
         m_chrome.ApplyBackdrop();
+        ColorDialogs();
     }
 
     void MainWindow::ApplyBackgroundColor() noexcept
     {
         m_chrome.ApplyBackgroundColor();
+        ColorDialogs();
     }
 
     _Use_decl_annotations_
@@ -249,6 +263,7 @@ namespace winrt::midi2monitor::implementation
         UpdateTitleBarInsets();
         UpdateCaptureButtonLayout();
         UpdateStatusBarLayout();
+        UpdateAdvancedLayout();
     }
 
     void MainWindow::UpdateStatusBarLayout() noexcept
@@ -262,11 +277,12 @@ namespace winrt::midi2monitor::implementation
                 return;
             }
 
-            // the export button is centered on the whole bar, so each side only gets half the
-            // width. Shed the least important controls first rather than letting them collide.
-            constexpr double ZoomSliderMinimumWidth = 800.0;
-            constexpr double ZoomPresetsMinimumWidth = 730.0;
-            constexpr double MessageCountsMinimumWidth = 690.0;
+            // the Save and Clear buttons are centered on the whole bar, so each side only gets
+            // half the width. Shed the least important controls first rather than letting them
+            // collide.
+            constexpr double ZoomSliderMinimumWidth = 890.0;
+            constexpr double ZoomPresetsMinimumWidth = 820.0;
+            constexpr double MessageCountsMinimumWidth = 780.0;
 
             auto const visible = [](bool show)
                 {
@@ -475,13 +491,20 @@ namespace winrt::midi2monitor::implementation
                 L"ColumnHeaderGroupText",
                 L"ColumnHeaderChannelText",
                 L"ColumnHeaderDecodedText",
-                L"ColumnHeaderDeltaText"
+                L"ColumnHeaderDeltaText",
+                L"ColumnHeaderSourceText"
             };
 
             m_columns.Clear();
 
             for (auto const& entry : native::ColumnLayoutState::Entries())
             {
+                // each mode has a column the other doesn't
+                if (!native::IsColumnInMode(entry.Id, native::ColumnLayoutState::AdvancedMode()))
+                {
+                    continue;
+                }
+
                 auto const index = static_cast<size_t>(entry.Id);
 
                 m_columns.Append(winrt::make<MonitorColumn>(
@@ -562,6 +585,9 @@ namespace winrt::midi2monitor::implementation
             auto const wasAtEnd = IsMessageListAtEnd();
 
             m_listSource->Refresh();
+
+            // repeats folded onto rows already on screen
+            m_listSource->ApplyFoldUpdates(m_pipeline.TakeFoldUpdates());
 
             if (wasAtEnd)
             {
@@ -680,6 +706,25 @@ namespace winrt::midi2monitor::implementation
             {
                 DroppedCountText().Visibility(xaml::Visibility::Collapsed);
             }
+
+            // advanced mode says how much the filter and folding are keeping off the list
+            auto const showHidden = m_advancedMode && snapshot.HiddenMessageCount > 0;
+            auto const showFolded = m_advancedMode && snapshot.FoldedMessageCount > 0;
+
+            HiddenCountText().Visibility(showHidden ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            FoldedCountText().Visibility(showFolded ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (showHidden)
+            {
+                HiddenCountText().Text(res::FormatString(L"StatusHiddenMessagesFormat", snapshot.HiddenMessageCount));
+            }
+
+            if (showFolded)
+            {
+                FoldedCountText().Text(res::FormatString(L"StatusFoldedMessagesFormat", snapshot.FoldedMessageCount));
+            }
+
+            ClearButton().IsEnabled(snapshot.VisibleCount > 0 || snapshot.TotalMessageCount > 0);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the status line.")
     }
@@ -705,6 +750,9 @@ namespace winrt::midi2monitor::implementation
         }
 
         m_pipeline.PostHiddenTraits(traits);
+
+        // advanced mode shows these two as filter chips
+        RebuildChips();
     }
 
     _Use_decl_annotations_
@@ -877,7 +925,14 @@ namespace winrt::midi2monitor::implementation
             }
 
             auto const index = static_cast<int32_t>(std::distance(entries.begin(), position));
-            auto const target = index + offset;
+            auto target = index + offset;
+
+            // step over the column this mode leaves out, or the move looks like it did nothing
+            while (target >= 0 && target < static_cast<int32_t>(entries.size()) &&
+                !native::IsColumnInMode(entries[static_cast<size_t>(target)].Id, native::ColumnLayoutState::AdvancedMode()))
+            {
+                target += offset;
+            }
 
             if (target < 0 || target >= static_cast<int32_t>(entries.size()))
             {
@@ -995,11 +1050,48 @@ namespace winrt::midi2monitor::implementation
 
         try
         {
+            // the shortcut works even when the list is empty, and there is nothing to ask about
+            auto const snapshot = m_pipeline.Snapshot();
+
+            if (snapshot.VisibleCount == 0 && snapshot.TotalMessageCount == 0)
+            {
+                co_return;
+            }
+
+            if (!native::AppSettings::Current().AskBeforeClear())
+            {
+                m_pipeline.PostClear();
+                co_return;
+            }
+
+            // only one confirmation at a time; a second Ctrl+L while it is open does nothing
+            if (m_clearConfirmationOpen)
+            {
+                co_return;
+            }
+
+            m_clearConfirmationOpen = true;
+            auto reset = wil::scope_exit([this]() noexcept { m_clearConfirmationOpen = false; });
+
             controls::ContentDialog dialog{};
 
+            controls::TextBlock body{};
+            body.Text(res::GetString(L"ClearConfirmBody"));
+            body.TextWrapping(xaml::TextWrapping::Wrap);
+
+            // unchecked every time: the answer is only kept when Clear is chosen
+            controls::CheckBox dontAsk{};
+            dontAsk.Content(winrt::box_value(res::GetString(L"ClearConfirmDontAsk")));
+            dontAsk.Margin(xaml::ThicknessHelper::FromLengths(0, 12, 0, 0));
+
+            controls::StackPanel content{};
+            content.Children().Append(body);
+            content.Children().Append(dontAsk);
+
             dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.RequestedTheme(RootGrid().ActualTheme());
             dialog.Title(winrt::box_value(res::GetString(L"ClearConfirmTitle")));
-            dialog.Content(winrt::box_value(res::GetString(L"ClearConfirmBody")));
+            dialog.Content(content);
             dialog.PrimaryButtonText(res::GetString(L"ClearConfirmPrimary"));
             dialog.CloseButtonText(res::GetString(L"CommonCancel"));
             dialog.DefaultButton(controls::ContentDialogButton::Close);
@@ -1008,6 +1100,13 @@ namespace winrt::midi2monitor::implementation
 
             if (result == controls::ContentDialogResult::Primary)
             {
+                auto const checked = dontAsk.IsChecked();
+
+                if (checked != nullptr && checked.Value())
+                {
+                    native::AppSettings::Current().AskBeforeClear(false);
+                }
+
                 m_pipeline.PostClear();
             }
         }
@@ -1079,6 +1178,7 @@ namespace winrt::midi2monitor::implementation
             controls::ContentDialog dialog{};
 
             dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.RequestedTheme(RootGrid().ActualTheme());
             dialog.Title(winrt::box_value(title));
             dialog.CloseButtonText(res::GetString(L"CommonClose"));
 
@@ -1139,6 +1239,7 @@ namespace winrt::midi2monitor::implementation
             controls::ContentDialog dialog{};
 
             dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.RequestedTheme(RootGrid().ActualTheme());
             dialog.Title(winrt::box_value(res::GetString(L"CommandLineHelpTitle")));
             dialog.CloseButtonText(res::GetString(L"CommonClose"));
 

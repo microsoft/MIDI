@@ -15,6 +15,26 @@ namespace midi2monitor
     {
         std::vector<ColumnDisplayEntry> g_entries{};
         bool g_autoHideWhenNarrow{ true };
+        bool g_advancedMode{ false };
+
+        // Where a column not named in a stored layout goes: From goes after the time, because a
+        // layout saved before From existed would otherwise put it at the far end.
+        void InsertInDefaultPlace(_Inout_ std::vector<ColumnDisplayEntry>& entries, _In_ MonitorColumnId id)
+        {
+            if (id == MonitorColumnId::Source)
+            {
+                for (auto it = entries.begin(); it != entries.end(); ++it)
+                {
+                    if (it->Id == MonitorColumnId::Timestamp)
+                    {
+                        entries.insert(it + 1, ColumnDisplayEntry{ id, true });
+                        return;
+                    }
+                }
+            }
+
+            entries.push_back(ColumnDisplayEntry{ id, true });
+        }
     }
 
     std::vector<ColumnDisplayEntry>& ColumnLayoutState::Entries() noexcept
@@ -33,7 +53,7 @@ namespace midi2monitor
 
         for (int32_t i = 0; i < MonitorColumnCount; i++)
         {
-            g_entries.push_back(ColumnDisplayEntry{ static_cast<MonitorColumnId>(i), true });
+            InsertInDefaultPlace(g_entries, static_cast<MonitorColumnId>(i));
         }
     }
 
@@ -46,6 +66,17 @@ namespace midi2monitor
     void ColumnLayoutState::AutoHideWhenNarrow(bool value) noexcept
     {
         g_autoHideWhenNarrow = value;
+    }
+
+    bool ColumnLayoutState::AdvancedMode() noexcept
+    {
+        return g_advancedMode;
+    }
+
+    _Use_decl_annotations_
+    void ColumnLayoutState::AdvancedMode(bool value) noexcept
+    {
+        g_advancedMode = value;
     }
 
     std::wstring ColumnLayoutState::Serialize()
@@ -122,12 +153,12 @@ namespace midi2monitor
             position = separator + 1;
         }
 
-        // anything the stored layout did not mention keeps its default position at the end
+        // anything the stored layout did not mention keeps its default position
         for (int32_t i = 0; i < MonitorColumnCount; i++)
         {
             if (!seen[static_cast<size_t>(i)])
             {
-                parsed.push_back(ColumnDisplayEntry{ static_cast<MonitorColumnId>(i), true });
+                InsertInDefaultPlace(parsed, static_cast<MonitorColumnId>(i));
             }
         }
 
@@ -167,7 +198,8 @@ namespace winrt::midi2monitor::implementation
         {
             auto const childIndex = static_cast<uint32_t>(entry.Id) + 1;
 
-            if (!entry.IsVisible || childIndex > columnChildCount)
+            if (!entry.IsVisible || childIndex > columnChildCount ||
+                !native::IsColumnInMode(entry.Id, native::ColumnLayoutState::AdvancedMode()))
             {
                 continue;
             }

@@ -8,7 +8,9 @@
 #pragma once
 
 // Pure: no XAML, no resources and no precompiled header, so the unit tests compile it exactly as
-// it ships. The names and summaries a customer reads are in MessageText.h.
+// it ships. Windows MIDI Patchbay's filter steps and Windows MIDI Monitor's filters both use it, so
+// a box means the same thing in both apps. The names and summaries a customer reads are in each
+// app's own resources.
 
 #include <sal.h>
 #include <array>
@@ -20,7 +22,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Data.Json.h>
 
-namespace midipatchbay
+namespace midiapp
 {
     namespace json = ::winrt::Windows::Data::Json;
 
@@ -127,4 +129,28 @@ namespace midipatchbay
     // Short and stable. The routing engine compares plans by string, so a filter change has to
     // show up there or it would never be applied to a running route.
     std::wstring FilterSignature(_In_ MessageFilter const& filter) noexcept;
+}
+
+// Windows MIDI Patchbay wrote these before they were shared, and still uses them by these names.
+namespace midipatchbay
+{
+    namespace json = ::winrt::Windows::Data::Json;
+    using ::midiapp::UmpMessageType;
+    using ::midiapp::MessageTypeCount;
+    using ::midiapp::ChannelCount;
+    using ::midiapp::ChannelVoiceStatusCount;
+    using ::midiapp::SystemMessage;
+    using ::midiapp::SystemMessageList;
+    using ::midiapp::SystemMessageCount;
+    using ::midiapp::LowestNote;
+    using ::midiapp::HighestNote;
+    using ::midiapp::MessageFilter;
+    using ::midiapp::IndexOfSystemMessage;
+    using ::midiapp::StatusCarriesNote;
+    using ::midiapp::PackFlags;
+    using ::midiapp::UnpackFlags;
+    using ::midiapp::AllTrue;
+    using ::midiapp::FilterToJson;
+    using ::midiapp::FilterFromJson;
+    using ::midiapp::FilterSignature;
 }
