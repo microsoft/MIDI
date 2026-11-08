@@ -30,12 +30,16 @@
     <a class="item" href="6-opened-by-another-app.html"><div class="n">6. Opened by another app</div><div class="d">A command-line launch sets your saved sources aside without changing them.</div></a>
   </div>
 
-  <h2>Questions before building</h2>
+  <h2>Decisions (Pete, Nov 8 2026)</h2>
   <ol class="q">
-    <li><b>Activity lights listen to every endpoint.</b> To light up endpoints that aren't checked, the Monitor has to open a connection to each one. That's cheap in Windows MIDI Services, but on a PC with dozens of endpoints it's dozens of connections from one app. Keep it always on, or only while the Sources pane is open?</li>
-    <li><b>Ctrl+L</b> for clearing, or something else?</li>
-    <li><b>Should simple mode remember the last device</b> (and group and channel) too? It doesn't today.</li>
-    <li><b>The "hide repeats" filter</b> on page 4 isn't a Patchbay filter. Keep it, or keep the list exactly the Patchbay's?</li>
+    <li><b>Activity lights</b>: on by default, with a setting to turn them off (page 2), because opening every endpoint is expensive on a PC with many devices.</li>
+    <li><b>Ctrl+L</b> clears. Prior art: Chrome and Edge DevTools console, bash, zsh, PowerShell.</li>
+    <li><b>Simple mode remembers</b> the last device, group and channel. A command-line launch doesn't overwrite them.</li>
+  </ol>
+
+  <h2>Still open</h2>
+  <ol class="q">
+    <li><b>The "hide repeats" filter</b>: the last check box in the Filter flyout on page 4 (mark 5), "Hide messages that only differ in time from the one before". It isn't a Patchbay filter. Keep it, or keep the list exactly the Patchbay's?</li>
     <li><b>Sharing the Patchbay filter code.</b> The Monitor's filters would use the Patchbay's filter type (which is plain code with no UI), moved into the code the tools share, so both apps agree on what each box means.</li>
   </ol>
 </div>

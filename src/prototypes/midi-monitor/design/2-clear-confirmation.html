@@ -2,7 +2,7 @@
 <html lang="en-us">
 <head>
 <meta charset="utf-8">
-<meta name="size" content="1300,700">
+<meta name="size" content="1300,820">
 <title>2. Clear confirmation with Don't ask again</title>
 <link rel="stylesheet" href="mon.css">
 </head>
@@ -11,7 +11,7 @@
   <p class="caption-above"><b>2. "Don't ask me again" on the clear confirmation.</b> Left: the dialog as Ctrl+L, the Clear button or the menu opens it. Right: the Capture section of Settings, where the question can be turned back on.</p>
 
   <div class="row">
-    <div class="window" style="width:620px; height:470px; background:#1a1a1a">
+    <div class="window" style="width:620px; height:560px; background:#1a1a1a">
       <div class="smoke"></div>
       <div class="dialog" style="left:70px; top:70px; width:480px">
         <div class="dlg-body">
@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <div class="window" style="width:620px; height:470px">
+    <div class="window" style="width:620px; height:560px">
       <div class="dlg-body" style="gap:20px">
         <div class="dlg-title">Settings</div>
         <div class="vstack">
@@ -34,6 +34,11 @@
           <div style="font-size:12px; color:var(--text2)">How many messages to keep. Older messages are discarded once the limit is reached.</div>
           <div class="field" style="width:260px; color:var(--text)">10000</div>
           <div class="check on new" data-mark="2" style="margin-top:8px"><span class="cb">&#xE73E;</span>Ask before clearing all entries</div>
+        </div>
+        <div class="vstack">
+          <div style="font-weight:600">Advanced mode</div>
+          <div class="check on new" data-mark="3"><span class="cb">&#xE73E;</span>Show which endpoints are sending</div>
+          <div style="font-size:12px; color:var(--text2); margin:-6px 0 0 30px">Opens every endpoint, not just the ones you're watching. Turn this off if the Monitor is slow to start on a PC with many devices.</div>
         </div>
         <div class="vstack">
           <div style="font-weight:600">Message list</div>
@@ -46,6 +51,7 @@
   <ol class="callouts">
     <li><b>Unchecked every time the dialog opens.</b> Checked and then Clear: the list clears and the answer is saved for this user, so every Monitor window stops asking. Checked and then Cancel: nothing is saved, because "don't ask me again" next to a Cancel shouldn't quietly turn into "always clear". Cancel stays the default button, as it is today.</li>
     <li><b>Settings turns it back on.</b> One check box under Capture, checked by default, the same value the dialog writes. There's no other way to find this once the question has stopped, so it has to live somewhere people look. Stored with the Monitor's other settings in the registry (HKCU), next to the column layout and zoom.</li>
+    <li><b>Show which endpoints are sending</b> (Pete, Nov 8: on by default, but a setting). Controls the activity lights on page 3. Opening every endpoint costs time on a PC with many devices, so this is the way out. Takes effect the next time listening starts.</li>
   </ol>
 </div>
 </body>
