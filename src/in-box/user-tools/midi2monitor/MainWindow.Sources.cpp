@@ -462,7 +462,7 @@ namespace winrt::midi2monitor::implementation
         {
             m_suppressSourceEvents = true;
 
-            auto const showLights = m_advancedListening && native::AppSettings::Current().ShowEndpointActivity();
+            auto const showLights = m_advancedMode && native::AppSettings::Current().ShowEndpointActivity();
             auto const lightVisibility = showLights ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
 
             for (auto& row : m_sourceRows)
@@ -533,9 +533,9 @@ namespace winrt::midi2monitor::implementation
         {
             auto const search = std::wstring{ SourcesSearchBox().Text() };
 
-            // only while listening is there anything to say about who is sending
+            // works whenever the lights do, listening or not
             auto const onlySending = OnlySendingToggle().IsOn() &&
-                m_advancedListening &&
+                m_advancedMode &&
                 native::AppSettings::Current().ShowEndpointActivity();
 
             for (auto& row : m_sourceRows)

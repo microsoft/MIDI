@@ -471,7 +471,7 @@
                     <StackPanel Spacing="4">
                         <ToggleSwitch x:Name="OnlySendingToggle"
                                       x:Uid="OnlySendingToggle"
-                                      Header="Sending only"
+                                      Header="Show only active or checked"
                                       Toggled="OnOnlySendingToggled" />
                         <TextBlock x:Name="SourcesSummaryText"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
@@ -789,11 +789,12 @@
                                         </StackPanel>
                                         <Border Background="{x:Bind MessageNameBackground}"
                                                 Visibility="{x:Bind MessageNameVisibility}"
-                                                CornerRadius="9"
-                                                Padding="8,1,8,1"
+                                                CornerRadius="3"
+                                                Padding="5,0,5,1"
                                                 HorizontalAlignment="Left">
                                             <TextBlock Text="{x:Bind MessageName}"
                                                        FontSize="{x:Bind ChicletFontSize}"
+                                                       FontWeight="SemiBold"
                                                        Foreground="{x:Bind MessageNameForeground}" />
                                         </Border>
                                     </StackPanel>

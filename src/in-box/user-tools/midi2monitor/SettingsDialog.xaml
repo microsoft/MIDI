@@ -119,7 +119,7 @@
                           Checked="OnShowActivityChanged"
                           Unchecked="OnShowActivityChanged" />
                 <TextBlock x:Uid="SettingsShowActivityDescription"
-                           Text="While listening, this opens every endpoint, not only the ones you're watching, so the Sources list can light up the ones sending messages. Turn it off if listening is slow to start on a PC with many devices."
+                           Text="In advanced mode, this opens every endpoint, not only the ones you're watching, so the Sources list can light up the ones sending messages. Turn it off if advanced mode is slow to open on a PC with many devices."
                            TextWrapping="Wrap"
                            Margin="28,-4,0,0"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"

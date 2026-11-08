@@ -30,7 +30,8 @@ namespace winrt::midi2monitor::implementation
 {
     namespace
     {
-        constexpr double FilterFlyoutWidth = 560.0;
+        // Three columns of check boxes, the longest "RPN and NRPN (MIDI 2.0)", each on one line.
+        constexpr double FilterFlyoutWidth = 700.0;
 
         // The UMP message types the filter offers, in the order it shows them, with the
         // resource key for each.

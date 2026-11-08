@@ -219,6 +219,11 @@ namespace winrt::midi2monitor::implementation
                 m_monitoredEndpointName = {};
                 RefreshSourcesList();
             }
+            else
+            {
+                // closes what advanced mode had open for its lights
+                UpdateDesiredConnections();
+            }
 
             UpdateAdvancedLayout();
             RebuildChips();
@@ -581,16 +586,19 @@ namespace winrt::midi2monitor::implementation
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the groups to listen to.")
     }
 
+    // What is open: with Activity lights on, every endpoint for as long as advanced mode shows,
+    // so the lights work before listening starts; with it off, only checked endpoints, and only
+    // while listening. The lights' timer runs exactly when there's activity to show.
     void MainWindow::UpdateDesiredConnections() noexcept
     {
         try
         {
             std::vector<native::AdvancedConnections::Wanted> wanted{};
 
-            if (m_advancedMode && m_advancedListening)
-            {
-                auto const everyEndpoint = native::AppSettings::Current().ShowEndpointActivity();
+            auto const everyEndpoint = native::AppSettings::Current().ShowEndpointActivity();
 
+            if (m_advancedMode && (everyEndpoint || m_advancedListening))
+            {
                 for (auto const& row : m_sourceRows)
                 {
                     if (row.Slot == native::NoSourceSlot)
@@ -606,6 +614,19 @@ namespace winrt::midi2monitor::implementation
             }
 
             m_advancedConnections.Desired(std::move(wanted));
+
+            if (m_activityTimer != nullptr)
+            {
+                if (m_advancedMode && everyEndpoint)
+                {
+                    m_activityTimer.Start();
+                }
+                else
+                {
+                    m_activityTimer.Stop();
+                    RefreshActivityLights();
+                }
+            }
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the advanced mode connections.")
     }
@@ -649,11 +670,6 @@ namespace winrt::midi2monitor::implementation
 
             UpdateDesiredConnections();
 
-            if (m_activityTimer != nullptr)
-            {
-                m_activityTimer.Start();
-            }
-
             MIDI_MONITOR_LOG_INFO(L"Advanced mode listening started.");
 
             UpdateSourceRowStates();
@@ -680,18 +696,6 @@ namespace winrt::midi2monitor::implementation
             m_monitoring = false;
 
             UpdateDesiredConnections();
-
-            if (m_activityTimer != nullptr)
-            {
-                m_activityTimer.Stop();
-            }
-
-            for (auto& row : m_sourceRows)
-            {
-                row.Sending = false;
-            }
-
-            RefreshActivityLights();
 
             if (addNotice)
             {
@@ -723,7 +727,7 @@ namespace winrt::midi2monitor::implementation
         {
             auto const now = midi2::MidiClock::Now();
             auto const hold = midi2::MidiClock::TimestampFrequency() * ActivityHoldMilliseconds / 1000;
-            auto const showLights = m_advancedListening && native::AppSettings::Current().ShowEndpointActivity();
+            auto const showLights = m_advancedMode && native::AppSettings::Current().ShowEndpointActivity();
 
             auto const resources = xaml::Application::Current().Resources();
             auto const onBrush = resources.Lookup(winrt::box_value(L"SystemFillColorSuccessBrush")).try_as<media::Brush>();

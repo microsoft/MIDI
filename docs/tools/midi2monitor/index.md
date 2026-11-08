@@ -126,9 +126,9 @@ In advanced mode the device, group and channel lists are replaced by a **Sources
 
 Each checked group gets its own color. The color shows next to the group in **Sources**, and as a bar beside every message from that group.
 
-While MIDI Monitor is listening, a green light shows next to every device and group that has sent something in the last second, whether it's checked or not. That's the quickest way to find which device and group your keyboard is really using. Turn on **Sending only** at the bottom of the list to hide everything that's quiet. The box at the top of the list finds a device or group by name.
+A green light shows next to every device and group that has sent something in the last second, whether it's checked or not, and whether or not MIDI Monitor is listening. That's the quickest way to find which device and group your keyboard is really using: play a note and see what lights up. Turn on **Show only active or checked** at the bottom of the list to hide everything that's quiet. Devices you've checked stay in the list either way, so you can always uncheck them. The box at the top of the list finds a device or group by name.
 
-The lights work by listening to every device, not only the ones you checked. On a PC with a lot of MIDI devices that can make listening slow to start. If it does, turn off **Activity lights** in Settings, and MIDI Monitor opens only the devices you checked.
+The lights work by opening every device, not only the ones you checked, as soon as you switch to advanced mode. On a PC with a lot of MIDI devices that can make advanced mode slow to open. If it does, turn off **Activity lights** in Settings, and MIDI Monitor opens only the devices you checked, when you start listening.
 
 The button at the left of the toolbar hides and shows **Sources**. To make the list wider or narrower, drag its right edge. MIDI Monitor remembers the width. In a narrow window, **Sources** opens over the messages instead of beside them, and the groups you're watching show as small tags in the toolbar. Select the **x** on a tag to stop watching that group, or **+ Add** to open **Sources**.
 
