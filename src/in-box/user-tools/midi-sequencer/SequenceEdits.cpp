@@ -1213,4 +1213,32 @@ namespace midisequencer
             },
             std::move(before), std::move(after), cost);
     }
+
+    _Use_decl_annotations_
+    bool MoveMeterChange(std::vector<MeterChange>& meter, size_t index, int64_t toBar)
+    {
+        if (index == 0 || index >= meter.size() || toBar < 2)
+        {
+            return false;
+        }
+
+        auto const moved = meter[index];
+
+        if (BarPositionAtTick(meter, moved.Tick).Bar == toBar)
+        {
+            return false;
+        }
+
+        RemoveMeterChange(meter, index);
+        SetMeterAt(meter, toBar, moved.Numerator, moved.Denominator);
+        return true;
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeMeterRowChange(bool before, bool after)
+    {
+        return std::make_unique<SnapshotChange<bool>>(
+            [](Sequence& sequence) -> bool* { return &sequence.ShowMeterRow; },
+            before, after, sizeof(SequenceChange) + 16);
+    }
 }

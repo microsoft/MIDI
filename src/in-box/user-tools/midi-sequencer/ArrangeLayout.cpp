@@ -168,6 +168,17 @@ namespace midisequencer
         layout.PinnedHeight = tempo.Height;
         layout.Pinned.push_back(tempo);
 
+        if (sequence.ShowMeterRow)
+        {
+            ArrangeRow meter{};
+            meter.Kind = ArrangeRowKind::Meter;
+            meter.Height = MeterRowHeight;
+            meter.Pinned = true;
+            meter.Top = layout.PinnedHeight;
+            layout.PinnedHeight += MeterRowHeight;
+            layout.Pinned.push_back(meter);
+        }
+
         if (sequence.Lyrics)
         {
             ArrangeRow lyrics{};

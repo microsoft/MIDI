@@ -936,6 +936,10 @@ namespace midisequencer
         // height. Kept in the file like a track's height, and not an edit to undo either.
         uint16_t TempoRowHeight{ 0 };
 
+        // The Meter row under Tempo and meter, with a flag for each meter change (design section 37).
+        // Showing or hiding it is an edit to undo, like the Key and chords row.
+        bool ShowMeterRow{ false };
+
         // Tags on the Tempo and meter track: about the whole sequence.
         std::vector<Tag> Tags{};
 

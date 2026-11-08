@@ -36,6 +36,7 @@ namespace midisequencer
         constexpr wchar_t KeyTicksPerQuarterNote[] = L"ticksPerQuarterNote";
         constexpr wchar_t KeyTempo[] = L"tempo";
         constexpr wchar_t KeyTempoHeight[] = L"tempoHeight";
+        constexpr wchar_t KeyMeterRow[] = L"meterRow";
         constexpr wchar_t KeyMeter[] = L"meter";
         constexpr wchar_t KeyTags[] = L"tags";
         constexpr wchar_t KeyScenes[] = L"scenes";
@@ -2862,10 +2863,11 @@ namespace midisequencer
         }
 
         sequence.TempoRowHeight = static_cast<uint16_t>(ReadInteger(root, KeyTempoHeight, 0, 0, MaximumTrackRowHeight));
+        sequence.ShowMeterRow = ReadBool(root, KeyMeterRow, false);
 
         sequence.Unknown = UnknownKeys(root, {
             KeyFileVersion, KeyName, midiapp::ProvenanceKey, KeyTicksPerQuarterNote, KeyTempo, KeyMeter,
-            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, HarmonyKey, KeyCopyright, KeyTempoHeight });
+            KeyTags, KeyScenes, KeyTracks, KeyClips, LyricsKey, HarmonyKey, KeyCopyright, KeyTempoHeight, KeyMeterRow });
 
         NormalizeSequence(sequence);
 
@@ -2911,6 +2913,11 @@ namespace midisequencer
         if (sequence.TempoRowHeight > 0)
         {
             root.Integer(KeyTempoHeight, sequence.TempoRowHeight);
+        }
+
+        if (sequence.ShowMeterRow)
+        {
+            root.Bool(KeyMeterRow, true);
         }
 
         root.Key(KeyTempo);

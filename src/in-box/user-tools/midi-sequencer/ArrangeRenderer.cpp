@@ -629,6 +629,10 @@ namespace midisequencer
                 DrawHarmonyRow(ds, top, rowHeight, width, context);
                 break;
 
+            case ArrangeRowKind::Meter:
+                DrawMeterRow(ds, top, rowHeight, width, context);
+                break;
+
             default:
                 break;
             }
@@ -733,10 +737,10 @@ namespace midisequencer
             ds.DrawCircle(px, py, radius, selected ? colors.SelectionStroke : colors.TempoLine, 1.2f);
         }
 
-        // Meter changes after the first, along the bottom.
+        // Meter changes after the first, along the bottom, unless the Meter row shows them.
         auto const& meter = context.Doc->Meter;
 
-        for (size_t i = 1; i < meter.size(); ++i)
+        for (size_t i = 1; i < meter.size() && !context.Doc->ShowMeterRow; ++i)
         {
             auto const mx = x(meter[i].Tick);
 

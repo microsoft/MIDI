@@ -213,6 +213,15 @@ A ramp goes to a device in small steps, no more often than the automation interv
 
 The **Tempo and meter** track holds the tempo map. Click its tempo line to add a tempo change, and drag a change to move it or to make it faster or slower. Hold Shift while you drag to keep its tempo and move it only in time. Double-click a change to delete it. A tempo change can jump or ramp to the next one, and the meter can change at the start of any bar.
 
+To see every meter change at a glance, right-click **Tempo and meter** and select **Show Meter row**. The **Meter** row sits right under it, with a flag at each bar where the meter changes, such as **7/8**. Its header shows the meter at the playhead and how many changes there are.
+
+- **To add a meter change**, double-click the row near the bar where it should start.
+- **To change a meter**, double-click its flag, or right-click it.
+- **To move a meter change**, drag its flag to another bar. The first meter starts the song, so it can't move.
+- **To remove a meter change**, select its flag and press Delete, or right-click it.
+
+Moving or removing a meter change moves the bar lines, not the notes. Notes keep their time, so a note can land on a different beat. Meter changes after the one you moved stay on the same bar numbers. To hide the row, right-click it and select **Hide Meter row**.
+
 Tags mark parts of the song, like the verse and the chorus. They sit along the top of **Tempo and meter**. Double-click there to add one. Drag a tag to move it, and right-click it to rename it, change its color or delete it. To change where the loop starts and ends, drag its edges on the ruler, or drag the middle to move the whole loop.
 
 ## The MIDI Mixer

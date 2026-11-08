@@ -514,6 +514,82 @@ void AutomationTests::MeterEditsKeepLaterBars()
     VERIFY_ARE_EQUAL(int64_t{ 9 }, BarPositionAtTick(meter, meter[1].Tick).Bar);
 }
 
+void AutomationTests::MeterChangesMoveToABar()
+{
+    // 4/4, 3/4 from bar 5, 7/8 from bar 9.
+    std::vector<MeterChange> meter{ MeterChange{ 0, 4, 4 } };
+    SetMeterAt(meter, 5, 3, 4);
+    SetMeterAt(meter, 9, 7, 8);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, meter.size());
+
+    // The 3/4 moves to bar 3. The 7/8 stays at bar 9, now six bars of 3/4 later.
+    VERIFY_IS_TRUE(MoveMeterChange(meter, 1, 3));
+    VERIFY_ARE_EQUAL(size_t{ 3 }, meter.size());
+    VERIFY_ARE_EQUAL(Bar * 2, meter[1].Tick);
+    VERIFY_ARE_EQUAL(uint8_t{ 3 }, meter[1].Numerator);
+    VERIFY_ARE_EQUAL(int64_t{ 9 }, BarPositionAtTick(meter, meter[2].Tick).Bar);
+    VERIFY_ARE_EQUAL(Bar * 2 + 6 * 2880, meter[2].Tick);
+
+    // Past the 7/8: the 3/4 now comes after it.
+    VERIFY_IS_TRUE(MoveMeterChange(meter, 1, 12));
+    VERIFY_ARE_EQUAL(size_t{ 3 }, meter.size());
+    VERIFY_ARE_EQUAL(uint8_t{ 7 }, meter[1].Numerator);
+    VERIFY_ARE_EQUAL(int64_t{ 9 }, BarPositionAtTick(meter, meter[1].Tick).Bar);
+    VERIFY_ARE_EQUAL(uint8_t{ 3 }, meter[2].Numerator);
+    VERIFY_ARE_EQUAL(int64_t{ 12 }, BarPositionAtTick(meter, meter[2].Tick).Bar);
+
+    // The first meter doesn't move, nothing moves to bar 1, and staying put isn't a move.
+    VERIFY_IS_FALSE(MoveMeterChange(meter, 0, 4));
+    VERIFY_IS_FALSE(MoveMeterChange(meter, 2, 1));
+    VERIFY_IS_FALSE(MoveMeterChange(meter, 2, 12));
+    VERIFY_IS_FALSE(MoveMeterChange(meter, 5, 4));
+}
+
+void AutomationTests::TheMeterRowShowsAndSaves()
+{
+    auto sequence = LaneSequence();
+    VERIFY_IS_FALSE(sequence.ShowMeterRow);
+
+    // Hidden: no row, and nothing in the file.
+    auto layout = BuildArrangeLayout(sequence);
+    VERIFY_IS_FALSE(std::any_of(layout.Pinned.begin(), layout.Pinned.end(), [](ArrangeRow const& row) { return row.Kind == ArrangeRowKind::Meter; }));
+    VERIFY_IS_FALSE(Contains(WriteSequenceJson(sequence), L"\"meterRow\""));
+
+    // Shown, through the undo history.
+    UndoStack undo{};
+    ChangeList changes{};
+    changes.push_back(MakeMeterRowChange(false, true));
+    sequence.ShowMeterRow = true;
+    undo.Commit(L"Show Meter row", std::move(changes));
+
+    // Pinned straight under Tempo and meter.
+    layout = BuildArrangeLayout(sequence);
+    size_t tempo{ SIZE_MAX };
+    size_t meterRow{ SIZE_MAX };
+
+    for (size_t i = 0; i < layout.Pinned.size(); ++i)
+    {
+        if (layout.Pinned[i].Kind == ArrangeRowKind::Tempo) { tempo = i; }
+        if (layout.Pinned[i].Kind == ArrangeRowKind::Meter) { meterRow = i; }
+    }
+
+    VERIFY_ARE_NOT_EQUAL(SIZE_MAX, meterRow);
+    VERIFY_ARE_EQUAL(tempo + 1, meterRow);
+    VERIFY_ARE_EQUAL(MeterRowHeight, layout.Pinned[meterRow].Height);
+
+    // Saved and read back.
+    auto const text = WriteSequenceJson(sequence);
+    VERIFY_IS_TRUE(Contains(text, L"\"meterRow\": true"));
+
+    Sequence read{};
+    VERIFY_IS_TRUE(ReadSequenceJson(text, read).Succeeded());
+    VERIFY_IS_TRUE(read.ShowMeterRow);
+
+    VERIFY_IS_TRUE(undo.Undo(sequence));
+    VERIFY_IS_FALSE(sequence.ShowMeterRow);
+    VERIFY_IS_TRUE(undo.Redo(sequence));
+    VERIFY_IS_TRUE(sequence.ShowMeterRow);
+}
 void AutomationTests::LaneRowsFollowTheirTrack()
 {
     auto sequence = LaneSequence();

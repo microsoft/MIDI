@@ -934,6 +934,29 @@ namespace winrt::midisequencer::implementation
         void UpdateLyricsBar() noexcept;
 
         // About this sequence (MainWindowProvenance.cpp).
+        // ---- the Meter row (MainWindowMeterRow.cpp) ----
+
+        struct MeterDrag
+        {
+            bool Active{ false };
+            bool Pinned{ true };
+            bool Moved{ false };
+            size_t Index{ SIZE_MAX };
+            double StartX{ 0 };
+            int64_t ToBar{ 0 };
+            int64_t ToTick{ 0 };
+        };
+
+        void ShowMeterRow(_In_ bool show) noexcept;
+        xaml::UIElement MakeMeterHeader(_In_ seq::ArrangeRow const& row);
+        size_t HitTestMeter(_In_ foundation::Point point) const noexcept;
+        void OnMeterPressed(_In_ bool pinned, _In_ input::PointerRoutedEventArgs const& args);
+        void OnMeterDragMoved(_In_ input::PointerRoutedEventArgs const& args);
+        void OnMeterDragReleased() noexcept;
+        void OnMeterDoubleTapped(_In_ foundation::Point point, _In_ int64_t tick);
+        void DeleteSelectedMeter() noexcept;
+        void AddMeterMenuItems(_In_ controls::MenuFlyout const& menu, _In_ foundation::Point point, _In_ int64_t tick);
+
         void ShowSequenceInfo();
         void StampProvenance() noexcept;
         void PromptForTempo(_In_ int64_t tick, _In_ std::optional<size_t> index);
@@ -1539,6 +1562,8 @@ namespace winrt::midisequencer::implementation
         size_t m_selectedChord{ SIZE_MAX };
         size_t m_selectedKey{ SIZE_MAX };
         HarmonyDrag m_harmonyDrag{};
+        size_t m_selectedMeter{ SIZE_MAX };
+        MeterDrag m_meterDrag{};
         std::vector<winrt::hstring> m_keyScaleNames{};
 
         // The chord picker's last progression and rate, so Fill can be used again quickly.
