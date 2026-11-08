@@ -33,9 +33,15 @@ namespace midipatchbay
 
         constexpr double WentToColumnWidth = 150.0;
 
-        // What one look takes from the buffer at a time, and at most per look.
-        constexpr size_t DrainBatch = 512;
-        constexpr size_t MostPerTick = 8192;
+        // What one look takes from the buffer at a time, and at most per look. A flooded link
+        // leaves the rest in the buffer, where it drops and is counted, so this window never
+        // holds up the thread every Patchbay window shares.
+        constexpr size_t DrainBatch = 256;
+        constexpr size_t MostPerTick = (std::min)(size_t{ 1000 }, MaximumWatchHistory);
+
+        // Up to this many new rows go into the list one at a time. More, and the list is
+        // replaced whole, which tells it once instead of once for every row.
+        constexpr size_t RowsAddedOneByOne = 16;
 
         constexpr std::chrono::milliseconds TickInterval{ 50 };
 
@@ -1008,12 +1014,12 @@ namespace midipatchbay
                 return;
             }
 
-            auto const before = m_history.LastSequence();
             size_t taken{ 0 };
 
             while (taken < MostPerTick)
             {
-                auto const count = m_lease.Buffer->Drain(m_drained.data(), m_drained.size());
+                auto const wanted = (std::min)(m_drained.size(), MostPerTick - taken);
+                auto const count = m_lease.Buffer->Drain(m_drained.data(), wanted);
 
                 for (size_t i = 0; i < count; i++)
                 {
@@ -1022,21 +1028,126 @@ namespace midipatchbay
 
                 taken += count;
 
-                if (count < m_drained.size())
+                if (count < wanted)
                 {
                     break;
                 }
             }
 
-            if (m_history.LastSequence() != before && m_items.Size() > 0)
+            ShowNewRows();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show what a watched connection carried.")
+    }
+
+    controls::ScrollViewer WatchWindow::ListScroller() noexcept
+    {
+        try
+        {
+            if (m_scroller != nullptr || m_list == nullptr)
+            {
+                return m_scroller;
+            }
+
+            // The list's own, inside its template.
+            std::vector<xaml::DependencyObject> pending{ m_list };
+
+            while (!pending.empty())
+            {
+                auto const current = pending.back();
+                pending.pop_back();
+
+                if (auto const scroller = current.try_as<controls::ScrollViewer>())
+                {
+                    m_scroller = scroller;
+                    break;
+                }
+
+                auto const count = media::VisualTreeHelper::GetChildrenCount(current);
+
+                for (int32_t i = 0; i < count; i++)
+                {
+                    pending.push_back(media::VisualTreeHelper::GetChild(current, i));
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to find a monitor window's scroll bar.")
+
+        return m_scroller;
+    }
+
+    // Once a tick, or once a test: the list catches up with the history in one go.
+    void WatchWindow::ShowNewRows() noexcept
+    {
+        auto const updateCounts = wil::scope_exit([this]() noexcept
+            {
+                UpdateCount();
+                UpdateEmptyState();
+            });
+
+        try
+        {
+            if (m_pendingAdded == 0 || m_closing)
+            {
+                m_pendingAdded = 0;
+                m_pendingRemoved = 0;
+                return;
+            }
+
+            auto const added = std::exchange(m_pendingAdded, size_t{ 0 });
+            auto const removed = std::exchange(m_pendingRemoved, size_t{ 0 });
+
+            auto const scroller = ListScroller();
+            auto const atEnd = scroller == nullptr || scroller.VerticalOffset() >= scroller.ScrollableHeight() - 2.0;
+            auto const offset = scroller == nullptr ? 0.0 : scroller.VerticalOffset();
+
+            auto const last = m_history.LastSequence();
+            auto const first = last - m_history.Size() + 1;
+
+            auto const oneByOne = added <= RowsAddedOneByOne && removed <= m_items.Size() &&
+                m_items.Size() - removed + added == m_history.Size();
+
+            if (oneByOne)
+            {
+                for (size_t i = 0; i < removed; i++)
+                {
+                    m_items.RemoveAt(0);
+                }
+
+                for (auto sequence = last - added + 1; sequence <= last; sequence++)
+                {
+                    m_items.Append(winrt::box_value(sequence));
+                }
+            }
+            else
+            {
+                std::vector<foundation::IInspectable> rows{};
+                rows.reserve(m_history.Size());
+
+                for (auto sequence = first; sequence <= last; sequence++)
+                {
+                    rows.push_back(winrt::box_value(sequence));
+                }
+
+                m_items.ReplaceAll(rows);
+            }
+
+            if (m_items.Size() == 0)
+            {
+                return;
+            }
+
+            // Follows the newest only when it was showing the newest already, so someone
+            // scrolled up to read stays where they were.
+            if (atEnd)
             {
                 m_list.ScrollIntoView(m_items.GetAt(m_items.Size() - 1));
             }
-
-            UpdateCount();
-            UpdateEmptyState();
+            else if (!oneByOne && scroller != nullptr)
+            {
+                scroller.ChangeView(nullptr, foundation::IReference<double>{ offset }, nullptr, true);
+            }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show what a watched connection carried.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show a monitor window's new rows.")
     }
 
     _Use_decl_annotations_
@@ -1068,12 +1179,8 @@ namespace midipatchbay
                 copy.Timestamp = internal::GetCurrentMidiTimestamp();
             }
 
-            if (m_history.Add(copy) > 0 && m_items.Size() > 0)
-            {
-                m_items.RemoveAt(0);
-            }
-
-            m_items.Append(winrt::box_value(m_history.LastSequence()));
+            m_pendingRemoved += m_history.Add(copy);
+            m_pendingAdded++;
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add a message to a monitor window.")
     }
@@ -1103,17 +1210,8 @@ namespace midipatchbay
 
             std::copy_n(message.Words.begin(), watched.WordCount, watched.Words.begin());
 
-            auto const before = m_history.LastSequence();
-
+            // The list catches up once the whole test is in, in ShowNewRows.
             TakeIn(watched);
-
-            if (m_history.LastSequence() != before && m_items.Size() > 0)
-            {
-                m_list.ScrollIntoView(m_items.GetAt(m_items.Size() - 1));
-            }
-
-            UpdateCount();
-            UpdateEmptyState();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add a test message to a monitor window.")
     }
@@ -1159,6 +1257,8 @@ namespace midipatchbay
         {
             m_history.Clear();
             m_items.Clear();
+            m_pendingAdded = 0;
+            m_pendingRemoved = 0;
             m_total = 0;
             m_droppedBefore = m_lease.Buffer == nullptr ? 0 : m_lease.Buffer->Dropped();
 
@@ -1506,6 +1606,14 @@ namespace midipatchbay
                             window->AddTest(carried.LinkId, carried.Message);
                         }
                     }
+                }
+            }
+
+            for (auto const& window : windows)
+            {
+                if (window != nullptr)
+                {
+                    window->ShowNewRows();
                 }
             }
         }

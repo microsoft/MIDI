@@ -57,8 +57,10 @@ namespace midipatchbay
         // Names, state and links, after any change to the patch or its routing.
         void Refresh(_In_ WatchPatchState const& state) noexcept;
 
-        // A message from Test that went along a link this window may watch.
+        // A message from Test that went along a link this window may watch. ShowNewRows puts
+        // what a whole test added into the list at once.
         void AddTest(_In_ std::wstring const& linkId, _In_ TraceMessage const& message) noexcept;
+        void ShowNewRows() noexcept;
 
         void Activate() noexcept;
         void Close() noexcept;
@@ -131,6 +133,13 @@ namespace midipatchbay
         std::vector<WatchedMessage> m_drained{};
 
         uint64_t m_total{ 0 };
+
+        // Rows added to the history, and pushed out of it, since the list last caught up.
+        size_t m_pendingAdded{ 0 };
+        size_t m_pendingRemoved{ 0 };
+
+        controls::ScrollViewer ListScroller() noexcept;
+        controls::ScrollViewer m_scroller{ nullptr };
         uint64_t m_droppedBefore{ 0 };
         uint64_t m_shownTotal{ UINT64_MAX };
         uint64_t m_shownDropped{ UINT64_MAX };
