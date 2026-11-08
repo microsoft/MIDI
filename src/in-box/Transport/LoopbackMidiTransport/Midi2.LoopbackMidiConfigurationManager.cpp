@@ -707,8 +707,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     // empty config is ok in this case. We just ignore
     if (configurationJsonSection == nullptr) return S_OK;
 
-    // Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. The service does not serialize these
-    // calls, so two apps can be in here at once. Each validates against the table and then
+    // The service does not serialize these calls, so two apps can be in here at once. Each validates against the table and then
     // changes it, and an update rewrites endpoint names that a list in another call is reading.
     std::unique_lock<std::mutex> configurationLock{};
 

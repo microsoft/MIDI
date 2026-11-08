@@ -370,25 +370,31 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, contextHandle);
 
-    auto lock = m_sessionsLock.lock();
+    MidiSessionEntry entry{0};
+    std::vector<MidiClientHandle> clientHandles;
+    std::shared_ptr<CMidiClientManager> clientManager;
 
-    std::shared_ptr<CMidiClientManager> clientManager = m_clientManager.lock();
-
-    if (auto sessionEntry = FindSessionForContextHandle(contextHandle); sessionEntry != m_sessions.end())
     {
-        // Remove each client connection using the MidiClientManager
-
-        while (sessionEntry->ClientHandles.size() > 0)
+        auto lock = m_sessionsLock.lock();
+        clientManager = m_clientManager.lock();
+        if (auto sessionEntry = FindSessionForContextHandle(contextHandle); sessionEntry != m_sessions.end())
         {
-            auto clientHandle = *(sessionEntry->ClientHandles.begin());
-
-            sessionEntry->ClientHandles.erase(sessionEntry->ClientHandles.begin());
-
-            LOG_IF_FAILED(clientManager->DestroyMidiClient(clientHandle, 0));
+            clientHandles = sessionEntry->ClientHandles;
+            // Remove this session entry while holding the lock, once removed any attempts to add new clients to it will fail.
+            m_sessions.erase(sessionEntry);
         }
+    }
 
-        // Remove this session entry
-        m_sessions.erase(sessionEntry);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, clientManager);
+
+    // Remove each client connection using the MidiClientManager, do this outside of the
+    // sessions lock because this calls into the client manager which calls back into the
+    // session manager.
+    while (clientHandles.size() > 0)
+    {
+        auto clientHandle = *(clientHandles.begin());
+        clientHandles.erase(clientHandles.begin());
+        LOG_IF_FAILED(clientManager->DestroyMidiClient(clientHandle, 0));
     }
 
     TraceLoggingWrite(
