@@ -560,7 +560,7 @@ A trace doesn't run generators, and it doesn't wait for a message throttler. Wha
 
 Right-click a connection and select **Watch messages**, or select it and press **Ctrl+M**. A small window opens and lists every message that goes along that connection, as it goes. It shows the time, the message in hex with its name, and a description of it, the same way [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) does. Messages from **Trace messages…** show up there too, marked **Test**, so you can watch a test without a device plugged in.
 
-Right-click a step or an endpoint and select **Watch everything out of this** to watch all of its connections out at once. That window has a **Went to** column, so you can tell where each message went.
+Right-click a step or an endpoint and select **Watch output** to watch all of its connections out at once. That window has a **Destination** column, so you can tell where each message went.
 
 - Open as many as you like. Each window has a number and a color, and its connection shows a dot with the same number. Click the dot to bring that window to the front.
 - The windows stay on top of everything else, so they don't get lost behind the editor. Select the pin in a window's title bar to turn that off.

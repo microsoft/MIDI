@@ -31,7 +31,7 @@ namespace midipatchbay
         // Each new window sits a little further down and left, so they don't hide each other.
         constexpr double CascadeStep = 28.0;
 
-        constexpr double WentToColumnWidth = 150.0;
+        constexpr double DestinationColumnWidth = 150.0;
 
         // What one look takes from the buffer at a time, and at most per look. A flooded link
         // leaves the rest in the buffer, where it drops and is counted, so this window never
@@ -178,7 +178,7 @@ namespace midipatchbay
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <TextBlock x:Name="HeaderTime" Grid.Column="0" FontSize="12" FontWeight="SemiBold" />
-        <TextBlock x:Name="HeaderWentTo" Grid.Column="1" FontSize="12" FontWeight="SemiBold" />
+        <TextBlock x:Name="HeaderDestination" Grid.Column="1" FontSize="12" FontWeight="SemiBold" />
         <TextBlock x:Name="HeaderMessage" Grid.Column="2" FontSize="12" FontWeight="SemiBold" />
         <TextBlock x:Name="HeaderDetails" Grid.Column="3" FontSize="12" FontWeight="SemiBold" />
       </Grid>
@@ -522,14 +522,14 @@ namespace midipatchbay
             find(L"EmptyHint").as<controls::TextBlock>().Text(resources::GetString(L"WatchEmptyHint"));
 
             find(L"HeaderTime").as<controls::TextBlock>().Text(resources::GetString(L"WatchColumnTime"));
-            find(L"HeaderWentTo").as<controls::TextBlock>().Text(resources::GetString(L"WatchColumnWentTo"));
+            find(L"HeaderDestination").as<controls::TextBlock>().Text(resources::GetString(L"WatchColumnDestination"));
             find(L"HeaderMessage").as<controls::TextBlock>().Text(resources::GetString(L"WatchColumnMessage"));
             find(L"HeaderDetails").as<controls::TextBlock>().Text(resources::GetString(L"WatchColumnDetails"));
 
-            // Watching a single connection, the From and To line already says where everything goes.
+            // Watching a single connection, the Source and Destination line already says where everything goes.
             if (watchingNode)
             {
-                find(L"Header").as<controls::Grid>().ColumnDefinitions().GetAt(1).Width(xaml::GridLengthHelper::FromPixels(WentToColumnWidth));
+                find(L"Header").as<controls::Grid>().ColumnDefinitions().GetAt(1).Width(xaml::GridLengthHelper::FromPixels(DestinationColumnWidth));
             }
 
             xaml::Automation::AutomationProperties::SetName(m_list, resources::GetString(L"WatchListName"));
@@ -946,7 +946,7 @@ namespace midipatchbay
             }
             else
             {
-                m_fromLabel.Text(resources::GetString(L"WatchEverythingOutOfLabel"));
+                m_fromLabel.Text(resources::GetString(L"WatchFromLabel"));
                 m_toLabel.Visibility(xaml::Visibility::Collapsed);
                 m_arrow.Visibility(xaml::Visibility::Collapsed);
 
@@ -1310,12 +1310,21 @@ namespace midipatchbay
     _Use_decl_annotations_
     winrt::hstring WatchWindow::TimeText(WatchedMessage const& message) const
     {
+        // Rounded to whole microseconds first, then shown to exactly three places, so a time
+        // never trails float noise such as 2,785.7093999999997.
+        numberformatting::IncrementNumberRounder rounder{};
+        rounder.Increment(0.001);
+        rounder.RoundingAlgorithm(numberformatting::RoundingAlgorithm::RoundHalfAwayFromZero);
+
         numberformatting::DecimalFormatter formatter{};
         formatter.IsGrouped(true);
         formatter.FractionDigits(3);
         formatter.IntegerDigits(1);
+        formatter.NumberRounder(rounder);
 
-        return formatter.FormatDouble(WatchMilliseconds(message.Timestamp, m_origin, m_ticksPerSecond));
+        auto const microseconds = WatchMicroseconds(message.Timestamp, m_origin, m_ticksPerSecond);
+
+        return formatter.FormatDouble(static_cast<double>(microseconds) / 1000.0);
     }
 
     _Use_decl_annotations_
@@ -1342,7 +1351,7 @@ namespace midipatchbay
             auto const& message = row->Message;
             auto const children = root.Children();
 
-            root.ColumnDefinitions().GetAt(1).Width(xaml::GridLengthHelper::FromPixels(m_subject.NodeId.empty() ? 0.0 : WentToColumnWidth));
+            root.ColumnDefinitions().GetAt(1).Width(xaml::GridLengthHelper::FromPixels(m_subject.NodeId.empty() ? 0.0 : DestinationColumnWidth));
 
             // Time, and the Test tag
             auto const timePanel = children.GetAt(0).as<controls::StackPanel>();
@@ -1352,9 +1361,9 @@ namespace midipatchbay
             testTag.Visibility(message.FromTest ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             testTag.Child().as<controls::TextBlock>().Text(resources::GetString(L"WatchTestTag"));
 
-            // Went to
-            auto const wentTo = children.GetAt(1).as<controls::TextBlock>();
-            wentTo.Text(message.Link < m_linkNames.size() ? winrt::hstring{ m_linkNames[message.Link] } : winrt::hstring{});
+            // Destination
+            auto const destination = children.GetAt(1).as<controls::TextBlock>();
+            destination.Text(message.Link < m_linkNames.size() ? winrt::hstring{ m_linkNames[message.Link] } : winrt::hstring{});
 
             // Message: the words, and the name in the Monitor's colors
             auto const messagePanel = children.GetAt(2).as<controls::StackPanel>();

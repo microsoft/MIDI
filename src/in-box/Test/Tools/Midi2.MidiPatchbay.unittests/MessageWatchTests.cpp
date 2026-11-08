@@ -380,6 +380,18 @@ void MessageWatchTests::WordsAndTimesReadTheWayTheMonitorShowsThem()
 
     // Days of timestamps lose nothing to the conversion.
     VERIFY_IS_TRUE(std::abs(WatchMilliseconds(Origin + 86'400 * Frequency + 1, Origin, Frequency) - 86'400'000.0001) < 0.00001);
+
+    // What the Time column shows: whole microseconds, rounded, so no float noise reaches it.
+    VERIFY_ARE_EQUAL(int64_t{ 2'785'709 }, WatchMicroseconds(Origin + 27'857'094, Origin, Frequency));
+    VERIFY_ARE_EQUAL(int64_t{ 2'785'710 }, WatchMicroseconds(Origin + 27'857'095, Origin, Frequency));
+    VERIFY_ARE_EQUAL(int64_t{ -500'000 }, WatchMicroseconds(Origin - Frequency / 2, Origin, Frequency));
+    VERIFY_ARE_EQUAL(int64_t{ 0 }, WatchMicroseconds(Origin, Origin, Frequency));
+    VERIFY_ARE_EQUAL(int64_t{ 0 }, WatchMicroseconds(Origin + 1, Origin, 0));
+    VERIFY_ARE_EQUAL(int64_t{ 86'400'000'000 }, WatchMicroseconds(Origin + 86'400 * Frequency + 4, Origin, Frequency));
+
+    // A frequency that doesn't divide a microsecond evenly, as a QPC can be.
+    VERIFY_ARE_EQUAL(int64_t{ 1'000'000 }, WatchMicroseconds(Origin + 3'579'545, Origin, 3'579'545));
+    VERIFY_ARE_EQUAL(int64_t{ 279 }, WatchMicroseconds(Origin + 1'000, Origin, 3'579'545));
 }
 
 void MessageWatchTests::TheHistoryKeepsTheNewestAndFindsRowsByNumber()

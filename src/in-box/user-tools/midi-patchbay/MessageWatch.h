@@ -156,6 +156,12 @@ namespace midipatchbay
         _In_ uint64_t origin,
         _In_ uint64_t ticksPerSecond) noexcept;
 
+    // The same, in whole microseconds, rounded to the nearest. What the Time column shows.
+    int64_t WatchMicroseconds(
+        _In_ uint64_t timestamp,
+        _In_ uint64_t origin,
+        _In_ uint64_t ticksPerSecond) noexcept;
+
     struct WatchRow
     {
         uint64_t Sequence{ 0 };

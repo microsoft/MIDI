@@ -266,6 +266,27 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    int64_t WatchMicroseconds(uint64_t timestamp, uint64_t origin, uint64_t ticksPerSecond) noexcept
+    {
+        if (ticksPerSecond == 0)
+        {
+            return 0;
+        }
+
+        constexpr uint64_t PerSecond = 1'000'000;
+
+        auto const ticks = timestamp >= origin ? timestamp - origin : origin - timestamp;
+
+        // Whole seconds and the rest apart, so a long session never overflows.
+        auto const microseconds = (ticks / ticksPerSecond) * PerSecond +
+            ((ticks % ticksPerSecond) * PerSecond + ticksPerSecond / 2) / ticksPerSecond;
+
+        return timestamp >= origin
+            ? static_cast<int64_t>(microseconds)
+            : -static_cast<int64_t>(microseconds);
+    }
+
+    _Use_decl_annotations_
     WatchHistory::WatchHistory(size_t limit) noexcept :
         m_limit((std::max)(limit, size_t{ 1 }))
     {

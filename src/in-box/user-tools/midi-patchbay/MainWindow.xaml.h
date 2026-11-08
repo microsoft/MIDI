@@ -415,7 +415,7 @@ namespace winrt::midipatchbay::implementation
         void FeedTraceToWatchWindows() noexcept;
         void CloseWatchWindows() noexcept;
 
-        // "Watch everything out of this", at the top of a step's or endpoint's menu.
+        // "Watch output", at the top of a step's or endpoint's menu.
         void AddWatchNodeItem(_In_ controls::MenuFlyout const& menu, _In_ std::wstring const& nodeId) noexcept;
         ::midipatchbay::WatchPatchState CurrentWatchState() noexcept;
         std::shared_ptr<::midipatchbay::WatchWindows> WatchWindowList() noexcept;
