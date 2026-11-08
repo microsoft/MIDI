@@ -262,11 +262,12 @@ namespace winrt::midi2monitor::implementation
                 return;
             }
 
-            // the export button is centered on the whole bar, so each side only gets half the
-            // width. Shed the least important controls first rather than letting them collide.
-            constexpr double ZoomSliderMinimumWidth = 800.0;
-            constexpr double ZoomPresetsMinimumWidth = 730.0;
-            constexpr double MessageCountsMinimumWidth = 690.0;
+            // the Save and Clear buttons are centered on the whole bar, so each side only gets
+            // half the width. Shed the least important controls first rather than letting them
+            // collide.
+            constexpr double ZoomSliderMinimumWidth = 890.0;
+            constexpr double ZoomPresetsMinimumWidth = 820.0;
+            constexpr double MessageCountsMinimumWidth = 780.0;
 
             auto const visible = [](bool show)
                 {
@@ -680,6 +681,8 @@ namespace winrt::midi2monitor::implementation
             {
                 DroppedCountText().Visibility(xaml::Visibility::Collapsed);
             }
+
+            ClearButton().IsEnabled(snapshot.VisibleCount > 0 || snapshot.TotalMessageCount > 0);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the status line.")
     }
@@ -995,11 +998,47 @@ namespace winrt::midi2monitor::implementation
 
         try
         {
+            // the shortcut works even when the list is empty, and there is nothing to ask about
+            auto const snapshot = m_pipeline.Snapshot();
+
+            if (snapshot.VisibleCount == 0 && snapshot.TotalMessageCount == 0)
+            {
+                co_return;
+            }
+
+            if (!native::AppSettings::Current().AskBeforeClear())
+            {
+                m_pipeline.PostClear();
+                co_return;
+            }
+
+            // only one confirmation at a time; a second Ctrl+L while it is open does nothing
+            if (m_clearConfirmationOpen)
+            {
+                co_return;
+            }
+
+            m_clearConfirmationOpen = true;
+            auto reset = wil::scope_exit([this]() noexcept { m_clearConfirmationOpen = false; });
+
             controls::ContentDialog dialog{};
+
+            controls::TextBlock body{};
+            body.Text(res::GetString(L"ClearConfirmBody"));
+            body.TextWrapping(xaml::TextWrapping::Wrap);
+
+            // unchecked every time: the answer is only kept when Clear is chosen
+            controls::CheckBox dontAsk{};
+            dontAsk.Content(winrt::box_value(res::GetString(L"ClearConfirmDontAsk")));
+            dontAsk.Margin(xaml::ThicknessHelper::FromLengths(0, 12, 0, 0));
+
+            controls::StackPanel content{};
+            content.Children().Append(body);
+            content.Children().Append(dontAsk);
 
             dialog.XamlRoot(RootGrid().XamlRoot());
             dialog.Title(winrt::box_value(res::GetString(L"ClearConfirmTitle")));
-            dialog.Content(winrt::box_value(res::GetString(L"ClearConfirmBody")));
+            dialog.Content(content);
             dialog.PrimaryButtonText(res::GetString(L"ClearConfirmPrimary"));
             dialog.CloseButtonText(res::GetString(L"CommonCancel"));
             dialog.DefaultButton(controls::ContentDialogButton::Close);
@@ -1008,6 +1047,13 @@ namespace winrt::midi2monitor::implementation
 
             if (result == controls::ContentDialogResult::Primary)
             {
+                auto const checked = dontAsk.IsChecked();
+
+                if (checked != nullptr && checked.Value())
+                {
+                    native::AppSettings::Current().AskBeforeClear(false);
+                }
+
                 m_pipeline.PostClear();
             }
         }

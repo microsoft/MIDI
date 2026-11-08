@@ -139,6 +139,12 @@ namespace winrt::midi2monitor::implementation
                 desiredEndpointId = winrt::hstring{ options.EndpointDeviceId };
             }
 
+            // nothing picked yet and nothing asked for: the device watched last time, if it's here
+            if (desiredEndpointId.empty() && options.EndpointDeviceId.empty())
+            {
+                desiredEndpointId = winrt::hstring{ native::AppSettings::Current().LastEndpointDeviceId() };
+            }
+
             int32_t selectedIndex{ -1 };
 
             for (uint32_t i = 0; i < m_endpoints.Size(); i++)
@@ -225,6 +231,7 @@ namespace winrt::midi2monitor::implementation
             RefreshGroupList();
             UpdateEndpointImage();
             UpdateCommandStates();
+            SaveSimpleSelection();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to handle the endpoint selection change.")
     }
@@ -242,6 +249,7 @@ namespace winrt::midi2monitor::implementation
             ApplyFilterToPipeline();
             UpdateCommandStates();
             UpdateWindowTitle();
+            SaveSimpleSelection();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to handle the group selection change.")
     }
@@ -257,6 +265,7 @@ namespace winrt::midi2monitor::implementation
         try
         {
             ApplyFilterToPipeline();
+            SaveSimpleSelection();
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to handle the channel selection change.")
     }
@@ -320,6 +329,28 @@ namespace winrt::midi2monitor::implementation
                 if (options.ChannelNumber.has_value() && m_channels.Size() > options.ChannelNumber.value())
                 {
                     ChannelComboBox().SelectedIndex(options.ChannelNumber.value());
+                }
+
+                // no command line: the group and channel watched last, when it's the same device
+                auto const& settings = native::AppSettings::Current();
+
+                if (options.EndpointDeviceId.empty() &&
+                    settings.LastGroupNumber() > 0 &&
+                    ::CompareStringOrdinal(SelectedEndpointDeviceId().c_str(), -1,
+                        settings.LastEndpointDeviceId().c_str(), -1, TRUE) == CSTR_EQUAL)
+                {
+                    auto const groupIndex = FindGroupChoiceIndex(settings.LastGroupNumber());
+
+                    // a group the device no longer has is dropped back to all groups
+                    if (groupIndex > 0)
+                    {
+                        selectedIndex = groupIndex;
+
+                        if (settings.LastChannelNumber() > 0 && m_channels.Size() > settings.LastChannelNumber())
+                        {
+                            ChannelComboBox().SelectedIndex(settings.LastChannelNumber());
+                        }
+                    }
                 }
             }
             else if (previousGroupNumber > 0)

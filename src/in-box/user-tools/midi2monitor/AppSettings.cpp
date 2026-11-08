@@ -22,6 +22,13 @@ namespace midi2monitor
         constexpr wchar_t ValueAutoHideColumns[] = L"AutoHideColumnsWhenNarrow";
         constexpr wchar_t ValueColumnLayout[] = L"ColumnLayout";
         constexpr wchar_t ValueTableZoomPercent[] = L"TableZoomPercent";
+        constexpr wchar_t ValueAskBeforeClear[] = L"AskBeforeClear";
+        constexpr wchar_t ValueLastEndpoint[] = L"LastEndpointDeviceId";
+        constexpr wchar_t ValueLastGroup[] = L"LastGroupNumber";
+        constexpr wchar_t ValueLastChannel[] = L"LastChannelNumber";
+
+        // Endpoint ids are a few hundred characters at most. A longer value read back isn't one.
+        constexpr size_t MaximumEndpointIdLength = 1024;
     }
 
     AppSettings::AppSettings() noexcept :
@@ -56,6 +63,60 @@ namespace midi2monitor
 
         auto const zoom = ReadDword(ValueTableZoomPercent, DefaultZoomPercent);
         m_tableZoomPercent = std::clamp(zoom, MinimumZoomPercent, MaximumZoomPercent);
+
+        m_askBeforeClear = ReadDword(ValueAskBeforeClear, 1) != 0;
+
+        m_lastEndpointDeviceId = ReadString(ValueLastEndpoint, L"");
+
+        if (m_lastEndpointDeviceId.size() > MaximumEndpointIdLength)
+        {
+            m_lastEndpointDeviceId.clear();
+        }
+
+        auto const group = ReadDword(ValueLastGroup, 0);
+        auto const channel = ReadDword(ValueLastChannel, 0);
+
+        m_lastGroupNumber = static_cast<uint8_t>(group <= 16 ? group : 0);
+        m_lastChannelNumber = static_cast<uint8_t>(channel <= 16 ? channel : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AskBeforeClear(bool value) noexcept
+    {
+        m_askBeforeClear = value;
+        WriteDword(ValueAskBeforeClear, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::LastSimpleSelection(std::wstring const& endpointDeviceId, uint8_t groupNumber, uint8_t channelNumber) noexcept
+    {
+        try
+        {
+            auto const group = static_cast<uint8_t>(groupNumber <= 16 ? groupNumber : 0);
+            auto const channel = static_cast<uint8_t>(channelNumber <= 16 ? channelNumber : 0);
+
+            if (endpointDeviceId != m_lastEndpointDeviceId)
+            {
+                m_lastEndpointDeviceId = endpointDeviceId;
+                WriteString(ValueLastEndpoint, endpointDeviceId);
+            }
+
+            if (group != m_lastGroupNumber)
+            {
+                m_lastGroupNumber = group;
+                WriteDword(ValueLastGroup, group);
+            }
+
+            if (channel != m_lastChannelNumber)
+            {
+                m_lastChannelNumber = channel;
+                WriteDword(ValueLastChannel, channel);
+            }
+        }
+        catch (...)
+        {
+            // the in-memory values stay as they were; the next pick tries again
+        }
     }
 
     void AppSettings::TableZoomPercent(uint32_t value) noexcept

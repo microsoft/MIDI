@@ -9,7 +9,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent"
+          KeyboardAcceleratorPlacementMode="Hidden">
+        <!-- Window-wide shortcuts. The menus show them through KeyboardAcceleratorTextOverride. -->
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Modifiers="Control" Key="L" Invoked="OnClearAcceleratorInvoked" />
+            <KeyboardAccelerator Modifiers="Control" Key="C" Invoked="OnCopyAcceleratorInvoked" />
+        </Grid.KeyboardAccelerators>
+
         <Grid.Resources>
             <!-- BasedOn matters: an explicit presenter style replaces the implicit one outright,
                  which loses the rounded corners, border and padding -->
@@ -698,23 +705,43 @@
                 </ToggleButton>
             </StackPanel>
 
-            <Button Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    x:Name="ExportButton"
-                    x:Uid="ExportButton"
-                    TabIndex="9"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Height="28"
-                    MinHeight="28"
-                    FontSize="12"
-                    Padding="10,0,10,0"
-                    Click="OnExportClick">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEDE1;" FontSize="13" />
-                    <TextBlock x:Uid="ExportButtonText" Text="Save to File" FontSize="12" />
-                </StackPanel>
-            </Button>
+            <!-- Save and Clear sit together in the middle of the whole bar -->
+            <StackPanel Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <Button x:Name="ExportButton"
+                        x:Uid="ExportButton"
+                        TabIndex="9"
+                        VerticalAlignment="Center"
+                        Height="28"
+                        MinHeight="28"
+                        FontSize="12"
+                        Padding="10,0,10,0"
+                        Click="OnExportClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEDE1;" FontSize="13" />
+                        <TextBlock x:Uid="ExportButtonText" Text="Save to File" FontSize="12" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="ClearButton"
+                        x:Uid="ClearButton"
+                        TabIndex="9"
+                        VerticalAlignment="Center"
+                        Height="28"
+                        MinHeight="28"
+                        FontSize="12"
+                        Padding="10,0,10,0"
+                        Click="OnClearCaptureClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE74D;" FontSize="13" />
+                        <TextBlock x:Uid="ClearButtonText" Text="Clear" FontSize="12" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
 
             <StackPanel Grid.Column="2"
                         Orientation="Horizontal"

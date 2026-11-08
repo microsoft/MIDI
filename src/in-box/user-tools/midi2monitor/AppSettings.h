@@ -59,6 +59,17 @@ namespace midi2monitor
         uint32_t TableZoomPercent() const noexcept { return m_tableZoomPercent; }
         void TableZoomPercent(uint32_t value) noexcept;
 
+        // Off once someone checks "Don't ask me again" on the clear confirmation.
+        bool AskBeforeClear() const noexcept { return m_askBeforeClear; }
+        void AskBeforeClear(_In_ bool value) noexcept;
+
+        // What simple mode watched last, so the next start picks it again. Empty and 0 when
+        // nothing was picked yet. Group and channel count from 1; 0 means all.
+        std::wstring LastEndpointDeviceId() const noexcept { return m_lastEndpointDeviceId; }
+        uint8_t LastGroupNumber() const noexcept { return m_lastGroupNumber; }
+        uint8_t LastChannelNumber() const noexcept { return m_lastChannelNumber; }
+        void LastSimpleSelection(_In_ std::wstring const& endpointDeviceId, _In_ uint8_t groupNumber, _In_ uint8_t channelNumber) noexcept;
+
         static constexpr uint32_t MinimumRetainedMessageCount = 100;
         static constexpr uint32_t MaximumRetainedMessageCount = 500000;
         static constexpr uint32_t DefaultRetainedMessageCount = 10000;
@@ -89,5 +100,9 @@ namespace midi2monitor
         uint32_t m_retainedMessageCount{ DefaultRetainedMessageCount };
         uint32_t m_tableZoomPercent{ DefaultZoomPercent };
         std::wstring m_columnLayout{};
+        bool m_askBeforeClear{ true };
+        std::wstring m_lastEndpointDeviceId{};
+        uint8_t m_lastGroupNumber{ 0 };
+        uint8_t m_lastChannelNumber{ 0 };
     };
 }

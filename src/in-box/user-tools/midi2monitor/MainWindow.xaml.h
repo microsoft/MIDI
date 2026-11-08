@@ -43,6 +43,8 @@ namespace winrt::midi2monitor::implementation
         void OnDisplayOptionsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnClearCaptureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnClearAcceleratorInvoked(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnCopyAcceleratorInvoked(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
 
         void OnMessagesContextRequested(xaml::UIElement const& sender, xaml::Input::ContextRequestedEventArgs const& args);
         void OnMessagesContextFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
@@ -117,6 +119,11 @@ namespace winrt::midi2monitor::implementation
         void ApplyFilterToPipeline() noexcept;
         void ApplyHiddenTraits() noexcept;
 
+        // Keeps what simple mode is watching for the next start. A window opened by another app
+        // with an endpoint on its command line doesn't, so that app never replaces the choice.
+        void SaveSimpleSelection() noexcept;
+        bool ShouldRememberSelection() noexcept;
+
         void OnPipelineContentChanged() noexcept;
         void RefreshMessageList() noexcept;
         void UpdateStatusLine() noexcept;
@@ -177,6 +184,7 @@ namespace winrt::midi2monitor::implementation
         bool m_captureButtonStacked{ false };
         bool m_suppressSelectionHandling{ false };
         bool m_suppressZoomHandling{ false };
+        bool m_clearConfirmationOpen{ false };
         winrt::hstring m_monitoredEndpointName{};
     };
 }

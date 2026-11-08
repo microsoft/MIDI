@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MessageStore.h"
+#include "UmpDescriber.h"
 
 namespace midi2monitor
 {
@@ -115,29 +116,9 @@ namespace midi2monitor
     // ---------------------------------------------------------------------------------------
 
     // Decoded content, split into localized labels and their values. Keeping them apart lets the
-    // UI color the values without any parsing, and keeps the labels translatable.
-    struct DecodedFields
-    {
-        static constexpr size_t MaxFields = 4;
-
-        std::array<winrt::hstring, MaxFields> Labels{};
-        std::array<winrt::hstring, MaxFields> Values{};
-        uint32_t Count{ 0 };
-
-        void Add(winrt::hstring const& label, std::wstring const& value) noexcept
-        {
-            if (Count >= MaxFields)
-            {
-                return;
-            }
-
-            Labels[Count] = label;
-            Values[Count] = winrt::hstring{ value };
-            Count++;
-        }
-
-        winrt::hstring ToDisplayString() const;
-    };
+    // UI color the values without any parsing, and keeps the labels translatable. Shared with
+    // Windows MIDI Patchbay.
+    using DecodedFields = ::midiapp::UmpDescription;
 
     // Friendly name for the message, from the SDK's MidiMessageHelper
     winrt::hstring GetMessageDisplayName(uint32_t word0) noexcept;

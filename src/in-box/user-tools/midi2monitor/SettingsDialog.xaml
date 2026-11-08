@@ -102,6 +102,11 @@
                            LargeChange="10000"
                            SpinButtonPlacementMode="Hidden"
                            ValueChanged="OnRetentionChanged" />
+                <CheckBox x:Name="AskBeforeClearCheckBox"
+                          x:Uid="SettingsAskBeforeClearCheckBox"
+                          Content="Ask before clearing all entries"
+                          Checked="OnAskBeforeClearChanged"
+                          Unchecked="OnAskBeforeClearChanged" />
             </StackPanel>
 
             <StackPanel Spacing="8">

@@ -657,4 +657,30 @@ Examples
   <data name="MidiServiceUnavailableClose" xml:space="preserve">
     <value>Close</value>
   </data>
+
+  <!-- ============================ Clearing and shortcuts ============================ -->
+  <data name="ClearConfirmDontAsk" xml:space="preserve">
+    <value>Don't ask me again</value>
+  </data>
+  <data name="ClearButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Clear all entries</value>
+  </data>
+  <data name="ClearButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Clear all entries (Ctrl+L)</value>
+  </data>
+  <data name="ClearButtonText.Text" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="SelectAllMenuItem.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+A</value>
+  </data>
+  <data name="CopyUmpWordsMenuItem.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+C</value>
+  </data>
+  <data name="ClearCaptureMenuItem.KeyboardAcceleratorTextOverride" xml:space="preserve">
+    <value>Ctrl+L</value>
+  </data>
+  <data name="SettingsAskBeforeClearCheckBox.Content" xml:space="preserve">
+    <value>Ask before clearing all entries</value>
+  </data>
 </root>
