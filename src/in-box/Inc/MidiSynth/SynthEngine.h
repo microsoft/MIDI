@@ -89,6 +89,9 @@ namespace MidiSynth
         double PerNoteGain{ 1.0 };
         double PerNotePan{ 0.0 };
 
+        // Channel and master tuning as they were when the note started, for SynthConfig::TuningFixedAtNoteOn.
+        double NoteOnTuningCents{ 0.0 };
+
         // A detached note keeps sounding under its own per-note control even when the same note
         // number is played again on the same channel, so a held note is not stolen by the retrigger.
         bool Detached{ false };

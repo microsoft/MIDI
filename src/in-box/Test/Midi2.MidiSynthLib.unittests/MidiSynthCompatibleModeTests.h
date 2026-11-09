@@ -14,4 +14,5 @@ public:
 
     TEST_METHOD(TestDrumsTakePerformanceControls);
     TEST_METHOD(TestDrumChannelListsWhatDrumsTake);
+    TEST_METHOD(TestTuningIsFixedAtNoteOn);
 };
