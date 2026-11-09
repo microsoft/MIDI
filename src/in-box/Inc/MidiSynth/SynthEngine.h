@@ -202,6 +202,11 @@ namespace MidiSynth
         uint8_t RpnMsb{ 0x7F };
         uint8_t RpnLsb{ 0x7F };
 
+        // SynthConfig::OlderMessageHandling only. Mono mode ends the notes a channel holds when it
+        // plays another, and scale tuning offsets each pitch class, C first, in cents.
+        bool MonoMode{ false };
+        std::array<int8_t, 12> ScaleTuningCents{};
+
         const DlsInstrument* Instrument{ nullptr };
     };
 
@@ -304,6 +309,25 @@ namespace MidiSynth
         {
             return m_channels[channel & 0x0F].IsDrumChannel;
         }
+
+        // SynthConfig::OlderMessageHandling only, where the older synthesizer's GS state decides
+        // what is read. A GS Reset turns it on; any other reset turns it off.
+        void SetGsActive(_In_ bool active) noexcept { m_gsActive = active; }
+
+        // Whether GS part messages, such as Use For Rhythm Part, are acted on.
+        bool AcceptsGsPartMessages() const noexcept { return !m_config.OlderMessageHandling || m_gsActive; }
+
+        // GS Scale Tuning: count offsets, C first, each 64 for none. Ignored unless OlderMessageHandling
+        // is on and GS is active.
+        void SetScaleTuning(_In_ uint8_t channel, _In_reads_(count) const uint8_t* offsets, _In_ size_t count) noexcept;
+
+        // GS Receive Channel: which MIDI channel an engine channel takes its messages from. Ignored
+        // unless OlderMessageHandling is on and GS is active.
+        void SetReceiveChannel(_In_ uint8_t engineChannel, _In_ uint8_t midiChannel) noexcept;
+
+        // The engine channels that act on a message sent on a MIDI channel, one bit each. Only the
+        // same channel unless GS Receive Channel moved one; then none, one or several.
+        uint16_t EngineChannelsReceiving(_In_ uint8_t midiChannel) const noexcept;
 
         // Changing this re-resolves every channel, so a mode chosen mid-song takes effect at once
         // rather than at the next program change.
@@ -480,6 +504,9 @@ namespace MidiSynth
         std::array<SynthChannelState, MidiChannelCount> m_channels;
 
         uint64_t m_nextStartOrder{ 1 };
+
+        bool m_gsActive{ false };
+        std::array<uint8_t, MidiChannelCount> m_receiveChannels{};
 
         // What Automatic has settled on. Equal to the configured mode when it is not Automatic.
         BankSelectMode m_detectedBankSelectMode{ BankSelectMode::RolandGS };

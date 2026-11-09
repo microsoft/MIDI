@@ -428,3 +428,233 @@ void MidiSynthCompatibleModeTests::TestPitchBendGlides()
         }
     }
 }
+
+namespace
+{
+    constexpr uint8_t StatusProgramChange = 0xC;
+
+    // GS Reset, then GM System On, as files send them.
+    const std::vector<uint8_t> GsReset{ 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 };
+    const std::vector<uint8_t> GmSystemOn{ 0x7E, 0x7F, 0x09, 0x01 };
+
+    void SelectBank(_Inout_ Rig& rig, _In_ uint8_t channel, _In_ uint8_t msb, _In_ uint8_t program)
+    {
+        rig.SendMidi1(StatusControlChange, channel, 0, msb);
+        rig.SendMidi1(StatusControlChange, channel, 32, 0);
+        rig.SendMidi1(StatusProgramChange, channel, program, 0);
+    }
+}
+
+// The older synthesizer reads bank select only after a GS Reset, and a GM System On turns that off
+// again. Modern always reads it.
+void MidiSynthCompatibleModeTests::TestBankSelectNeedsGsReset()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    // Program 0 in bank 16 is "Piano 1d", which has a name of its own.
+    const auto* const variation = collection->FindInstrument(16, 0, 0, false);
+    const auto* const capitalTone = collection->FindInstrument(0, 0, 0, false);
+    VERIFY_IS_TRUE(variation != nullptr && capitalTone != nullptr && variation != capitalTone);
+
+    Rig rig(*collection, CompatibleConfig());
+
+    SelectBank(rig, 0, 16, 0);
+    VERIFY_IS_TRUE(rig.Engine().ChannelState(0).Instrument == capitalTone, L"without a GS Reset, bank select is ignored");
+
+    rig.SendSysEx(GsReset);
+    SelectBank(rig, 0, 16, 0);
+    VERIFY_IS_TRUE(rig.Engine().ChannelState(0).Instrument == variation, L"after a GS Reset, it's read");
+
+    rig.SendSysEx(GmSystemOn);
+    SelectBank(rig, 0, 16, 0);
+    VERIFY_IS_TRUE(rig.Engine().ChannelState(0).Instrument == capitalTone, L"a GM System On turns it off again");
+
+    Rig modern(*collection);
+    SelectBank(modern, 0, 16, 0);
+    VERIFY_IS_TRUE(modern.Engine().ChannelState(0).Instrument == variation, L"Modern always reads it");
+}
+
+// The older synthesizer takes whole semitones of pitch bend sensitivity, keeps the fine tuning LSB
+// when a new MSB arrives, resets volume and pan on a Reset All Controllers with a value, and has no
+// master tuning.
+void MidiSynthCompatibleModeTests::TestOlderDataEntryAndResets()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    Rig rig(*collection, CompatibleConfig());
+    const auto state = [&]() { return rig.Engine().ChannelState(0); };
+
+    SetRegisteredParameter(rig, 0, 0, 4);
+    rig.SendMidi1(StatusControlChange, 0, 38, 50);
+    VERIFY_ARE_EQUAL(4.0, state().PitchBendRangeSemitones, L"the cents of the bend range are ignored");
+
+    SetRegisteredParameter(rig, 0, 1, 0x40);
+    rig.SendMidi1(StatusControlChange, 0, 38, 0x20);
+    rig.SendMidi1(StatusControlChange, 0, 6, 0x41);
+    VERIFY_ARE_EQUAL((static_cast<double>(0x20A0) - 8192.0) * 100.0 / 8192.0, state().FineTuneCents, L"a new MSB keeps the LSB");
+
+    rig.SendMidi1(StatusControlChange, 0, 7, 20);
+    rig.SendMidi1(StatusControlChange, 0, 10, 0);
+    rig.SendMidi1(StatusControlChange, 0, 121, 0);
+    VERIFY_ARE_EQUAL(20.0 / 127.0, state().Volume, L"Reset All Controllers with zero leaves volume alone");
+    VERIFY_ARE_EQUAL(1, static_cast<int>(state().RpnLsb), L"and keeps the parameter selected");
+
+    rig.SendMidi1(StatusControlChange, 0, 121, 127);
+    VERIFY_ARE_EQUAL(100.0 / 127.0, state().Volume, L"with a value, it resets volume");
+    VERIFY_ARE_EQUAL(0.0, state().PanOffset, L"and pan");
+
+    // Master fine tuning to the top, which would be nearly 100 cents sharp.
+    std::vector<float> plain;
+    {
+        Rig untuned(*collection, CompatibleConfig());
+        untuned.Engine().ProgramChange(0, ChurchOrgan);
+        untuned.NoteOn(0, 60, NoAttribute, 0);
+        plain = untuned.Render(0.2);
+    }
+
+    Rig tuned(*collection, CompatibleConfig());
+    tuned.SendSysEx({ 0x7F, 0x7F, 0x04, 0x03, 0x7F, 0x7F });
+    tuned.SendSysEx({ 0x7F, 0x7F, 0x04, 0x04, 0x00, 0x50 });
+    tuned.Engine().ProgramChange(0, ChurchOrgan);
+    tuned.NoteOn(0, 60, NoAttribute, 0);
+
+    VERIFY_IS_TRUE(LargestDifference(plain, tuned.Render(0.2)) < 1e-6, L"master tuning is ignored");
+}
+
+// Mono mode: a new note ends the one the channel holds. Poly mode puts it back.
+void MidiSynthCompatibleModeTests::TestMonoMode()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    for (const bool mono : { true, false })
+    {
+        Rig rig(*collection, CompatibleConfig());
+        rig.Engine().ProgramChange(0, ChurchOrgan);
+
+        rig.SendMidi1(StatusControlChange, 0, mono ? 126 : 127, 1);
+
+        rig.NoteOn(0, 60, NoAttribute, 0);
+        rig.NoteOn(0, 64, NoAttribute, 0);
+        (void)rig.Render(1.0);
+
+        VERIFY_ARE_EQUAL(mono ? 1u : 2u, rig.Engine().SoundingVoiceCount(0), mono ? L"mono plays one note" : L"poly plays both");
+        VERIFY_IS_TRUE(rig.Engine().IsNoteSounding(0, 64), L"the newest note sounds");
+    }
+
+    // Modern ignores both.
+    Rig modern(*collection);
+    modern.Engine().ProgramChange(0, ChurchOrgan);
+    modern.SendMidi1(StatusControlChange, 0, 126, 1);
+    modern.NoteOn(0, 60, NoAttribute, 0);
+    modern.NoteOn(0, 64, NoAttribute, 0);
+    (void)modern.Render(1.0);
+
+    VERIFY_ARE_EQUAL(2u, modern.Engine().SoundingVoiceCount(0));
+}
+
+// GS Scale Tuning moves each pitch class by up to 64 cents. It needs a GS Reset first.
+void MidiSynthCompatibleModeTests::TestGsScaleTuning()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    // Part 1 is channel 1. C is 20 cents sharp, the rest are in tune.
+    const std::vector<uint8_t> scaleTuning
+    {
+        0x41, 0x10, 0x42, 0x12, 0x40, 0x11, 0x40,
+        84, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+        0x00,
+    };
+
+    auto measure = [&](bool gsReset, uint8_t note)
+    {
+        double reference = 0.0;
+        {
+            Rig plain(*collection, CompatibleConfig());
+            plain.Engine().ProgramChange(0, ChurchOrgan);
+            plain.NoteOn(0, note, NoAttribute, 0);
+            (void)plain.Render(0.3);
+            reference = EstimateHertz(plain.Render(0.6), plain.SampleRate(), 100.0, 1000.0);
+        }
+
+        Rig rig(*collection, CompatibleConfig());
+
+        if (gsReset)
+        {
+            rig.SendSysEx(GsReset);
+        }
+
+        rig.SendSysEx(scaleTuning);
+        rig.Engine().ProgramChange(0, ChurchOrgan);
+        rig.NoteOn(0, note, NoAttribute, 0);
+        (void)rig.Render(0.3);
+
+        return Cents(EstimateHertz(rig.Render(0.6), rig.SampleRate(), 100.0, 1000.0), reference);
+    };
+
+    const double tunedC = measure(true, 60);
+    const double untunedE = measure(true, 64);
+    const double withoutReset = measure(false, 60);
+
+    Log::Comment(String().Format(L"C %+.2f cents, E %+.2f cents, C without a GS Reset %+.2f cents", tunedC, untunedE, withoutReset));
+
+    VERIFY_IS_TRUE(std::fabs(tunedC - 20.0) < 1.0, L"C is 20 cents sharp");
+    VERIFY_IS_TRUE(std::fabs(untunedE) < 1.0, L"E is in tune");
+    VERIFY_IS_TRUE(std::fabs(withoutReset) < 1.0, L"and nothing changes without a GS Reset");
+}
+
+// GS Rx. Channel moves a part to another MIDI channel, read the way the older synthesizer read it:
+// the value counts from 1.
+void MidiSynthCompatibleModeTests::TestGsReceiveChannel()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    Rig rig(*collection, CompatibleConfig());
+    rig.SendSysEx(GsReset);
+
+    // Part 11 receives on channel 1 as well.
+    rig.SendSysEx({ 0x41, 0x10, 0x42, 0x12, 0x40, 0x1A, 0x02, 0x01, 0x00 });
+
+    rig.SendMidi1(StatusProgramChange, 0, ChurchOrgan, 0);
+
+    VERIFY_ARE_EQUAL(ChurchOrgan, rig.Engine().ChannelState(0).Program, L"channel 1 takes the program");
+    VERIFY_ARE_EQUAL(ChurchOrgan, rig.Engine().ChannelState(10).Program, L"and so does part 11");
+
+    rig.SendMidi1(StatusProgramChange, 10, 5, 0);
+    VERIFY_ARE_EQUAL(ChurchOrgan, rig.Engine().ChannelState(10).Program, L"which no longer listens to channel 11");
+
+    rig.SendSysEx(GsReset);
+    rig.SendMidi1(StatusProgramChange, 10, 5, 0);
+    VERIFY_ARE_EQUAL(5, static_cast<int>(rig.Engine().ChannelState(10).Program), L"until a reset puts it back");
+
+    // Modern ignores the message.
+    Rig modern(*collection);
+    modern.SendSysEx(GsReset);
+    modern.SendSysEx({ 0x41, 0x10, 0x42, 0x12, 0x40, 0x1A, 0x02, 0x01, 0x00 });
+    modern.SendMidi1(StatusProgramChange, 0, ChurchOrgan, 0);
+    VERIFY_ARE_EQUAL(0, static_cast<int>(modern.Engine().ChannelState(10).Program));
+}
