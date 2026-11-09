@@ -372,3 +372,59 @@ void MidiSynthCompatibleModeTests::TestStealingPrefersAReleasedNote()
         }
     }
 }
+
+// The older synthesizer moved pitch in straight lines between control points a few tens of
+// milliseconds apart, so a bend glides to its new value. Modern lands it at the next block.
+void MidiSynthCompatibleModeTests::TestPitchBendGlides()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    // A nearly pure tone, high enough that a few milliseconds hold several cycles.
+    constexpr uint8_t Note = 84;
+    constexpr uint8_t Ocarina = 79;
+
+    for (const bool compatible : { true, false })
+    {
+        const auto config = compatible ? CompatibleConfig() : TestConfig();
+
+        double reference = 0.0;
+        {
+            Rig plain(*collection, config);
+            plain.Engine().ProgramChange(0, Ocarina);
+            plain.NoteOn(0, Note, NoAttribute, 0);
+            (void)plain.Render(0.3);
+            reference = EstimateHertz(plain.Render(0.3), plain.SampleRate(), 600.0, 2400.0);
+        }
+
+        Rig rig(*collection, config);
+        rig.Engine().ProgramChange(0, Ocarina);
+        rig.NoteOn(0, Note, NoAttribute, 0);
+        (void)rig.Render(0.3);
+
+        // All the way up: 200 cents at the default range.
+        rig.SendMidi1(StatusPitchBend, 0, 0x7F, 0x7F);
+
+        const double start = Cents(EstimateHertz(rig.Render(0.008), rig.SampleRate(), 600.0, 2400.0), reference);
+        (void)rig.Render(0.06);
+        const double settled = Cents(EstimateHertz(rig.Render(0.1), rig.SampleRate(), 600.0, 2400.0), reference);
+
+        Log::Comment(String().Format(L"%s: %+.1f cents in the first 8 ms, %+.1f cents after 68 ms",
+            compatible ? L"Compatible" : L"Modern", start, settled));
+
+        VERIFY_IS_TRUE(std::fabs(settled - 200.0) < 3.0, L"the bend arrives");
+
+        if (compatible)
+        {
+            VERIFY_IS_TRUE(start < 150.0, L"gliding there");
+        }
+        else
+        {
+            VERIFY_IS_TRUE(start > 185.0, L"Modern is there at once");
+        }
+    }
+}

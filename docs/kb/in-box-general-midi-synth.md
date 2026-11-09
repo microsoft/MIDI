@@ -73,6 +73,7 @@ Here's what Compatible mode does differently from Modern mode:
 - **Drums respond to pitch bend, modulation, the damper pedal, pitch bend sensitivity, and fine tuning.** Only coarse tuning leaves them alone. In Modern mode, drums ignore all of these, as General MIDI 2 recommends. See [Registered parameters](#registered-parameters).
 - **Tuning is fixed when a note starts.** A fine or coarse tuning change leaves the notes that are already playing alone, and applies to the notes after it. In Modern mode, it retunes the notes that are playing too.
 - **Channel 10 has the highest priority when the synthesizer runs out of voices**, then channels 1 to 9, then 11 to 16. A note can only take a voice from a channel with the same priority or lower, and it takes one from a note that's already been let go before it takes one from a note that's held. So drums are the last thing to be cut off. A burst of notes can briefly use 8 voices beyond the 32, and the synthesizer then fades out the oldest notes on the lowest-priority channels to get back to 32. In Modern mode, with far more voices, the synthesizer gives up the quietest note first, starting with notes that have been let go.
+- **Pitch bend glides to its new value** over about 20 to 50 milliseconds, the way the older synthesizer moved pitch, instead of jumping there at once. Fast bends sound smoother, and a jump from one end of the bend range to the other slides rather than snapping.
 
 ### Exclusive mode
 

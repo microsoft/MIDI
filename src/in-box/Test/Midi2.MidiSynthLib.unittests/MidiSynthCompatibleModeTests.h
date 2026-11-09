@@ -18,4 +18,5 @@ public:
     TEST_METHOD(TestChannel10HasTheHighestPriority);
     TEST_METHOD(TestSpareVoicesFadeTheLowestPriority);
     TEST_METHOD(TestStealingPrefersAReleasedNote);
+    TEST_METHOD(TestPitchBendGlides);
 };
