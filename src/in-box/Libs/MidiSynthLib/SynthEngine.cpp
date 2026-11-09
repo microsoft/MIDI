@@ -585,6 +585,29 @@ namespace MidiSynth
         }
 
         voice.LfoDelayRemainingSeconds = articulation.LfoStartDelaySeconds;
+
+        // The pitch envelope is scaled by velocity and key the same way as the volume envelope.
+        const double pitchVelocityAttackScale =
+            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg2VelocityToAttackTimeCents * normalizedVelocity));
+        const double pitchKeyDecayScale =
+            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg2KeyToDecayTimeCents * (regionKey / 128.0)));
+
+        voice.PitchAttackSeconds =
+            articulation.Eg2AttackSeconds * ((pitchVelocityAttackScale > 0.0) ? pitchVelocityAttackScale : 1.0);
+        voice.PitchDecaySeconds =
+            articulation.Eg2DecaySeconds * ((pitchKeyDecayScale > 0.0) ? pitchKeyDecayScale : 1.0);
+        voice.PitchReleaseSeconds = articulation.Eg2ReleaseSeconds;
+
+        if (voice.PitchAttackSeconds > 0.0)
+        {
+            voice.PitchStage = EnvelopeStage::Attack;
+            voice.PitchEnvelopeLevel = 0.0;
+        }
+        else
+        {
+            voice.PitchStage = EnvelopeStage::Decay;
+            voice.PitchEnvelopeLevel = 1.0;
+        }
     }
 
     _Use_decl_annotations_
@@ -812,6 +835,11 @@ namespace MidiSynth
         }
 
         voice.Stage = EnvelopeStage::Release;
+
+        if (voice.PitchStage != EnvelopeStage::Idle)
+        {
+            voice.PitchStage = EnvelopeStage::Release;
+        }
 
         if (voice.AttackProgress < 1.0)
         {
@@ -1233,9 +1261,59 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void SynthEngine::AdvancePitchEnvelope(SynthVoice& voice, double blockSeconds) noexcept
+    {
+        // Each stage moves at full scale per its time, so a decay to a sustain of one half takes
+        // half the decay time (DLS Level 1 section 1.6).
+        switch (voice.PitchStage)
+        {
+        case EnvelopeStage::Attack:
+            voice.PitchEnvelopeLevel += (voice.PitchAttackSeconds > 0.0) ? blockSeconds / voice.PitchAttackSeconds : 1.0;
+
+            if (voice.PitchEnvelopeLevel >= 1.0)
+            {
+                voice.PitchEnvelopeLevel = 1.0;
+                voice.PitchStage = EnvelopeStage::Decay;
+            }
+            break;
+
+        case EnvelopeStage::Decay:
+        {
+            const double sustain = voice.Articulation.Eg2SustainFraction;
+
+            voice.PitchEnvelopeLevel -= (voice.PitchDecaySeconds > 0.0) ? blockSeconds / voice.PitchDecaySeconds : 1.0;
+
+            if (voice.PitchEnvelopeLevel <= sustain)
+            {
+                voice.PitchEnvelopeLevel = sustain;
+                voice.PitchStage = EnvelopeStage::Sustain;
+            }
+            break;
+        }
+
+        case EnvelopeStage::Release:
+            voice.PitchEnvelopeLevel -= (voice.PitchReleaseSeconds > 0.0) ? blockSeconds / voice.PitchReleaseSeconds : 1.0;
+
+            if (voice.PitchEnvelopeLevel <= 0.0)
+            {
+                voice.PitchEnvelopeLevel = 0.0;
+                voice.PitchStage = EnvelopeStage::Idle;
+            }
+            break;
+
+        case EnvelopeStage::Sustain:
+        case EnvelopeStage::Idle:
+        default:
+            break;
+        }
+    }
+
+    _Use_decl_annotations_
     void SynthEngine::UpdateVoiceControl(SynthVoice& voice, uint32_t frames) noexcept
     {
         const double blockSeconds = static_cast<double>(frames) / m_renderSampleRate;
+
+        AdvancePitchEnvelope(voice, blockSeconds);
 
         switch (voice.Stage)
         {
@@ -1372,10 +1450,13 @@ namespace MidiSynth
             ? 0.0
             : (held ? voice.HeldTuningCents : state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents);
 
+        const double pitchEnvelopeCents = voice.PitchEnvelopeLevel * articulation.Eg2ToPitchCents;
+
         // Per-note pitch adds to the channel bend rather than replacing it, so a MIDI 2.0 note can
         // be bent on its own while the channel wheel still moves the whole part.
         const double totalCents =
-            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents + tuningCents;
+            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents + tuningCents +
+            pitchEnvelopeCents;
 
         voice.BlockPitchRatio = voice.BasePitchRatio * CentsToPitchRatio(totalCents);
     }

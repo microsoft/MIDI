@@ -103,6 +103,15 @@ namespace MidiSynth
         double ReleaseSeconds{ 0.0 };
         double SustainDb{ 0.0 };
 
+        // The DLS pitch envelope (EG2). It runs from 0 to 1 and back on a linear scale, and its level
+        // times Articulation.Eg2ToPitchCents is added to the pitch. Instruments use it for a pitch
+        // that falls after the strike, like Synth Drum, or for a fixed offset, like Bagpipe.
+        EnvelopeStage PitchStage{ EnvelopeStage::Idle };
+        double PitchEnvelopeLevel{ 0.0 };
+        double PitchAttackSeconds{ 0.0 };
+        double PitchDecaySeconds{ 0.0 };
+        double PitchReleaseSeconds{ 0.0 };
+
         double LfoPhase{ 0.0 };
         double LfoDelayRemainingSeconds{ 0.0 };
 
@@ -398,6 +407,9 @@ namespace MidiSynth
         void HoldControlsForReset(_Inout_ SynthVoice& voice) const noexcept;
 
         void UpdateVoiceControl(_Inout_ SynthVoice& voice, _In_ uint32_t frames) noexcept;
+
+        // Moves the pitch envelope on by one control block.
+        static void AdvancePitchEnvelope(_Inout_ SynthVoice& voice, _In_ double blockSeconds) noexcept;
         void RenderVoiceBlock(
             _Inout_ SynthVoice& voice,
             _Inout_updates_(frames * 2) float* output,
