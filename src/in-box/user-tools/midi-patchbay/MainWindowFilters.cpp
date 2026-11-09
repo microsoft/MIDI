@@ -364,6 +364,7 @@ namespace winrt::midipatchbay::implementation
 
             DrawVelocityCurve();
             DrawShapePreviews();
+            RefreshMessageTypeSections();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to summarize the step.")
     }
@@ -407,6 +408,10 @@ namespace winrt::midipatchbay::implementation
             m_parameterRowsPanel = nullptr;
             m_parameterCurveCanvases.clear();
             m_gateTriggerPanels = { nullptr, nullptr };
+            m_channelVoiceGrid = nullptr;
+            m_channelVoiceOffText = nullptr;
+            m_systemGrid = nullptr;
+            m_systemOffText = nullptr;
 
             switch (m_editingKind)
             {
@@ -534,7 +539,11 @@ namespace winrt::midipatchbay::implementation
                 body.Children().Append(Heading(resources::GetString(L"FilterSectionChannelVoice")));
                 body.Children().Append(HeadingHint(resources::GetString(L"FilterSectionChannelVoiceHint")));
 
+                m_channelVoiceOffText = HeadingHint(resources::GetString(L"FilterSectionChannelVoiceOff"));
+                body.Children().Append(m_channelVoiceOffText);
+
                 auto grid = makeGrid();
+                m_channelVoiceGrid = grid;
 
                 // Note off and note on together: nobody wants one without the other, and a stuck
                 // note is what you get when they are split by accident.
@@ -585,7 +594,11 @@ namespace winrt::midipatchbay::implementation
                 body.Children().Append(Heading(resources::GetString(L"FilterSectionSystem")));
                 body.Children().Append(HeadingHint(resources::GetString(L"FilterSectionSystemHint")));
 
+                m_systemOffText = HeadingHint(resources::GetString(L"FilterSectionSystemOff"));
+                body.Children().Append(m_systemOffText);
+
                 auto grid = makeGrid();
+                m_systemGrid = grid;
 
                 for (size_t i = 0; i < patchbay::SystemMessageCount; i++)
                 {
@@ -599,6 +612,42 @@ namespace winrt::midipatchbay::implementation
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the message type sections.")
+    }
+
+    void MainWindow::RefreshMessageTypeSections() noexcept
+    {
+        try
+        {
+            // The boxes keep what they say while they're off, so turning the message type back on
+            // brings back the same choices.
+            auto const show = [](controls::Panel const& grid, controls::TextBlock const& offText, bool on)
+                {
+                    if (grid == nullptr || offText == nullptr)
+                    {
+                        return;
+                    }
+
+                    for (auto const& child : grid.Children())
+                    {
+                        if (auto const control = child.try_as<controls::Control>())
+                        {
+                            control.IsEnabled(on);
+                        }
+                    }
+
+                    offText.Visibility(on ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+                };
+
+            auto const& types = m_editingFilter.MessageTypes;
+
+            show(m_channelVoiceGrid, m_channelVoiceOffText,
+                types[static_cast<size_t>(patchbay::UmpMessageType::Midi1ChannelVoice)] ||
+                types[static_cast<size_t>(patchbay::UmpMessageType::Midi2ChannelVoice)]);
+
+            show(m_systemGrid, m_systemOffText,
+                types[static_cast<size_t>(patchbay::UmpMessageType::System)]);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show which message type sections apply.")
     }
 
     void MainWindow::BuildValueSetSection() noexcept
