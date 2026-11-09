@@ -928,6 +928,7 @@ namespace midipatchbay
         m_connections.clear();
         m_answerPaths.clear();
         m_nodeHalos.clear();
+        m_highlightHalos.clear();
     }
 
     _Use_decl_annotations_
@@ -1035,6 +1036,7 @@ namespace midipatchbay
             m_connections.clear();
             m_answerPaths.clear();
             m_nodeHalos.clear();
+            m_highlightHalos.clear();
 
             m_nodeLayer.Children().Clear();
             m_connectionLayer.Children().Clear();
@@ -2711,6 +2713,71 @@ namespace midipatchbay
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to light up the routing.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::Highlight(std::vector<std::wstring> const& nodeIds) noexcept
+    {
+        try
+        {
+            if (m_connectionLayer == nullptr)
+            {
+                return;
+            }
+
+            for (auto const& halo : m_highlightHalos)
+            {
+                uint32_t index{ 0 };
+
+                if (m_connectionLayer.Children().IndexOf(halo, index))
+                {
+                    m_connectionLayer.Children().RemoveAt(index);
+                }
+            }
+
+            m_highlightHalos.clear();
+
+            if (m_patch == nullptr)
+            {
+                return;
+            }
+
+            for (auto const& nodeId : nodeIds)
+            {
+                auto const* node = FindNode(nodeId);
+                auto const origin = NodePosition(nodeId);
+
+                if (node == nullptr || node->IsAnnotation || !origin.has_value())
+                {
+                    continue;
+                }
+
+                auto const height = node->Height > 0
+                    ? node->Height
+                    : (node->IsBlock ? BlockFallbackHeight : EndpointFallbackHeight);
+                auto const radius = (node->IsBlock ? BlockCornerRadius : NodeCornerRadius) + HaloReach;
+
+                // Behind the node like a live routing glow, but in the accent color and steady,
+                // so it reads as "these ones" and not as traffic.
+                shapes::Rectangle halo{};
+                halo.IsHitTestVisible(false);
+                halo.UseLayoutRounding(false);
+                halo.StrokeThickness(4.0);
+                halo.Stroke(ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF)));
+                halo.Width(node->Width + 2 * HaloReach);
+                halo.Height(height + 2 * HaloReach);
+                halo.RadiusX(radius);
+                halo.RadiusY(radius);
+
+                controls::Canvas::SetLeft(halo, origin->X - HaloReach);
+                controls::Canvas::SetTop(halo, origin->Y - HaloReach);
+                controls::Canvas::SetZIndex(halo, GlowZIndex);
+
+                m_connectionLayer.Children().Append(halo);
+                m_highlightHalos.push_back(halo);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to highlight the steps.")
     }
 
     void PatchCanvas::ClearTrace() noexcept

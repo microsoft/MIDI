@@ -688,6 +688,12 @@ namespace winrt::midipatchbay::implementation
             RefreshInspector();
             UpdateMessages();
         }
+        else
+        {
+            // Also for a change that doesn't redraw, such as a memory's name typed in the details
+            // panel. RebuildCanvas does it otherwise.
+            RefreshLogicNames();
+        }
 
         UpdatePatchHeader();
         UpdateStatusStrip();
@@ -1279,6 +1285,9 @@ namespace winrt::midipatchbay::implementation
 
             EmptyCanvasPanel().Visibility(isEmpty ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             MinimapPanel().Visibility(isEmpty ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            // The rebuild took away any highlight, and the names may have changed.
+            RefreshLogicNames();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to rebuild the canvas.")
     }

@@ -2215,6 +2215,30 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
+    void RouteEngine::ResetMemory(std::wstring const& patchKey, std::wstring const& name) noexcept
+    {
+        try
+        {
+            auto const trimmed = LogicNameFrom(name);
+
+            if (trimmed.empty())
+            {
+                return;
+            }
+
+            std::scoped_lock guard{ m_publishLock };
+
+            auto const found = m_memories.find(patchKey + L'|' + LowerCopy(trimmed));
+
+            if (found != m_memories.end() && found->second != nullptr)
+            {
+                found->second->store(PackLogicValue({}), std::memory_order_relaxed);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to reset a memory.")
+    }
+
+    _Use_decl_annotations_
     std::optional<LogicValue> RouteEngine::LastTestedValue(std::wstring const& cell) const noexcept
     {
         std::shared_ptr<Runtime> runtime{};

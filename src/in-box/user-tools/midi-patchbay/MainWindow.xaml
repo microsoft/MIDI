@@ -425,6 +425,13 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                        <ToggleButton x:Name="LogicNamesToggle"
+                                      x:Uid="LogicNamesToggle"
+                                      Content="Memories and tags"
+                                      Height="32"
+                                      Padding="10,4,10,4"
+                                      VerticalAlignment="Center"
+                                      Click="OnLogicNamesToggleClick" />
                         <ToggleButton x:Name="LiveRoutingToggle"
                                       x:Uid="LiveRoutingToggle"
                                       Content="Show live routing"
@@ -446,6 +453,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
@@ -732,6 +740,54 @@
 
                             <ScrollViewer Grid.Row="1" Padding="14,12,14,14">
                                 <StackPanel x:Name="InspectorContent" Spacing="14" />
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- Every memory and tag the patch uses, and the steps that set and read each
+                         one. Beside the details panel rather than in it, so selecting a step from
+                         here shows its details without closing the list. -->
+                    <Border x:Name="LogicNamesPanel"
+                            Grid.Column="5"
+                            Width="300"
+                            BorderThickness="1,0,0,0"
+                            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Height="44" Padding="14,0,8,0" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Uid="LogicNamesTitle"
+                                           Text="Memories and tags"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                                <Button x:Name="LogicNamesCloseButton"
+                                        x:Uid="LogicNamesCloseButton"
+                                        Grid.Column="1"
+                                        Width="32"
+                                        Height="32"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Click="OnLogicNamesCloseClick">
+                                    <FontIcon Glyph="&#xE711;" FontSize="13" />
+                                </Button>
+                            </Grid>
+
+                            <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom"
+                                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                            <ScrollViewer Grid.Row="1" Padding="14,12,14,14">
+                                <StackPanel x:Name="LogicNamesContent" Spacing="12" />
                             </ScrollViewer>
                         </Grid>
                     </Border>

@@ -304,6 +304,7 @@ namespace winrt::midipatchbay::implementation
             m_canvas.RefreshStatus(m_activity);
 
             UpdateInspectorActivity();
+            UpdateLogicNameValues();
             UpdateStatusStrip();
             UpdateOscFirewallBar();
 

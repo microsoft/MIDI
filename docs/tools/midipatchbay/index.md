@@ -258,6 +258,8 @@ To play notes only while a sequencer is playing, connect the sequencer's clock a
 - A tag belongs to one message. It starts empty, and a message that leaves a message throttler leaves its tags behind.
 - A memory belongs to the patch. It starts empty and keeps its value until Windows MIDI Patchbay closes, even while the patch isn't routing. It isn't saved in the patch. Select a step that uses a memory to see its value under **Activity**.
 
+**Seeing where each name is used.** Select **Memories and tags** on the toolbar. The list beside the canvas shows every memory and tag in the patch, the steps that set it, and the steps that read it. Point at a name to light up its steps on the canvas, and select a step to go to it. Each memory shows what it holds now, and **Reset** empties it without stopping the routing. A name that no step sets is marked, because it's almost always a name spelled two ways. So is a name that no step reads.
+
 **Notes stay together.** A Branch or a Switch sends a note off out the same output as its note on, even when the note off wouldn't pass the test on its own. A sustain pedal let go reaches every output it went down on, and the rest of a long message, such as system exclusive, follows its first packet.
 
 **Missing value.** A Branch that tests the note can get a control change, and a memory can be empty. Under **Missing value**, choose what happens to those messages: send them to **All outputs**, send them to one output, or **Block** them. **All outputs** is the default, the same as two filters side by side would do.

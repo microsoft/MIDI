@@ -85,6 +85,10 @@ namespace midipatchbay
         // routing has used it since the app started.
         std::optional<LogicValue> MemoryValue(_In_ std::wstring const& patchKey, _In_ std::wstring const& name) const noexcept;
 
+        // Empties a patch's memory now, as if the app had just started. Routing goes on, and the
+        // next message that reads it finds it empty.
+        void ResetMemory(_In_ std::wstring const& patchKey, _In_ std::wstring const& name) noexcept;
+
         // What a Branch or a Switch tested last, by its "patch key|block id". Nothing when it
         // isn't routing.
         std::optional<LogicValue> LastTestedValue(_In_ std::wstring const& cell) const noexcept;

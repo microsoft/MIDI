@@ -69,6 +69,8 @@ namespace winrt::midipatchbay::implementation
         void OnZoomValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnTestClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnLiveRoutingToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLogicNamesToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLogicNamesCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnShowLoopClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnInspectorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -393,6 +395,17 @@ namespace winrt::midipatchbay::implementation
         void ShowLiveRouting(_In_ bool shown) noexcept;
         void OnLiveRoutingTick() noexcept;
 
+        // ---- memories and tags list, in MainWindowLogicNames.cpp ----
+        void ShowLogicNames(_In_ bool shown) noexcept;
+
+        // Builds the list again from the patch. Called after every change to it.
+        void RefreshLogicNames() noexcept;
+
+        // Only each memory's value, for activity that changed nothing else.
+        void UpdateLogicNameValues() noexcept;
+
+        void GoToStep(_In_ std::wstring const& blockId) noexcept;
+
         // The steps a customer can put into a link, by category.
         controls::MenuFlyout BuildAddStepMenu(_In_ std::wstring const& connectionId) noexcept;
 
@@ -528,6 +541,18 @@ namespace winrt::midipatchbay::implementation
         bool m_liveRoutingPaused{ false };
         xaml::DispatcherTimer m_liveRoutingTimer{ nullptr };
         std::unordered_map<std::wstring, uint64_t> m_liveRoutingCounts{};
+
+        // The memories and tags list, and each memory's value line with how to read it.
+        struct LogicNameValueLine
+        {
+            std::wstring Name{};
+            ::midipatchbay::LogicUnit Unit{ ::midipatchbay::LogicUnit::Number };
+            ::midipatchbay::ValueScale Scale{ ::midipatchbay::ValueScale::SevenBit };
+            controls::TextBlock Text{ nullptr };
+        };
+
+        bool m_showingLogicNames{ false };
+        std::vector<LogicNameValueLine> m_logicNameValueLines{};
 
         // The selected annotation's text box, so double-clicking the annotation goes straight to it.
         controls::TextBox m_annotationTextBox{ nullptr };
