@@ -84,6 +84,7 @@
     <ClInclude Include="MidiSynthWithoutAudioTests.h" />
     <ClInclude Include="MidiSynthDlsTests.h" />
     <ClInclude Include="MidiSynthExactPitchTests.h" />
+    <ClInclude Include="MidiSynthPitchEnvelopeTests.h" />
     <ClInclude Include="MidiSynthQueueTests.h" />
     <ClInclude Include="MidiSynthRhythmChannelTests.h" />
     <ClInclude Include="MidiSynthSystemOnTests.h" />
@@ -101,6 +102,7 @@
     <ClCompile Include="MidiSynthWithoutAudioTests.cpp" />
     <ClCompile Include="MidiSynthDlsTests.cpp" />
     <ClCompile Include="MidiSynthExactPitchTests.cpp" />
+    <ClCompile Include="MidiSynthPitchEnvelopeTests.cpp" />
     <ClCompile Include="MidiSynthQueueTests.cpp" />
     <ClCompile Include="MidiSynthRhythmChannelTests.cpp" />
     <ClCompile Include="MidiSynthSystemOnTests.cpp" />
