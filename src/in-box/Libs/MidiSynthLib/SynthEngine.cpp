@@ -21,6 +21,8 @@ namespace MidiSynth
         constexpr uint8_t ControllerBankSelectLsb = 32;
         constexpr uint8_t ControllerDataEntryLsb = 38;
         constexpr uint8_t ControllerSustainPedal = 64;
+        constexpr uint8_t ControllerNrpnLsb = 98;
+        constexpr uint8_t ControllerNrpnMsb = 99;
         constexpr uint8_t ControllerRpnLsb = 100;
         constexpr uint8_t ControllerRpnMsb = 101;
         constexpr uint8_t ControllerAllSoundOff = 120;
@@ -1004,6 +1006,14 @@ namespace MidiSynth
 
         case ControllerRpnLsb:
             state.RpnLsb = value & 0x7F;
+            break;
+
+        case ControllerNrpnMsb:
+        case ControllerNrpnLsb:
+            // No NRPN is implemented, but choosing one still deselects the registered parameter,
+            // so the data entry meant for the NRPN can't change the pitch bend range or tuning.
+            state.RpnMsb = 0x7F;
+            state.RpnLsb = 0x7F;
             break;
 
         case ControllerDataEntryMsb:
