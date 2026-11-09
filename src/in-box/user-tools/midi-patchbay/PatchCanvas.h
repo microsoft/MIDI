@@ -179,6 +179,11 @@ namespace midipatchbay
         // light up too.
         void LightUp(_In_ std::vector<std::wstring> const& ids) noexcept;
 
+        // A steady glow around each of these nodes, until it's called again with others or with
+        // none. Something to point at, such as every step that uses one memory. A rebuild takes it
+        // away.
+        void Highlight(_In_ std::vector<std::wstring> const& nodeIds) noexcept;
+
         // A connection a monitor window watches: the window's number and color, drawn as a dot
         // on the line. Defined in PatchCanvasWatch.cpp.
         struct WatchMark
@@ -441,6 +446,9 @@ namespace midipatchbay
 
         // A glow behind each node that has lit up, made the first time it does.
         std::unordered_map<std::wstring, shapes::Rectangle> m_nodeHalos{};
+
+        // The glows Highlight drew, so the next call can take them away.
+        std::vector<shapes::Rectangle> m_highlightHalos{};
         std::unordered_set<std::wstring> m_loopMutedConnectionIds{};
 
         CanvasSelectionKind m_selectionKind{ CanvasSelectionKind::None };

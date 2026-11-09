@@ -283,6 +283,69 @@
   <data name="LiveRoutingToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Lights up each link and step as messages go through it. It waits while the window is minimized.</value>
   </data>
+  <data name="LogicNamesToggle.Content" xml:space="preserve">
+    <value>Memories and tags</value>
+  </data>
+  <data name="LogicNamesToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lists each memory and tag in this patch, the steps that set it and read it, and what each memory holds now.</value>
+  </data>
+  <data name="LogicNamesTitle.Text" xml:space="preserve">
+    <value>Memories and tags</value>
+  </data>
+  <data name="LogicNamesCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Close memories and tags</value>
+  </data>
+  <data name="LogicNamesCloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="LogicNamesEmpty" xml:space="preserve">
+    <value>This patch doesn't use any memories or tags yet. Add a Set memory or Set tag step from the Logic group, then pick its name in a Branch, Switch or Put value step.</value>
+  </data>
+  <data name="LogicNamesHint" xml:space="preserve">
+    <value>Point at a name to see its steps on the canvas. Select a step to go to it.</value>
+  </data>
+  <data name="LogicNamesMemoriesHeading" xml:space="preserve">
+    <value>Memories</value>
+  </data>
+  <data name="LogicNamesTagsHeading" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="LogicNamesSetBy" xml:space="preserve">
+    <value>Set by</value>
+  </data>
+  <data name="LogicNamesReadBy" xml:space="preserve">
+    <value>Read by</value>
+  </data>
+  <data name="LogicNamesValueFormat" xml:space="preserve">
+    <value>Now: {0}</value>
+  </data>
+  <data name="LogicNamesBypassedFormat" xml:space="preserve">
+    <value>{0} (bypassed)</value>
+  </data>
+  <data name="LogicNamesGoToStepTip" xml:space="preserve">
+    <value>Select this step on the canvas</value>
+  </data>
+  <data name="LogicNamesReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="LogicNamesResetTip" xml:space="preserve">
+    <value>Empties this memory now, the way it is when Windows MIDI Patchbay starts. Routing doesn't stop.</value>
+  </data>
+  <data name="LogicNamesResetNameFormat" xml:space="preserve">
+    <value>Reset {0}</value>
+  </data>
+  <data name="LogicNamesNeverSetMemory" xml:space="preserve">
+    <value>No step sets this memory, so it's always empty. Check that the name is spelled the same in every step.</value>
+  </data>
+  <data name="LogicNamesNeverSetTag" xml:space="preserve">
+    <value>No step sets this tag, so it's always empty. Check that the name is spelled the same in every step.</value>
+  </data>
+  <data name="LogicNamesNeverReadMemory" xml:space="preserve">
+    <value>No step reads this memory, so setting it changes nothing.</value>
+  </data>
+  <data name="LogicNamesNeverReadTag" xml:space="preserve">
+    <value>No step reads this tag, so setting it changes nothing.</value>
+  </data>
   <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Zoom in</value>
   </data>

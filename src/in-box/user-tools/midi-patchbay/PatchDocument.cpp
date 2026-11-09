@@ -242,4 +242,102 @@ namespace midipatchbay
 
         return false;
     }
+
+    _Use_decl_annotations_
+    std::vector<LogicNameUse> FindLogicNameUses(std::vector<PatchBlock> const& blocks)
+    {
+        std::vector<LogicNameUse> uses{};
+
+        auto const note = [&uses](std::wstring const& rawName, bool isMemory, bool sets, std::wstring const& blockId)
+            {
+                auto const name = LogicNameFrom(rawName);
+
+                if (name.empty())
+                {
+                    return;
+                }
+
+                auto found = std::find_if(uses.begin(), uses.end(), [&](LogicNameUse const& use)
+                    {
+                        return use.IsMemory == isMemory && SameLogicName(use.Name, name);
+                    });
+
+                if (found == uses.end())
+                {
+                    LogicNameUse use{};
+                    use.Name = name;
+                    use.IsMemory = isMemory;
+
+                    uses.push_back(std::move(use));
+                    found = uses.end() - 1;
+                }
+
+                auto& steps = sets ? found->SetBy : found->ReadBy;
+
+                if (std::find(steps.begin(), steps.end(), blockId) == steps.end())
+                {
+                    steps.push_back(blockId);
+                }
+            };
+
+        auto const read = [&note](LogicSource const& source, std::wstring const& blockId)
+            {
+                if (source.Kind == LogicSourceKind::Tag || source.Kind == LogicSourceKind::Memory)
+                {
+                    note(source.Name, source.Kind == LogicSourceKind::Memory, false, blockId);
+                }
+            };
+
+        for (auto const& block : blocks)
+        {
+            auto const& settings = block.Settings;
+
+            switch (block.Kind)
+            {
+            case BlockKind::Branch:
+                read(settings.Branch.Subject, block.Id);
+                break;
+
+            case BlockKind::Switch:
+                read(settings.Switch.Subject, block.Id);
+                break;
+
+            case BlockKind::SetTag:
+                note(settings.SetTag.Tag, false, true, block.Id);
+                read(settings.SetTag.Value, block.Id);
+                break;
+
+            case BlockKind::SetMemory:
+                note(settings.SetMemory.Memory, true, true, block.Id);
+
+                if (settings.SetMemory.Action == MemoryAction::Set)
+                {
+                    read(settings.SetMemory.Value, block.Id);
+                }
+                break;
+
+            case BlockKind::PutValue:
+                read(settings.PutValue.Value, block.Id);
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        std::stable_sort(uses.begin(), uses.end(), [](LogicNameUse const& left, LogicNameUse const& right)
+            {
+                if (left.IsMemory != right.IsMemory)
+                {
+                    return left.IsMemory;
+                }
+
+                return ::CompareStringOrdinal(
+                    left.Name.c_str(), static_cast<int>(left.Name.size()),
+                    right.Name.c_str(), static_cast<int>(right.Name.size()),
+                    TRUE) == CSTR_LESS_THAN;
+            });
+
+        return uses;
+    }
 }

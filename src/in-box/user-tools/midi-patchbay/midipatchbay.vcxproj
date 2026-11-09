@@ -350,6 +350,7 @@
     <ClCompile Include="MainWindowControllerSteps.cpp" />
     <ClCompile Include="MainWindowConverterSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />
+    <ClCompile Include="MainWindowLogicNames.cpp" />
     <ClCompile Include="MainWindowWatch.cpp" />
     <ClCompile Include="WatchWindow.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
