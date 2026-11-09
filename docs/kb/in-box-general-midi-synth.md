@@ -171,13 +171,15 @@ Messages on any group other than the one this endpoint owns are discarded, as ar
 | 64 | Damper (sustain) | Yes |
 | 91 | Reverb Send Level | Yes |
 | 93 | Chorus Send Level | Yes |
+| 98 | NRPN LSB | Deselects the registered parameter. No NRPN is implemented |
+| 99 | NRPN MSB | Deselects the registered parameter. No NRPN is implemented |
 | 100 | RPN LSB | Yes |
 | 101 | RPN MSB | Yes |
 | 120 | All Sound Off | Yes |
 | 121 | Reset All Controllers | Yes |
 | 123 | All Notes Off | Yes |
 
-Everything else is ignored, including CC 2, 4, 5, and 12-13, the other LSB pairs at 33-63, the pedals at 65-67, the sound controllers at 70-79, the NRPN selects at 98-99, and the channel mode messages at 122 and 124-127.
+Everything else is ignored, including CC 2, 4, 5, and 12-13, the other LSB pairs at 33-63, the pedals at 65-67, the sound controllers at 70-79, and the channel mode messages at 122 and 124-127. Choosing an NRPN with CC 98 or 99 doesn't do anything on its own, but it means the data entry that follows can't change the pitch bend range or tuning by mistake.
 
 **Reset All Controllers follows General MIDI 2 section 3.5.2 and the MIDI-CI Default Control Change Mapping profile.** It resets modulation, expression, the pedals, the parameter number selects, and pitch bend. It deliberately does **not** reset channel volume, pan, bank select, program, or the effect send levels, because both specifications list those as not reset.
 
