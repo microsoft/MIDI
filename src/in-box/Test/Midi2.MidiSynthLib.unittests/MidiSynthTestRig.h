@@ -15,6 +15,12 @@ namespace MidiSynthTestRig
         return config;
     }
 
+    // Compatible mode as the transport sets it up, which has no effects either.
+    inline MidiSynth::SynthConfig CompatibleConfig() noexcept
+    {
+        return MidiSynth::SynthConfig::ForMode(MidiSynth::SynthMode::Compatible, 48000);
+    }
+
     // gm.dls, parsed once for every test that uses it. Marks the test skipped and returns nullptr
     // when the sound set can't be loaded.
     inline _Ret_maybenull_ const MidiSynth::DlsCollection* RequireSoundSet()
@@ -58,9 +64,10 @@ namespace MidiSynthTestRig
     class Rig
     {
     public:
-        explicit Rig(_In_ const MidiSynth::DlsCollection& collection)
+        explicit Rig(_In_ const MidiSynth::DlsCollection& collection, _In_ const MidiSynth::SynthConfig& config = TestConfig())
+            : m_config(config)
         {
-            m_engine.Initialize(&collection, TestConfig());
+            m_engine.Initialize(&collection, m_config);
             m_dispatcher.Initialize(&m_engine, 0, 0x0123456);
         }
 
@@ -69,7 +76,7 @@ namespace MidiSynthTestRig
 
         MidiSynth::SynthEngine& Engine() noexcept { return m_engine; }
 
-        uint32_t SampleRate() const noexcept { return TestConfig().RenderSampleRate(); }
+        uint32_t SampleRate() const noexcept { return m_config.RenderSampleRate(); }
 
         // A MIDI 2.0 channel voice message on group 1.
         void Send(_In_ uint8_t status, _In_ uint8_t channel, _In_ uint8_t index1, _In_ uint8_t index2, _In_ uint32_t data)
@@ -152,6 +159,7 @@ namespace MidiSynthTestRig
         }
 
     private:
+        MidiSynth::SynthConfig m_config;
         MidiSynth::SynthEngine m_engine;
         MidiSynth::UmpDispatcher m_dispatcher;
     };

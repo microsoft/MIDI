@@ -867,7 +867,7 @@ namespace MidiSynth
         voice.HeldModulation = state.Modulation;
         voice.HeldPanOffset = state.PanOffset;
         voice.HeldBendCents = state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
-        voice.HeldTuningCents = state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+        voice.HeldTuningCents = ChannelTuningCents(voice, state);
         voice.HeldReverbSend = static_cast<float>(state.ReverbSend);
         voice.HeldChorusSend = static_cast<float>(state.ChorusSend);
     }
@@ -911,7 +911,7 @@ namespace MidiSynth
             voice.NoteHeld = false;
 
             // General MIDI 2 recommends that drums ignore the damper pedal (section 3.3.7).
-            if (pedalDown && !voice.DrumKit)
+            if (pedalDown && !VoiceIgnoresDrumControls(voice))
             {
                 voice.SustainHeld = true;
             }
@@ -945,7 +945,7 @@ namespace MidiSynth
 
         case ControllerModulation:
             // General MIDI 2 recommends that a rhythm channel ignore modulation (section 3.3.2).
-            if (!state.PlaysDrumKit)
+            if (!ChannelIgnoresDrumControls(state))
             {
                 state.Modulation = normalized;
             }
@@ -979,7 +979,7 @@ namespace MidiSynth
             // A rhythm channel never presses the damper (General MIDI 2 section 3.3.7), but it
             // still lets it go, or melodic notes it held before the channel chose a kit would
             // never end.
-            if (down && state.PlaysDrumKit)
+            if (down && ChannelIgnoresDrumControls(state))
             {
                 break;
             }
@@ -1020,7 +1020,7 @@ namespace MidiSynth
             // A channel playing a drum kit ignores pitch bend sensitivity and channel fine and
             // coarse tuning, as General MIDI 2 recommends in sections 3.4.1 to 3.4.3. An MSB sets
             // the LSB back to zero, as the MIDI 1.0 specification asks of a receiver.
-            if (state.RpnMsb != 0 || state.PlaysDrumKit)
+            if (state.RpnMsb != 0 || ChannelIgnoresDrumControls(state))
             {
                 break;
             }
@@ -1042,7 +1042,7 @@ namespace MidiSynth
         case ControllerDataEntryLsb:
             // Cents of pitch bend sensitivity, and the low seven bits of fine tuning. An LSB on its
             // own adjusts what the last MSB set. Coarse tuning has no LSB.
-            if (state.RpnMsb != 0 || state.PlaysDrumKit)
+            if (state.RpnMsb != 0 || ChannelIgnoresDrumControls(state))
             {
                 break;
             }
@@ -1089,7 +1089,7 @@ namespace MidiSynth
         switch (controller)
         {
         case ControllerModulation:
-            if (!state.PlaysDrumKit)
+            if (!ChannelIgnoresDrumControls(state))
             {
                 state.Modulation = normalized;
             }
@@ -1118,7 +1118,7 @@ namespace MidiSynth
     void SynthEngine::PitchBend32(uint8_t channel, uint32_t value)
     {
         // General MIDI 2 recommends that a rhythm channel ignore pitch bend (section 3.6).
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1130,7 +1130,7 @@ namespace MidiSynth
     void SynthEngine::SetChannelFineTuning32(uint8_t channel, uint32_t value) noexcept
     {
         // A channel playing a drum kit ignores channel tuning, as General MIDI 2 recommends.
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1146,7 +1146,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetChannelCoarseTuning(uint8_t channel, uint8_t msb) noexcept
     {
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1157,7 +1157,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetPitchBendRange(uint8_t channel, uint8_t semitones, uint8_t cents) noexcept
     {
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1200,7 +1200,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::PitchBend(uint8_t channel, int32_t value)
     {
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1235,7 +1235,7 @@ namespace MidiSynth
 
             voice.NoteHeld = false;
 
-            if (pedalDown && !voice.DrumKit)
+            if (pedalDown && !VoiceIgnoresDrumControls(voice))
             {
                 voice.SustainHeld = true;
             }
@@ -1395,7 +1395,7 @@ namespace MidiSynth
 
         // A drum note leaves modulation and pitch bend alone, whatever the channel held when it chose
         // the kit (General MIDI 2 sections 3.3.2 and 3.6).
-        const double modulationDepth = voice.DrumKit ? 0.0 : (held ? voice.HeldModulation : state.Modulation);
+        const double modulationDepth = VoiceIgnoresDrumControls(voice) ? 0.0 : (held ? voice.HeldModulation : state.Modulation);
 
         double lfoValue = 0.0;
 
@@ -1446,19 +1446,14 @@ namespace MidiSynth
         voice.TargetGainRight = targetRight;
 
         // Pitch for this block.
-        const double bendCents = voice.DrumKit
+        const double bendCents = VoiceIgnoresDrumControls(voice)
             ? 0.0
             : (held ? voice.HeldBendCents : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0);
 
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
 
-        // General MIDI 2 keeps channel and master tuning off drums (sections 3.4.2, 3.4.3, 4.2 and
-        // 4.3). The note decides rather than the channel, so a note keeps its tuning when the
-        // channel changes program while it sounds.
-        const double tuningCents = voice.DrumKit
-            ? 0.0
-            : (held ? voice.HeldTuningCents : state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents);
+        const double tuningCents = held ? voice.HeldTuningCents : ChannelTuningCents(voice, state);
 
         const double pitchEnvelopeCents = voice.PitchEnvelopeLevel * articulation.Eg2ToPitchCents;
 
@@ -1495,6 +1490,21 @@ namespace MidiSynth
     {
         m_masterCoarseCents = (static_cast<double>(msb & 0x7F) - 64.0) * 100.0;
         m_masterTuningCents = m_masterFineCents + m_masterCoarseCents;
+    }
+
+    _Use_decl_annotations_
+    double SynthEngine::ChannelTuningCents(const SynthVoice& voice, const SynthChannelState& state) const noexcept
+    {
+        // The note decides rather than the channel, so a note keeps its tuning when the channel
+        // changes program while it sounds.
+        if (!voice.DrumKit)
+        {
+            return state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+        }
+
+        // General MIDI 2 keeps channel and master tuning off drums (sections 3.4.2, 3.4.3, 4.2 and
+        // 4.3). The older synthesizer tunes drums with fine tuning, but never with coarse tuning.
+        return m_config.DrumsFollowGeneralMidi2 ? 0.0 : state.FineTuneCents + m_masterFineCents;
     }
 
     _Use_decl_annotations_

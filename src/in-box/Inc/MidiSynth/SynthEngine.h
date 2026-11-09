@@ -408,6 +408,21 @@ namespace MidiSynth
 
         void UpdateVoiceControl(_Inout_ SynthVoice& voice, _In_ uint32_t frames) noexcept;
 
+        // True when a channel playing a kit should ignore the controls General MIDI 2 keeps off
+        // drums. Always false for a melodic channel, and false in Compatible mode.
+        bool ChannelIgnoresDrumControls(_In_ const SynthChannelState& state) const noexcept
+        {
+            return state.PlaysDrumKit && m_config.DrumsFollowGeneralMidi2;
+        }
+
+        bool VoiceIgnoresDrumControls(_In_ const SynthVoice& voice) const noexcept
+        {
+            return voice.DrumKit && m_config.DrumsFollowGeneralMidi2;
+        }
+
+        // Channel and master tuning for a voice, in cents, as the channel holds them now.
+        double ChannelTuningCents(_In_ const SynthVoice& voice, _In_ const SynthChannelState& state) const noexcept;
+
         // Moves the pitch envelope on by one control block.
         static void AdvancePitchEnvelope(_Inout_ SynthVoice& voice, _In_ double blockSeconds) noexcept;
         void RenderVoiceBlock(

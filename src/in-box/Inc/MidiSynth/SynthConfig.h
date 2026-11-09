@@ -94,6 +94,12 @@ namespace MidiSynth
         // being measured.
         bool EnableEffects{ true };
 
+        // General MIDI 2 recommends that drums ignore modulation, the damper pedal, pitch bend, pitch
+        // bend sensitivity, and channel and master tuning. The older synthesizer predates that: its
+        // drums bend, take modulation, the damper and fine tuning, and skip only coarse tuning, so
+        // Compatible does the same.
+        bool DrumsFollowGeneralMidi2{ true };
+
         // Control rate divisor. Envelopes and modulation update every this many frames, with
         // gain ramped across the block so nothing zippers.
         uint32_t ControlRateFrames{ 32 };
@@ -114,6 +120,8 @@ namespace MidiSynth
 
                 // Reproducing the older synthesizer means reproducing the misses too.
                 config.BankSelect = BankSelectMode::RolandGS;
+
+                config.DrumsFollowGeneralMidi2 = false;
             }
 
             return config;

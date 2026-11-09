@@ -54,13 +54,23 @@ All of these are in the MIDI Settings app under global settings, and in MIDI Con
 
 | Setting | What it does |
 | --- | --- |
-| **Synthesizer mode** | **Modern** plays the sound set without the limits of the older Windows synthesizer. **Compatible** reproduces those limits on purpose: 32 voices, a 22050 Hz render rate, and no effects. Pick Compatible when you're comparing against how a file sounded on an older PC. This is the "retro" setting. |
+| **Synthesizer mode** | **Modern** plays the sound set without the limits of the older Windows synthesizer. **Compatible** reproduces how the older Windows synthesizer sounded: 32 voices, a 22050 Hz render rate, no effects, and the older synthesizer's handling of drums and other messages. See [Compatible mode](#compatible-mode) below. Pick Compatible when you're comparing against how a file sounded on an older PC. This is the "retro" setting. |
 | **Audio output** | **Shared** is the normal setting and mixes with everything else. **Shared, low latency** asks the audio engine for smaller buffers, which tightens timing at the cost of some CPU. Not all audio devices support this low-latency Windows API. **Exclusive** takes the audio device for the synthesizer alone, for the shortest delay. See [Exclusive mode](#exclusive-mode) below. |
 | **Bank select** | Which convention to read bank select messages in: follow the sender, Roland GS, Yamaha XG, or General MIDI 2. |
 | **Volume trim** | A volume control for the synthesizer alone, from -60 dB to +12 dB. The service runs in a place where Windows can't give it a slider in the Volume Mixer, so this is how you balance it against your other audio. |
 | **Reverb and chorus** | Turns the built-in effects on or off. They're always off in Compatible mode, because the synthesizer being reproduced didn't have them. |
 
 Changing the synthesizer mode, the audio output, or the reverb and chorus setting restarts the audio, which stops any notes that are sounding. Each channel keeps its program, controllers, and tuning. When **Bank select** is set to follow the sender, the synthesizer also keeps reading bank select the way the sender's last System On message chose. A new **Bank select** setting takes effect right away without a restart, but it can change the instrument each channel plays, so don't change it in the middle of a song. Volume trim is safe to change while music is playing.
+
+### Compatible mode
+
+Compatible mode is for songs written for the Microsoft GS Wavetable Synth, the synthesizer older versions of Windows used. Newer standards, mostly General MIDI 2, changed how some messages should work. Modern mode follows the newer standards. Compatible mode follows the older synthesizer, so those songs sound the way their authors heard them.
+
+Here's what Compatible mode does differently from Modern mode:
+
+- **32 voices, a 22050 Hz render rate, and no reverb or chorus**, like the older synthesizer.
+- **Bank select is always read the Roland GS way.**
+- **Drums respond to pitch bend, modulation, the damper pedal, pitch bend sensitivity, and fine tuning.** Only coarse tuning leaves them alone. In Modern mode, drums ignore all of these, as General MIDI 2 recommends. See [Registered parameters](#registered-parameters).
 
 ### Exclusive mode
 
@@ -198,7 +208,9 @@ Controller 1 sets fine tuning from the whole 32-bit value. `0x80000000` is in tu
 
 Fine and coarse tuning change notes that are already playing too. They add to a note's Pitch 7.9 attribute rather than replacing it, as the specification says.
 
-**Drum channels ignore modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine and coarse tuning, as General MIDI 2 recommends in sections 3.3, 3.4, and 3.6.** So none of them changes how a drum sounds or how long it rings. A drum channel is any channel that's playing a drum kit, such as channel 10, a channel given drums with the GS Use For Rhythm Part message, or a channel where bank select chose a kit under Yamaha XG or General MIDI 2 addressing. A drum channel doesn't store any of these values when it's sent them, with one exception: lifting the damper pedal always works, so a melodic note the pedal was holding when the channel switched to a kit can't get stuck. A channel that was set up before it switched to a kit keeps those values, because a program change doesn't reset them, but its drums don't use them. They work again if the channel switches back to a melodic program. A melodic note that's still playing when its channel switches to a kit keeps them.
+**In Modern mode, drum channels ignore modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine and coarse tuning, as General MIDI 2 recommends in sections 3.3, 3.4, and 3.6.** So none of them changes how a drum sounds or how long it rings. A drum channel is any channel that's playing a drum kit, such as channel 10, a channel given drums with the GS Use For Rhythm Part message, or a channel where bank select chose a kit under Yamaha XG or General MIDI 2 addressing. A drum channel doesn't store any of these values when it's sent them, with one exception: lifting the damper pedal always works, so a melodic note the pedal was holding when the channel switched to a kit can't get stuck. A channel that was set up before it switched to a kit keeps those values, because a program change doesn't reset them, but its drums don't use them. They work again if the channel switches back to a melodic program. A melodic note that's still playing when its channel switches to a kit keeps them.
+
+**In Compatible mode, drum channels work the way they did on the older Windows synthesizer.** They respond to modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine tuning. Only coarse tuning leaves drums alone, so a song that transposes with coarse tuning doesn't retune its drums.
 
 ### System messages
 
@@ -343,7 +355,7 @@ Both lists support pagination through `offset` and `limit` in the request header
 
 #### ChCtrlList
 
-Two lists, one for melodic channels and one for drum channels. The list with resource ID `channel` has 15 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, fine tuning, coarse tuning, and per-note volume, pan, and pitch. The list with resource ID `drums` leaves out what drum channels ignore: modulation, pitch bend, the sustain pedal, pitch bend sensitivity, and fine and coarse tuning. That leaves 9 controllers. Each channel's `ChannelList` entry links to the list that applies to it.
+Three lists, one for melodic channels and two for drum channels. The list with resource ID `channel` has 15 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, fine tuning, coarse tuning, and per-note volume, pan, and pitch. The list with resource ID `drums` leaves out what drum channels ignore in Modern mode: modulation, pitch bend, the sustain pedal, pitch bend sensitivity, and fine and coarse tuning. That leaves 9 controllers. In Compatible mode, drum channels link to the list with resource ID `drumsCompatible` instead, which leaves out only coarse tuning, so it has 14 controllers. Each channel's `ChannelList` entry links to the list that applies to it.
 
 Every entry says `"transmit":"none"`, because the synthesizer only receives controllers. Each default is the value a reset returns to, written as a 32-bit MIDI 2.0 value. For example, the default volume of 100 is `3374617161`.
 
