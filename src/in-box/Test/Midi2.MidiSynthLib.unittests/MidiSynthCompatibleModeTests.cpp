@@ -658,3 +658,29 @@ void MidiSynthCompatibleModeTests::TestGsReceiveChannel()
     modern.SendMidi1(StatusProgramChange, 0, ChurchOrgan, 0);
     VERIFY_ARE_EQUAL(0, static_cast<int>(modern.Engine().ChannelState(10).Program));
 }
+
+// Voices fading out after All Sound Off are no longer heard, so the next notes take them, even on
+// the lowest priority channel and before anything has rendered.
+void MidiSynthCompatibleModeTests::TestFadingVoicesAreReusedFirst()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    Rig rig(*collection, CompatibleConfig());
+
+    HoldNotes(rig, 0, 30, 40);
+    rig.SendMidi1(StatusControlChange, 0, 120, 0);
+
+    const auto dropped = rig.Engine().DroppedNoteCount();
+    const auto stolen = rig.Engine().StolenVoiceCount();
+
+    HoldNotes(rig, 15, 30, 40);
+
+    VERIFY_ARE_EQUAL(dropped, rig.Engine().DroppedNoteCount(), L"no note is dropped");
+    VERIFY_ARE_EQUAL(stolen, rig.Engine().StolenVoiceCount(), L"and nothing sounding was stolen");
+    VERIFY_ARE_EQUAL(40u, rig.Engine().SoundingVoiceCount(15));
+}
