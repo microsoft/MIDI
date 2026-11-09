@@ -118,6 +118,16 @@ namespace MidiSynth
         // takes about 20 to 50 ms to arrive. Zero in Modern, where a bend lands at the next block.
         double PitchBendGlideMaximumSeconds{ 0.0 };
 
+        // Read messages the way the older synthesizer did, where that differs from the standards
+        // this engine otherwise follows:
+        //  - bank select, and the GS part messages, are ignored until a GS Reset, and a GM or XG
+        //    System On turns them off again;
+        //  - the pitch bend sensitivity LSB is ignored, and a fine tuning MSB keeps the LSB;
+        //  - Reset All Controllers with a value other than zero also resets volume and pan;
+        //  - master fine and coarse tuning are ignored;
+        //  - mono and poly mode, GS scale tuning and GS receive channel are honored.
+        bool OlderMessageHandling{ false };
+
         // Control rate divisor. Envelopes and modulation update every this many frames, with
         // gain ramped across the block so nothing zippers.
         uint32_t ControlRateFrames{ 32 };
@@ -143,6 +153,7 @@ namespace MidiSynth
                 config.DrumsFollowGeneralMidi2 = false;
                 config.TuningFixedAtNoteOn = true;
                 config.PitchBendGlideMaximumSeconds = 0.05;
+                config.OlderMessageHandling = true;
             }
 
             return config;

@@ -28,6 +28,8 @@ namespace MidiSynth
         constexpr uint8_t ControllerAllSoundOff = 120;
         constexpr uint8_t ControllerResetAllControllers = 121;
         constexpr uint8_t ControllerAllNotesOff = 123;
+        constexpr uint8_t ControllerMonoMode = 126;
+        constexpr uint8_t ControllerPolyMode = 127;
 
         constexpr uint8_t DrumChannelIndex = 9;
 
@@ -41,6 +43,12 @@ namespace MidiSynth
         double FineTuningCentsFrom14(_In_ uint32_t value) noexcept
         {
             return (static_cast<double>(value & 0x3FFF) - 8192.0) * 100.0 / 8192.0;
+        }
+
+        // The fourteen bit value a fine tuning would have been sent as. Exact for anything MIDI 1.0 set.
+        uint32_t FineTuning14Of(_In_ double cents) noexcept
+        {
+            return static_cast<uint32_t>(std::lround((std::clamp)(cents * 8192.0 / 100.0 + 8192.0, 0.0, 16383.0)));
         }
 
         // The data entry MSB a fine tuning would have been sent with, so a data entry LSB on its own
@@ -194,8 +202,11 @@ namespace MidiSynth
 
     void SynthEngine::ResetChannels() noexcept
     {
+        m_gsActive = false;
+
         for (size_t channel = 0; channel < MidiChannelCount; channel++)
         {
+            m_receiveChannels[channel] = static_cast<uint8_t>(channel);
             m_channels[channel] = SynthChannelState{};
             m_channels[channel].IsDrumChannel = (channel == DrumChannelIndex);
             ResolveInstrument(static_cast<uint8_t>(channel));
@@ -331,6 +342,54 @@ namespace MidiSynth
         m_channels[channel].IsDrumChannel = isDrumChannel;
 
         ResolveInstrument(channel);
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetScaleTuning(uint8_t channel, const uint8_t* offsets, size_t count) noexcept
+    {
+        if (!m_config.OlderMessageHandling || !m_gsActive || channel >= MidiChannelCount || offsets == nullptr)
+        {
+            return;
+        }
+
+        auto& tuning = m_channels[channel].ScaleTuningCents;
+
+        for (size_t i = 0; i < count && i < tuning.size(); i++)
+        {
+            tuning[i] = static_cast<int8_t>(static_cast<int>(offsets[i] & 0x7F) - 64);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetReceiveChannel(uint8_t engineChannel, uint8_t midiChannel) noexcept
+    {
+        if (!m_config.OlderMessageHandling || !m_gsActive || engineChannel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        m_receiveChannels[engineChannel] = midiChannel & 0x0F;
+    }
+
+    _Use_decl_annotations_
+    uint16_t SynthEngine::EngineChannelsReceiving(uint8_t midiChannel) const noexcept
+    {
+        if (!m_config.OlderMessageHandling)
+        {
+            return static_cast<uint16_t>(1u << (midiChannel & 0x0F));
+        }
+
+        uint16_t channels = 0;
+
+        for (uint8_t engineChannel = 0; engineChannel < MidiChannelCount; engineChannel++)
+        {
+            if (m_receiveChannels[engineChannel] == (midiChannel & 0x0F))
+            {
+                channels |= static_cast<uint16_t>(1u << engineChannel);
+            }
+        }
+
+        return channels;
     }
 
     _Use_decl_annotations_
@@ -710,6 +769,12 @@ namespace MidiSynth
 
         voice.NoteOnTuningCents = ChannelTuningCents(voice, m_channels[channel]);
 
+        // GS scale tuning, which the older synthesizer applies to drums as well.
+        if (m_config.OlderMessageHandling)
+        {
+            voice.NoteOnTuningCents += m_channels[channel].ScaleTuningCents[note % 12];
+        }
+
         if (m_config.PitchBendGlideMaximumSeconds > 0.0)
         {
             // An eighth of the vibrato cycle when the instrument has vibrato or tremolo, which is
@@ -801,6 +866,20 @@ namespace MidiSynth
                 !voice.SelfNonExclusive && !voice.Detached)
             {
                 KillVoice(voice);
+            }
+        }
+
+        // In mono mode a new note ends the ones the channel still holds, damper or not.
+        if (m_config.OlderMessageHandling && state.MonoMode)
+        {
+            for (auto& voice : m_voices)
+            {
+                if (voice.Active && !voice.Killed && voice.Channel == channel && voice.Stage != EnvelopeStage::Release)
+                {
+                    voice.NoteHeld = false;
+                    voice.SustainHeld = false;
+                    ReleaseVoice(voice);
+                }
             }
         }
 
@@ -1059,11 +1138,14 @@ namespace MidiSynth
         switch (controller)
         {
         case ControllerBankSelectMsb:
-            state.BankMsb = value & 0x7F;
-            break;
-
         case ControllerBankSelectLsb:
-            state.BankLsb = value & 0x7F;
+            // The older synthesizer reads bank select only once a GS Reset has turned GS on.
+            if (m_config.OlderMessageHandling && !m_gsActive)
+            {
+                break;
+            }
+
+            (controller == ControllerBankSelectMsb ? state.BankMsb : state.BankLsb) = value & 0x7F;
             break;
 
         case ControllerModulation:
@@ -1154,7 +1236,10 @@ namespace MidiSynth
             }
             else if (state.RpnLsb == 1)
             {
-                state.FineTuneCents = FineTuningCentsFrom14(static_cast<uint32_t>(value & 0x7F) << 7);
+                // The older synthesizer keeps the LSB a fine tuning already had.
+                const uint32_t lsb = m_config.OlderMessageHandling ? FineTuning14Of(state.FineTuneCents) & 0x7F : 0;
+
+                state.FineTuneCents = FineTuningCentsFrom14((static_cast<uint32_t>(value & 0x7F) << 7) | lsb);
             }
             else if (state.RpnLsb == 2)
             {
@@ -1172,7 +1257,11 @@ namespace MidiSynth
 
             if (state.RpnLsb == 0)
             {
-                SetPitchBendRangeRaw(state, state.PitchBendRangeMsb, value);
+                // The older synthesizer takes whole semitones only.
+                if (!m_config.OlderMessageHandling)
+                {
+                    SetPitchBendRangeRaw(state, state.PitchBendRangeMsb, value);
+                }
             }
             else if (state.RpnLsb == 1)
             {
@@ -1186,7 +1275,39 @@ namespace MidiSynth
             break;
 
         case ControllerResetAllControllers:
-            ResetAllControllers(channel);
+            if (m_config.OlderMessageHandling)
+            {
+                // The older synthesizer also puts the effect sends back, and volume and pan when the
+                // value isn't zero, and leaves the parameter number selected.
+                const auto rpnMsb = state.RpnMsb;
+                const auto rpnLsb = state.RpnLsb;
+
+                ResetAllControllers(channel);
+
+                state.RpnMsb = rpnMsb;
+                state.RpnLsb = rpnLsb;
+                state.ReverbSend = 40.0 / 127.0;
+                state.ChorusSend = 0.0;
+
+                if ((value & 0x7F) != 0)
+                {
+                    state.Volume = 100.0 / 127.0;
+                    state.PanOffset = 0.0;
+                }
+            }
+            else
+            {
+                ResetAllControllers(channel);
+            }
+            break;
+
+        case ControllerMonoMode:
+        case ControllerPolyMode:
+            if (m_config.OlderMessageHandling)
+            {
+                state.MonoMode = (controller == ControllerMonoMode);
+                AllSoundOff(channel);
+            }
             break;
 
         case ControllerAllNotesOff:
@@ -1623,6 +1744,12 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetMasterFineTuning(uint16_t value) noexcept
     {
+        // The older synthesizer has no master tuning.
+        if (m_config.OlderMessageHandling)
+        {
+            return;
+        }
+
         const auto clamped = (std::min)(value, static_cast<uint16_t>(16383));
 
         m_masterFineCents = (static_cast<double>(clamped) - 8192.0) * (100.0 / 8192.0);
@@ -1632,6 +1759,11 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetMasterCoarseTuning(uint8_t msb) noexcept
     {
+        if (m_config.OlderMessageHandling)
+        {
+            return;
+        }
+
         m_masterCoarseCents = (static_cast<double>(msb & 0x7F) - 64.0) * 100.0;
         m_masterTuningCents = m_masterFineCents + m_masterCoarseCents;
     }

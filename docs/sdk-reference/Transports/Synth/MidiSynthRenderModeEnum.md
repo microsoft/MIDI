@@ -12,8 +12,8 @@ description: Whether the synthesizer reproduces the older in-box synthesizer or 
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `Compatible` | `0` | Sounds like the older synthesizer that came with Windows, limits and all: 32 voices, linear interpolation, no reverb or chorus, and a 22050 Hz sample rate. That lower sample rate cuts off high frequencies, and that's part of the sound being copied |
-| `Modern` | `1` | The same sound set, without the old limits |
+| `Compatible` | `0` | Sounds like the older synthesizer that came with Windows, limits and all: 32 voices, linear interpolation, no reverb or chorus, and a 22050 Hz sample rate. That lower sample rate cuts off high frequencies, and that's part of the sound being copied. It also handles drums, tuning, voice priority, pitch bend and some messages the way that synthesizer did, where newer standards changed them. The full list is in [the General MIDI Synth article]({{ site.baseurl }}/kb/in-box-general-midi-synth/#compatible-mode) |
+| `Modern` | `1` | The same sound set, without the old limits, following General MIDI 2 where it differs from the older synthesizer |
 
 ## Remarks
 

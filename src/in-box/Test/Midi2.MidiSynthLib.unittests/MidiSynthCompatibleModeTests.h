@@ -19,4 +19,9 @@ public:
     TEST_METHOD(TestSpareVoicesFadeTheLowestPriority);
     TEST_METHOD(TestStealingPrefersAReleasedNote);
     TEST_METHOD(TestPitchBendGlides);
+    TEST_METHOD(TestBankSelectNeedsGsReset);
+    TEST_METHOD(TestOlderDataEntryAndResets);
+    TEST_METHOD(TestMonoMode);
+    TEST_METHOD(TestGsScaleTuning);
+    TEST_METHOD(TestGsReceiveChannel);
 };
