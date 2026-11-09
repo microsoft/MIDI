@@ -136,7 +136,7 @@ Steps can't be connected in a circle, because nothing would ever leave it. Windo
 
 ### Filter steps
 
-- **Message type filter** is the coarsest switch. **Message types** works at the UMP message type level. **Channel messages** applies to both MIDI 1.0 and MIDI 2.0 channel voice messages, so you can drop program changes or keep only notes. **System messages** is where you stop a device flooding everything downstream with timing clock or active sensing.
+- **Message type filter** is the coarsest switch. **Message types** works at the UMP message type level. **Channel messages** applies to both MIDI 1.0 and MIDI 2.0 channel voice messages, so you can drop program changes or keep only notes. **System messages** is where you stop a device flooding everything downstream with timing clock or active sensing. **Message types** comes first: a message type you clear there is dropped whatever the other sections say. So **Channel messages** is turned off until **MIDI 1.0 channel voice** or **MIDI 2.0 channel voice** is on, and **System messages** is turned off until **System** is on.
 - **Channel filter** limits which of the sixteen channels get through. Messages without a channel, such as clock, always get through.
 - **Group filter** limits which of the sixteen groups get through.
 - **Note filter** picks out a range of notes, one note, or a list of notes, and either lets only those through or keeps them out. Click keys on the keyboard to pick them. For a range, click the lowest key, then hold Shift and click the highest. It applies to note on, note off, poly pressure and the MIDI 2.0 per note messages, so a held note can't be stranded. Everything else goes through.

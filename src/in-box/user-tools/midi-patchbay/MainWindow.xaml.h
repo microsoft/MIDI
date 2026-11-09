@@ -232,6 +232,7 @@ namespace winrt::midipatchbay::implementation
         ::midipatchbay::BlockSettings EditedSettings() noexcept;
 
         void BuildMessageTypeSections() noexcept;
+        void RefreshMessageTypeSections() noexcept;
         void BuildValueSetSection() noexcept;
         void RefreshValueSetUi() noexcept;
         void OnValueKeyPressed(_In_ uint8_t value, _In_ bool shift) noexcept;
@@ -636,6 +637,13 @@ namespace winrt::midipatchbay::implementation
         // The (N)RPN rows and the gate's two triggers, rebuilt as they change.
         controls::StackPanel m_parameterRowsPanel{ nullptr };
         std::array<controls::StackPanel, 2> m_gateTriggerPanels{ nullptr, nullptr };
+
+        // The message type filter's channel and system sections, which only matter while the
+        // message types they belong to are let through.
+        controls::Panel m_channelVoiceGrid{ nullptr };
+        controls::TextBlock m_channelVoiceOffText{ nullptr };
+        controls::Panel m_systemGrid{ nullptr };
+        controls::TextBlock m_systemOffText{ nullptr };
 
         // Each (N)RPN transform row's curve, by row.
         std::vector<controls::Canvas> m_parameterCurveCanvases{};
