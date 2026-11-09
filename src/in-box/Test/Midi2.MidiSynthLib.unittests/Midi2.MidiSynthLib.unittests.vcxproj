@@ -79,6 +79,7 @@
   <ItemGroup>
     <ClInclude Include="MidiSynthAudioFormatTests.h" />
     <ClInclude Include="MidiSynthChannelTuningTests.h" />
+    <ClInclude Include="MidiSynthCompatibleModeTests.h" />
     <ClInclude Include="MidiSynthDataEntryTests.h" />
     <ClInclude Include="MidiSynthMuidTests.h" />
     <ClInclude Include="MidiSynthWithoutAudioTests.h" />
@@ -97,6 +98,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MidiSynthAudioFormatTests.cpp" />
     <ClCompile Include="MidiSynthChannelTuningTests.cpp" />
+    <ClCompile Include="MidiSynthCompatibleModeTests.cpp" />
     <ClCompile Include="MidiSynthDataEntryTests.cpp" />
     <ClCompile Include="MidiSynthMuidTests.cpp" />
     <ClCompile Include="MidiSynthWithoutAudioTests.cpp" />

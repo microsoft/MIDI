@@ -37,6 +37,10 @@ namespace MidiSynth
     constexpr char const* ControllerListResourceId = "channel";
     constexpr char const* DrumControllerListResourceId = "drums";
 
+    // Compatible mode keeps the older synthesizer's drums, which respond to everything on a melodic
+    // channel except coarse tuning, so its drum channels link to this list instead.
+    constexpr char const* CompatibleDrumControllerListResourceId = "drumsCompatible";
+
     // Text a customer reads in these resources, localized by the host. Patch names and other GM or GS names are never translated.
     struct PropertyExchangeText
     {
@@ -108,19 +112,29 @@ namespace MidiSynth
         // answered, with the melodic list.
         const std::vector<char>& ControllerListJson() const noexcept { return m_controllerListJson; }
         const std::vector<char>& DrumControllerListJson() const noexcept { return m_drumControllerListJson; }
+        const std::vector<char>& CompatibleDrumControllerListJson() const noexcept { return m_compatibleDrumControllerListJson; }
 
         const std::vector<char>& ControllerListJson(_In_ const std::string& resourceId) const noexcept
         {
-            return (resourceId == DrumControllerListResourceId)
-                ? m_drumControllerListJson
-                : m_controllerListJson;
+            if (resourceId == DrumControllerListResourceId)
+            {
+                return m_drumControllerListJson;
+            }
+
+            if (resourceId == CompatibleDrumControllerListResourceId)
+            {
+                return m_compatibleDrumControllerListJson;
+            }
+
+            return m_controllerListJson;
         }
 
         static bool IsKnownControllerListResourceId(_In_ const std::string& resourceId) noexcept
         {
             return resourceId.empty()
                 || resourceId == ControllerListResourceId
-                || resourceId == DrumControllerListResourceId;
+                || resourceId == DrumControllerListResourceId
+                || resourceId == CompatibleDrumControllerListResourceId;
         }
 
         // Reflects what is selected right now, which is why it is rebuilt per request and why it
@@ -243,6 +257,7 @@ namespace MidiSynth
         std::vector<char> m_drumKitProgramListJson;
         std::vector<char> m_controllerListJson;
         std::vector<char> m_drumControllerListJson;
+        std::vector<char> m_compatibleDrumControllerListJson;
         std::vector<char> m_channelListJson;
         PropertyExchangeText m_text{};
 
