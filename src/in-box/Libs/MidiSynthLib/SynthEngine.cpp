@@ -148,7 +148,7 @@ namespace MidiSynth
             return false;
         }
 
-        m_voices.assign((std::max)(1u, config.MaxVoices), SynthVoice{});
+        m_voices.assign((std::max)(1u, config.MaxVoices + config.SpareVoices), SynthVoice{});
 
         // Not allocated at all when effects are off, so the per voice send accumulation is skipped
         // rather than merely discarded.
@@ -433,24 +433,11 @@ namespace MidiSynth
 
         SynthVoice* candidate = nullptr;
 
-        if (m_config.StealingPolicy == VoiceStealingPolicy::LowestChannelPriority)
+        if (m_config.StealingPolicy == VoiceStealingPolicy::ChannelPriority)
         {
-            // The in-box synth favors lower channel numbers, so a voice on a higher channel than
-            // the incoming note is the first thing to go.
-            for (auto& voice : m_voices)
-            {
-                if (voice.Channel < channel)
-                {
-                    continue;
-                }
-
-                if (candidate == nullptr ||
-                    voice.Channel > candidate->Channel ||
-                    (voice.Channel == candidate->Channel && voice.StartOrder < candidate->StartOrder))
-                {
-                    candidate = &voice;
-                }
-            }
+            // A note can only take a voice from a channel of its own priority or lower. When every
+            // voice belongs to a higher priority channel, the note isn't played.
+            candidate = PriorityVictim(ChannelPriority(channel), false);
         }
         else
         {
@@ -491,6 +478,116 @@ namespace MidiSynth
         }
 
         return candidate;
+    }
+
+    _Use_decl_annotations_
+    uint32_t SynthEngine::ChannelPriority(uint8_t channel) noexcept
+    {
+        // Channel 10 first, then 1 to 9, then 11 to 16.
+        if (channel == DrumChannelIndex)
+        {
+            return MidiChannelCount;
+        }
+
+        return (channel < DrumChannelIndex)
+            ? static_cast<uint32_t>(MidiChannelCount - 1 - channel)
+            : static_cast<uint32_t>(MidiChannelCount - channel);
+    }
+
+    _Use_decl_annotations_
+    SynthVoice* SynthEngine::PriorityVictim(uint32_t maxPriority, bool lowestPriorityOnly) noexcept
+    {
+        // Visited lowest priority first and, within a priority, oldest first, which is the order
+        // the older synthesizer kept its voices in. Its comparisons depend on that order, so they
+        // are copied as they are: a released note wins over a held one when it is the quieter, and
+        // an older held note wins over whatever was chosen before it.
+        std::array<SynthVoice*, 512> order{};
+        size_t count = 0;
+
+        for (auto& voice : m_voices)
+        {
+            if (voice.Active && !voice.Killed && count < order.size() && ChannelPriority(voice.Channel) <= maxPriority)
+            {
+                order[count++] = &voice;
+            }
+        }
+
+        std::sort(order.begin(), order.begin() + count, [](const SynthVoice* a, const SynthVoice* b)
+        {
+            const auto priorityA = ChannelPriority(a->Channel);
+            const auto priorityB = ChannelPriority(b->Channel);
+
+            return (priorityA != priorityB) ? priorityA < priorityB : a->StartOrder < b->StartOrder;
+        });
+
+        SynthVoice* best = nullptr;
+
+        for (size_t i = 0; i < count; i++)
+        {
+            SynthVoice* voice = order[i];
+
+            if (best == nullptr)
+            {
+                best = voice;
+                continue;
+            }
+
+            if (lowestPriorityOnly && ChannelPriority(voice->Channel) > ChannelPriority(best->Channel))
+            {
+                break;
+            }
+
+            const bool voiceHeld = voice->Stage != EnvelopeStage::Release;
+            const bool bestHeld = best->Stage != EnvelopeStage::Release;
+
+            if (!voiceHeld)
+            {
+                const double voiceLoudness = voice->CurrentGainLeft + voice->CurrentGainRight;
+                const double bestLoudness = best->CurrentGainLeft + best->CurrentGainRight;
+
+                if (bestHeld || bestLoudness > voiceLoudness)
+                {
+                    best = voice;
+                }
+            }
+            else if (best->StartOrder > voice->StartOrder)
+            {
+                best = voice;
+            }
+        }
+
+        return best;
+    }
+
+    void SynthEngine::ReleaseSpareVoices() noexcept
+    {
+        if (m_config.SpareVoices == 0)
+        {
+            return;
+        }
+
+        size_t sounding = 0;
+
+        for (const auto& voice : m_voices)
+        {
+            if (voice.Active && !voice.Killed)
+            {
+                sounding++;
+            }
+        }
+
+        for (; sounding > m_config.MaxVoices; sounding--)
+        {
+            SynthVoice* victim = PriorityVictim(MidiChannelCount, true);
+
+            if (victim == nullptr)
+            {
+                break;
+            }
+
+            m_stolenVoiceCount++;
+            KillVoice(*victim);
+        }
     }
 
     _Use_decl_annotations_
@@ -887,6 +984,7 @@ namespace MidiSynth
         voice.NoteHeld = false;
         voice.SustainHeld = false;
         voice.ReleaseSeconds = VoiceKillSeconds;
+        voice.Killed = true;
 
         // A killed voice must not win a later note off for the same key.
         voice.Note = 0xFF;
@@ -1629,6 +1727,8 @@ namespace MidiSynth
             std::fill_n(m_reverbSendBuffer.data(), samples, 0.0f);
             std::fill_n(m_chorusSendBuffer.data(), samples, 0.0f);
         }
+
+        ReleaseSpareVoices();
 
         m_renderCursor = interleavedStereo;
 

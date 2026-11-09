@@ -243,3 +243,132 @@ void MidiSynthCompatibleModeTests::TestTuningIsFixedAtNoteOn()
         }
     }
 }
+
+namespace
+{
+    // Holds count organ notes on a channel, from firstNote up. Nothing is rendered, so no voice is
+    // freed or faded in between.
+    void HoldNotes(_Inout_ Rig& rig, _In_ uint8_t channel, _In_ uint8_t firstNote, _In_ uint8_t count)
+    {
+        rig.Engine().ProgramChange(channel, ChurchOrgan);
+
+        for (uint8_t i = 0; i < count; i++)
+        {
+            rig.NoteOn(channel, static_cast<uint8_t>(firstNote + i), NoAttribute, 0);
+        }
+    }
+}
+
+// The older synthesizer ranks channel 10 first, then channels 1 to 9, then 11 to 16, and a note can
+// only take a voice from a channel ranked the same or lower. So drums are the last thing to be cut.
+void MidiSynthCompatibleModeTests::TestChannel10HasTheHighestPriority()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    struct Case
+    {
+        uint8_t Channel;
+        bool Plays;
+        const wchar_t* Name;
+    };
+
+    const Case cases[]
+    {
+        { DrumChannel, true, L"channel 10 takes a voice from channel 1" },
+        { 1, false, L"channel 2 can't take one from channel 1" },
+        { 10, false, L"and neither can channel 11" },
+        { 0, true, L"channel 1 takes one from itself" },
+    };
+
+    for (const auto& test : cases)
+    {
+        Rig rig(*collection, CompatibleConfig());
+
+        // Every voice, spares included, held on channel 1.
+        HoldNotes(rig, 0, 30, 40);
+
+        const auto dropped = rig.Engine().DroppedNoteCount();
+
+        rig.NoteOn(test.Channel, (test.Channel == DrumChannel) ? LowTom : 90, NoAttribute, 0);
+
+        const bool plays = rig.Engine().DroppedNoteCount() == dropped;
+
+        Log::Comment(String().Format(L"Channel %u: %s", test.Channel + 1, plays ? L"plays" : L"dropped"));
+
+        VERIFY_ARE_EQUAL(test.Plays, plays, test.Name);
+    }
+}
+
+// A burst of notes can use eight voices beyond the 32 for a moment. Before the next block renders,
+// the oldest notes on the lowest priority channel fade out, so 32 are left.
+void MidiSynthCompatibleModeTests::TestSpareVoicesFadeTheLowestPriority()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    Rig rig(*collection, CompatibleConfig());
+
+    HoldNotes(rig, 15, 40, 20);
+    HoldNotes(rig, 0, 40, 20);
+
+    VERIFY_ARE_EQUAL(20u, rig.Engine().SoundingVoiceCount(15));
+    VERIFY_ARE_EQUAL(20u, rig.Engine().SoundingVoiceCount(0), L"40 notes sound at once");
+
+    (void)rig.Render(0.1);
+
+    Log::Comment(String().Format(L"After one render: channel 16 has %u, channel 1 has %u",
+        rig.Engine().SoundingVoiceCount(15), rig.Engine().SoundingVoiceCount(0)));
+
+    VERIFY_ARE_EQUAL(12u, rig.Engine().SoundingVoiceCount(15), L"channel 16 gives up 8");
+    VERIFY_ARE_EQUAL(20u, rig.Engine().SoundingVoiceCount(0), L"channel 1 keeps all of its notes");
+    VERIFY_IS_FALSE(rig.Engine().IsNoteSounding(15, 40), L"the oldest went first");
+    VERIFY_IS_TRUE(rig.Engine().IsNoteSounding(15, 59), L"the newest stayed");
+    VERIFY_ARE_EQUAL(32u, rig.Engine().ActiveVoiceCount(), L"and the faded ones are gone");
+}
+
+// With every voice in use, a note takes a released note's voice before a held one, even a released
+// note newer than every held one.
+void MidiSynthCompatibleModeTests::TestStealingPrefersAReleasedNote()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    for (const bool release : { true, false })
+    {
+        Rig rig(*collection, CompatibleConfig());
+
+        HoldNotes(rig, 0, 30, 40);
+
+        if (release)
+        {
+            rig.NoteOff(0, 69);
+        }
+
+        rig.NoteOn(0, 90, NoAttribute, 0);
+
+        VERIFY_IS_TRUE(rig.Engine().IsNoteSounding(0, 90), L"the new note plays");
+
+        if (release)
+        {
+            VERIFY_IS_FALSE(rig.Engine().IsNoteSounding(0, 69), L"in the released note's voice");
+            VERIFY_IS_TRUE(rig.Engine().IsNoteSounding(0, 30), L"and the oldest held note keeps playing");
+        }
+        else
+        {
+            VERIFY_IS_FALSE(rig.Engine().IsNoteSounding(0, 30), L"with nothing released, the oldest note gives way");
+        }
+    }
+}

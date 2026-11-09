@@ -96,6 +96,10 @@ namespace MidiSynth
         // number is played again on the same channel, so a held note is not stolen by the retrigger.
         bool Detached{ false };
 
+        // Fading out after All Sound Off, a reset, a retrigger or a steal. No longer counts as one
+        // of the notes sounding.
+        bool Killed{ false };
+
         ResolvedArticulation Articulation;
 
         EnvelopeStage Stage{ EnvelopeStage::Idle };
@@ -348,6 +352,23 @@ namespace MidiSynth
         void Render(_Out_writes_(frameCount * 2) float* interleavedStereo, _In_ uint32_t frameCount) noexcept;
 
         uint32_t ActiveVoiceCount() const noexcept;
+
+        // Notes sounding on a channel, not counting voices fading out after a steal or a reset.
+        uint32_t SoundingVoiceCount(_In_ uint8_t channel) const noexcept
+        {
+            return static_cast<uint32_t>(std::count_if(m_voices.begin(), m_voices.end(), [channel](const SynthVoice& voice)
+            {
+                return voice.Active && !voice.Killed && voice.Channel == channel;
+            }));
+        }
+
+        bool IsNoteSounding(_In_ uint8_t channel, _In_ uint8_t note) const noexcept
+        {
+            return std::any_of(m_voices.begin(), m_voices.end(), [channel, note](const SynthVoice& voice)
+            {
+                return voice.Active && !voice.Killed && voice.Channel == channel && voice.Note == note;
+            });
+        }
         uint64_t StolenVoiceCount() const noexcept { return m_stolenVoiceCount; }
         uint64_t DroppedNoteCount() const noexcept { return m_droppedNoteCount; }
 
@@ -388,6 +409,16 @@ namespace MidiSynth
 
         void ResolveInstrument(_In_ uint8_t channel) noexcept;
         _Ret_maybenull_ SynthVoice* AllocateVoice(_In_ uint8_t channel) noexcept;
+
+        // The older synthesizer's channel priority: higher wins. See VoiceStealingPolicy::ChannelPriority.
+        static uint32_t ChannelPriority(_In_ uint8_t channel) noexcept;
+
+        // The voice the ChannelPriority policy gives up first. With lowestPriorityOnly, only voices
+        // at the lowest priority sounding are considered, otherwise any at or below maxPriority.
+        _Ret_maybenull_ SynthVoice* PriorityVictim(_In_ uint32_t maxPriority, _In_ bool lowestPriorityOnly) noexcept;
+
+        // Fades out notes until no more than MaxVoices are sounding, when SpareVoices allows more.
+        void ReleaseSpareVoices() noexcept;
         void StartVoice(
             _Inout_ SynthVoice& voice,
             _In_ const DlsRegion& region,
