@@ -494,6 +494,22 @@ namespace MidiSynth
 
         if (m_config.StealingPolicy == VoiceStealingPolicy::ChannelPriority)
         {
+            // A voice already fading out after a reset, All Sound Off or a retrigger is no longer
+            // heard, so it goes first, whatever its channel. Taking it steals nothing.
+            for (auto& voice : m_voices)
+            {
+                if (voice.Active && voice.Killed && (candidate == nullptr || voice.EnvelopeLevelDb < candidate->EnvelopeLevelDb))
+                {
+                    candidate = &voice;
+                }
+            }
+
+            if (candidate != nullptr)
+            {
+                *candidate = SynthVoice{};
+                return candidate;
+            }
+
             // A note can only take a voice from a channel of its own priority or lower. When every
             // voice belongs to a higher priority channel, the note isn't played.
             candidate = PriorityVictim(ChannelPriority(channel), false);
