@@ -277,6 +277,12 @@
   <data name="TestButton.Content" xml:space="preserve">
     <value>Test</value>
   </data>
+  <data name="LiveRoutingToggle.Content" xml:space="preserve">
+    <value>Show live routing</value>
+  </data>
+  <data name="LiveRoutingToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lights up each link and step as messages go through it. It waits while the window is minimized.</value>
+  </data>
   <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Zoom in</value>
   </data>
@@ -3785,12 +3791,6 @@
   </data>
   <data name="ParameterCurveAccessibleFormat" xml:space="preserve">
     <value>Value curve for row {0}</value>
-  </data>
-  <data name="TestLiveRouting" xml:space="preserve">
-    <value>Show live routing</value>
-  </data>
-  <data name="TestLiveRoutingTip" xml:space="preserve">
-    <value>Lights up each link and step as messages go through it. It redraws the canvas many times a second, so turn it off when you're done.</value>
   </data>
   <data name="ParameterNoRows" xml:space="preserve">
     <value>Nothing to change yet, so this step changes nothing.</value>

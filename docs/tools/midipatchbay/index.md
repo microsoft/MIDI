@@ -538,9 +538,9 @@ Right-click an endpoint, or use **Test** on the toolbar, to open [MIDI Monitor](
 
 ### Showing live routing
 
-**Show live routing**, under **Test**, lights up each connection and step as messages go through it, and then fades it out. Play a few notes on a keyboard and watch where they go. When a MIDI-CI responder answers, its dashed line back to the endpoint lights up too.
+**Show live routing**, on the toolbar next to **Test**, lights up each connection and step as messages go through it, and then fades it out. Play a few notes on a keyboard and watch where they go. When a MIDI-CI responder answers, its dashed line back to the endpoint lights up too.
 
-It only shows a patch that's routing, and it waits while a trace is on the canvas. It redraws the canvas many times a second, so turn it off when you're done. It's off each time you open a patch.
+It only shows a patch that's routing, and it waits while a trace is on the canvas or the window is minimized. It's off each time you open a patch.
 
 ### Tracing messages
 

@@ -425,6 +425,13 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                        <ToggleButton x:Name="LiveRoutingToggle"
+                                      x:Uid="LiveRoutingToggle"
+                                      Content="Show live routing"
+                                      Height="32"
+                                      Padding="10,4,10,4"
+                                      VerticalAlignment="Center"
+                                      Click="OnLiveRoutingToggleClick" />
                         <Button x:Name="TestButton"
                                 x:Uid="TestButton"
                                 Content="Test"

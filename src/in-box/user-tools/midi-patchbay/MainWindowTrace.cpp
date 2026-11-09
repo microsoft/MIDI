@@ -36,6 +36,9 @@ namespace winrt::midipatchbay::implementation
         // Often enough that a key press lights up as it's played.
         constexpr int32_t LiveRoutingIntervalMilliseconds = 40;
 
+        // While nobody can see the window, just often enough to notice it's back.
+        constexpr int32_t LiveRoutingPausedIntervalMilliseconds = 500;
+
         // What a trace starts with when nothing has been traced yet: a note played and let go.
         std::vector<patchbay::TraceMessage> FirstTraceMessages()
         {
@@ -683,6 +686,7 @@ namespace winrt::midipatchbay::implementation
         try
         {
             m_showingLiveRouting = shown;
+            m_liveRoutingPaused = false;
             m_liveRoutingCounts.clear();
 
             if (!shown)
@@ -698,7 +702,6 @@ namespace winrt::midipatchbay::implementation
             if (m_liveRoutingTimer == nullptr)
             {
                 m_liveRoutingTimer = xaml::DispatcherTimer{};
-                m_liveRoutingTimer.Interval(std::chrono::milliseconds{ LiveRoutingIntervalMilliseconds });
                 m_liveRoutingTimer.Tick([weak = get_weak()](auto&&, auto&&)
                     {
                         if (auto strong = weak.get())
@@ -707,6 +710,8 @@ namespace winrt::midipatchbay::implementation
                         }
                     });
             }
+
+            m_liveRoutingTimer.Interval(std::chrono::milliseconds{ LiveRoutingIntervalMilliseconds });
 
             // What has gone through already is where it starts from, so nothing lights up at once.
             OnLiveRoutingTick();
@@ -724,8 +729,25 @@ namespace winrt::midipatchbay::implementation
                 return;
             }
 
-            // Nobody can see a minimized window.
-            if (::IsIconic(m_chrome.WindowHandle()))
+            // Nobody can see a minimized window, or one put away in the notification area. The
+            // timer slows down until it's back, and then starts again from what has gone through
+            // by then, so everything that went through meanwhile doesn't light up at once.
+            auto const window = m_chrome.WindowHandle();
+            auto const hidden = ::IsIconic(window) || !::IsWindowVisible(window);
+
+            if (hidden != m_liveRoutingPaused)
+            {
+                m_liveRoutingPaused = hidden;
+                m_liveRoutingCounts.clear();
+
+                if (m_liveRoutingTimer != nullptr)
+                {
+                    m_liveRoutingTimer.Interval(std::chrono::milliseconds{
+                        hidden ? LiveRoutingPausedIntervalMilliseconds : LiveRoutingIntervalMilliseconds });
+                }
+            }
+
+            if (hidden)
             {
                 return;
             }

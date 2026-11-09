@@ -68,6 +68,7 @@ namespace winrt::midipatchbay::implementation
         void OnZoomFlyoutOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
         void OnZoomValueChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
         void OnTestClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLiveRoutingToggleClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         void OnShowLoopClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnInspectorCloseClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
@@ -524,6 +525,7 @@ namespace winrt::midipatchbay::implementation
 
         // Live routing, and the counts it saw last by link or step id, so only what moved lights up.
         bool m_showingLiveRouting{ false };
+        bool m_liveRoutingPaused{ false };
         xaml::DispatcherTimer m_liveRoutingTimer{ nullptr };
         std::unordered_map<std::wstring, uint64_t> m_liveRoutingCounts{};
 
