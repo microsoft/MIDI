@@ -9,7 +9,7 @@ categories:
 
 If you open Device Manager on a PC with Windows MIDI Services, you'll find a lot more MIDI entries than you might expect. Some have names that look like duplicates. Some have names like "Service Test Ping (Internal)" that don't sound like anything you plugged in. It's tempting to tidy them up by disabling the ones you don't recognize.
 
-Please don't. Almost all of these entries are software devices. Windows creates them on purpose, every time it starts, so that apps can find and use your MIDI gear. Disabling one can stop the MIDI service from starting, hide your devices from your apps, or break MIDI in ways that are hard to track down.
+Please don't. Almost all of these entries are software devices. The MIDI service creates them on purpose, so that apps can find and use your MIDI gear, and it keeps track of each one. If you disable one, Device Manager and the MIDI service no longer agree about what's there. That can stop the MIDI service from starting, hide your devices from your apps, or break MIDI in ways that are hard to track down. The same goes for using **Uninstall device** on them.
 
 This article walks through the three places MIDI shows up in Device Manager, what each entry is for, and the one place where it *is* fine to disable something.
 
@@ -116,8 +116,8 @@ Windows MIDI Services lets more than one app use the same device at the same tim
 2. Choose **View** > **Show hidden devices**, so entries that aren't working right now still show up.
 3. Look in **Software devices** and **MIDI Endpoints** for entries with a small down arrow on the icon. That arrow means the device is disabled.
 4. Right-click each one and choose **Enable device**.
-5. Restart your PC, so the MIDI service starts fresh and recreates anything that's missing.
+5. Restart your PC, so the MIDI service starts fresh.
 
-If you used **Uninstall device** on one of these software devices instead of disabling it, restarting your PC is usually enough. The MIDI service and the audio service create these entries again when they start.
+If you used **Uninstall device** on one of these software devices, restart your PC, then check whether MIDI works.
 
 If MIDI still isn't working after that, the [MIDI Troubleshooting and Repair app]({{ site.baseurl }}/tools/miditroubleshooter/) can check the MIDI service and your devices for you.
