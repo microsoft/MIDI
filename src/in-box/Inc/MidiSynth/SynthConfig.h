@@ -100,6 +100,11 @@ namespace MidiSynth
         // Compatible does the same.
         bool DrumsFollowGeneralMidi2{ true };
 
+        // Channel and master tuning normally retune notes that are already sounding. The older
+        // synthesizer read the tuning once, when each note started, so in Compatible a change
+        // applies only to the notes that follow it.
+        bool TuningFixedAtNoteOn{ false };
+
         // Control rate divisor. Envelopes and modulation update every this many frames, with
         // gain ramped across the block so nothing zippers.
         uint32_t ControlRateFrames{ 32 };
@@ -122,6 +127,7 @@ namespace MidiSynth
                 config.BankSelect = BankSelectMode::RolandGS;
 
                 config.DrumsFollowGeneralMidi2 = false;
+                config.TuningFixedAtNoteOn = true;
             }
 
             return config;

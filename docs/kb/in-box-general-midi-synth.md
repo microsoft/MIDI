@@ -71,6 +71,7 @@ Here's what Compatible mode does differently from Modern mode:
 - **32 voices, a 22050 Hz render rate, and no reverb or chorus**, like the older synthesizer.
 - **Bank select is always read the Roland GS way.**
 - **Drums respond to pitch bend, modulation, the damper pedal, pitch bend sensitivity, and fine tuning.** Only coarse tuning leaves them alone. In Modern mode, drums ignore all of these, as General MIDI 2 recommends. See [Registered parameters](#registered-parameters).
+- **Tuning is fixed when a note starts.** A fine or coarse tuning change leaves the notes that are already playing alone, and applies to the notes after it. In Modern mode, it retunes the notes that are playing too.
 
 ### Exclusive mode
 
@@ -206,7 +207,7 @@ A MIDI 2.0 Registered Controller message for bank 0, controller 0 is treated as 
 
 Controller 1 sets fine tuning from the whole 32-bit value. `0x80000000` is in tune, `0x00000000` is 100 cents flat, and `0xFFFFFFFF` is 100 cents sharp. Controller 2 sets coarse tuning from the top seven bits, in semitones, where 64 is in tune. The specification leaves the other bits undefined, so they're ignored. Over MIDI 1.0, fine tuning takes both data entry bytes as one 14-bit value, so it moves in steps of about 0.012 cents. As the MIDI 1.0 specification says, a data entry MSB on its own sets the LSB back to zero, and an LSB on its own adjusts the value that's already there.
 
-Fine and coarse tuning change notes that are already playing too. They add to a note's Pitch 7.9 attribute rather than replacing it, as the specification says.
+In Modern mode, fine and coarse tuning change notes that are already playing too. In Compatible mode they don't: as on the older Windows synthesizer, each note keeps the tuning it started with, and a change applies to the notes that follow it. Either way, tuning adds to a note's Pitch 7.9 attribute rather than replacing it, as the specification says.
 
 **In Modern mode, drum channels ignore modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine and coarse tuning, as General MIDI 2 recommends in sections 3.3, 3.4, and 3.6.** So none of them changes how a drum sounds or how long it rings. A drum channel is any channel that's playing a drum kit, such as channel 10, a channel given drums with the GS Use For Rhythm Part message, or a channel where bank select chose a kit under Yamaha XG or General MIDI 2 addressing. A drum channel doesn't store any of these values when it's sent them, with one exception: lifting the damper pedal always works, so a melodic note the pedal was holding when the channel switched to a kit can't get stuck. A channel that was set up before it switched to a kit keeps those values, because a program change doesn't reset them, but its drums don't use them. They work again if the channel switches back to a melodic program. A melodic note that's still playing when its channel switches to a kit keeps them.
 

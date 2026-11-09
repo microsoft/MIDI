@@ -25,6 +25,9 @@ namespace
 
     constexpr uint8_t LowTom = 45;
 
+    // A steady tone, so its pitch can be measured to a small fraction of a cent.
+    constexpr uint8_t ChurchOrgan = 19;
+
     constexpr uint8_t StatusControlChange = 0xB;
     constexpr uint8_t StatusPitchBend = 0xE;
 
@@ -179,4 +182,64 @@ void MidiSynthCompatibleModeTests::TestDrumChannelListsWhatDrumsTake()
         L"Compatible channel 10 links the Compatible drum list");
     VERIFY_IS_TRUE(channelLink(TestConfig()) == winrt::to_hstring(DrumControllerListResourceId),
         L"Modern channel 10 links the General MIDI 2 drum list");
+}
+
+// The older synthesizer read channel tuning when each note started. A tuning change leaves the notes
+// already sounding where they are, and only the notes after it take the new tuning. Modern retunes
+// the sounding notes too.
+void MidiSynthCompatibleModeTests::TestTuningIsFixedAtNoteOn()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    for (const bool compatible : { true, false })
+    {
+        const auto config = compatible ? CompatibleConfig() : TestConfig();
+
+        double reference = 0.0;
+        {
+            Rig plain(*collection, config);
+            plain.Engine().ProgramChange(0, ChurchOrgan);
+            plain.NoteOn(0, 60, NoAttribute, 0);
+            (void)plain.Render(0.3);
+            reference = EstimateHertz(plain.Render(0.6), plain.SampleRate(), 150.0, 400.0);
+        }
+
+        Rig rig(*collection, config);
+        rig.Engine().ProgramChange(0, ChurchOrgan);
+        rig.NoteOn(0, 60, NoAttribute, 0);
+        (void)rig.Render(0.3);
+
+        // Fine tuning 0x5000, 25 cents sharp, while the note sounds.
+        SetRegisteredParameter(rig, 0, 1, 0x50);
+        (void)rig.Render(0.05);
+
+        const double held = Cents(EstimateHertz(rig.Render(0.6), rig.SampleRate(), 150.0, 400.0), reference);
+
+        rig.NoteOff(0, 60);
+        (void)rig.Render(0.5);
+
+        rig.NoteOn(0, 60, NoAttribute, 0);
+        (void)rig.Render(0.3);
+
+        const double next = Cents(EstimateHertz(rig.Render(0.6), rig.SampleRate(), 150.0, 400.0), reference);
+
+        Log::Comment(String().Format(L"%s: the held note moved %+.2f cents, the next note is %+.2f cents",
+            compatible ? L"Compatible" : L"Modern", held, next));
+
+        VERIFY_IS_TRUE(std::fabs(next - 25.0) < 1.0, L"the next note takes the new tuning");
+
+        if (compatible)
+        {
+            VERIFY_IS_TRUE(std::fabs(held) < 1.0, L"the held note stays where it started");
+        }
+        else
+        {
+            VERIFY_IS_TRUE(std::fabs(held - 25.0) < 1.0, L"Modern retunes the held note");
+        }
+    }
 }

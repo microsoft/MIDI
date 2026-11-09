@@ -610,6 +610,8 @@ namespace MidiSynth
             voice.PitchStage = EnvelopeStage::Decay;
             voice.PitchEnvelopeLevel = 1.0;
         }
+
+        voice.NoteOnTuningCents = ChannelTuningCents(voice, m_channels[channel]);
     }
 
     _Use_decl_annotations_
@@ -867,7 +869,7 @@ namespace MidiSynth
         voice.HeldModulation = state.Modulation;
         voice.HeldPanOffset = state.PanOffset;
         voice.HeldBendCents = state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
-        voice.HeldTuningCents = ChannelTuningCents(voice, state);
+        voice.HeldTuningCents = m_config.TuningFixedAtNoteOn ? voice.NoteOnTuningCents : ChannelTuningCents(voice, state);
         voice.HeldReverbSend = static_cast<float>(state.ReverbSend);
         voice.HeldChorusSend = static_cast<float>(state.ChorusSend);
     }
@@ -1453,7 +1455,9 @@ namespace MidiSynth
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
 
-        const double tuningCents = held ? voice.HeldTuningCents : ChannelTuningCents(voice, state);
+        const double tuningCents = held
+            ? voice.HeldTuningCents
+            : (m_config.TuningFixedAtNoteOn ? voice.NoteOnTuningCents : ChannelTuningCents(voice, state));
 
         const double pitchEnvelopeCents = voice.PitchEnvelopeLevel * articulation.Eg2ToPitchCents;
 
