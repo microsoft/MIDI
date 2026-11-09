@@ -15,4 +15,7 @@ public:
     TEST_METHOD(TestDrumsTakePerformanceControls);
     TEST_METHOD(TestDrumChannelListsWhatDrumsTake);
     TEST_METHOD(TestTuningIsFixedAtNoteOn);
+    TEST_METHOD(TestChannel10HasTheHighestPriority);
+    TEST_METHOD(TestSpareVoicesFadeTheLowestPriority);
+    TEST_METHOD(TestStealingPrefersAReleasedNote);
 };

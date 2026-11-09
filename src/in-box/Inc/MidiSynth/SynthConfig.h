@@ -32,8 +32,10 @@ namespace MidiSynth
 
     enum class VoiceStealingPolicy
     {
-        // What the in-box synth does: lower channel numbers win.
-        LowestChannelPriority,
+        // What the older in-box synthesizer does. Channel 10 has the highest priority, then
+        // channels 1 to 9, then 11 to 16. A note may take a voice from its own priority or lower:
+        // a released note first, the quietest of those, otherwise the oldest.
+        ChannelPriority,
 
         // Prefer voices already releasing, then the quietest, then the oldest.
         QuietestReleasing,
@@ -72,6 +74,11 @@ namespace MidiSynth
         uint32_t OutputSampleRate{ 48000 };
 
         uint32_t MaxVoices{ 256 };
+
+        // Voices beyond MaxVoices that a burst of notes can use for a moment. Each render then fades
+        // out the oldest notes on the lowest priority channel until no more than MaxVoices are left,
+        // which is how the older synthesizer frees room before it has to steal.
+        uint32_t SpareVoices{ 0 };
 
         InterpolationQuality Interpolation{ InterpolationQuality::Cubic };
 
@@ -119,7 +126,8 @@ namespace MidiSynth
             {
                 config.MaxVoices = 32;
                 config.Interpolation = InterpolationQuality::Linear;
-                config.StealingPolicy = VoiceStealingPolicy::LowestChannelPriority;
+                config.StealingPolicy = VoiceStealingPolicy::ChannelPriority;
+                config.SpareVoices = 8;
                 config.EnableLimiter = false;
                 config.EnableEffects = false;
 
