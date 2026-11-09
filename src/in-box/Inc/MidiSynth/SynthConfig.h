@@ -112,6 +112,12 @@ namespace MidiSynth
         // applies only to the notes that follow it.
         bool TuningFixedAtNoteOn{ false };
 
+        // When above zero, a pitch bend change glides to its new value instead of jumping. The older
+        // synthesizer moved pitch in straight lines from one control point to the next, an eighth
+        // of the instrument's vibrato cycle apart and never more than 50 ms, so in Compatible a bend
+        // takes about 20 to 50 ms to arrive. Zero in Modern, where a bend lands at the next block.
+        double PitchBendGlideMaximumSeconds{ 0.0 };
+
         // Control rate divisor. Envelopes and modulation update every this many frames, with
         // gain ramped across the block so nothing zippers.
         uint32_t ControlRateFrames{ 32 };
@@ -136,6 +142,7 @@ namespace MidiSynth
 
                 config.DrumsFollowGeneralMidi2 = false;
                 config.TuningFixedAtNoteOn = true;
+                config.PitchBendGlideMaximumSeconds = 0.05;
             }
 
             return config;

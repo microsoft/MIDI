@@ -709,6 +709,29 @@ namespace MidiSynth
         }
 
         voice.NoteOnTuningCents = ChannelTuningCents(voice, m_channels[channel]);
+
+        if (m_config.PitchBendGlideMaximumSeconds > 0.0)
+        {
+            // An eighth of the vibrato cycle when the instrument has vibrato or tremolo, which is
+            // how often the older synthesizer recomputed pitch, and never more than the maximum.
+            const bool hasLfo =
+                articulation.LfoToPitchCents != 0.0 || articulation.LfoModWheelToPitchCents != 0.0 ||
+                articulation.LfoToAttenuationDb != 0.0 || articulation.LfoModWheelToAttenuationDb != 0.0;
+
+            voice.BendGlideSeconds = hasLfo
+                ? (std::min)(m_config.PitchBendGlideMaximumSeconds, 0.125 / articulation.LfoFrequencyHertz)
+                : m_config.PitchBendGlideMaximumSeconds;
+        }
+
+        const auto& state = m_channels[channel];
+        const double bendCents = VoiceIgnoresDrumControls(voice)
+            ? 0.0
+            : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
+
+        voice.BendGlideFromCents = bendCents;
+        voice.BendGlideToCents = bendCents;
+        voice.BendGlideElapsedSeconds = voice.BendGlideSeconds;
+        voice.GlidedBendCents = bendCents;
     }
 
     _Use_decl_annotations_
@@ -1546,9 +1569,28 @@ namespace MidiSynth
         voice.TargetGainRight = targetRight;
 
         // Pitch for this block.
-        const double bendCents = VoiceIgnoresDrumControls(voice)
+        double bendCents = VoiceIgnoresDrumControls(voice)
             ? 0.0
             : (held ? voice.HeldBendCents : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0);
+
+        if (voice.BendGlideSeconds > 0.0 && !held)
+        {
+            if (bendCents != voice.BendGlideToCents)
+            {
+                voice.BendGlideFromCents = voice.GlidedBendCents;
+                voice.BendGlideToCents = bendCents;
+                voice.BendGlideElapsedSeconds = 0.0;
+            }
+
+            voice.BendGlideElapsedSeconds += blockSeconds;
+
+            const double progress = (std::min)(1.0, voice.BendGlideElapsedSeconds / voice.BendGlideSeconds);
+
+            voice.GlidedBendCents =
+                voice.BendGlideFromCents + (voice.BendGlideToCents - voice.BendGlideFromCents) * progress;
+
+            bendCents = voice.GlidedBendCents;
+        }
 
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
