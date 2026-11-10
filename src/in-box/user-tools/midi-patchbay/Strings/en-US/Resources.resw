@@ -292,6 +292,9 @@
   <data name="LogicNamesTitle.Text" xml:space="preserve">
     <value>Memories and tags</value>
   </data>
+  <data name="LogicNamesScroller.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Memories and tags in this patch</value>
+  </data>
   <data name="LogicNamesCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Close memories and tags</value>
   </data>

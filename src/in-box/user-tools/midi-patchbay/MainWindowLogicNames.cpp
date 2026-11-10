@@ -76,7 +76,7 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnLogicNamesToggleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    void MainWindow::OnLogicNamesToggleChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
@@ -84,7 +84,13 @@ namespace winrt::midipatchbay::implementation
         try
         {
             auto const checked = LogicNamesToggle().IsChecked();
-            ShowLogicNames(checked != nullptr && checked.Value());
+            auto const shown = checked != nullptr && checked.Value();
+
+            // ShowLogicNames sets the button too, which comes back here.
+            if (shown != m_showingLogicNames)
+            {
+                ShowLogicNames(shown);
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show or hide the memories and tags.")
     }
