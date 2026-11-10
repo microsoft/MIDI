@@ -373,8 +373,8 @@ void MidiSynthCompatibleModeTests::TestStealingPrefersAReleasedNote()
     }
 }
 
-// The older synthesizer moved pitch in straight lines between control points a few tens of
-// milliseconds apart, so a bend glides to its new value. Modern lands it at the next block.
+// The older synthesizer moved pitch in straight lines between control points up to about 10 ms
+// apart, so a bend glides to its new value. Modern lands it at the next block.
 void MidiSynthCompatibleModeTests::TestPitchBendGlides()
 {
     const auto* const collection = RequireSoundSet();
@@ -410,13 +410,16 @@ void MidiSynthCompatibleModeTests::TestPitchBendGlides()
         rig.SendMidi1(StatusPitchBend, 0, 0x7F, 0x7F);
 
         const double start = Cents(EstimateHertz(rig.Render(0.008), rig.SampleRate(), 600.0, 2400.0), reference);
-        (void)rig.Render(0.06);
+        (void)rig.Render(0.004);
+        const double arrived = Cents(EstimateHertz(rig.Render(0.008), rig.SampleRate(), 600.0, 2400.0), reference);
+        (void)rig.Render(0.05);
         const double settled = Cents(EstimateHertz(rig.Render(0.1), rig.SampleRate(), 600.0, 2400.0), reference);
 
-        Log::Comment(String().Format(L"%s: %+.1f cents in the first 8 ms, %+.1f cents after 68 ms",
-            compatible ? L"Compatible" : L"Modern", start, settled));
+        Log::Comment(String().Format(L"%s: %+.1f cents in the first 8 ms, %+.1f cents at 12 to 20 ms, %+.1f cents after 70 ms",
+            compatible ? L"Compatible" : L"Modern", start, arrived, settled));
 
-        VERIFY_IS_TRUE(std::fabs(settled - 200.0) < 3.0, L"the bend arrives");
+        VERIFY_IS_TRUE(std::fabs(arrived - 200.0) < 3.0, L"the bend has arrived within about 10 ms, as on the older synthesizer");
+        VERIFY_IS_TRUE(std::fabs(settled - 200.0) < 3.0, L"and stays there");
 
         if (compatible)
         {
