@@ -870,7 +870,7 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnLiveRoutingToggleClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    void MainWindow::OnLiveRoutingToggleChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
@@ -878,7 +878,12 @@ namespace winrt::midipatchbay::implementation
         try
         {
             auto const checked = LiveRoutingToggle().IsChecked();
-            ShowLiveRouting(checked != nullptr && checked.Value());
+            auto const shown = checked != nullptr && checked.Value();
+
+            if (shown != m_showingLiveRouting)
+            {
+                ShowLiveRouting(shown);
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to turn live routing on or off.")
     }

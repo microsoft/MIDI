@@ -431,14 +431,16 @@
                                       Height="32"
                                       Padding="10,4,10,4"
                                       VerticalAlignment="Center"
-                                      Click="OnLogicNamesToggleClick" />
+                                      Checked="OnLogicNamesToggleChanged"
+                                      Unchecked="OnLogicNamesToggleChanged" />
                         <ToggleButton x:Name="LiveRoutingToggle"
                                       x:Uid="LiveRoutingToggle"
                                       Content="Show live routing"
                                       Height="32"
                                       Padding="10,4,10,4"
                                       VerticalAlignment="Center"
-                                      Click="OnLiveRoutingToggleClick" />
+                                      Checked="OnLiveRoutingToggleChanged"
+                                      Unchecked="OnLiveRoutingToggleChanged" />
                         <Button x:Name="TestButton"
                                 x:Uid="TestButton"
                                 Content="Test"
@@ -786,7 +788,10 @@
                             <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom"
                                     Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-                            <ScrollViewer Grid.Row="1" Padding="14,12,14,14">
+                            <ScrollViewer x:Name="LogicNamesScroller"
+                                          x:Uid="LogicNamesScroller"
+                                          Grid.Row="1"
+                                          Padding="14,12,14,14">
                                 <StackPanel x:Name="LogicNamesContent" Spacing="12" />
                             </ScrollViewer>
                         </Grid>
