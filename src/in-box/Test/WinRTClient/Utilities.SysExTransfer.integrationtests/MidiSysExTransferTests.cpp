@@ -48,7 +48,7 @@ static winrt::hstring GetTestDataFilePath(_In_ std::wstring const& fileName)
     std::filesystem::path path(modulePath);
 
     path = path.parent_path();
-    path /= LR"(..\..\..\..\..\Test\WinRT Client\test-data)";
+    path /= LR"(..\..\..\..\..\Test\WinRTClient\test-data)";
     path /= fileName;
 
     std::error_code ec{};

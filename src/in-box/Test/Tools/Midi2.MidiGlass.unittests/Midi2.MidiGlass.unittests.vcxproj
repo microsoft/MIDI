@@ -58,7 +58,7 @@
   <PropertyGroup>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\tests\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\Generated Files\</GeneratedFilesDir>
+    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(LibraryPath);$(WindowsSdkDir)Testing\Development\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
