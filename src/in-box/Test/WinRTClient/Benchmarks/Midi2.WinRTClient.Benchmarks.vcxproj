@@ -21,16 +21,17 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{BCAE6353-5F32-4AE8-9949-039A2BC2C8C6}</ProjectGuid>
+    <ProjectGuid>{4DABE157-7DD5-422A-8C77-B83EAC9987D0}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>false</CppWinRTGenerateWindowsMetadata>
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
+    <CppWinRTEnableDefaultCopyLocalFalse>true</CppWinRTEnableDefaultCopyLocalFalse>
     <CppWinRTLibs>true</CppWinRTLibs>
     <MinimalCoreWin>true</MinimalCoreWin>
-    <ProjectName>Midi2.WinRTClient.Offline.unittests</ProjectName>
+    <ProjectName>Midi2.WinRTClient.Benchmarks</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -78,29 +79,29 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(SolutionDir)vsfiles-sdk\out\tests\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\Generated Files\</GeneratedFilesDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
+    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(SolutionDir)vsfiles-sdk\out\tests\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\Generated Files\</GeneratedFilesDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
+    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)vsfiles-sdk\out\tests\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\Generated Files\</GeneratedFilesDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
+    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)vsfiles-sdk\out\tests\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\Generated Files\</GeneratedFilesDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
+    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -108,7 +109,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\in-box\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -119,7 +120,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\in-box\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -130,7 +131,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\in-box\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -141,7 +142,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\in-box\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
@@ -149,43 +150,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiApiTests.cpp" />
-    <ClCompile Include="MidiChannelTests.cpp" />
-    <ClCompile Include="MidiClockTests.cpp" />
-    <ClCompile Include="MidiGroupTests.cpp" />
-    <ClCompile Include="MidiMessage128Tests.cpp" />
-    <ClCompile Include="MidiMessage32Tests.cpp" />
-    <ClCompile Include="MidiMessage64Tests.cpp" />
-    <ClCompile Include="MidiMessage96Tests.cpp" />
-    <ClCompile Include="MidiMessagePacketTests.cpp" />
-    <ClCompile Include="MidiCiMessageTests.cpp" />
-    <ClCompile Include="MidiCapabilityInquiryMessageTests.cpp" />
-    <ClCompile Include="MidiCiProgramListTests.cpp" />
-    <ClCompile Include="MidiCiResponderTests.cpp" />
-    <ClCompile Include="MidiStreamMessageBuilderTests.cpp" />
-    <ClCompile Include="MidiUniqueIdTests.cpp" />
+    <ClCompile Include="MidiBenchmarks.cpp" />
+    <ClCompile Include="MidiSchedulerBenchmarks.cpp" />
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MidiApiTests.h" />
-    <ClInclude Include="MidiChannelTests.h" />
-    <ClInclude Include="MidiClockTests.h" />
-    <ClInclude Include="MidiGroupTests.h" />
-    <ClInclude Include="MidiMessage128Tests.h" />
-    <ClInclude Include="MidiMessage32Tests.h" />
-    <ClInclude Include="MidiMessage64Tests.h" />
-    <ClInclude Include="MidiMessage96Tests.h" />
-    <ClInclude Include="MidiMessagePacketTests.h" />
-    <ClInclude Include="MidiCiMessageTests.h" />
-    <ClInclude Include="MidiCapabilityInquiryMessageTests.h" />
-    <ClInclude Include="MidiCiProgramListTests.h" />
-    <ClInclude Include="MidiCiResponderTests.h" />
-    <ClInclude Include="MidiStreamMessageBuilderTests.h" />
-    <ClInclude Include="MidiUniqueIdTests.h" />
+    <ClInclude Include="MidiBenchmarks.h" />
+    <ClInclude Include="MidiSchedulerBenchmarks.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2ClientTests.rc" />
+    <ResourceCompile Include="Midi2ClientBenchmarks.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -273,6 +273,9 @@
   <ItemGroup>
     <ClCompile Include="..\MidiEndpointNamingLib\MidiEndpointNameTable.cpp" />
   </ItemGroup>
+  <PropertyGroup>
+    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
