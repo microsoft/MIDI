@@ -1226,6 +1226,7 @@ namespace winrt::midisequencer::implementation
         m_selectedTempoPoint = SIZE_MAX;
         m_selectedChord = SIZE_MAX;
         m_selectedKey = SIZE_MAX;
+        m_selectedMeter = SIZE_MAX;
     }
 
     void MainWindow::DeleteSelectedAutomationPoint() noexcept

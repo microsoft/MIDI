@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "GeneratorKinds.h"
 #include "GeneratorListen.h"
 #include "HarmonyFollow.h"
@@ -253,7 +254,7 @@ namespace midisequencer
     _Use_decl_annotations_
     void NormalizeGenerator(GeneratorSettings& generator)
     {
-        if (generator.Type > GeneratorType::ChangeRinging)
+        if (generator.Type > GeneratorType::Strum)
         {
             generator.Type = GeneratorType::Euclidean;
         }
@@ -276,6 +277,24 @@ namespace midisequencer
         }
 
         generator.ArpOctaves = std::clamp<uint8_t>(generator.ArpOctaves, 1, 4);
+
+        // A Strum's settings, which a file can hold anything in.
+        if (generator.Instrument > StrumInstrument::Harp) { generator.Instrument = StrumInstrument::Guitar; }
+        if (generator.StrumCurve > StrumShape::Rake) { generator.StrumCurve = StrumShape::SpeedingUp; }
+        if (generator.StrumBurstCurve > StrumShape::Rake) { generator.StrumBurstCurve = StrumShape::SpeedingUp; }
+        if (generator.StrumLand > StrumLands::Last) { generator.StrumLand = StrumLands::First; }
+        if (generator.StrumMute > StrumMuting::KeySwitch) { generator.StrumMute = StrumMuting::Short; }
+        generator.StrumPattern = CleanStrumPattern(generator.StrumPattern);
+        generator.StrumSpreadMs = std::min(generator.StrumSpreadMs, MaximumStrumSpreadMs);
+        generator.StrumSpreadTicks = std::min(generator.StrumSpreadTicks, MaximumStrumSpreadTicks);
+        generator.StrumBend = std::min<uint8_t>(generator.StrumBend, 100);
+        generator.StrumTilt = std::clamp<int8_t>(generator.StrumTilt, -50, 50);
+        generator.StrumHand = std::min<uint8_t>(generator.StrumHand, 100);
+        generator.StrumBurst = std::clamp<uint8_t>(generator.StrumBurst, 2, 12);
+        generator.StrumMuteKey &= 0x7F;
+        generator.StrumOpenKey &= 0x7F;
+        generator.StrumCapo = std::min<uint8_t>(generator.StrumCapo, 9);
+        generator.StrumPosition = std::min<uint8_t>(generator.StrumPosition, 9);
 
         if (generator.ArpTrackId.size() > 128)
         {
@@ -449,6 +468,8 @@ namespace midisequencer
         }
 
         case GeneratorType::Arpeggiator:
+        case GeneratorType::Strum:
+            // They play notes they're given (SequenceArpeggiator.h, SequenceStrum.h).
             break;
 
         default:

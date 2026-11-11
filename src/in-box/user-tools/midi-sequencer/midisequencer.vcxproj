@@ -170,6 +170,9 @@
     <ClInclude Include="MixerSlots.h" />
     <ClInclude Include="ClipIcons.h" />
     <ClInclude Include="PatternTemplates.h" />
+    <ClInclude Include="NoteTools.h" />
+    <ClInclude Include="SequenceStrum.h" />
+    <ClInclude Include="NoteExpression.h" />
     <ClInclude Include="DawProject.h" />
     <ClInclude Include="CaptureImport.h" />
     <ClInclude Include="DocumentFiles.h" />
@@ -271,6 +274,8 @@
     <ClCompile Include="MainWindowChordAssistant.cpp" />
     <ClCompile Include="..\midi-app-shared\FrameTicker.cpp" />
     <ClCompile Include="ArrangeRendererHarmony.cpp" />
+    <ClCompile Include="ArrangeRendererMeter.cpp" />
+    <ClCompile Include="MainWindowMeterRow.cpp" />
     <ClCompile Include="MainWindowAutoSave.cpp" />
     <ClCompile Include="MainWindowClipEdits.cpp" />
     <ClCompile Include="MainWindowGhostNotes.cpp" />
@@ -345,6 +350,17 @@
     <ClCompile Include="MainWindowListen.cpp" />
     <!-- the model and the engine are free of the pch and XAML so the unit tests compile them unchanged -->
     <ClCompile Include="PatternTemplates.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="NoteTools.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MainWindowNoteTools.cpp" />
+    <ClCompile Include="SequenceStrum.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="MainWindowStrum.cpp" />
+    <ClCompile Include="NoteExpression.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RecentSequences.cpp">
@@ -552,6 +568,9 @@
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
   </ItemGroup>
+  <PropertyGroup>
+    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

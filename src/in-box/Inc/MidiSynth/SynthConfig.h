@@ -32,8 +32,10 @@ namespace MidiSynth
 
     enum class VoiceStealingPolicy
     {
-        // What the in-box synth does: lower channel numbers win.
-        LowestChannelPriority,
+        // What the older in-box synthesizer does. Channel 10 has the highest priority, then
+        // channels 1 to 9, then 11 to 16. A note may take a voice from its own priority or lower:
+        // a released note first, the quietest of those, otherwise the oldest.
+        ChannelPriority,
 
         // Prefer voices already releasing, then the quietest, then the oldest.
         QuietestReleasing,
@@ -73,6 +75,11 @@ namespace MidiSynth
 
         uint32_t MaxVoices{ 256 };
 
+        // Voices beyond MaxVoices that a burst of notes can use for a moment. Each render then fades
+        // out the oldest notes on the lowest priority channel until no more than MaxVoices are left,
+        // which is how the older synthesizer frees room before it has to steal.
+        uint32_t SpareVoices{ 0 };
+
         InterpolationQuality Interpolation{ InterpolationQuality::Cubic };
 
         VoiceStealingPolicy StealingPolicy{ VoiceStealingPolicy::QuietestReleasing };
@@ -94,6 +101,34 @@ namespace MidiSynth
         // being measured.
         bool EnableEffects{ true };
 
+        // General MIDI 2 recommends that drums ignore modulation, the damper pedal, pitch bend, pitch
+        // bend sensitivity, and channel and master tuning. The older synthesizer predates that: its
+        // drums bend, take modulation, the damper and fine tuning, and skip only coarse tuning, so
+        // Compatible does the same.
+        bool DrumsFollowGeneralMidi2{ true };
+
+        // Channel and master tuning normally retune notes that are already sounding. The older
+        // synthesizer read the tuning once, when each note started, so in Compatible a change
+        // applies only to the notes that follow it.
+        bool TuningFixedAtNoteOn{ false };
+
+        // When above zero, a pitch bend change glides to its new value instead of jumping. The older
+        // synthesizer moved pitch in straight lines from one control point to the next. Those were an
+        // eighth of the instrument's vibrato cycle apart, and also fell at the end of every audio
+        // buffer it rendered, which in shared mode is the 10 ms device period. So in Compatible a bend
+        // takes up to about 10 ms to arrive. Zero in Modern, where a bend lands at the next block.
+        double PitchBendGlideMaximumSeconds{ 0.0 };
+
+        // Read messages the way the older synthesizer did, where that differs from the standards
+        // this engine otherwise follows:
+        //  - bank select, and the GS part messages, are ignored until a GS Reset, and a GM or XG
+        //    System On turns them off again;
+        //  - the pitch bend sensitivity LSB is ignored, and a fine tuning MSB keeps the LSB;
+        //  - Reset All Controllers with a value other than zero also resets volume and pan;
+        //  - master fine and coarse tuning are ignored;
+        //  - mono and poly mode, GS scale tuning and GS receive channel are honored.
+        bool OlderMessageHandling{ false };
+
         // Control rate divisor. Envelopes and modulation update every this many frames, with
         // gain ramped across the block so nothing zippers.
         uint32_t ControlRateFrames{ 32 };
@@ -108,12 +143,18 @@ namespace MidiSynth
             {
                 config.MaxVoices = 32;
                 config.Interpolation = InterpolationQuality::Linear;
-                config.StealingPolicy = VoiceStealingPolicy::LowestChannelPriority;
+                config.StealingPolicy = VoiceStealingPolicy::ChannelPriority;
+                config.SpareVoices = 8;
                 config.EnableLimiter = false;
                 config.EnableEffects = false;
 
                 // Reproducing the older synthesizer means reproducing the misses too.
                 config.BankSelect = BankSelectMode::RolandGS;
+
+                config.DrumsFollowGeneralMidi2 = false;
+                config.TuningFixedAtNoteOn = true;
+                config.PitchBendGlideMaximumSeconds = 0.01;
+                config.OlderMessageHandling = true;
             }
 
             return config;

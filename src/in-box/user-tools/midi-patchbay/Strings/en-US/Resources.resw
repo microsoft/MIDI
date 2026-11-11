@@ -277,6 +277,78 @@
   <data name="TestButton.Content" xml:space="preserve">
     <value>Test</value>
   </data>
+  <data name="LiveRoutingToggle.Content" xml:space="preserve">
+    <value>Show live routing</value>
+  </data>
+  <data name="LiveRoutingToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lights up each link and step as messages go through it. It waits while the window is minimized.</value>
+  </data>
+  <data name="LogicNamesToggle.Content" xml:space="preserve">
+    <value>Memories and tags</value>
+  </data>
+  <data name="LogicNamesToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lists each memory and tag in this patch, the steps that set it and read it, and what each memory holds now.</value>
+  </data>
+  <data name="LogicNamesTitle.Text" xml:space="preserve">
+    <value>Memories and tags</value>
+  </data>
+  <data name="LogicNamesScroller.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Memories and tags in this patch</value>
+  </data>
+  <data name="LogicNamesCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Close memories and tags</value>
+  </data>
+  <data name="LogicNamesCloseButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="LogicNamesEmpty" xml:space="preserve">
+    <value>This patch doesn't use any memories or tags yet. Add a Set memory or Set tag step from the Logic group, then pick its name in a Branch, Switch or Put value step.</value>
+  </data>
+  <data name="LogicNamesHint" xml:space="preserve">
+    <value>Point at a name to see its steps on the canvas. Select a step to go to it.</value>
+  </data>
+  <data name="LogicNamesMemoriesHeading" xml:space="preserve">
+    <value>Memories</value>
+  </data>
+  <data name="LogicNamesTagsHeading" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="LogicNamesSetBy" xml:space="preserve">
+    <value>Set by</value>
+  </data>
+  <data name="LogicNamesReadBy" xml:space="preserve">
+    <value>Read by</value>
+  </data>
+  <data name="LogicNamesValueFormat" xml:space="preserve">
+    <value>Now: {0}</value>
+  </data>
+  <data name="LogicNamesBypassedFormat" xml:space="preserve">
+    <value>{0} (bypassed)</value>
+  </data>
+  <data name="LogicNamesGoToStepTip" xml:space="preserve">
+    <value>Select this step on the canvas</value>
+  </data>
+  <data name="LogicNamesReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="LogicNamesResetTip" xml:space="preserve">
+    <value>Empties this memory now, the way it is when Windows MIDI Patchbay starts. Routing doesn't stop.</value>
+  </data>
+  <data name="LogicNamesResetNameFormat" xml:space="preserve">
+    <value>Reset {0}</value>
+  </data>
+  <data name="LogicNamesNeverSetMemory" xml:space="preserve">
+    <value>No step sets this memory, so it's always empty. Check that the name is spelled the same in every step.</value>
+  </data>
+  <data name="LogicNamesNeverSetTag" xml:space="preserve">
+    <value>No step sets this tag, so it's always empty. Check that the name is spelled the same in every step.</value>
+  </data>
+  <data name="LogicNamesNeverReadMemory" xml:space="preserve">
+    <value>No step reads this memory, so setting it changes nothing.</value>
+  </data>
+  <data name="LogicNamesNeverReadTag" xml:space="preserve">
+    <value>No step reads this tag, so setting it changes nothing.</value>
+  </data>
   <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Zoom in</value>
   </data>
@@ -749,6 +821,12 @@
   </data>
   <data name="FilterSectionSystemHint" xml:space="preserve">
     <value>Clock and active sensing are the two most often taken out of a route.</value>
+  </data>
+  <data name="FilterSectionChannelVoiceOff" xml:space="preserve">
+    <value>To choose these, turn on MIDI 1.0 channel voice or MIDI 2.0 channel voice under Message types.</value>
+  </data>
+  <data name="FilterSectionSystemOff" xml:space="preserve">
+    <value>To choose these, turn on System under Message types.</value>
   </data>
   <data name="FilterSectionChannelsHint" xml:space="preserve">
     <value>Only applies to channel messages. Everything else ignores this.</value>
@@ -3780,12 +3858,6 @@
   <data name="ParameterCurveAccessibleFormat" xml:space="preserve">
     <value>Value curve for row {0}</value>
   </data>
-  <data name="TestLiveRouting" xml:space="preserve">
-    <value>Show live routing</value>
-  </data>
-  <data name="TestLiveRoutingTip" xml:space="preserve">
-    <value>Lights up each link and step as messages go through it. It redraws the canvas many times a second, so turn it off when you're done.</value>
-  </data>
   <data name="ParameterNoRows" xml:space="preserve">
     <value>Nothing to change yet, so this step changes nothing.</value>
   </data>
@@ -5727,5 +5799,226 @@
   </data>
   <data name="MidiServiceUnavailableClose" xml:space="preserve">
     <value>Close</value>
+  </data>
+  <data name="DecodeLabelNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="DecodeLabelVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="DecodeLabelPressure" xml:space="preserve">
+    <value>Pressure</value>
+  </data>
+  <data name="DecodeLabelController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="DecodeLabelValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="DecodeLabelProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="DecodeLabelBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="DecodeLabelBend" xml:space="preserve">
+    <value>Bend</value>
+  </data>
+  <data name="DecodeLabelIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="DecodeLabelBytes" xml:space="preserve">
+    <value>Bytes</value>
+  </data>
+  <data name="DecodeLabelStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="DecodeLabelSong" xml:space="preserve">
+    <value>Song</value>
+  </data>
+  <data name="DecodeLabelPosition" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="DecodeLabelFrame" xml:space="preserve">
+    <value>Frame</value>
+  </data>
+  <data name="DecodeLabelAttribute" xml:space="preserve">
+    <value>Attribute</value>
+  </data>
+  <data name="DecodeLabelText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="DecodeLabelName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="DecodeLabelTicks" xml:space="preserve">
+    <value>Ticks</value>
+  </data>
+  <data name="DecodeLabelTempo" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="DecodeLabelStreamId" xml:space="preserve">
+    <value>Stream</value>
+  </data>
+  <data name="DecodeLabelFunctionBlock" xml:space="preserve">
+    <value>Function block</value>
+  </data>
+  <data name="DecodeLabelForm" xml:space="preserve">
+    <value>Form</value>
+  </data>
+  <data name="DecodeLabelTimeSignature" xml:space="preserve">
+    <value>Time signature</value>
+  </data>
+  <data name="DecodeTimeSignatureNonStandardFormat" xml:space="preserve">
+    <value>{0} beats, non-standard denominator</value>
+    <comment>{0} is the number of beats in a bar.</comment>
+  </data>
+  <data name="DecodeLabelKeySignature" xml:space="preserve">
+    <value>Key signature</value>
+  </data>
+  <data name="DecodeLabelPerNote" xml:space="preserve">
+    <value>Per note</value>
+  </data>
+  <data name="DecodeLabelOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="DecodeLabelNoteOffValue" xml:space="preserve">
+    <value>Note off value</value>
+  </data>
+  <data name="WatchMessagesMenuItem" xml:space="preserve">
+    <value>Watch messages</value>
+  </data>
+  <data name="WatchEverythingOutMenuItem" xml:space="preserve">
+    <value>Watch output</value>
+  </data>
+  <data name="WatchShortcutText" xml:space="preserve">
+    <value>Ctrl+M</value>
+    <comment>Shortcut shown beside the menu item.</comment>
+  </data>
+  <data name="WatchRemoveShortcutText" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Shortcut shown beside the menu item: the Delete key.</comment>
+  </data>
+  <data name="WatchPutStepMenuItem" xml:space="preserve">
+    <value>Insert step</value>
+  </data>
+  <data name="WatchDotTipFormat" xml:space="preserve">
+    <value>Monitor window {0}</value>
+    <comment>{0} is the window&apos;s number.</comment>
+  </data>
+  <data name="WatchCaptionFormat" xml:space="preserve">
+    <value>{0} → {1}</value>
+    <comment>{0} is where the messages come from, {1} is where they go.</comment>
+  </data>
+  <data name="WatchTitleFormat" xml:space="preserve">
+    <value>{0} → {1} – {2}</value>
+    <comment>Window title. {0} is where the messages come from, {1} is where they go, {2} is the patch name.</comment>
+  </data>
+  <data name="WatchNodeCaptionFormat" xml:space="preserve">
+    <value>{0} output</value>
+    <comment>{0} is the name of a step or endpoint.</comment>
+  </data>
+  <data name="WatchNodeTitleFormat" xml:space="preserve">
+    <value>{0} output – {1}</value>
+    <comment>Window title. {0} is the name of a step or endpoint, {1} is the patch name.</comment>
+  </data>
+  <data name="WatchEndFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>{0} is an endpoint name, {1} is its group, such as Group 1.</comment>
+  </data>
+  <data name="WatchGroupFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} is the group number, from 1.</comment>
+  </data>
+  <data name="WatchNamedGroupFormat" xml:space="preserve">
+    <value>Group {0} · {1}</value>
+    <comment>{0} is the group number, from 1. {1} is the group&apos;s name.</comment>
+  </data>
+  <data name="WatchFromLabel" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="WatchToLabel" xml:space="preserve">
+    <value>Destination</value>
+  </data>
+  <data name="WatchConnectionCountOne" xml:space="preserve">
+    <value>1 connection</value>
+  </data>
+  <data name="WatchConnectionCountFormat" xml:space="preserve">
+    <value>{0} connections</value>
+    <comment>{0} is a number, 0 or more than 1.</comment>
+  </data>
+  <data name="WatchStateRouting" xml:space="preserve">
+    <value>Routing</value>
+  </data>
+  <data name="WatchStateNotRouting" xml:space="preserve">
+    <value>Not routing</value>
+  </data>
+  <data name="WatchStateMuted" xml:space="preserve">
+    <value>Muted</value>
+  </data>
+  <data name="WatchStateRemoved" xml:space="preserve">
+    <value>Removed</value>
+  </data>
+  <data name="WatchRemovedConnectionMessage" xml:space="preserve">
+    <value>This connection was removed from the patch. The messages it carried are kept until you close this window.</value>
+  </data>
+  <data name="WatchRemovedNodeMessage" xml:space="preserve">
+    <value>This was removed from the patch. The messages that came out of it are kept until you close this window.</value>
+  </data>
+  <data name="WatchPinTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="WatchPauseTip" xml:space="preserve">
+    <value>Pause (Space)</value>
+  </data>
+  <data name="WatchResumeTip" xml:space="preserve">
+    <value>Resume (Space)</value>
+  </data>
+  <data name="WatchClearTip" xml:space="preserve">
+    <value>Clear (Ctrl+L)</value>
+  </data>
+  <data name="WatchClockTip" xml:space="preserve">
+    <value>Clock messages</value>
+  </data>
+  <data name="WatchSensingTip" xml:space="preserve">
+    <value>Active Sensing messages</value>
+  </data>
+  <data name="WatchCountFormat" xml:space="preserve">
+    <value>{0} messages · {1} dropped</value>
+    <comment>{0} is how many messages went along, including hidden and dropped ones. {1} is how many the window couldn&apos;t keep up with.</comment>
+  </data>
+  <data name="WatchColumnTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="WatchColumnDestination" xml:space="preserve">
+    <value>Destination</value>
+  </data>
+  <data name="WatchColumnMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="WatchColumnDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="WatchTestTag" xml:space="preserve">
+    <value>Test</value>
+    <comment>Marks a message that came from Test, not from a device.</comment>
+  </data>
+  <data name="WatchEmptyTitle" xml:space="preserve">
+    <value>Nothing has gone along this connection yet.</value>
+  </data>
+  <data name="WatchEmptyNodeTitle" xml:space="preserve">
+    <value>Nothing has come out of this yet.</value>
+  </data>
+  <data name="WatchEmptyHint" xml:space="preserve">
+    <value>Turn on Routing, or use Test, and messages show here as they pass.</value>
+  </data>
+  <data name="WatchListName" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="WatchCopyWords" xml:space="preserve">
+    <value>Copy as UMP words</value>
+  </data>
+  <data name="WatchCopyRow" xml:space="preserve">
+    <value>Copy as text</value>
   </data>
 </root>

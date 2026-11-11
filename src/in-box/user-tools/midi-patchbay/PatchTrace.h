@@ -67,6 +67,13 @@ namespace midipatchbay
         TraceMessage Message{};
     };
 
+    // A message going along one link, as it went.
+    struct TraceCarried
+    {
+        std::wstring LinkId{};
+        TraceMessage Message{};
+    };
+
     // Where one message went.
     struct TraceStep
     {
@@ -80,6 +87,10 @@ namespace midipatchbay
         std::vector<std::wstring> KeptOut{};
 
         std::vector<TraceArrival> Arrivals{};
+
+        // Every message that went along a link, in the order they went, for the windows watching
+        // those links.
+        std::vector<TraceCarried> Carried{};
 
         // Every memory in the patch after this message, by the name the patch gives it.
         std::vector<std::pair<std::wstring, LogicValue>> Memories{};

@@ -27,6 +27,8 @@ namespace winrt::midi2monitor::implementation
         void OnBackgroundColorChanged(controls::ColorPicker const& sender, controls::ColorChangedEventArgs const& args);
         void OnRetentionChanged(foundation::IInspectable const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnResetColumnsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAskBeforeClearChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnShowActivityChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
     private:
         void UpdateBackgroundColorState() noexcept;

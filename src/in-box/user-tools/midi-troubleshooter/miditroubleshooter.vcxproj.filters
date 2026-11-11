@@ -20,6 +20,7 @@
     <ClCompile Include="Elevation.cpp" />
     <ClCompile Include="ProcessRunner.cpp" />
     <ClCompile Include="RegistryRepair.cpp" />
+    <ClCompile Include="MmcssTasks.cpp" />
     <ClCompile Include="ReportFile.cpp" />
     <ClCompile Include="ReproLog.cpp" />
     <ClCompile Include="ClientProcesses.cpp" />
@@ -56,6 +57,7 @@
     <ClInclude Include="Elevation.h" />
     <ClInclude Include="ProcessRunner.h" />
     <ClInclude Include="RegistryRepair.h" />
+    <ClInclude Include="MmcssTasks.h" />
     <ClInclude Include="ReportFile.h" />
     <ClInclude Include="ReproLog.h" />
     <ClInclude Include="ClientProcesses.h" />

@@ -58,7 +58,7 @@
   <PropertyGroup>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\tests\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\Generated Files\</GeneratedFilesDir>
+    <GeneratedFilesDir>$(SolutionDir)vsfiles-sdk\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(LibraryPath);$(WindowsSdkDir)Testing\Development\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -118,6 +118,9 @@
     <ClInclude Include="RecentSequencesTests.h" />
     <ClInclude Include="TrackSoundTests.h" />
     <ClInclude Include="PatternTemplatesTests.h" />
+    <ClInclude Include="NoteToolsTests.h" />
+    <ClInclude Include="StrumTests.h" />
+    <ClInclude Include="NoteExpressionTests.h" />
     <ClInclude Include="GeneratorKindsTests.h" />
     <ClInclude Include="GeneratorListenTests.h" />
     <ClInclude Include="ThemeEngineTests.h" />
@@ -149,6 +152,9 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\RecentSequences.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\TrackSound.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\PatternTemplates.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\NoteTools.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\SequenceStrum.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\NoteExpression.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
@@ -185,6 +191,9 @@
     <ClCompile Include="RecentSequencesTests.cpp" />
     <ClCompile Include="TrackSoundTests.cpp" />
     <ClCompile Include="PatternTemplatesTests.cpp" />
+    <ClCompile Include="NoteToolsTests.cpp" />
+    <ClCompile Include="StrumTests.cpp" />
+    <ClCompile Include="NoteExpressionTests.cpp" />
     <ClCompile Include="GeneratorKindsTests.cpp" />
     <ClCompile Include="GeneratorListenTests.cpp" />
     <ClCompile Include="ThemeEngineTests.cpp" />
@@ -229,6 +238,9 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\TimelineView.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\TrackSound.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\PatternTemplates.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\NoteTools.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\SequenceStrum.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\NoteExpression.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\ThemePalette.cpp" />
     <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeColor.cpp" />
     <ClCompile Include="..\..\..\user-tools\theme-engine\ThemeSyntax.cpp" />

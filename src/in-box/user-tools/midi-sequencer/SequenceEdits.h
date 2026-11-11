@@ -141,6 +141,9 @@ namespace midisequencer
     std::unique_ptr<SequenceChange> MakeTrackLanesChange(_In_ std::wstring trackId, _In_ std::vector<AutomationLane> before, _In_ std::vector<AutomationLane> after);
     std::unique_ptr<SequenceChange> MakeClipLanesChange(_In_ std::wstring clipId, _In_ std::vector<AutomationLane> before, _In_ std::vector<AutomationLane> after);
 
+    // A clip's other messages, such as the Per-Note Pitch Bend of glide and vibrato (NoteExpression.h).
+    std::unique_ptr<SequenceChange> MakeClipEventsChange(_In_ std::wstring clipId, _In_ std::vector<ClipEvent> before, _In_ std::vector<ClipEvent> after);
+
     // ---- tempo and meter ----
 
     // The tempo from a tick on: changes the tempo change at that tick, or adds one. A ramp from
@@ -159,4 +162,12 @@ namespace midisequencer
 
     // Later meter changes stay at their bars. The first meter can't be removed.
     bool RemoveMeterChange(_Inout_ std::vector<MeterChange>& meter, _In_ size_t index);
+
+    // Moves a meter change, not the first, to the start of another bar. The other changes keep
+    // their bar numbers, as SetMeterAt and RemoveMeterChange leave them. Notes stay where they are
+    // in time. False when nothing moves.
+    bool MoveMeterChange(_Inout_ std::vector<MeterChange>& meter, _In_ size_t index, _In_ int64_t toBar);
+
+    // Showing or hiding the Meter row.
+    std::unique_ptr<SequenceChange> MakeMeterRowChange(_In_ bool before, _In_ bool after);
 }

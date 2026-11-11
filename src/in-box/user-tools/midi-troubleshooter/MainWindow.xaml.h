@@ -12,6 +12,7 @@
 #include "AppSettings.h"
 #include "CommandLineOptions.h"
 #include "DriverTools.h"
+#include "OverviewPanel.xaml.h"
 #include "RegistryRepair.h"
 #include "ReportFile.h"
 #include "ReproLog.h"
@@ -44,6 +45,9 @@ namespace winrt::miditroubleshooter::implementation
         // API mode
         void OnApiModeSelectionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnApplyApiModeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // the "Change the API mode" button on the pages Legacy MIDI mode doesn't use
+        void OnGoToApiModeClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
         // Diagnostics
         winrt::fire_and_forget OnRunMidiDiagClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -81,6 +85,9 @@ namespace winrt::miditroubleshooter::implementation
         winrt::fire_and_forget OnUseClassicDriverClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRemoveKorgDriverClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRemoveKorgBleDriverClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // Active sessions: the copy button on a connection row
+        void OnCopyEndpointIdClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
 
     private:
         // Everything the service knows, gathered off the UI thread in one pass.
@@ -128,6 +135,39 @@ namespace winrt::miditroubleshooter::implementation
         foundation::IAsyncAction RemoveKorgPackagesAsync(::miditroubleshooter::KorgDriverKind const kind);
 
         void LoadApiMode() noexcept;
+
+        // The Overview page, in MainWindowOverview.cpp. Every check the dashboard shows runs in
+        // the background when the window opens, and each page's own refresh feeds it too.
+        void InitializeOverviewPage() noexcept;
+        void RunStartupChecks() noexcept;
+        winrt::fire_and_forget RefreshCrashSummaryAsync() noexcept;
+        void UpdateOverview() noexcept;
+        void UpdateNavigationBadges() noexcept;
+        void NavigateToTag(_In_ winrt::hstring const& tag) noexcept;
+
+        // each fills its part of m_overview; defined next to the page that owns the data
+        void SummarizeServiceForOverview(_In_ ServiceSnapshot const& snapshot) noexcept;
+        void SummarizeRegistryForOverview(_In_ ::miditroubleshooter::RegistryScan const& scan) noexcept;
+        void SummarizeDevicesForOverview(
+            _In_ std::vector<::miditroubleshooter::HardwareDeviceInfo> const& devices,
+            _In_ bool korgUsbInstalled,
+            _In_ bool korgBleInstalled) noexcept;
+        void SummarizeApiModeForOverview(_In_ ::miditroubleshooter::ApiMode mode) noexcept;
+
+        // the Registry page's summary card and group headers, in MainWindowRegistry.cpp
+        void ApplyRegistrySummary(_In_ ::miditroubleshooter::RegistryScan const& scan) noexcept;
+
+        // the Transports page's summary card, in MainWindowService.cpp
+        void ApplyTransportsSummary(
+            _In_ uint32_t total,
+            _In_ uint32_t inWindows,
+            _In_ uint32_t preview,
+            _In_ uint32_t turnedOff,
+            _In_ uint32_t problems,
+            _In_ bool awaitingRestart,
+            _In_ bool serviceRunning) noexcept;
+
+        OverviewState m_overview{};
 
         // yes / cancel confirmation, used before anything that changes the machine
         foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
@@ -232,7 +272,11 @@ namespace winrt::miditroubleshooter::implementation
         collections::IObservableVector<miditroubleshooter::SessionItem> m_sessions{
             winrt::single_threaded_observable_vector<miditroubleshooter::SessionItem>() };
 
+        // the transports in System32, and the ones installed anywhere else (the preview transports)
         collections::IObservableVector<miditroubleshooter::TransportItem> m_transports{
+            winrt::single_threaded_observable_vector<miditroubleshooter::TransportItem>() };
+
+        collections::IObservableVector<miditroubleshooter::TransportItem> m_previewTransports{
             winrt::single_threaded_observable_vector<miditroubleshooter::TransportItem>() };
 
         collections::IObservableVector<miditroubleshooter::RegistryEntryItem> m_drivers32Entries{
@@ -245,6 +289,9 @@ namespace winrt::miditroubleshooter::implementation
             winrt::single_threaded_observable_vector<miditroubleshooter::RegistryEntryItem>() };
 
         collections::IObservableVector<miditroubleshooter::RegistryEntryItem> m_transportRegistryEntries{
+            winrt::single_threaded_observable_vector<miditroubleshooter::RegistryEntryItem>() };
+
+        collections::IObservableVector<miditroubleshooter::RegistryEntryItem> m_mmcssTaskEntries{
             winrt::single_threaded_observable_vector<miditroubleshooter::RegistryEntryItem>() };
 
         collections::IObservableVector<miditroubleshooter::DriverDeviceItem> m_driverDevices{

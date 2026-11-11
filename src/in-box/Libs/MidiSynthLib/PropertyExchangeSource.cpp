@@ -202,24 +202,40 @@ namespace MidiSynth
         // A channel playing a drum kit ignores modulation, the damper pedal, pitch bend, pitch bend
         // sensitivity and fine and coarse tuning, as General MIDI 2 recommends (sections 3.3.2,
         // 3.3.7, 3.4.1 to 3.4.3 and 3.6), so its list is the same one without them.
+        //
+        // Compatible mode's drums take all of those except coarse tuning, as the older synthesizer's do.
         std::vector<ci::ControllerListEntry> drumEntries;
+        std::vector<ci::ControllerListEntry> compatibleDrumEntries;
 
         for (const auto& entry : entries)
         {
+            const bool isRegistered = std::strcmp(entry.ControllerType, "rpn") == 0 && entry.Index[0] == 0;
+
             const bool ignoredByDrums =
                 std::strcmp(entry.ControllerType, "pBend") == 0 ||
                 (std::strcmp(entry.ControllerType, "cc") == 0 && (entry.Index[0] == 1 || entry.Index[0] == 64)) ||
-                (std::strcmp(entry.ControllerType, "rpn") == 0 && entry.Index[0] == 0 && entry.Index[1] <= 2);
+                (isRegistered && entry.Index[1] <= 2);
 
             if (!ignoredByDrums)
             {
                 drumEntries.push_back(entry);
+            }
+
+            if (!(isRegistered && entry.Index[1] == 2))
+            {
+                compatibleDrumEntries.push_back(entry);
             }
         }
 
         m_drumControllerListJson.resize(ci::BuildControllerListJson(drumEntries.data(), drumEntries.size(), nullptr, 0));
         (void)ci::BuildControllerListJson(
             drumEntries.data(), drumEntries.size(), m_drumControllerListJson.data(), m_drumControllerListJson.size());
+
+        m_compatibleDrumControllerListJson.resize(
+            ci::BuildControllerListJson(compatibleDrumEntries.data(), compatibleDrumEntries.size(), nullptr, 0));
+        (void)ci::BuildControllerListJson(
+            compatibleDrumEntries.data(), compatibleDrumEntries.size(),
+            m_compatibleDrumControllerListJson.data(), m_compatibleDrumControllerListJson.size());
     }
 
     _Use_decl_annotations_
@@ -240,7 +256,9 @@ namespace MidiSynth
         const ci::ResourceLink DrumKitLinks[]
         {
             { "ProgramList", DrumKitProgramListResourceId, m_text.DrumKitProgramList.c_str() },
-            { "ChCtrlList", DrumControllerListResourceId, m_text.ControllerList.c_str() },
+            { "ChCtrlList",
+              engine.Config().DrumsFollowGeneralMidi2 ? DrumControllerListResourceId : CompatibleDrumControllerListResourceId,
+              m_text.ControllerList.c_str() },
         };
 
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)

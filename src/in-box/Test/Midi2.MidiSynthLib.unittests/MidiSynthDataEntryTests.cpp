@@ -176,3 +176,35 @@ void MidiSynthDataEntryTests::TestMidi2BendRangeLeavesDataEntryAlone()
     VERIFY_ARE_EQUAL(FineCents(80u << 7), state.FineTuneCents, L"and the data entry still reached fine tuning");
     VERIFY_IS_TRUE(state.RpnMsb == 0 && state.RpnLsb == 1, L"which stayed the selected parameter");
 }
+
+// Choosing a non-registered parameter deselects the registered one, so data entry sent for an NRPN
+// the synthesizer doesn't implement can't change the pitch bend range or the tuning instead.
+void MidiSynthDataEntryTests::TestNrpnSelectDeselectsTheRpn()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    for (const uint8_t nrpnController : { uint8_t{ 99 }, uint8_t{ 98 } })
+    {
+        Rig rig(*collection);
+        const auto state = [&]() { return rig.Engine().ChannelState(0); };
+
+        SelectRegisteredParameter(rig, 0, 0);
+        rig.SendMidi1(StatusControlChange, 0, 6, 12);
+
+        VERIFY_ARE_EQUAL(12.0, state().PitchBendRangeSemitones);
+
+        // A GS vibrato rate NRPN, as files written for GS devices send it.
+        rig.SendMidi1(StatusControlChange, 0, nrpnController, (nrpnController == 99) ? 1 : 8);
+        rig.SendMidi1(StatusControlChange, 0, 6, 64);
+        rig.SendMidi1(StatusControlChange, 0, 38, 10);
+
+        VERIFY_ARE_EQUAL(12.0, state().PitchBendRangeSemitones, L"the NRPN's data entry leaves the bend range alone");
+        VERIFY_ARE_EQUAL(0.0, state().FineTuneCents);
+        VERIFY_ARE_EQUAL(0.0, state().CoarseTuneSemitones);
+    }
+}

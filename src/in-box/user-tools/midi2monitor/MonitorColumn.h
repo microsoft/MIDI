@@ -12,7 +12,8 @@
 namespace midi2monitor
 {
     // Canonical order. Row and header XAML declare their cells in exactly this order, after the
-    // comment gutter, and MessageRowPanel reorders them for display.
+    // comment gutter, and MessageRowPanel reorders them for display. Source was added last, so
+    // it's last here even though it shows next to the time.
     enum class MonitorColumnId : int32_t
     {
         Index = 0,
@@ -21,10 +22,11 @@ namespace midi2monitor
         Group = 3,
         Channel = 4,
         Decoded = 5,
-        Delta = 6
+        Delta = 6,
+        Source = 7
     };
 
-    inline constexpr int32_t MonitorColumnCount = 7;
+    inline constexpr int32_t MonitorColumnCount = 8;
     inline constexpr double CommentGutterWidth = 26.0;
 
     struct MonitorColumnMetrics
@@ -46,8 +48,17 @@ namespace midi2monitor
         case MonitorColumnId::Channel:   return { 64.0, false, true, 1 };
         case MonitorColumnId::Decoded:   return { 220.0, true, true, -1 };
         case MonitorColumnId::Delta:     return { 120.0, false, true, 0 };
+        // never dropped: in advanced mode it's what tells the rows apart
+        case MonitorColumnId::Source:    return { 200.0, false, true, -1 };
         default:                         return { 80.0, false, true, 0 };
         }
+    }
+
+    // Each mode leaves out one column: simple mode has no From, and advanced mode has no Group,
+    // because From already says the group.
+    constexpr bool IsColumnInMode(MonitorColumnId id, bool advancedMode) noexcept
+    {
+        return advancedMode ? id != MonitorColumnId::Group : id != MonitorColumnId::Source;
     }
 }
 

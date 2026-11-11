@@ -56,13 +56,16 @@ namespace miditroubleshooter
         static constexpr uint32_t PageIndexLatencyCheck = 8;
         static constexpr uint32_t PageIndexCrashDumps = 9;
 
-        static constexpr uint32_t PageIndexMaximum = PageIndexCrashDumps;
+        // added last so the saved numbers of the other pages keep their meaning
+        static constexpr uint32_t PageIndexOverview = 10;
+
+        static constexpr uint32_t PageIndexMaximum = PageIndexOverview;
 
     private:
         AppSettings() noexcept;
 
         uint32_t m_refreshIntervalSeconds{ DefaultRefreshIntervalSeconds };
-        uint32_t m_selectedPageIndex{ PageIndexApiMode };
+        uint32_t m_selectedPageIndex{ PageIndexOverview };
         std::wstring m_lastCaptureFolder{};
         WindowPlacementInfo m_reportViewerPlacement{};
     };

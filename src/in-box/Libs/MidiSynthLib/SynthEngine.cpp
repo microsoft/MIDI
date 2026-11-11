@@ -21,11 +21,15 @@ namespace MidiSynth
         constexpr uint8_t ControllerBankSelectLsb = 32;
         constexpr uint8_t ControllerDataEntryLsb = 38;
         constexpr uint8_t ControllerSustainPedal = 64;
+        constexpr uint8_t ControllerNrpnLsb = 98;
+        constexpr uint8_t ControllerNrpnMsb = 99;
         constexpr uint8_t ControllerRpnLsb = 100;
         constexpr uint8_t ControllerRpnMsb = 101;
         constexpr uint8_t ControllerAllSoundOff = 120;
         constexpr uint8_t ControllerResetAllControllers = 121;
         constexpr uint8_t ControllerAllNotesOff = 123;
+        constexpr uint8_t ControllerMonoMode = 126;
+        constexpr uint8_t ControllerPolyMode = 127;
 
         constexpr uint8_t DrumChannelIndex = 9;
 
@@ -39,6 +43,12 @@ namespace MidiSynth
         double FineTuningCentsFrom14(_In_ uint32_t value) noexcept
         {
             return (static_cast<double>(value & 0x3FFF) - 8192.0) * 100.0 / 8192.0;
+        }
+
+        // The fourteen bit value a fine tuning would have been sent as. Exact for anything MIDI 1.0 set.
+        uint32_t FineTuning14Of(_In_ double cents) noexcept
+        {
+            return static_cast<uint32_t>(std::lround((std::clamp)(cents * 8192.0 / 100.0 + 8192.0, 0.0, 16383.0)));
         }
 
         // The data entry MSB a fine tuning would have been sent with, so a data entry LSB on its own
@@ -146,7 +156,7 @@ namespace MidiSynth
             return false;
         }
 
-        m_voices.assign((std::max)(1u, config.MaxVoices), SynthVoice{});
+        m_voices.assign((std::max)(1u, config.MaxVoices + config.SpareVoices), SynthVoice{});
 
         // Not allocated at all when effects are off, so the per voice send accumulation is skipped
         // rather than merely discarded.
@@ -192,8 +202,11 @@ namespace MidiSynth
 
     void SynthEngine::ResetChannels() noexcept
     {
+        m_gsActive = false;
+
         for (size_t channel = 0; channel < MidiChannelCount; channel++)
         {
+            m_receiveChannels[channel] = static_cast<uint8_t>(channel);
             m_channels[channel] = SynthChannelState{};
             m_channels[channel].IsDrumChannel = (channel == DrumChannelIndex);
             ResolveInstrument(static_cast<uint8_t>(channel));
@@ -332,6 +345,54 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void SynthEngine::SetScaleTuning(uint8_t channel, const uint8_t* offsets, size_t count) noexcept
+    {
+        if (!m_config.OlderMessageHandling || !m_gsActive || channel >= MidiChannelCount || offsets == nullptr)
+        {
+            return;
+        }
+
+        auto& tuning = m_channels[channel].ScaleTuningCents;
+
+        for (size_t i = 0; i < count && i < tuning.size(); i++)
+        {
+            tuning[i] = static_cast<int8_t>(static_cast<int>(offsets[i] & 0x7F) - 64);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetReceiveChannel(uint8_t engineChannel, uint8_t midiChannel) noexcept
+    {
+        if (!m_config.OlderMessageHandling || !m_gsActive || engineChannel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        m_receiveChannels[engineChannel] = midiChannel & 0x0F;
+    }
+
+    _Use_decl_annotations_
+    uint16_t SynthEngine::EngineChannelsReceiving(uint8_t midiChannel) const noexcept
+    {
+        if (!m_config.OlderMessageHandling)
+        {
+            return static_cast<uint16_t>(1u << (midiChannel & 0x0F));
+        }
+
+        uint16_t channels = 0;
+
+        for (uint8_t engineChannel = 0; engineChannel < MidiChannelCount; engineChannel++)
+        {
+            if (m_receiveChannels[engineChannel] == (midiChannel & 0x0F))
+            {
+                channels |= static_cast<uint16_t>(1u << engineChannel);
+            }
+        }
+
+        return channels;
+    }
+
+    _Use_decl_annotations_
     void SynthEngine::SetBankSelectMode(BankSelectMode mode)
     {
         m_config.BankSelect = mode;
@@ -431,24 +492,27 @@ namespace MidiSynth
 
         SynthVoice* candidate = nullptr;
 
-        if (m_config.StealingPolicy == VoiceStealingPolicy::LowestChannelPriority)
+        if (m_config.StealingPolicy == VoiceStealingPolicy::ChannelPriority)
         {
-            // The in-box synth favors lower channel numbers, so a voice on a higher channel than
-            // the incoming note is the first thing to go.
+            // A voice already fading out after a reset, All Sound Off or a retrigger is no longer
+            // heard, so it goes first, whatever its channel. Taking it steals nothing.
             for (auto& voice : m_voices)
             {
-                if (voice.Channel < channel)
-                {
-                    continue;
-                }
-
-                if (candidate == nullptr ||
-                    voice.Channel > candidate->Channel ||
-                    (voice.Channel == candidate->Channel && voice.StartOrder < candidate->StartOrder))
+                if (voice.Active && voice.Killed && (candidate == nullptr || voice.EnvelopeLevelDb < candidate->EnvelopeLevelDb))
                 {
                     candidate = &voice;
                 }
             }
+
+            if (candidate != nullptr)
+            {
+                *candidate = SynthVoice{};
+                return candidate;
+            }
+
+            // A note can only take a voice from a channel of its own priority or lower. When every
+            // voice belongs to a higher priority channel, the note isn't played.
+            candidate = PriorityVictim(ChannelPriority(channel), false);
         }
         else
         {
@@ -489,6 +553,116 @@ namespace MidiSynth
         }
 
         return candidate;
+    }
+
+    _Use_decl_annotations_
+    uint32_t SynthEngine::ChannelPriority(uint8_t channel) noexcept
+    {
+        // Channel 10 first, then 1 to 9, then 11 to 16.
+        if (channel == DrumChannelIndex)
+        {
+            return MidiChannelCount;
+        }
+
+        return (channel < DrumChannelIndex)
+            ? static_cast<uint32_t>(MidiChannelCount - 1 - channel)
+            : static_cast<uint32_t>(MidiChannelCount - channel);
+    }
+
+    _Use_decl_annotations_
+    SynthVoice* SynthEngine::PriorityVictim(uint32_t maxPriority, bool lowestPriorityOnly) noexcept
+    {
+        // Visited lowest priority first and, within a priority, oldest first, which is the order
+        // the older synthesizer kept its voices in. Its comparisons depend on that order, so they
+        // are copied as they are: a released note wins over a held one when it is the quieter, and
+        // an older held note wins over whatever was chosen before it.
+        std::array<SynthVoice*, 512> order{};
+        size_t count = 0;
+
+        for (auto& voice : m_voices)
+        {
+            if (voice.Active && !voice.Killed && count < order.size() && ChannelPriority(voice.Channel) <= maxPriority)
+            {
+                order[count++] = &voice;
+            }
+        }
+
+        std::sort(order.begin(), order.begin() + count, [](const SynthVoice* a, const SynthVoice* b)
+        {
+            const auto priorityA = ChannelPriority(a->Channel);
+            const auto priorityB = ChannelPriority(b->Channel);
+
+            return (priorityA != priorityB) ? priorityA < priorityB : a->StartOrder < b->StartOrder;
+        });
+
+        SynthVoice* best = nullptr;
+
+        for (size_t i = 0; i < count; i++)
+        {
+            SynthVoice* voice = order[i];
+
+            if (best == nullptr)
+            {
+                best = voice;
+                continue;
+            }
+
+            if (lowestPriorityOnly && ChannelPriority(voice->Channel) > ChannelPriority(best->Channel))
+            {
+                break;
+            }
+
+            const bool voiceHeld = voice->Stage != EnvelopeStage::Release;
+            const bool bestHeld = best->Stage != EnvelopeStage::Release;
+
+            if (!voiceHeld)
+            {
+                const double voiceLoudness = voice->CurrentGainLeft + voice->CurrentGainRight;
+                const double bestLoudness = best->CurrentGainLeft + best->CurrentGainRight;
+
+                if (bestHeld || bestLoudness > voiceLoudness)
+                {
+                    best = voice;
+                }
+            }
+            else if (best->StartOrder > voice->StartOrder)
+            {
+                best = voice;
+            }
+        }
+
+        return best;
+    }
+
+    void SynthEngine::ReleaseSpareVoices() noexcept
+    {
+        if (m_config.SpareVoices == 0)
+        {
+            return;
+        }
+
+        size_t sounding = 0;
+
+        for (const auto& voice : m_voices)
+        {
+            if (voice.Active && !voice.Killed)
+            {
+                sounding++;
+            }
+        }
+
+        for (; sounding > m_config.MaxVoices; sounding--)
+        {
+            SynthVoice* victim = PriorityVictim(MidiChannelCount, true);
+
+            if (victim == nullptr)
+            {
+                break;
+            }
+
+            m_stolenVoiceCount++;
+            KillVoice(*victim);
+        }
     }
 
     _Use_decl_annotations_
@@ -585,6 +759,60 @@ namespace MidiSynth
         }
 
         voice.LfoDelayRemainingSeconds = articulation.LfoStartDelaySeconds;
+
+        // The pitch envelope is scaled by velocity and key the same way as the volume envelope.
+        const double pitchVelocityAttackScale =
+            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg2VelocityToAttackTimeCents * normalizedVelocity));
+        const double pitchKeyDecayScale =
+            TimeCentsToSeconds(static_cast<int32_t>(articulation.Eg2KeyToDecayTimeCents * (regionKey / 128.0)));
+
+        voice.PitchAttackSeconds =
+            articulation.Eg2AttackSeconds * ((pitchVelocityAttackScale > 0.0) ? pitchVelocityAttackScale : 1.0);
+        voice.PitchDecaySeconds =
+            articulation.Eg2DecaySeconds * ((pitchKeyDecayScale > 0.0) ? pitchKeyDecayScale : 1.0);
+        voice.PitchReleaseSeconds = articulation.Eg2ReleaseSeconds;
+
+        if (voice.PitchAttackSeconds > 0.0)
+        {
+            voice.PitchStage = EnvelopeStage::Attack;
+            voice.PitchEnvelopeLevel = 0.0;
+        }
+        else
+        {
+            voice.PitchStage = EnvelopeStage::Decay;
+            voice.PitchEnvelopeLevel = 1.0;
+        }
+
+        voice.NoteOnTuningCents = ChannelTuningCents(voice, m_channels[channel]);
+
+        // GS scale tuning, which the older synthesizer applies to drums as well.
+        if (m_config.OlderMessageHandling)
+        {
+            voice.NoteOnTuningCents += m_channels[channel].ScaleTuningCents[note % 12];
+        }
+
+        if (m_config.PitchBendGlideMaximumSeconds > 0.0)
+        {
+            // An eighth of the vibrato cycle when the instrument has vibrato or tremolo, which is
+            // how often the older synthesizer recomputed pitch, and never more than the maximum.
+            const bool hasLfo =
+                articulation.LfoToPitchCents != 0.0 || articulation.LfoModWheelToPitchCents != 0.0 ||
+                articulation.LfoToAttenuationDb != 0.0 || articulation.LfoModWheelToAttenuationDb != 0.0;
+
+            voice.BendGlideSeconds = hasLfo
+                ? (std::min)(m_config.PitchBendGlideMaximumSeconds, 0.125 / articulation.LfoFrequencyHertz)
+                : m_config.PitchBendGlideMaximumSeconds;
+        }
+
+        const auto& state = m_channels[channel];
+        const double bendCents = VoiceIgnoresDrumControls(voice)
+            ? 0.0
+            : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
+
+        voice.BendGlideFromCents = bendCents;
+        voice.BendGlideToCents = bendCents;
+        voice.BendGlideElapsedSeconds = voice.BendGlideSeconds;
+        voice.GlidedBendCents = bendCents;
     }
 
     _Use_decl_annotations_
@@ -654,6 +882,20 @@ namespace MidiSynth
                 !voice.SelfNonExclusive && !voice.Detached)
             {
                 KillVoice(voice);
+            }
+        }
+
+        // In mono mode a new note ends the ones the channel still holds, damper or not.
+        if (m_config.OlderMessageHandling && state.MonoMode)
+        {
+            for (auto& voice : m_voices)
+            {
+                if (voice.Active && !voice.Killed && voice.Channel == channel && voice.Stage != EnvelopeStage::Release)
+                {
+                    voice.NoteHeld = false;
+                    voice.SustainHeld = false;
+                    ReleaseVoice(voice);
+                }
             }
         }
 
@@ -813,6 +1055,11 @@ namespace MidiSynth
 
         voice.Stage = EnvelopeStage::Release;
 
+        if (voice.PitchStage != EnvelopeStage::Idle)
+        {
+            voice.PitchStage = EnvelopeStage::Release;
+        }
+
         if (voice.AttackProgress < 1.0)
         {
             voice.EnvelopeLevelDb = (voice.AttackProgress <= 0.0)
@@ -837,7 +1084,7 @@ namespace MidiSynth
         voice.HeldModulation = state.Modulation;
         voice.HeldPanOffset = state.PanOffset;
         voice.HeldBendCents = state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
-        voice.HeldTuningCents = state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+        voice.HeldTuningCents = m_config.TuningFixedAtNoteOn ? voice.NoteOnTuningCents : ChannelTuningCents(voice, state);
         voice.HeldReverbSend = static_cast<float>(state.ReverbSend);
         voice.HeldChorusSend = static_cast<float>(state.ChorusSend);
     }
@@ -855,6 +1102,7 @@ namespace MidiSynth
         voice.NoteHeld = false;
         voice.SustainHeld = false;
         voice.ReleaseSeconds = VoiceKillSeconds;
+        voice.Killed = true;
 
         // A killed voice must not win a later note off for the same key.
         voice.Note = 0xFF;
@@ -881,7 +1129,7 @@ namespace MidiSynth
             voice.NoteHeld = false;
 
             // General MIDI 2 recommends that drums ignore the damper pedal (section 3.3.7).
-            if (pedalDown && !voice.DrumKit)
+            if (pedalDown && !VoiceIgnoresDrumControls(voice))
             {
                 voice.SustainHeld = true;
             }
@@ -906,16 +1154,19 @@ namespace MidiSynth
         switch (controller)
         {
         case ControllerBankSelectMsb:
-            state.BankMsb = value & 0x7F;
-            break;
-
         case ControllerBankSelectLsb:
-            state.BankLsb = value & 0x7F;
+            // The older synthesizer reads bank select only once a GS Reset has turned GS on.
+            if (m_config.OlderMessageHandling && !m_gsActive)
+            {
+                break;
+            }
+
+            (controller == ControllerBankSelectMsb ? state.BankMsb : state.BankLsb) = value & 0x7F;
             break;
 
         case ControllerModulation:
             // General MIDI 2 recommends that a rhythm channel ignore modulation (section 3.3.2).
-            if (!state.PlaysDrumKit)
+            if (!ChannelIgnoresDrumControls(state))
             {
                 state.Modulation = normalized;
             }
@@ -949,7 +1200,7 @@ namespace MidiSynth
             // A rhythm channel never presses the damper (General MIDI 2 section 3.3.7), but it
             // still lets it go, or melodic notes it held before the channel chose a kit would
             // never end.
-            if (down && state.PlaysDrumKit)
+            if (down && ChannelIgnoresDrumControls(state))
             {
                 break;
             }
@@ -978,11 +1229,19 @@ namespace MidiSynth
             state.RpnLsb = value & 0x7F;
             break;
 
+        case ControllerNrpnMsb:
+        case ControllerNrpnLsb:
+            // No NRPN is implemented, but choosing one still deselects the registered parameter,
+            // so the data entry meant for the NRPN can't change the pitch bend range or tuning.
+            state.RpnMsb = 0x7F;
+            state.RpnLsb = 0x7F;
+            break;
+
         case ControllerDataEntryMsb:
             // A channel playing a drum kit ignores pitch bend sensitivity and channel fine and
             // coarse tuning, as General MIDI 2 recommends in sections 3.4.1 to 3.4.3. An MSB sets
             // the LSB back to zero, as the MIDI 1.0 specification asks of a receiver.
-            if (state.RpnMsb != 0 || state.PlaysDrumKit)
+            if (state.RpnMsb != 0 || ChannelIgnoresDrumControls(state))
             {
                 break;
             }
@@ -993,7 +1252,10 @@ namespace MidiSynth
             }
             else if (state.RpnLsb == 1)
             {
-                state.FineTuneCents = FineTuningCentsFrom14(static_cast<uint32_t>(value & 0x7F) << 7);
+                // The older synthesizer keeps the LSB a fine tuning already had.
+                const uint32_t lsb = m_config.OlderMessageHandling ? FineTuning14Of(state.FineTuneCents) & 0x7F : 0;
+
+                state.FineTuneCents = FineTuningCentsFrom14((static_cast<uint32_t>(value & 0x7F) << 7) | lsb);
             }
             else if (state.RpnLsb == 2)
             {
@@ -1004,14 +1266,18 @@ namespace MidiSynth
         case ControllerDataEntryLsb:
             // Cents of pitch bend sensitivity, and the low seven bits of fine tuning. An LSB on its
             // own adjusts what the last MSB set. Coarse tuning has no LSB.
-            if (state.RpnMsb != 0 || state.PlaysDrumKit)
+            if (state.RpnMsb != 0 || ChannelIgnoresDrumControls(state))
             {
                 break;
             }
 
             if (state.RpnLsb == 0)
             {
-                SetPitchBendRangeRaw(state, state.PitchBendRangeMsb, value);
+                // The older synthesizer takes whole semitones only.
+                if (!m_config.OlderMessageHandling)
+                {
+                    SetPitchBendRangeRaw(state, state.PitchBendRangeMsb, value);
+                }
             }
             else if (state.RpnLsb == 1)
             {
@@ -1025,7 +1291,39 @@ namespace MidiSynth
             break;
 
         case ControllerResetAllControllers:
-            ResetAllControllers(channel);
+            if (m_config.OlderMessageHandling)
+            {
+                // The older synthesizer also puts the effect sends back, and volume and pan when the
+                // value isn't zero, and leaves the parameter number selected.
+                const auto rpnMsb = state.RpnMsb;
+                const auto rpnLsb = state.RpnLsb;
+
+                ResetAllControllers(channel);
+
+                state.RpnMsb = rpnMsb;
+                state.RpnLsb = rpnLsb;
+                state.ReverbSend = 40.0 / 127.0;
+                state.ChorusSend = 0.0;
+
+                if ((value & 0x7F) != 0)
+                {
+                    state.Volume = 100.0 / 127.0;
+                    state.PanOffset = 0.0;
+                }
+            }
+            else
+            {
+                ResetAllControllers(channel);
+            }
+            break;
+
+        case ControllerMonoMode:
+        case ControllerPolyMode:
+            if (m_config.OlderMessageHandling)
+            {
+                state.MonoMode = (controller == ControllerMonoMode);
+                AllSoundOff(channel);
+            }
             break;
 
         case ControllerAllNotesOff:
@@ -1051,7 +1349,7 @@ namespace MidiSynth
         switch (controller)
         {
         case ControllerModulation:
-            if (!state.PlaysDrumKit)
+            if (!ChannelIgnoresDrumControls(state))
             {
                 state.Modulation = normalized;
             }
@@ -1080,7 +1378,7 @@ namespace MidiSynth
     void SynthEngine::PitchBend32(uint8_t channel, uint32_t value)
     {
         // General MIDI 2 recommends that a rhythm channel ignore pitch bend (section 3.6).
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1092,7 +1390,7 @@ namespace MidiSynth
     void SynthEngine::SetChannelFineTuning32(uint8_t channel, uint32_t value) noexcept
     {
         // A channel playing a drum kit ignores channel tuning, as General MIDI 2 recommends.
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1108,7 +1406,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetChannelCoarseTuning(uint8_t channel, uint8_t msb) noexcept
     {
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1119,7 +1417,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetPitchBendRange(uint8_t channel, uint8_t semitones, uint8_t cents) noexcept
     {
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1162,7 +1460,7 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::PitchBend(uint8_t channel, int32_t value)
     {
-        if (channel >= MidiChannelCount || m_channels[channel].PlaysDrumKit)
+        if (channel >= MidiChannelCount || ChannelIgnoresDrumControls(m_channels[channel]))
         {
             return;
         }
@@ -1197,7 +1495,7 @@ namespace MidiSynth
 
             voice.NoteHeld = false;
 
-            if (pedalDown && !voice.DrumKit)
+            if (pedalDown && !VoiceIgnoresDrumControls(voice))
             {
                 voice.SustainHeld = true;
             }
@@ -1233,9 +1531,59 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void SynthEngine::AdvancePitchEnvelope(SynthVoice& voice, double blockSeconds) noexcept
+    {
+        // Each stage moves at full scale per its time, so a decay to a sustain of one half takes
+        // half the decay time (DLS Level 1 section 1.6).
+        switch (voice.PitchStage)
+        {
+        case EnvelopeStage::Attack:
+            voice.PitchEnvelopeLevel += (voice.PitchAttackSeconds > 0.0) ? blockSeconds / voice.PitchAttackSeconds : 1.0;
+
+            if (voice.PitchEnvelopeLevel >= 1.0)
+            {
+                voice.PitchEnvelopeLevel = 1.0;
+                voice.PitchStage = EnvelopeStage::Decay;
+            }
+            break;
+
+        case EnvelopeStage::Decay:
+        {
+            const double sustain = voice.Articulation.Eg2SustainFraction;
+
+            voice.PitchEnvelopeLevel -= (voice.PitchDecaySeconds > 0.0) ? blockSeconds / voice.PitchDecaySeconds : 1.0;
+
+            if (voice.PitchEnvelopeLevel <= sustain)
+            {
+                voice.PitchEnvelopeLevel = sustain;
+                voice.PitchStage = EnvelopeStage::Sustain;
+            }
+            break;
+        }
+
+        case EnvelopeStage::Release:
+            voice.PitchEnvelopeLevel -= (voice.PitchReleaseSeconds > 0.0) ? blockSeconds / voice.PitchReleaseSeconds : 1.0;
+
+            if (voice.PitchEnvelopeLevel <= 0.0)
+            {
+                voice.PitchEnvelopeLevel = 0.0;
+                voice.PitchStage = EnvelopeStage::Idle;
+            }
+            break;
+
+        case EnvelopeStage::Sustain:
+        case EnvelopeStage::Idle:
+        default:
+            break;
+        }
+    }
+
+    _Use_decl_annotations_
     void SynthEngine::UpdateVoiceControl(SynthVoice& voice, uint32_t frames) noexcept
     {
         const double blockSeconds = static_cast<double>(frames) / m_renderSampleRate;
+
+        AdvancePitchEnvelope(voice, blockSeconds);
 
         switch (voice.Stage)
         {
@@ -1307,7 +1655,7 @@ namespace MidiSynth
 
         // A drum note leaves modulation and pitch bend alone, whatever the channel held when it chose
         // the kit (General MIDI 2 sections 3.3.2 and 3.6).
-        const double modulationDepth = voice.DrumKit ? 0.0 : (held ? voice.HeldModulation : state.Modulation);
+        const double modulationDepth = VoiceIgnoresDrumControls(voice) ? 0.0 : (held ? voice.HeldModulation : state.Modulation);
 
         double lfoValue = 0.0;
 
@@ -1358,24 +1706,43 @@ namespace MidiSynth
         voice.TargetGainRight = targetRight;
 
         // Pitch for this block.
-        const double bendCents = voice.DrumKit
+        double bendCents = VoiceIgnoresDrumControls(voice)
             ? 0.0
             : (held ? voice.HeldBendCents : state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0);
+
+        if (voice.BendGlideSeconds > 0.0 && !held)
+        {
+            if (bendCents != voice.BendGlideToCents)
+            {
+                voice.BendGlideFromCents = voice.GlidedBendCents;
+                voice.BendGlideToCents = bendCents;
+                voice.BendGlideElapsedSeconds = 0.0;
+            }
+
+            voice.BendGlideElapsedSeconds += blockSeconds;
+
+            const double progress = (std::min)(1.0, voice.BendGlideElapsedSeconds / voice.BendGlideSeconds);
+
+            voice.GlidedBendCents =
+                voice.BendGlideFromCents + (voice.BendGlideToCents - voice.BendGlideFromCents) * progress;
+
+            bendCents = voice.GlidedBendCents;
+        }
 
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
 
-        // General MIDI 2 keeps channel and master tuning off drums (sections 3.4.2, 3.4.3, 4.2 and
-        // 4.3). The note decides rather than the channel, so a note keeps its tuning when the
-        // channel changes program while it sounds.
-        const double tuningCents = voice.DrumKit
-            ? 0.0
-            : (held ? voice.HeldTuningCents : state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents);
+        const double tuningCents = held
+            ? voice.HeldTuningCents
+            : (m_config.TuningFixedAtNoteOn ? voice.NoteOnTuningCents : ChannelTuningCents(voice, state));
+
+        const double pitchEnvelopeCents = voice.PitchEnvelopeLevel * articulation.Eg2ToPitchCents;
 
         // Per-note pitch adds to the channel bend rather than replacing it, so a MIDI 2.0 note can
         // be bent on its own while the channel wheel still moves the whole part.
         const double totalCents =
-            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents + tuningCents;
+            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents + tuningCents +
+            pitchEnvelopeCents;
 
         voice.BlockPitchRatio = voice.BasePitchRatio * CentsToPitchRatio(totalCents);
     }
@@ -1393,6 +1760,12 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetMasterFineTuning(uint16_t value) noexcept
     {
+        // The older synthesizer has no master tuning.
+        if (m_config.OlderMessageHandling)
+        {
+            return;
+        }
+
         const auto clamped = (std::min)(value, static_cast<uint16_t>(16383));
 
         m_masterFineCents = (static_cast<double>(clamped) - 8192.0) * (100.0 / 8192.0);
@@ -1402,8 +1775,28 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::SetMasterCoarseTuning(uint8_t msb) noexcept
     {
+        if (m_config.OlderMessageHandling)
+        {
+            return;
+        }
+
         m_masterCoarseCents = (static_cast<double>(msb & 0x7F) - 64.0) * 100.0;
         m_masterTuningCents = m_masterFineCents + m_masterCoarseCents;
+    }
+
+    _Use_decl_annotations_
+    double SynthEngine::ChannelTuningCents(const SynthVoice& voice, const SynthChannelState& state) const noexcept
+    {
+        // The note decides rather than the channel, so a note keeps its tuning when the channel
+        // changes program while it sounds.
+        if (!voice.DrumKit)
+        {
+            return state.FineTuneCents + state.CoarseTuneSemitones * 100.0 + m_masterTuningCents;
+        }
+
+        // General MIDI 2 keeps channel and master tuning off drums (sections 3.4.2, 3.4.3, 4.2 and
+        // 4.3). The older synthesizer tunes drums with fine tuning, but never with coarse tuning.
+        return m_config.DrumsFollowGeneralMidi2 ? 0.0 : state.FineTuneCents + m_masterFineCents;
     }
 
     _Use_decl_annotations_
@@ -1524,6 +1917,8 @@ namespace MidiSynth
             std::fill_n(m_reverbSendBuffer.data(), samples, 0.0f);
             std::fill_n(m_chorusSendBuffer.data(), samples, 0.0f);
         }
+
+        ReleaseSpareVoices();
 
         m_renderCursor = interleavedStereo;
 

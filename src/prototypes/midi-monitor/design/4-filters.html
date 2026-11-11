@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1420">
+<title>4. Advanced mode filters</title>
+<link rel="stylesheet" href="mon.css">
+<script src="mon.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>4. Filter, open.</b> The same five groups of choices as a MIDI Patchbay filter step, in the same words, so what you learn in one app works in the other. Every choice starts on, which means "show it". Changes apply as you click; there's no OK button.</p>
+
+  <div class="window" style="width:1240px; height:820px">
+    <div class="titlebar">
+      <img src="appicon.ico" alt="">
+      <div class="title">Windows MIDI Monitor</div>
+      <div class="spacer"></div>
+      <div class="cap on">&#xE9E9;</div>
+      <div class="cap">&#xE713;</div>
+      <div class="cap">&#xE718;</div>
+      <div class="sys"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+    <div class="toolbar cardx">
+      <span class="btn accent" style="min-width:150px"><span class="gl">&#xE71A;</span>Stop listening</span>
+      <span class="sep"></span>
+      <span class="btn toggled"><span class="gl">&#xE71C;</span>Filter<span class="badge" style="background:#000; color:var(--accent)">3</span></span>
+      <span class="chip">Clock hidden<span class="x">&#xE8BB;</span></span>
+      <span class="chip">Active Sensing hidden<span class="x">&#xE8BB;</span></span>
+      <span class="chip">Channels 1 to 4<span class="x">&#xE8BB;</span></span>
+    </div>
+    <div class="msgs layer" data-rows="advanced" data-count="16" style="opacity:.55"></div>
+
+    <div class="flyout ff" style="left:178px; top:96px">
+      <div class="hstack"><h4>Show these messages</h4><span class="spacer"></span><span class="btn sm subtle">Show everything</span></div>
+      <div class="help">Hidden messages are still captured. Change a filter and they come back.</div>
+
+      <div class="sect" data-mark="1">
+        <div class="t">Message types</div>
+        <div class="grid2">
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Utility</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>System</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>MIDI 1.0 channel voice</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>MIDI 2.0 channel voice</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>SysEx 7</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>SysEx 8 and mixed data</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Flex data</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>UMP stream</div>
+        </div>
+      </div>
+
+      <div class="sect" data-mark="2">
+        <div class="t">Channels<span class="lnk">All</span></div>
+        <div class="chgrid"><div class="on">1</div><div class="on">2</div><div class="on">3</div><div class="on">4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div></div>
+      </div>
+
+      <div class="sect">
+        <div class="t">Channel voice messages</div>
+        <div class="grid3">
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Note on</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Note off</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Poly pressure</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Control change</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Program change</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Channel pressure</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Pitch bend</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Per-note (MIDI 2.0)</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>RPN and NRPN (MIDI 2.0)</div>
+        </div>
+      </div>
+
+      <div class="sect" data-mark="3">
+        <div class="t">System messages</div>
+        <div class="grid3">
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Time code</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Song position</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Song select</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Tune request</div>
+          <div class="check sm"><span class="cb">&#xE73E;</span>Clock</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Start, Continue, Stop</div>
+          <div class="check sm"><span class="cb">&#xE73E;</span>Active Sensing</div>
+          <div class="check sm on"><span class="cb">&#xE73E;</span>Reset</div>
+        </div>
+      </div>
+
+      <div class="sect" data-mark="4">
+        <div class="t">Notes</div>
+        <div class="range"><span class="check sm"><span class="cb">&#xE73E;</span>Only notes from</span><span class="combo">C-1 (0)<span class="chev">&#xE70D;</span></span>to<span class="combo">G9 (127)<span class="chev">&#xE70D;</span></span></div>
+      </div>
+
+      <div class="msep"></div>
+      <div class="hstack" data-mark="5"><span class="check sm"><span class="cb">&#xE73E;</span>Fold repeated messages into one row, with a count</span></div>
+    </div>
+  </div>
+
+  <p class="caption-above"><b>With "Fold repeated messages" on.</b> The Modulation wheel held still sent the same value 234 more times. Those messages don't get rows; the row they repeat counts them, and the count keeps going up while they arrive.</p>
+  <div class="window" style="width:1240px">
+    <div class="msgs layer" data-rows="advanced" data-count="4" data-only="a" data-names="off" data-repeat="1:234" data-mark="6" style="margin:12px"></div>
+    <div class="statusrow"><span>Total: 1,430</span><span>Hidden by filter: 3,410</span><span data-mark="7" style="margin-left:6px">Repeats folded: 234</span></div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Message types</b>, by UMP message type, the Patchbay's first filter row. SysEx 8 and mixed data share a type, so they share a box.</li>
+    <li><b>Channels</b> as 16 buttons, numbered from 1 like everywhere else on screen. "All" turns all 16 back on. In advanced mode this replaces the single Channel picker from simple mode, because a picker can only hold one.</li>
+    <li><b>System messages</b>, one box each. Clock and Active Sensing here are the same switches as the two buttons in the status bar, so turning one off in either place shows in both.</li>
+    <li><b>Note range</b>, the Patchbay's note filter, for note on, note off, poly pressure and the MIDI 2.0 per-note messages. Everything else ignores it.</li>
+    <li><b>A Monitor-only extra: fold repeats.</b> A message with exactly the same data as the one before it from the same source doesn't get a row of its own. It's counted on the row it repeats instead. Useful for controllers that send the same value over and over. Not a Patchbay filter, so it sits below a line. Saved with advanced mode, like the other filters.</li>
+    <li><b>The count is on the row</b>, so you can see where repeats were folded and how many. Each one still keeps its own time: Save to File and copy write every folded message out in full, with its own timestamp. Turning the option off brings them back as rows.</li>
+    <li><b>The status bar adds up the folded messages</b>, next to Hidden by filter, so the total always matches what was received.</li>
+  </ol>
+</div>
+</body>
+</html>

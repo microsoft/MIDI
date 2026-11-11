@@ -74,6 +74,11 @@ namespace midisequencer
             case ClipIcon::Infinity:
                 return { Ring(4.6f, 8.0f, 3.3f, 1.5f), Ring(11.4f, 8.0f, 3.3f, 1.5f) };
 
+            case ClipIcon::Strum:
+                // Four strings and a stroke across them.
+                return { Line(1.5f, 3.5f, 14.5f, 3.5f, 0.9f), Line(1.5f, 6.5f, 14.5f, 6.5f, 0.9f), Line(1.5f, 9.5f, 14.5f, 9.5f, 0.9f), Line(1.5f, 12.5f, 14.5f, 12.5f, 0.9f),
+                    Line(5.0f, 15.0f, 11.0f, 1.0f, 1.8f) };
+
             case ClipIcon::LSystem:
                 return { Line(8.0f, 15.0f, 8.0f, 3.0f, 1.3f), Line(8.0f, 11.5f, 3.5f, 7.5f, 1.3f), Line(8.0f, 8.5f, 12.5f, 5.0f, 1.3f),
                     Line(8.0f, 5.5f, 5.0f, 3.0f, 1.1f), Dot(3.5f, 7.5f, 1.5f), Dot(12.5f, 5.0f, 1.5f), Dot(5.0f, 3.0f, 1.3f), Dot(8.0f, 3.0f, 1.5f) };
@@ -203,6 +208,7 @@ namespace midisequencer
         case GeneratorType::Infinity: return ClipIcon::Infinity;
         case GeneratorType::LSystem: return ClipIcon::LSystem;
         case GeneratorType::ChangeRinging: return ClipIcon::ChangeRinging;
+        case GeneratorType::Strum: return ClipIcon::Strum;
 
         case GeneratorType::Euclidean:
         default:
@@ -257,6 +263,7 @@ namespace midisequencer
         case ClipIcon::Evolve:
         case ClipIcon::Infinity:
         case ClipIcon::LSystem:
+        case ClipIcon::Strum:
         {
             // Made once, and kept for the life of the app.
             static std::array<std::wstring, 16> const paths = []()

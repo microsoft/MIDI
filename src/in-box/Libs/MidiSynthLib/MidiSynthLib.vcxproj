@@ -50,11 +50,22 @@
   <PropertyGroup>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
 
-    <!-- libmidi2's M2Utils scaling is header only, so this is an include path and not a link
-         dependency. It is the same arithmetic the service uses, which is the point. The triplet is
-         x64 for every platform because nothing here is compiled, only included. -->
-    <SynthLibMidi2Include>$(MSBuildThisFileDirectory)..\..\Client\WinRT\core\vcpkg_installed\x64-windows\include</SynthLibMidi2Include>
+  <!-- libmidi2's M2Utils scaling is the same arithmetic the service uses, which is the point. This
+       project installs libmidi2 from its own manifest, like the transforms do, so it builds without
+       the SDK having been built first. -->
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Platform)'=='x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Platform)'=='ARM64'">
+    <VcpkgTriplet>arm64-windows</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Platform)'=='ARM64EC'">
+    <VcpkgTriplet>arm64ec-windows</VcpkgTriplet>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -65,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)Inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>

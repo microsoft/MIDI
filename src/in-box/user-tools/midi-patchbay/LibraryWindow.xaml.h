@@ -75,6 +75,14 @@ namespace winrt::midipatchbay::implementation
         winrt::fire_and_forget ConfirmExitAsync();
         void ExitApp() noexcept;
 
+        // Windows is signing out or shutting down, or an installer has asked the app to close
+        // so it can replace its files. There is no one to answer a question, so the app saves
+        // and closes without asking.
+        void OnSessionEnding() noexcept;
+
+        // Changes still waiting for the quiet moment, written now because it is not coming.
+        void SaveUnsavedPatches() noexcept;
+
         // ---- documents from Explorer ----
         // A patch double-clicked while the app is open arrives from the second copy as
         // WM_COPYDATA, which XAML does not pass on, so the window is subclassed to see it.

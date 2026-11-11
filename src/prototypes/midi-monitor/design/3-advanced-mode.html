@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1600,1180">
+<title>3. Advanced mode</title>
+<link rel="stylesheet" href="mon.css">
+<script src="mon.js"></script>
+<style>
+    .body { display: flex; flex: 1; min-height: 0; }
+    .main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .main .msgs { margin-left: 8px; }
+    .main .toolbar { margin-left: 8px; }
+    .main .statusrow { margin-left: 10px; }
+</style>
+</head>
+<body>
+<div class="page wide">
+  <p class="caption-above"><b>3. Advanced mode.</b> The device, group and channel pickers make way for a Sources list on the left: every endpoint, with its groups under it, and a check box on each. Check as many groups on as many endpoints as you like. Each source gets a color, and each row says which source it came from. Filters sit above the list.</p>
+
+  <div class="window" style="width:1540px; height:880px">
+    <div class="titlebar">
+      <img src="appicon.ico" alt="">
+      <div class="title">Windows MIDI Monitor</div>
+      <div class="preview">PREVIEW</div>
+      <div class="spacer"></div>
+      <div class="cap on">&#xE9E9;</div>
+      <div class="cap">&#xE713;</div>
+      <div class="cap">&#xE718;</div>
+      <div class="sys"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+
+    <div class="body">
+      <!-- ============================================================ sources -->
+      <div class="sources cardx" data-mark="1">
+        <div class="head"><span class="t">Sources</span><span class="spacer"></span><span class="btn sm subtle icon"><span class="gl">&#xE72C;</span></span><span class="btn sm subtle icon"><span class="gl">&#xE712;</span></span></div>
+        <div class="search"><div class="field" style="height:30px; font-size:13px">Find an endpoint or group<span class="gl">&#xE721;</span></div></div>
+        <div class="tree">
+          <div class="tn"><span class="exp">&#xE70D;</span><span class="check sm mixed"><span class="cb"></span></span><span class="img">&#xE765;</span><span class="nm">MiniLab 3</span><span class="end"><span class="led on"></span></span></div>
+          <div class="tn child"><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="nm">Group 1 <small>MIDI</small></span><span class="end"><span class="led on"></span><span class="sw" style="background:var(--src1)"></span></span></div>
+          <div class="tn child"><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="nm">Group 2 <small>DIN Thru</small></span><span class="end"><span class="led"></span><span class="sw" style="background:var(--src2)"></span></span></div>
+          <div class="tn child dim"><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="nm">Group 3 <small>MCU</small></span><span class="end"><span class="led"></span></span></div>
+
+          <div class="tn"><span class="exp">&#xE70D;</span><span class="check sm mixed"><span class="cb"></span></span><span class="img">&#xE839;</span><span class="nm">Studio Mac <small>Network</small></span><span class="end"><span class="led on"></span></span></div>
+          <div class="tn child"><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="nm">Group 1 <small>Logic Out</small></span><span class="end"><span class="led on"></span><span class="sw" style="background:var(--src3)"></span></span></div>
+          <div class="tn child dim"><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="nm">Group 2 <small>Click</small></span><span class="end"><span class="led"></span></span></div>
+
+          <div class="tn"><span class="exp">&#xE70D;</span><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="img">&#xE895;</span><span class="nm">DAW Loopback (A)</span><span class="end"><span class="led on"></span></span></div>
+          <div class="tn child"><span class="check sm on"><span class="cb">&#xE73E;</span></span><span class="nm">Group 1</span><span class="end"><span class="led on"></span><span class="sw" style="background:var(--src4)"></span></span></div>
+
+          <div class="tn hover"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE8D6;</span><span class="nm">Bass Station II</span><span class="end"><span class="led"></span></span></div>
+          <div class="tn"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE8D6;</span><span class="nm">Roland TR-8S</span><span class="end"><span class="led on"></span></span></div>
+          <div class="tn"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE8D6;</span><span class="nm">General MIDI Synth</span><span class="end"><span class="led"></span></span></div>
+          <div class="tn"><span class="exp">&#xE76C;</span><span class="check sm"><span class="cb">&#xE73E;</span></span><span class="img">&#xE895;</span><span class="nm">DAW Loopback (B)</span><span class="end"><span class="led"></span></span></div>
+        </div>
+        <div class="foot">
+          <div class="hstack" data-mark="2"><span class="toggle"></span>Only show endpoints that are sending</div>
+          <div>4 groups on 3 endpoints</div>
+        </div>
+      </div>
+
+      <!-- ============================================================ main -->
+      <div class="main">
+        <div class="toolbar cardx">
+          <span class="btn accent" style="min-width:150px"><span class="gl">&#xE71A;</span>Stop listening</span>
+          <span class="sep"></span>
+          <span class="btn" data-mark="3"><span class="gl">&#xE71C;</span>Filter<span class="badge">3</span></span>
+          <span class="chip">Clock hidden<span class="x">&#xE8BB;</span></span>
+          <span class="chip">Active Sensing hidden<span class="x">&#xE8BB;</span></span>
+          <span class="chip">Channels 1 to 4<span class="x">&#xE8BB;</span></span>
+          <span class="spacer"></span>
+          <span class="btn sm subtle" data-mark="4"><span class="gl">&#xE8CB;</span>Order by: time received<span class="gl" style="font-size:10px">&#xE70D;</span></span>
+        </div>
+
+        <div class="msgs layer" data-rows="advanced" data-count="16" data-sel="6" data-mark="5"></div>
+
+        <div class="statusrow">
+          <span>Total: 1,196</span><span>Hidden by filter: 3,410</span>
+          <span class="div"></span>
+          <span class="btn sm icon"><span class="gl">&#xE823;</span></span>
+          <span class="btn sm icon"><span class="gl">&#xEA8F;</span></span>
+          <span class="center">
+            <span class="btn sm"><span class="gl">&#xEDE1;</span>Save to File</span>
+            <span class="btn sm"><span class="gl">&#xE74D;</span>Clear</span>
+          </span>
+          <span class="spacer"></span>
+          <span class="zoom"><span class="btn sm" style="min-width:78px">100%<span class="gl" style="font-size:10px">&#xE70D;</span></span><span class="gl" style="font-size:12px">&#xE71F;</span><span class="slider"></span><span class="gl" style="font-size:12px">&#xE8A3;</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Sources: a list, not a dialog.</b> This is my answer to "how does someone pick several groups on several endpoints". A pop-up dialog hides the choice once it's made, and you can't see what's sending while you pick. A list beside the messages is always visible, you change it with one click while listening, and the endpoint check box picks or clears all of its groups at once. Groups use the names from the device's function blocks or group terminal blocks, the same names simple mode's Group picker shows. Endpoint pictures come from MIDI Settings, as they do today. The pane can be resized and hidden (the button at the top), and below about 900 pixels wide it folds into the bar on page 5.</li>
+    <li><b>Activity lights.</b> A green dot on every endpoint and group that has sent anything in the last second or so, checked or not. That's how you find which of 40 endpoints your keyboard is really on, without guessing and checking. The switch at the bottom hides everything that isn't sending, so the list shrinks to what matters. Watching the dots means listening to every endpoint, so the Monitor opens each endpoint once whether it's checked or not, and simply doesn't keep unchecked messages. Opening many endpoints is slow on a PC with a lot of devices, so this is a setting: on by default, and off in Settings (page 2). When it's off, only checked endpoints are opened, the dots and the switch go away, and the list shows every endpoint.</li>
+    <li><b>Filter</b> opens the panel on page 4, with the same choices as a MIDI Patchbay filter step. Each active rule shows as a chip, and the x on a chip removes that one rule. The badge counts the rules. Filters hide rows; they don't stop the capture, so loosening a filter brings back what it hid (status bar: "Hidden by filter"). The Clock and Active Sensing buttons in the status bar stay, and are the same switches as those two rules.</li>
+    <li><b>Order.</b> Rows go in the order the Monitor received them, as today. The other choice is message timestamp, which matters when several sources are involved: a network endpoint can deliver a message a few milliseconds after a USB message that played later. Each row keeps its own timestamp either way.</li>
+    <li><b>New From column.</b> A color bar, the endpoint's name and the group, so a row can be read without looking back at the sources. The Group column from simple mode is gone, because From has it. From can be moved or hidden in Edit columns like any other column, and Save to File and copy include it. Simple mode doesn't change: same columns, same pickers, same window.</li>
+  </ol>
+</div>
+</body>
+</html>

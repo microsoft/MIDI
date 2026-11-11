@@ -94,6 +94,26 @@ namespace midipatchbay
                 }
             }
 
+            void LinkCarried(
+                _In_ uint32_t cell,
+                _In_reads_(wordCount) uint32_t const* words,
+                _In_ uint8_t wordCount) noexcept override
+            {
+                try
+                {
+                    TraceCarried carried{};
+                    carried.LinkId = ElementOf(cell);
+                    carried.Message.WordCount = static_cast<uint8_t>((std::min)(static_cast<size_t>(wordCount), carried.Message.Words.size()));
+
+                    std::copy_n(words, carried.Message.WordCount, carried.Message.Words.begin());
+
+                    m_step.Carried.push_back(std::move(carried));
+                }
+                catch (...)
+                {
+                }
+            }
+
             void CountBlock(_In_ uint32_t cell, _In_ bool passed) noexcept override
             {
                 try

@@ -216,6 +216,22 @@ namespace midipatchbay
     // Whether a link from this block leaves by a way it has.
     bool IsWayOf(_In_ PatchBlock const& block, _In_ int32_t way) noexcept;
 
+    // Where a patch uses one tag or memory name: the steps that set it and the steps that read
+    // it, by block id, in the order the patch keeps them.
+    struct LogicNameUse
+    {
+        std::wstring Name{};
+        bool IsMemory{ false };
+        std::vector<std::wstring> SetBy{};
+        std::vector<std::wstring> ReadBy{};
+    };
+
+    // Every tag and memory name the patch's steps use, memories first, each kind in name order
+    // with capital letters ignored. A name spelled two ways is one name, under the first spelling.
+    // A value only a step's settings keep, such as the source of a Set memory that toggles, is
+    // not a use, because the step never reads it.
+    std::vector<LogicNameUse> FindLogicNameUses(_In_ std::vector<PatchBlock> const& blocks);
+
     // What the routing engine calls an OSC connection in place of an endpoint device id. Made from
     // the patch's key and the node's id, so each running copy of a patch has its own.
     constexpr std::wstring_view OscDeviceIdPrefix{ L"osc:" };

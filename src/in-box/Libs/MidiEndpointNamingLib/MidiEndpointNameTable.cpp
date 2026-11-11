@@ -361,25 +361,26 @@ std::wstring GenerateLegacyMidi1PortName(
 
             return WindowsMidiServicesInternal::TrimmedWStringCopy(formatted);
         }
-
-        // switching back and forth between wstring and string here is probably not a great idea, but the original
-        // values from USB should all be narrow standard strings anyway.
-        if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
-        {
-            auto formatted = std::format("MIDIIN{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
-            return WindowsMidiServicesInternal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
-        }
-        else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
-        {
-            auto formatted = std::format("MIDIOUT{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
-            return WindowsMidiServicesInternal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
-        }
         else
         {
-            // unexpected
-            return generatedName;
+            // switching back and forth between wstring and string here is probably not a great idea, but the original
+            // values from USB should all be narrow standard strings anyway.
+            if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
+            {
+                auto formatted = std::format("MIDIIN{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
+                return WindowsMidiServicesInternal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
+            }
+            else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
+            {
+                auto formatted = std::format("MIDIOUT{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
+                return WindowsMidiServicesInternal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
+            }
+            else
+            {
+                // unexpected
+                return generatedName;
+            }
         }
-
     }
     else
     {
@@ -1389,8 +1390,6 @@ std::vector<Midi1PortNameEntry> MidiEndpointNameTable::GetAllDestinationEntries(
 // ========================================================================================================
 // New-style name construction.
 //
-// These are net-new alongside the Generate* functions above, which are left exactly as they shipped
-// so that turning Feature_Servicing_MIDI2PortNamingRework off restores the original behavior.
 // ========================================================================================================
 
 namespace
@@ -2493,7 +2492,10 @@ MidiEndpointNameTable::WriteGroupTerminalBlockProperties(
     winrt::hstring const& endpointDeviceId,
     std::vector<DEVPROPERTY>& destination) noexcept
 {
-    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
+    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        return S_OK;
+    }
 
     try
     {

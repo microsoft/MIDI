@@ -235,6 +235,7 @@ namespace winrt::midisequencer::implementation
             auto const visible = [](bool show) { return show ? xaml::Visibility::Visible : xaml::Visibility::Collapsed; };
 
             NotesTools().Visibility(visible(!pattern && !generator));
+            NoteToolbar().Visibility(visible(!pattern && !generator));
             PatternTools().Visibility(visible(pattern));
             GeneratorTools().Visibility(visible(generator));
             PatternActions().Visibility(visible(pattern || generator));
@@ -250,8 +251,9 @@ namespace winrt::midisequencer::implementation
             // A pattern's length comes from its steps, so only a notes clip's opens to change.
             EditorLengthButton().IsEnabled(!pattern);
 
-            // An arpeggiator's rate sits with its octaves and note length instead (comp 4).
-            auto const arpeggiator = generator && clip->Generator->Type == seq::GeneratorType::Arpeggiator;
+            // An arpeggiator's rate sits with its octaves and note length instead (comp 4), and a
+            // Strum's with its pattern.
+            auto const arpeggiator = generator && (clip->Generator->Type == seq::GeneratorType::Arpeggiator || clip->Generator->Type == seq::GeneratorType::Strum);
             GeneratorStepSizeText().Visibility(visible(!arpeggiator));
             GeneratorStepSizeCombo().Visibility(visible(!arpeggiator));
 
@@ -306,6 +308,7 @@ namespace winrt::midisequencer::implementation
             EditorUsesText().Text(res::FormatString(L"ClipUsesFormat", uses));
 
             EditorDrawToggle().IsChecked(m_roll.Tool() == seq::RollTool::Draw);
+            NoteStrumToggle().IsChecked(m_roll.Tool() == seq::RollTool::Strum);
 
             auto const grid = SnapGrid();
             EditorQuantizeButton().Content(winrt::box_value(grid > 0 ? res::GetString(L"EditorQuantizeToGrid") : res::GetString(L"EditorQuantizeSixteenths")));
@@ -322,6 +325,9 @@ namespace winrt::midisequencer::implementation
     {
         try
         {
+            // The toolbar above the roll says how many notes its tools will change.
+            UpdateNoteToolbar();
+
             auto const body = NoteInspectorBody();
             body.Children().Clear();
 
@@ -572,6 +578,32 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            // A right click on empty space or on a selected note opens the note tools. On a note
+            // that isn't selected it still deletes that note, as it always has.
+            if (right && m_roll.IsInNotesArea(position))
+            {
+                auto const note = m_roll.NoteAt(position);
+
+                if (!note.has_value() || m_roll.IsNoteSelected(*note))
+                {
+                    args.Handled(true);
+                    ShowNoteToolsContextMenu(position);
+                    return;
+                }
+            }
+
+            // The Strum tool: a drag on a chord strums it.
+            if (!right && m_roll.Tool() == seq::RollTool::Strum && m_roll.IsInNotesArea(position))
+            {
+                if (StrumDragPressed(position))
+                {
+                    m_editorCanvas.CapturePointer(args.Pointer());
+                }
+
+                args.Handled(true);
+                return;
+            }
+
             // Alt turns Scale snap off for this note.
             m_roll.SetScaleSnapBypass((args.KeyModifiers() & winrt::Windows::System::VirtualKeyModifiers::Menu) == winrt::Windows::System::VirtualKeyModifiers::Menu);
 
@@ -604,6 +636,12 @@ namespace winrt::midisequencer::implementation
             if (OnClipLanesMoved(position))
             {
                 ShowEditorSizing(false);
+                return;
+            }
+
+            if (m_strumDrag.Active)
+            {
+                StrumDragMoved(position);
                 return;
             }
 
@@ -680,6 +718,14 @@ namespace winrt::midisequencer::implementation
 
             if (OnClipLanesReleased(args.GetCurrentPoint(m_editorCanvas).Position()))
             {
+                return;
+            }
+
+            if (m_strumDrag.Active)
+            {
+                StrumDragMoved(args.GetCurrentPoint(m_editorCanvas).Position());
+                m_editorCanvas.ReleasePointerCaptures();
+                StrumDragReleased();
                 return;
             }
 
@@ -841,8 +887,7 @@ namespace winrt::midisequencer::implementation
                 break;
 
             case VirtualKey::B:
-                m_roll.SetTool(m_roll.Tool() == seq::RollTool::Draw ? seq::RollTool::Select : seq::RollTool::Draw);
-                EditorDrawToggle().IsChecked(m_roll.Tool() == seq::RollTool::Draw);
+                UseRollTool(m_roll.Tool() == seq::RollTool::Draw ? seq::RollTool::Select : seq::RollTool::Draw);
                 break;
 
             default:
@@ -865,7 +910,7 @@ namespace winrt::midisequencer::implementation
     _Use_decl_annotations_
     void MainWindow::OnEditorDrawClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
-        m_roll.SetTool(EditorDrawToggle().IsChecked().GetBoolean() ? seq::RollTool::Draw : seq::RollTool::Select);
+        UseRollTool(EditorDrawToggle().IsChecked().GetBoolean() ? seq::RollTool::Draw : seq::RollTool::Select);
     }
 
     _Use_decl_annotations_
@@ -881,30 +926,6 @@ namespace winrt::midisequencer::implementation
             ApplyRollEdit(m_roll.QuantizeSelection(SnapGrid() > 0 ? SnapGrid() : 240));
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to quantize.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnTransposeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
-    {
-        try
-        {
-            auto const item = sender.try_as<controls::MenuFlyoutItem>();
-
-            if (item == nullptr)
-            {
-                return;
-            }
-
-            auto const semitones = std::stoi(std::wstring{ winrt::unbox_value_or<winrt::hstring>(item.Tag(), L"0") });
-
-            if (m_roll.Selection().empty())
-            {
-                m_roll.SelectAll();
-            }
-
-            ApplyRollEdit(m_roll.TransposeSelection(semitones));
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to transpose.")
     }
 
     _Use_decl_annotations_

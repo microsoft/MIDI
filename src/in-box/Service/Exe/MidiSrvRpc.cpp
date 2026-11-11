@@ -104,8 +104,7 @@ MidiSrvVerifyConnectivity(
     return sessionTracker->VerifyConnectivity();
 }
 
-// Net-new for Feature_Servicing_MIDI2LoopbackAndClientOpenHardening. MidiSrvCreateClient is extern "C", and
-// with /EHsc the compiler assumes such a function never throws, so it has no cleanup for an
+// MidiSrvCreateClient is extern "C", and with /EHsc the compiler assumes such a function never throws, so it has no cleanup for an
 // exception passing through it. An exception from CreateMidiClient left the failure callback that
 // MidiSrvCreateClient registers on this thread linked in after its frame was gone, and the next
 // failure reported on that thread crashed the service. Caught here instead, as an HRESULT.
@@ -276,7 +275,7 @@ HRESULT MidiSrvDestroyClient(
 }
 
 
-// Net-new. The original below has several calls which throw on hostile input, and it is an RPC
+// The original below has several calls which throw on hostile input, and it is an RPC
 // entry point with no exception containment, so a malformed configuration payload took the
 // whole service down with a fail-fast. Everything here is contained, and every JSON node is
 // type-checked before it is read.
@@ -365,7 +364,6 @@ MidiSrvUpdateConfiguration(
             wcsnlen_s(configurationJson, (MAXIMUM_JSON_SIZE / sizeof(wchar_t)) + 1) >
                 (MAXIMUM_JSON_SIZE / sizeof(wchar_t)));
     }
-    //RETURN_HR_IF_NULL(E_INVALIDARG, responseJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -381,56 +379,58 @@ MidiSrvUpdateConfiguration(
     {
         return MidiSrvUpdateConfigurationHardened(configurationJson, responseJson);
     }
-
-    // Send it to the configuration manager and get it broken apart
-
-    std::shared_ptr<CMidiConfigurationManager> configurationManager;
-    std::shared_ptr<CMidiDeviceManager> deviceManager;
-
-    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
-
-    RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
-    RETURN_IF_FAILED(g_MidiService->GetDeviceManager(deviceManager));
-
-    auto configEntries = configurationManager->GetTransportSettingsFromJsonString(configurationJson);
-
-    if (configEntries.size() != 1)
+    else
     {
+        // Send it to the configuration manager and get it broken apart
+
+        std::shared_ptr<CMidiConfigurationManager> configurationManager;
+        std::shared_ptr<CMidiDeviceManager> deviceManager;
+
+        auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+        RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
+        RETURN_IF_FAILED(g_MidiService->GetDeviceManager(deviceManager));
+
+        auto configEntries = configurationManager->GetTransportSettingsFromJsonString(configurationJson);
+
+        if (configEntries.size() != 1)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(nullptr, "this"),
+                TraceLoggingWideString(L"Only one config entry allowed per call", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return E_FAIL;
+        }
+
+        LPWSTR response;
+
+        RETURN_IF_FAILED(deviceManager->UpdateTransportConfiguration(
+            configEntries.begin()->first,
+            configEntries.begin()->second.c_str(),
+            &response));
+
+        // TODO: Should use tryparse here instead
+        auto responseObject = json::JsonObject::Parse(response);
+
+
+        LOG_IF_FAILED(StringifyJsonToOutputParameter(responseObject, responseJson));
+
+        // TODO: Now check to see if it has settings for anything else, and send those along to be processed
+
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
+            MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(nullptr, "this"),
-            TraceLoggingWideString(L"Only one config entry allowed per call", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
-
-        return E_FAIL;
     }
-
-    LPWSTR response;
-
-    RETURN_IF_FAILED(deviceManager->UpdateTransportConfiguration(
-        configEntries.begin()->first,
-        configEntries.begin()->second.c_str(),
-        &response));
-
-    // TODO: Should use tryparse here instead
-    auto responseObject = json::JsonObject::Parse(response);
-
-
-    LOG_IF_FAILED(StringifyJsonToOutputParameter(responseObject, responseJson));
-
-    // TODO: Now check to see if it has settings for anything else, and send those along to be processed
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
-        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
 
     return S_OK;
 }

@@ -12,6 +12,7 @@
 #include "SequenceArpeggiator.h"
 #include "GeneratorListen.h"
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "SequencePattern.h"
 
 #include <algorithm>
@@ -286,6 +287,22 @@ namespace midisequencer
                         messages[i].Arpeggiated = true;
                     }
                 }, options.SongTick);
+            }
+            else if (generated && clip.Generator->Type == GeneratorType::Strum)
+            {
+                // Played from keys held, it's recorded as it plays, as an arpeggiator's notes are.
+                auto const fromKeys = PlaysHeldKeys(clip);
+
+                ForEachStrumNote(sequence, clip, passStart, passEnd, pass, windowStart, windowEnd, [&](Note const& note)
+                {
+                    auto const first = messages.size();
+                    addNote(note);
+
+                    for (auto i = first; fromKeys && i < messages.size(); ++i)
+                    {
+                        messages[i].Arpeggiated = true;
+                    }
+                }, options.SongTick, options.Arpeggiator);
             }
             else if (generated)
             {

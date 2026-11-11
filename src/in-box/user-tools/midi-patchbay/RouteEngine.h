@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "MessageWatch.h"
 #include "PatchModel.h"
 #include "RouteGraph.h"
 #include "SendQueue.h"
@@ -84,6 +85,10 @@ namespace midipatchbay
         // routing has used it since the app started.
         std::optional<LogicValue> MemoryValue(_In_ std::wstring const& patchKey, _In_ std::wstring const& name) const noexcept;
 
+        // Empties a patch's memory now, as if the app had just started. Routing goes on, and the
+        // next message that reads it finds it empty.
+        void ResetMemory(_In_ std::wstring const& patchKey, _In_ std::wstring const& name) noexcept;
+
         // What a Branch or a Switch tested last, by its "patch key|block id". Nothing when it
         // isn't routing.
         std::optional<LogicValue> LastTestedValue(_In_ std::wstring const& cell) const noexcept;
@@ -95,6 +100,18 @@ namespace midipatchbay
             _In_ std::wstring const& endpointDeviceId,
             _In_ int32_t groupIndex,
             _In_ uint8_t noteIndex) noexcept;
+
+        // Starts copying what goes along links into a buffer for a connection monitor window.
+        // Each cell is "patch key|link id", and what goes along cells[i] is marked as link i. A
+        // cell that isn't routing now is watched from when it is. Routing never waits for the
+        // window. Any thread; never waits for a graph being applied.
+        WatchLease StartWatching(_In_ std::vector<std::wstring> const& cells) noexcept;
+
+        // The same window, watching other links. The marks stay with the place in the list.
+        void ChangeWatching(_In_ uint32_t id, _In_ std::vector<std::wstring> const& cells) noexcept;
+
+        // The buffer goes back for the next window. The window has stopped taking from it.
+        void StopWatching(_In_ uint32_t id) noexcept;
 
     private:
         RouteEngine() noexcept = default;
@@ -124,6 +141,26 @@ namespace midipatchbay
         void SetLastError(_In_ winrt::hstring const& message) noexcept;
 
         void CloseConnection(_Inout_ Connection& connection) noexcept;
+
+        // One connection monitor window, and the links it watches.
+        struct Watch
+        {
+            uint32_t Id{ 0 };
+            WatchBuffer* Buffer{ nullptr };
+            uint32_t Lease{ 0 };
+            std::vector<std::wstring> Cells{};
+        };
+
+        // Points each of the graph's watched links at the windows watching it. Under m_publishLock.
+        void InstallWatchesLocked(_Inout_ Runtime& runtime) noexcept;
+
+        // Guarded by m_publishLock. A buffer is never freed while the app runs, because a routing
+        // thread can still hold one for a moment after its window has gone. One that is let go
+        // waits here for the next window.
+        std::vector<std::unique_ptr<WatchBuffer>> m_watchBuffers{};
+        std::vector<WatchBuffer*> m_freeWatchBuffers{};
+        std::vector<Watch> m_watches{};
+        uint32_t m_nextWatchId{ 1 };
 
         // Held for the whole of Apply and Shutdown, and while a test note finds its connection.
         std::mutex m_lock{};

@@ -9,6 +9,7 @@
 #include "GeneratorKinds.h"
 #include "SequenceArpeggiator.h"
 #include "SequenceGenerator.h"
+#include "SequenceStrum.h"
 #include "SequencePattern.h"
 
 #include <algorithm>
@@ -839,7 +840,8 @@ namespace midisequencer
         clip.Origin = ClipOrigin::Generated;
         clip.Generator = IsSectionTwentyEightGenerator(type) ? MakeSectionTwentyEightGenerator(type) :
             type == GeneratorType::ChanceMelody ? MakeChanceMelodyGenerator() :
-            type == GeneratorType::Arpeggiator ? MakeArpeggiatorGenerator() : MakeEuclideanGenerator();
+            type == GeneratorType::Arpeggiator ? MakeArpeggiatorGenerator() :
+            type == GeneratorType::Strum ? MakeStrumGenerator() : MakeEuclideanGenerator();
         clip.Generator->Type = type;
         RefreshGeneratorPreview(clip);
         return clip;
@@ -1196,5 +1198,47 @@ namespace midisequencer
         meter.resize(index);
         PlaceAtBars(meter, later);
         return true;
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeClipEventsChange(std::wstring clipId, std::vector<ClipEvent> before, std::vector<ClipEvent> after)
+    {
+        auto const cost = sizeof(SequenceChange) + (before.size() + after.size()) * sizeof(ClipEvent);
+
+        return std::make_unique<SnapshotChange<std::vector<ClipEvent>>>(
+            [clipId](Sequence& sequence) -> std::vector<ClipEvent>*
+            {
+                auto const clip = FindClip(sequence, clipId);
+                return clip != nullptr ? &clip->Events : nullptr;
+            },
+            std::move(before), std::move(after), cost);
+    }
+
+    _Use_decl_annotations_
+    bool MoveMeterChange(std::vector<MeterChange>& meter, size_t index, int64_t toBar)
+    {
+        if (index == 0 || index >= meter.size() || toBar < 2)
+        {
+            return false;
+        }
+
+        auto const moved = meter[index];
+
+        if (BarPositionAtTick(meter, moved.Tick).Bar == toBar)
+        {
+            return false;
+        }
+
+        RemoveMeterChange(meter, index);
+        SetMeterAt(meter, toBar, moved.Numerator, moved.Denominator);
+        return true;
+    }
+
+    _Use_decl_annotations_
+    std::unique_ptr<SequenceChange> MakeMeterRowChange(bool before, bool after)
+    {
+        return std::make_unique<SnapshotChange<bool>>(
+            [](Sequence& sequence) -> bool* { return &sequence.ShowMeterRow; },
+            before, after, sizeof(SequenceChange) + 16);
     }
 }

@@ -222,7 +222,7 @@ namespace winrt::midisequencer::implementation
                 m_editorPlates.Add(separator, L"transport.separator");
             }
 
-            for (auto const& button : { EditorQuantizeButton(), EditorTransposeButton(), EditorKeyboardButton(), EditorAutomationButton(),
+            for (auto const& button : { EditorKeyboardButton(), EditorAutomationButton(),
                 PatternTemplatesButton(), PatternVaryButton(), PatternMakeNotesButton(), EditorCloseButton() })
             {
                 m_editorPlates.Add(button, L"button.subtle", OnStates());
@@ -234,6 +234,19 @@ namespace winrt::midisequencer::implementation
             }
 
             m_editorPlates.Add(ValuesAsCombo(), L"field");
+
+            // The note tools' toolbar above the roll (MainWindowNoteTools.cpp).
+            m_noteToolPlates.Attach(NoteToolbar(), 0);
+            SpanAll(m_noteToolPlates.Surface(), 2, xaml::Thickness{ -12, 0, -12, 0 });
+            m_noteToolPlates.Add(NoteToolsSeparator(), L"transport.separator");
+
+            for (auto const& button : { EditorQuantizeButton(), NoteSelectButton(), NoteTimingButton(), NoteLengthButton(), NotePitchButton(),
+                NoteVelocityButton(), NoteCleanUpButton(), NoteOverlapButton() })
+            {
+                m_noteToolPlates.Add(button, L"button.subtle", OnStates());
+            }
+
+            m_noteToolPlates.Add(NoteStrumToggle(), L"button.subtle", OnStates());
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to set up the style's plates.")
     }
@@ -252,6 +265,7 @@ namespace winrt::midisequencer::implementation
             auto changed = m_transportPlates.Theme(strip);
             changed = m_toolbarPlates.Theme(style) || changed;
             changed = m_editorPlates.Theme(style) || changed;
+            m_noteToolPlates.Theme(style);
 
             // The rows and scenes are built again for a new look, which adds their plates.
             m_headerPlates.Theme(style);
@@ -282,6 +296,7 @@ namespace winrt::midisequencer::implementation
         m_transportPlates.Refresh();
         m_toolbarPlates.Refresh();
         m_editorPlates.Refresh();
+        m_noteToolPlates.Refresh();
         m_headerPlates.Refresh();
     }
 

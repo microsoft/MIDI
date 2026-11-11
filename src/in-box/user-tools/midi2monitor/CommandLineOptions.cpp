@@ -146,6 +146,12 @@ namespace midi2monitor
                     continue;
                 }
 
+                if (name == L"simple" || name == L"advanced")
+                {
+                    options.AdvancedMode = (name == L"advanced");
+                    continue;
+                }
+
                 return MakeError(L"CommandLineErrorUnknownOption", argument);
             }
 

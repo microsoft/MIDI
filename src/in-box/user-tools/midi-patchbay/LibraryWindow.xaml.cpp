@@ -94,6 +94,17 @@ namespace winrt::midipatchbay::implementation
             return TRUE;
         }
 
+        // Restart Manager, which installers use to close running apps, sends this and then
+        // WM_CLOSE. Asking whether to stop routing there leaves the app running behind a
+        // question no one sees, and the installer then needs a restart to finish.
+        if (message == WM_ENDSESSION && wParam != FALSE)
+        {
+            if (auto strong = s_instance.get())
+            {
+                strong->OnSessionEnding();
+            }
+        }
+
         if (message == WM_NCDESTROY)
         {
             ::RemoveWindowSubclass(window, &LibraryWindow::HandoffSubclassProcedure, subclassId);
@@ -330,15 +341,7 @@ namespace winrt::midipatchbay::implementation
                     closingLibrary.Unsubscribe(strong->m_libraryToken);
                     strong->m_libraryToken = 0;
 
-                    // Changes still waiting for the quiet moment are written now, because that
-                    // moment is not coming.
-                    for (auto const* patch : closingLibrary.Patches())
-                    {
-                        if (!patch->FilePath.empty() && closingLibrary.IsUnsaved(patch->SessionKey))
-                        {
-                            closingLibrary.Save(patch->SessionKey);
-                        }
-                    }
+                    strong->SaveUnsavedPatches();
 
                     patchbay::EndpointCatalog::Current().SetChangedHandler(nullptr);
                     patchbay::EndpointCatalog::Current().Stop();
@@ -838,9 +841,62 @@ namespace winrt::midipatchbay::implementation
 
             App::CloseAllEditors();
 
-            Close();
+            // Already on its way out when Windows closed it after the session ended.
+            if (!m_closing)
+            {
+                Close();
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the app.")
+    }
+
+    void LibraryWindow::OnSessionEnding() noexcept
+    {
+        try
+        {
+            // Set first, so the WM_CLOSE that follows neither asks nor hides to the
+            // notification area.
+            m_exiting = true;
+
+            // A sign-out can end the process as soon as this message is answered, so nothing
+            // is left for later.
+            SaveUnsavedPatches();
+
+            // A question already on screen from an earlier close would otherwise stay open.
+            ConfirmExitDialog().Hide();
+
+            // Closing a window from inside a message sent by another process is not safe, and
+            // the editors have to close as well or the app keeps running.
+            auto weak = get_weak();
+
+            DispatcherQueue().TryEnqueue(
+                winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::High,
+                [weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ExitApp();
+                    }
+                });
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to close the app for Windows.")
+    }
+
+    void LibraryWindow::SaveUnsavedPatches() noexcept
+    {
+        try
+        {
+            auto& library = patchbay::PatchLibrary::Current();
+
+            for (auto const* patch : library.Patches())
+            {
+                if (!patch->FilePath.empty() && library.IsUnsaved(patch->SessionKey))
+                {
+                    library.Save(patch->SessionKey);
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to save changed patches.")
     }
 
     // ---------------------------------------------------------------- importing

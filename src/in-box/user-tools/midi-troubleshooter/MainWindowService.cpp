@@ -196,6 +196,127 @@ namespace winrt::miditroubleshooter::implementation
             return res::FormatString(L"TransportDisableWarningOtherFormat", name);
         }
 
+        // What kind of transport an endpoint belongs to, read from its device id, with an icon
+        // for it. Only for display: an id the list doesn't know is just a "MIDI port".
+        struct ConnectionKind
+        {
+            wchar_t const* LabelKey;
+            wchar_t const* Glyph;
+        };
+
+        ConnectionKind ConnectionKindFromId(_In_ winrt::hstring const& deviceId) noexcept
+        {
+            struct Match
+            {
+                wchar_t const* Fragment;
+                ConnectionKind Kind;
+            };
+
+            static constexpr Match Matches[]
+            {
+                { L"midiu_ksa_",     { L"SessionKindUsbMidi1", L"\uE88E" } },
+                { L"midiu_ks_",      { L"SessionKindUsb", L"\uE88E" } },
+                { L"midiu_net2udp",  { L"SessionKindNetwork", L"\uE839" } },
+                { L"midiu_rtp",      { L"SessionKindRtpMidi", L"\uE839" } },
+                { L"midiu_ble",      { L"SessionKindBluetooth", L"\uE702" } },
+                { L"midiu_gmsynth",  { L"SessionKindSynth", L"\uE8D6" } },
+                { L"midiu_bloop",    { L"SessionKindLoopback", L"\uE8AB" } },
+                { L"midiu_loop",     { L"SessionKindLoopback", L"\uE8AB" } },
+                { L"midiu_app",      { L"SessionKindVirtual", L"\uE7F4" } },
+                { L"midiu_diag",     { L"SessionKindDiagnostics", L"\uE9D9" } },
+            };
+
+            try
+            {
+                std::wstring lowered{ deviceId };
+
+                std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                    [](wchar_t c) { return static_cast<wchar_t>(::towlower(c)); });
+
+                for (auto const& match : Matches)
+                {
+                    if (lowered.find(match.Fragment) != std::wstring::npos)
+                    {
+                        return match.Kind;
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return { L"SessionKindOther", L"\uE8D6" };
+        }
+
+        // The service registers WinMM and Windows.Devices.Midi apps under a fixed session name,
+        // so for those the app's own name says more.
+        bool IsGenericSessionName(_In_ winrt::hstring const& name) noexcept
+        {
+            return name.empty() ||
+                _wcsicmp(name.c_str(), L"WinMM client") == 0 ||
+                _wcsicmp(name.c_str(), L"Windows.Devices.Midi client session") == 0;
+        }
+
+        winrt::hstring ProcessDisplayName(_In_ winrt::hstring const& processName) noexcept
+        {
+            try
+            {
+                std::wstring name{ processName };
+
+                if (name.size() > 4 && _wcsicmp(name.c_str() + name.size() - 4, L".exe") == 0)
+                {
+                    name.resize(name.size() - 4);
+                }
+
+                return winrt::hstring{ name };
+            }
+            catch (...)
+            {
+                return processName;
+            }
+        }
+
+        wchar_t const* TransportGlyph(_In_ winrt::hstring const& code, _In_ winrt::hstring const& transportId) noexcept
+        {
+            if (_wcsicmp(transportId.c_str(), L"{2ba15e4e-5417-4a66-85b8-2b2260efbc84}") == 0) return L"\uF156";
+
+            if (code == L"KS" || code == L"KSA")                    return L"\uE88E";
+            if (code == L"NET2UDP" || code == L"RTPMIDI")           return L"\uE839";
+            if (code == L"BLEMIDI")                                 return L"\uE702";
+            if (code == L"LOOP" || code == L"BLOOP")                return L"\uE8AB";
+            if (code == L"APP")                                     return L"\uE7F4";
+            if (code == L"GMSYNTH")                                 return L"\uE8D6";
+            if (code == L"DIAG")                                    return L"\uE9D9";
+
+            return L"\uE968";
+        }
+
+        void FillTransportList(
+            _In_ collections::IObservableVector<miditroubleshooter::TransportItem> const& list,
+            _In_ std::vector<TransportItem::Values> const& rows) noexcept
+        {
+            try
+            {
+                // Rows are addressed by index rather than matched, because the composition
+                // already produces a stable order and the list is short.
+                while (list.Size() > rows.size())
+                {
+                    list.RemoveAtEnd();
+                }
+
+                while (list.Size() < rows.size())
+                {
+                    list.Append(winrt::make<TransportItem>());
+                }
+
+                for (uint32_t i = 0; i < rows.size(); i++)
+                {
+                    winrt::get_self<TransportItem>(list.GetAt(i))->Update(rows[i]);
+                }
+            }
+            MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to fill a transport list.")
+        }
+
         // The data context of a control inside a DataTemplate is the row it was realized for.
         miditroubleshooter::TransportItem TransportItemFromSender(_In_ foundation::IInspectable const& sender) noexcept
         {
@@ -293,6 +414,57 @@ namespace winrt::miditroubleshooter::implementation
         ApplyServiceStatus(snapshot);
         ApplySessions(snapshot);
         ApplyTransports(snapshot);
+
+        SummarizeServiceForOverview(snapshot);
+        UpdateOverview();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::SummarizeServiceForOverview(ServiceSnapshot const& snapshot) noexcept
+    {
+        try
+        {
+            auto const& service = snapshot.Service;
+            auto& summary = m_overview.MidiService;
+
+            summary.Known = true;
+            summary.Installed = service.Installed && service.State != native::ServiceState::NotInstalled;
+            summary.Running = service.State == native::ServiceState::Running;
+            summary.Disabled = service.StartMode == native::ServiceStartMode::Disabled;
+            summary.StartsWithWindows =
+                service.StartMode == native::ServiceStartMode::Automatic ||
+                service.StartMode == native::ServiceStartMode::AutomaticDelayed;
+            summary.StateText = ServiceStateText(service.State);
+            summary.StartedText = service.ProcessStartTime == 0 ?
+                winrt::hstring{} :
+                FormatLocalTime(winrt::clock::from_file_time(winrt::file_time{ service.ProcessStartTime }));
+
+            auto& sessions = m_overview.SessionCounts;
+
+            sessions.Known = true;
+            sessions.ServiceRunning = summary.Running;
+            sessions.Apps = m_sessions.Size();
+            sessions.Connections = 0;
+
+            std::wstring names{};
+            uint32_t named{ 0 };
+
+            for (auto const& session : m_sessions)
+            {
+                sessions.Connections += session.Connections().Size();
+
+                if (named < 3)
+                {
+                    names = names.empty() ?
+                        std::wstring{ session.Title() } :
+                        std::wstring{ res::FormatString(L"OverviewNameListFormat", winrt::hstring{ names }, session.Title()) };
+                    named++;
+                }
+            }
+
+            sessions.Names = winrt::hstring{ names };
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to summarize the service for the overview.")
     }
 
     _Use_decl_annotations_
@@ -338,11 +510,18 @@ namespace winrt::miditroubleshooter::implementation
             {
                 m_sessions.Clear();
 
-                SessionsStatusText().Text(snapshot.Service.State == native::ServiceState::Running ?
-                    res::GetString(L"SessionsUnavailable") : res::GetString(L"SessionsServiceNotRunning"));
+                auto const running = snapshot.Service.State == native::ServiceState::Running;
+
+                SessionsSummary().Severity(4);
+                SessionsSummary().Title(running ?
+                    res::GetString(L"SessionsUnavailable") : res::GetString(L"SessionsSummaryServiceNotRunning"));
+                SessionsSummary().Message(running ?
+                    winrt::hstring{} : res::GetString(L"SessionsSummaryServiceNotRunningMessage"));
 
                 return;
             }
+
+            uint32_t totalConnections{ 0 };
 
             std::vector<winrt::hstring> seen{};
 
@@ -373,15 +552,34 @@ namespace winrt::miditroubleshooter::implementation
                 auto const connectionCount = connections == nullptr ? 0u : connections.Size();
 
                 auto const name = session.SessionName();
+                auto const processName = session.ProcessName();
+                auto const genericName = IsGenericSessionName(name);
+                auto const started = FormatLocalTime(session.StartTime());
+
+                totalConnections += connectionCount;
 
                 winrt::get_self<SessionItem>(item)->Update(
                     sessionId,
-                    name.empty() ? res::GetString(L"SessionUnnamed") : name,
+                    genericName && !processName.empty() ?
+                        ProcessDisplayName(processName) :
+                        (name.empty() ? res::GetString(L"SessionUnnamed") : name),
                     res::FormatString(L"SessionProcessFormat",
-                        session.ProcessName(),
+                        processName,
                         static_cast<uint64_t>(session.ProcessId())),
-                    res::FormatString(L"SessionStartedFormat", FormatLocalTime(session.StartTime())),
+                    res::FormatString(L"SessionStartedFormat", started),
+                    connectionCount == 0 ? res::GetString(L"SessionNoConnections") :
+                    connectionCount == 1 ? res::GetString(L"SessionOneConnection") :
                     res::FormatString(L"SessionConnectionCountFormat", connectionCount));
+
+                // the session name moves into the detail line when the title is the app's name
+                winrt::get_self<SessionItem>(item)->UpdateCard(
+                    genericName && !name.empty() ?
+                        res::FormatString(L"SessionCardDetailNamedFormat",
+                            name, processName, static_cast<uint64_t>(session.ProcessId()), started) :
+                        res::FormatString(L"SessionCardDetailFormat",
+                            processName, static_cast<uint64_t>(session.ProcessId()), started),
+                    _wcsicmp(processName.c_str(), L"midisrv.exe") == 0 ? L"\uF156" : L"\uE71D",
+                    connectionCount == 0 ? 4 : 3);
 
                 auto const rows = item.Connections();
 
@@ -401,14 +599,21 @@ namespace winrt::miditroubleshooter::implementation
                 {
                     auto const connection = connections.GetAt(i);
                     auto const deviceId = connection.EndpointOrPortDeviceId();
+                    auto const kind = ConnectionKindFromId(deviceId);
+                    auto const displayName = ConnectionDisplayName(deviceId);
 
                     winrt::get_self<SessionConnectionItem>(rows.GetAt(i))->Update(
                         deviceId,
-                        ConnectionDisplayName(deviceId),
-                        res::FormatString(L"SessionConnectionInstancesFormat",
-                            static_cast<uint32_t>(connection.InstanceCount())),
+                        displayName,
+                        connection.InstanceCount() == 1 ?
+                            res::GetString(L"SessionConnectionOneInstance") :
+                            res::FormatString(L"SessionConnectionInstancesFormat",
+                                static_cast<uint32_t>(connection.InstanceCount())),
                         res::FormatString(L"SessionConnectionSinceFormat",
-                            FormatLocalTime(connection.EarliestConnectionTime())));
+                            FormatLocalTime(connection.EarliestConnectionTime())),
+                        res::GetString(kind.LabelKey),
+                        winrt::hstring{ kind.Glyph },
+                        res::FormatString(L"SessionCopyIdAccessibleNameFormat", displayName));
                 }
             }
 
@@ -422,9 +627,14 @@ namespace winrt::miditroubleshooter::implementation
                 }
             }
 
-            SessionsStatusText().Text(m_sessions.Size() == 0 ?
-                res::GetString(L"SessionsNone") :
+            SessionsSummary().Severity(m_sessions.Size() == 0 ? 4 : 3);
+            SessionsSummary().Title(
+                m_sessions.Size() == 0 ? res::GetString(L"SessionsNone") :
+                m_sessions.Size() == 1 ? res::GetString(L"SessionsOneApp") :
                 res::FormatString(L"SessionsCountFormat", m_sessions.Size()));
+            SessionsSummary().Message(m_sessions.Size() == 0 ?
+                winrt::hstring{} :
+                res::FormatString(L"SessionsSummaryConnectionsFormat", totalConnections));
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the active sessions.")
     }
@@ -518,6 +728,8 @@ namespace winrt::miditroubleshooter::implementation
                     row.Module = res::FormatString(
                         L"TransportModuleFormat", winrt::hstring{ registered.ModulePath });
                 }
+
+                row.Preview = native::IsPreviewModulePath(registered.ModulePath);
 
                 if (auto const described = m_transportDescriptions.find(std::wstring{ key });
                     !key.empty() && described != m_transportDescriptions.end())
@@ -638,6 +850,7 @@ namespace winrt::miditroubleshooter::implementation
                 }
 
                 row.RowAccessibleName = res::FormatString(L"TransportRowAccessibleNameFormat", row.Name, row.State);
+                row.Glyph = TransportGlyph(row.Code, row.TransportId);
 
                 rows.push_back(row);
             }
@@ -666,37 +879,126 @@ namespace winrt::miditroubleshooter::implementation
                 setState(row, L"TransportStateEnabledLoaded", Severity::Ok, {});
 
                 row.RowAccessibleName = res::FormatString(L"TransportRowAccessibleNameFormat", row.Name, row.State);
+                row.Glyph = TransportGlyph(row.Code, row.TransportId);
 
                 rows.push_back(row);
             }
 
-            // Rows are addressed by index rather than matched, because the composition above
-            // already produces a stable order and the list is short.
-            while (m_transports.Size() > rows.size())
+            std::vector<TransportItem::Values> inWindowsRows{};
+            std::vector<TransportItem::Values> previewRows{};
+
+            for (auto const& row : rows)
             {
-                m_transports.RemoveAtEnd();
+                (row.Preview ? previewRows : inWindowsRows).push_back(row);
             }
 
-            while (m_transports.Size() < rows.size())
-            {
-                m_transports.Append(winrt::make<TransportItem>());
-            }
+            FillTransportList(m_transports, inWindowsRows);
+            FillTransportList(m_previewTransports, previewRows);
 
-            for (uint32_t i = 0; i < rows.size(); i++)
-            {
-                winrt::get_self<TransportItem>(m_transports.GetAt(i))->Update(rows[i]);
-            }
+            auto const problems = static_cast<uint32_t>(std::count_if(rows.begin(), rows.end(),
+                [](TransportItem::Values const& row) { return row.StateSeverity == Severity::Error; }));
 
-            auto const notLoaded = static_cast<uint32_t>(std::count_if(rows.begin(), rows.end(),
-                [](TransportItem::Values const& row) { return row.StateSeverity != Severity::Ok; }));
+            auto const turnedOff = static_cast<uint32_t>(std::count_if(rows.begin(), rows.end(),
+                [](TransportItem::Values const& row) { return !row.RegistryKeyName.empty() && !row.Enabled; }));
 
-            TransportsStatusText().Text(notLoaded == 0 ?
-                res::FormatString(L"TransportsAllLoadedFormat", static_cast<uint32_t>(rows.size())) :
-                res::FormatString(L"TransportsProblemFormat", static_cast<uint32_t>(rows.size()), notLoaded));
-
-            TransportsRestartInfoBar().IsOpen(awaitingRestart);
+            ApplyTransportsSummary(
+                static_cast<uint32_t>(rows.size()),
+                static_cast<uint32_t>(inWindowsRows.size()),
+                static_cast<uint32_t>(previewRows.size()),
+                turnedOff,
+                problems,
+                awaitingRestart,
+                serviceRunning);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the transports.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ApplyTransportsSummary(
+        uint32_t const total,
+        uint32_t const inWindows,
+        uint32_t const preview,
+        uint32_t const turnedOff,
+        uint32_t const problems,
+        bool const awaitingRestart,
+        bool const serviceRunning) noexcept
+    {
+        try
+        {
+            auto const banner = TransportsSummary();
+
+            if (!serviceRunning)
+            {
+                banner.Severity(4);
+                banner.Title(res::GetString(L"TransportsSummaryServiceNotRunning"));
+                banner.Message(res::GetString(L"TransportsSummaryServiceNotRunningMessage"));
+            }
+            else if (awaitingRestart)
+            {
+                banner.Severity(1);
+                banner.Title(res::GetString(L"TransportsSummaryRestartTitle"));
+                banner.Message(res::GetString(L"TransportsSummaryRestartMessage"));
+            }
+            else if (problems > 0)
+            {
+                banner.Severity(2);
+                banner.Title(res::FormatString(L"TransportsSummaryProblemsFormat", problems, total));
+                banner.Message(res::GetString(L"TransportsSummaryProblemsMessage"));
+            }
+            else
+            {
+                banner.Severity(0);
+                banner.Title(res::FormatString(L"TransportsSummaryAllLoadedFormat", total - turnedOff));
+                banner.Message(res::GetString(L"TransportsSummaryAllLoadedMessage"));
+            }
+
+            TransportsInWindowsPill().Text(res::FormatString(L"TransportsInWindowsPillFormat", inWindows));
+            TransportsPreviewPill().Text(res::FormatString(L"TransportsPreviewPillFormat", preview));
+            TransportsPreviewPill().Visibility(preview == 0 ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            TransportsOffPill().Text(res::FormatString(L"TransportsOffPillFormat", turnedOff));
+            TransportsOffPill().Visibility(turnedOff == 0 ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            TransportsInWindowsHeader().Visibility(inWindows == 0 ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            TransportsPreviewHeader().Visibility(preview == 0 ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            // The restart is the page's main job only while a change is waiting for it.
+            auto const restartButton = TransportsRestartServiceButton();
+
+            restartButton.Visibility(awaitingRestart ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            restartButton.IsEnabled(awaitingRestart);
+
+            auto& summary = m_overview.TransportCounts;
+
+            summary.Known = true;
+            summary.ServiceRunning = serviceRunning;
+            summary.Total = total;
+            summary.InWindows = inWindows;
+            summary.Preview = preview;
+            summary.TurnedOff = turnedOff;
+            summary.Problems = problems;
+            summary.AwaitingRestart = awaitingRestart;
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the transports summary.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCopyEndpointIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const element = sender.try_as<xaml::FrameworkElement>();
+
+            if (element == nullptr)
+            {
+                return;
+            }
+
+            if (auto const item = element.DataContext().try_as<miditroubleshooter::SessionConnectionItem>())
+            {
+                CopyToClipboard(item.EndpointDeviceId());
+            }
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to copy an endpoint id.")
     }
 
     _Use_decl_annotations_

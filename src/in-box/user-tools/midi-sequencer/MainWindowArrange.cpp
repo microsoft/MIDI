@@ -617,6 +617,9 @@ namespace winrt::midisequencer::implementation
 
         context.SelectedChord = m_selectedChord;
         context.SelectedKey = m_selectedKey;
+        context.SelectedMeter = m_selectedMeter;
+        context.DraggedMeter = m_meterDrag.Active && m_meterDrag.Moved ? m_meterDrag.Index : SIZE_MAX;
+        context.DraggedMeterTick = m_meterDrag.ToTick;
         context.ScaleNames = &KeyScaleNames();
         context.ShowNumerals = seq::AppSettings::Current().ShowRomanNumerals();
         context.EmptyHarmonyHint = m_textHarmonyEmpty;
@@ -815,6 +818,11 @@ namespace winrt::midisequencer::implementation
         if (row.Kind == seq::ArrangeRowKind::Harmony)
         {
             return MakeHarmonyHeader(row);
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Meter)
+        {
+            return MakeMeterHeader(row);
         }
 
         controls::Grid grid{};
@@ -1811,31 +1819,49 @@ namespace winrt::midisequencer::implementation
         {
             UpdateLyricsBar();
             m_timelineBar.PlayheadMoved(m_position);
+            MovePlayheadLine();
+        }
+        catch (...)
+        {
+        }
+    }
 
+    // Only the line and its marker: cheap enough for every refresh of the display (OnDisplayFrame).
+    void MainWindow::MovePlayheadLine() noexcept
+    {
+        try
+        {
             auto const x = static_cast<double>(m_position) * (m_barWidth / TicksPerFourFourBar) - m_scrollX;
             auto const width = LaneWidth();
 
             if (x < -1.0 || x > width)
             {
-                PlayheadLine().Visibility(xaml::Visibility::Collapsed);
-                PlayheadMarker().Visibility(xaml::Visibility::Collapsed);
+                PlayheadGroup().Visibility(xaml::Visibility::Collapsed);
                 return;
             }
 
-            PlayheadLine().Visibility(xaml::Visibility::Visible);
-            PlayheadMarker().Visibility(xaml::Visibility::Visible);
+            PlayheadGroup().Visibility(xaml::Visibility::Visible);
 
-            // On whole physical pixels, so the line keeps its width and brightness as it moves.
+            // The line and its marker sit in one group, placed once in whole physical pixels around
+            // the group's origin; each frame only moves the group, also to a whole pixel. So the
+            // line keeps its width, and the marker stays centered on it (#1324).
             auto const scale = Content().XamlRoot() != nullptr ? Content().XamlRoot().RasterizationScale() : 1.0;
             auto const lineWidth = seq::WholePixels(1.5, scale);
+            auto const lineLeft = seq::SnapToPixel(-lineWidth / 2.0, scale);
+            auto const markerLeft = seq::SnapToPixel(lineLeft + lineWidth / 2.0 - 5.5, scale);
+            auto const height = std::max(0.0, PlayheadLayer().ActualHeight());
 
-            PlayheadLine().Width(lineWidth);
-            PlayheadLine().Height(std::max(0.0, PlayheadLayer().ActualHeight()));
-            controls::Canvas::SetLeft(PlayheadLine(), seq::SnapToPixel(x - lineWidth / 2.0, scale));
-            controls::Canvas::SetTop(PlayheadLine(), 0);
+            if (PlayheadLine().Width() != lineWidth || PlayheadLine().Height() != height || controls::Canvas::GetLeft(PlayheadLine()) != lineLeft)
+            {
+                PlayheadLine().Width(lineWidth);
+                PlayheadLine().Height(height);
+                controls::Canvas::SetLeft(PlayheadLine(), lineLeft);
+                controls::Canvas::SetTop(PlayheadLine(), 0);
+                controls::Canvas::SetLeft(PlayheadMarker(), markerLeft);
+                controls::Canvas::SetTop(PlayheadMarker(), 24);
+            }
 
-            controls::Canvas::SetLeft(PlayheadMarker(), seq::SnapToPixel(x - 5.5, scale));
-            controls::Canvas::SetTop(PlayheadMarker(), 24);
+            PlayheadShift().X(seq::SnapToPixel(x, scale));
         }
         catch (...)
         {
@@ -2470,6 +2496,14 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (hit.Row->Kind == seq::ArrangeRowKind::Meter)
+            {
+                OnMeterPressed(pinned, args);
+                return;
+            }
+
+            m_selectedMeter = SIZE_MAX;
+
             m_selectedChord = SIZE_MAX;
             m_selectedKey = SIZE_MAX;
 
@@ -2631,6 +2665,16 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            if (m_meterDrag.Active)
+            {
+                if (pinned == m_meterDrag.Pinned)
+                {
+                    OnMeterDragMoved(args);
+                }
+
+                return;
+            }
+
             if (m_razor && !m_clipDrag.Pressed)
             {
                 UpdateRazor(pinned, args.GetCurrentPoint(pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).Position());
@@ -2747,6 +2791,13 @@ namespace winrt::midisequencer::implementation
             if (m_harmonyDrag.Kind != HarmonyDragKind::None)
             {
                 OnHarmonyDragReleased();
+                (pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).ReleasePointerCaptures();
+                return;
+            }
+
+            if (m_meterDrag.Active)
+            {
+                OnMeterDragReleased();
                 (pinned ? m_pinnedLaneCanvas : m_scrollLaneCanvas).ReleasePointerCaptures();
                 return;
             }
@@ -2994,6 +3045,13 @@ namespace winrt::midisequencer::implementation
             {
                 args.Handled(true);
                 OnHarmonyDoubleTapped(pinned, *hit.Row, position, hit.Tick);
+                return;
+            }
+
+            if (hit.Row->Kind == seq::ArrangeRowKind::Meter)
+            {
+                args.Handled(true);
+                OnMeterDoubleTapped(position, hit.Tick);
                 return;
             }
 
@@ -3299,6 +3357,15 @@ namespace winrt::midisequencer::implementation
         else if (row.Kind == seq::ArrangeRowKind::Tempo && (!m_doc.Harmony || m_doc.Harmony->Hidden))
         {
             add(res::GetString(L"MenuShowKeyAndChords"), L"\uE8D6", [weak]() { if (auto s = weak.get()) { s->ShowHarmonyRow(); } });
+        }
+
+        if (row.Kind == seq::ArrangeRowKind::Meter)
+        {
+            AddMeterMenuItems(menu, point, tick);
+        }
+        else if (row.Kind == seq::ArrangeRowKind::Tempo && !m_doc.ShowMeterRow)
+        {
+            add(res::GetString(L"MenuShowMeterRow"), L"\uE7C1", [weak]() { if (auto s = weak.get()) { s->ShowMeterRow(true); } });
         }
 
         add(res::GetString(L"MenuPlayFromHere"), L"\uE768", [weak, snapped]() { if (auto s = weak.get()) { s->Play(snapped); } });

@@ -23,10 +23,18 @@
     <ClCompile Include="MainWindow.Monitoring.cpp" />
     <ClCompile Include="MainWindow.Clipboard.cpp" />
     <ClCompile Include="MainWindow.Export.cpp" />
+    <ClCompile Include="MainWindow.Commands.cpp" />
+    <ClCompile Include="SourceTable.cpp" />
+    <ClCompile Include="AdvancedConnections.cpp" />
+    <ClCompile Include="MainWindow.Advanced.cpp" />
+    <ClCompile Include="MainWindow.Sources.cpp" />
+    <ClCompile Include="MainWindow.Filters.cpp" />
     <ClCompile Include="MessageRowPanel.cpp" />
     <ClCompile Include="MidiMessageViewModel.cpp" />
     <ClCompile Include="MonitorColumn.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
+    <ClCompile Include="..\midi-app-shared\MessageFilter.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
@@ -39,6 +47,8 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="MessageCapture.h" />
+    <ClInclude Include="SourceTable.h" />
+    <ClInclude Include="AdvancedConnections.h" />
     <ClInclude Include="MessagePipeline.h" />
     <ClInclude Include="MessageStore.h" />
     <ClInclude Include="MessageListSource.h" />
@@ -51,6 +61,8 @@
     <ClInclude Include="MidiMessageViewModel.h" />
     <ClInclude Include="MonitorColumn.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
+    <ClInclude Include="..\midi-app-shared\MessageFilter.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />

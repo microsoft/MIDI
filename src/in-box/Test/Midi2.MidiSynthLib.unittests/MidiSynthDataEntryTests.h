@@ -16,4 +16,5 @@ public:
     TEST_METHOD(TestFineTuningTakesTheDataEntryLsb);
     TEST_METHOD(TestPitchBendRangeTakesCents);
     TEST_METHOD(TestMidi2BendRangeLeavesDataEntryAlone);
+    TEST_METHOD(TestNrpnSelectDeselectsTheRpn);
 };

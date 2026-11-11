@@ -22,11 +22,18 @@ $sizes = @{
     '4-note-filter' = @(1304, 1000)
     '5-message-mask' = @(1304, 1180)
     '6-inspectors' = @(1304, 790)
+    '7-connection-monitor' = @(1740, 1180)
+    '8-connection-monitor-window' = @(1600, 1240)
     'index'        = @(1100, 760)
 }
 
 foreach ($file in Get-ChildItem $PSScriptRoot -Filter '*.html' | Sort-Object Name) {
     if ($Page -and -not $file.BaseName.StartsWith($Page)) {
+        continue
+    }
+
+    # a name starting with _ is a fragment that other pages show in a frame
+    if ($file.BaseName.StartsWith('_')) {
         continue
     }
 

@@ -5,6 +5,7 @@
 
 #include <Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h>
 #include <Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure.h>
+#include <Feature_Servicing_MIDI2TimestampRounding.h>
 
 #define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
 
@@ -78,15 +79,6 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     memcpy(&m_OpenDesc, openDesc, sizeof(m_OpenDesc));
     m_Flags = flags;
     m_InterfaceId = interfaceId;
-
-    if (Feature_Servicing_MIDI2WinMMRemovalWithoutPortLock::IsEnabled())
-    {
-        try
-        {
-            m_RemovalInterfaceId = interfaceId;
-        }
-        CATCH_RETURN();
-    }
 
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
@@ -518,6 +510,15 @@ CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ U
 
     // if we're running, and this message was generated after we started,
     // deliver it to the client.
+    if (Feature_Servicing_MIDI2TimestampRounding::IsEnabled())
+    {
+        // Allow 1ms tolerance to account for millisecond quantization in the
+        // KS streaming path (100ns -> ms -> QPC round-trip is lossy).
+        // 3rd party drivers may not round up TimeDeltaMs, so the reconstructed
+        // QPC can land up to ~1ms before the true event time.
+        startTime -= (m_qpcFrequency / 1000);
+    }
+
     if (started && position >= startTime)
     {
         // The amount of data left for this callback, and the current data position
@@ -991,7 +992,16 @@ _Use_decl_annotations_
 HRESULT
 CMidiPort::SendLongMessage(LPMIDIHDR buffer)
 {
-    if (Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure::IsEnabled())
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(buffer, "buffer"));
+
+    auto exitCallback = wil::scope_exit([&]()
     {
         TraceLoggingWrite(
             WdmAud2TelemetryProvider::Provider(),
@@ -999,21 +1009,12 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingPointer(buffer, "buffer"));
+    });
 
-        auto exitCallback = wil::scope_exit([&]()
-        {
-            TraceLoggingWrite(
-                WdmAud2TelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_VERBOSE,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingPointer(buffer, "buffer"));
-        });
-
+    if (Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure::IsEnabled())
+    {
         HRESULT sendResult = S_OK;
 
         {
@@ -1056,31 +1057,9 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         WinmmClientCallback(MOM_DONE, (DWORD_PTR) buffer, 0);
 
         RETURN_IF_FAILED(sendResult);
-
     }
     else
     {
-        TraceLoggingWrite(
-            WdmAud2TelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_VERBOSE,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingPointer(buffer, "buffer"));
-
-        auto exitCallback = wil::scope_exit([&]()
-        {
-            TraceLoggingWrite(
-                WdmAud2TelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_VERBOSE,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingPointer(buffer, "buffer"));
-        });
-
         {
             auto lock = m_Lock.lock();
 

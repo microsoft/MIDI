@@ -1034,6 +1034,73 @@ void LogicStepTests::NamesIgnoreCaseAndStopAtTheCap()
     VERIFY_ARE_EQUAL(size_t{ 1 }, sink.Take(L"dev-out").size());
 }
 
+void LogicStepTests::TheNameListSaysWhereEachNameIsSetAndRead()
+{
+    PatchDocument patch{};
+
+    auto& toggle = AddBlock(patch, L"toggle", BlockKind::SetMemory);
+    toggle.Settings.SetMemory.Memory = L"Scene";
+    toggle.Settings.SetMemory.Action = MemoryAction::Toggle;
+    // Kept by the settings, but a toggle never reads it.
+    toggle.Settings.SetMemory.Value = FromName(LogicSourceKind::Memory, L"Unused");
+
+    auto& copy = AddBlock(patch, L"copy", BlockKind::SetMemory);
+    copy.Settings.SetMemory.Memory = L"backup";
+    copy.Settings.SetMemory.Action = MemoryAction::Set;
+    copy.Settings.SetMemory.Value = FromName(LogicSourceKind::Memory, L"SCENE");
+
+    auto& branch = AddBlock(patch, L"branch", BlockKind::Branch);
+    branch.Settings.Branch.Subject = FromName(LogicSourceKind::Memory, L"  scene ");
+
+    auto& misspelled = AddBlock(patch, L"misspelled", BlockKind::Switch);
+    misspelled.Settings.Switch.Subject = FromName(LogicSourceKind::Memory, L"Scnee");
+
+    auto& tag = AddBlock(patch, L"tag", BlockKind::SetTag);
+    tag.Settings.SetTag.Tag = L"Played on";
+    tag.Settings.SetTag.Value = FromNumber(1);
+
+    auto& put = AddBlock(patch, L"put", BlockKind::PutValue);
+    put.Settings.PutValue.Value = FromName(LogicSourceKind::Tag, L"played ON");
+
+    // A tag and a memory can share a name and are still two names.
+    auto& sameName = AddBlock(patch, L"sameName", BlockKind::SetTag);
+    sameName.Settings.SetTag.Tag = L"Scene";
+    sameName.Settings.SetTag.Value = FromNumber(2);
+
+    AddBlock(patch, L"filter", BlockKind::MessageTypeFilter);
+
+    auto const uses = FindLogicNameUses(patch.Blocks);
+
+    std::vector<std::wstring> names{};
+
+    for (auto const& use : uses)
+    {
+        names.push_back((use.IsMemory ? L"m:" : L"t:") + use.Name);
+    }
+
+    VERIFY_IS_TRUE((names == std::vector<std::wstring>{ L"m:backup", L"m:Scene", L"m:Scnee", L"t:Played on", L"t:Scene" }));
+
+    auto const& backup = uses[0];
+    VERIFY_IS_TRUE((backup.SetBy == std::vector<std::wstring>{ L"copy" }));
+    VERIFY_IS_TRUE(backup.ReadBy.empty());
+
+    auto const& scene = uses[1];
+    VERIFY_IS_TRUE((scene.SetBy == std::vector<std::wstring>{ L"toggle" }));
+    VERIFY_IS_TRUE((scene.ReadBy == std::vector<std::wstring>{ L"copy", L"branch" }));
+
+    auto const& scnee = uses[2];
+    VERIFY_IS_TRUE(scnee.SetBy.empty());
+    VERIFY_IS_TRUE((scnee.ReadBy == std::vector<std::wstring>{ L"misspelled" }));
+
+    auto const& playedOn = uses[3];
+    VERIFY_IS_TRUE((playedOn.SetBy == std::vector<std::wstring>{ L"tag" }));
+    VERIFY_IS_TRUE((playedOn.ReadBy == std::vector<std::wstring>{ L"put" }));
+
+    auto const& sceneTag = uses[4];
+    VERIFY_IS_TRUE((sceneTag.SetBy == std::vector<std::wstring>{ L"sameName" }));
+    VERIFY_IS_TRUE(sceneTag.ReadBy.empty());
+}
+
 void LogicStepTests::LogicSettingsSurviveTheFile()
 {
     for (auto const kind : { BlockKind::Branch, BlockKind::Switch, BlockKind::SetTag, BlockKind::SetMemory, BlockKind::PutValue })

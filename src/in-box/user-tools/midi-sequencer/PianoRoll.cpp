@@ -113,6 +113,7 @@ namespace midisequencer
         {
             m_selected.clear();
             m_gesture = Gesture::None;
+            ClearPreview();
         }
     }
 
@@ -134,6 +135,51 @@ namespace midisequencer
     bool PianoRoll::IsSelected(Note const& note) const noexcept
     {
         auto range = std::equal_range(m_selected.begin(), m_selected.end(), note, NoteOrder);
+        return std::find(range.first, range.second, note) != range.second;
+    }
+
+    _Use_decl_annotations_
+    std::optional<uint16_t> PianoRoll::LineVelocity(int64_t tick) const noexcept
+    {
+        auto const from = TickAtX(m_pressPoint.X);
+        auto const to = TickAtX(m_lastPoint.X);
+
+        if (std::abs(to - from) < 1.0 || static_cast<double>(tick) < std::min(from, to) || static_cast<double>(tick) > std::max(from, to))
+        {
+            return std::nullopt;
+        }
+
+        auto const top = RollBottom() + 1.0f;
+        auto const start = static_cast<double>(VelocityAt(m_pressPoint.Y, top, LaneHeight));
+        auto const end = static_cast<double>(VelocityAt(m_lastPoint.Y, top, LaneHeight));
+        auto const along = (static_cast<double>(tick) - from) / (to - from);
+        return static_cast<uint16_t>(std::clamp(std::lround(start + (end - start) * along), 512L, 65535L));
+    }
+
+    _Use_decl_annotations_
+    void PianoRoll::SetPreview(std::vector<Note> removed, std::vector<Note> added)
+    {
+        m_previewRemoved = Sorted(std::move(removed));
+        m_previewAdded = std::move(added);
+        m_hasPreview = true;
+    }
+
+    void PianoRoll::ClearPreview() noexcept
+    {
+        m_previewRemoved.clear();
+        m_previewAdded.clear();
+        m_hasPreview = false;
+    }
+
+    _Use_decl_annotations_
+    bool PianoRoll::IsHiddenByPreview(Note const& note) const noexcept
+    {
+        if (!m_hasPreview)
+        {
+            return false;
+        }
+
+        auto range = std::equal_range(m_previewRemoved.begin(), m_previewRemoved.end(), note, NoteOrder);
         return std::find(range.first, range.second, note) != range.second;
     }
 
@@ -264,6 +310,19 @@ namespace midisequencer
     }
 
     _Use_decl_annotations_
+    std::optional<Note> PianoRoll::NoteAt(Point point) const noexcept
+    {
+        auto const index = NoteIndexAt(point);
+
+        if (index < 0)
+        {
+            return std::nullopt;
+        }
+
+        return m_clip->Notes[static_cast<size_t>(index)];
+    }
+
+    _Use_decl_annotations_
     bool PianoRoll::IsOverNoteEdge(Point point) const noexcept
     {
         auto const index = NoteIndexAt(point);
@@ -347,6 +406,13 @@ namespace midisequencer
         {
             preview.Velocity = m_dragVelocity;
         }
+        else if (m_gesture == Gesture::VelocityLine && InLineScope(note))
+        {
+            if (auto const velocity = LineVelocity(note.Tick); velocity.has_value())
+            {
+                preview.Velocity = *velocity;
+            }
+        }
 
         return preview;
     }
@@ -368,6 +434,14 @@ namespace midisequencer
 
         if (point.Y > RollBottom())
         {
+            // Ctrl draws a line the velocities of the notes under it follow: the selected notes, or
+            // every note when none are selected.
+            if (control)
+            {
+                m_gesture = Gesture::VelocityLine;
+                return true;
+            }
+
             auto const index = VelocityStemAt(point);
 
             if (index < 0)
@@ -514,6 +588,9 @@ namespace midisequencer
             m_dragVelocity = VelocityAt(point.Y, RollBottom() + 1.0f, LaneHeight);
             return true;
 
+        case Gesture::VelocityLine:
+            return true;
+
         default:
             return false;
         }
@@ -529,6 +606,48 @@ namespace midisequencer
 
         switch (gesture)
         {
+        case Gesture::VelocityLine:
+        {
+            RollEdit change{};
+            change.Name = L"Velocity";
+
+            if (m_clip != nullptr)
+            {
+                for (auto const& note : m_clip->Notes)
+                {
+                    auto const after = PreviewOf(note);
+
+                    if (after != note)
+                    {
+                        change.Removed.push_back(note);
+                        change.Added.push_back(after);
+                    }
+                }
+            }
+
+            if (!change.Removed.empty())
+            {
+                if (!m_selected.empty())
+                {
+                    auto selection = m_selected;
+
+                    for (size_t i = 0; i < change.Removed.size(); ++i)
+                    {
+                        if (auto found = std::find(selection.begin(), selection.end(), change.Removed[i]); found != selection.end())
+                        {
+                            *found = change.Added[i];
+                        }
+                    }
+
+                    m_selected = Sorted(selection);
+                }
+
+                edit = std::move(change);
+            }
+
+            break;
+        }
+
         case Gesture::Move:
         case Gesture::Resize:
         case Gesture::Velocity:
@@ -1049,7 +1168,7 @@ namespace midisequencer
             auto const selected = IsSelected(*it);
 
             // While a gesture moves notes, they're drawn where they're going.
-            if (moving && selected)
+            if ((moving && selected) || IsHiddenByPreview(*it))
             {
                 continue;
             }
@@ -1062,6 +1181,17 @@ namespace midisequencer
             for (auto const& note : m_gestureNotes)
             {
                 drawNote(PreviewOf(note), true);
+            }
+        }
+
+        if (m_hasPreview)
+        {
+            for (auto const& note : m_previewAdded)
+            {
+                if (static_cast<double>(note.Tick) <= visibleTo && static_cast<double>(note.Tick + note.Length) >= visibleFrom)
+                {
+                    drawNote(note, true);
+                }
             }
         }
 
@@ -1243,9 +1373,19 @@ namespace midisequencer
                 {
                     auto const selected = IsSelected(*it);
 
-                    if (velocityDrag && selected)
+                    if ((velocityDrag && selected) || IsHiddenByPreview(*it))
                     {
                         continue;
+                    }
+
+                    // Under a velocity line, a note shows where the line puts it.
+                    if (m_gesture == Gesture::VelocityLine)
+                    {
+                        if (auto const after = PreviewOf(*it); after != *it)
+                        {
+                            drawStem(after, true);
+                            continue;
+                        }
                     }
 
                     drawStem(*it, selected);
@@ -1256,6 +1396,23 @@ namespace midisequencer
                     for (auto const& note : m_gestureNotes)
                     {
                         drawStem(PreviewOf(note), true);
+                    }
+                }
+
+                if (m_gesture == Gesture::VelocityLine)
+                {
+                    auto const clampY = [&](float y) { return std::clamp(y, laneTop + 4.0f, laneTop + laneHeight - 4.0f); };
+                    ds.DrawLine(m_pressPoint.X, clampY(m_pressPoint.Y), m_lastPoint.X, clampY(m_lastPoint.Y), colors.SelectionStroke, 1.5f);
+                }
+
+                if (m_hasPreview)
+                {
+                    for (auto const& note : m_previewAdded)
+                    {
+                        if (static_cast<double>(note.Tick) >= visibleFrom && static_cast<double>(note.Tick) <= visibleTo)
+                        {
+                            drawStem(note, true);
+                        }
                     }
                 }
             }

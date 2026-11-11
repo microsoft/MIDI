@@ -230,6 +230,15 @@ namespace winrt::midipatchbay::implementation
             callbacks.EndpointDropped = [this](std::wstring endpointDeviceId, foundation::Point point)
                 { OnEndpointDropped(endpointDeviceId, point); };
             callbacks.BlockActivated = [this](std::wstring blockId) { ShowBlockDialogAsync(blockId); };
+            callbacks.ConnectionContextMenuRequested = [this](std::wstring connectionId, foundation::Point position)
+                { ShowConnectionMenu(connectionId, position); };
+            callbacks.WatchMarkClicked = [this](uint32_t number)
+                {
+                    if (m_watchWindows != nullptr)
+                    {
+                        m_watchWindows->BringForward(number);
+                    }
+                };
 
             m_canvas.Initialize(CanvasScroller(), CanvasSurface(), MinimapSurface(), std::move(callbacks));
 
@@ -283,6 +292,7 @@ namespace winrt::midipatchbay::implementation
                     if (auto strong = weak.get())
                     {
                         strong->m_closing = true;
+                        strong->CloseWatchWindows();
                         strong->StopLearning();
                         strong->StopControllerLearn();
                         strong->ShowLiveRouting(false);
@@ -396,6 +406,14 @@ namespace winrt::midipatchbay::implementation
                 if (control)
                 {
                     DuplicateSelection();
+                }
+                break;
+
+            case VirtualKey::M:
+                handled = control;
+                if (control)
+                {
+                    WatchSelection();
                 }
                 break;
 
@@ -592,6 +610,7 @@ namespace winrt::midipatchbay::implementation
                     UpdatePatchHeader();
                     UpdateMessages();
                     UpdateInspectorActivity();
+                    RefreshWatchWindows();
                 }
                 break;
 
@@ -668,6 +687,12 @@ namespace winrt::midipatchbay::implementation
             RebuildCanvas();
             RefreshInspector();
             UpdateMessages();
+        }
+        else
+        {
+            // Also for a change that doesn't redraw, such as a memory's name typed in the details
+            // panel. RebuildCanvas does it otherwise.
+            RefreshLogicNames();
         }
 
         UpdatePatchHeader();
@@ -1254,10 +1279,15 @@ namespace winrt::midipatchbay::implementation
             m_canvas.Rebuild(patch, patchbay::PatchLibrary::Current().LiveEndpoints(), Analysis());
             m_canvas.RefreshStatus(m_activity);
 
+            RefreshWatchWindows();
+
             auto const isEmpty = patch == nullptr || (patch->Endpoints.empty() && patch->Blocks.empty());
 
             EmptyCanvasPanel().Visibility(isEmpty ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             MinimapPanel().Visibility(isEmpty ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            // The rebuild took away any highlight, and the names may have changed.
+            RefreshLogicNames();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to rebuild the canvas.")
     }

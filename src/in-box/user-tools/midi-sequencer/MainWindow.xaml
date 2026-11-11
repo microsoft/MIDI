@@ -889,10 +889,16 @@
                 </Rectangle.Fill>
             </Rectangle>
 
-            <!-- The playhead, over the ruler and every lane. -->
+            <!-- The playhead, over the ruler and every lane. The line and its marker move as one, with
+                 PlayheadShift, so they can't round apart as it moves (MovePlayheadLine). -->
             <Canvas x:Name="PlayheadLayer" Grid.Row="1" Grid.RowSpan="4" Grid.Column="2" IsHitTestVisible="False">
-                <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
-                <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
+                <Canvas x:Name="PlayheadGroup">
+                    <Canvas.RenderTransform>
+                        <TranslateTransform x:Name="PlayheadShift" />
+                    </Canvas.RenderTransform>
+                    <Rectangle x:Name="PlayheadLine" Width="1.5" Fill="{ThemeResource SeqPlayheadBrush}" />
+                    <Polygon x:Name="PlayheadMarker" Points="0,0 11,0 5.5,8" Fill="{ThemeResource SeqPlayheadBrush}" />
+                </Canvas>
             </Canvas>
 
             <!-- A track's setup, beside the timeline (comp 5). -->
@@ -1188,19 +1194,6 @@
                             </StackPanel>
                         </ToggleButton>
 
-                        <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
-
-                        <Button x:Name="EditorTransposeButton" x:Uid="EditorTransposeButton" Style="{StaticResource SubtleSmallButtonStyle}">
-                            <Button.Flyout>
-                                <MenuFlyout>
-                                    <MenuFlyoutItem x:Uid="TransposeUpOctave" Tag="12" Click="OnTransposeClick" />
-                                    <MenuFlyoutItem x:Uid="TransposeUpSemitone" Tag="1" Click="OnTransposeClick" />
-                                    <MenuFlyoutItem x:Uid="TransposeDownSemitone" Tag="-1" Click="OnTransposeClick" />
-                                    <MenuFlyoutItem x:Uid="TransposeDownOctave" Tag="-12" Click="OnTransposeClick" />
-                                </MenuFlyout>
-                            </Button.Flyout>
-                        </Button>
-
                         <Button x:Name="EditorKeyboardButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorKeyboardClick">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Viewbox Width="14" Height="14">
@@ -1368,15 +1361,108 @@
                   PointerCaptureLost="OnSplitterCaptureLost" />
 
             <Grid x:Name="EditorBody" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition x:Name="EditorInspectorColumn" Width="236" />
                 </Grid.ColumnDefinitions>
 
-                <Grid x:Name="EditorCanvasHost" />
+                <!-- The note tools, which change the selected notes or, with none selected, the whole
+                     clip (MainWindowNoteTools.cpp, design section 34). Notes clips only. The menus are
+                     built as they open; a right click in the roll opens the same ones. -->
+                <Grid x:Name="NoteToolbar"
+                      Height="36"
+                      Padding="12,0,12,0"
+                      BorderThickness="0,0,0,1"
+                      BorderBrush="{ThemeResource SeqDividerBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock x:Name="NoteSelectionText" FontSize="12" MinWidth="128" Margin="0,0,6,0" VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <Button x:Name="EditorQuantizeButton" x:Uid="EditorQuantizeButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnEditorQuantizeClick" />
+
+                        <!-- Drag on a chord to strum it (MainWindowNoteTools.cpp). -->
+                        <ToggleButton x:Name="NoteStrumToggle" x:Uid="NoteStrumToggle" Style="{StaticResource SubtleSmallToggleStyle}" Click="OnNoteStrumToggleClick">
+                            <TextBlock x:Uid="NoteStrumText" />
+                        </ToggleButton>
+
+                        <Rectangle x:Name="NoteToolsSeparator" Width="1" Height="20" Margin="2,0,2,0" Fill="{ThemeResource SeqDividerBrush}" />
+
+                        <Button x:Name="NoteSelectButton" x:Uid="NoteSelectButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock x:Uid="NoteSelectText" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="NoteSelectMenu" Placement="BottomEdgeAlignedLeft" Opening="OnNoteToolsMenuOpening" />
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button x:Name="NoteTimingButton" x:Uid="NoteTimingButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock x:Uid="NoteTimingText" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="NoteTimingMenu" Placement="BottomEdgeAlignedLeft" Opening="OnNoteToolsMenuOpening" />
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button x:Name="NoteLengthButton" x:Uid="NoteLengthButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock x:Uid="NoteLengthText" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="NoteLengthMenu" Placement="BottomEdgeAlignedLeft" Opening="OnNoteToolsMenuOpening" />
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button x:Name="NotePitchButton" x:Uid="NotePitchButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock x:Uid="NotePitchText" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="NotePitchMenu" Placement="BottomEdgeAlignedLeft" Opening="OnNoteToolsMenuOpening" />
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button x:Name="NoteVelocityButton" x:Uid="NoteVelocityButton" Style="{StaticResource SubtleSmallButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock x:Uid="NoteVelocityText" />
+                                <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                            </StackPanel>
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="NoteVelocityMenu" Placement="BottomEdgeAlignedLeft" Opening="OnNoteToolsMenuOpening" />
+                            </Button.Flyout>
+                        </Button>
+
+                        <Button x:Name="NoteCleanUpButton" x:Uid="NoteCleanUpButton" Style="{StaticResource SubtleSmallButtonStyle}" Click="OnNoteCleanUpClick" />
+                    </StackPanel>
+
+                    <!-- Two notes of the same number overlapping cut each other short on most instruments. -->
+                    <Button x:Name="NoteOverlapButton" x:Uid="NoteOverlapButton" Grid.Column="1" Style="{StaticResource SubtleSmallButtonStyle}" Visibility="Collapsed" Click="OnNoteOverlapClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE7BA;" FontSize="12" Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                            <TextBlock x:Name="NoteOverlapText" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <Grid x:Name="EditorCanvasHost" Grid.Row="1" />
 
                 <!-- A generator's settings, over the canvas. Built in code for the generator's type. -->
                 <ScrollViewer x:Name="GeneratorPanel"
+                              Grid.Row="1"
                               Visibility="Collapsed"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Auto"
@@ -1386,6 +1472,7 @@
 
                 <Grid x:Name="EditorInspector"
                       Grid.Column="1"
+                      Grid.RowSpan="2"
                       BorderThickness="1,0,0,0"
                       BorderBrush="{ThemeResource SeqDividerBrush}"
                       Background="{ThemeResource SeqInspectorBackgroundBrush}">

@@ -96,6 +96,9 @@ namespace miditroubleshooter
         std::vector<RegistryEntryInfo> ServiceRootEntries{};
         std::vector<TransportRegistrationInfo> Transports{};
 
+        // Reported only. These are Windows settings, not MIDI ones, so Repair leaves them alone.
+        std::vector<RegistryEntryInfo> MmcssTaskEntries{};
+
         RegistryRepairPlan Plan{};
     };
 
@@ -118,6 +121,11 @@ namespace miditroubleshooter
     bool TrySetTransportEnabled(_In_ std::wstring const& keyName, _In_ bool const enabled) noexcept;
 
     RepairResult ApplyRegistryRepair(RegistryRepairPlan const& plan) noexcept;
+
+    // A transport installed outside System32 came from the Windows MIDI Services installer,
+    // which today means a preview transport from Program Files. A bare file name loads from
+    // System32, so it is not a preview.
+    bool IsPreviewModulePath(_In_ std::wstring const& modulePath) noexcept;
 
     // Requires the shutdown privilege, which an elevated process has.
     bool TryRestartComputer() noexcept;
