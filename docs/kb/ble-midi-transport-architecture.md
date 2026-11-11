@@ -136,7 +136,16 @@ Real time passing between packets while the sender's timestamp stands still is t
 
 The ATT notification payload is UMP data with no header or other framing. Words are big-endian, several UMPs may be concatenated, and fragmentation is prohibited: a UMP which does not fit is deferred to the next notification. A malformed UMP invalidates the rest of the payload, because without a valid length there is no way to find the next message boundary.
 
-Jitter Reduction Timestamps are optional in the specification and are not implemented. The service has no JR clock, and at a 15 ms connection interval the BLE schedule is the dominant latency bound anyway.
+**Jitter Reduction (JR) Timestamps** are handled inside this transport, not in the service, because only the transport knows where each BLE packet starts and ends. This part is provisional. It follows BLE MIDI 2.0 Working Group discussion that isn't in a published draft yet, so it will change when the specification does.
+
+- The transport asks for JR in both directions during the normal protocol negotiation. A device that can't do JR, or turns it down, simply doesn't get it.
+- Incoming JR Clock and JR Timestamp messages never reach apps. The transport uses them to timestamp the messages they describe, lining the device's JR clock up with this PC's clock the same way BLE MIDI 1.0 timestamps are. A message with no usable JR Timestamp gets the time it arrived.
+- Incoming messages are timestamped and delivered right away, even when their JR Timestamp is slightly in the future. When to act on a message is left to the app, as with every other transport.
+- Nothing goes out with JR until the device has said it will receive it. After that, each packet has a JR Timestamp in front of each group of messages that share a JR tick, and ends with a JR Clock carrying the time of its last message. When nothing has gone out for 200 ms, a JR Clock is sent on its own, which keeps inside the 250 ms the UMP specification requires.
+- JR Clock and JR Timestamp messages sent by apps are dropped. Only the transport can time them against the link.
+- A device that never sends JR, or whose JR Clock stops or goes quiet, is reported as `ArrivalTime` in `MidiBluetoothTimestampSource`, the same as a BLE MIDI 1.0 device whose clock doesn't run.
+- The transport learns what the device agreed to from the device's own Stream Configuration Notification as it passes through, not from the service. That way it works with any version of the service.
+- JR is not sent in the Peripheral role, where Windows answers the remote Central's negotiation rather than starting it.
 
 ## Sending
 
@@ -274,7 +283,7 @@ For the UMP Characteristic: big-endian words, multiple UMPs per payload, no frag
 | Encryption | Not enabled | Optional in both specifications. Requiring it would force pairing, and an unpaired device connecting is a case which has to keep working. |
 | Bluetooth 5.0 required for the UMP Characteristic | Not enforced | No check that the radio is 5.0 or higher before offering UMP. |
 | Peripheral minimum 64-byte ATT payload for UMP | Not enforced | The negotiated size is used as-is, with a floor of the 20-byte MIDI 1.0 default. |
-| Jitter Reduction Timestamps | Not implemented | Optional. The service has no JR clock. |
+| Jitter Reduction Timestamps | Provisional | Handled in the transport, following Working Group discussion that is not in a published draft yet. Not sent in the Peripheral role. |
 | Endpoint Discovery retried three times before disconnecting | Service-side | Retry policy belongs to the service's protocol manager, not this transport. |
 
 ### Connection interval
@@ -296,4 +305,4 @@ The preference is settable with `midi bluetooth connection-parameters`, and the 
 
 ## Not yet implemented
 
-- Jitter Reduction Timestamps.
+- Sending Jitter Reduction Timestamps in the Peripheral role.

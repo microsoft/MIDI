@@ -123,6 +123,13 @@ private:
     void ProcessIncomingMidi1Packet(_In_reads_bytes_(byteCount) uint8_t const* const bytes, _In_ size_t const byteCount);
     void ProcessIncomingUmpPayload(_In_reads_bytes_(byteCount) uint8_t const* const bytes, _In_ size_t const byteCount);
 
+    // TEMPORARY, see the definition.
+    void UpdateJrStateFromEndpointStreamConfigurationNotifications(
+        _In_reads_(wordCount) uint32_t const* const words,
+        _In_ size_t const wordCount);
+
+    void UpdateUmpIncomingTimestampSource(_In_ uint64_t const localArrivalTimestamp);
+
     HRESULT SendUmpWordsToCallback(
         _In_reads_(wordCount) uint32_t const* const words,
         _In_ size_t const wordCount,
@@ -132,6 +139,10 @@ private:
     void BuildOutgoingUmpPackets(_In_reads_(wordCount) uint32_t const* const words, _In_ size_t const wordCount);
 
     void QueueOutgoingPackets(_In_ std::vector<std::vector<uint8_t>>&& packets);
+
+    // The UMP Characteristic needs a JR Clock at least every 250 ms once JR is on, data or not.
+    bool IsIdleJrClockDue(_Out_ DWORD& millisecondsUntilDue) const noexcept;
+    void QueueIdleJrClock();
 
     HRESULT WriterWorker(_In_ std::stop_token stopToken);
     HRESULT WritePacketToDevice(_In_ std::vector<uint8_t> const& packet);
@@ -187,12 +198,31 @@ private:
     MidiBleMidi1::TimestampCorrelator m_incomingTimestampCorrelator{ };
     bytestreamToUMP m_bytestreamToUmp{ };
 
+    // BLE MIDI 2.0: JR Clock and JR Timestamp messages are consumed here and never reach the service
+    MidiBleJr::IncomingDecoder m_incomingJrDecoder{ };
+
+    // Guarded by m_incomingLock. The local time the device's Stream Configuration Notification
+    // arrived, so a device which agreed to send JR and then never does can be called out.
+    bool m_haveEndpointStreamConfiguration{ false };
+    MidiBleJr::StreamConfiguration m_endpointStreamConfiguration{ };
+    uint64_t m_endpointStreamConfigurationTimestamp{ 0 };
+
     // Only the receive path touches its state, so a reset asked for elsewhere is done there.
     std::atomic<bool> m_incomingStateResetPending{ false };
 
     MidiBleMidi1::PacketBuilder m_outgoingPacketBuilder{ };
     umpToBytestream m_umpToBytestream{ };
+    MidiBleJr::OutgoingPacketBuilder m_outgoingUmpPacketBuilder{ };
     wil::srwlock m_outgoingTranslationLock;
+
+    // Set only once the device has said it will receive JR Timestamps. Read by the send path and
+    // the writer thread, so it is atomic rather than guarded by the receive path's lock.
+    std::atomic<bool> m_sendJrToDevice{ false };
+
+    // GetTickCount64 when a packet carrying a JR Clock was last queued, or zero to send one now.
+    // Clocks are queued under m_outgoingTranslationLock so they go out in the order their times
+    // were taken.
+    std::atomic<uint64_t> m_lastJrClockQueuedTickCount{ 0 };
 
     wil::srwlock m_outgoingQueueLock;
     std::deque<std::vector<uint8_t>> m_outgoingPackets{ };

@@ -12,6 +12,8 @@ Bluetooth Low Energy MIDI 1.0 sends a 13-bit millisecond timestamp with each mes
 
 Lining up with a clock that doesn't run would put a whole musical phrase at a single instant. So the service notices this, and uses the time each message arrived instead. The timing is then real, not squashed into one instant, but it's measured on this PC, so it's an estimate.
 
+Bluetooth Low Energy MIDI 2.0 works the same way, using jitter reduction (JR) timestamps in place of the 13-bit timestamp. A MIDI 2.0 device reports `ArrivalTime` if it didn't agree to send JR timestamps, or if its JR clock stops or goes quiet. This handling is provisional, because the BLE MIDI 2.0 specification isn't final yet.
+
 ## Values
 
 | Value | Numeric Value | Description |

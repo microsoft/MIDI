@@ -174,12 +174,14 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="BleMidi1CodecTests.h" />
+    <ClInclude Include="BleMidi2JrTests.h" />
     <ClInclude Include="BluetoothMidiValidationTests.h" />
     <ClInclude Include="BluetoothMidiRobustnessTests.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="BleMidi1CodecTests.cpp" />
+    <ClCompile Include="BleMidi2JrTests.cpp" />
     <ClCompile Include="BluetoothMidiValidationTests.cpp" />
     <ClCompile Include="BluetoothMidiRobustnessTests.cpp" />
     <ClCompile Include="pch.cpp">

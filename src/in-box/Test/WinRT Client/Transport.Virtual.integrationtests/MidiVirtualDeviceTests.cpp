@@ -17,6 +17,7 @@
 #include <atomic>
 
 #include "Feature_Servicing_MIDI2VirtualDeviceRejectDuplicateUniqueId.h"
+#include "Feature_Servicing_MIDI2StreamConfigurationFromEndpoint.h"
 
 
 namespace
@@ -853,6 +854,121 @@ void MidiVirtualDeviceTests::TestFunctionBlocksAreVisibleOnVirtualDevice()
     VERIFY_IS_TRUE(virtualDevice.FunctionBlocks().HasKey(0));
     VERIFY_ARE_EQUAL(virtualDevice.FunctionBlocks().Lookup(0).Name(), winrt::hstring{ L"Test Block" });
     VERIFY_ARE_EQUAL(virtualDevice.FunctionBlocks().Lookup(0).GroupCount(), (uint8_t)1);
+}
+
+
+void MidiVirtualDeviceTests::TestDeclinedStreamConfigurationIsRecordedFromTheDevice()
+{
+    if (!Feature_Servicing_MIDI2StreamConfigurationFromEndpoint::IsEnabled())
+    {
+        LOG_OUTPUT(L"Feature_Servicing_MIDI2StreamConfigurationFromEndpoint is disabled. Skipping.");
+        return;
+    }
+
+    // The device says it sends JR timestamps. The Virtual transport asks for none, so the service
+    // asks the device to stop, and the device declines. A device's reply to that request is final,
+    // so the client endpoint has to report what the device is doing, not what the service asked for.
+    MidiDeclaredEndpointInfo declaredEndpointInfo{};
+    declaredEndpointInfo.Name(L"Contoso Declined Configuration Test");
+    declaredEndpointInfo.ProductInstanceId(winrt::hstring{ MakeUniqueProductInstanceId() });
+    declaredEndpointInfo.SpecificationVersionMajor(1);
+    declaredEndpointInfo.SpecificationVersionMinor(1);
+    declaredEndpointInfo.SupportsMidi10Protocol(true);
+    declaredEndpointInfo.SupportsMidi20Protocol(true);
+    declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps(false);
+    declaredEndpointInfo.SupportsSendingJitterReductionTimestamps(true);
+    declaredEndpointInfo.HasStaticFunctionBlocks(true);
+
+    MidiVirtualDeviceCreationConfig config(
+        L"Contoso Declined Configuration Test",
+        L"Virtual device integration test",
+        L"Windows MIDI Services Test",
+        declaredEndpointInfo);
+
+    auto session = MidiSession::Create(L"Virtual device integration tests");
+    VERIFY_IS_NOT_NULL(session);
+    auto cleanupSession = wil::scope_exit([&] { session.Close(); });
+
+    auto device = MidiVirtualDeviceManager::CreateVirtualDevice(config);
+    VERIFY_IS_NOT_NULL(device);
+
+    auto deviceConnection = session.CreateEndpointConnection(device.DeviceEndpointDeviceId());
+    VERIFY_IS_NOT_NULL(deviceConnection);
+
+    std::atomic<uint32_t> requestCount{ 0 };
+    std::atomic<bool> askedToStopSendingJr{ false };
+
+    // the handler is in place before the connection opens, because opening it starts negotiation
+    auto token = device.StreamConfigRequestReceived([&](MidiVirtualDevice const&, MidiStreamConfigRequestReceivedEventArgs const& args)
+        {
+            requestCount++;
+
+            if (!args.RequestEndpointTransmitJitterReductionTimestamps())
+            {
+                askedToStopSendingJr = true;
+            }
+
+            // declined: still MIDI 2.0, still sending JR timestamps, still not receiving them
+            deviceConnection.SendSingleMessagePacket(MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
+                MidiClock::TimestampConstantSendImmediately(),
+                static_cast<uint8_t>(MidiProtocol::Midi2),
+                false,
+                true));
+        });
+
+    auto cleanupDevice = wil::scope_exit([&]
+        {
+            device.StreamConfigRequestReceived(token);
+            deviceConnection.RemoveMessageProcessingPlugin(device.PluginId());
+            session.DisconnectEndpointConnection(deviceConnection.ConnectionId());
+        });
+
+    deviceConnection.AddMessageProcessingPlugin(device);
+    VERIFY_IS_TRUE(deviceConnection.Open());
+
+    winrt::hstring clientEndpointDeviceId{};
+
+    for (int i = 0; i < 100 && clientEndpointDeviceId.empty(); i++)
+    {
+        Sleep(100);
+        clientEndpointDeviceId = MidiVirtualDeviceManager::GetAssociatedClientEndpointDeviceId(device.AssociationId());
+    }
+
+    VERIFY_IS_FALSE(clientEndpointDeviceId.empty());
+
+    for (int i = 0; i < 100 && requestCount == 0; i++)
+    {
+        Sleep(100);
+    }
+
+    // proves the decline path ran: the service asked, and asked for something the device refused
+    VERIFY_ARE_EQUAL(requestCount.load(), (uint32_t)1);
+    VERIFY_IS_TRUE(askedToStopSendingJr.load());
+
+    // the properties are written after the reply is processed, so give that a moment
+    MidiDeclaredStreamConfiguration streamConfiguration{ nullptr };
+
+    for (int i = 0; i < 50; i++)
+    {
+        auto info = MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(clientEndpointDeviceId);
+
+        if (info != nullptr)
+        {
+            streamConfiguration = info.GetDeclaredStreamConfiguration();
+
+            if (streamConfiguration != nullptr && streamConfiguration.SendJitterReductionTimestamps())
+            {
+                break;
+            }
+        }
+
+        Sleep(100);
+    }
+
+    VERIFY_IS_NOT_NULL(streamConfiguration);
+    VERIFY_IS_TRUE(streamConfiguration.SendJitterReductionTimestamps());
+    VERIFY_IS_FALSE(streamConfiguration.ReceiveJitterReductionTimestamps());
+    VERIFY_IS_TRUE(streamConfiguration.Protocol() == MidiProtocol::Midi2);
 }
 
 
