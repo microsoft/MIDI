@@ -161,3 +161,16 @@
 
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_OFFLINE_RETENTION          L"setOfflineRetention"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_OFFLINE_RETENTION_KEY        L"effectiveOfflineRetention"
+
+// When incoming messages are handed to clients. "smooth" holds each message until the time the
+// device stamped on it plus a small, steady delay, which trades a few milliseconds of latency for
+// much less jitter. "asSoonAsPossible" hands each message on the moment its packet arrives. Appears
+// at transport level, as the default, and on each device, where "default" defers to the transport.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY                    L"incomingTiming"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_DEFAULT          L"default"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_SMOOTH           L"smooth"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_AS_SOON_AS_POSSIBLE L"asSoonAsPossible"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_INCOMING_TIMING_KEY          L"effectiveIncomingTiming"
+
+// The delay smoothing is adding right now, in milliseconds. 0 when the device is not smoothed.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_SMOOTHING_DELAY_MS_KEY        L"incomingSmoothingDelayMilliseconds"

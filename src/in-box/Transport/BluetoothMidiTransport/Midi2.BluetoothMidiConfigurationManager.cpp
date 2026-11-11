@@ -55,6 +55,22 @@ namespace
                 MidiBleUtilities::OfflineRetentionToJsonString(
                     TransportState::Current().GetEffectiveOfflineRetentionSeconds(device.Id))));
 
+        deviceJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY,
+            json::JsonValue::CreateStringValue(
+                MidiBleUtilities::IncomingTimingToJsonString(
+                    TransportState::Current().GetDeviceIncomingTiming(device.Id))));
+
+        deviceJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_INCOMING_TIMING_KEY,
+            json::JsonValue::CreateStringValue(
+                MidiBleUtilities::IncomingTimingToJsonString(
+                    TransportState::Current().GetEffectiveIncomingTiming(device.Id))));
+
+        deviceJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_SMOOTHING_DELAY_MS_KEY,
+            json::JsonValue::CreateNumberValue(device.IncomingSmoothingDelayMilliseconds));
+
         return deviceJson;
     }
 
@@ -484,6 +500,30 @@ namespace
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                         TraceLoggingWideString(L"Ignoring an unusable offline retention for a configured Bluetooth MIDI device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(deviceId.c_str(), "device id")
+                    );
+                }
+            }
+
+            if (deviceObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY))
+            {
+                auto timing{ MidiBleProtocol::IncomingTiming::UseTransportDefault };
+
+                if (MidiBleUtilities::TryIncomingTimingFromJsonString(
+                    MidiBleProtocol::SafeJson::GetString(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY),
+                    true,
+                    timing))
+                {
+                    TransportState::Current().SetDeviceIncomingTiming(deviceId, timing);
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingWideString(L"Ignoring an unusable incoming timing for a configured Bluetooth MIDI device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(deviceId.c_str(), "device id")
                     );
                 }
@@ -932,6 +972,30 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 }
             }
 
+            if (jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY))
+            {
+                auto timing{ MidiBleProtocol::IncomingTiming::Smooth };
+
+                if (MidiBleUtilities::TryIncomingTimingFromJsonString(
+                    MidiBleProtocol::SafeJson::GetString(jsonObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY),
+                    false,
+                    timing))
+                {
+                    TransportState::Current().SetDefaultIncomingTiming(timing);
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Ignoring an unusable default incoming timing", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+                }
+            }
+
             LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
 
             internal::SetConfigurationResponseObjectSuccess(responseObject);
@@ -971,6 +1035,12 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 json::JsonValue::CreateStringValue(
                     MidiBleUtilities::OfflineRetentionToJsonString(
                         TransportState::Current().GetDefaultOfflineRetentionSeconds())));
+
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY,
+                json::JsonValue::CreateStringValue(
+                    MidiBleUtilities::IncomingTimingToJsonString(
+                        TransportState::Current().GetDefaultIncomingTiming())));
 
             AddRadioCapabilitiesToResponse(responseObject);
             internal::SetConfigurationResponseObjectSuccess(responseObject);

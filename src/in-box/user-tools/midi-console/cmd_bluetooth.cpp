@@ -50,23 +50,35 @@ namespace midi2console
             return false;
         }
 
-        // Every config write goes through here so "--temporary" consistently means
-        // "push to the running service without writing the configuration file".
-        bool ApplyConfig(
-            _In_ midi2config::IMidiServiceTransportPluginConfig const& config,
-            _In_ bool temporary)
+        // "default" only means something for a single device, which can defer to the transport.
+        bool TryParseIncomingTiming(
+            _In_ std::string const& text,
+            _In_ bool allowDefault,
+            _Out_ midi2bt::MidiBluetoothIncomingTiming& timing)
         {
-            if (temporary)
-            {
-                auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+            timing = midi2bt::MidiBluetoothIncomingTiming::UseTransportDefault;
 
-                return response != nullptr &&
-                    response.Status() == midi2config::MidiServiceConfigResponseStatus::Success;
+            if (EqualsIgnoreCase(text, "smooth"))
+            {
+                timing = midi2bt::MidiBluetoothIncomingTiming::Smooth;
+                return true;
             }
 
-            auto const response = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+            if (EqualsIgnoreCase(text, "asap") || EqualsIgnoreCase(text, "as-soon-as-possible"))
+            {
+                timing = midi2bt::MidiBluetoothIncomingTiming::AsSoonAsPossible;
+                return true;
+            }
 
-            return response != nullptr && response.Success();
+            if (allowDefault && EqualsIgnoreCase(text, "default"))
+            {
+                return true;
+            }
+
+            WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_ENUM_VALUE,
+                text, std::string{ "--incoming-timing" }));
+
+            return false;
         }
 
         // Applying a change and remembering it are separate steps. The transport manager call has
@@ -93,6 +105,45 @@ namespace midi2console
             auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
 
             WriteWarningLine(FormatResourceString(IDS_BT_SAVE_FAILED, message));
+        }
+
+        // Every config write goes through here so "--temporary" consistently means
+        // "push to the running service without writing the configuration file".
+        // Saving alone only writes the file, which the running service doesn't read again until
+        // it restarts, so the change is always sent first.
+        bool ApplyConfig(
+            _In_ midi2config::IMidiServiceTransportPluginConfig const& config,
+            _In_ bool temporary)
+        {
+            auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (response == nullptr ||
+                response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+            {
+                if (temporary)
+                {
+                    return false;
+                }
+
+                // These commands have always worked with the service stopped, by saving only
+                auto const saved = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                if (saved == nullptr || !saved.Success())
+                {
+                    return false;
+                }
+
+                WriteWarningLine(ResourceString(IDS_BT_SAVED_FOR_NEXT_START));
+
+                return true;
+            }
+
+            if (!temporary)
+            {
+                ReportSave(config);
+            }
+
+            return true;
         }
 
         bool EnsureTransportAvailable()
@@ -136,6 +187,34 @@ namespace midi2console
             if (seconds <= 0)                          return ResourceString(IDS_BT_RETENTION_IMMEDIATE);
 
             return FormatResourceString(IDS_BT_RETENTION_SECONDS, fmt::format("{}", seconds));
+        }
+
+        std::string FormatIncomingTiming(_In_ midi2bt::MidiBluetoothIncomingTiming timing)
+        {
+            return timing == midi2bt::MidiBluetoothIncomingTiming::AsSoonAsPossible ?
+                ResourceString(IDS_BT_INCOMING_TIMING_AS_SOON_AS_POSSIBLE) :
+                ResourceString(IDS_BT_INCOMING_TIMING_SMOOTH);
+        }
+
+        // Shows what is in effect, whether it came from the transport default, and what smoothing
+        // costs in latency for this device right now.
+        std::string FormatDeviceIncomingTiming(_In_ midi2bt::MidiBluetoothDeviceInformation const& device)
+        {
+            auto text = FormatIncomingTiming(device.EffectiveIncomingTiming());
+
+            if (device.IncomingTiming() == midi2bt::MidiBluetoothIncomingTiming::UseTransportDefault)
+            {
+                text = FormatResourceString(IDS_BT_INCOMING_TIMING_FROM_DEFAULT, text);
+            }
+
+            auto const delay = device.IncomingSmoothingDelayMilliseconds();
+
+            if (delay > 0.0)
+            {
+                text = FormatResourceString(IDS_BT_INCOMING_TIMING_WITH_DELAY, text, fmt::format("{:.1f}", delay));
+            }
+
+            return text;
         }
 
         // The service holds the whole allow and deny list, so it is read back and written out
@@ -271,6 +350,7 @@ namespace midi2console
         table.AddColumn(ResourceString(IDS_BT_LABEL_CONNECTED));
         table.AddColumn(ResourceString(IDS_LABEL_PROTOCOL));
         table.AddColumn(ResourceString(IDS_BT_LABEL_TIMESTAMPS));
+        table.AddColumn(ResourceString(IDS_BT_LABEL_INCOMING_TIMING));
         table.AddColumn(ResourceString(IDS_BT_LABEL_IN_COUNTS), ColumnAlignment::Right);
         table.AddColumn(ResourceString(IDS_BT_LABEL_OUT_COUNTS), ColumnAlignment::Right);
 
@@ -285,6 +365,7 @@ namespace midi2console
                 device.IsConnected() ? FormatTimestampSource(device.TimestampSource()) : std::string{},
                 device.TimestampSource() == midi2bt::MidiBluetoothTimestampSource::ArrivalTime ?
                     warningTextStyle : infoTextStyle);
+            table.AddCell(FormatDeviceIncomingTiming(device));
             table.AddCell(fmt::format("{} / {}", device.MessagesReceived(), device.PacketsReceived()), numberTextStyle);
             table.AddCell(fmt::format("{} / {}", device.MessagesSent(), device.PacketsSent()), numberTextStyle);
         }
@@ -423,6 +504,28 @@ namespace midi2console
             changed = true;
         }
 
+        if (!options.IncomingTiming.empty())
+        {
+            midi2bt::MidiBluetoothIncomingTiming timing{};
+
+            if (!TryParseIncomingTiming(options.IncomingTiming, true, timing))
+            {
+                return 1;
+            }
+
+            midi2bt::MidiBluetoothIncomingTimingConfig const timingConfig{
+                winrt::hstring{ FromUtf8(options.BluetoothDeviceId) }, timing };
+
+            // Applied live, then saved unless temporary
+            if (!ApplyConfig(timingConfig, options.Temporary))
+            {
+                WriteErrorLine(FormatResourceString(IDS_BT_CUSTOMIZE_FAILED, std::string{}));
+                return 1;
+            }
+
+            changed = true;
+        }
+
         if (options.HasName || options.HasDescription || options.HasImage || options.Clear)
         {
             auto const endpointDeviceId = ToUtf8(device.EndpointDeviceId());
@@ -464,6 +567,49 @@ namespace midi2console
         }
 
         WriteSuccessLine(ResourceString(IDS_BT_CUSTOMIZE_SUCCEEDED));
+
+        return 0;
+    }
+
+    int RunBluetoothDefaultsCommand(_In_ BluetoothDefaultsOptions const& options)
+    {
+        if (!EnsureTransportAvailable())
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.IncomingTiming.empty())
+        {
+            WriteWarningLine(ResourceString(IDS_ERROR_NO_REQUEST_FLAGS));
+            return 1;
+        }
+
+        midi2bt::MidiBluetoothIncomingTiming timing{};
+
+        if (!TryParseIncomingTiming(options.IncomingTiming, false, timing))
+        {
+            return 1;
+        }
+
+        midi2bt::MidiBluetoothIncomingTimingConfig const timingConfig{ timing };
+
+        // Applied live first, so the change is heard right away rather than after a restart
+        if (!ApplyConfig(timingConfig, true))
+        {
+            WriteErrorLine(FormatResourceString(IDS_BT_DEFAULTS_FAILED, std::string{}));
+            return 1;
+        }
+
+        WriteSuccessLine(ResourceString(IDS_BT_DEFAULTS_SUCCEEDED));
+
+        if (options.Temporary)
+        {
+            WriteInfoLine(ResourceString(IDS_BT_TEMPORARY_NOTE));
+
+            return 0;
+        }
+
+        ReportSave(timingConfig);
 
         return 0;
     }
@@ -751,6 +897,9 @@ namespace midi2console
 
         WriteField(ResourceString(IDS_BT_LABEL_DEFAULT_RETENTION),
             FormatOfflineRetention(defaultRetention), fieldValueTextStyle);
+
+        WriteField(ResourceString(IDS_BT_LABEL_DEFAULT_INCOMING_TIMING),
+            FormatIncomingTiming(midi2bt::MidiBluetoothTransportManager::GetDefaultIncomingTiming()), fieldValueTextStyle);
 
         WriteBlankLine();
 

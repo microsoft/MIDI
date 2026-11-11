@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // When messages from a device are handed to applications.
+    //
+    // This matters because Bluetooth sends MIDI in packets, on a schedule the radio sets, so
+    // messages which were played evenly can arrive in uneven bunches. Delivering them on arrival
+    // makes that unevenness audible as timing jitter.
+    enum MidiBluetoothIncomingTiming
+    {
+        // Only valid for a single device. Defers to the transport-wide setting.
+        UseTransportDefault = -1,
+
+        // Each message is held until the time the device stamped on it, plus a small steady
+        // delay. This adds a few milliseconds of latency in exchange for much steadier timing.
+        // This is the default.
+        Smooth = 0,
+
+        // Each message is handed on as soon as its packet arrives. Lowest latency, but the
+        // timing is only as even as the radio link.
+        AsSoonAsPossible = 1,
+    };
+}

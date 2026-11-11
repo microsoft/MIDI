@@ -60,6 +60,17 @@ namespace midibluetoothsetup
         // Always readable, so a value the combo box cannot represent is still shown.
         String OfflineRetentionText{ get; };
 
+        // Position in the incoming timing combo box: use default, smooth, as soon as possible.
+        Int32 IncomingTimingIndex{ get; };
+
+        // What the setting resolves to, so "use default" still says which one is in effect.
+        String IncomingTimingText{ get; };
+
+        // How much latency smoothing is adding right now. Empty when the device is not being
+        // smoothed, which hides the row.
+        String SmoothingDelayText{ get; };
+        Microsoft.UI.Xaml.Visibility SmoothingDelayVisibility{ get; };
+
         // The most recent connection failure, in the transport's own words. More specific
         // than the error code, because several causes share one code.
         String LastErrorText{ get; };

@@ -96,6 +96,9 @@ public:
         return static_cast<MidiBleProtocol::TimestampSource>(m_incomingTimestampSource.load());
     }
 
+    // The delay incoming smoothing is adding right now. Zero when the device isn't smoothed.
+    double IncomingSmoothingDelayMilliseconds() const noexcept;
+
     bool IsDeviceConnected() const;
     bool IsPeripheral() const noexcept { return m_isPeripheral; }
 
@@ -134,6 +137,20 @@ private:
         _In_reads_(wordCount) uint32_t const* const words,
         _In_ size_t const wordCount,
         _In_ uint64_t const timestamp);
+
+    // Incoming smoothing (BLE MIDI 1.0). Messages being smoothed wait in the release queue until
+    // their release time, and the release thread hands them to the service. Called with
+    // m_incomingLock held.
+    bool RefreshIncomingTimingSetting();
+    void DeliverIncomingMessage(
+        _In_ bool const smoothing,
+        _In_ uint64_t const releaseTimestamp,
+        _In_ uint64_t const timestamp,
+        _Inout_ std::vector<uint32_t>& words);
+
+    HRESULT StartIncomingReleaseThread();
+    HRESULT IncomingReleaseWorker(_In_ std::stop_token stopToken);
+    void ReleaseQueuedIncomingMessagesNow() noexcept;
 
     void BuildOutgoingMidi1Packets(_In_reads_(wordCount) uint32_t const* const words, _In_ size_t const wordCount);
     void BuildOutgoingUmpPackets(_In_reads_(wordCount) uint32_t const* const words, _In_ size_t const wordCount);
@@ -210,6 +227,38 @@ private:
     // Only the receive path touches its state, so a reset asked for elsewhere is done there.
     std::atomic<bool> m_incomingStateResetPending{ false };
 
+    // Incoming smoothing state owned by the receive path, guarded by m_incomingLock.
+    MidiBleSmoothing::IncomingSmoother m_incomingSmoother{ };
+    uint32_t m_incomingSmootherClockGeneration{ 0 };
+    bool m_haveIncomingTimingGeneration{ false };
+    uint32_t m_incomingTimingGeneration{ 0 };
+    bool m_smoothIncoming{ false };
+
+    // Timestamps handed to clients never go backwards, including when smoothing is switched on or off
+    uint64_t m_lastIncomingTimestamp{ 0 };
+
+    std::atomic<int64_t> m_incomingSmoothingDelayTicks{ 0 };
+
+    // Messages waiting for their release time. Only the receive path adds to this, so while it
+    // holds m_incomingLock nothing new can be released behind its back. A message delivered
+    // directly is only allowed when this is empty and nothing is mid-delivery, which keeps
+    // delivery in order when smoothing is switched off with messages still waiting.
+    struct PendingIncomingMessage
+    {
+        uint64_t ReleaseTimestamp{ 0 };
+        uint64_t Timestamp{ 0 };
+        std::vector<uint32_t> Words{ };
+    };
+
+    wil::srwlock m_releaseQueueLock;
+    std::deque<PendingIncomingMessage> m_releaseQueue{ };
+    bool m_releaseInProgress{ false };
+    bool m_releaseAllNow{ false };
+    bool m_releaseStop{ false };
+    std::atomic<bool> m_releaseThreadRunning{ false };
+    wil::unique_event_nothrow m_releaseWakeup;
+    wil::unique_handle m_releaseTimer;
+
     MidiBleMidi1::PacketBuilder m_outgoingPacketBuilder{ };
     umpToBytestream m_umpToBytestream{ };
     MidiBleJr::OutgoingPacketBuilder m_outgoingUmpPacketBuilder{ };
@@ -254,4 +303,5 @@ private:
 
     // jthread members are declared last so they are destroyed first
     std::jthread m_writerThread;
+    std::jthread m_releaseThread;
 };

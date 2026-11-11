@@ -52,6 +52,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
         int32_t EffectiveOfflineRetentionSeconds() const noexcept { return m_effectiveOfflineRetentionSeconds; }
 
+        bluetooth::MidiBluetoothIncomingTiming IncomingTiming() const noexcept { return m_incomingTiming; }
+        bluetooth::MidiBluetoothIncomingTiming EffectiveIncomingTiming() const noexcept { return m_effectiveIncomingTiming; }
+        double IncomingSmoothingDelayMilliseconds() const noexcept { return m_incomingSmoothingDelayMilliseconds; }
+
         void InternalInitializeFromJson(_In_ json::JsonObject const& deviceJson) noexcept;
 
     private:
@@ -83,5 +87,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         int32_t m_offlineRetentionSeconds{ static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault) };
         int32_t m_effectiveOfflineRetentionSeconds{ static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways) };
+
+        bluetooth::MidiBluetoothIncomingTiming m_incomingTiming{ bluetooth::MidiBluetoothIncomingTiming::UseTransportDefault };
+        bluetooth::MidiBluetoothIncomingTiming m_effectiveIncomingTiming{ bluetooth::MidiBluetoothIncomingTiming::Smooth };
+        double m_incomingSmoothingDelayMilliseconds{ 0.0 };
     };
 }

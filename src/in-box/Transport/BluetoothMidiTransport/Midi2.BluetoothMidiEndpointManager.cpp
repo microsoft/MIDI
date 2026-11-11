@@ -1407,6 +1407,7 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
             device.PacketsSent = connection->PacketsSent();
             device.LastSendErrorHresult = connection->LastSendErrorHresult();
             device.IncomingTimestampSource = connection->IncomingTimestampSource();
+            device.IncomingSmoothingDelayMilliseconds = connection->IncomingSmoothingDelayMilliseconds();
 
             // The stored flag only records that a connection object exists. Asking the device
             // is what distinguishes a live link from one that went away without telling us,

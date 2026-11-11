@@ -39,6 +39,9 @@ Returned by `MidiBluetoothTransportManager.GetAvailableDevices` and `MidiBluetoo
 | `LastSendErrorHResult` | The HRESULT error number from the most recent failed send |
 | `OfflineRetentionSeconds` | How long this device's endpoint stays after the device goes offline, as seconds or a named `MidiBluetoothOfflineRetention` value. This is the device's own setting, so it can be `UseTransportDefault` |
 | `EffectiveOfflineRetentionSeconds` | The same, after the transport setting is applied, so it's never `UseTransportDefault`. Show this one to people |
+| `IncomingTiming` | When this device's incoming messages are handed to apps, as a `MidiBluetoothIncomingTiming` value. This is the device's own setting, so it can be `UseTransportDefault` |
+| `EffectiveIncomingTiming` | The same, after the transport setting is applied, so it's never `UseTransportDefault`. Show this one to people |
+| `IncomingSmoothingDelayMilliseconds` | How much delay smoothing is adding to each incoming message right now, in milliseconds. This is the latency that `Smooth` costs for this device. Zero when the device isn't being smoothed |
 
 Check `LastConnectErrorCode` after you ask for a connection. Connecting happens in the background, long after `ConnectDeviceAsync` returns. So a failure during that work shows up here, not in the response.
 

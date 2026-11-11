@@ -16,6 +16,7 @@ A Bluetooth MIDI device saved in the configuration file. `MidiBluetoothTransport
 | `Comment` | The `Comment` from the `MidiBluetoothDeviceConnectConfig` that saved the device, which is usually its name. Empty when none was saved |
 | `IsEnabled` | False when the device was kept but switched off by saving a `MidiBluetoothDeviceDisconnectConfig`. The service doesn't connect it when it starts |
 | `OfflineRetentionSeconds` | The offline retention saved for this device, as seconds or a named `MidiBluetoothOfflineRetention` value. `UseTransportDefault` when none is saved |
+| `IncomingTiming` | The incoming timing saved for this device, as a `MidiBluetoothIncomingTiming` value. `UseTransportDefault` when none is saved |
 
 ## Saved isn't the same as connected
 

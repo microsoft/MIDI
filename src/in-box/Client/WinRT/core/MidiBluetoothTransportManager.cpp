@@ -201,6 +201,26 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
     }
 
+    bluetooth::MidiBluetoothIncomingTiming MidiBluetoothTransportManager::GetDefaultIncomingTiming() noexcept
+    {
+        try
+        {
+            // Carried on the device list for the same reason as the offline retention default
+            auto const outcome = SendTransportCommand(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_LIST_AVAILABLE_DEVICES, {});
+
+            if (outcome.Success && outcome.ResponseJson != nullptr)
+            {
+                return btinternal::ResolvedIncomingTimingFromJsonString(
+                    outcome.ResponseJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY, L""));
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return bluetooth::MidiBluetoothIncomingTiming::Smooth;
+    }
+
     collections::IVectorView<bluetooth::MidiBluetoothSavedDevice> MidiBluetoothTransportManager::GetSavedDevices() noexcept
     {
         auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothSavedDevice>();
@@ -257,7 +277,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                     isEnabled,
                     retention.empty() ?
                         static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault) :
-                        btinternal::OfflineRetentionFromJsonString(retention));
+                        btinternal::OfflineRetentionFromJsonString(retention),
+                    btinternal::IncomingTimingFromJsonString(
+                        StringValueOrEmpty(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY)));
 
                 devices.Append(*device);
             }

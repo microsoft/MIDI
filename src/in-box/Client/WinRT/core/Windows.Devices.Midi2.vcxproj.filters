@@ -770,6 +770,12 @@
     <Midl Include="MidiBluetoothOfflineRetentionEnum.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>
+    <Midl Include="MidiBluetoothIncomingTimingConfig.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothIncomingTimingEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
     <Midl Include="MidiNetworkAdvertisedHostChangedPropertiesEnum.idl">
       <Filter>SDK\Transports\Network\Watcher</Filter>
     </Midl>

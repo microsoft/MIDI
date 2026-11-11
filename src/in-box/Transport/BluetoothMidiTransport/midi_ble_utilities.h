@@ -91,6 +91,9 @@ namespace MidiBleProtocol
         // enough for the transport to judge its clock.
         TimestampSource IncomingTimestampSource{ TimestampSource::Unknown };
 
+        // What incoming smoothing is adding right now. Zero when the device isn't smoothed.
+        double IncomingSmoothingDelayMilliseconds{ 0.0 };
+
         // Connecting is asynchronous, so this distinguishes an attempt under way from a device
         // which is wanted but has not appeared yet.
         ConnectionState ConnectionState{ ConnectionState::NotConnected };
