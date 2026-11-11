@@ -9,6 +9,8 @@
 #include "..\..\..\Inc\midi_sdk_idl_defs.h"
 import "MidiApiContracts.idl";
 
+import "MidiBluetoothIncomingTimingEnum.idl";
+
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
     [contract(MidiTransportsBluetoothApiContract, 1)]
@@ -33,5 +35,8 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // The saved MidiBluetoothOfflineRetention value or number of seconds for this device.
         // UseTransportDefault when none is saved.
         [noexcept] Int32 OfflineRetentionSeconds{ get; };
+
+        // The saved incoming timing for this device. UseTransportDefault when none is saved.
+        [noexcept] MidiBluetoothIncomingTiming IncomingTiming{ get; };
     }
 }

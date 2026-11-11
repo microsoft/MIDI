@@ -232,6 +232,17 @@ namespace MidiBleProtocol
     constexpr int32_t OfflineRetentionKeepAlways{ -1 };
     constexpr int32_t OfflineRetentionUseTransportDefault{ -2 };
 
+    // When incoming messages are handed to clients. Smooth holds each one until the time the
+    // device stamped on it plus a small steady delay, trading a little latency for much less
+    // jitter. Values match MidiBluetoothIncomingTiming in the API. UseTransportDefault is only
+    // meaningful on a device.
+    enum class IncomingTiming : int8_t
+    {
+        UseTransportDefault = -1,
+        Smooth = 0,
+        AsSoonAsPossible = 1,
+    };
+
     // Whether a Central which subscribes to this PC's peripheral is let through without asking.
     // WinRT cannot refuse a subscription, so "require approval" gates the MIDI endpoint and the
     // data path rather than the Bluetooth link itself.
@@ -522,6 +533,48 @@ namespace MidiBleUtilities
         seconds = static_cast<int32_t>(parsed);
 
         return true;
+    }
+
+    inline winrt::hstring IncomingTimingToJsonString(_In_ MidiBleProtocol::IncomingTiming const timing)
+    {
+        switch (timing)
+        {
+        case MidiBleProtocol::IncomingTiming::UseTransportDefault:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_DEFAULT;
+        case MidiBleProtocol::IncomingTiming::AsSoonAsPossible:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_AS_SOON_AS_POSSIBLE;
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_SMOOTH;
+        }
+    }
+
+    // Returns false for anything unrecognized, and for "default" where there is nothing to defer
+    // to, so the caller decides what an unusable value means.
+    inline bool TryIncomingTimingFromJsonString(
+        _In_ winrt::hstring const& value,
+        _In_ bool const allowUseTransportDefault,
+        _Out_ MidiBleProtocol::IncomingTiming& timing)
+    {
+        timing = MidiBleProtocol::IncomingTiming::Smooth;
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_SMOOTH)
+        {
+            return true;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_AS_SOON_AS_POSSIBLE)
+        {
+            timing = MidiBleProtocol::IncomingTiming::AsSoonAsPossible;
+            return true;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_DEFAULT && allowUseTransportDefault)
+        {
+            timing = MidiBleProtocol::IncomingTiming::UseTransportDefault;
+            return true;
+        }
+
+        return false;
     }
 
     // The Bluetooth address is the only identifier both the advertisement watcher and the GATT

@@ -122,7 +122,7 @@ A packet is a Header Byte (bit 7 set, bit 6 reserved, bits 5-0 `timestampHigh`) 
 
 **Timestamps** arrive in the sender's clock domain, and correlating the two clocks is explicitly out of scope for the specification. The sender's 13 bit value is unwrapped into a continuous millisecond count and mapped onto the local clock through a single offset, which preserves spacing both within a packet and across packet boundaries. Anchoring each packet to its own arrival time instead does not work: consecutive packets are anchored independently, so an early message in one packet can be given a timestamp before a late message in the packet before it, and the stream arrives out of order.
 
-The offset is the smallest arrival delay observed, because arrival delay is never negative and the minimum is therefore the sample carrying the least transport latency. That minimum is taken over a sliding five second window rather than over all history. An all-time minimum never forgets an outlier, and following clock drift by creeping a fixed step per packet would make the correction rate depend on how fast the device happens to be sending rather than on how much time has passed.
+The offset is the smallest arrival delay observed, because arrival delay is never negative and the minimum is therefore the sample carrying the least transport latency. That minimum is taken over a sliding five second window rather than over all history. An all-time minimum never forgets an outlier, and following clock drift by creeping a fixed step per packet would make the correction rate depend on how fast the device happens to be sending rather than on how much time has passed. These are the timestamps apps get when a device is set to "As soon as possible". Smoothing uses a more careful estimate that also measures clock drift; see [Incoming timing](#incoming-timing-smoothing-out-connection-interval-jitter).
 
 Deciding that too much time has passed to trust the correlation cannot be left to the sender's clock. Thirteen bits wraps every 8.192 seconds, so a long gap is reported as `gap % 8192`, and roughly half of those land below any plausible-gap threshold and read as an ordinary short delta: a twenty second silence arrives as 3,616 ms. The local arrival clock decides instead, and a gap longer than one wrap discards the correlation and re-anchors on the next packet.
 
@@ -131,6 +131,68 @@ Deciding that too much time has passed to trust the correlation cannot be left t
 Real time passing between packets while the sender's timestamp stands still is the only way to detect this, because messages inside one packet are allowed to share a timestamp and Running Status leaves them no room to carry one. After three such observations the sender's clock is abandoned and arrival time is used instead. Any subsequent movement of the timestamp restores correlation, so nothing is stored and a firmware fix takes effect on its own. Which of the two is in use is reported per device as `MidiBluetoothTimestampSource` and shown by `midi bluetooth list` and the setup app.
 
 **Encoding** never generates Running Status: transmitting it is optional and every receiver is required to accept full messages. A complete message other than SysEx is never split across two packets. Because a packet carries a single `timestampHigh`, a message past a 128 ms boundary starts a new packet rather than relying on the receiver's single wrap allowance.
+
+## Incoming timing: smoothing out connection interval jitter
+
+This section is for anyone building a BLE MIDI 1.0 device. It explains what Windows does with your timestamps and what timing your users will get.
+
+### Why BLE MIDI jitters
+
+BLE only moves data at connection events, one every connection interval. When a player presses a key, the message waits for the next event. That wait is anywhere from no time at all to one whole interval. It can be longer if the link skips an event or has to resend a packet, and the Windows Bluetooth stack adds a little more of its own.
+
+If each message is handed to apps the moment its packet arrives, notes played exactly 10 ms apart can come out 7.5 ms apart, then 15 ms apart. MIDI clock and fast passages are hit hardest. Most apps act on a message when it arrives, not on its timestamp, so they hear all of it.
+
+### What Windows does about it
+
+Every message carries a timestamp from your device's clock. If Windows knows how your clock lines up with its own, it can hold each message until the time you stamped on it, plus a small steady delay. Then every message comes out with the spacing you played. The cost is a few milliseconds of extra latency, the same for every message.
+
+This is the **Smooth** setting, and it's the default. **As soon as possible** turns it off for a device, so each message is handed on the moment it arrives. That's the lowest latency with the full jitter. The setting is per device, it's saved, and it's in the Bluetooth MIDI setup app as "Smooth (add some latency to improve jitter)" and "As soon as possible". In the console, it's `midi bluetooth customize <device> --incoming-timing smooth|asap|default` for one device and `midi bluetooth defaults --incoming-timing smooth|asap` for the transport default. `midi bluetooth list` shows each device's setting and the delay smoothing is adding right now. When smoothing is on, the timestamp an app sees is the time the message was released, so apps that use timestamps and apps that don't hear the same steady timing.
+
+Smoothing is BLE MIDI 1.0 only for now. BLE MIDI 2.0 messages are still delivered as they arrive.
+
+### How the clock is recovered
+
+The 13-bit timestamp is unwrapped into a continuous millisecond count first, as described under [BLE MIDI 1.0 packet format](#ble-midi-10-packet-format). After that:
+
+1. For every packet, Windows compares your timestamp with the time the packet arrived. The difference is your clock's offset from ours plus however long the packet waited. Waiting is never negative, so the packets that waited least show the true offset.
+2. It keeps the smallest difference from each second, for the last 30 seconds, and fits a straight line under them (the lower convex hull). The line's height is the offset. Its slope is how fast your clock runs compared with ours. The slope is only measured once there are 5 seconds of data, and it's limited to 2%.
+3. Each message's place on that line is when you played it, in Windows time. The release time is that plus the delay.
+4. The delay is measured, not guessed. Over the last 10 seconds, Windows works out how long packets waited after their place on the line, and picks a delay that covers all but 0.5% of them, plus 0.5 ms for timer wake-up. It starts at one connection interval plus 2 ms (or 17 ms if the interval isn't known). It grows straight away if messages start arriving after their release time. It shrinks in small steps (an eighth of the difference, 0.1 to 0.5 ms at a time, every 100 ms), so nobody hears it settle. It's never less than 1 ms and never more than 50 ms.
+5. The first 8 packets after connecting, or after your clock restarts, are delivered as they arrive while the line is built.
+6. Messages always come out in the order they arrived. A message that arrives after its release time goes out the moment it arrives. When the link drops, anything still waiting goes out right away.
+
+The BLE MIDI 1.0 specification says timestamps can't be in the future. Windows still treats them as untrusted, which is why the delay has a ceiling and the slope has a limit.
+
+### What jitter to expect
+
+These figures come from a simulated link (the `BleIncomingSmoothingTests` unit tests), with a sender that stamps each message when it happens and a stack delay of up to 0.3 ms. Real links add skipped events and resends, which the delay grows to cover.
+
+| Connection interval | As soon as possible: added delay | As soon as possible: jitter | Smooth: added delay, once settled | Smooth: jitter |
+| --- | --- | --- | --- | --- |
+| 7.5 ms | none | up to about 7.5 ms | about 8.7 ms | about 1 ms |
+| 11.25 ms | none | up to about 11.25 ms | about 12.4 ms | about 1 ms |
+| 15 ms | none | up to about 15 ms | about 15.8 ms | about 1 ms |
+
+The 1 ms that's left is the timestamp itself: BLE MIDI 1.0 timestamps are whole milliseconds, so no receiver can do better. Smooth delay settles at about one connection interval because that's how long a packet can wait. Windows has only been seen to negotiate 15 ms as the Central, so most devices connected to a PC will see the 15 ms row. A Central that negotiates a shorter interval, such as a phone connected to this PC as a peripheral, gets a lower delay.
+
+### How your device's clock affects the result
+
+| Your device | What happens |
+| --- | --- |
+| Stamps each message when it happens, from a crystal-accurate millisecond clock | The best case. About 1 ms of jitter, with a delay of about one connection interval. |
+| Clock runs fast or slow by up to 2% (for example an RC oscillator) | Once 5 seconds of data are in, the slope is measured and the result is the same as the best case. Before that, the delay grows to cover the drift, and with a large drift some messages miss their release time and go out as they arrive. |
+| Clock is off by more than 2% | The slope stops at 2%. Messages start missing their release time and go out as they arrive, so timing falls back toward "as soon as possible". |
+| Stamps messages when it builds the packet, not when they happen | Smoothing can only recreate the spacing in the timestamps. Messages in one packet come out together, and the spacing between packets still follows the connection events. You get the full connection interval jitter plus the smoothing delay. |
+| Timestamp never moves | Detected after three packets, as described above. Messages are delivered as they arrive, and the device is reported with a timestamp source of `ArrivalTime`. |
+| Clock restarts or jumps | The line is thrown away and rebuilt from the next packets. The delay the link needs is kept. |
+
+### Recommendations for device makers
+
+- Stamp each message with the time it happened: the key press, the knob move, the clock tick. Not the time the packet was built.
+- Run the timestamp from a crystal-accurate millisecond clock, and never freeze it.
+- Never put a timestamp in the future, and wrap the 13-bit value correctly.
+- Ask for the shortest connection interval your stack allows. 7.5 ms is recommended for live playing, and the smoothing delay follows the interval.
+- Send each message at the next connection event. Holding messages back to fill packets adds latency that smoothing can't take away.
 
 ## BLE MIDI 2.0 packet format
 

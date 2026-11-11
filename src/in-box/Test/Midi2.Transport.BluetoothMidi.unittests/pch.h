@@ -29,6 +29,7 @@
 // The codec is header only and has no dependency on Bluetooth, the service or COM, which is
 // what makes these pure unit tests.
 #include "midi_ble_midi1_codec.h"
+#include "midi_ble_incoming_smoothing.h"
 
 // The BLE MIDI 2.0 JR Clock and JR Timestamp handling is header only for the same reason.
 #include "midi_ble_jr.h"

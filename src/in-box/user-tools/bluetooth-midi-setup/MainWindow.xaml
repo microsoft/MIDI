@@ -434,6 +434,8 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
 
                                                     <TextBlock x:Uid="DeviceAddressLabel"
@@ -561,6 +563,47 @@
                                                             VerticalAlignment="Center"
                                                             Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
                                                             Click="OnCustomizeDeviceClick" />
+
+                                                    <!-- Bluetooth delivers MIDI in packets on the radio's schedule, so
+                                                         messages played evenly can arrive in bunches. Smoothing evens
+                                                         them out again at the cost of a few milliseconds. -->
+                                                    <TextBlock x:Uid="IncomingTimingLabel"
+                                                               Grid.Row="6" Grid.Column="0"
+                                                               Text="Incoming timing"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <StackPanel Grid.Row="6" Grid.Column="1"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8"
+                                                                VerticalAlignment="Center">
+                                                        <ComboBox MinWidth="170"
+                                                                  x:Uid="IncomingTimingCombo"
+                                                                  SelectedIndex="{x:Bind IncomingTimingIndex, Mode=OneWay}"
+                                                                  SelectionChanged="OnIncomingTimingChanged">
+                                                            <ComboBoxItem x:Uid="IncomingTimingUseDefaultItem" Content="Use default" />
+                                                            <ComboBoxItem x:Uid="IncomingTimingSmoothItem" Content="Smooth (add some latency to improve jitter)" />
+                                                            <ComboBoxItem x:Uid="IncomingTimingAsSoonAsPossibleItem" Content="As soon as possible" />
+                                                        </ComboBox>
+                                                        <!-- What the setting resolves to, so "Use default" still says
+                                                             which one is in effect. -->
+                                                        <TextBlock Text="{x:Bind IncomingTimingText, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    </StackPanel>
+
+                                                    <TextBlock x:Uid="SmoothingDelayLabel"
+                                                               Grid.Row="7" Grid.Column="0"
+                                                               Text="Smoothing delay"
+                                                               Visibility="{x:Bind SmoothingDelayVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="7" Grid.Column="1"
+                                                               Text="{x:Bind SmoothingDelayText, Mode=OneWay}"
+                                                               Visibility="{x:Bind SmoothingDelayVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
                                                 </Grid>
                                             </Expander>
 
@@ -799,6 +842,35 @@
                                     </ComboBox>
 
                                     <TextBlock x:Name="DefaultOfflineRetentionStatusText"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel Spacing="10">
+                                    <TextBlock x:Uid="DefaultIncomingTimingHeader"
+                                               x:Name="DefaultIncomingTimingHeader"
+                                               Text="Incoming timing"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                    <TextBlock x:Uid="DefaultIncomingTimingDescription"
+                                               Text="Bluetooth sends MIDI in packets, so notes played evenly can arrive unevenly. Smooth holds each message for a few milliseconds and passes it on at the time the device sent it, which makes timing much steadier. As soon as possible passes each message on the moment it arrives, for the lowest latency."
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                    <ComboBox x:Name="DefaultIncomingTimingCombo"
+                                              AutomationProperties.LabeledBy="{x:Bind DefaultIncomingTimingHeader}"
+                                              MinWidth="200"
+                                              HorizontalAlignment="Left"
+                                              SelectionChanged="OnDefaultIncomingTimingChanged">
+                                        <ComboBoxItem x:Uid="IncomingTimingSmoothItem" Content="Smooth (add some latency to improve jitter)" />
+                                        <ComboBoxItem x:Uid="IncomingTimingAsSoonAsPossibleItem" Content="As soon as possible" />
+                                    </ComboBox>
+
+                                    <TextBlock x:Name="DefaultIncomingTimingStatusText"
                                                TextWrapping="Wrap"
                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

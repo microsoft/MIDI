@@ -711,7 +711,14 @@ int main()
     auto btImageOption = bluetoothCustomizeCommand->add_option("-i,--image", bluetoothCustomizeOptions.Image, ResourceString(IDS_OPT_BT_IMAGE));
     bluetoothCustomizeCommand->add_flag("-c,--clear", bluetoothCustomizeOptions.Clear, ResourceString(IDS_OPT_BT_CLEAR));
     bluetoothCustomizeCommand->add_option("-k,--keep-when-offline", bluetoothCustomizeOptions.KeepWhenOffline, ResourceString(IDS_OPT_BT_KEEP_WHEN_OFFLINE));
+    bluetoothCustomizeCommand->add_option("--incoming-timing", bluetoothCustomizeOptions.IncomingTiming, ResourceString(IDS_OPT_BT_INCOMING_TIMING));
     bluetoothCustomizeCommand->add_flag("-t,--temporary", bluetoothCustomizeOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
+
+    BluetoothDefaultsOptions bluetoothDefaultsOptions{};
+
+    auto bluetoothDefaultsCommand = bluetoothCommand->add_subcommand("defaults", ResourceString(IDS_CMD_BT_DEFAULTS));
+    bluetoothDefaultsCommand->add_option("--incoming-timing", bluetoothDefaultsOptions.IncomingTiming, ResourceString(IDS_OPT_BT_DEFAULT_INCOMING_TIMING));
+    bluetoothDefaultsCommand->add_flag("-t,--temporary", bluetoothDefaultsOptions.Temporary, ResourceString(IDS_OPT_SYNTH_TEMPORARY));
 
     auto peripheralCommand = bluetoothCommand->add_subcommand("peripheral", ResourceString(IDS_CMD_BT_PERIPHERAL));
     peripheralCommand->require_subcommand(1);
@@ -768,6 +775,7 @@ int main()
     SetCommandExamples(loopbackCreateCommand, { "midi loopback create --name-a \"Loop A\" --name-b \"Loop B\"" });
     SetCommandExamples(synthDisableCommand, { "midi synth disable", "midi synth disable --temporary" });
     SetCommandExamples(synthConfigureCommand, { "midi synth configure --synth-mode modern", "midi synth configure --audio-mode sharedLowLatency" });
+    SetCommandExamples(bluetoothDefaultsCommand, { "midi bluetooth defaults --incoming-timing smooth", "midi bluetooth defaults --incoming-timing asap" });
     SetCommandExamples(servicePingCommand, { "midi service ping", "midi service ping --count 20" });
 
     // ---------------------------------------------------------------- parse and dispatch
@@ -915,6 +923,7 @@ int main()
         if (bluetoothConnectCommand->parsed())      return RunBluetoothConnectCommand(bluetoothConnectOptions);
         if (bluetoothDisconnectCommand->parsed())   return RunBluetoothDisconnectCommand(bluetoothDisconnectOptions);
         if (bluetoothCustomizeCommand->parsed())    return RunBluetoothCustomizeCommand(bluetoothCustomizeOptions);
+        if (bluetoothDefaultsCommand->parsed())     return RunBluetoothDefaultsCommand(bluetoothDefaultsOptions);
         if (peripheralStartCommand->parsed())       return RunBluetoothPeripheralStartCommand(peripheralStartOptions);
         if (peripheralStopCommand->parsed())        return RunBluetoothPeripheralStopCommand(peripheralStopOptions);
         if (peripheralStatusCommand->parsed())      return RunBluetoothPeripheralStatusCommand();

@@ -91,6 +91,17 @@ public:
     int32_t GetEffectiveOfflineRetentionSeconds(_In_ winrt::hstring const& deviceId);
     std::map<winrt::hstring, int32_t> GetDeviceOfflineRetentionOverrides();
 
+    // When incoming messages are handed to clients. Same shape as offline retention: the device
+    // value wins unless it is UseTransportDefault. The generation changes on every update so a
+    // connection can notice cheaply, per packet, that it should look again.
+    void SetDefaultIncomingTiming(_In_ MidiBleProtocol::IncomingTiming const timing);
+    MidiBleProtocol::IncomingTiming GetDefaultIncomingTiming();
+
+    void SetDeviceIncomingTiming(_In_ winrt::hstring const& deviceId, _In_ MidiBleProtocol::IncomingTiming const timing);
+    MidiBleProtocol::IncomingTiming GetDeviceIncomingTiming(_In_ winrt::hstring const& deviceId);
+    MidiBleProtocol::IncomingTiming GetEffectiveIncomingTiming(_In_ winrt::hstring const& deviceId);
+    uint32_t GetIncomingTimingGeneration() const noexcept { return m_incomingTimingGeneration.load(); }
+
     // Probed once at start up. A machine with no usable radio still loads the transport, so this
     // is what lets every command explain itself rather than just doing nothing.
     void SetRadioCapabilities(_In_ MidiBleProtocol::RadioCapabilities const& capabilities);
@@ -162,6 +173,13 @@ private:
 
     wil::srwlock m_offlineRetentionLock;
     std::map<winrt::hstring, int32_t> m_deviceOfflineRetentionSeconds;
+
+    // Smooth by default: most apps act on a message when it arrives, not on its timestamp.
+    std::atomic<MidiBleProtocol::IncomingTiming> m_defaultIncomingTiming{ MidiBleProtocol::IncomingTiming::Smooth };
+    std::atomic<uint32_t> m_incomingTimingGeneration{ 0 };
+
+    wil::srwlock m_incomingTimingLock;
+    std::map<winrt::hstring, MidiBleProtocol::IncomingTiming> m_deviceIncomingTiming;
 
     MidiBleProtocol::RadioCapabilities m_radioCapabilities{};
     wil::srwlock m_radioCapabilitiesLock;

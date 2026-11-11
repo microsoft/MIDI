@@ -826,7 +826,7 @@ Works with Bluetooth LE MIDI devices. [Windows MIDI Bluetooth Setup]({{ site.bas
 
 ### bluetooth list and bluetooth status
 
-`bluetooth list` (alias `list-devices`) lists the Bluetooth MIDI devices Windows has found, with the Bluetooth device id the other commands need. `bluetooth status` (alias `radio`) reports on the Bluetooth radio and the Bluetooth MIDI transport, and lists any device waiting for your approval.
+`bluetooth list` (alias `list-devices`) lists the Bluetooth MIDI devices Windows has found, with the Bluetooth device id the other commands need. Its Incoming Timing column shows when each device's messages are passed on, adds "(default)" when the device uses the transport default, and shows how many milliseconds smoothing is adding right now. `bluetooth status` (alias `radio`) reports on the Bluetooth radio and the Bluetooth MIDI transport, including the default offline retention and incoming timing, and lists any device waiting for your approval.
 
 ### bluetooth connect
 
@@ -861,13 +861,28 @@ Sets the name, description and picture shown for a device.
 | `--image` | `-i` | | The file name of the picture to show. Give the file name only, not a path |
 | `--clear` | `-c` | | Remove the name, description and picture customizations |
 | `--keep-when-offline` | `-k` | | How long to keep the device's MIDI endpoint after the device goes away: `always`, `immediate`, `default`, or a number of seconds |
+| `--incoming-timing` | | | When the device's incoming messages are passed on: `smooth` holds each one a few milliseconds so the timing is steadier, `asap` (or `as-soon-as-possible`) passes each one on as soon as it arrives, and `default` uses the transport default |
 | `--temporary` | `-t` | | Don't save the change. It lasts until the MIDI service restarts |
 
 ```
 midi bluetooth list
 midi bluetooth connect <bluetooth device id>
 midi bluetooth customize <bluetooth device id> --name "Stage Keyboard" --keep-when-offline always
+midi bluetooth customize <bluetooth device id> --incoming-timing asap
 midi bluetooth disconnect <bluetooth device id> --forget
+```
+
+### bluetooth defaults
+
+Sets the defaults used by every Bluetooth MIDI device that doesn't have its own setting.
+
+| Option | Short | Default | Description |
+| ----- | ----- | ----- | ----- |
+| `--incoming-timing` | | | When incoming messages are passed on: `smooth` holds each one a few milliseconds so the timing is steadier, and `asap` (or `as-soon-as-possible`) passes each one on as soon as it arrives. `smooth` is the default |
+| `--temporary` | `-t` | | Don't save the change. It lasts until the MIDI service restarts |
+
+```
+midi bluetooth defaults --incoming-timing smooth
 ```
 
 ### bluetooth peripheral
@@ -879,7 +894,7 @@ Publishes this PC as a Bluetooth MIDI device, so a phone, tablet or another comp
 | `bluetooth peripheral start` | Starts publishing this PC. `--protocol` (`-p`) chooses `midi1`, the default, or `midi2`. Only one can be published at a time |
 | `bluetooth peripheral stop` | Stops publishing this PC |
 | `bluetooth peripheral status` | Shows whether this PC is published, and what's connected to it |
-| `bluetooth peripheral customize` | Sets the name, description and picture shown for the device connected to this PC. It takes the same options as `bluetooth customize`, except `--keep-when-offline` |
+| `bluetooth peripheral customize` | Sets the name, description and picture shown for the device connected to this PC. It takes the same options as `bluetooth customize`, except `--keep-when-offline` and `--incoming-timing` |
 | `bluetooth peripheral approve` | Lets a device that connected to this PC have a MIDI endpoint |
 | `bluetooth peripheral deny` | Refuses a device that connected to this PC |
 | `bluetooth peripheral forget` | Forgets a remembered approval or refusal, so you're asked about that device again |
