@@ -83,6 +83,9 @@
   <PropertyGroup>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <!-- set here, before IncludePath reads it: the default is "Generated Files", and the internal
+         Windows build can't take a path with a space -->
+    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -228,9 +231,6 @@
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
   </ItemGroup>
-  <PropertyGroup>
-    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
