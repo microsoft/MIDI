@@ -1644,6 +1644,58 @@ void OscTests::CustomRulesBecomeMidi()
     VERIFY_ARE_EQUAL(static_cast<int32_t>(InboundResult::NoRowMatched), static_cast<int32_t>(Receive({ sendOnly }, MessageBuilder{ "/1/fader3" }.Float(0.5f), umps).Result));
 }
 
+void OscTests::LaterRulesForTheSameMidiNeverSend()
+{
+    OscRow row{};
+    row.Group = 0;
+    row.Format = OscFormat::Custom;
+
+    // Two rules for controller 74 on channel 1, the second asking for argument 2.
+    OscRule first{};
+    first.Address = "/test";
+    first.Direction = OscRuleDirection::Out;
+    first.Number = OscRuleNumber{ {}, 74 };
+    row.Rules.push_back(first);
+
+    auto second = first;
+    second.Argument = 1;
+    row.Rules.push_back(second);
+
+    VERIFY_IS_TRUE((RulesNeverSent(row.Rules) == std::vector<bool>{ false, true }));
+
+    std::vector<OscRow> const rows{ row };
+    OutboundTranslator translator{};
+    uint32_t const word = Cv(0xB0, 74, 127, 0);
+    std::vector<MessageBuilder> out{};
+    translator.Translate(rows, &word, 1, out);
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, out.size());
+    VERIFY_ARE_EQUAL(std::string{ "f" }, Reread(out[0]).TypeTags);
+
+    // A rule that only receives hides nothing.
+    row.Rules[0].Direction = OscRuleDirection::In;
+    VERIFY_IS_TRUE((RulesNeverSent(row.Rules) == std::vector<bool>{ false, false }));
+
+    // {n}+70 takes controllers 70 to 127, so it hides 74 but not 60.
+    row.Rules[0].Direction = OscRuleDirection::Both;
+    row.Rules[0].Address = "/fader{n}";
+    row.Rules[0].Number = OscRuleNumber{ "n", 70 };
+    VERIFY_IS_TRUE((RulesNeverSent(row.Rules) == std::vector<bool>{ false, true }));
+
+    row.Rules[1].Number = OscRuleNumber{ {}, 60 };
+    VERIFY_IS_TRUE((RulesNeverSent(row.Rules) == std::vector<bool>{ false, false }));
+
+    std::string address{};
+    VERIFY_ARE_EQUAL(size_t{ 0 }, SendingRule(row.Rules, OscRuleMessage::ControlChange, 0, 74, address).value_or(99));
+    VERIFY_ARE_EQUAL(std::string{ "/fader4" }, address);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, SendingRule(row.Rules, OscRuleMessage::ControlChange, 0, 60, address).value_or(99));
+    VERIFY_IS_FALSE(SendingRule(row.Rules, OscRuleMessage::Note, 0, 60, address).has_value());
+
+    // The preset's rules each send something.
+    auto const touchOsc = Preset(OscPreset::TouchOsc, 0).Rules;
+    VERIFY_IS_TRUE((RulesNeverSent(touchOsc) == std::vector<bool>(touchOsc.size(), false)));
+}
+
 void OscTests::CustomRulesSendOsc()
 {
     auto row = Preset(OscPreset::TouchOsc, 1);
@@ -1672,6 +1724,9 @@ void OscTests::CustomRulesSendOsc()
     VERIFY_ARE_EQUAL(std::string{ "/1/fader3" }, copy.Address);
     VERIFY_ARE_EQUAL(std::string{ "f" }, copy.TypeTags);
     VERIFY_ARE_EQUAL(1.0, copy.Arguments[0].Real);
+
+    copy = Reread(send(Cv(0xB0, 80, 127, 1))[0]);
+    VERIFY_ARE_EQUAL(std::string{ "/1/toggle1" }, copy.Address);
 
     copy = Reread(send(Cv(0x90, 61, 127, 1))[0]);
     VERIFY_ARE_EQUAL(std::string{ "/1/push2" }, copy.Address);

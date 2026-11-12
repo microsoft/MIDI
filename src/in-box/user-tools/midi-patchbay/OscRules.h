@@ -66,6 +66,14 @@ namespace midipatchbay::osc
     bool RuleReceives(_In_ OscRule const& rule);
     bool RuleSends(_In_ OscRule const& rule);
 
+    // The rule that sends one MIDI message: the first that sends this kind of message and whose
+    // channel and number fit it. Also the address it goes to. Nothing when no rule fits.
+    std::optional<size_t> SendingRule(_In_ std::vector<OscRule> const& rules, _In_ OscRuleMessage message, _In_ int32_t channel, _In_ int32_t number, _Out_ std::string& address);
+
+    // For each rule, whether it would send MIDI to OSC but never does, because a rule above it
+    // fits every MIDI message it fits, and only the first rule that fits sends.
+    std::vector<bool> RulesNeverSent(_In_ std::vector<OscRule> const& rules);
+
     // The highest MIDI value a rule's message has: 127, or 16383 for pitch bend.
     uint32_t RuleHighest(_In_ OscRuleMessage message) noexcept;
 

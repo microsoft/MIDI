@@ -1465,33 +1465,17 @@ namespace midipatchbay::osc
             default: message = OscRuleMessage::PitchBend; value = static_cast<uint32_t>(midi.Data1) | (static_cast<uint32_t>(midi.Data2) << 7); break;
             }
 
-            auto const usesNumber = message != OscRuleMessage::PitchBend && message != OscRuleMessage::ChannelPressure;
+            std::string address{};
+            auto const sending = SendingRule(row.Rules, message, channel, number, address);
 
-            for (auto const& rule : row.Rules)
+            if (!sending.has_value())
             {
-                if (rule.Direction == OscRuleDirection::In || rule.Message != message)
-                {
-                    continue;
-                }
-
-                RuleParts parts{};
-
-                if (!SolveRuleNumber(rule.Channel, channel, parts) || (usesNumber && !SolveRuleNumber(rule.Number, number, parts)))
-                {
-                    continue;
-                }
-
-                auto const address = BuildRuleAddress(rule.Address, parts);
-
-                if (!address.has_value())
-                {
-                    continue;
-                }
-
-                auto const unit = static_cast<double>(value) / RuleHighest(rule.Message);
-                out.emplace_back(*address).Float(static_cast<float>(rule.Low + unit * (rule.High - rule.Low)));
                 return;
             }
+
+            auto const& rule = row.Rules[*sending];
+            auto const unit = static_cast<double>(value) / RuleHighest(rule.Message);
+            out.emplace_back(address).Float(static_cast<float>(rule.Low + unit * (rule.High - rule.Low)));
         }
 
         // One MIDI 1.0 message as the row's format says it.
