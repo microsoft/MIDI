@@ -11,6 +11,7 @@
 
 #include "CalcPitch.h"
 #include "CalcTempo.h"
+#include "CalcTimecode.h"
 
 namespace midicalculator
 {
@@ -20,15 +21,18 @@ namespace midicalculator
     using midiapp::WindowBackdrop;
     using midiapp::WindowPlacementInfo;
 
-    // The pages, in the order the navigation shows them. The value is saved, so only add.
+    // The pages. The value is saved, so only add; the navigation sets its own order.
     enum class CalculatorPage : int32_t
     {
         Tempo = 0,
         Pitch = 1,
         Midi2 = 2,
         WindowsTime = 3,
-        History = 4
+        History = 4,
+        Timecode = 5
     };
+
+    inline constexpr CalculatorPage LastCalculatorPage = CalculatorPage::Timecode;
 
     class AppSettings : public midiapp::MidiAppSettings
     {
@@ -50,6 +54,9 @@ namespace midicalculator
 
         double ReferenceHertz() const noexcept { return m_referenceHertz; }
         void ReferenceHertz(double value) noexcept;
+
+        midicalc::FrameRate FrameRate() const noexcept { return m_frameRate; }
+        void FrameRate(midicalc::FrameRate value) noexcept;
 
         void ResetSession() noexcept;
 
@@ -95,6 +102,7 @@ namespace midicalculator
         midicalc::Meter m_meter{};
         double m_sampleRate{ DefaultSampleRate };
         double m_referenceHertz{ midicalc::DefaultReferenceHertz };
+        midicalc::FrameRate m_frameRate{ midicalc::DefaultFrameRate };
 
         midicalc::Temperament m_temperament{ midicalc::Temperament::Equal };
         int32_t m_temperamentRoot{ 0 };

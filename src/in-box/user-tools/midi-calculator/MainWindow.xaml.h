@@ -32,6 +32,7 @@ namespace winrt::midicalculator::implementation
         void OnSessionTempoChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnSessionSampleRateChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnSessionReferenceChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnSessionFrameRateChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnSessionMeterLostFocus(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSessionMeterKeyDown(foundation::IInspectable const& sender, xaml::Input::KeyRoutedEventArgs const& args);
         void OnSessionResetClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -69,6 +70,14 @@ namespace winrt::midicalculator::implementation
         void BuildPitchPage();
         void UpdatePitchPage() noexcept;
         void UpdateNoteTable() noexcept;
+
+        // ---- Timecode and samples (MainWindowTimecode.cpp) ----
+        void BuildTimecodePage();
+        void UpdateTimecodePage() noexcept;
+        void UpdateTimecodeCalculator() noexcept;
+        void UpdateTimecodeConvert() noexcept;
+        void UpdateSamples() noexcept;
+        void AddToTape(_In_ winrt::hstring const& question, _In_ winrt::hstring const& answer) noexcept;
 
         // ---- MIDI 2.0 values (MainWindowMidi2.cpp) ----
         void BuildMidi2Page();
@@ -169,6 +178,37 @@ namespace winrt::midicalculator::implementation
         controls::NumberBox m_tableOctave{ nullptr };
         std::array<controls::TextBlock, 12> m_tableNames{};
         std::array<controls::TextBlock, 12> m_tableHertz{};
+
+        // ---- Timecode and samples ----
+        controls::ComboBox m_tcRate{ nullptr };
+        std::shared_ptr<::midicalculator::ui::Segmented> m_tcMode{};
+        controls::TextBox m_tcA{ nullptr };
+        controls::TextBox m_tcB{ nullptr };
+        std::array<controls::Primitives::ToggleButton, 4> m_tcOperators{};
+        int32_t m_tcOperator{ 0 };
+        bool m_tcUpdatingOperators{ false };
+        ::midicalculator::ui::BigResult m_tcResult{};
+        controls::StackPanel m_tcTape{ nullptr };
+        std::optional<int64_t> m_tcAnswer{};
+        winrt::hstring m_tcQuestion{};
+        winrt::hstring m_tcAnswerText{};
+
+        controls::TextBox m_cvTimecode{ nullptr };
+        controls::ComboBox m_cvRate{ nullptr };
+        controls::TextBlock m_cvFrames{ nullptr };
+        controls::TextBlock m_cvRealTime{ nullptr };
+        controls::TextBlock m_cvSamples{ nullptr };
+        controls::TextBlock m_cvSamplesLabel{ nullptr };
+        controls::TextBlock m_cvBars{ nullptr };
+        controls::TextBlock m_cvBarsLabel{ nullptr };
+        controls::ComboBox m_cvTargetRate{ nullptr };
+        controls::TextBlock m_cvTarget{ nullptr };
+
+        controls::TextBlock m_samplesTitle{ nullptr };
+        controls::TextBox m_samples{ nullptr };
+        controls::TextBlock m_samplesResult{ nullptr };
+        std::array<controls::TextBlock, 2> m_bufferRates{};
+        std::array<std::array<controls::TextBlock, 6>, 2> m_bufferCells{};
 
         // ---- MIDI 2.0 values ----
         controls::TextBox m_m2Note{ nullptr };

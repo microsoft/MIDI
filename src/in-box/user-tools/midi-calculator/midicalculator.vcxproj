@@ -138,6 +138,7 @@
     <ClInclude Include="CalcPitch.h" />
     <ClInclude Include="CalcMidi2.h" />
     <ClInclude Include="CalcTime.h" />
+    <ClInclude Include="CalcTimecode.h" />
     <ClInclude Include="CalcText.h" />
     <ClInclude Include="CalcHistory.h" />
     <ClInclude Include="CardBuilder.h" />
@@ -185,6 +186,9 @@
     <ClCompile Include="CalcTime.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="CalcTimecode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
@@ -204,6 +208,9 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowTime.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowTimecode.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowHistory.cpp">

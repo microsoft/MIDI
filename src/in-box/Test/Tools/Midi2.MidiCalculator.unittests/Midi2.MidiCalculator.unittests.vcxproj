@@ -90,6 +90,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-calculator\CalcPitch.h" />
     <ClInclude Include="..\..\..\user-tools\midi-calculator\CalcMidi2.h" />
     <ClInclude Include="..\..\..\user-tools\midi-calculator\CalcTime.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-calculator\CalcTimecode.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\TapTempo.h" />
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +101,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-calculator\CalcPitch.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-calculator\CalcMidi2.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-calculator\CalcTime.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-calculator\CalcTimecode.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\TapTempo.cpp" />
   </ItemGroup>  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

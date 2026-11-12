@@ -19,6 +19,7 @@ namespace midicalculator
         constexpr wchar_t ValueMeterDenominator[] = L"MeterDenominator";
         constexpr wchar_t ValueSampleRate[] = L"SampleRate";
         constexpr wchar_t ValueReferenceHertz[] = L"ReferenceHertz";
+        constexpr wchar_t ValueFrameRate[] = L"FrameRate";
         constexpr wchar_t ValueTemperament[] = L"Temperament";
         constexpr wchar_t ValueTemperamentRoot[] = L"TemperamentRoot";
         constexpr wchar_t ValueMiddleCOctave[] = L"MiddleCOctave";
@@ -93,6 +94,11 @@ namespace midicalculator
         m_sampleRate = ReadDouble(ValueSampleRate, DefaultSampleRate, MinimumSampleRate, MaximumSampleRate);
         m_referenceHertz = ReadDouble(ValueReferenceHertz, midicalc::DefaultReferenceHertz, MinimumReferenceHertz, MaximumReferenceHertz);
 
+        auto const frameRate = ReadDword(ValueFrameRate, static_cast<uint32_t>(midicalc::DefaultFrameRate));
+        m_frameRate = frameRate < static_cast<uint32_t>(midicalc::FrameRateCount)
+            ? static_cast<midicalc::FrameRate>(frameRate)
+            : midicalc::DefaultFrameRate;
+
         auto const temperament = ReadDword(ValueTemperament, 0);
         m_temperament = temperament < static_cast<uint32_t>(midicalc::TemperamentCount)
             ? static_cast<midicalc::Temperament>(temperament)
@@ -107,7 +113,7 @@ namespace midicalculator
         m_ticksPerQuarterNote = (ticks >= 1 && ticks <= 65535) ? ticks : DefaultTicksPerQuarterNote;
 
         auto const page = ReadDword(ValueLastPage, 0);
-        m_lastPage = page <= static_cast<uint32_t>(CalculatorPage::History)
+        m_lastPage = page <= static_cast<uint32_t>(LastCalculatorPage)
             ? static_cast<CalculatorPage>(page)
             : CalculatorPage::Tempo;
     }
@@ -146,12 +152,22 @@ namespace midicalculator
         WriteDouble(ValueReferenceHertz, m_referenceHertz);
     }
 
+    _Use_decl_annotations_
+    void AppSettings::FrameRate(midicalc::FrameRate value) noexcept
+    {
+        m_frameRate = static_cast<int32_t>(value) >= 0 && static_cast<int32_t>(value) < midicalc::FrameRateCount
+            ? value
+            : midicalc::DefaultFrameRate;
+        WriteDword(ValueFrameRate, static_cast<uint32_t>(m_frameRate));
+    }
+
     void AppSettings::ResetSession() noexcept
     {
         Tempo(DefaultTempo);
         Meter(midicalc::Meter{});
         SampleRate(DefaultSampleRate);
         ReferenceHertz(midicalc::DefaultReferenceHertz);
+        FrameRate(midicalc::DefaultFrameRate);
     }
 
     _Use_decl_annotations_

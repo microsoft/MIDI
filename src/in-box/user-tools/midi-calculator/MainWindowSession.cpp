@@ -38,6 +38,16 @@ namespace winrt::midicalculator::implementation
             SessionSampleRateBox().Value(settings.SampleRate());
             SessionReferenceBox().Value(settings.ReferenceHertz());
             SessionMeterBox().Text(std::format(L"{}/{}", settings.Meter().Numerator, settings.Meter().Denominator));
+
+            if (SessionFrameRateBox().Items().Size() == 0)
+            {
+                for (int32_t rate = 0; rate < ::midicalc::FrameRateCount; ++rate)
+                {
+                    SessionFrameRateBox().Items().Append(winrt::box_value(res::GetString(std::format(L"FrameRateShort{}", rate))));
+                }
+            }
+
+            SessionFrameRateBox().SelectedIndex(static_cast<int32_t>(settings.FrameRate()));
             m_suppressSession = false;
 
             UpdateReferenceLabel();
@@ -67,7 +77,31 @@ namespace winrt::midicalculator::implementation
         UpdateReferenceLabel();
         UpdateTempoPage();
         UpdatePitchPage();
+        UpdateTimecodePage();
         UpdateMidi2Page();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSessionFrameRateChanged(foundation::IInspectable const&, controls::SelectionChangedEventArgs const&)
+    {
+        auto const index = SessionFrameRateBox().SelectedIndex();
+
+        if (m_suppressSession || index < 0 || index >= ::midicalc::FrameRateCount)
+        {
+            return;
+        }
+
+        auto const rate = static_cast<::midicalc::FrameRate>(index);
+        native::AppSettings::Current().FrameRate(rate);
+
+        // the cards follow the session frame rate; each can still be set on its own after
+        if (m_tcRate)
+        {
+            m_tcRate.SelectedIndex(index);
+            m_cvRate.SelectedIndex(index);
+        }
+
+        SessionChanged();
     }
 
     _Use_decl_annotations_
@@ -148,6 +182,14 @@ namespace winrt::midicalculator::implementation
         {
             native::AppSettings::Current().ResetSession();
             LoadSessionControls();
+
+            if (m_tcRate)
+            {
+                auto const rate = static_cast<int32_t>(native::AppSettings::Current().FrameRate());
+                m_tcRate.SelectedIndex(rate);
+                m_cvRate.SelectedIndex(rate);
+            }
+
             SessionChanged();
         }
         MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to reset the session values.")

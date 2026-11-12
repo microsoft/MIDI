@@ -49,6 +49,7 @@ namespace winrt::midicalculator::implementation
             // A page that fails to build leaves the rest of the app working.
             try { BuildTempoPage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Tempo and beats page.")
             try { BuildPitchPage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Notes and pitch page.")
+            try { BuildTimecodePage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Timecode and samples page.")
             try { BuildMidi2Page(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the MIDI 2.0 values page.")
             try { BuildTimePage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Windows timestamps page.")
             try { BuildHistoryPage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the History page.")
@@ -148,12 +149,14 @@ namespace winrt::midicalculator::implementation
 
             TempoPage().Visibility(page == native::CalculatorPage::Tempo ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             PitchPage().Visibility(page == native::CalculatorPage::Pitch ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            TimecodePage().Visibility(page == native::CalculatorPage::Timecode ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             Midi2Page().Visibility(page == native::CalculatorPage::Midi2 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             WindowsTimePage().Visibility(page == native::CalculatorPage::WindowsTime ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             HistoryPage().Visibility(page == native::CalculatorPage::History ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             // Windows timestamps and History don't use the session values
-            auto const usesSession = page == native::CalculatorPage::Tempo || page == native::CalculatorPage::Pitch || page == native::CalculatorPage::Midi2;
+            auto const usesSession = page == native::CalculatorPage::Tempo || page == native::CalculatorPage::Pitch ||
+                page == native::CalculatorPage::Timecode || page == native::CalculatorPage::Midi2;
             SessionStrip().Visibility(usesSession ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             controls::NavigationViewItem item{ nullptr };
@@ -162,6 +165,7 @@ namespace winrt::midicalculator::implementation
             switch (page)
             {
             case native::CalculatorPage::Pitch: item = NavPitch(); title = res::GetString(L"PagePitch"); break;
+            case native::CalculatorPage::Timecode: item = NavTimecode(); title = res::GetString(L"PageTimecode"); break;
             case native::CalculatorPage::Midi2: item = NavMidi2(); title = res::GetString(L"PageMidi2"); break;
             case native::CalculatorPage::WindowsTime: item = NavWindowsTime(); title = res::GetString(L"PageWindowsTime"); break;
             case native::CalculatorPage::History: item = NavHistory(); title = res::GetString(L"PageHistory"); break;
@@ -213,7 +217,7 @@ namespace winrt::midicalculator::implementation
             auto const tag = winrt::unbox_value_or<winrt::hstring>(item.Tag(), L"0");
             auto const index = std::wcstol(tag.c_str(), nullptr, 10);
 
-            if (index >= 0 && index <= static_cast<long>(native::CalculatorPage::History) && static_cast<native::CalculatorPage>(index) != m_page)
+            if (index >= 0 && index <= static_cast<long>(native::LastCalculatorPage) && static_cast<native::CalculatorPage>(index) != m_page)
             {
                 ShowPage(static_cast<native::CalculatorPage>(index));
             }
@@ -414,6 +418,9 @@ namespace winrt::midicalculator::implementation
                 break;
             case native::CalculatorPage::Pitch:
                 m_pitchNote.Text(value);
+                break;
+            case native::CalculatorPage::Timecode:
+                m_cvTimecode.Text(value);
                 break;
             case native::CalculatorPage::Midi2:
                 m_umpWords.Text(value);

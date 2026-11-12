@@ -81,4 +81,4 @@ That lets other tools hand off to it. The first one I'd add is in the MIDI Monit
 
 ## Built so far (November 11 2026)
 
-Tempo and beats, Notes and pitch, MIDI 2.0 values, Windows timestamps and History, laid out to these comps. Still to come: Chords and scales, Timecode and samples (with the session frame rate), the compact overlay, and the MIDI input features (tap from a note, measure MIDI Clock, play a note or chord).
+Tempo and beats, Notes and pitch, Timecode and samples (with the session frame rate), MIDI 2.0 values, Windows timestamps and History, laid out to these comps. Timecode and samples was added November 12. Still to come: Chords and scales, the compact overlay, and the MIDI input features (tap from a note, measure MIDI Clock, play a note or chord).

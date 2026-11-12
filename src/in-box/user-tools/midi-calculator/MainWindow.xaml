@@ -138,6 +138,11 @@
                         <FontIcon Glyph="&#xE8D6;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="NavTimecode" x:Uid="NavTimecode" Tag="5">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE823;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem x:Name="NavMidi2" x:Uid="NavMidi2" Tag="2">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE943;" />
@@ -182,10 +187,13 @@
                     <Border.Resources>
                         <x:Double x:Key="TextControlThemeMinHeight">26</x:Double>
                         <Thickness x:Key="TextControlThemePadding">8,2,8,3</Thickness>
+                        <x:Double x:Key="ComboBoxMinHeight">26</x:Double>
+                        <Thickness x:Key="ComboBoxPadding">8,2,0,3</Thickness>
                     </Border.Resources>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
                     <Grid ColumnSpacing="14" Padding="0,0,0,2">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
@@ -250,8 +258,17 @@
                             <TextBlock x:Uid="SessionHertzUnit2" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Uid="SessionFrameRateLabel" Text="Frame rate" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox FontSize="13" x:Name="SessionFrameRateBox"
+                                      x:Uid="SessionFrameRateBox"
+                                      MinWidth="76"
+                                      SelectionChanged="OnSessionFrameRateChanged" />
+                            <TextBlock x:Uid="SessionFrameRateUnit" Text="fps" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
                         <TextBlock x:Name="StatusText"
-                                   Grid.Column="5"
+                                   Grid.Column="6"
                                    HorizontalAlignment="Right"
                                    VerticalAlignment="Top"
                                    Margin="0,4.5,0,0"
@@ -260,7 +277,7 @@
 
                         <Button x:Name="SessionResetButton"
                                 x:Uid="SessionResetButton"
-                                Grid.Column="6"
+                                Grid.Column="7"
                                 MinHeight="26"
                                 Padding="10,3,10,4"
                                 FontSize="12"
@@ -284,6 +301,7 @@
                     <Grid x:Name="PageHost" Margin="24,4,24,24" SizeChanged="OnPageHostSizeChanged">
                         <Grid x:Name="TempoPage" Visibility="Collapsed" />
                         <Grid x:Name="PitchPage" Visibility="Collapsed" />
+                        <Grid x:Name="TimecodePage" Visibility="Collapsed" />
                         <Grid x:Name="Midi2Page" Visibility="Collapsed" />
                         <Grid x:Name="WindowsTimePage" Visibility="Collapsed" />
                         <Grid x:Name="HistoryPage" Visibility="Collapsed" />
