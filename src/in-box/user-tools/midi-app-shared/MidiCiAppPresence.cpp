@@ -247,6 +247,17 @@ namespace midiapp
                             return;
                         }
 
+                        // On a loopback this app hears its own Discovery come back. Answering it
+                        // would be a reply to itself, sent while other devices may be replying.
+                        auto const ownMuid = sender.SourceMuid();
+                        auto const fromMuid = message.SourceMuid();
+
+                        if (ownMuid == nullptr || fromMuid == nullptr ||
+                            fromMuid.AsCombined28BitValue() == ownMuid.AsCombined28BitValue())
+                        {
+                            return;
+                        }
+
                         // The same identifier and the same claim the session makes when it
                         // announces itself, so one device does not describe itself two ways.
                         auto const messages = MidiCapabilityInquiryMessageBuilder::BuildDiscoveryReply(
