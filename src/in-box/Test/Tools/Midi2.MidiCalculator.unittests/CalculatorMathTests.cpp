@@ -16,6 +16,8 @@
 #include "CalcPitch.h"
 #include "CalcTempo.h"
 #include "CalcTime.h"
+#include "CalcTimecode.h"
+#include "MidiTimeCode.h"
 #include "TapTempo.h"
 
 using namespace midicalc;
@@ -490,4 +492,175 @@ void CalculatorMathTests::SplitsSecondsIntoHoursAndMinutes()
 
     auto const zero = SplitSeconds(-5.0);
     VERIFY_ARE_EQUAL(0ull, zero.Hours);
+}
+
+// ---------------------------------------------------------------- timecode and samples
+
+void CalculatorMathTests::DropFrameSkipsTwoNumbersAMinute()
+{
+    auto const rate = FrameRate::Fps2997Drop;
+
+    VERIFY_ARE_EQUAL(int64_t{ 1800 }, TimecodeToFrames({ false, 0, 1, 0, 2 }, rate));
+    VERIFY_ARE_EQUAL(int64_t{ 17982 }, TimecodeToFrames({ false, 0, 10, 0, 0 }, rate));
+    VERIFY_ARE_EQUAL(int64_t{ 107892 }, TimecodeToFrames({ false, 1, 0, 0, 0 }, rate));
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"00:00:59;29" }, FormatTimecode(FramesToTimecode(1799, rate), rate));
+    VERIFY_ARE_EQUAL(std::wstring{ L"00:01:00;02" }, FormatTimecode(FramesToTimecode(1800, rate), rate));
+    VERIFY_ARE_EQUAL(std::wstring{ L"00:10:00;00" }, FormatTimecode(FramesToTimecode(17982, rate), rate));
+
+    // the tenth minute keeps its numbers, the others lose two
+    VERIFY_IS_TRUE(IsSkippedFrameNumber({ false, 0, 1, 0, 1 }, rate));
+    VERIFY_IS_FALSE(IsSkippedFrameNumber({ false, 0, 10, 0, 1 }, rate));
+    VERIFY_IS_FALSE(IsSkippedFrameNumber({ false, 0, 1, 0, 1 }, FrameRate::Fps2997));
+
+    // every frame number of the first twenty minutes comes back to the same frame
+    for (int64_t frames = 0; frames < 30 * 60 * 20; ++frames)
+    {
+        auto const timecode = FramesToTimecode(frames, rate);
+        VERIFY_IS_TRUE(IsValidTimecode(timecode, rate));
+        VERIFY_ARE_EQUAL(frames, TimecodeToFrames(timecode, rate));
+    }
+}
+
+void CalculatorMathTests::DropFrameAt5994SkipsFour()
+{
+    auto const rate = FrameRate::Fps5994Drop;
+
+    VERIFY_ARE_EQUAL(int64_t{ 3600 }, TimecodeToFrames({ false, 0, 1, 0, 4 }, rate));
+    VERIFY_ARE_EQUAL(int64_t{ 215784 }, TimecodeToFrames({ false, 1, 0, 0, 0 }, rate));
+    VERIFY_IS_TRUE(IsSkippedFrameNumber({ false, 0, 1, 0, 3 }, rate));
+    VERIFY_ARE_EQUAL(std::wstring{ L"00:01:00;04" }, FormatTimecode(FramesToTimecode(3600, rate), rate));
+
+    for (int64_t frames = 0; frames < 60 * 60 * 11; ++frames)
+    {
+        VERIFY_ARE_EQUAL(frames, TimecodeToFrames(FramesToTimecode(frames, rate), rate));
+    }
+}
+
+void CalculatorMathTests::TimecodeTypingFillsFromTheRight()
+{
+    auto const at25 = FrameRate::Fps25;
+
+    auto parsed = ParseTimecode(L"1:20", at25);
+    VERIFY_IS_TRUE(parsed.has_value());
+    VERIFY_ARE_EQUAL(int64_t{ 45 }, TimecodeToFrames(*parsed, at25));
+
+    // digits on their own fill two at a time
+    parsed = ParseTimecode(L"1000", at25);
+    VERIFY_IS_TRUE(parsed.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"00:00:10:00" }, FormatTimecode(*parsed, at25));
+
+    parsed = ParseTimecode(L"100000000", at25);
+    VERIFY_IS_TRUE(parsed.has_value());
+    VERIFY_ARE_EQUAL(uint32_t{ 100 }, parsed->Hours);
+
+    // either separator, whatever the rate
+    VERIFY_IS_TRUE(ParseTimecode(L"01:00:00:00", FrameRate::Fps2997Drop).has_value());
+    VERIFY_IS_TRUE(ParseTimecode(L" 01;00;00;00 ", at25).has_value());
+
+    parsed = ParseTimecode(L"-0:10", at25);
+    VERIFY_IS_TRUE(parsed.has_value());
+    VERIFY_ARE_EQUAL(int64_t{ -10 }, TimecodeToFrames(*parsed, at25));
+    VERIFY_ARE_EQUAL(std::wstring{ L"-00:00:00:10" }, FormatTimecode(*parsed, at25));
+    VERIFY_IS_FALSE(ParseTimecode(L"-0", at25)->Negative);
+
+    VERIFY_IS_FALSE(ParseTimecode(L"1:25", at25).has_value());
+    VERIFY_IS_FALSE(ParseTimecode(L"0:60:00", at25).has_value());
+    VERIFY_IS_FALSE(ParseTimecode(L"00:01:00;00", FrameRate::Fps2997Drop).has_value());
+    VERIFY_IS_TRUE(ParseTimecode(L"00:01:00;02", FrameRate::Fps2997Drop).has_value());
+    VERIFY_IS_FALSE(ParseTimecode(L"1::2", at25).has_value());
+    VERIFY_IS_FALSE(ParseTimecode(L"1:2:3:4:5", at25).has_value());
+    VERIFY_IS_FALSE(ParseTimecode(L"ten", at25).has_value());
+    VERIFY_IS_FALSE(ParseTimecode(L"", at25).has_value());
+}
+
+void CalculatorMathTests::TimecodeAgreesWithMidiTimeCode()
+{
+    // the four rates MIDI Time Code carries
+    std::pair<FrameRate, midiapp::MidiTimeCodeFrameRate> const rates[]{
+        { FrameRate::Fps24, midiapp::MidiTimeCodeFrameRate::Frames24 },
+        { FrameRate::Fps25, midiapp::MidiTimeCodeFrameRate::Frames25 },
+        { FrameRate::Fps2997Drop, midiapp::MidiTimeCodeFrameRate::Frames2997Drop },
+        { FrameRate::Fps30, midiapp::MidiTimeCodeFrameRate::Frames30 } };
+
+    for (auto const& [ours, theirs] : rates)
+    {
+        // every frame of the first two minutes, then a spread across the day
+        auto const day = TimecodeToFrames({ false, 23, 59, 59, static_cast<uint32_t>(NominalFramesPerSecond(ours) - 1) }, ours);
+
+        for (int64_t frames = 0; frames <= day; frames += (frames < 3600 ? 1 : 997))
+        {
+            auto const mine = FramesToTimecode(frames, ours);
+            auto const shared = midiapp::PositionAfterFrames({}, theirs, static_cast<uint64_t>(frames));
+
+            VERIFY_ARE_EQUAL(static_cast<uint32_t>(shared.Hours), mine.Hours);
+            VERIFY_ARE_EQUAL(static_cast<uint32_t>(shared.Minutes), mine.Minutes);
+            VERIFY_ARE_EQUAL(static_cast<uint32_t>(shared.Seconds), mine.Seconds);
+            VERIFY_ARE_EQUAL(static_cast<uint32_t>(shared.Frames), mine.Frames);
+            VERIFY_ARE_EQUAL(midiapp::FormatPosition(shared, theirs), FormatTimecode(mine, ours));
+        }
+
+        VERIFY_IS_TRUE(Near(FramesPerSecond(ours), 1.0 / midiapp::SecondsPerFrame(theirs), 1e-9));
+    }
+}
+
+void CalculatorMathTests::TimecodeToRealTimeSamplesAndBars()
+{
+    // the values in the comp: 01:00:00;00 at 29.97 drop frame
+    auto const rate = FrameRate::Fps2997Drop;
+    auto const frames = TimecodeToFrames(*ParseTimecode(L"01:00:00;00", rate), rate);
+    auto const seconds = FramesToSeconds(frames, rate);
+
+    VERIFY_IS_TRUE(Near(seconds, 3599.9964, 1e-9));
+    VERIFY_ARE_EQUAL(172799827ll, static_cast<long long>(std::floor(seconds * 48000.0)));
+
+    auto position = BarPositionAt(seconds, 120.0, 4, 4);
+    VERIFY_IS_TRUE(position.has_value());
+    VERIFY_ARE_EQUAL(uint64_t{ 1800 }, position->Bar);
+    VERIFY_ARE_EQUAL(uint32_t{ 4 }, position->Beat);
+    VERIFY_IS_TRUE(Near(position->BeatFraction, 0.9928, 1e-6));
+
+    // the start of a bar is beat 1 of the next bar, not beat 5 of this one
+    position = BarPositionAt(4.0, 120.0, 4, 4);
+    VERIFY_ARE_EQUAL(uint64_t{ 3 }, position->Bar);
+    VERIFY_ARE_EQUAL(uint32_t{ 1 }, position->Beat);
+
+    // 6/8 counts eighth notes
+    position = BarPositionAt(1.25, 120.0, 6, 8);
+    VERIFY_ARE_EQUAL(uint64_t{ 1 }, position->Bar);
+    VERIFY_ARE_EQUAL(uint32_t{ 6 }, position->Beat);
+    VERIFY_IS_FALSE(BarPositionAt(-1.0, 120.0, 4, 4).has_value());
+
+    // the comp's sum
+    auto const sum = frames + TimecodeToFrames(*ParseTimecode(L"00:00:30;00", rate), rate);
+    VERIFY_ARE_EQUAL(int64_t{ 108792 }, sum);
+    VERIFY_ARE_EQUAL(std::wstring{ L"01:00:30;00" }, FormatTimecode(FramesToTimecode(sum, rate), rate));
+}
+
+void CalculatorMathTests::SameMomentAtAnotherFrameRate()
+{
+    auto moment = ConvertFrames(107892, FrameRate::Fps2997Drop, FrameRate::Fps25);
+    VERIFY_ARE_EQUAL(int64_t{ 89999 }, moment.Frames);
+    VERIFY_IS_TRUE(Near(moment.Leftover, 0.91, 1e-9));
+    VERIFY_ARE_EQUAL(std::wstring{ L"00:59:59:24" }, FormatTimecode(FramesToTimecode(moment.Frames, FrameRate::Fps25), FrameRate::Fps25));
+
+    moment = ConvertFrames(24, FrameRate::Fps23976, FrameRate::Fps24);
+    VERIFY_ARE_EQUAL(int64_t{ 24 }, moment.Frames);
+    VERIFY_IS_TRUE(Near(moment.Leftover, 0.024, 1e-9));
+
+    // a negative length rounds down, so what's left over is never negative
+    moment = ConvertFrames(-1, FrameRate::Fps24, FrameRate::Fps25);
+    VERIFY_ARE_EQUAL(int64_t{ -2 }, moment.Frames);
+    VERIFY_IS_TRUE(moment.Leftover >= 0.0 && moment.Leftover < 1.0);
+
+    moment = SecondsToFrames(1.0, FrameRate::Fps25);
+    VERIFY_ARE_EQUAL(int64_t{ 25 }, moment.Frames);
+    VERIFY_IS_TRUE(Near(moment.Leftover, 0.0, 1e-9));
+}
+
+void CalculatorMathTests::BufferLengths()
+{
+    VERIFY_IS_TRUE(Near(BufferMilliseconds(128, 48000.0), 2.6667, 1e-4));
+    VERIFY_IS_TRUE(Near(BufferMilliseconds(1024, 44100.0), 23.2200, 1e-4));
+    VERIFY_IS_TRUE(Near(BufferMilliseconds(32, 0.0), 0.0, 1e-12));
 }

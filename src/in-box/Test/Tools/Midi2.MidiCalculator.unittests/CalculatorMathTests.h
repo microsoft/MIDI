@@ -61,4 +61,13 @@ public:
     TEST_METHOD(TimestampsToSecondsKeepTheirDigits);
     TEST_METHOD(TimestampsAndClockTime);
     TEST_METHOD(SplitsSecondsIntoHoursAndMinutes);
+
+    // ---- timecode and samples ----
+    TEST_METHOD(DropFrameSkipsTwoNumbersAMinute);
+    TEST_METHOD(DropFrameAt5994SkipsFour);
+    TEST_METHOD(TimecodeTypingFillsFromTheRight);
+    TEST_METHOD(TimecodeAgreesWithMidiTimeCode);
+    TEST_METHOD(TimecodeToRealTimeSamplesAndBars);
+    TEST_METHOD(SameMomentAtAnotherFrameRate);
+    TEST_METHOD(BufferLengths);
 };

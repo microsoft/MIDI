@@ -195,7 +195,7 @@
     <value>Reset the session values</value>
   </data>
   <data name="SessionResetButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Put back 120 BPM, 4/4, 48,000 Hz and 440 Hz</value>
+    <value>Put back 120 BPM, 4/4, 48,000 Hz, 440 Hz and 24 fps</value>
   </data>
   <data name="SettingsMiddleCLabel" xml:space="preserve">
     <value>Middle C (note 60) is called</value>
@@ -1126,5 +1126,236 @@
   </data>
   <data name="TableCopy" xml:space="preserve">
     <value>Copy table</value>
+  </data>
+  <data name="PageTimecode" xml:space="preserve">
+    <value>Timecode and samples</value>
+  </data>
+  <data name="NavTimecode.Content" xml:space="preserve">
+    <value>Timecode and samples</value>
+  </data>
+  <data name="SessionFrameRateLabel.Text" xml:space="preserve">
+    <value>Frame rate</value>
+  </data>
+  <data name="SessionFrameRateBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Session frame rate, in frames per second</value>
+  </data>
+  <data name="SessionFrameRateUnit.Text" xml:space="preserve">
+    <value>fps</value>
+  </data>
+  <data name="FrameRateName0" xml:space="preserve">
+    <value>23.976</value>
+  </data>
+  <data name="FrameRateName1" xml:space="preserve">
+    <value>24</value>
+  </data>
+  <data name="FrameRateName2" xml:space="preserve">
+    <value>25</value>
+  </data>
+  <data name="FrameRateName3" xml:space="preserve">
+    <value>29.97 drop frame</value>
+  </data>
+  <data name="FrameRateName4" xml:space="preserve">
+    <value>29.97 non-drop</value>
+  </data>
+  <data name="FrameRateName5" xml:space="preserve">
+    <value>30</value>
+  </data>
+  <data name="FrameRateName6" xml:space="preserve">
+    <value>50</value>
+  </data>
+  <data name="FrameRateName7" xml:space="preserve">
+    <value>59.94 drop frame</value>
+  </data>
+  <data name="FrameRateName8" xml:space="preserve">
+    <value>59.94 non-drop</value>
+  </data>
+  <data name="FrameRateName9" xml:space="preserve">
+    <value>60</value>
+  </data>
+  <data name="FrameRateShort0" xml:space="preserve">
+    <value>23.976</value>
+  </data>
+  <data name="FrameRateShort1" xml:space="preserve">
+    <value>24</value>
+  </data>
+  <data name="FrameRateShort2" xml:space="preserve">
+    <value>25</value>
+  </data>
+  <data name="FrameRateShort3" xml:space="preserve">
+    <value>29.97 drop</value>
+  </data>
+  <data name="FrameRateShort4" xml:space="preserve">
+    <value>29.97</value>
+  </data>
+  <data name="FrameRateShort5" xml:space="preserve">
+    <value>30</value>
+  </data>
+  <data name="FrameRateShort6" xml:space="preserve">
+    <value>50</value>
+  </data>
+  <data name="FrameRateShort7" xml:space="preserve">
+    <value>59.94 drop</value>
+  </data>
+  <data name="FrameRateShort8" xml:space="preserve">
+    <value>59.94</value>
+  </data>
+  <data name="FrameRateShort9" xml:space="preserve">
+    <value>60</value>
+  </data>
+  <data name="TcTitle" xml:space="preserve">
+    <value>Timecode calculator</value>
+  </data>
+  <data name="TcRateLabel" xml:space="preserve">
+    <value>Frame rate</value>
+  </data>
+  <data name="TcModeLabel" xml:space="preserve">
+    <value>Type values as</value>
+  </data>
+  <data name="TcModeTimecode" xml:space="preserve">
+    <value>Timecode</value>
+  </data>
+  <data name="TcModeFrames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="TcALabel" xml:space="preserve">
+    <value>First timecode</value>
+  </data>
+  <data name="TcBLabelTimecode" xml:space="preserve">
+    <value>Timecode to add or take away</value>
+  </data>
+  <data name="TcBLabelNumber" xml:space="preserve">
+    <value>Number to multiply or divide by</value>
+  </data>
+  <data name="TcPlaceholderTimecode" xml:space="preserve">
+    <value>01:00:00:00</value>
+  </data>
+  <data name="TcPlaceholderFrames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="TcPlaceholderNumber" xml:space="preserve">
+    <value>A number, such as 3</value>
+  </data>
+  <data name="TcOpAddText" xml:space="preserve">
+    <value>+</value>
+  </data>
+  <data name="TcOpSubtractText" xml:space="preserve">
+    <value>−</value>
+  </data>
+  <data name="TcOpMultiplyText" xml:space="preserve">
+    <value>×</value>
+  </data>
+  <data name="TcOpDivideText" xml:space="preserve">
+    <value>÷</value>
+  </data>
+  <data name="TcOpAddName" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="TcOpSubtractName" xml:space="preserve">
+    <value>Subtract</value>
+  </data>
+  <data name="TcOpMultiplyName" xml:space="preserve">
+    <value>Multiply</value>
+  </data>
+  <data name="TcOpDivideName" xml:space="preserve">
+    <value>Divide</value>
+  </data>
+  <data name="TcResultName" xml:space="preserve">
+    <value>timecode answer</value>
+  </data>
+  <data name="TcUseAsA" xml:space="preserve">
+    <value>Use as A</value>
+  </data>
+  <data name="TcFramesUnit" xml:space="preserve">
+    <value>frames</value>
+  </data>
+  <data name="TcDetailTimecode" xml:space="preserve">
+    <value>{0} frames · {1} of real time</value>
+  </data>
+  <data name="TcDetailFrames" xml:space="preserve">
+    <value>{0} · {1} of real time</value>
+  </data>
+  <data name="TcQuestion" xml:space="preserve">
+    <value>{0} {1} {2} at {3}</value>
+  </data>
+  <data name="TcNeedA" xml:space="preserve">
+    <value>Type a timecode such as 01:00:00:00. Fewer numbers fill from the right, so 1:20 is one second and twenty frames.</value>
+  </data>
+  <data name="TcNeedB" xml:space="preserve">
+    <value>Type a second timecode to add or take away.</value>
+  </data>
+  <data name="TcNeedFrames" xml:space="preserve">
+    <value>Type a number of frames.</value>
+  </data>
+  <data name="TcNeedNumber" xml:space="preserve">
+    <value>Type a number to multiply or divide by.</value>
+  </data>
+  <data name="TcSkipped" xml:space="preserve">
+    <value>{0} isn&apos;t a frame number at {1}. Drop frame skips the first {2} numbers of every minute except each tenth minute.</value>
+  </data>
+  <data name="TcDivideByZero" xml:space="preserve">
+    <value>You can&apos;t divide by zero.</value>
+  </data>
+  <data name="TcTooLong" xml:space="preserve">
+    <value>That&apos;s longer than 999 hours.</value>
+  </data>
+  <data name="TcTapeName" xml:space="preserve">
+    <value>Recent timecode answers</value>
+  </data>
+  <data name="CvTitle" xml:space="preserve">
+    <value>Convert a timecode</value>
+  </data>
+  <data name="CvTimecodeLabel" xml:space="preserve">
+    <value>Timecode</value>
+  </data>
+  <data name="CvRateLabel" xml:space="preserve">
+    <value>At</value>
+  </data>
+  <data name="CvFrames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="CvRealTime" xml:space="preserve">
+    <value>Real time</value>
+  </data>
+  <data name="CvSamplesFormat" xml:space="preserve">
+    <value>Samples at {0} kHz</value>
+  </data>
+  <data name="CvBarsFormat" xml:space="preserve">
+    <value>Bars and beats at {0} BPM, {1}</value>
+  </data>
+  <data name="CvBarsValue" xml:space="preserve">
+    <value>bar {0}, beat {1} + {2}</value>
+  </data>
+  <data name="CvTargetLabel" xml:space="preserve">
+    <value>Same moment at</value>
+  </data>
+  <data name="CvTargetName" xml:space="preserve">
+    <value>The same moment at the other frame rate</value>
+  </data>
+  <data name="CvLeftover" xml:space="preserve">
+    <value>{0} frame</value>
+  </data>
+  <data name="CvExact" xml:space="preserve">
+    <value>exactly</value>
+  </data>
+  <data name="SmTitleFormat" xml:space="preserve">
+    <value>Samples and buffers at {0} kHz</value>
+  </data>
+  <data name="SmSamplesLabel" xml:space="preserve">
+    <value>Samples</value>
+  </data>
+  <data name="SmResultFormat" xml:space="preserve">
+    <value>{0} s · {1} bars at {2} BPM</value>
+  </data>
+  <data name="SmNeed" xml:space="preserve">
+    <value>Type a number of samples.</value>
+  </data>
+  <data name="SmBufferHeading" xml:space="preserve">
+    <value>Buffer</value>
+  </data>
+  <data name="SmRateFormat" xml:space="preserve">
+    <value>{0} kHz</value>
+  </data>
+  <data name="SmHelp" xml:space="preserve">
+    <value>Milliseconds for one buffer. Your interface adds its own converter and driver time on top, in each direction.</value>
   </data>
 </root>

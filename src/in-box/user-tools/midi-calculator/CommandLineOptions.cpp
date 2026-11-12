@@ -29,6 +29,7 @@ namespace midicalculator
         {
             if (name == L"tempo" || name == L"beats") return CalculatorPage::Tempo;
             if (name == L"pitch" || name == L"notes" || name == L"note") return CalculatorPage::Pitch;
+            if (name == L"timecode" || name == L"smpte" || name == L"samples") return CalculatorPage::Timecode;
             if (name == L"midi2" || name == L"ump") return CalculatorPage::Midi2;
             if (name == L"time" || name == L"timestamp" || name == L"windows") return CalculatorPage::WindowsTime;
             if (name == L"history") return CalculatorPage::History;
