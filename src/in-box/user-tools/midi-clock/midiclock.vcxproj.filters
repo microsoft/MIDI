@@ -21,7 +21,7 @@
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="MainWindowEditor.cpp" />
     <ClCompile Include="StringResources.cpp" />
-    <ClCompile Include="TapTempo.cpp" />
+    <ClCompile Include="..\midi-app-shared\TapTempo.cpp" />
     <ClCompile Include="WindowVisibility.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
@@ -43,7 +43,7 @@
     <ClInclude Include="ClockStore.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="StringResources.h" />
-    <ClInclude Include="TapTempo.h" />
+    <ClInclude Include="..\midi-app-shared\TapTempo.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="WindowVisibility.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />

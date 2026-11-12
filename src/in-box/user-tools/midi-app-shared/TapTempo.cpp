@@ -5,11 +5,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "TapTempo.h"
-#include "ClockStore.h"
+// Deliberately free of pch.h, WinRT and XAML, so the unit tests compile it unchanged.
 
-namespace midiclock
+#include "TapTempo.h"
+
+#include <algorithm>
+#include <cmath>
+
+namespace midiapp
 {
     namespace
     {
@@ -21,15 +24,17 @@ namespace midiclock
         }
     }
 
+    _Use_decl_annotations_
+    TapTempo::TapTempo(double minimumBeatsPerMinute, double maximumBeatsPerMinute, double resolution) noexcept :
+        m_minimum{ minimumBeatsPerMinute },
+        m_maximum{ (std::max)(minimumBeatsPerMinute, maximumBeatsPerMinute) },
+        m_resolution{ resolution > 0.0 ? resolution : 0.0 }
+    {
+    }
+
     void TapTempo::Reset() noexcept
     {
-        try
-        {
-            m_taps.clear();
-        }
-        catch (...)
-        {
-        }
+        m_taps.clear();
     }
 
     _Use_decl_annotations_
@@ -41,6 +46,12 @@ namespace midiclock
         }
 
         auto const sinceLastTap = SecondsBetween(m_taps.back(), now);
+
+        if (sinceLastTap < 0.0)
+        {
+            // a timestamp from before the last tap can't continue anything
+            return true;
+        }
 
         if (m_taps.size() < 2)
         {
@@ -64,18 +75,22 @@ namespace midiclock
 
     std::optional<double> TapTempo::Tap() noexcept
     {
+        return TapAt(std::chrono::steady_clock::now());
+    }
+
+    _Use_decl_annotations_
+    std::optional<double> TapTempo::TapAt(std::chrono::steady_clock::time_point const& when) noexcept
+    {
         try
         {
-            auto const now = std::chrono::steady_clock::now();
-
-            if (!m_taps.empty() && IsNewSequence(now))
+            if (!m_taps.empty() && IsNewSequence(when))
             {
                 // Only the new tap survives, so the display holds its last value until there
                 // is a fresh interval to report rather than lurching to a half-measured one.
                 m_taps.clear();
             }
 
-            m_taps.push_back(now);
+            m_taps.push_back(when);
 
             if (m_taps.size() > MaximumTapsConsidered)
             {
@@ -87,23 +102,44 @@ namespace midiclock
                 return std::nullopt;
             }
 
-            auto const span = std::chrono::duration_cast<std::chrono::duration<double>>(
-                m_taps.back() - m_taps.front()).count();
-
+            auto const span = SecondsBetween(m_taps.front(), m_taps.back());
             auto const intervals = static_cast<double>(m_taps.size() - 1);
 
-            if (span <= 0.0 || intervals <= 0.0)
+            if (span <= 0.0)
             {
                 return std::nullopt;
             }
 
-            auto const beatsPerMinute = std::round(60.0 * intervals / span / Resolution) * Resolution;
+            auto beatsPerMinute = 60.0 * intervals / span;
 
-            return std::clamp(beatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+            if (m_resolution > 0.0)
+            {
+                beatsPerMinute = std::round(beatsPerMinute / m_resolution) * m_resolution;
+            }
+
+            return std::clamp(beatsPerMinute, m_minimum, m_maximum);
         }
         catch (...)
         {
             return std::nullopt;
         }
+    }
+
+    std::optional<double> TapTempo::SpreadMilliseconds() const noexcept
+    {
+        if (m_taps.size() < 3)
+        {
+            return std::nullopt;
+        }
+
+        auto const mean = SecondsBetween(m_taps.front(), m_taps.back()) / static_cast<double>(m_taps.size() - 1);
+        double largest{ 0.0 };
+
+        for (size_t i = 1; i < m_taps.size(); ++i)
+        {
+            largest = (std::max)(largest, std::abs(SecondsBetween(m_taps[i - 1], m_taps[i]) - mean));
+        }
+
+        return largest * 1000.0;
     }
 }
