@@ -5600,7 +5600,10 @@
   </data>
   <data name="OscRuleArgumentHeader" xml:space="preserve">
     <value>Argument</value>
-    <comment>The header of a number box: which of the OSC message&apos;s arguments carries the value, counted from 1.</comment>
+    <comment>The header of a number box: which of the OSC message&apos;s arguments carries the value, counted from 1. Only for OSC coming in.</comment>
+  </data>
+  <data name="OscRuleArgumentHint" xml:space="preserve">
+    <value>Which value to read from OSC that comes in. MIDI that goes out as OSC always sends one value.</value>
   </data>
   <data name="OscRuleRemove" xml:space="preserve">
     <value>Remove rule</value>
@@ -5613,6 +5616,9 @@
   </data>
   <data name="OscRuleCantSend" xml:space="preserve">
     <value>This rule can&apos;t send: every part of its address has to come from the channel or the number.</value>
+  </data>
+  <data name="OscRuleNeverSent" xml:space="preserve">
+    <value>This rule never sends MIDI to OSC. A rule above it takes the same MIDI messages, and only the first rule that fits a message sends it.</value>
   </data>
   <data name="OscHeardAddRuleFormat" xml:space="preserve">
     <value>Add a rule for this: {0} to {1}</value>
