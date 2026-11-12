@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1290">
+<title>6. Windows timestamps</title>
+<link rel="stylesheet" href="calc.css">
+<script src="calc.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>6. Windows timestamps.</b> For anyone reading logs, traces or MIDI Monitor captures: what a MIDI timestamp means in real time, how far apart two are, and how to turn between the other tick counts Windows uses. The session values aren't used here, so the strip is hidden.</p>
+
+  <div class="window" data-calc="windows" data-session="hide" style="width:1240px; height:990px">
+    <div class="card" data-mark="1" style="flex-direction:row; align-items:center; gap:28px; padding:12px 16px">
+      <div class="vstack" style="gap:2px"><span class="dim" style="font-size:12px">MIDI timestamp now</span><span class="mono" style="font-size:18px">2,892,714,813,833</span></div>
+      <div class="vstack" style="gap:2px"><span class="dim" style="font-size:12px">Ticks per second on this PC</span><span style="font-size:18px">10,000,000 <span class="dim" style="font-size:12px">(one tick is 100 ns)</span></span></div>
+      <div class="vstack" style="gap:2px"><span class="dim" style="font-size:12px">Since this PC started</span><span style="font-size:18px">80 h 21 min 11.48 s</span></div>
+      <div class="vstack" style="gap:2px"><span class="dim" style="font-size:12px">System timer</span><span style="font-size:18px">1 ms <span class="dim" style="font-size:12px">(0.5 to 15.625 ms)</span></span></div>
+      <div class="spacer"></div>
+      <div class="btn sm"><span class="gl">&#xE769;</span>Freeze</div>
+    </div>
+
+    <div class="cols c2">
+      <div class="vstack" style="gap:12px">
+        <div class="card" data-mark="2">
+          <h2><span class="gl">&#xE916;</span>MIDI timestamp</h2>
+          <div class="fields">
+            <div class="f"><div class="lbl">Timestamp</div><div class="input mono focus" style="width:230px">2892714813833</div></div>
+            <div class="f"><div class="lbl">Ticks per second</div><div class="input" style="width:170px">10,000,000<span class="u">this PC</span></div></div>
+          </div>
+          <div class="kv">
+            <div class="k">Seconds</div><div class="v">289,271.481 383 3</div><div class="c">&#xE8C8;</div>
+            <div class="k">Milliseconds</div><div class="v">289,271,481.3833</div><div class="c">&#xE8C8;</div>
+            <div class="k">Microseconds</div><div class="v">289,271,481,383.3</div><div class="c">&#xE8C8;</div>
+            <div class="k">After this PC started</div><div class="v">80 h 21 min 11.481 s</div><div class="c">&#xE8C8;</div>
+            <div class="k">Clock time</div><div class="v hl">Nov 11 2026, 7:38:02.481 PM</div><div class="c hover">&#xE8C8;</div>
+          </div>
+          <div class="help">Clock time is worked out from this PC's clock, so it's only right for timestamps taken on this PC since it last started.</div>
+        </div>
+
+        <div class="card" data-mark="3">
+          <h2><span class="gl">&#xE8AB;</span>Between two timestamps</h2>
+          <div class="fields">
+            <div class="f"><div class="lbl">From</div><div class="input mono" style="width:190px">2892714813833</div></div>
+            <div class="f"><div class="lbl">To</div><div class="input mono focus" style="width:190px">2892717313833</div></div>
+          </div>
+          <div class="result">
+            <div><div class="big">250.000<small>ms</small></div><div class="sub">2,500,000 ticks · half a beat at 120 BPM</div></div>
+            <div class="acts"><div class="btn sm icon"><span class="gl">&#xE8C8;</span></div></div>
+          </div>
+          <div class="fields">
+            <div class="f"><div class="lbl">Or add to From</div><div class="input" style="width:140px">250<span class="u">ms</span></div></div>
+            <div class="f"><div class="lbl">&nbsp;</div><div class="result" style="padding:4px 12px; height:32px"><span class="mono">2892717313833</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-mark="4">
+        <h2><span class="gl">&#xE770;</span>Other Windows time values</h2>
+        <div class="help">Type into any row. The others follow.</div>
+        <div class="fields">
+          <div class="f"><div class="lbl">Date and time</div><div class="input focus" style="width:260px">11/11/2026 7:30:00.123 PM</div></div>
+          <div class="f"><div class="lbl">Time zone</div><div class="input" style="width:160px">Eastern (local)<span class="chev">&#xE70D;</span></div></div>
+        </div>
+        <div class="kv">
+          <div class="k">UTC, ISO 8601</div><div class="v mono">2026-11-12T00:30:00.123Z</div><div class="c">&#xE8C8;</div>
+          <div class="k">FILETIME (100 ns since 1601)</div><div class="v mono">134389170001230000</div><div class="c">&#xE8C8;</div>
+          <div class="k">FILETIME, hex</div><div class="v mono">0x01DD723CF39538B0</div><div class="c">&#xE8C8;</div>
+          <div class="k">WinRT DateTime</div><div class="v mono">same as FILETIME</div><div class="c">&#xE8C8;</div>
+          <div class="k">.NET DateTime ticks</div><div class="v mono">639300402001230000</div><div class="c">&#xE8C8;</div>
+          <div class="k">Unix time, seconds</div><div class="v mono">1794443400.123</div><div class="c">&#xE8C8;</div>
+          <div class="k">Unix time, ms</div><div class="v mono">1794443400123</div><div class="c">&#xE8C8;</div>
+          <div class="k">MIDI timestamp</div><div class="v mono">2887891233833</div><div class="c">&#xE8C8;</div>
+                    <div class="k">Milliseconds since this PC started</div><div class="v mono">288789123</div><div class="c">&#xE8C8;</div>
+        </div>
+        <div class="fields">
+          <div class="f"><div class="lbl">A length</div><div class="input" style="width:140px">1500000<span class="u">ticks</span></div></div>
+          <div class="f"><div class="lbl">Ticks are</div><div class="input" style="width:200px">100 ns (FILETIME)<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">&nbsp;</div><div class="result" style="padding:4px 12px; height:32px; font-size:13px">150 ms</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>This PC, live.</b> The current MIDI timestamp, the tick rate and the system timer period, all from the Windows MIDI Services SDK's MidiClock, which is what the service stamps messages with. Freeze stops the numbers so you can copy them.</li>
+    <li><b>MIDI timestamp</b> to real units, and to the clock time it was taken. Ticks per second starts at this PC's rate. Change it when the timestamp came from someone else's PC or log.</li>
+    <li><b>Between two timestamps</b>: paste two rows from the MIDI Monitor and see how far apart they were, in ms and in beats. Or add a length to get a timestamp to schedule a message at.</li>
+    <li><b>Other Windows time values</b>: FILETIME, WinRT and .NET ticks, Unix time, and a MIDI timestamp for that moment (shown only when it falls since this PC started). The last row turns any tick count into time: 100 ns ticks, MIDI timestamps, milliseconds or a rate you type.</li>
+  </ol>
+</div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1400">
+<title>5. MIDI 2.0 values</title>
+<link rel="stylesheet" href="calc.css">
+<script src="calc.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>5. MIDI 2.0 values.</b> The numbers you need when you send or read MIDI 2.0 by hand: exact note pitch, pitch bend in both protocols, scaling a value between resolutions, UMP timing, and a decoder for raw UMP words. Every value shows hex and decimal, and every hex value can be typed back in.</p>
+
+  <div class="window" data-calc="midi2" style="width:1240px; height:1090px">
+    <div class="cols c2">
+      <div class="card" data-mark="1">
+        <h2><span class="gl">&#xE8D6;</span>Note pitch</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">Note</div><div class="input" style="width:120px">A3 (69)<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">Plus</div><div class="input focus" style="width:120px">38.906<span class="u">cents</span></div></div>
+          <div class="f"><div class="lbl">Or frequency</div><div class="input" style="width:120px">450<span class="u">Hz</span></div></div>
+        </div>
+        <div class="lbl" style="margin:2px 0 -4px">Note On attribute #3, Pitch 7.9</div>
+        <div class="bits">
+          <div class="a" style="flex:7"><small>Semitone, 7 bits</small>1000101 = 69</div>
+          <div class="b" style="flex:9"><small>Fraction, 9 bits</small>011000111 = 199/512</div>
+        </div>
+        <div class="kv">
+          <div class="k">Pitch 7.9</div><div class="v mono hl">0x8AC7 · 35,527</div><div class="c">&#xE8C8;</div>
+          <div class="k">Sounds as</div><div class="v">A3 +38.867 cents · 449.990 Hz</div><div class="c">&#xE8C8;</div>
+          <div class="k">Step size</div><div class="v">0.195 cents (100/512)</div><div class="c">&#xE8C8;</div>
+          <div class="k">Per-note controller #3, Pitch 7.25</div><div class="v mono">0x8AC73293 · 2,328,310,419</div><div class="c">&#xE8C8;</div>
+          <div class="k">The 7.9 value, widened to 7.25</div><div class="v mono">0x8AC70000</div><div class="c">&#xE8C8;</div>
+        </div>
+      </div>
+
+      <div class="card" data-mark="2">
+        <h2><span class="gl">&#xE8AB;</span>Pitch bend</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">Bend range</div><div class="input" style="width:150px">± 2<span class="u">semitones</span></div></div>
+          <div class="f"><div class="lbl">Plus</div><div class="input" style="width:90px">0<span class="u">cents</span></div></div>
+          <div class="f"><div class="lbl">Bend by</div><div class="input focus" style="width:130px">+38.906<span class="u">cents</span></div></div>
+        </div>
+        <div class="kv">
+          <div class="k">MIDI 2.0 pitch bend, 32 bits</div><div class="v mono hl">0x98E65267</div><div class="c">&#xE8C8;</div>
+          <div class="k">MIDI 1.0 pitch bend, 14 bits</div><div class="v mono">9,785 · bytes E0 39 4C</div><div class="c">&#xE8C8;</div>
+          <div class="k">That 14-bit value in MIDI 2.0</div><div class="v mono">0x98E4C726 (0.009 cents lower)</div><div class="c">&#xE8C8;</div>
+          <div class="k">Range, MIDI 2.0 RPN 0 data</div><div class="v mono">0x04000000</div><div class="c">&#xE8C8;</div>
+          <div class="k">Range, MIDI 1.0 RPN 0</div><div class="v mono">B0 65 00 B0 64 00 B0 06 02 B0 26 00</div><div class="c">&#xE8C8;</div>
+        </div>
+        <div class="help">Channel 1 in the bytes. The channel and group follow the decoder below.</div>
+      </div>
+
+      <div class="card" data-mark="3">
+        <h2><span class="gl">&#xE9E9;</span>Value scaling</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">Value</div><div class="input focus" style="width:110px">100</div></div>
+          <div class="f"><div class="lbl">Bits</div><div class="input" style="width:90px">7<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">Method</div><div class="input" style="width:200px">Min-center-max<span class="chev">&#xE70D;</span></div></div>
+        </div>
+        <table class="t">
+          <tr><th>Bits</th><th>Decimal</th><th>Hex</th><th>Of full scale</th></tr>
+          <tr class="hl"><td>7 (MIDI 1.0 velocity, CC)</td><td>100</td><td class="mono">0x64</td><td>78.74%</td></tr>
+          <tr><td>14 (MIDI 1.0 pitch bend)</td><td>12,873</td><td class="mono">0x3249</td><td>78.58%</td></tr>
+          <tr><td>16 (MIDI 2.0 velocity)</td><td>51,492</td><td class="mono">0xC924</td><td>78.57%</td></tr>
+          <tr><td>32 (MIDI 2.0 controllers)</td><td>3,374,617,161</td><td class="mono">0xC9249249</td><td>78.57%</td></tr>
+        </table>
+        <div class="help">Min-center-max keeps the bottom, the center and the top where they are. Zero-extension, for RPNs 0 to 31 and pitch values, pads with zeros instead.</div>
+      </div>
+
+      <div class="card" data-mark="4">
+        <h2><span class="gl">&#xE916;</span>UMP timing</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">JR Timestamp</div><div class="input mono focus" style="width:140px">0x1234</div></div>
+          <div class="f"><div class="lbl">&nbsp;</div><div class="result" style="padding:4px 12px; height:32px; font-size:13px">4,660 ticks · 149.12 ms</div></div>
+        </div>
+        <div class="kv">
+          <div class="k">One JR tick</div><div class="v">32 µs (1/31,250 s)</div><div class="c">&#xE8C8;</div>
+          <div class="k">16 bits wrap after</div><div class="v">2.097 s</div><div class="c">&#xE8C8;</div>
+        </div>
+        <div class="fields">
+          <div class="f"><div class="lbl">Delta Clockstamp ticks per quarter</div><div class="input" style="width:140px">960</div></div>
+          <div class="f"><div class="lbl">Ticks</div><div class="input" style="width:110px">480</div></div>
+        </div>
+        <div class="kv">
+          <div class="k">At 120 BPM</div><div class="v hl">250 ms · one tick is 0.521 ms</div><div class="c">&#xE8C8;</div>
+        </div>
+      </div>
+
+      <div class="card span2" data-mark="5">
+        <h2><span class="gl">&#xE943;</span>Decode UMP words<span class="more">Build a message</span></h2>
+        <div class="words">
+          <div class="input mono focus" style="font-size:14px">40904503 C9248AC7</div>
+          <div class="btn"><span class="gl">&#xE77F;</span>Paste</div>
+        </div>
+        <div class="bits" style="height:44px">
+          <div class="d" style="flex:4"><small>Type</small>4</div>
+          <div class="d" style="flex:4"><small>Group</small>0 = 1</div>
+          <div class="a" style="flex:4"><small>Note On</small>9</div>
+          <div class="d" style="flex:4"><small>Channel</small>0 = 1</div>
+          <div class="a" style="flex:8"><small>Note</small>0x45 = A3</div>
+          <div class="c" style="flex:8"><small>Attribute type</small>3 = Pitch 7.9</div>
+          <div class="b" style="flex:16"><small>Velocity</small>0xC924 = 78.6%</div>
+          <div class="c" style="flex:16"><small>Attribute</small>0x8AC7 = A3 +38.87 cents</div>
+        </div>
+        <div class="hstack" style="font-size:13px">
+          <span>MIDI 2.0 Note On, group 1, channel 1, A3, velocity 51,492, pitch A3 +38.87 cents</span>
+          <span class="spacer"></span>
+          <span class="dim">As MIDI 1.0:</span><span class="mono">90 45 64</span>
+          <span class="dim">· MfrID</span><span class="mono">00 20 6B ↔ 0xA06B</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Note pitch.</b> Type a note and cents, or a frequency, and get the Note On's Pitch 7.9 attribute and the Pitch 7.25 per-note controller. The bit picture shows where the semitone ends and the fraction starts. "Widened to 7.25" pads with zeros, as the bit scaling spec says to for pitch, so a receiver that converts gets the same pitch you sent. Paste a hex value into either row to go the other way.</li>
+    <li><b>Pitch bend</b> in both protocols, from a range and an amount. Shows how much the 14-bit MIDI 1.0 value loses, and the RPN 0 messages that set the range.</li>
+    <li><b>Value scaling</b>, with the spec's min-center-max method by default and zero-extension as the other choice. Typing in any row recalculates the rest, so it works for downscaling too.</li>
+    <li><b>UMP timing</b>: Jitter Reduction timestamps and the Delta Clockstamps used in MIDI Clip Files, at the session tempo.</li>
+    <li><b>Decode UMP words</b> uses the same decoder as the Windows MIDI Monitor and Patchbay, with each field colored over its bits. Group and channel show both the number on the wire and the one people read. Build a message goes the other way. The manufacturer ID converter is here too, because it's needed when you hand-build SysEx 8.</li>
+  </ol>
+</div>
+</body>
+</html>
