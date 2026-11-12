@@ -67,5 +67,5 @@ Most of the time, your app needs to check a message before it calls a function t
 | --------------- | ----------- |
 | `GetMessageDisplayNameFromFirstWord(word0)` | Returns a friendly name for the message. It's what the MIDI Console shows when you monitor an endpoint in verbose mode |
 | `GetNoteDisplayNameFromNoteIndex(noteIndex)` | Returns the usual name for a MIDI note number from 0 to 127 |
-| `GetNoteOctaveFromNoteIndex(noteIndex)` | Returns the octave number of a MIDI note number, using the default octave for middle C |
-| `GetNoteOctaveFromNoteIndex(noteIndex, middleCOctave)` | Returns the octave number of a MIDI note number, using `middleCOctave` as the octave for middle C |
+| `GetNoteOctaveFromNoteIndex(noteIndex)` | Returns the octave number of a MIDI note number, with middle C (note 60) in octave 3. Note 0 is in octave -2 and note 127 is in octave 8 |
+| `GetNoteOctaveFromNoteIndex(noteIndex, middleCOctave)` | Returns the octave number of a MIDI note number, with middle C (note 60) in octave `middleCOctave`, which can be 1 to 7. The answer can be negative: with C4 as middle C, note 0 is in octave -1. Returns 0 for a note above 127 or a `middleCOctave` outside 1 to 7 |

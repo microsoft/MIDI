@@ -16,6 +16,9 @@
     <ClCompile Include="MidiStreamMessageBuilderTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="MidiMessageHelperTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusive7MessageHelperTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -34,6 +37,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilderTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageHelperTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiSystemExclusive7MessageHelperTests.h">

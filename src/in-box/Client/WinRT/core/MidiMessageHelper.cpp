@@ -380,14 +380,16 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         return GetNoteOctaveFromNoteIndex(noteIndex, 3);
     }
 
-    // this works for classic note indexes 0-127
+    // this works for classic note indexes 0-127. Note 60 is middle C, so it's in octave
+    // middleCOctave, and every 12 notes is an octave from there. With the default of 3, note 0
+    // is octave -2 and note 127 is octave 8.
     _Use_decl_annotations_
     int16_t MidiMessageHelper::GetNoteOctaveFromNoteIndex(uint8_t const noteIndex, uint8_t middleCOctave) noexcept
     {
         if (noteIndex > 0x7F) return 0;
         if ((middleCOctave < 1) || (middleCOctave > 7)) return 0;   // Middle C is typically 3, 4, or even 5. We allow a bit more.
 
-        return static_cast<int16_t>((noteIndex / 12) - (middleCOctave - 1));
+        return static_cast<int16_t>((noteIndex / 12) - (5 - static_cast<int16_t>(middleCOctave)));
     }
 
 

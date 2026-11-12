@@ -44,6 +44,7 @@ using namespace winrt::Windows::Devices::Midi2::Enumeration;
 #include "MidiMessageBuilderTests.h"
 #include "MidiStreamMessageBuilderTests.h"
 #include "MidiMessageConverterTests.h"
+#include "MidiMessageHelperTests.h"
 #include "MidiSystemExclusive7MessageHelperTests.h"
 
 
