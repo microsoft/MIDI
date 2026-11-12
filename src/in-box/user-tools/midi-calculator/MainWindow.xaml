@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midicalculator.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midicalculator"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       x:Uid="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Calculator"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- Spans every column so it sits in the middle of the window rather than the middle
+                 of the stretchy column. Not hit testable, so it stays part of the drag region.
+                 Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="5"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <!-- A shape, not a Border: a Border snaps its corner radius to whole pixels
+                     along with its bounds, so at 125% scaling the arc comes out stepped. -->
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </StackPanel.Resources>
+
+                <Button x:Name="SettingsButton"
+                        x:Uid="SettingsButton"
+                        Width="46"
+                        Height="32"
+                        Padding="0"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        Click="OnSettingsClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </Button>
+
+                <!-- Checked and Unchecked rather than Click: Click never fires for a screen
+                     reader's toggle -->
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Checked="OnAlwaysOnTopChanged"
+                              Unchecked="OnAlwaysOnTopChanged">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================================ Pages ================================ -->
+        <NavigationView x:Name="Navigation"
+                        Grid.Row="1"
+                        PaneDisplayMode="Left"
+                        OpenPaneLength="220"
+                        CompactModeThresholdWidth="760"
+                        ExpandedModeThresholdWidth="1000"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        IsPaneToggleButtonVisible="True"
+                        SelectionChanged="OnNavigationSelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="NavTempo" x:Uid="NavTempo" Tag="0">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE916;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="NavPitch" x:Uid="NavPitch" Tag="1">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8D6;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="NavMidi2" x:Uid="NavMidi2" Tag="2">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE943;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="NavWindowsTime" x:Uid="NavWindowsTime" Tag="3">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE770;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Name="NavHistory" x:Uid="NavHistory" Tag="4">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE81C;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+
+            <Grid x:Name="ContentGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="PageTitleText"
+                           Grid.Row="0"
+                           Margin="24,14,24,10"
+                           Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                <!-- the session values every page reads -->
+                <Border x:Name="SessionStrip"
+                        Grid.Row="1"
+                        Margin="24,0,24,8"
+                        Padding="12,8,12,8"
+                        CornerRadius="8"
+                        BorderThickness="1"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                    <Grid ColumnSpacing="14" Padding="0,0,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock x:Uid="SessionLabel"
+                                   Text="Session"
+                                   VerticalAlignment="Top"
+                                   Margin="0,7.5,0,0"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Uid="SessionTempoLabel" Text="Tempo" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <NumberBox x:Name="SessionTempoBox"
+                                       x:Uid="SessionTempoBox"
+                                       Width="72"
+                                       Minimum="1"
+                                       Maximum="1000"
+                                       SpinButtonPlacementMode="Hidden"
+                                       ValidationMode="InvalidInputOverwritten"
+                                       ValueChanged="OnSessionTempoChanged" />
+                            <TextBlock x:Uid="SessionTempoUnit" Text="BPM" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Uid="SessionMeterLabel" Text="Meter" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <TextBox x:Name="SessionMeterBox"
+                                     x:Uid="SessionMeterBox"
+                                     Width="56"
+                                     IsSpellCheckEnabled="False"
+                                     LostFocus="OnSessionMeterLostFocus"
+                                     KeyDown="OnSessionMeterKeyDown" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Uid="SessionSampleRateLabel" Text="Sample rate" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <NumberBox x:Name="SessionSampleRateBox"
+                                       x:Uid="SessionSampleRateBox"
+                                       Width="92"
+                                       Minimum="1000"
+                                       Maximum="1536000"
+                                       SpinButtonPlacementMode="Hidden"
+                                       ValidationMode="InvalidInputOverwritten"
+                                       ValueChanged="OnSessionSampleRateChanged" />
+                            <TextBlock x:Uid="SessionHertzUnit" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Name="SessionReferenceLabel" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <NumberBox x:Name="SessionReferenceBox"
+                                       Width="72"
+                                       Minimum="300"
+                                       Maximum="600"
+                                       SpinButtonPlacementMode="Hidden"
+                                       ValidationMode="InvalidInputOverwritten"
+                                       ValueChanged="OnSessionReferenceChanged" />
+                            <TextBlock x:Uid="SessionHertzUnit2" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="StatusText"
+                                   Grid.Column="5"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Top"
+                                   Margin="0,7.5,0,0"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <Button x:Name="SessionResetButton"
+                                x:Uid="SessionResetButton"
+                                Grid.Column="6"
+                                Click="OnSessionResetClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE777;" FontSize="14" />
+                                <TextBlock x:Uid="SessionResetButtonText" Text="Reset" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    </ScrollViewer>
+                </Border>
+
+                <ScrollViewer x:Name="PageScroller"
+                              Grid.Row="2"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <Grid x:Name="PageHost" Margin="24,4,24,24" SizeChanged="OnPageHostSizeChanged">
+                        <Grid x:Name="TempoPage" Visibility="Collapsed" />
+                        <Grid x:Name="PitchPage" Visibility="Collapsed" />
+                        <Grid x:Name="Midi2Page" Visibility="Collapsed" />
+                        <Grid x:Name="WindowsTimePage" Visibility="Collapsed" />
+                        <Grid x:Name="HistoryPage" Visibility="Collapsed" />
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>

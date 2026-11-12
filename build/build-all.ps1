@@ -238,6 +238,7 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midipatchbay';       Display = 'MIDI Patchbay' }
     [pscustomobject]@{ Name = 'midiglass';          Display = 'MIDI Glass' }
     [pscustomobject]@{ Name = 'midisequencer';      Display = 'MIDI Sequencer' }
+    [pscustomobject]@{ Name = 'midicalculator';     Display = 'MIDI Calculator' }
     # midisoundmodule (Sound Module) builds with the SDK solution but is left out on purpose
     # until the Virtual Device transport it depends on works in the released service.
     [pscustomobject]@{ Name = 'miditroubleshooter'; Display = 'MIDI Troubleshooting and Repair' }
