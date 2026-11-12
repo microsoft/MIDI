@@ -70,11 +70,15 @@ That lets other tools hand off to it. The first one I'd add is in the MIDI Monit
 2. Notes and pitch, Timecode and samples, the command line and the Monitor hand-off.
 3. Chords and scales (after the shared chord code move), the compact overlay, and the MIDI input features (tap from a note, measure clock, name a chord you play).
 
-## Open questions
+## Decisions (Pete, November 11 2026)
 
-1. **Name.** "Windows MIDI Calculator" (`midicalc.exe`), or something that says music, like "Windows MIDI Music Calculator"?
-2. **Middle C.** C3 by default to match the other tools, with C4 in Settings. Is that right for a calculator people will compare with other apps?
-3. **Temperaments.** Equal temperament only at first, or a short list (just intonation on a root, Pythagorean, quarter-comma meantone) from the start?
-4. **Shared code.** OK to move `TapTempo` and the chord code into `midi-app-shared`? It touches the MIDI Clock app and the Sequencer.
-5. **Console.** Should the `midi` console get the same calculators (`midi calc ...`) later?
-6. **History.** Last 500 answers, kept between runs, with pinning. Too much, too little?
+1. **Name.** Windows MIDI Calculator. It's broader than MIDI, but the name stays. The app is `midicalculator.exe` in `src\in-box\user-tools\midi-calculator`.
+2. **Middle C.** Aligned with the Windows MIDI Services API: C3 by default, with the octave in Settings.
+3. **Temperaments.** A short list from the start: equal temperament, just intonation, Pythagorean, quarter-comma meantone and Werckmeister III, each built on any root.
+4. **Shared code.** Yes. `TapTempo` is now in `midi-app-shared`; the Sequencer's chord code moves with the Chords and scales page.
+5. **Console.** Not now. The calculator is a GUI app only.
+6. **History.** The last 500 answers, kept between runs, with pinning.
+
+## Built so far (November 11 2026)
+
+Tempo and beats, Notes and pitch, MIDI 2.0 values, Windows timestamps and History, laid out to these comps. Still to come: Chords and scales, Timecode and samples (with the session frame rate), the compact overlay, and the MIDI input features (tap from a note, measure MIDI Clock, play a note or chord).
