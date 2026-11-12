@@ -1,0 +1,1130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+    <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="UmpPrimerLink" xml:space="preserve">
+    <value>How to read and understand UMP messages</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>App color mode</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use my Windows setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom background color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Windows MIDI Calculator</value>
+  </data>
+  <data name="AppTitleTextBlock.Text" xml:space="preserve">
+    <value>Windows MIDI Calculator</value>
+  </data>
+  <data name="CopyNameFormat" xml:space="preserve">
+    <value>Copy {0}</value>
+  </data>
+  <data name="StatusCopied" xml:space="preserve">
+    <value>Copied {0}</value>
+  </data>
+  <data name="StatusSessionTempo" xml:space="preserve">
+    <value>Session tempo is now {0}</value>
+  </data>
+  <data name="TempoValueFormat" xml:space="preserve">
+    <value>{0} BPM</value>
+  </data>
+  <data name="PageTempo" xml:space="preserve">
+    <value>Tempo and beats</value>
+  </data>
+  <data name="PagePitch" xml:space="preserve">
+    <value>Notes and pitch</value>
+  </data>
+  <data name="PageMidi2" xml:space="preserve">
+    <value>MIDI 2.0 values</value>
+  </data>
+  <data name="PageWindowsTime" xml:space="preserve">
+    <value>Windows timestamps</value>
+  </data>
+  <data name="PageHistory" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="NavTempo.Content" xml:space="preserve">
+    <value>Tempo and beats</value>
+  </data>
+  <data name="NavPitch.Content" xml:space="preserve">
+    <value>Notes and pitch</value>
+  </data>
+  <data name="NavMidi2.Content" xml:space="preserve">
+    <value>MIDI 2.0 values</value>
+  </data>
+  <data name="NavWindowsTime.Content" xml:space="preserve">
+    <value>Windows timestamps</value>
+  </data>
+  <data name="NavHistory.Content" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="SessionLabel.Text" xml:space="preserve">
+    <value>Session</value>
+  </data>
+  <data name="SessionTempoLabel.Text" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="SessionTempoBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Session tempo, in beats per minute</value>
+  </data>
+  <data name="SessionTempoUnit.Text" xml:space="preserve">
+    <value>BPM</value>
+  </data>
+  <data name="SessionMeterLabel.Text" xml:space="preserve">
+    <value>Meter</value>
+  </data>
+  <data name="SessionMeterBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Session meter, such as 4/4 or 6/8</value>
+  </data>
+  <data name="SessionSampleRateLabel.Text" xml:space="preserve">
+    <value>Sample rate</value>
+  </data>
+  <data name="SessionSampleRateBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Session sample rate, in hertz</value>
+  </data>
+  <data name="SessionHertzUnit.Text" xml:space="preserve">
+    <value>Hz</value>
+  </data>
+  <data name="SessionHertzUnit2.Text" xml:space="preserve">
+    <value>Hz</value>
+  </data>
+  <data name="SessionReferenceFormat" xml:space="preserve">
+    <value>{0} =</value>
+  </data>
+  <data name="SessionReferenceName" xml:space="preserve">
+    <value>Tuning reference: the frequency of {0}, in hertz</value>
+  </data>
+  <data name="SessionResetButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Reset the session values</value>
+  </data>
+  <data name="SessionResetButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Put back 120 BPM, 4/4, 48,000 Hz and 440 Hz</value>
+  </data>
+  <data name="SettingsMiddleCLabel" xml:space="preserve">
+    <value>Middle C (note 60) is called</value>
+  </data>
+  <data name="SettingsMiddleCOption" xml:space="preserve">
+    <value>C{0}</value>
+  </data>
+  <data name="SettingsMiddleCHelp" xml:space="preserve">
+    <value>C3 is what the Windows MIDI Services API and the other Windows MIDI tools use. Some apps call it C4.</value>
+  </data>
+  <data name="SettingsTicksLabel" xml:space="preserve">
+    <value>Ticks per quarter note</value>
+  </data>
+  <data name="SessionResetButtonText.Text" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="TapTitle" xml:space="preserve">
+    <value>Tap tempo</value>
+  </data>
+  <data name="TapPadName" xml:space="preserve">
+    <value>Tap the tempo. You can also press T.</value>
+  </data>
+  <data name="TapNoTempo" xml:space="preserve">
+    <value>Tap</value>
+  </data>
+  <data name="TapHint" xml:space="preserve">
+    <value>Click here, or press T or the spacebar.</value>
+  </data>
+  <data name="TapKeepTapping" xml:space="preserve">
+    <value>Keep tapping</value>
+  </data>
+  <data name="TapCountFormat" xml:space="preserve">
+    <value>{0} taps</value>
+  </data>
+  <data name="TapDetailFormat" xml:space="preserve">
+    <value>{0} taps, steady within {1} ms</value>
+  </data>
+  <data name="TapReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="UseAsSessionTempo" xml:space="preserve">
+    <value>Use as session tempo</value>
+  </data>
+  <data name="BeatTitle" xml:space="preserve">
+    <value>Beat calculator</value>
+  </data>
+  <data name="BeatHelp" xml:space="preserve">
+    <value>You know how long a part is and how many bars it fills. A drum loop, a sample, a section of a recording you&apos;re lining up to a grid.</value>
+  </data>
+  <data name="BeatFindLabel" xml:space="preserve">
+    <value>What to work out</value>
+  </data>
+  <data name="BeatFindTempo" xml:space="preserve">
+    <value>Find the tempo</value>
+  </data>
+  <data name="BeatFindLength" xml:space="preserve">
+    <value>Find the length</value>
+  </data>
+  <data name="BeatFindBars" xml:space="preserve">
+    <value>Find the bars</value>
+  </data>
+  <data name="BeatBarsLabel" xml:space="preserve">
+    <value>Bars</value>
+  </data>
+  <data name="BeatBeatsLabel" xml:space="preserve">
+    <value>Beats</value>
+  </data>
+  <data name="BeatLengthLabel" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="BeatLengthUnitLabel" xml:space="preserve">
+    <value>In</value>
+  </data>
+  <data name="BeatUnitTime" xml:space="preserve">
+    <value>min:sec</value>
+  </data>
+  <data name="BeatUnitSamples" xml:space="preserve">
+    <value>Samples</value>
+  </data>
+  <data name="BeatTempoLabel" xml:space="preserve">
+    <value>Tempo (BPM)</value>
+  </data>
+  <data name="BeatResultName" xml:space="preserve">
+    <value>Beat calculator answer</value>
+  </data>
+  <data name="BeatNeedLengthAndBars" xml:space="preserve">
+    <value>Type a length and at least one beat.</value>
+  </data>
+  <data name="BeatNeedLength" xml:space="preserve">
+    <value>Type a length.</value>
+  </data>
+  <data name="BeatTempoDetail" xml:space="preserve">
+    <value>{0} beats in {1} seconds. One beat is {2} ms.</value>
+  </data>
+  <data name="BeatLengthDetail" xml:space="preserve">
+    <value>{0} seconds, or {1} samples at {2} Hz</value>
+  </data>
+  <data name="BeatBarsValue" xml:space="preserve">
+    <value>{0} bars</value>
+  </data>
+  <data name="BeatBarsDetail" xml:space="preserve">
+    <value>{0} whole bars and {1} beats of {2}</value>
+  </data>
+  <data name="NoteTitleFormat" xml:space="preserve">
+    <value>Note lengths at {0} BPM</value>
+  </data>
+  <data name="NoteUnitLabel" xml:space="preserve">
+    <value>Show note lengths in</value>
+  </data>
+  <data name="NoteUnitMilliseconds" xml:space="preserve">
+    <value>ms</value>
+  </data>
+  <data name="NoteUnitHertz" xml:space="preserve">
+    <value>Hz</value>
+  </data>
+  <data name="NoteUnitSamples" xml:space="preserve">
+    <value>Samples</value>
+  </data>
+  <data name="NoteUnitTicks" xml:space="preserve">
+    <value>Ticks</value>
+  </data>
+  <data name="NoteHeadingNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="NoteHeadingStraight" xml:space="preserve">
+    <value>Straight</value>
+  </data>
+  <data name="NoteHeadingDotted" xml:space="preserve">
+    <value>Dotted</value>
+  </data>
+  <data name="NoteHeadingTriplet" xml:space="preserve">
+    <value>Triplet</value>
+  </data>
+  <data name="NoteCellName" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="NoteHelp" xml:space="preserve">
+    <value>Click any cell to copy it. Bars and beats use the session meter.</value>
+  </data>
+  <data name="NoteOneBar" xml:space="preserve">
+    <value>One bar</value>
+  </data>
+  <data name="NoteOneBarName" xml:space="preserve">
+    <value>One bar of {0}</value>
+  </data>
+  <data name="NoteSixteenBars" xml:space="preserve">
+    <value>16 bars</value>
+  </data>
+  <data name="NoteBarValue" xml:space="preserve">
+    <value>{0} ms, {1} samples</value>
+  </data>
+  <data name="NoteSixteenValue" xml:space="preserve">
+    <value>{0}, {1} samples</value>
+  </data>
+  <data name="ChangeTitle" xml:space="preserve">
+    <value>Tempo change</value>
+  </data>
+  <data name="ChangeFromLabel" xml:space="preserve">
+    <value>From (BPM)</value>
+  </data>
+  <data name="ChangeToLabel" xml:space="preserve">
+    <value>To (BPM)</value>
+  </data>
+  <data name="ChangePercentLabel" xml:space="preserve">
+    <value>Or change by (%)</value>
+  </data>
+  <data name="ChangeSpeed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="ChangeLength" xml:space="preserve">
+    <value>New length</value>
+  </data>
+  <data name="ChangePitch" xml:space="preserve">
+    <value>Pitch, if you don&apos;t time-stretch</value>
+  </data>
+  <data name="ChangeSpeedValue" xml:space="preserve">
+    <value>{0}% (× {1})</value>
+  </data>
+  <data name="ChangeLengthValue" xml:space="preserve">
+    <value>× {0} (16 s becomes {1} s)</value>
+  </data>
+  <data name="ChangePitchValue" xml:space="preserve">
+    <value>{0} semitones ({1} cents)</value>
+  </data>
+  <data name="BeatMeterLabel" xml:space="preserve">
+    <value>Meter</value>
+  </data>
+  <data name="NoteQuarterOneBeat" xml:space="preserve">
+    <value>1/4 (one beat)</value>
+  </data>
+  <data name="NotePreDelay" xml:space="preserve">
+    <value>Pre-delay that ends on a 1/64</value>
+  </data>
+  <data name="M2PitchTitle" xml:space="preserve">
+    <value>Note pitch</value>
+  </data>
+  <data name="M2NoteLabel" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="M2CentsLabel" xml:space="preserve">
+    <value>Plus (cents)</value>
+  </data>
+  <data name="M2HertzLabel" xml:space="preserve">
+    <value>Or frequency (Hz)</value>
+  </data>
+  <data name="M2BitsLabel" xml:space="preserve">
+    <value>Note On attribute #3, Pitch 7.9</value>
+  </data>
+  <data name="M2BitsSemitone" xml:space="preserve">
+    <value>Semitone, 7 bits</value>
+  </data>
+  <data name="M2BitsFraction" xml:space="preserve">
+    <value>Fraction, 9 bits</value>
+  </data>
+  <data name="M2Pitch79" xml:space="preserve">
+    <value>Pitch 7.9</value>
+  </data>
+  <data name="M2SoundsAs" xml:space="preserve">
+    <value>Sounds as</value>
+  </data>
+  <data name="M2SoundsAsValue" xml:space="preserve">
+    <value>{0} {1} cents · {2} Hz</value>
+  </data>
+  <data name="M2Step" xml:space="preserve">
+    <value>Step size</value>
+  </data>
+  <data name="M2StepValue" xml:space="preserve">
+    <value>0.195 cents (100/512)</value>
+  </data>
+  <data name="M2Pitch725" xml:space="preserve">
+    <value>Per-note controller #3, Pitch 7.25</value>
+  </data>
+  <data name="M2Widened" xml:space="preserve">
+    <value>The 7.9 value, widened to 7.25</value>
+  </data>
+  <data name="M2ReadLabel" xml:space="preserve">
+    <value>Read a pitch value (hex)</value>
+  </data>
+  <data name="M2ReadPlaceholder" xml:space="preserve">
+    <value>Like 0x8AC7</value>
+  </data>
+  <data name="M2ReadResult" xml:space="preserve">
+    <value>That value is</value>
+  </data>
+  <data name="M2ReadAs79" xml:space="preserve">
+    <value>Pitch 7.9: {0} {1} cents, {2} Hz</value>
+  </data>
+  <data name="M2ReadAs725" xml:space="preserve">
+    <value>Pitch 7.25: {0} {1} cents, {2} Hz</value>
+  </data>
+  <data name="M2ReadInvalid" xml:space="preserve">
+    <value>Type a value up to 0xFFFF for Pitch 7.9, or up to 0xFFFFFFFF for Pitch 7.25.</value>
+  </data>
+  <data name="M2BendTitle" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="M2BendRangeLabel" xml:space="preserve">
+    <value>Bend range (± semitones)</value>
+  </data>
+  <data name="M2BendRangeCentsLabel" xml:space="preserve">
+    <value>Plus (cents)</value>
+  </data>
+  <data name="M2BendByLabel" xml:space="preserve">
+    <value>Bend by (cents)</value>
+  </data>
+  <data name="M2Bend32" xml:space="preserve">
+    <value>MIDI 2.0 pitch bend, 32 bits</value>
+  </data>
+  <data name="M2Bend14" xml:space="preserve">
+    <value>MIDI 1.0 pitch bend, 14 bits</value>
+  </data>
+  <data name="M2Bend14Value" xml:space="preserve">
+    <value>{0} · bytes {1}</value>
+  </data>
+  <data name="M2Bend14In32" xml:space="preserve">
+    <value>That 14-bit value in MIDI 2.0</value>
+  </data>
+  <data name="M2Bend14In32Lower" xml:space="preserve">
+    <value>{0} ({1} cents lower)</value>
+  </data>
+  <data name="M2Bend14In32Higher" xml:space="preserve">
+    <value>{0} ({1} cents higher)</value>
+  </data>
+  <data name="M2BendRpn2" xml:space="preserve">
+    <value>Range, MIDI 2.0 RPN 0 data</value>
+  </data>
+  <data name="M2BendRpn1" xml:space="preserve">
+    <value>Range, MIDI 1.0 RPN 0</value>
+  </data>
+  <data name="M2BendNoRange" xml:space="preserve">
+    <value>Set a range first</value>
+  </data>
+  <data name="M2BendHelp" xml:space="preserve">
+    <value>Channel 1 in the bytes. The range is how far a full bend goes either way, set on the receiver with RPN 0.</value>
+  </data>
+  <data name="M2ScaleTitle" xml:space="preserve">
+    <value>Value scaling</value>
+  </data>
+  <data name="M2ScaleValueLabel" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="M2ScaleBitsLabel" xml:space="preserve">
+    <value>Bits</value>
+  </data>
+  <data name="M2ScaleMethodLabel" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="M2ScaleMinCenterMax" xml:space="preserve">
+    <value>Min-center-max</value>
+  </data>
+  <data name="M2ScaleZeroExtension" xml:space="preserve">
+    <value>Zero-extension</value>
+  </data>
+  <data name="M2ScaleBitsHeading" xml:space="preserve">
+    <value>Bits</value>
+  </data>
+  <data name="M2ScaleDecimalHeading" xml:space="preserve">
+    <value>Decimal</value>
+  </data>
+  <data name="M2ScaleHexHeading" xml:space="preserve">
+    <value>Hex</value>
+  </data>
+  <data name="M2ScalePercentHeading" xml:space="preserve">
+    <value>Of full scale</value>
+  </data>
+  <data name="M2Scale7" xml:space="preserve">
+    <value>7 (MIDI 1.0 velocity, CC)</value>
+  </data>
+  <data name="M2Scale14" xml:space="preserve">
+    <value>14 (MIDI 1.0 pitch bend)</value>
+  </data>
+  <data name="M2Scale16" xml:space="preserve">
+    <value>16 (MIDI 2.0 velocity)</value>
+  </data>
+  <data name="M2Scale32" xml:space="preserve">
+    <value>32 (MIDI 2.0 controllers)</value>
+  </data>
+  <data name="M2ScaleHelp" xml:space="preserve">
+    <value>Min-center-max keeps the bottom, the center and the top where they are. Zero-extension, for RPNs 0 to 31 and pitch values, pads with zeros instead.</value>
+  </data>
+  <data name="M2TimingTitle" xml:space="preserve">
+    <value>UMP timing</value>
+  </data>
+  <data name="M2JrLabel" xml:space="preserve">
+    <value>JR Timestamp</value>
+  </data>
+  <data name="M2JrValue" xml:space="preserve">
+    <value>{0} ticks · {1} ms</value>
+  </data>
+  <data name="M2JrInvalid" xml:space="preserve">
+    <value>Type 0 to 0xFFFF.</value>
+  </data>
+  <data name="M2JrTick" xml:space="preserve">
+    <value>One JR tick</value>
+  </data>
+  <data name="M2JrTickValue" xml:space="preserve">
+    <value>32 µs (1/31,250 s)</value>
+  </data>
+  <data name="M2JrWrap" xml:space="preserve">
+    <value>16 bits wrap after</value>
+  </data>
+  <data name="M2JrWrapValue" xml:space="preserve">
+    <value>2.097 s</value>
+  </data>
+  <data name="M2DctpqLabel" xml:space="preserve">
+    <value>Delta Clockstamp ticks per quarter</value>
+  </data>
+  <data name="M2DcTicksLabel" xml:space="preserve">
+    <value>Ticks</value>
+  </data>
+  <data name="M2DcAtTempo" xml:space="preserve">
+    <value>At {0} BPM</value>
+  </data>
+  <data name="M2DcValue" xml:space="preserve">
+    <value>{0} ms · one tick is {1} ms</value>
+  </data>
+  <data name="M2DecodeTitle" xml:space="preserve">
+    <value>Decode UMP words</value>
+  </data>
+  <data name="M2WordsLabel" xml:space="preserve">
+    <value>UMP words, in hex</value>
+  </data>
+  <data name="M2Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="M2WordsInvalid" xml:space="preserve">
+    <value>Type 32-bit words in hex, with spaces between them.</value>
+  </data>
+  <data name="M2WordsTooFew" xml:space="preserve">
+    <value>This message type needs {0} words.</value>
+  </data>
+  <data name="M2WordsExtra" xml:space="preserve">
+    <value>   (the next {0} words aren&apos;t part of this message)</value>
+  </data>
+  <data name="M2GroupChannel" xml:space="preserve">
+    <value>, group {0}, channel {1}</value>
+  </data>
+  <data name="M2Group" xml:space="preserve">
+    <value>, group {0}</value>
+  </data>
+  <data name="M2DecodedPitch" xml:space="preserve">
+    <value>   Pitch {0} cents</value>
+  </data>
+  <data name="M2AsMidi1" xml:space="preserve">
+    <value>As MIDI 1.0</value>
+  </data>
+  <data name="M2FieldType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="M2FieldGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="M2FieldStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="M2FieldChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="M2FieldIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="M2FieldData" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="M2FieldRest" xml:space="preserve">
+    <value>Rest of the word</value>
+  </data>
+  <data name="M2FieldAttributeType" xml:space="preserve">
+    <value>Attribute type</value>
+  </data>
+  <data name="M2AttributePitch" xml:space="preserve">
+    <value>{0} = Pitch 7.9</value>
+  </data>
+  <data name="M2MfrLabel" xml:space="preserve">
+    <value>Manufacturer ID</value>
+  </data>
+  <data name="M2MfrTo2" xml:space="preserve">
+    <value>MIDI 2.0: {0}</value>
+  </data>
+  <data name="M2MfrTo1" xml:space="preserve">
+    <value>MIDI 1.0 bytes: {0}</value>
+  </data>
+  <data name="M2MfrInvalid" xml:space="preserve">
+    <value>Type one or three MIDI 1.0 bytes, or the MIDI 2.0 form such as 0xA06B.</value>
+  </data>
+  <data name="UmpLabelNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="UmpLabelVelocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="UmpLabelPressure" xml:space="preserve">
+    <value>Pressure</value>
+  </data>
+  <data name="UmpLabelController" xml:space="preserve">
+    <value>Controller</value>
+  </data>
+  <data name="UmpLabelValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="UmpLabelProgram" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="UmpLabelBank" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="UmpLabelBend" xml:space="preserve">
+    <value>Bend</value>
+  </data>
+  <data name="UmpLabelIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="UmpLabelBytes" xml:space="preserve">
+    <value>Bytes</value>
+  </data>
+  <data name="UmpLabelStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="UmpLabelSong" xml:space="preserve">
+    <value>Song</value>
+  </data>
+  <data name="UmpLabelPosition" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="UmpLabelFrame" xml:space="preserve">
+    <value>Frame</value>
+  </data>
+  <data name="UmpLabelAttribute" xml:space="preserve">
+    <value>Attribute</value>
+  </data>
+  <data name="UmpLabelText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="UmpLabelName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="UmpLabelTicks" xml:space="preserve">
+    <value>Ticks</value>
+  </data>
+  <data name="UmpLabelTempo" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="UmpLabelStreamId" xml:space="preserve">
+    <value>Stream</value>
+  </data>
+  <data name="UmpLabelFunctionBlock" xml:space="preserve">
+    <value>Function block</value>
+  </data>
+  <data name="UmpLabelForm" xml:space="preserve">
+    <value>Form</value>
+  </data>
+  <data name="UmpLabelTimeSignature" xml:space="preserve">
+    <value>Time signature</value>
+  </data>
+  <data name="UmpLabelTimeSignatureNonStandardFormat" xml:space="preserve">
+    <value>{0} beats, non-standard denominator</value>
+  </data>
+  <data name="UmpLabelKeySignature" xml:space="preserve">
+    <value>Key signature</value>
+  </data>
+  <data name="UmpLabelPerNote" xml:space="preserve">
+    <value>Per note</value>
+  </data>
+  <data name="UmpLabelOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="UmpLabelNoteOffValue" xml:space="preserve">
+    <value>Note off value</value>
+  </data>
+  <data name="TimeLiveTitle" xml:space="preserve">
+    <value>This PC</value>
+  </data>
+  <data name="TimeLiveNow" xml:space="preserve">
+    <value>MIDI timestamp now</value>
+  </data>
+  <data name="TimeLiveFrequency" xml:space="preserve">
+    <value>Ticks per second</value>
+  </data>
+  <data name="TimeFrequencyValue" xml:space="preserve">
+    <value>{0} (one tick is {1} ns)</value>
+  </data>
+  <data name="TimeLiveSinceStart" xml:space="preserve">
+    <value>Since this PC started</value>
+  </data>
+  <data name="TimeLiveTimer" xml:space="preserve">
+    <value>System timer</value>
+  </data>
+  <data name="TimeTimerValue" xml:space="preserve">
+    <value>{0} ms (this PC can do {1} to {2} ms)</value>
+  </data>
+  <data name="TimeLiveFreeze" xml:space="preserve">
+    <value>Freeze</value>
+  </data>
+  <data name="TimeLiveHelp" xml:space="preserve">
+    <value>These come from the Windows MIDI Services SDK&apos;s MidiClock, the same clock the MIDI service stamps every message with. Freeze stops the numbers so you can copy them.</value>
+  </data>
+  <data name="TimeSinceFormat" xml:space="preserve">
+    <value>{0} h {1} min {2} s</value>
+  </data>
+  <data name="TimeStampTitle" xml:space="preserve">
+    <value>MIDI timestamp</value>
+  </data>
+  <data name="TimeStampLabel" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="TimeTicksPerSecondLabel" xml:space="preserve">
+    <value>Ticks per second</value>
+  </data>
+  <data name="TimeSeconds" xml:space="preserve">
+    <value>Seconds</value>
+  </data>
+  <data name="TimeMilliseconds" xml:space="preserve">
+    <value>Milliseconds</value>
+  </data>
+  <data name="TimeMicroseconds" xml:space="preserve">
+    <value>Microseconds</value>
+  </data>
+  <data name="TimeAfterStart" xml:space="preserve">
+    <value>After the PC started</value>
+  </data>
+  <data name="TimeClockTime" xml:space="preserve">
+    <value>Clock time</value>
+  </data>
+  <data name="TimeClockHelp" xml:space="preserve">
+    <value>Clock time is worked out from this PC&apos;s clock, so it&apos;s only right for a timestamp taken on this PC since it last started. For a timestamp from another PC or a log, set its ticks per second.</value>
+  </data>
+  <data name="TimeClockOtherPc" xml:space="preserve">
+    <value>Only for this PC&apos;s own timestamps</value>
+  </data>
+  <data name="TimeBetweenTitle" xml:space="preserve">
+    <value>Between two timestamps</value>
+  </data>
+  <data name="TimeBetweenHelp" xml:space="preserve">
+    <value>Paste two timestamps, such as two rows from the Windows MIDI Monitor, to see how far apart they are.</value>
+  </data>
+  <data name="TimeFromLabel" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="TimeToLabel" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="TimeBetweenName" xml:space="preserve">
+    <value>Time between the timestamps</value>
+  </data>
+  <data name="TimeBetweenNeedBoth" xml:space="preserve">
+    <value>Type both timestamps.</value>
+  </data>
+  <data name="TimeMillisecondsValue" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+  <data name="TimeBetweenDetail" xml:space="preserve">
+    <value>{0} ticks · {1} beats at {2} BPM</value>
+  </data>
+  <data name="TimeAddLabel" xml:space="preserve">
+    <value>Or add to From (ms)</value>
+  </data>
+  <data name="TimeAdded" xml:space="preserve">
+    <value>New timestamp</value>
+  </data>
+  <data name="TimeBeforeStart" xml:space="preserve">
+    <value>Before this PC started</value>
+  </data>
+  <data name="TimeOtherTitle" xml:space="preserve">
+    <value>Other Windows time values</value>
+  </data>
+  <data name="TimeOtherHelp" xml:space="preserve">
+    <value>Pick what you&apos;re typing, then type it. Every other format follows.</value>
+  </data>
+  <data name="TimeOtherKindLabel" xml:space="preserve">
+    <value>I&apos;m typing</value>
+  </data>
+  <data name="TimeOtherInputLabel" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="TimeKindLocal" xml:space="preserve">
+    <value>Local date and time</value>
+  </data>
+  <data name="TimeKindUtc" xml:space="preserve">
+    <value>UTC, ISO 8601</value>
+  </data>
+  <data name="TimeKindFileTime" xml:space="preserve">
+    <value>FILETIME (100 ns since 1601)</value>
+  </data>
+  <data name="TimeKindDotNet" xml:space="preserve">
+    <value>.NET DateTime ticks</value>
+  </data>
+  <data name="TimeKindUnixSeconds" xml:space="preserve">
+    <value>Unix time, seconds</value>
+  </data>
+  <data name="TimeKindUnixMilliseconds" xml:space="preserve">
+    <value>Unix time, ms</value>
+  </data>
+  <data name="TimeKindMidi" xml:space="preserve">
+    <value>MIDI timestamp</value>
+  </data>
+  <data name="TimeFileTimeHex" xml:space="preserve">
+    <value>FILETIME, hex</value>
+  </data>
+  <data name="TimeWinRt" xml:space="preserve">
+    <value>WinRT DateTime</value>
+  </data>
+  <data name="TimeWinRtValue" xml:space="preserve">
+    <value>same as FILETIME</value>
+  </data>
+  <data name="TimeMillisecondsSinceStart" xml:space="preserve">
+    <value>Milliseconds since this PC started</value>
+  </data>
+  <data name="TimeLengthLabel" xml:space="preserve">
+    <value>A length (ticks)</value>
+  </data>
+  <data name="TimeLengthUnitLabel" xml:space="preserve">
+    <value>Ticks are</value>
+  </data>
+  <data name="TimeLengthHundredNs" xml:space="preserve">
+    <value>100 ns (FILETIME, TimeSpan)</value>
+  </data>
+  <data name="TimeLengthMidi" xml:space="preserve">
+    <value>MIDI timestamps (this PC)</value>
+  </data>
+  <data name="TimeLengthJr" xml:space="preserve">
+    <value>JR Timestamp ticks (32 µs)</value>
+  </data>
+  <data name="TimeLengthValue" xml:space="preserve">
+    <value>= {0} ms</value>
+  </data>
+  <data name="HistorySearchLabel" xml:space="preserve">
+    <value>Search history</value>
+  </data>
+  <data name="HistorySearchPlaceholder" xml:space="preserve">
+    <value>Search history</value>
+  </data>
+  <data name="HistorySave" xml:space="preserve">
+    <value>Save as text</value>
+  </data>
+  <data name="HistoryClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="HistoryClearTip" xml:space="preserve">
+    <value>Clear everything but the pinned answers</value>
+  </data>
+  <data name="HistoryPinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="HistoryToday" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="HistoryYesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="HistoryFileName" xml:space="preserve">
+    <value>MIDI Calculator history.txt</value>
+  </data>
+  <data name="HistorySaved" xml:space="preserve">
+    <value>Saved the history</value>
+  </data>
+  <data name="HistoryHelp" xml:space="preserve">
+    <value>Keeps the last {0} answers. Pinned ones stay until you unpin them.</value>
+  </data>
+  <data name="HistoryEmpty" xml:space="preserve">
+    <value>Nothing here yet. Copy an answer on any page and it shows up here.</value>
+  </data>
+  <data name="HistoryNoMatch" xml:space="preserve">
+    <value>Nothing matches that search.</value>
+  </data>
+  <data name="HistoryPin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="HistoryUnpin" xml:space="preserve">
+    <value>Unpin</value>
+  </data>
+  <data name="HertzValue" xml:space="preserve">
+    <value>{0} Hz</value>
+  </data>
+  <data name="MillisecondsValue" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+  <data name="PitchNoteTitle" xml:space="preserve">
+    <value>Note to frequency</value>
+  </data>
+  <data name="PitchNoteLabel" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="PitchCentsLabel" xml:space="preserve">
+    <value>Fine tune (cents)</value>
+  </data>
+  <data name="PitchFrequencyName" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="PitchFrequencyDetail" xml:space="preserve">
+    <value>{0}, {1} = {2} Hz (session)</value>
+  </data>
+  <data name="PitchNoteInvalid" xml:space="preserve">
+    <value>Type a note as a name, like A3 or Bb1, or a number from 0 to 127.</value>
+  </data>
+  <data name="PitchNumber" xml:space="preserve">
+    <value>MIDI note number</value>
+  </data>
+  <data name="PitchPeriod" xml:space="preserve">
+    <value>One cycle</value>
+  </data>
+  <data name="PitchSamplesPerCycle" xml:space="preserve">
+    <value>Samples per cycle at {0} kHz</value>
+  </data>
+  <data name="FrequencyTitle" xml:space="preserve">
+    <value>Frequency to note</value>
+  </data>
+  <data name="FrequencyLabel" xml:space="preserve">
+    <value>Frequency (Hz)</value>
+  </data>
+  <data name="FrequencyNoteName" xml:space="preserve">
+    <value>Nearest note</value>
+  </data>
+  <data name="FrequencyNoteValue" xml:space="preserve">
+    <value>{0} {1} cents</value>
+  </data>
+  <data name="FrequencyNoteDetail" xml:space="preserve">
+    <value>Note {0}, {1} Hz from it</value>
+  </data>
+  <data name="FrequencyOutOfRange" xml:space="preserve">
+    <value>That frequency is outside the 128 MIDI notes.</value>
+  </data>
+  <data name="FrequencyFraction" xml:space="preserve">
+    <value>As a fractional note</value>
+  </data>
+  <data name="FrequencyPitch79" xml:space="preserve">
+    <value>MIDI 2.0 pitch for this</value>
+  </data>
+  <data name="IntervalTitle" xml:space="preserve">
+    <value>Interval</value>
+  </data>
+  <data name="IntervalFromLabel" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="IntervalToLabel" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="IntervalName" xml:space="preserve">
+    <value>Interval</value>
+  </data>
+  <data name="IntervalDistance" xml:space="preserve">
+    <value>Distance</value>
+  </data>
+  <data name="IntervalDistanceValue" xml:space="preserve">
+    <value>{0} semitones · {1} cents</value>
+  </data>
+  <data name="IntervalRatio" xml:space="preserve">
+    <value>Frequency ratio</value>
+  </data>
+  <data name="IntervalFrequencies" xml:space="preserve">
+    <value>Frequencies</value>
+  </data>
+  <data name="IntervalFrequenciesValue" xml:space="preserve">
+    <value>{0} Hz to {1} Hz</value>
+  </data>
+  <data name="IntervalUp" xml:space="preserve">
+    <value>{0}, up</value>
+  </data>
+  <data name="IntervalDown" xml:space="preserve">
+    <value>{0}, down</value>
+  </data>
+  <data name="IntervalPlusOctaves" xml:space="preserve">
+    <value>{0} plus {1} octaves</value>
+  </data>
+  <data name="IntervalOctaves" xml:space="preserve">
+    <value>{0} octaves</value>
+  </data>
+  <data name="IntervalName0" xml:space="preserve">
+    <value>Unison</value>
+  </data>
+  <data name="IntervalName1" xml:space="preserve">
+    <value>Minor second</value>
+  </data>
+  <data name="IntervalName2" xml:space="preserve">
+    <value>Major second</value>
+  </data>
+  <data name="IntervalName3" xml:space="preserve">
+    <value>Minor third</value>
+  </data>
+  <data name="IntervalName4" xml:space="preserve">
+    <value>Major third</value>
+  </data>
+  <data name="IntervalName5" xml:space="preserve">
+    <value>Perfect fourth</value>
+  </data>
+  <data name="IntervalName6" xml:space="preserve">
+    <value>Tritone</value>
+  </data>
+  <data name="IntervalName7" xml:space="preserve">
+    <value>Perfect fifth</value>
+  </data>
+  <data name="IntervalName8" xml:space="preserve">
+    <value>Minor sixth</value>
+  </data>
+  <data name="IntervalName9" xml:space="preserve">
+    <value>Major sixth</value>
+  </data>
+  <data name="IntervalName10" xml:space="preserve">
+    <value>Minor seventh</value>
+  </data>
+  <data name="IntervalName11" xml:space="preserve">
+    <value>Major seventh</value>
+  </data>
+  <data name="TableTitle" xml:space="preserve">
+    <value>Note table</value>
+  </data>
+  <data name="TableHelp" xml:space="preserve">
+    <value>The tuning is used on this page, and A3 keeps the session frequency in every tuning. In a tuning other than equal temperament, each note shows how many cents it moved. MIDI 2.0 pitch values always count in equal-tempered semitones.</value>
+  </data>
+  <data name="TemperamentLabel" xml:space="preserve">
+    <value>Tuning</value>
+  </data>
+  <data name="TemperamentEqual" xml:space="preserve">
+    <value>Equal temperament</value>
+  </data>
+  <data name="TemperamentJust" xml:space="preserve">
+    <value>Just intonation</value>
+  </data>
+  <data name="TemperamentPythagorean" xml:space="preserve">
+    <value>Pythagorean</value>
+  </data>
+  <data name="TemperamentMeantone" xml:space="preserve">
+    <value>Quarter-comma meantone</value>
+  </data>
+  <data name="TemperamentWerckmeister" xml:space="preserve">
+    <value>Werckmeister III</value>
+  </data>
+  <data name="TemperamentRootLabel" xml:space="preserve">
+    <value>Built on</value>
+  </data>
+  <data name="TableOctaveLabel" xml:space="preserve">
+    <value>Octave</value>
+  </data>
+  <data name="TableNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="TableHertz" xml:space="preserve">
+    <value>Hz</value>
+  </data>
+  <data name="PitchOtherNames" xml:space="preserve">
+    <value>Same note, other names</value>
+  </data>
+  <data name="PitchOtherNamesValue" xml:space="preserve">
+    <value>{0} when middle C is called C{1}</value>
+  </data>
+  <data name="FrequencyNoteSharp" xml:space="preserve">
+    <value>Nearest note {0}. {1} Hz sharp of {2} Hz.</value>
+  </data>
+  <data name="FrequencyNoteFlat" xml:space="preserve">
+    <value>Nearest note {0}. {1} Hz flat of {2} Hz.</value>
+  </data>
+  <data name="FrequencyPitch79Value" xml:space="preserve">
+    <value>{0} (Pitch 7.9)</value>
+  </data>
+  <data name="FrequencyOpenMidi2" xml:space="preserve">
+    <value>Open it on the MIDI 2.0 values page</value>
+  </data>
+  <data name="IntervalMoveLabel" xml:space="preserve">
+    <value>Or move by (semitones)</value>
+  </data>
+  <data name="IntervalRatioWider" xml:space="preserve">
+    <value>{0} (a pure {1} is {2} cents wider)</value>
+  </data>
+  <data name="IntervalRatioNarrower" xml:space="preserve">
+    <value>{0} (a pure {1} is {2} cents narrower)</value>
+  </data>
+  <data name="TableNumber" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="TableCopy" xml:space="preserve">
+    <value>Copy table</value>
+  </data>
+</root>

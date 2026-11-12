@@ -1,0 +1,291 @@
+/* PROTOTYPE. Styles for the Windows MIDI Calculator comps. Approximates the WinUI 3 dark theme with
+   the same tokens as the MIDI Monitor, MIDI Settings, MIDI Patchbay and MIDI Sequencer comps.
+   Nothing here is product code. */
+
+:root {
+    --bg: #202020;
+    --pane: #1c1c1c;
+    --layer: rgba(58, 58, 58, 0.30);
+    --card: rgba(255, 255, 255, 0.0512);
+    --card-strong: rgba(255, 255, 255, 0.0837);
+    --stroke: rgba(255, 255, 255, 0.0698);
+    --stroke-strong: rgba(255, 255, 255, 0.14);
+    --divider: rgba(255, 255, 255, 0.0837);
+    --control: rgba(255, 255, 255, 0.0605);
+    --control-stroke: rgba(255, 255, 255, 0.093);
+    --text: #FFFFFF;
+    --text2: rgba(255, 255, 255, 0.786);
+    --text3: rgba(255, 255, 255, 0.5442);
+    --text-disabled: rgba(255, 255, 255, 0.3628);
+    --accent: #60CDFF;
+    --accent-dim: rgba(96, 205, 255, 0.14);
+    --on-accent: #000000;
+    --caution: #FCE100;
+    --caution-bg: #433519;
+    --success: #6CCB5F;
+    --info-bg: #262f37;
+    --mark: #FFB547;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.52);
+    --dialog-shadow: 0 32px 64px rgba(0, 0, 0, 0.56), 0 2px 21px rgba(0, 0, 0, 0.40);
+
+    /* bit fields in the MIDI 2.0 page */
+    --bits-a: #4CC2FF;
+    --bits-b: #F7A75C;
+    --bits-c: #A78BFA;
+    --bits-d: rgba(255, 255, 255, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #101010;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+.gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; font-style: normal; font-weight: normal; line-height: 1; }
+.mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+.spacer { flex: 1; }
+.hstack { display: flex; align-items: center; gap: 8px; }
+.vstack { display: flex; flex-direction: column; gap: 8px; }
+.dim { color: var(--text3); }
+
+/* ----------------------------------------------------------------- page */
+
+.page { width: 1300px; padding: 16px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.page.wide { width: 1600px; }
+
+.caption-above { font-size: 13px; color: var(--text3); line-height: 1.5; max-width: 1240px; margin: 0 0 -4px 2px; }
+.caption-above b { color: var(--text); font-weight: 600; }
+
+.callouts { margin: 0 0 0 2px; padding: 0 0 0 22px; font-size: 12px; color: var(--text3); line-height: 1.55; max-width: 1240px; columns: 2; column-gap: 36px; }
+.callouts.one { columns: 1; }
+.callouts li { margin-bottom: 5px; break-inside: avoid; }
+.callouts li::marker { color: var(--mark); font-weight: 700; }
+.callouts b { color: var(--text2); font-weight: 600; }
+
+[data-mark] { position: relative; }
+[data-mark]::before {
+    content: attr(data-mark);
+    position: absolute; top: -9px; left: -9px;
+    width: 20px; height: 20px; border-radius: 10px;
+    background: var(--mark); color: #000;
+    font: 700 11px/20px "Segoe UI", sans-serif; text-align: center;
+    box-shadow: 0 0 0 2px #101010; z-index: 40;
+}
+
+/* ----------------------------------------------------------------- window */
+
+.window {
+    position: relative;
+    background: var(--bg);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.titlebar { height: 40px; display: flex; align-items: center; flex: 0 0 auto; position: relative; }
+.titlebar .appglyph { width: 16px; height: 16px; margin: 0 10px 0 16px; font-size: 16px; color: var(--accent); }
+.titlebar .title { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlebar .preview { position: absolute; left: 50%; transform: translateX(-50%); height: 18px; padding: 0 9px; border-radius: 9px; border: 1px solid var(--caution); background: var(--caution-bg); color: var(--caution); font-size: 10px; font-weight: 600; line-height: 16px; }
+.cap { width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: "Segoe Fluent Icons"; font-size: 14px; color: var(--text); align-self: flex-start; }
+.cap.on { background: rgba(255, 255, 255, 0.0605); color: var(--accent); }
+.sys { display: flex; align-self: flex-start; }
+.sys div { width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: "Segoe Fluent Icons"; font-size: 10px; color: var(--text); }
+
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* left navigation, like a NavigationView in Left mode */
+.nav { width: 216px; flex: 0 0 auto; display: flex; flex-direction: column; padding: 4px 4px 8px; gap: 2px; }
+.nav .ni { height: 36px; display: flex; align-items: center; gap: 14px; padding: 0 12px; border-radius: 4px; font-size: 14px; position: relative; white-space: nowrap; }
+.nav .ni .gl { font-size: 16px; width: 16px; }
+.nav .ni.sel { background: rgba(255, 255, 255, 0.0605); }
+.nav .ni.sel::after { content: ""; position: absolute; left: 0; top: 10px; width: 3px; height: 16px; border-radius: 2px; background: var(--accent); }
+.nav .sep { height: 1px; background: var(--divider); margin: 6px 8px; }
+.nav.narrow { width: 52px; }
+.nav.narrow .ni { padding: 0 14px; }
+
+.content { flex: 1; min-width: 0; background: var(--layer); border-top: 1px solid var(--stroke); border-left: 1px solid var(--stroke); border-top-left-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+.content .head { padding: 18px 24px 10px; display: flex; align-items: center; gap: 12px; }
+.content .head h1 { margin: 0; font-size: 20px; font-weight: 600; }
+.scroll { flex: 1; overflow: hidden; padding: 4px 24px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* the session values every calculator reads */
+.session { margin: 0 24px 6px; padding: 8px 12px; display: flex; align-items: center; gap: 18px; border-radius: 8px; background: var(--card); border: 1px solid var(--stroke); font-size: 12px; color: var(--text2); flex-wrap: nowrap; white-space: nowrap; }
+.session .sv { display: flex; align-items: center; gap: 6px; }
+.session .sv .v { height: 26px; min-width: 52px; padding: 0 8px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); border-bottom-color: rgba(255,255,255,.16); display: inline-flex; align-items: center; color: var(--text); font-size: 13px; }
+.session .t { color: var(--text3); }
+
+.cols { display: grid; gap: 12px; align-items: start; }
+.cols > * { min-width: 0; }
+.cols.c2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.cols.c3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
+.cols.c21 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+.span2 { grid-column: span 2; }
+
+/* ----------------------------------------------------------------- cards */
+
+.card { background: var(--card); border: 1px solid var(--stroke); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card h2 .gl { font-size: 14px; color: var(--text2); }
+.card h2 .more { margin-left: auto; font-weight: 400; font-size: 12px; color: var(--accent); }
+.card .help { font-size: 12px; color: var(--text3); line-height: 1.45; margin-top: -4px; }
+
+.fields { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.f { display: flex; flex-direction: column; }
+.lbl { font-size: 12px; color: var(--text2); margin-bottom: 4px; white-space: nowrap; }
+.input { height: 32px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); border-bottom-color: rgba(255,255,255,.16); padding: 0 10px; display: flex; align-items: center; gap: 6px; font-size: 14px; white-space: nowrap; overflow: hidden; }
+.input.focus { border-bottom: 2px solid var(--accent); background: rgba(30,30,30,.9); }
+.input .u { margin-left: auto; color: var(--text3); font-size: 12px; padding-left: 8px; }
+.input .chev { margin-left: auto; font-family: "Segoe Fluent Icons"; font-size: 12px; color: var(--text2); }
+.input .spin { margin-left: auto; display: flex; flex-direction: column; font-family: "Segoe Fluent Icons"; font-size: 8px; color: var(--text2); gap: 2px; }
+.input.mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; }
+
+.btn { height: 32px; border-radius: 4px; background: var(--control); border: 1px solid var(--control-stroke); padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; white-space: nowrap; }
+.btn.sm { height: 28px; font-size: 12px; padding: 0 10px; }
+.btn.accent { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.btn.subtle { background: transparent; border-color: transparent; }
+.btn.icon { padding: 0; width: 32px; }
+.btn.sm.icon { width: 28px; }
+.btn .gl { font-size: 14px; }
+.btn.sm .gl { font-size: 13px; }
+
+.seg { display: inline-flex; border-radius: 4px; border: 1px solid var(--control-stroke); background: var(--control); overflow: hidden; height: 28px; }
+.seg div { padding: 0 12px; display: flex; align-items: center; font-size: 12px; border-right: 1px solid var(--control-stroke); white-space: nowrap; }
+.seg div:last-child { border-right: none; }
+.seg div.on { background: var(--accent); color: #000; font-weight: 600; }
+
+/* a result: big value, units, copy */
+.result { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; background: rgba(0,0,0,.22); border: 1px solid var(--stroke); }
+.result .big { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
+.result .big small { font-size: 14px; font-weight: 400; color: var(--text2); margin-left: 4px; }
+.result .sub { font-size: 12px; color: var(--text3); line-height: 1.45; }
+.result .acts { margin-left: auto; display: flex; gap: 6px; }
+
+/* a list of results, label left, value right, copy on hover */
+.kv { display: grid; grid-template-columns: auto 1fr auto; column-gap: 12px; row-gap: 0; font-size: 13px; }
+.kv > div { height: 30px; display: flex; align-items: center; border-bottom: 1px solid var(--divider); white-space: nowrap; }
+.kv > div:nth-last-child(-n+3) { border-bottom: none; }
+.kv .k { color: var(--text2); }
+.kv .v { font-variant-numeric: tabular-nums; justify-content: flex-end; }
+.kv .v.mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; }
+.kv .c { font-family: "Segoe Fluent Icons"; font-size: 12px; color: var(--text3); width: 20px; justify-content: center; }
+.kv .c.hover { color: var(--accent); }
+.kv .hl { color: var(--accent); }
+
+/* tables */
+table.t { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.t th { text-align: right; font-weight: 600; font-size: 12px; color: var(--text2); height: 30px; border-bottom: 1px solid var(--divider); padding: 0 10px; }
+table.t td { text-align: right; height: 28px; padding: 0 10px; border-bottom: 1px solid rgba(255,255,255,.04); white-space: nowrap; }
+table.t th:first-child, table.t td:first-child { text-align: left; }
+table.t td:first-child { color: var(--text2); }
+table.t tr.hl td { background: var(--accent-dim); }
+table.t tr.hl td:first-child { color: var(--accent); }
+table.t td .gl { font-size: 12px; color: var(--text3); }
+
+/* ----------------------------------------------------------------- tap pad */
+
+.tap { height: 128px; border-radius: 8px; border: 1px dashed var(--stroke-strong); background: rgba(96,205,255,.06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.tap .bpm { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tap .bpm small { font-size: 16px; font-weight: 400; color: var(--text2); margin-left: 6px; }
+.tap .hint { font-size: 12px; color: var(--text3); }
+.dots { display: flex; gap: 6px; align-items: center; }
+.dots i { width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.18); }
+.dots i.on { background: var(--accent); }
+
+/* ----------------------------------------------------------------- piano keyboard */
+
+.kb { position: relative; height: 112px; display: flex; border-radius: 4px; overflow: hidden; }
+.kb .w { flex: 1; background: #e9e9e9; border-right: 1px solid #9a9a9a; position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-size: 10px; color: #444; }
+.kb .w.on { background: #9fdcff; }
+.kb .w.bass { background: #ffcf8a; }
+.kb .b { position: absolute; top: 0; width: 4.2%; height: 64%; background: #1b1b1b; border-radius: 0 0 3px 3px; z-index: 2; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-size: 9px; color: #ccc; }
+.kb .b.on { background: #2e8fc4; color: #fff; }
+.kb .w .dot, .kb .b .dot { position: absolute; top: auto; bottom: 22px; width: 10px; height: 10px; border-radius: 5px; background: #0a5c88; }
+
+.notes { display: flex; gap: 6px; flex-wrap: wrap; }
+.note { min-width: 52px; padding: 6px 8px; border-radius: 6px; background: var(--card-strong); border: 1px solid var(--stroke); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.note b { font-size: 16px; font-weight: 600; }
+.note span { font-size: 11px; color: var(--text3); }
+.note.root { border-color: var(--accent); }
+.note.bass { border-color: #ffcf8a; }
+
+.chordrow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.chordrow div { border-radius: 6px; background: var(--card-strong); border: 1px solid var(--stroke); padding: 6px 4px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.chordrow b { font-size: 15px; font-weight: 600; }
+.chordrow span { font-size: 11px; color: var(--text3); }
+.chordrow div.on { border-color: var(--accent); background: var(--accent-dim); }
+
+.cands { display: flex; flex-direction: column; gap: 6px; }
+.cand { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: var(--card-strong); border: 1px solid var(--stroke); }
+.cand b { font-size: 18px; font-weight: 600; min-width: 70px; }
+.cand span { font-size: 12px; color: var(--text3); }
+.cand.best { border-color: var(--accent); }
+
+/* ----------------------------------------------------------------- tuner gauge */
+
+.gauge { position: relative; height: 44px; margin: 4px 6px 0; }
+.gauge .line { position: absolute; left: 0; right: 0; top: 18px; height: 2px; background: rgba(255,255,255,.18); }
+.gauge .tick { position: absolute; top: 12px; width: 1px; height: 14px; background: rgba(255,255,255,.35); }
+.gauge .tick.mid { top: 6px; height: 26px; background: rgba(255,255,255,.7); }
+.gauge .needle { position: absolute; top: 4px; width: 3px; height: 30px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.gauge .lab { position: absolute; top: 32px; font-size: 10px; color: var(--text3); transform: translateX(-50%); }
+
+/* ----------------------------------------------------------------- bit fields */
+
+.bits { display: flex; height: 40px; border-radius: 4px; overflow: hidden; font-family: "Cascadia Mono", Consolas, monospace; font-size: 11px; }
+.bits div { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #000; border-right: 1px solid rgba(0,0,0,.25); gap: 2px; }
+.bits div:last-child { border-right: none; }
+.bits div small { font-family: "Segoe UI", sans-serif; font-size: 10px; font-weight: 600; opacity: .8; }
+.bits .a { background: var(--bits-a); }
+.bits .b { background: var(--bits-b); }
+.bits .c { background: var(--bits-c); }
+.bits .d { background: var(--bits-d); color: var(--text2); }
+
+.words { display: flex; gap: 8px; }
+.words .input { flex: 1; }
+
+/* ----------------------------------------------------------------- tape (history) */
+
+.tape { display: flex; flex-direction: column; gap: 0; font-size: 13px; }
+.tape .e { padding: 8px 10px; border-bottom: 1px solid var(--divider); display: flex; flex-direction: column; gap: 2px; }
+.tape .e .q { color: var(--text3); font-size: 12px; }
+.tape .e .a { font-weight: 600; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.tape .e .a .gl { margin-left: auto; font-size: 12px; color: var(--text3); font-weight: 400; }
+.tape .e .pg { font-size: 11px; color: var(--accent); }
+
+/* ----------------------------------------------------------------- flyouts, menus */
+
+.flyout { position: absolute; background: #2C2C2C; border: 1px solid rgba(0,0,0,.2); outline: 1px solid rgba(255,255,255,.08); border-radius: 8px; box-shadow: var(--dialog-shadow); z-index: 30; }
+.menu { padding: 4px 0; min-width: 240px; }
+.mi { height: 32px; margin: 0 4px; padding: 0 12px; border-radius: 4px; display: flex; align-items: center; gap: 12px; font-size: 14px; white-space: nowrap; }
+.mi .gl { width: 16px; font-size: 15px; color: var(--text2); }
+.mi .acc { margin-left: auto; padding-left: 24px; font-size: 12px; color: var(--text3); }
+.mi.hover { background: rgba(255,255,255,.0605); }
+.msep { height: 1px; background: var(--divider); margin: 4px 0; }
+
+.infobar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 6px; background: var(--info-bg); border: 1px solid var(--stroke); font-size: 13px; }
+.infobar .ico { width: 16px; height: 16px; border-radius: 8px; background: var(--accent); color: #000; font-family: "Segoe Fluent Icons"; font-size: 10px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+
+.toggle { width: 40px; height: 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,.6); position: relative; flex: 0 0 auto; }
+.toggle::after { content: ""; position: absolute; left: 4px; top: 4px; width: 10px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.8); }
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle.on::after { left: 24px; background: #000; }
+
+.led { width: 8px; height: 8px; border-radius: 4px; background: var(--success); box-shadow: 0 0 6px var(--success); display: inline-block; }
+
+/* ----------------------------------------------------------------- desktop backdrop for page 7 */
+
+.desk { position: relative; width: 1560px; height: 860px; border-radius: 8px; background: linear-gradient(135deg, #1d2a3a, #2a1d33); overflow: hidden; }
+.host { position: absolute; left: 20px; top: 20px; width: 1140px; height: 820px; border-radius: 8px; background: #2a2a2a; border: 1px solid rgba(255,255,255,.08); box-shadow: var(--shadow); overflow: hidden; }
+.host .bar { height: 34px; background: #333; display: flex; align-items: center; padding: 0 12px; font-size: 12px; color: #bbb; gap: 16px; }
+.host .trk { position: absolute; left: 0; right: 0; height: 64px; border-bottom: 1px solid #222; }
+.host .trk .hd { position: absolute; left: 0; top: 0; bottom: 0; width: 180px; background: #303030; border-right: 1px solid #222; font-size: 11px; color: #aaa; padding: 8px; }
+.host .clip { position: absolute; top: 8px; height: 48px; border-radius: 4px; opacity: .85; }

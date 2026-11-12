@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1360">
+<title>1. Tempo and beats</title>
+<link rel="stylesheet" href="calc.css">
+<script src="calc.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>1. Tempo and beats.</b> The page people asked Steinberg to bring back: tap a tempo, work out a tempo from a length you already have, and get delay and reverb times for any note value. Every page reads the session values along the top, so you set the tempo and sample rate once.</p>
+
+  <div class="window" data-calc="tempo" data-mark-nav="1" data-mark-session="2" style="width:1240px; height:1010px">
+    <div class="cols c21">
+      <div class="vstack" style="gap:12px">
+        <div class="card" data-mark="3">
+          <h2><span class="gl">&#xE916;</span>Tap tempo<span class="more">Listen to MIDI</span></h2>
+          <div class="tap">
+            <div class="bpm">122.4<small>BPM</small></div>
+            <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+            <div class="hint">Click here, or press T or the spacebar. 8 taps, steady within 1.2 ms.</div>
+          </div>
+          <div class="hstack">
+            <div class="input" style="flex:1"><span class="led"></span>Tap with: MiniLab 3, any note<span class="chev">&#xE70D;</span></div>
+            <div class="btn sm accent">Use as session tempo</div>
+            <div class="btn sm subtle"><span class="gl">&#xE777;</span>Reset</div>
+          </div>
+        </div>
+
+        <div class="card" data-mark="4">
+          <h2><span class="gl">&#xE8EF;</span>Beat calculator</h2>
+          <div class="seg"><div class="on">Find the tempo</div><div>Find the length</div><div>Find the bars</div></div>
+          <div class="help">You know how long a part is and how many bars it fills. A drum loop, a sample, a section of a recording you're lining up to a grid.</div>
+          <div class="fields">
+            <div class="f"><div class="lbl">Bars</div><div class="input" style="width:84px">8<span class="spin"><span>&#xE70E;</span><span>&#xE70D;</span></span></div></div>
+            <div class="f"><div class="lbl">Beats</div><div class="input" style="width:84px">0<span class="spin"><span>&#xE70E;</span><span>&#xE70D;</span></span></div></div>
+            <div class="f"><div class="lbl">Meter</div><div class="input" style="width:84px">4/4<span class="chev">&#xE70D;</span></div></div>
+            <div class="f"><div class="lbl">Length</div><div class="input focus" style="width:130px">0:15.600</div></div>
+                        <div class="f"><div class="lbl">In</div><div class="input" style="width:120px">min:sec<span class="chev">&#xE70D;</span></div></div>
+          </div>
+          <div class="result">
+            <div><div class="big">123.077<small>BPM</small></div><div class="sub">32 beats in 15.6 seconds. One beat is 487.5 ms.</div></div>
+            <div class="acts"><div class="btn sm icon"><span class="gl">&#xE8C8;</span></div><div class="btn sm">Use as session tempo</div></div>
+          </div>
+        </div>
+
+        <div class="card" data-mark="5">
+          <h2><span class="gl">&#xE8AB;</span>Tempo change</h2>
+          <div class="fields">
+            <div class="f"><div class="lbl">From</div><div class="input" style="width:120px">120<span class="u">BPM</span></div></div>
+            <div class="f"><div class="lbl">To</div><div class="input focus" style="width:120px">128<span class="u">BPM</span></div></div>
+            <div class="f"><div class="lbl">Or change by</div><div class="input" style="width:120px">+6.667<span class="u">%</span></div></div>
+          </div>
+          <div class="kv">
+            <div class="k">Speed</div><div class="v">+6.667% (× 1.0667)</div><div class="c">&#xE8C8;</div>
+            <div class="k">New length</div><div class="v">× 0.9375 (16 s becomes 15 s)</div><div class="c">&#xE8C8;</div>
+            <div class="k">Pitch, if you don't time-stretch</div><div class="v hl">+1.117 semitones (+111.7 cents)</div><div class="c hover">&#xE8C8;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vstack" style="gap:12px">
+        <div class="card" data-mark="6">
+          <h2><span class="gl">&#xE8FD;</span>Note lengths at 120 BPM</h2>
+          <div class="hstack"><div class="seg"><div class="on">ms</div><div>Hz</div><div>Samples</div><div>Ticks</div></div></div>
+          <table class="t">
+            <tr><th>Note</th><th>Straight</th><th>Dotted</th><th>Triplet</th></tr>
+            <tr><td>1/1</td><td>2,000</td><td>3,000</td><td>1,333.33</td></tr>
+            <tr><td>1/2</td><td>1,000</td><td>1,500</td><td>666.67</td></tr>
+            <tr class="hl"><td>1/4 (one beat)</td><td>500</td><td>750</td><td>333.33</td></tr>
+            <tr><td>1/8</td><td>250</td><td>375</td><td>166.67</td></tr>
+            <tr><td>1/16</td><td>125</td><td>187.5</td><td>83.33</td></tr>
+            <tr><td>1/32</td><td>62.5</td><td>93.75</td><td>41.67</td></tr>
+            <tr><td>1/64</td><td>31.25</td><td>46.88</td><td>20.83</td></tr>
+          </table>
+          <div class="help" style="margin-top:2px">Click any cell to copy it. Bars and beats use the session meter.</div>
+          <div class="kv">
+            <div class="k">One bar of 4/4</div><div class="v">2,000 ms · 96,000 samples</div><div class="c">&#xE8C8;</div>
+            <div class="k">16 bars</div><div class="v">0:32.000 · 1,536,000 samples</div><div class="c">&#xE8C8;</div>
+            <div class="k">Pre-delay that ends on a 1/64</div><div class="v">31.25 ms</div><div class="c">&#xE8C8;</div>
+          </div>
+        </div>
+
+        <div class="card" data-mark="7">
+          <h2><span class="gl">&#xEC92;</span>Measure MIDI Clock</h2>
+          <div class="help">Plug in a drum machine or a DAW's clock output and read the tempo it's really sending.</div>
+          <div class="hstack">
+            <div class="input" style="flex:1"><span class="led"></span>Loop A<span class="chev">&#xE70D;</span></div>
+            <div class="btn sm">Stop</div>
+          </div>
+          <div class="kv">
+            <div class="k">Tempo</div><div class="v hl">120.01 BPM, playing</div><div class="c">&#xE8C8;</div>
+            <div class="k">Steadiness</div><div class="v">± 0.18 ms between clocks</div><div class="c">&#xE8C8;</div>
+            <div class="k">Song position</div><div class="v">Bar 17, beat 1</div><div class="c">&#xE8C8;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Six pages</b> in a left navigation pane, plus History at the bottom. The pane folds to icons in a narrow window. The app opens on the page you used last.</li>
+    <li><b>Session values.</b> Tempo, meter, sample rate, tuning reference and frame rate, set once and used by every page. Tap tempo, the beat calculator and Measure MIDI Clock can each write their answer here. They're saved between runs. Reset puts back 120 BPM, 4/4, 48 kHz, A3 = 440 Hz, 24 fps.</li>
+    <li><b>Tap tempo</b> with the mouse, the T key or the spacebar, or with any note from a MIDI input (the Listen to MIDI link picks the endpoint). Uses the MIDI Clock app's tap tempo code. "Steady within" tells you if the taps were even enough to trust.</li>
+    <li><b>Beat calculator</b>, modeled on the one Cubase users keep asking Steinberg to bring back. Three questions, one form: the tempo from bars and a length, the length from bars and a tempo, or how many bars fit. The length takes time, samples or timecode, so you can paste a sample count straight from an audio editor.</li>
+    <li><b>Tempo change.</b> Speed, new length and the pitch change you'd hear if you just sped up the audio. Type a target tempo or a percentage; the other one updates.</li>
+    <li><b>Note lengths</b> for setting a delay, an LFO or a gate by hand. Ticks uses 960 per quarter note, the same as the Windows MIDI Sequencer, and can be changed in Settings.</li>
+    <li><b>Measure MIDI Clock</b> builds on the clock follower code the tools already share. It shows start, stop and song position as well, so it doubles as a quick check that a clock source is sending what you think it is.</li>
+  </ol>
+</div>
+</body>
+</html>

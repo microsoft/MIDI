@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1170">
+<title>2. Notes and pitch</title>
+<link rel="stylesheet" href="calc.css">
+<script src="calc.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>2. Notes and pitch.</b> Note names, MIDI note numbers and frequencies, in both directions, plus the distance between two notes. Middle C is C3 here, as in every Windows MIDI tool, with a setting for people who count it as C4.</p>
+
+  <div class="window" data-calc="pitch" style="width:1240px; height:860px">
+    <div class="cols c2">
+      <div class="card" data-mark="1">
+        <h2><span class="gl">&#xE8D6;</span>Note to frequency</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">Note</div><div class="input focus" style="width:150px">A3 (69)<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">Fine tune</div><div class="input" style="width:110px">0<span class="u">cents</span></div></div>
+        </div>
+        <div class="result">
+          <div><div class="big">440.000<small>Hz</small></div><div class="sub">Equal temperament, A3 = 440 Hz (session)</div></div>
+          <div class="acts"><div class="btn sm icon"><span class="gl">&#xE8C8;</span></div><div class="btn sm icon" title="Play on Windows MIDI Sound Module"><span class="gl">&#xE768;</span></div></div>
+        </div>
+        <div class="kv">
+          <div class="k">MIDI note number</div><div class="v">69 · 0x45</div><div class="c">&#xE8C8;</div>
+          <div class="k">One cycle</div><div class="v">2.2727 ms</div><div class="c">&#xE8C8;</div>
+          <div class="k">Samples per cycle at 48 kHz</div><div class="v">109.09</div><div class="c">&#xE8C8;</div>
+          <div class="k">Same note, other names</div><div class="v">A4 when middle C is called C4</div><div class="c">&#xE8C8;</div>
+        </div>
+      </div>
+
+      <div class="card" data-mark="2">
+        <h2><span class="gl">&#xE9D9;</span>Frequency to note</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">Frequency</div><div class="input focus" style="width:170px">450<span class="u">Hz</span></div></div>
+        </div>
+        <div class="result">
+          <div><div class="big">A3 <small>+38.9 cents</small></div><div class="sub">Nearest note 69. 9.99 Hz sharp of 440 Hz.</div></div>
+          <div class="acts"><div class="btn sm icon"><span class="gl">&#xE8C8;</span></div></div>
+        </div>
+        <div class="gauge">
+          <div class="line"></div>
+          <div class="tick" style="left:0%"></div><div class="tick" style="left:25%"></div><div class="tick mid" style="left:50%"></div><div class="tick" style="left:75%"></div><div class="tick" style="left:100%"></div>
+          <div class="needle" style="left:calc(50% + 19.45% - 1px)"></div>
+          <div class="lab" style="left:0%">-50</div><div class="lab" style="left:25%">-25</div><div class="lab" style="left:50%">0</div><div class="lab" style="left:75%">+25</div><div class="lab" style="left:100%">+50</div>
+        </div>
+        <div class="kv" style="margin-top:4px">
+          <div class="k">As a fractional note</div><div class="v">69.3891</div><div class="c">&#xE8C8;</div>
+          <div class="k">MIDI 2.0 pitch for this</div><div class="v"><span style="color:var(--accent)">0x8AC7 (Pitch 7.9) <span class="gl" style="font-size:11px">&#xE76C;</span></span></div><div class="c">&#xE8C8;</div>
+        </div>
+      </div>
+
+      <div class="card" data-mark="3">
+        <h2><span class="gl">&#xE8AB;</span>Interval</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">From</div><div class="input" style="width:130px">C3 (60)<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">To</div><div class="input focus" style="width:130px">G3 (67)<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">Or move by</div><div class="input" style="width:120px">+7<span class="u">semitones</span></div></div>
+        </div>
+        <div class="kv">
+          <div class="k">Interval</div><div class="v hl">Perfect fifth, up</div><div class="c">&#xE8C8;</div>
+          <div class="k">Distance</div><div class="v">7 semitones · 700 cents</div><div class="c">&#xE8C8;</div>
+          <div class="k">Frequency ratio</div><div class="v">1.4983 (a pure 3:2 is 1.96 cents wider)</div><div class="c">&#xE8C8;</div>
+          <div class="k">Frequencies</div><div class="v">261.626 Hz to 391.995 Hz</div><div class="c">&#xE8C8;</div>
+        </div>
+      </div>
+
+      <div class="card" data-mark="4">
+        <h2><span class="gl">&#xE8FD;</span>Note table<span class="more">Copy table</span></h2>
+        <div class="hstack">
+          <div class="input" style="width:110px">Octave 3<span class="chev">&#xE70D;</span></div>
+          <div class="input" style="width:200px">Equal temperament<span class="chev">&#xE70D;</span></div>
+        </div>
+        <table class="t">
+          <tr><th>Note</th><th>Number</th><th>Hz</th><th>Note</th><th>Number</th><th>Hz</th></tr>
+          <tr><td>C3</td><td>60</td><td>261.626</td><td>F♯3</td><td>66</td><td>369.994</td></tr>
+          <tr><td>C♯3</td><td>61</td><td>277.183</td><td>G3</td><td>67</td><td>391.995</td></tr>
+          <tr><td>D3</td><td>62</td><td>293.665</td><td>G♯3</td><td>68</td><td>415.305</td></tr>
+          <tr><td>D♯3</td><td>63</td><td>311.127</td><td style="color:var(--accent)">A3</td><td style="color:var(--accent)">69</td><td style="color:var(--accent)">440.000</td></tr>
+          <tr><td>E3</td><td>64</td><td>329.628</td><td>A♯3</td><td>70</td><td>466.164</td></tr>
+          <tr><td>F3</td><td>65</td><td>349.228</td><td>B3</td><td>71</td><td>493.883</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Note to frequency.</b> The note box takes the same text every Windows MIDI tool takes ("A3", "Bb1", "F♯0", "69"), using the shared note-name code. The speaker button plays the note on the Windows MIDI Sound Module or an endpoint you pick, so you can check it by ear.</li>
+    <li><b>Frequency to note</b>, like a tuner you type into. The link jumps to the MIDI 2.0 page with this pitch already filled in, since a MIDI 2.0 note can carry that exact pitch.</li>
+    <li><b>Interval</b>: name, semitones, cents and ratio, with how far equal temperament is from the pure interval. Works in both directions: pick two notes, or one note and a distance.</li>
+    <li><b>Note table</b> for one octave at a time, using the session tuning reference. The temperament list starts with equal temperament only; see the open questions on the index page.</li>
+  </ol>
+</div>
+</body>
+</html>

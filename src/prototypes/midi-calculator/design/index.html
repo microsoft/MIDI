@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,980">
+<title>Windows MIDI Calculator: design comps</title>
+<link rel="stylesheet" href="calc.css">
+<style>
+    h1 { font-size: 22px; margin: 6px 0 0 0; }
+    h2 { font-size: 16px; margin: 10px 0 -4px 0; }
+    p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0; max-width: 1180px; }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 1240px; }
+    a.item { display: block; text-decoration: none; color: var(--text); border-radius: 8px; border: 1px solid var(--stroke-strong); background: var(--card); padding: 14px 16px; }
+    a.item .n { font-size: 14px; font-weight: 600; }
+    a.item .d { font-size: 12px; color: var(--text3); margin-top: 4px; line-height: 1.5; }
+    ol.q { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 1180px; margin: 0; padding-left: 22px; }
+    ol.q b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Windows MIDI Calculator</h1>
+  <p>Comps for a small calculator you keep open beside your music app: tempo and delay times, notes and frequencies, chords, timecode, MIDI 2.0 values and Windows timestamps. It's built like the other Windows MIDI tools and uses their shared code. These are HTML: open any page in a browser, or run <span class="mono">capture.ps1</span> for pictures in <span class="mono">shots</span>. Nothing here is built. The design, the math rules with their spec sections, and the phases are in <span class="mono">README.md</span>.</p>
+  <div class="list">
+    <a class="item" href="1-tempo-and-beats.html"><div class="n">1. Tempo and beats</div><div class="d">Tap tempo, the beat calculator, note lengths for delays, tempo change, measure MIDI Clock.</div></a>
+    <a class="item" href="2-notes-and-pitch.html"><div class="n">2. Notes and pitch</div><div class="d">Note to frequency and back, intervals, a note table.</div></a>
+    <a class="item" href="3-chords-and-scales.html"><div class="n">3. Chords and scales</div><div class="d">Chord to notes, name a chord you play, chords in a key.</div></a>
+    <a class="item" href="4-timecode-and-samples.html"><div class="n">4. Timecode and samples</div><div class="d">Timecode math at every common frame rate, samples and buffer lengths.</div></a>
+    <a class="item" href="5-midi-2-values.html"><div class="n">5. MIDI 2.0 values</div><div class="d">Pitch 7.9 and 7.25, pitch bend, value scaling, UMP timing, decode UMP words.</div></a>
+    <a class="item" href="6-windows-timestamps.html"><div class="n">6. Windows timestamps</div><div class="d">MIDI timestamps to time, the gap between two, FILETIME, .NET and Unix time.</div></a>
+    <a class="item" href="7-compact-overlay.html"><div class="n">7. Compact overlay</div><div class="d">One calculator in a small always-on-top window beside your music app.</div></a>
+    <a class="item" href="8-history.html"><div class="n">8. History</div><div class="d">Answers you copied, used or pinned, with search.</div></a>
+  </div>
+
+  <h2>Open questions</h2>
+  <ol class="q">
+    <li><b>Name.</b> "Windows MIDI Calculator" (<span class="mono">midicalc.exe</span>), or a name that says music?</li>
+    <li><b>Middle C.</b> C3 by default to match the other tools, with C4 in Settings?</li>
+    <li><b>Temperaments.</b> Equal temperament only at first, or a short list from the start?</li>
+    <li><b>Shared code.</b> Move the MIDI Clock app's tap tempo and the Sequencer's chord naming into the shared tool code?</li>
+    <li><b>Console.</b> Add the same calculators to the <span class="mono">midi</span> console later?</li>
+    <li><b>History.</b> Last 500 answers, kept between runs, with pinning?</li>
+  </ol>
+</div>
+</body>
+</html>

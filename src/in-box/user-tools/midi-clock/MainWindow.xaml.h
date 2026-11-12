@@ -147,7 +147,7 @@ namespace winrt::midiclock::implementation
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcherQueue{ nullptr };
 
         ::midiclock::ClockEngine m_engine{};
-        ::midiclock::TapTempo m_tapTempo{};
+        ::midiapp::TapTempo m_tapTempo{ ::midiclock::MinimumBeatsPerMinute, ::midiclock::MaximumBeatsPerMinute, 0.5 };
 
         xaml::DispatcherTimer m_timeCodeTimer{ nullptr };
 

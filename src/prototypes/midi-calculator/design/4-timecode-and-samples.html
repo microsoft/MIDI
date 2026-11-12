@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1150">
+<title>4. Timecode and samples</title>
+<link rel="stylesheet" href="calc.css">
+<script src="calc.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>4. Timecode and samples.</b> Add and subtract timecodes, turn them into frames, seconds and samples, and move between frame rates. Then the sample and buffer math that comes up when you set up an audio interface.</p>
+
+  <div class="window" data-calc="timecode" style="width:1240px; height:860px">
+    <div class="cols c2">
+      <div class="card" data-mark="1">
+        <h2><span class="gl">&#xE823;</span>Timecode calculator</h2>
+        <div class="fields">
+          <div class="f"><div class="lbl">Frame rate</div><div class="input" style="width:170px">29.97 drop frame<span class="chev">&#xE70D;</span></div></div>
+          <div class="f"><div class="lbl">&nbsp;</div><div class="seg" style="height:32px"><div class="on">Timecode</div><div>Frames</div></div></div>
+        </div>
+        <div class="vstack" style="gap:6px">
+          <div class="input mono" style="font-size:18px; height:40px">01:00:00;00</div>
+          <div class="hstack" style="gap:6px">
+            <div class="btn accent" style="width:44px">+</div><div class="btn" style="width:44px">−</div><div class="btn" style="width:44px">×</div><div class="btn" style="width:44px">÷</div>
+            <div class="input mono focus" style="flex:1; font-size:18px; height:40px">00:00:30;00</div>
+          </div>
+        </div>
+        <div class="result">
+          <div><div class="big mono" style="font-size:26px">01:00:30;00</div><div class="sub">108,792 frames · 1:00:30.026 of real time</div></div>
+          <div class="acts"><div class="btn sm icon"><span class="gl">&#xE8C8;</span></div><div class="btn sm">Use as A</div></div>
+        </div>
+        <div class="tape" style="margin-top:-2px">
+          <div class="e"><div class="q">00:59:30;00 + 00:00:30;00 at 29.97 drop</div><div class="a">01:00:00;00 <span class="gl">&#xE8C8;</span></div></div>
+          <div class="e"><div class="q">00:01:00:00 × 3 at 25</div><div class="a">00:03:00:00 <span class="gl">&#xE8C8;</span></div></div>
+        </div>
+      </div>
+
+      <div class="vstack" style="gap:12px">
+        <div class="card" data-mark="2">
+          <h2><span class="gl">&#xE8AB;</span>Convert a timecode</h2>
+          <div class="fields">
+            <div class="f"><div class="lbl">Timecode</div><div class="input mono focus" style="width:160px">01:00:00;00</div></div>
+            <div class="f"><div class="lbl">At</div><div class="input" style="width:170px">29.97 drop frame<span class="chev">&#xE70D;</span></div></div>
+          </div>
+          <div class="kv">
+            <div class="k">Frames</div><div class="v">107,892</div><div class="c">&#xE8C8;</div>
+            <div class="k">Real time</div><div class="v">0:59:59.996</div><div class="c">&#xE8C8;</div>
+            <div class="k">Samples at 48 kHz</div><div class="v">172,799,827</div><div class="c">&#xE8C8;</div>
+            <div class="k">Bars and beats at 120 BPM, 4/4</div><div class="v">bar 1,800, beat 4 + 0.99</div><div class="c">&#xE8C8;</div>
+          </div>
+          <div class="fields">
+            <div class="f"><div class="lbl">Same moment at</div><div class="input" style="width:170px">25<span class="chev">&#xE70D;</span></div></div>
+            <div class="f"><div class="lbl">&nbsp;</div><div class="result" style="padding:4px 12px; height:32px"><span class="mono" style="font-size:14px">00:59:59:24</span><span class="dim" style="font-size:12px">+0.91 frame</span></div></div>
+          </div>
+        </div>
+
+        <div class="card" data-mark="3">
+          <h2><span class="gl">&#xE7F6;</span>Samples and buffers at 48 kHz</h2>
+          <div class="fields">
+            <div class="f"><div class="lbl">Samples</div><div class="input focus" style="width:160px">1,536,000</div></div>
+            <div class="f"><div class="lbl">&nbsp;</div><div class="result" style="padding:4px 12px; height:32px; font-size:13px">32.000 s · 16 bars at 120 BPM</div></div>
+          </div>
+          <table class="t">
+            <tr><th>Buffer</th><th>32</th><th>64</th><th>128</th><th>256</th><th>512</th><th>1,024</th></tr>
+            <tr class="hl"><td>48 kHz</td><td>0.67</td><td>1.33</td><td>2.67</td><td>5.33</td><td>10.67</td><td>21.33</td></tr>
+            <tr><td>44.1 kHz</td><td>0.73</td><td>1.45</td><td>2.90</td><td>5.80</td><td>11.61</td><td>23.22</td></tr>
+          </table>
+          <div class="help" style="margin-top:2px">Milliseconds for one buffer. Your interface adds its own converter and driver time on top, in each direction.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Timecode calculator</b>, with a running tape of what you did. Frame rates: 23.976, 24, 25, 29.97 (drop and non-drop), 30, 50, 59.94 (drop and non-drop) and 60. Drop frame is written with a semicolon, the way editors write it. Typing fills from the right, so "1:20" is one second and twenty frames, as in the MIDI Clock app.</li>
+    <li><b>Convert a timecode</b> to frames, real time, samples and bars. "Same moment at" moves it to another frame rate and shows what's left over. This needs more frame rates than MIDI Time Code carries, so the calculator gets its own timecode math, tested against the shared MIDI Time Code code for the four rates they have in common.</li>
+    <li><b>Samples and buffers.</b> Samples to time and bars, and one buffer's length at common sizes. The row for the session sample rate is lit. It says plainly that this is only the buffer, so nobody reads it as their total latency.</li>
+  </ol>
+</div>
+</body>
+</html>

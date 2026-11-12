@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1600,1130">
+<title>7. Compact overlay</title>
+<link rel="stylesheet" href="calc.css">
+<script src="calc.js"></script>
+<style>
+    .compact { position: absolute; right: 24px; top: 20px; width: 360px; height: 384px; overflow: visible; }
+    .compact .titlebar { height: 32px; }
+    .compact .cbody { flex: 1; padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 10px; background: var(--layer); border-top: 1px solid var(--stroke); }
+    .compact table.t td, .compact table.t th { padding: 0 6px; height: 26px; font-size: 12px; }
+    .compact .tap { height: 96px; }
+    .compact .tap .bpm { font-size: 32px; }
+    .flyout.pages { right: 40px; top: 96px; }
+</style>
+</head>
+<body>
+<div class="page wide">
+  <p class="caption-above"><b>7. Compact overlay.</b> One calculator in a small window that stays on top of your music app, so you can read a delay time or tap a tempo without switching windows. It uses the compact overlay window mode Windows provides for picture-in-picture windows.</p>
+
+  <div class="desk">
+    <div class="host">
+      <div class="bar"><span>Your music app</span><span style="margin-left:auto">120.00 BPM</span><span>4/4</span><span>Bar 17.1.1</span></div>
+      <div class="trk" style="top:34px"><div class="hd">Drums</div><div class="clip" style="left:200px; width:520px; background:#3c7fb1"></div><div class="clip" style="left:730px; width:380px; background:#3c7fb1"></div></div>
+      <div class="trk" style="top:98px"><div class="hd">Bass</div><div class="clip" style="left:200px; width:900px; background:#7a5bb5"></div></div>
+      <div class="trk" style="top:162px"><div class="hd">Keys</div><div class="clip" style="left:460px; width:640px; background:#4f9a62"></div></div>
+      <div class="trk" style="top:226px"><div class="hd">Vocal delay</div><div class="clip" style="left:330px; width:300px; background:#b5803b"></div></div>
+      <div class="trk" style="top:290px"><div class="hd">Pad</div></div>
+    </div>
+
+    <div class="window compact" data-mark="1">
+      <div class="titlebar">
+        <span class="appglyph gl">&#xE8EF;</span>
+        <div class="title">Note lengths</div>
+        <div class="spacer"></div>
+        <div class="cap" style="height:32px" data-mark="2">&#xE70D;</div>
+        <div class="cap" style="height:32px" title="Back to full window">&#xE740;</div>
+        <div class="sys"><div>&#xE8BB;</div></div>
+      </div>
+      <div class="cbody">
+        <div class="hstack" style="font-size:12px; color:var(--text2)"><span>Tempo</span><div class="input" style="height:28px; width:84px; font-size:13px">120<span class="u">BPM</span></div><span class="spacer"></span><div class="seg"><div class="on">ms</div><div>Hz</div><div>Samples</div></div></div>
+        <table class="t">
+          <tr><th>Note</th><th>Straight</th><th>Dotted</th><th>Triplet</th></tr>
+          <tr><td>1/1</td><td>2,000</td><td>3,000</td><td>1,333.33</td></tr>
+          <tr><td>1/2</td><td>1,000</td><td>1,500</td><td>666.67</td></tr>
+          <tr class="hl"><td>1/4</td><td>500</td><td>750</td><td>333.33</td></tr>
+          <tr><td>1/8</td><td>250</td><td>375</td><td>166.67</td></tr>
+          <tr><td>1/16</td><td>125</td><td>187.5</td><td>83.33</td></tr>
+          <tr><td>1/32</td><td>62.5</td><td>93.75</td><td>41.67</td></tr>
+        </table>
+        <div class="tap" data-mark="3">
+          <div class="bpm">120.0<small>BPM</small></div>
+          <div class="hint">Tap here or press T</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flyout menu pages" style="right:392px; top:52px">
+      <div class="mi"><span class="gl">&#xE916;</span>Tap tempo</div>
+      <div class="mi hover"><span class="gl">&#xE8FD;</span>Note lengths</div>
+      <div class="mi"><span class="gl">&#xE8EF;</span>Beat calculator</div>
+      <div class="mi"><span class="gl">&#xE8D6;</span>Frequency to note</div>
+      <div class="mi"><span class="gl">&#xE823;</span>Timecode calculator</div>
+      <div class="mi"><span class="gl">&#xE943;</span>Note pitch (MIDI 2.0)</div>
+      <div class="mi"><span class="gl">&#xE770;</span>Between two timestamps</div>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Compact overlay</b>: Ctrl+Shift+O, or the button in the main window's title bar. One calculator at a time, sized to fit it. It remembers its size and place separately from the full window, so it goes back beside your music app each time.</li>
+    <li><b>Pick the calculator</b> from the title. The list is the calculators that fit a small window. Pages that need a lot of room, like Decode UMP words, stay in the full window.</li>
+    <li><b>Tap tempo under the table</b>, so a tempo you tap shows its delay times straight away. The overlay reads and writes the same session values as the full window.</li>
+  </ol>
+</div>
+</body>
+</html>
