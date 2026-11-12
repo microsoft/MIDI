@@ -13,6 +13,7 @@ import "MidiBluetoothProtocolEnum.idl";
 import "MidiBluetoothConnectionStateEnum.idl";
 import "MidiBluetoothTimestampSourceEnum.idl";
 import "MidiBluetoothDeviceConnectErrorCodeEnum.idl";
+import "MidiBluetoothIncomingTimingEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
@@ -94,5 +95,17 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 
         // The same, resolved against the transport setting, so it is never UseTransportDefault.
         [noexcept] Int32 EffectiveOfflineRetentionSeconds{ get; };
+
+        // When this device's incoming messages are handed to applications. This is what the
+        // device itself is set to, so it can be UseTransportDefault.
+        [noexcept] MidiBluetoothIncomingTiming IncomingTiming{ get; };
+
+        // The same, resolved against the transport setting, so it is never UseTransportDefault.
+        [noexcept] MidiBluetoothIncomingTiming EffectiveIncomingTiming{ get; };
+
+        // How long smoothing is holding each message right now, beyond the time the device
+        // stamped on it. This is the latency Smooth costs for this device. Zero when the device
+        // is not being smoothed.
+        [noexcept] Double IncomingSmoothingDelayMilliseconds{ get; };
     }
 }

@@ -653,6 +653,7 @@
 #define IDS_BT_SAVED_TO_CONFIG                          51929
 #define IDS_BT_TEMPORARY_NOTE                           51930
 #define IDS_BT_SAVE_FAILED                              51931
+#define IDS_BT_SAVED_FOR_NEXT_START                     52271
 #define IDS_BT_PENDING_TABLE_TITLE                      51932
 #define IDS_BT_NO_PENDING                               51933
 #define IDS_BT_LABEL_PAIRED                             51934
@@ -667,6 +668,17 @@
 #define IDS_BT_TIMESTAMPS_ESTIMATED_NOTE                51943
 #define IDS_BT_STATE_CONNECTING                         51944
 #define IDS_BT_STATE_WAITING                            51945
+#define IDS_BT_LABEL_DEFAULT_INCOMING_TIMING            51946
+#define IDS_BT_LABEL_INCOMING_TIMING                    51947
+#define IDS_BT_INCOMING_TIMING_SMOOTH                   51948
+#define IDS_BT_INCOMING_TIMING_AS_SOON_AS_POSSIBLE      51949
+#define IDS_BT_INCOMING_TIMING_FROM_DEFAULT             51950
+#define IDS_BT_INCOMING_TIMING_WITH_DELAY               51951
+#define IDS_OPT_BT_INCOMING_TIMING                      51952
+#define IDS_CMD_BT_DEFAULTS                             51953
+#define IDS_OPT_BT_DEFAULT_INCOMING_TIMING              51954
+#define IDS_BT_DEFAULTS_SUCCEEDED                       51955
+#define IDS_BT_DEFAULTS_FAILED                          51956
 
 // ---------------------------------------------------------------- MIDI time code  51960
 #define IDS_CMD_EP_SEND_TIME_CODE                       51960

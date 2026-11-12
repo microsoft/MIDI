@@ -112,6 +112,7 @@ Whether pairing an instrument is a good idea at all is a longer story, because a
 - the connection interval which was negotiated, which is the main thing determining latency and how often messages can be delivered
 - how many messages and how many Bluetooth packets have gone in and out since the connection was made, which is the quickest way to tell whether a device is actually sending anything
 - where the timestamps on incoming messages come from, described below
+- **Incoming timing**, and while a smoothed device is connected, the **Smoothing delay** it adds, described below
 - **Rename** gives the endpoint a name of your own, the same customization the MIDI Settings app offers
 
 ## Timestamps
@@ -130,6 +131,18 @@ When Windows MIDI Services sees a device do this, it stops trusting the device's
 Nothing about this is stored. It is worked out afresh from the traffic on each connection, so a device whose firmware is later fixed to keep time is picked up automatically with nothing to reset. The row shows nothing at all until the device has sent enough for Windows to judge.
 
 For how the two clocks are actually matched up, and why a stopped clock has to be detected from the traffic rather than asked about, see [How Bluetooth MIDI works in Windows]({{ site.baseurl }}/kb/ble-midi-transport-architecture/).
+
+## Incoming timing
+
+Bluetooth sends MIDI in packets, on a schedule the radio sets. So notes you played evenly can arrive in uneven bunches. **Incoming timing** decides what Windows does about that:
+
+- **Smooth (add some latency to improve jitter)** holds each message for a few milliseconds, then passes it on at the time the device stamped on it. Your timing comes through much steadier, and it costs a few milliseconds of latency. This is the default.
+- **As soon as possible** passes each message on the moment its packet arrives. That's the lowest latency, but the timing is only as even as the Bluetooth link.
+- **Use default** uses the setting on the **Transport settings** page. The text beside the box shows which one that is.
+
+While a smoothed device is connected, **Details** shows the **Smoothing delay**, which is how many milliseconds smoothing is adding right now.
+
+You can set this per device, or set the default for every device on the **Transport settings** page. The `midi` console can set it too, with `midi bluetooth customize --incoming-timing` for one device and `midi bluetooth defaults --incoming-timing` for the default.
 
 ## Keeping an endpoint when a device goes offline
 

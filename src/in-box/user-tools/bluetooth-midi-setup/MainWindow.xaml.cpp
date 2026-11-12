@@ -312,6 +312,7 @@ namespace winrt::midibluetoothsetup::implementation
             midiapp::MakeLiveStatusRegion(DevicesStatusText());
             midiapp::MakeLiveStatusRegion(PeripheralStatusText());
             midiapp::MakeLiveStatusRegion(DefaultOfflineRetentionStatusText());
+            midiapp::MakeLiveStatusRegion(DefaultIncomingTimingStatusText());
 
             midiapp::WindowChromeElements elements{};
 
@@ -645,6 +646,8 @@ namespace winrt::midibluetoothsetup::implementation
                 snapshot.RememberedDeviceIds.push_back(std::wstring{ Lowered(configured.BluetoothDeviceId()) });
             }
 
+            snapshot.DefaultIncomingTiming = midi2bt::MidiBluetoothTransportManager::GetDefaultIncomingTiming();
+
             snapshot.Gathered = true;
         }
         catch (...)
@@ -661,6 +664,7 @@ namespace winrt::midibluetoothsetup::implementation
         ApplyPeripheral(snapshot);
         ApplyPendingClients(snapshot);
         ApplyTransportSettings();
+        ApplyDefaultIncomingTiming(snapshot);
     }
 
     void MainWindow::ApplyTransportSettings() noexcept
@@ -833,6 +837,8 @@ namespace winrt::midibluetoothsetup::implementation
                     device.RequiresPairing(),
                     device.OfflineRetentionSeconds(),
                     OfflineRetentionDescription(device.EffectiveOfflineRetentionSeconds()));
+
+                ApplyDeviceIncomingTiming(item, device);
             }
 
             // The service drops a device it has not heard from for a while, so rows go away too

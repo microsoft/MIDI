@@ -24,6 +24,7 @@ namespace midi2console
         std::string Description;
         std::string Image;
         std::string KeepWhenOffline;
+        std::string IncomingTiming;
         bool HasName{ false };
         bool HasDescription{ false };
         bool HasImage{ false };
@@ -48,10 +49,17 @@ namespace midi2console
         std::string Scope;
     };
 
+    struct BluetoothDefaultsOptions
+    {
+        std::string IncomingTiming;
+        bool Temporary{ false };
+    };
+
     int RunBluetoothListCommand();
     int RunBluetoothConnectCommand(_In_ BluetoothDeviceOptions const& options);
     int RunBluetoothDisconnectCommand(_In_ BluetoothDeviceOptions const& options);
     int RunBluetoothCustomizeCommand(_In_ BluetoothCustomizeOptions const& options);
+    int RunBluetoothDefaultsCommand(_In_ BluetoothDefaultsOptions const& options);
 
     int RunBluetoothPeripheralStartCommand(_In_ BluetoothPeripheralStartOptions const& options);
     int RunBluetoothPeripheralStopCommand(_In_ BluetoothPeripheralStopOptions const& options);

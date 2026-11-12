@@ -537,6 +537,8 @@
 #define UUID_IMidiBluetoothOfflineRetentionConfigFactory        8087b303-0519-c0de-31d1-ff00F050F000
 
 #define UUID_IMidiBluetoothSavedDevice                          8087b303-0519-c0de-31d1-dd00F0511000
+#define UUID_IMidiBluetoothIncomingTimingConfig                 8087b303-0519-c0de-31d1-dd00F0512000
+#define UUID_IMidiBluetoothIncomingTimingConfigFactory          8087b303-0519-c0de-31d1-ff00F0512000
 
 
 // ============================================================================

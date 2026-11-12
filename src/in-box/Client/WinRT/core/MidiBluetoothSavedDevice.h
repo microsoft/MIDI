@@ -19,17 +19,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         winrt::hstring Comment() const noexcept { return m_comment; }
         bool IsEnabled() const noexcept { return m_isEnabled; }
         int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        bluetooth::MidiBluetoothIncomingTiming IncomingTiming() const noexcept { return m_incomingTiming; }
 
         void InternalInitialize(
             _In_ winrt::hstring const& bluetoothDeviceId,
             _In_ winrt::hstring const& comment,
             _In_ bool const isEnabled,
-            _In_ int32_t const offlineRetentionSeconds) noexcept
+            _In_ int32_t const offlineRetentionSeconds,
+            _In_ bluetooth::MidiBluetoothIncomingTiming const incomingTiming) noexcept
         {
             m_bluetoothDeviceId = bluetoothDeviceId;
             m_comment = comment;
             m_isEnabled = isEnabled;
             m_offlineRetentionSeconds = offlineRetentionSeconds;
+            m_incomingTiming = incomingTiming;
         }
 
     private:
@@ -37,5 +40,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         winrt::hstring m_comment{};
         bool m_isEnabled{ false };
         int32_t m_offlineRetentionSeconds{ static_cast<int32_t>(MidiBluetoothOfflineRetention::UseTransportDefault) };
+        bluetooth::MidiBluetoothIncomingTiming m_incomingTiming{ bluetooth::MidiBluetoothIncomingTiming::UseTransportDefault };
     };
 }

@@ -64,6 +64,8 @@ namespace winrt::midibluetoothsetup::implementation
         void OnRemoveImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnOfflineRetentionChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
         winrt::fire_and_forget OnDefaultOfflineRetentionChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
+        winrt::fire_and_forget OnIncomingTimingChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
+        winrt::fire_and_forget OnDefaultIncomingTimingChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
         void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnPairDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -97,6 +99,9 @@ namespace winrt::midibluetoothsetup::implementation
 
             // addresses the configuration file remembers, lowercased
             std::vector<std::wstring> RememberedDeviceIds{};
+
+            // the transport-wide incoming timing every device set to use the default falls back to
+            midi2bt::MidiBluetoothIncomingTiming DefaultIncomingTiming{ midi2bt::MidiBluetoothIncomingTiming::Smooth };
         };
 
         void StartRefreshTimer() noexcept;
@@ -186,6 +191,18 @@ namespace winrt::midibluetoothsetup::implementation
         static constexpr int32_t RetentionNotLoaded{ std::numeric_limits<int32_t>::min() };
 
         int32_t m_defaultOfflineRetentionSeconds{ RetentionNotLoaded };
+
+        // Same rule as the retention cache: no MidiBluetoothIncomingTiming value is this low, so the
+        // first refresh always populates the combo.
+        static constexpr int32_t IncomingTimingNotLoaded{ std::numeric_limits<int32_t>::min() };
+
+        int32_t m_defaultIncomingTiming{ IncomingTimingNotLoaded };
+
+        // in MainWindowIncomingTiming.cpp
+        void ApplyDefaultIncomingTiming(_In_ ServiceSnapshot const& snapshot) noexcept;
+        static void ApplyDeviceIncomingTiming(
+            _In_ midibluetoothsetup::BluetoothDeviceItem const& item,
+            _In_ midi2bt::MidiBluetoothDeviceInformation const& device) noexcept;
     };
 }
 

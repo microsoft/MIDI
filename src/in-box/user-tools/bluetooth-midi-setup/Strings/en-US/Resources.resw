@@ -547,4 +547,52 @@
   <data name="ServiceUnavailableBarMessage" xml:space="preserve">
     <value>The MIDI service isn't running, so this tool has nothing to work with. Restart the app once Windows MIDI Services is available.</value>
   </data>
+  <data name="IncomingTimingLabel.Text" xml:space="preserve">
+    <value>Incoming timing</value>
+  </data>
+  <data name="IncomingTimingCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Incoming timing</value>
+  </data>
+  <data name="IncomingTimingUseDefaultItem.Content" xml:space="preserve">
+    <value>Use default</value>
+  </data>
+  <data name="IncomingTimingSmoothItem.Content" xml:space="preserve">
+    <value>Smooth (add some latency to improve jitter)</value>
+  </data>
+  <data name="IncomingTimingAsSoonAsPossibleItem.Content" xml:space="preserve">
+    <value>As soon as possible</value>
+  </data>
+  <data name="SmoothingDelayLabel.Text" xml:space="preserve">
+    <value>Smoothing delay</value>
+  </data>
+  <data name="SmoothingDelayFormat" xml:space="preserve">
+    <value>{0:.1f} ms</value>
+    <comment>{0} is the number of milliseconds smoothing currently adds to each incoming message</comment>
+  </data>
+  <data name="DefaultIncomingTimingHeader.Text" xml:space="preserve">
+    <value>Incoming timing</value>
+  </data>
+  <data name="DefaultIncomingTimingDescription.Text" xml:space="preserve">
+    <value>Bluetooth sends MIDI in packets, so notes played evenly can arrive unevenly. Smooth holds each message for a few milliseconds and passes it on at the time the device sent it, which makes timing much steadier. As soon as possible passes each message on the moment it arrives, for the lowest latency.</value>
+  </data>
+  <data name="IncomingTimingUseDefault" xml:space="preserve">
+    <value>the default</value>
+  </data>
+  <data name="IncomingTimingSmooth" xml:space="preserve">
+    <value>Smooth</value>
+  </data>
+  <data name="IncomingTimingAsSoonAsPossible" xml:space="preserve">
+    <value>As soon as possible</value>
+  </data>
+  <data name="StatusIncomingTimingSetFormat" xml:space="preserve">
+    <value>Incoming timing for {0}: {1}.</value>
+    <comment>{0} is the device name, {1} is the incoming timing setting</comment>
+  </data>
+  <data name="StatusDefaultIncomingTimingSetFormat" xml:space="preserve">
+    <value>Default incoming timing: {0}.</value>
+    <comment>{0} is the incoming timing setting</comment>
+  </data>
+  <data name="StatusIncomingTimingFailed" xml:space="preserve">
+    <value>The setting could not be changed.</value>
+  </data>
 </root>

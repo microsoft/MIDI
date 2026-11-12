@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiBluetoothIncomingTimingEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // Sets when incoming messages are handed to applications, either for one device or for the
+    // transport as a whole. Send it to apply it now, save it to keep it across a service restart;
+    // both are usually wanted.
+    //
+    // A device entry is merged into the configuration file by its Bluetooth device id, so setting
+    // one device leaves the others alone. It does not connect the device, or save it as one to
+    // connect.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothIncomingTimingConfig", UUID_IMidiBluetoothIncomingTimingConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothIncomingTimingConfigFactory", UUID_IMidiBluetoothIncomingTimingConfigFactory)]
+    runtimeclass MidiBluetoothIncomingTimingConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        // The transport-wide default, used by every device set to UseTransportDefault. This one
+        // cannot itself be UseTransportDefault, because there is nothing above it to defer to.
+        MidiBluetoothIncomingTimingConfig(MidiBluetoothIncomingTiming incomingTiming);
+
+        // A single device. Pass UseTransportDefault to drop the override.
+        MidiBluetoothIncomingTimingConfig(String bluetoothDeviceId, MidiBluetoothIncomingTiming incomingTiming);
+    }
+}

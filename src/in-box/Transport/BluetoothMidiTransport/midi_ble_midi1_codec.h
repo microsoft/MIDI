@@ -129,6 +129,14 @@ namespace MidiBleMidi1
             m_offsetSamples.clear();
             m_senderClockStallObservations = 0;
             m_haveSeenSenderClockAdvance = false;
+            m_clockGeneration++;
+        }
+
+        // Changes whenever the sender's clock restarts, jumps or stops, which is when anything
+        // built on the continuous sender time has to start over.
+        uint32_t ClockGeneration() const noexcept
+        {
+            return m_clockGeneration;
         }
 
         // True once the device has proved its timestamps never move, so arrival time is being
@@ -147,13 +155,22 @@ namespace MidiBleMidi1
         // segments, because all segments in a packet share one arrival time: treating each as its
         // own delay sample would drag the offset down by exactly the spacing being preserved and
         // collapse the packet to a single instant.
+        //
+        // senderMilliseconds, when given, receives each segment's sender time as a continuous
+        // millisecond count. It only means anything while ClockGeneration stays the same.
         void MapPacket(
             _In_ std::vector<DecodedSegment> const& segments,
             _In_ uint64_t const localArrivalTimestamp,
             _In_ uint64_t const ticksPerMillisecond,
-            _Inout_ std::vector<uint64_t>& localTimestamps)
+            _Inout_ std::vector<uint64_t>& localTimestamps,
+            _Out_opt_ std::vector<uint64_t>* const senderMilliseconds = nullptr)
         {
             localTimestamps.clear();
+
+            if (senderMilliseconds != nullptr)
+            {
+                senderMilliseconds->clear();
+            }
 
             if (segments.empty())
             {
@@ -192,6 +209,11 @@ namespace MidiBleMidi1
                 localTimestamps.push_back(AdvanceSenderClock(segment.SenderTimestamp));
             }
 
+            if (senderMilliseconds != nullptr)
+            {
+                *senderMilliseconds = localTimestamps;
+            }
+
             // Some devices never advance their timestamp at all. Only real time passing between
             // packets can show that, because messages inside one packet are allowed to share a
             // timestamp and running status leaves them no room to carry one.
@@ -205,6 +227,7 @@ namespace MidiBleMidi1
                     {
                         // Running again, so nothing learned while it was stopped still applies.
                         m_offsetSamples.clear();
+                        m_clockGeneration++;
                     }
 
                     m_haveSeenSenderClockAdvance = true;
@@ -243,6 +266,7 @@ namespace MidiBleMidi1
             {
                 m_offsetSamples.clear();
                 m_resynchronize = false;
+                m_clockGeneration++;
             }
 
             // The newest segment is the one whose arrival was actually observed.
@@ -263,6 +287,7 @@ namespace MidiBleMidi1
                     // Waiting for the window to age out would strand every message in the past
                     // until it did.
                     m_offsetSamples.clear();
+                    m_clockGeneration++;
                 }
             }
 
@@ -375,6 +400,8 @@ namespace MidiBleMidi1
 
         uint32_t m_senderClockStallObservations{ 0 };
         bool m_haveSeenSenderClockAdvance{ false };
+
+        uint32_t m_clockGeneration{ 0 };
     };
 
 

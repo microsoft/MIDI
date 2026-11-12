@@ -15,6 +15,17 @@ namespace
     // A device which stops draining its queue must never be allowed to exhaust service memory.
     constexpr size_t MaxOutgoingPacketQueueDepth = 512;
 
+    // Incoming messages waiting for their release time. Smoothing holds them for well under 50 ms,
+    // so this is only reached by a device sending far faster than any real one.
+    constexpr size_t MaxQueuedIncomingMessages = 4096;
+
+    // How late the high resolution timer typically wakes, measured for the scheduler transform.
+    // The release timer is aimed this much early.
+    constexpr uint64_t ReleaseTimerOvershootMicroseconds = 500;
+
+    // Waits shorter than this are spun rather than left to the timer.
+    constexpr uint64_t ReleaseSpinMicroseconds = 250;
+
     // ATT overhead. The usable payload is always the negotiated MTU minus these three bytes.
     constexpr size_t AttHeaderByteCount = 3;
 
@@ -174,6 +185,13 @@ MidiBleConnection::Start()
             }
             CATCH_LOG();
         });
+
+    // Only the MIDI 1.0 Characteristic is smoothed so far. If the thread can't start, incoming
+    // messages are delivered as they arrive, which is how this transport always behaved.
+    if (m_protocol == MidiBleProtocol::Protocol::Midi1)
+    {
+        LOG_IF_FAILED(StartIncomingReleaseThread());
+    }
 
     // A peripheral has no Characteristic to subscribe to and no BluetoothLEDevice to watch. Its
     // link state is reported by the GATT service provider instead.
@@ -350,6 +368,9 @@ MidiBleConnection::ResetTranslationState()
 
     // A notification can be decoding on another thread right now
     m_incomingStateResetPending.store(true);
+
+    // Release times were worked out from the old link's clock, so anything still waiting goes now
+    ReleaseQueuedIncomingMessagesNow();
 
     auto lock = m_outgoingQueueLock.lock_exclusive();
     m_outgoingPackets.clear();
@@ -684,6 +705,20 @@ MidiBleConnection::BeginShutdown() noexcept
         auto lock = m_outgoingQueueLock.lock_exclusive();
         m_outgoingPackets.clear();
     }
+
+    // The callback is gone, so nothing waiting to be released has anywhere to go
+    {
+        auto lock = m_releaseQueueLock.lock_exclusive();
+        m_releaseStop = true;
+        m_releaseQueue.clear();
+    }
+
+    m_releaseThread.request_stop();
+
+    if (m_releaseWakeup)
+    {
+        m_releaseWakeup.SetEvent();
+    }
 }
 
 
@@ -711,6 +746,21 @@ MidiBleConnection::Shutdown()
     if (m_writerThread.joinable() && m_writerThread.get_id() != std::this_thread::get_id())
     {
         m_writerThread.join();
+    }
+
+    // Delivery calls into the service, which can come back here on the release thread itself.
+    // That thread holds its own reference until it returns, so it is left to finish on its own;
+    // a join there would never return, and destroying a joinable thread from itself terminates.
+    if (m_releaseThread.joinable())
+    {
+        if (m_releaseThread.get_id() != std::this_thread::get_id())
+        {
+            m_releaseThread.join();
+        }
+        else
+        {
+            m_releaseThread.detach();
+        }
     }
 
     // Taken out under the lock, so a reader on another thread either already holds its own
@@ -1158,6 +1208,9 @@ MidiBleConnection::ProcessIncomingPacket(
         m_incomingPacketDecoder.Reset();
         m_bytestreamToUmp.resetBuffer();
         m_incomingTimestampCorrelator.Reset();
+        m_incomingSmoother.Reset();
+        m_incomingSmootherClockGeneration = m_incomingTimestampCorrelator.ClockGeneration();
+        m_incomingSmoothingDelayTicks.store(0);
 
         // BLE MIDI 2.0 does not keep UMP stream state, which includes the JR configuration, across
         // a disconnection
@@ -1216,17 +1269,58 @@ MidiBleConnection::ProcessIncomingMidi1Packet(
     auto const ticksPerMillisecond = MidiTimestampTicksPerMillisecond();
 
     std::vector<uint64_t> segmentTimestamps;
-    m_incomingTimestampCorrelator.MapPacket(segments, receiveTimestamp, ticksPerMillisecond, segmentTimestamps);
+    std::vector<uint64_t> senderMilliseconds;
+    m_incomingTimestampCorrelator.MapPacket(segments, receiveTimestamp, ticksPerMillisecond, segmentTimestamps, &senderMilliseconds);
 
     m_incomingTimestampSource.store(static_cast<uint8_t>(
         m_incomingTimestampCorrelator.SenderClockIsStalled() ? MidiBleProtocol::TimestampSource::ArrivalTime :
         m_incomingTimestampCorrelator.HaveSeenSenderClockAdvance() ? MidiBleProtocol::TimestampSource::Device :
         MidiBleProtocol::TimestampSource::Unknown));
 
+    // Smoothing needs a sender clock which has been seen to run. Until then, and for a device
+    // whose clock never moves, messages are released as they arrive.
+    auto const smooth = RefreshIncomingTimingSetting();
+    bool smoothing{ false };
+    std::vector<uint64_t> releaseTimestamps;
+
+    if (smooth)
+    {
+        if (m_incomingTimestampCorrelator.ClockGeneration() != m_incomingSmootherClockGeneration)
+        {
+            m_incomingSmoother.ResetClock();
+            m_incomingSmootherClockGeneration = m_incomingTimestampCorrelator.ClockGeneration();
+        }
+
+        m_incomingSmoother.SetConnectionIntervalMicroseconds(
+            static_cast<uint32_t>(m_connectionIntervalUnits.load()) * MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS);
+
+        std::vector<int64_t> senderTicks;
+        senderTicks.reserve(senderMilliseconds.size());
+
+        for (auto const milliseconds : senderMilliseconds)
+        {
+            senderTicks.push_back(static_cast<int64_t>(milliseconds * ticksPerMillisecond));
+        }
+
+        smoothing = m_incomingSmoother.ProcessPacket(
+            senderTicks,
+            receiveTimestamp,
+            m_incomingTimestampCorrelator.HaveSeenSenderClockAdvance() && !m_incomingTimestampCorrelator.SenderClockIsStalled(),
+            ticksPerMillisecond,
+            releaseTimestamps);
+    }
+
+    m_incomingSmoothingDelayTicks.store(smoothing ? m_incomingSmoother.DelayTicks() : 0);
+
     for (size_t segmentIndex = 0; segmentIndex < segments.size(); segmentIndex++)
     {
         auto const& segment = segments[segmentIndex];
-        auto const timestamp = segmentTimestamps[segmentIndex];
+
+        // When smoothing, the timestamp is the release time, so a client which acts on timestamps
+        // and one which acts on arrival see the same steady timing.
+        auto const timestamp = smoothing ? releaseTimestamps[segmentIndex] : segmentTimestamps[segmentIndex];
+        auto const releaseTimestamp = smooth && segmentIndex < releaseTimestamps.size() ?
+            releaseTimestamps[segmentIndex] : receiveTimestamp;
 
         std::vector<uint32_t> words;
         words.reserve(segment.Bytes.size());
@@ -1250,7 +1344,7 @@ MidiBleConnection::ProcessIncomingMidi1Packet(
 
         if (!words.empty())
         {
-            LOG_IF_FAILED(SendUmpWordsToCallback(words.data(), words.size(), timestamp));
+            DeliverIncomingMessage(smooth, releaseTimestamp, timestamp, words);
         }
     }
 }
@@ -1534,6 +1628,290 @@ MidiBleConnection::SendUmpWordsToCallback(
         callbackContext));
 
     return S_OK;
+}
+
+
+double
+MidiBleConnection::IncomingSmoothingDelayMilliseconds() const noexcept
+{
+    return static_cast<double>(m_incomingSmoothingDelayTicks.load()) / static_cast<double>(MidiTimestampTicksPerMillisecond());
+}
+
+
+bool
+MidiBleConnection::RefreshIncomingTimingSetting()
+{
+    // Checked per packet, so the setting itself is only read when something changed
+    auto const generation = TransportState::Current().GetIncomingTimingGeneration();
+
+    if (m_haveIncomingTimingGeneration && generation == m_incomingTimingGeneration)
+    {
+        return m_smoothIncoming;
+    }
+
+    m_haveIncomingTimingGeneration = true;
+    m_incomingTimingGeneration = generation;
+
+    auto const smooth =
+        m_protocol == MidiBleProtocol::Protocol::Midi1 &&
+        m_releaseThreadRunning.load() &&
+        TransportState::Current().GetEffectiveIncomingTiming(m_deviceId) == MidiBleProtocol::IncomingTiming::Smooth;
+
+    if (smooth != m_smoothIncoming)
+    {
+        // Starts over either way. Anything learned before smoothing was switched off is stale.
+        m_incomingSmoother.Reset();
+        m_incomingSmootherClockGeneration = m_incomingTimestampCorrelator.ClockGeneration();
+        m_smoothIncoming = smooth;
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Incoming timing changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingBool(smooth, "smooth")
+        );
+    }
+
+    return m_smoothIncoming;
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::DeliverIncomingMessage(
+    bool const smoothing,
+    uint64_t const releaseTimestamp,
+    uint64_t const timestamp,
+    std::vector<uint32_t>& words
+)
+{
+    auto deliveredTimestamp = timestamp < m_lastIncomingTimestamp ? m_lastIncomingTimestamp : timestamp;
+    m_lastIncomingTimestamp = deliveredTimestamp;
+
+    bool queued{ false };
+
+    if (m_releaseThreadRunning.load())
+    {
+        auto lock = m_releaseQueueLock.lock_exclusive();
+
+        if (m_releaseStop)
+        {
+            // shutting down, and the callback is already gone
+            return;
+        }
+
+        // A message delivered directly while others still wait would overtake them, which is
+        // what happens otherwise just after smoothing is switched off.
+        if (smoothing || !m_releaseQueue.empty() || m_releaseInProgress)
+        {
+            if (m_releaseQueue.size() >= MaxQueuedIncomingMessages)
+            {
+                // Far more than any real device could have waiting, so let everything go rather
+                // than grow without limit.
+                m_releaseAllNow = true;
+            }
+
+            m_releaseQueue.push_back({ smoothing ? releaseTimestamp : 0, deliveredTimestamp, std::move(words) });
+            queued = true;
+        }
+    }
+
+    if (queued)
+    {
+        m_releaseWakeup.SetEvent();
+
+        return;
+    }
+
+    // Delivered now, so it can't carry a time which hasn't happened yet. That only matters if the
+    // release thread has stopped while smoothing is on; otherwise the time is already in the past.
+    auto const now = internal::GetCurrentMidiTimestamp();
+
+    if (deliveredTimestamp > now)
+    {
+        deliveredTimestamp = now;
+        m_lastIncomingTimestamp = now;
+    }
+
+    LOG_IF_FAILED(SendUmpWordsToCallback(words.data(), words.size(), deliveredTimestamp));
+}
+
+
+HRESULT
+MidiBleConnection::StartIncomingReleaseThread()
+{
+    RETURN_IF_FAILED(m_releaseWakeup.create(wil::EventOptions::None));
+
+    // An ordinary timer is less accurate but still works, so it is the fallback
+    m_releaseTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
+
+    if (!m_releaseTimer)
+    {
+        m_releaseTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
+    }
+
+    RETURN_LAST_ERROR_IF(!m_releaseTimer);
+
+    try
+    {
+        m_releaseThread = std::jthread([weakThis = weak_from_this()](std::stop_token stopToken)
+            {
+                // An exception leaving a jthread body terminates the whole service
+                try
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        LOG_IF_FAILED(self->IncomingReleaseWorker(stopToken));
+
+                        // Anything arriving from now on is delivered directly instead
+                        self->m_releaseThreadRunning = false;
+                    }
+                }
+                CATCH_LOG();
+            });
+    }
+    CATCH_RETURN();
+
+    m_releaseThreadRunning = true;
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiBleConnection::IncomingReleaseWorker(std::stop_token stopToken)
+{
+    // The scheduler transform's worker does the same, for the same reason: a late wake is a late message
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+
+    auto const frequency = internal::GetMidiTimestampFrequency();
+    auto const ticksPerMillisecond = MidiTimestampTicksPerMillisecond();
+    uint64_t const timerOvershootTicks = (ReleaseTimerOvershootMicroseconds * ticksPerMillisecond) / 1000;
+    uint64_t const spinTicks = (ReleaseSpinMicroseconds * ticksPerMillisecond) / 1000;
+
+    HANDLE const waitHandles[] = { m_releaseWakeup.get(), m_releaseTimer.get() };
+
+    while (!stopToken.stop_requested() && !m_shutdown.load())
+    {
+        PendingIncomingMessage message{};
+        bool haveMessage{ false };
+        bool queueEmpty{ false };
+        uint64_t waitTicks{ 0 };
+
+        {
+            auto lock = m_releaseQueueLock.lock_exclusive();
+
+            m_releaseInProgress = false;
+
+            if (m_releaseStop)
+            {
+                break;
+            }
+
+            if (m_releaseQueue.empty())
+            {
+                m_releaseAllNow = false;
+                queueEmpty = true;
+            }
+            else
+            {
+                auto const now = internal::GetCurrentMidiTimestamp();
+                auto& front = m_releaseQueue.front();
+
+                if (m_releaseAllNow || front.ReleaseTimestamp <= now)
+                {
+                    message = std::move(front);
+                    m_releaseQueue.pop_front();
+                    m_releaseInProgress = true;
+                    haveMessage = true;
+
+                    // Only possible when everything is released early. A client must never be
+                    // handed a time which hasn't happened yet.
+                    if (message.Timestamp > now)
+                    {
+                        message.Timestamp = now;
+                    }
+                }
+                else
+                {
+                    waitTicks = front.ReleaseTimestamp - now;
+                }
+            }
+        }
+
+        if (haveMessage)
+        {
+            LOG_IF_FAILED(SendUmpWordsToCallback(message.Words.data(), message.Words.size(), message.Timestamp));
+
+            continue;
+        }
+
+        if (queueEmpty)
+        {
+            // Auto-reset, so a message queued after the lock was dropped has already signaled it
+            WaitForSingleObject(m_releaseWakeup.get(), INFINITE);
+
+            continue;
+        }
+
+        if (waitTicks <= spinTicks)
+        {
+            // Too short for the timer, which typically wakes about half a millisecond late
+            auto const due = internal::GetCurrentMidiTimestamp() + waitTicks;
+
+            while (internal::GetCurrentMidiTimestamp() < due && !m_shutdown.load())
+            {
+                YieldProcessor();
+            }
+
+            continue;
+        }
+
+        // Aimed early by how late the timer usually wakes, and whatever is left is spun above
+        uint64_t const aimTicks = waitTicks > timerOvershootTicks + spinTicks ?
+            waitTicks - timerOvershootTicks :
+            waitTicks - spinTicks;
+
+        LARGE_INTEGER dueTime{};
+        dueTime.QuadPart = -static_cast<LONGLONG>((std::max<uint64_t>)((aimTicks * 10'000'000ULL) / frequency, 1));
+
+        if (SetWaitableTimer(m_releaseTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE))
+        {
+            WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, INFINITE);
+        }
+        else
+        {
+            WaitForSingleObject(m_releaseWakeup.get(), static_cast<DWORD>((std::max<uint64_t>)(aimTicks / ticksPerMillisecond, 1)));
+        }
+    }
+
+    return S_OK;
+}
+
+
+void
+MidiBleConnection::ReleaseQueuedIncomingMessagesNow() noexcept
+{
+    {
+        auto lock = m_releaseQueueLock.lock_exclusive();
+
+        if (m_releaseQueue.empty())
+        {
+            return;
+        }
+
+        m_releaseAllNow = true;
+    }
+
+    if (m_releaseWakeup)
+    {
+        m_releaseWakeup.SetEvent();
+    }
 }
 
 
