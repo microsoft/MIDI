@@ -617,7 +617,7 @@ namespace winrt::midicalculator::implementation
 
             if (!from.has_value() || !to.has_value())
             {
-                m_betweenResult.Value.Text(L"\u2014");
+                ::midicalculator::ui::SetBigText(m_betweenResult.Value, std::wstring_view{ winrt::hstring{ L"\u2014" } });
                 m_betweenResult.Detail.Text(res::GetString(L"TimeBetweenNeedBoth"));
             }
             else
@@ -627,7 +627,7 @@ namespace winrt::midicalculator::implementation
                 auto const seconds = ::midicalc::TicksToSeconds(gap, frequency) * (later ? 1.0 : -1.0);
                 auto const beats = seconds * native::AppSettings::Current().Tempo() / 60.0;
 
-                m_betweenResult.Value.Text(res::FormatString(L"TimeMillisecondsValue", text::Number(seconds * 1000.0, 3, true)));
+                ::midicalculator::ui::SetBigText(m_betweenResult.Value, std::wstring_view{ winrt::hstring{ res::FormatString(L"TimeMillisecondsValue", text::Number(seconds * 1000.0, 3, true)) } });
                 m_betweenResult.Detail.Text(res::FormatString(L"TimeBetweenDetail",
                     later ? text::Whole(gap) : text::SignedWhole(-static_cast<int64_t>(gap)),
                     text::Number(beats, 3), text::Number(native::AppSettings::Current().Tempo(), 3)));

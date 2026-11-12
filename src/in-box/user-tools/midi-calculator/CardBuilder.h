@@ -58,6 +58,17 @@ namespace midicalculator::ui
 
     controls::Button MakeButton(_In_ winrt::hstring const& text, _In_opt_ wchar_t const* glyph, _In_ bool accent);
 
+    // The comps' small button: 28 px tall, 12 px text. subtle has no fill or border, like Reset.
+    controls::Button MakeSmallButton(_In_ winrt::hstring const& text, _In_opt_ wchar_t const* glyph, _In_ bool accent, _In_ bool subtle);
+
+    // A field's label as the comps draw it: 12 px, secondary text. WinUI's own header is 14 px.
+    controls::TextBlock MakeFieldHeader(_In_ winrt::hstring const& label);
+
+    // A big answer with its unit smaller beside it, as in the comps ("123.077" large, "BPM" small).
+    // The unit is the last word when it's only letters (BPM, Hz, ms, cents, bars); otherwise the
+    // whole text is large.
+    void SetBigText(_In_ controls::TextBlock const& block, _In_ std::wstring_view text, _In_ double size = 28.0, _In_ double unitSize = 14.0);
+
     // A big answer with a line of detail under it and a copy button.
     struct BigResult
     {

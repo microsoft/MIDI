@@ -166,7 +166,7 @@
 
                 <TextBlock x:Name="PageTitleText"
                            Grid.Row="0"
-                           Margin="24,14,24,10"
+                           Margin="24,18,24,10"
                            Style="{ThemeResource SubtitleTextBlockStyle}" />
 
                 <!-- the session values every page reads -->
@@ -178,6 +178,11 @@
                         BorderThickness="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <!-- lightweight styling: the comps' 26 px session boxes -->
+                    <Border.Resources>
+                        <x:Double x:Key="TextControlThemeMinHeight">26</x:Double>
+                        <Thickness x:Key="TextControlThemePadding">8,2,8,3</Thickness>
+                    </Border.Resources>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
                     <Grid ColumnSpacing="14" Padding="0,0,0,2">
                         <Grid.ColumnDefinitions>
@@ -193,26 +198,26 @@
                         <TextBlock x:Uid="SessionLabel"
                                    Text="Session"
                                    VerticalAlignment="Top"
-                                   Margin="0,7.5,0,0"
+                                   Margin="0,4.5,0,0"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Uid="SessionTempoLabel" Text="Tempo" VerticalAlignment="Top" Margin="0,4.5,0,0" />
-                            <NumberBox x:Name="SessionTempoBox"
+                            <TextBlock x:Uid="SessionTempoLabel" Text="Tempo" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <NumberBox FontSize="13" x:Name="SessionTempoBox"
                                        x:Uid="SessionTempoBox"
-                                       Width="72"
+                                       Width="60"
                                        Minimum="1"
                                        Maximum="1000"
                                        SpinButtonPlacementMode="Hidden"
                                        ValidationMode="InvalidInputOverwritten"
                                        ValueChanged="OnSessionTempoChanged" />
-                            <TextBlock x:Uid="SessionTempoUnit" Text="BPM" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <TextBlock x:Uid="SessionTempoUnit" Text="BPM" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Uid="SessionMeterLabel" Text="Meter" VerticalAlignment="Top" Margin="0,4.5,0,0" />
-                            <TextBox x:Name="SessionMeterBox"
+                            <TextBlock x:Uid="SessionMeterLabel" Text="Meter" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBox FontSize="13" x:Name="SessionMeterBox"
                                      x:Uid="SessionMeterBox"
                                      Width="56"
                                      IsSpellCheckEnabled="False"
@@ -221,44 +226,50 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Uid="SessionSampleRateLabel" Text="Sample rate" VerticalAlignment="Top" Margin="0,4.5,0,0" />
-                            <NumberBox x:Name="SessionSampleRateBox"
+                            <TextBlock x:Uid="SessionSampleRateLabel" Text="Sample rate" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <NumberBox FontSize="13" x:Name="SessionSampleRateBox"
                                        x:Uid="SessionSampleRateBox"
-                                       Width="92"
+                                       Width="80"
                                        Minimum="1000"
                                        Maximum="1536000"
                                        SpinButtonPlacementMode="Hidden"
                                        ValidationMode="InvalidInputOverwritten"
                                        ValueChanged="OnSessionSampleRateChanged" />
-                            <TextBlock x:Uid="SessionHertzUnit" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <TextBlock x:Uid="SessionHertzUnit" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Name="SessionReferenceLabel" VerticalAlignment="Top" Margin="0,4.5,0,0" />
-                            <NumberBox x:Name="SessionReferenceBox"
-                                       Width="72"
+                            <TextBlock x:Name="SessionReferenceLabel" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <NumberBox FontSize="13" x:Name="SessionReferenceBox"
+                                       Width="60"
                                        Minimum="300"
                                        Maximum="600"
                                        SpinButtonPlacementMode="Hidden"
                                        ValidationMode="InvalidInputOverwritten"
                                        ValueChanged="OnSessionReferenceChanged" />
-                            <TextBlock x:Uid="SessionHertzUnit2" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" />
+                            <TextBlock x:Uid="SessionHertzUnit2" Text="Hz" VerticalAlignment="Top" Margin="0,4.5,0,0" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
                         <TextBlock x:Name="StatusText"
                                    Grid.Column="5"
                                    HorizontalAlignment="Right"
                                    VerticalAlignment="Top"
-                                   Margin="0,7.5,0,0"
+                                   Margin="0,4.5,0,0"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                         <Button x:Name="SessionResetButton"
                                 x:Uid="SessionResetButton"
                                 Grid.Column="6"
+                                MinHeight="26"
+                                Padding="10,3,10,4"
+                                FontSize="12"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                VerticalAlignment="Top"
                                 Click="OnSessionResetClick">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE777;" FontSize="14" />
+                                <FontIcon Glyph="&#xE777;" FontSize="13" />
                                 <TextBlock x:Uid="SessionResetButtonText" Text="Reset" />
                             </StackPanel>
                         </Button>

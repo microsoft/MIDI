@@ -253,7 +253,9 @@ namespace winrt::midicalculator::implementation
                 controls::TextBlock heading{};
                 heading.Text(headings[column]);
                 heading.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
-                heading.Margin(xaml::Thickness{ 8, 0, 8, 6 });
+                heading.FontSize(12);
+                heading.Foreground(Brush(L"TextFillColorSecondaryBrush"));
+                heading.Margin(xaml::Thickness{ 8, 6, 8, 7 });
                 heading.HorizontalAlignment(column == 0 ? xaml::HorizontalAlignment::Left : xaml::HorizontalAlignment::Right);
                 controls::Grid::SetColumn(heading, column);
                 table.Children().Append(heading);
@@ -264,6 +266,7 @@ namespace winrt::midicalculator::implementation
                 controls::TextBlock name{};
                 name.Text(rows[row]);
                 name.Margin(xaml::Thickness{ 8, 5, 8, 5 });
+                name.FontSize(13);
                 name.TextWrapping(xaml::TextWrapping::Wrap);
                 controls::Grid::SetRow(name, row + 1);
                 table.Children().Append(name);
@@ -272,6 +275,7 @@ namespace winrt::midicalculator::implementation
                 {
                     controls::TextBlock cell{};
                     cell.Margin(xaml::Thickness{ 8, 5, 8, 5 });
+                    cell.FontSize(13);
                     cell.HorizontalAlignment(xaml::HorizontalAlignment::Right);
                     cell.VerticalAlignment(xaml::VerticalAlignment::Center);
                     cell.IsTextSelectionEnabled(true);
@@ -548,7 +552,9 @@ namespace winrt::midicalculator::implementation
             auto const bits = ScaleBits[sourceIndex];
             auto const zeroExtension = m_scaleMethod.SelectedIndex() == 1;
             auto const value = text::ParseUnsigned(m_scaleValue.Text());
-            auto const lit = Brush(L"AccentFillColorDisabledBrush");
+            auto accent = winrt::unbox_value<winrt::Windows::UI::Color>(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"SystemAccentColorLight2")));
+            accent.A = 0x24;
+            media::SolidColorBrush const lit{ accent };
 
             for (int row = 0; row < 4; ++row)
             {

@@ -280,6 +280,8 @@ namespace winrt::midicalculator::implementation
                 controls::TextBlock heading{};
                 heading.Text(headings[column % 3]);
                 heading.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
+                heading.FontSize(12);
+                heading.Foreground(Brush(L"TextFillColorSecondaryBrush"));
                 heading.Margin(xaml::Thickness{ 0, 0, 0, 6 });
                 heading.HorizontalAlignment(column % 3 == 0 ? xaml::HorizontalAlignment::Left : xaml::HorizontalAlignment::Right);
                 controls::Grid::SetColumn(heading, column);
@@ -297,7 +299,8 @@ namespace winrt::midicalculator::implementation
                 {
                     cells[column] = controls::TextBlock{};
                     cells[column].IsTextSelectionEnabled(true);
-                    cells[column].Margin(xaml::Thickness{ 0, 3, 0, 3 });
+                    cells[column].Margin(xaml::Thickness{ 0, 4, 0, 4 });
+                    cells[column].FontSize(13);
                     cells[column].HorizontalAlignment(column == 0 ? xaml::HorizontalAlignment::Left : xaml::HorizontalAlignment::Right);
                     controls::Grid::SetRow(cells[column], row);
                     controls::Grid::SetColumn(cells[column], firstColumn + column);
@@ -380,7 +383,7 @@ namespace winrt::midicalculator::implementation
             {
                 auto const hertz = ::midicalc::NoteFrequency(*note + NumberOr(m_pitchCents, 0) / 100.0, tuning);
 
-                m_pitchFrequency.Value.Text(res::FormatString(L"HertzValue", text::Number(hertz, 3, true)));
+                ::midicalculator::ui::SetBigText(m_pitchFrequency.Value, std::wstring_view{ winrt::hstring{ res::FormatString(L"HertzValue", text::Number(hertz, 3, true)) } });
                 m_pitchFrequency.Detail.Text(res::FormatString(L"PitchFrequencyDetail", temperamentName, referenceName, text::Number(tuning.ReferenceHertz, 3)));
                 m_pitchNumber.Text(std::format(L"{} \u00B7 {}", *note, text::Hex(static_cast<uint64_t>(*note), 2)));
                 m_pitchPeriod.Text(res::FormatString(L"MillisecondsValue", text::Number(1000.0 / hertz, 4)));
@@ -392,7 +395,7 @@ namespace winrt::midicalculator::implementation
             }
             else
             {
-                m_pitchFrequency.Value.Text(L"\u2014");
+                ::midicalculator::ui::SetBigText(m_pitchFrequency.Value, std::wstring_view{ winrt::hstring{ L"\u2014" } });
                 m_pitchFrequency.Detail.Text(res::GetString(L"PitchNoteInvalid"));
 
                 for (auto const& block : { m_pitchNumber, m_pitchPeriod, m_pitchSamples, m_pitchOtherNames })
@@ -409,7 +412,7 @@ namespace winrt::midicalculator::implementation
                 auto const target = ::midicalc::NoteFrequency(nearest->Note, tuning);
                 auto const away = hertz - target;
 
-                m_frequencyNote.Value.Text(res::FormatString(L"FrequencyNoteValue", ::midicalc::NoteName(nearest->Note, middleC, false), text::Signed(nearest->Cents, 1)));
+                ::midicalculator::ui::SetBigText(m_frequencyNote.Value, std::wstring_view{ winrt::hstring{ res::FormatString(L"FrequencyNoteValue", ::midicalc::NoteName(nearest->Note, middleC, false), text::Signed(nearest->Cents, 1)) } });
                 m_frequencyNote.Detail.Text(res::FormatString(away >= 0 ? L"FrequencyNoteSharp" : L"FrequencyNoteFlat",
                     nearest->Note, text::Number(std::abs(away), 2), text::Number(target, 3)));
 
@@ -427,7 +430,7 @@ namespace winrt::midicalculator::implementation
             }
             else
             {
-                m_frequencyNote.Value.Text(L"\u2014");
+                ::midicalculator::ui::SetBigText(m_frequencyNote.Value, std::wstring_view{ winrt::hstring{ L"\u2014" } });
                 m_frequencyNote.Detail.Text(res::GetString(L"FrequencyOutOfRange"));
                 m_frequencyFraction.Text(L"\u2014");
                 m_frequencyPitch79.Text(L"\u2014");

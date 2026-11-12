@@ -40,6 +40,7 @@ namespace midicalculator::ui
             controls::FontIcon icon{};
             icon.Glyph(L"\uE8C8");
             icon.FontSize(12);
+            icon.Foreground(ThemeBrush(L"TextFillColorTertiaryBrush"));
             button.Content(icon);
 
             winrt::hstring name{ label };
@@ -127,7 +128,7 @@ namespace midicalculator::ui
         block.Text(text);
         block.TextWrapping(xaml::TextWrapping::Wrap);
         block.Style(ThemeStyle(L"CaptionTextBlockStyle"));
-        block.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+        block.Foreground(ThemeBrush(L"TextFillColorTertiaryBrush"));
         return block;
     }
 
@@ -151,7 +152,7 @@ namespace midicalculator::ui
     controls::NumberBox MakeNumberBox(winrt::hstring const& label, double value, double minimum, double maximum, double width)
     {
         controls::NumberBox box{};
-        box.Header(winrt::box_value(label));
+        box.Header(MakeFieldHeader(label));
         box.Minimum(minimum);
         box.Maximum(maximum);
         box.Value(value);
@@ -167,7 +168,7 @@ namespace midicalculator::ui
     controls::TextBox MakeTextBox(winrt::hstring const& label, winrt::hstring const& text, double width)
     {
         controls::TextBox box{};
-        box.Header(winrt::box_value(label));
+        box.Header(MakeFieldHeader(label));
         box.Text(text);
         box.Width(width);
         box.HorizontalAlignment(xaml::HorizontalAlignment::Left);
@@ -180,7 +181,7 @@ namespace midicalculator::ui
     controls::ComboBox MakeComboBox(winrt::hstring const& label, std::vector<winrt::hstring> const& items, int32_t selectedIndex, double width)
     {
         controls::ComboBox box{};
-        box.Header(winrt::box_value(label));
+        box.Header(MakeFieldHeader(label));
         box.Width(width);
         box.HorizontalAlignment(xaml::HorizontalAlignment::Left);
 
@@ -214,6 +215,69 @@ namespace midicalculator::ui
         return panel;
     }
 
+    _Use_decl_annotations_
+    controls::TextBlock MakeFieldHeader(winrt::hstring const& label)
+    {
+        controls::TextBlock header{};
+        header.Text(label);
+        header.FontSize(12);
+        header.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+        return header;
+    }
+
+    _Use_decl_annotations_
+    controls::Button MakeSmallButton(winrt::hstring const& text, wchar_t const* glyph, bool accent, bool subtle)
+    {
+        auto button = MakeButton(text, glyph, accent);
+        button.FontSize(12);
+        button.MinHeight(28);
+        button.Padding(xaml::Thickness{ 10, 4, 10, 5 });
+
+        if (auto content = button.Content().try_as<controls::StackPanel>())
+        {
+            content.Spacing(6);
+
+            if (auto icon = content.Children().GetAt(0).try_as<controls::FontIcon>())
+            {
+                icon.FontSize(13);
+            }
+        }
+
+        if (subtle)
+        {
+            button.Background(media::SolidColorBrush{ winrt::Microsoft::UI::Colors::Transparent() });
+            button.BorderThickness(xaml::Thickness{ 0 });
+        }
+
+        return button;
+    }
+
+    _Use_decl_annotations_
+    void SetBigText(controls::TextBlock const& block, std::wstring_view text, double size, double unitSize)
+    {
+        block.Inlines().Clear();
+        block.FontSize(size);
+        block.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
+
+        auto const space = text.rfind(L' ');
+        auto const unit = space == std::wstring_view::npos ? std::wstring_view{} : text.substr(space + 1);
+        auto const isUnit = !unit.empty() && unit.size() <= 5 &&
+            std::all_of(unit.begin(), unit.end(), [](wchar_t c) { return std::iswalpha(c) != 0; });
+
+        winrt::Microsoft::UI::Xaml::Documents::Run value{};
+        value.Text(winrt::hstring{ isUnit ? text.substr(0, space) : text });
+        block.Inlines().Append(value);
+
+        if (isUnit)
+        {
+            winrt::Microsoft::UI::Xaml::Documents::Run small{};
+            small.Text(winrt::hstring{ std::wstring{ L"\u2009" } + std::wstring{ unit } });
+            small.FontSize(unitSize);
+            small.FontWeight(winrt::Windows::UI::Text::FontWeights::Normal());
+            small.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+            block.Inlines().Append(small);
+        }
+    }
     _Use_decl_annotations_
     controls::Border MakeInlineText(controls::TextBlock const& text, bool framed)
     {
@@ -274,11 +338,11 @@ namespace midicalculator::ui
         BigResult result{};
 
         result.Root = controls::Border{};
-        result.Root.Background(ThemeBrush(L"LayerFillColorDefaultBrush"));
+        result.Root.Background(ThemeBrush(L"SolidBackgroundFillColorBaseBrush"));
         result.Root.BorderBrush(ThemeBrush(L"CardStrokeColorDefaultBrush"));
         result.Root.BorderThickness(xaml::Thickness{ 1 });
         result.Root.CornerRadius(xaml::CornerRadius{ 6 });
-        result.Root.Padding(xaml::Thickness{ 12, 8, 12, 8 });
+        result.Root.Padding(xaml::Thickness{ 12, 10, 12, 10 });
 
         controls::Grid grid{};
         controls::ColumnDefinition text{};
@@ -291,14 +355,15 @@ namespace midicalculator::ui
 
         controls::StackPanel words{};
         result.Value = controls::TextBlock{};
-        result.Value.Style(ThemeStyle(L"SubtitleTextBlockStyle"));
+        result.Value.FontSize(28);
+        result.Value.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
         result.Value.IsTextSelectionEnabled(true);
         result.Value.TextWrapping(xaml::TextWrapping::Wrap);
         automation::AutomationProperties::SetLiveSetting(result.Value, automation::Peers::AutomationLiveSetting::Polite);
 
         result.Detail = controls::TextBlock{};
         result.Detail.Style(ThemeStyle(L"CaptionTextBlockStyle"));
-        result.Detail.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
+        result.Detail.Foreground(ThemeBrush(L"TextFillColorTertiaryBrush"));
         result.Detail.TextWrapping(xaml::TextWrapping::Wrap);
         result.Detail.IsTextSelectionEnabled(true);
 
@@ -345,8 +410,18 @@ namespace midicalculator::ui
         row.Height(xaml::GridLengthHelper::Auto());
         m_grid.RowDefinitions().Append(row);
 
+        // a divider above every row but the first, behind the row's cells
+        controls::Border line{};
+        line.MinHeight(30);
+        line.BorderBrush(ThemeBrush(L"DividerStrokeColorDefaultBrush"));
+        line.BorderThickness(xaml::Thickness{ 0, m_rows > 0 ? 1.0 : 0.0, 0, 0 });
+        controls::Grid::SetRow(line, m_rows);
+        controls::Grid::SetColumnSpan(line, 3);
+        m_grid.Children().Append(line);
+
         controls::TextBlock name{};
         name.Text(label);
+        name.FontSize(13);
         name.Foreground(ThemeBrush(L"TextFillColorSecondaryBrush"));
         name.VerticalAlignment(xaml::VerticalAlignment::Center);
         name.TextWrapping(xaml::TextWrapping::Wrap);
@@ -356,6 +431,7 @@ namespace midicalculator::ui
         controls::TextBlock value{};
         value.HorizontalAlignment(xaml::HorizontalAlignment::Right);
         value.VerticalAlignment(xaml::VerticalAlignment::Center);
+        value.FontSize(13);
         value.IsTextSelectionEnabled(true);
         value.TextWrapping(xaml::TextWrapping::Wrap);
         value.TextAlignment(xaml::TextAlignment::Right);
@@ -486,7 +562,8 @@ namespace midicalculator::ui
         {
             controls::Primitives::ToggleButton button{};
             button.Content(winrt::box_value(items[i]));
-            button.MinHeight(30);
+            button.MinHeight(28);
+            button.FontSize(12);
             button.Padding(xaml::Thickness{ 12, 4, 12, 5 });
             button.IsChecked(i == m_selected);
 

@@ -68,19 +68,41 @@ namespace winrt::midicalculator::implementation
         {
             auto card = ui::MakeCard(res::GetString(L"TapTitle"), L"\uE916");
 
+            // the comp's pad: a faint accent tint inside a dashed outline, 128 px tall
             controls::Button pad{};
             pad.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            pad.HorizontalContentAlignment(xaml::HorizontalAlignment::Center);
-            pad.MinHeight(128);
-            pad.Background(Brush(L"AccentFillColorDisabledBrush"));
+            pad.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+            pad.VerticalContentAlignment(xaml::VerticalAlignment::Stretch);
+            pad.Height(128);
+            pad.Padding(xaml::Thickness{ 0 });
+            pad.BorderThickness(xaml::Thickness{ 0 });
+            pad.CornerRadius(xaml::CornerRadius{ 8 });
+            {
+                auto accent = winrt::unbox_value<winrt::Windows::UI::Color>(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"SystemAccentColorLight2")));
+                accent.A = 0x10;
+                pad.Background(media::SolidColorBrush{ accent });
+            }
             winrt::Microsoft::UI::Xaml::Automation::AutomationProperties::SetName(pad, res::GetString(L"TapPadName"));
 
+            controls::Grid padGrid{};
+
+            xaml::Shapes::Rectangle outline{};
+            outline.RadiusX(8);
+            outline.RadiusY(8);
+            outline.StrokeThickness(1);
+            outline.Stroke(Brush(L"ControlStrongStrokeColorDisabledBrush"));
+            outline.StrokeDashArray().Append(4);
+            outline.StrokeDashArray().Append(3);
+            padGrid.Children().Append(outline);
+
             controls::StackPanel content{};
-            content.Spacing(6);
+            content.Spacing(4);
+            content.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+            content.VerticalAlignment(xaml::VerticalAlignment::Center);
+
             m_tapValue = controls::TextBlock{};
-            m_tapValue.Style(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"TitleLargeTextBlockStyle")).as<xaml::Style>());
             m_tapValue.HorizontalAlignment(xaml::HorizontalAlignment::Center);
-            m_tapValue.Text(res::GetString(L"TapNoTempo"));
+            ui::SetBigText(m_tapValue, res::GetString(L"TapNoTempo"), 40.0, 16.0);
             winrt::Microsoft::UI::Xaml::Automation::AutomationProperties::SetLiveSetting(m_tapValue, winrt::Microsoft::UI::Xaml::Automation::Peers::AutomationLiveSetting::Polite);
 
             // one dot for each tap that counts, as in the comp
@@ -106,10 +128,11 @@ namespace winrt::midicalculator::implementation
             content.Children().Append(m_tapValue);
             content.Children().Append(m_tapDots);
             content.Children().Append(m_tapDetail);
-            pad.Content(content);
+            padGrid.Children().Append(content);
+            pad.Content(padGrid);
             pad.Click([weak = get_weak()](auto&&, auto&&) { if (auto s = weak.get()) s->Tap(); });
 
-            auto use = ui::MakeButton(res::GetString(L"UseAsSessionTempo"), nullptr, true);
+            auto use = ui::MakeSmallButton(res::GetString(L"UseAsSessionTempo"), nullptr, true, false);
             use.Click([weak = get_weak(), page](auto&&, auto&&)
                 {
                     if (auto s = weak.get(); s && s->m_tappedTempo.has_value())
@@ -118,16 +141,14 @@ namespace winrt::midicalculator::implementation
                     }
                 });
 
-            auto reset = ui::MakeButton(res::GetString(L"TapReset"), L"\uE777", false);
-            reset.Background(media::SolidColorBrush{ winrt::Microsoft::UI::Colors::Transparent() });
-            reset.BorderThickness(xaml::Thickness{ 0 });
+            auto reset = ui::MakeSmallButton(res::GetString(L"TapReset"), L"\uE777", false, true);
             reset.Click([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto s = weak.get())
                     {
                         s->m_tapTempo.Reset();
                         s->m_tappedTempo.reset();
-                        s->m_tapValue.Text(res::GetString(L"TapNoTempo"));
+                        ui::SetBigText(s->m_tapValue, res::GetString(L"TapNoTempo"), 40.0, 16.0);
                         s->m_tapDetail.Text(res::GetString(L"TapHint"));
 
                         auto const off = xaml::Application::Current().Resources().Lookup(winrt::box_value(L"ControlStrongFillColorDisabledBrush")).as<media::Brush>();
@@ -164,7 +185,13 @@ namespace winrt::midicalculator::implementation
             m_beatBars = ui::MakeNumberBox(res::GetString(L"BeatBarsLabel"), 8, 0, 100000, 84);
             m_beatBeats = ui::MakeNumberBox(res::GetString(L"BeatBeatsLabel"), 0, 0, 1000, 84);
 
-            m_beatMeter = ui::MakeComboBox(res::GetString(L"BeatMeterLabel"), { L"2/4", L"3/4", L"4/4", L"5/4", L"6/8", L"7/8", L"12/8" }, -1, 96);
+            // spin arrows on the two counts, as in the comp
+            m_beatBars.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
+            m_beatBeats.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
+            m_beatBars.Width(96);
+            m_beatBeats.Width(96);
+
+            m_beatMeter = ui::MakeComboBox(res::GetString(L"BeatMeterLabel"), { L"2/4", L"3/4", L"4/4", L"5/4", L"6/8", L"7/8", L"12/8" }, -1, 90);
             m_beatMeter.IsEditable(true);
             // the session meter, chosen in the list when it's there, typed in when it isn't
             {
@@ -192,12 +219,12 @@ namespace winrt::midicalculator::implementation
                 { res::GetString(L"BeatUnitTime"), res::GetString(L"BeatUnitSamples") }, 0, 130);
             m_beatTempo = ui::MakeNumberBox(res::GetString(L"BeatTempoLabel"), settings.Tempo(), 1, 1000, 100);
 
-            card.Body.Children().Append(ui::MakeFieldRow({ m_beatBars, m_beatBeats, m_beatMeter, m_beatTempo }));
-            card.Body.Children().Append(ui::MakeFieldRow({ m_beatLength, m_beatLengthUnit }));
+            card.Body.Children().Append(ui::MakeFieldRow({ m_beatBars, m_beatBeats, m_beatMeter, m_beatLength }));
+            card.Body.Children().Append(ui::MakeFieldRow({ m_beatLengthUnit, m_beatTempo }));
 
             m_beatResult = ui::MakeBigResult(res::GetString(L"BeatResultName"), copy);
 
-            auto use = ui::MakeButton(res::GetString(L"UseAsSessionTempo"), nullptr, false);
+            auto use = ui::MakeSmallButton(res::GetString(L"UseAsSessionTempo"), nullptr, false, false);
             use.Click([weak = get_weak(), page](auto&&, auto&&)
                 {
                     if (auto s = weak.get(); s && s->m_beatAnswerTempo.has_value())
@@ -306,7 +333,11 @@ namespace winrt::midicalculator::implementation
 
             // the quarter note's row, lit behind its cells
             controls::Border highlight{};
-            highlight.Background(Brush(L"AccentFillColorDisabledBrush"));
+            {
+                auto accent = winrt::unbox_value<winrt::Windows::UI::Color>(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"SystemAccentColorLight2")));
+                accent.A = 0x24;
+                highlight.Background(media::SolidColorBrush{ accent });
+            }
             highlight.CornerRadius(xaml::CornerRadius{ 4 });
             controls::Grid::SetRow(highlight, static_cast<int32_t>(QuarterRow) + 1);
             controls::Grid::SetColumnSpan(highlight, 4);
@@ -319,7 +350,9 @@ namespace winrt::midicalculator::implementation
                 controls::TextBlock heading{};
                 heading.Text(headings[column]);
                 heading.FontWeight(winrt::Windows::UI::Text::FontWeights::SemiBold());
-                heading.Margin(xaml::Thickness{ 8, 0, 8, 6 });
+                heading.FontSize(12);
+                heading.Foreground(Brush(L"TextFillColorSecondaryBrush"));
+                heading.Margin(xaml::Thickness{ 8, 6, 8, 7 });
                 heading.HorizontalAlignment(column == 0 ? xaml::HorizontalAlignment::Left : xaml::HorizontalAlignment::Right);
                 controls::Grid::SetColumn(heading, column);
                 table.Children().Append(heading);
@@ -329,9 +362,21 @@ namespace winrt::midicalculator::implementation
             winrt::hstring const shortNames[7]{ L"1/1", L"1/2", L"1/4", L"1/8", L"1/16", L"1/32", L"1/64" };
             winrt::hstring const feels[3]{ res::GetString(L"NoteHeadingStraight"), res::GetString(L"NoteHeadingDotted"), res::GetString(L"NoteHeadingTriplet") };
 
+            // a line under the headings and under each row
+            for (int row = 0; row < 8; ++row)
+            {
+                controls::Border line{};
+                line.BorderBrush(Brush(L"DividerStrokeColorDefaultBrush"));
+                line.BorderThickness(xaml::Thickness{ 0, 0, 0, 1 });
+                controls::Grid::SetRow(line, row);
+                controls::Grid::SetColumnSpan(line, 4);
+                table.Children().Append(line);
+            }
+
             for (int row = 0; row < 7; ++row)
             {
                 controls::TextBlock name{};
+                name.FontSize(13);
                 name.Text(names[row]);
                 name.Margin(xaml::Thickness{ 8, 0, 0, 0 });
                 name.Foreground(row == static_cast<int>(QuarterRow) ? Brush(L"AccentTextFillColorPrimaryBrush") : Brush(L"TextFillColorSecondaryBrush"));
@@ -344,7 +389,9 @@ namespace winrt::midicalculator::implementation
                     // a button, so each value can be copied with one click or the keyboard
                     controls::HyperlinkButton cell{};
                     cell.HorizontalAlignment(xaml::HorizontalAlignment::Right);
-                    cell.Padding(xaml::Thickness{ 8, 3, 8, 3 });
+                    cell.Padding(xaml::Thickness{ 8, 4, 8, 4 });
+                    cell.FontSize(13);
+                    cell.MinHeight(28);
                     cell.Foreground(Brush(L"TextFillColorPrimaryBrush"));
 
                     controls::TextBlock value{};
@@ -415,12 +462,12 @@ namespace winrt::midicalculator::implementation
 
             if (!m_tappedTempo.has_value())
             {
-                m_tapValue.Text(res::GetString(L"TapKeepTapping"));
+                ui::SetBigText(m_tapValue, res::GetString(L"TapKeepTapping"), 40.0, 16.0);
                 m_tapDetail.Text(res::GetString(L"TapHint"));
                 return;
             }
 
-            m_tapValue.Text(res::FormatString(L"TempoValueFormat", text::Number(*m_tappedTempo, 1, true)));
+            ui::SetBigText(m_tapValue, res::FormatString(L"TempoValueFormat", text::Number(*m_tappedTempo, 1, true)), 40.0, 16.0);
 
             auto const spread = m_tapTempo.SpreadMilliseconds();
 
@@ -497,13 +544,13 @@ namespace winrt::midicalculator::implementation
 
                 if (!answer.has_value())
                 {
-                    m_beatResult.Value.Text(L"\u2014");
+                    ::midicalculator::ui::SetBigText(m_beatResult.Value, std::wstring_view{ winrt::hstring{ L"\u2014" } });
                     m_beatResult.Detail.Text(res::GetString(L"BeatNeedLengthAndBars"));
                     return;
                 }
 
                 m_beatAnswerTempo = *answer;
-                m_beatResult.Value.Text(res::FormatString(L"TempoValueFormat", text::Number(*answer, 3)));
+                ::midicalculator::ui::SetBigText(m_beatResult.Value, std::wstring_view{ winrt::hstring{ res::FormatString(L"TempoValueFormat", text::Number(*answer, 3)) } });
                 m_beatResult.Detail.Text(res::FormatString(L"BeatTempoDetail",
                     text::Number(beatsInMeter, 2), text::Number(*seconds, 3), text::Number(*seconds * 1000.0 / beatsInMeter, 2)));
                 break;
@@ -514,12 +561,12 @@ namespace winrt::midicalculator::implementation
 
                 if (!answer.has_value())
                 {
-                    m_beatResult.Value.Text(L"\u2014");
+                    ::midicalculator::ui::SetBigText(m_beatResult.Value, std::wstring_view{ winrt::hstring{ L"\u2014" } });
                     m_beatResult.Detail.Text(L"");
                     return;
                 }
 
-                m_beatResult.Value.Text(winrt::hstring{ text::Duration(*answer) });
+                ::midicalculator::ui::SetBigText(m_beatResult.Value, std::wstring_view{ winrt::hstring{ winrt::hstring{ text::Duration(*answer) } } });
                 m_beatResult.Detail.Text(res::FormatString(L"BeatLengthDetail",
                     text::Number(*answer, 3), text::Whole(static_cast<uint64_t>(std::llround(*answer * rate))), text::Number(rate, 0)));
                 break;
@@ -530,7 +577,7 @@ namespace winrt::midicalculator::implementation
 
                 if (!answer.has_value())
                 {
-                    m_beatResult.Value.Text(L"\u2014");
+                    ::midicalculator::ui::SetBigText(m_beatResult.Value, std::wstring_view{ winrt::hstring{ L"\u2014" } });
                     m_beatResult.Detail.Text(res::GetString(L"BeatNeedLength"));
                     return;
                 }
@@ -538,7 +585,7 @@ namespace winrt::midicalculator::implementation
                 auto const wholeBars = std::floor(*answer + 1e-9);
                 auto const beats = (*answer - wholeBars) * meter.Numerator;
 
-                m_beatResult.Value.Text(res::FormatString(L"BeatBarsValue", text::Number(*answer, 3)));
+                ::midicalculator::ui::SetBigText(m_beatResult.Value, std::wstring_view{ winrt::hstring{ res::FormatString(L"BeatBarsValue", text::Number(*answer, 3)) } });
                 m_beatResult.Detail.Text(res::FormatString(L"BeatBarsDetail", text::Number(wholeBars, 0), text::Number(beats, 2), MeterText(meter)));
                 break;
             }
