@@ -66,6 +66,10 @@
                   Name="MIDI Sequencer"
                   Target="[#midisequencerExe]"
                   WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
+        <Shortcut Id="Shortcut_midicalculator"
+                  Name="MIDI Calculator"
+                  Target="[#midicalculatorExe]"
+                  WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
         <Shortcut Id="Shortcut_miditroubleshooter"
                   Name="MIDI Troubleshooting and Repair"
                   Target="[#miditroubleshooterExe]"

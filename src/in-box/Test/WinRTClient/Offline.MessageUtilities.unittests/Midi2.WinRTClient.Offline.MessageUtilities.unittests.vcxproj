@@ -153,6 +153,7 @@
     <ClCompile Include="MidiMessageBuilderTests.cpp" />
     <ClCompile Include="MidiMessageConverterTests.cpp" />
     <ClCompile Include="MidiStreamMessageBuilderTests.cpp" />
+    <ClCompile Include="MidiMessageHelperTests.cpp" />
     <ClCompile Include="MidiSystemExclusive7MessageHelperTests.cpp" />
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
@@ -161,6 +162,7 @@
     <ClInclude Include="MidiMessageBuilderTests.h" />
     <ClInclude Include="MidiMessageConverterTests.h" />
     <ClInclude Include="MidiStreamMessageBuilderTests.h" />
+    <ClInclude Include="MidiMessageHelperTests.h" />
     <ClInclude Include="MidiSystemExclusive7MessageHelperTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
