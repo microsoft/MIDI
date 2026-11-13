@@ -231,6 +231,29 @@ namespace midi2monitor
     }
 
     _Use_decl_annotations_
+    void MessageListSource::ApplyFoldUpdates(std::vector<std::pair<uint64_t, uint32_t>> const& updates) noexcept
+    {
+        try
+        {
+            for (auto const& [sequence, count] : updates)
+            {
+                auto const cached = m_cache.find(sequence);
+
+                if (cached == m_cache.end())
+                {
+                    continue;
+                }
+
+                if (auto const item = cached->second.try_as<winrt::midi2monitor::MidiMessageViewModel>())
+                {
+                    winrt::get_self<winrt::midi2monitor::implementation::MidiMessageViewModel>(item)->RepeatCount(count);
+                }
+            }
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to update the repeat counts.")
+    }
+
+    _Use_decl_annotations_
     foundation::IInspectable MessageListSource::GetAt(uint32_t index)
     {
         if (index >= m_count)

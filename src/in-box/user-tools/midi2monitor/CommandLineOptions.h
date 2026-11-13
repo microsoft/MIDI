@@ -24,6 +24,9 @@ namespace midi2monitor
         std::optional<uint8_t> GroupNumber{};
         std::optional<uint8_t> ChannelNumber{};
 
+        // --simple or --advanced: the mode for this window only. Nothing means the mode used last.
+        std::optional<bool> AdvancedMode{};
+
         static CommandLineOptions Parse(std::vector<std::wstring> const& arguments) noexcept;
         static CommandLineOptions ParseProcessCommandLine() noexcept;
     };

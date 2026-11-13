@@ -59,6 +59,49 @@ namespace midi2monitor
         uint32_t TableZoomPercent() const noexcept { return m_tableZoomPercent; }
         void TableZoomPercent(uint32_t value) noexcept;
 
+        // Off once someone checks "Don't ask me again" on the clear confirmation.
+        bool AskBeforeClear() const noexcept { return m_askBeforeClear; }
+        void AskBeforeClear(_In_ bool value) noexcept;
+
+        // What simple mode watched last, so the next start picks it again. Empty and 0 when
+        // nothing was picked yet. Group and channel count from 1; 0 means all.
+        std::wstring LastEndpointDeviceId() const noexcept { return m_lastEndpointDeviceId; }
+        uint8_t LastGroupNumber() const noexcept { return m_lastGroupNumber; }
+        uint8_t LastChannelNumber() const noexcept { return m_lastChannelNumber; }
+        void LastSimpleSelection(_In_ std::wstring const& endpointDeviceId, _In_ uint8_t groupNumber, _In_ uint8_t channelNumber) noexcept;
+
+        // ---------------- advanced mode ----------------
+
+        bool AdvancedMode() const noexcept { return m_advancedMode; }
+        void AdvancedMode(_In_ bool value) noexcept;
+
+        // The groups to listen to, one endpoint a line: the endpoint device id, a tab, and the
+        // groups as a hex mask where bit 0 is group 1.
+        std::wstring AdvancedSources() const noexcept { return m_advancedSources; }
+        void AdvancedSources(_In_ std::wstring const& value) noexcept;
+
+        // The shared message filter as JSON, written and read with FilterToJson and FilterFromJson.
+        std::wstring AdvancedFilter() const noexcept { return m_advancedFilter; }
+        void AdvancedFilter(_In_ std::wstring const& value) noexcept;
+
+        bool FoldRepeats() const noexcept { return m_foldRepeats; }
+        void FoldRepeats(_In_ bool value) noexcept;
+
+        // Opens every endpoint while listening, so the Sources list can say which are sending.
+        // Off for a PC with so many endpoints that opening them all is slow.
+        bool ShowEndpointActivity() const noexcept { return m_showEndpointActivity; }
+        void ShowEndpointActivity(_In_ bool value) noexcept;
+
+        bool OnlySendingEndpoints() const noexcept { return m_onlySendingEndpoints; }
+        void OnlySendingEndpoints(_In_ bool value) noexcept;
+
+        bool SourcesPaneOpen() const noexcept { return m_sourcesPaneOpen; }
+        void SourcesPaneOpen(_In_ bool value) noexcept;
+
+        // The Sources list's width as last dragged, in view pixels. 0 means the default.
+        uint32_t SourcesPaneWidth() const noexcept { return m_sourcesPaneWidth; }
+        void SourcesPaneWidth(_In_ uint32_t value) noexcept;
+
         static constexpr uint32_t MinimumRetainedMessageCount = 100;
         static constexpr uint32_t MaximumRetainedMessageCount = 500000;
         static constexpr uint32_t DefaultRetainedMessageCount = 10000;
@@ -89,5 +132,17 @@ namespace midi2monitor
         uint32_t m_retainedMessageCount{ DefaultRetainedMessageCount };
         uint32_t m_tableZoomPercent{ DefaultZoomPercent };
         std::wstring m_columnLayout{};
+        bool m_askBeforeClear{ true };
+        std::wstring m_lastEndpointDeviceId{};
+        uint8_t m_lastGroupNumber{ 0 };
+        uint8_t m_lastChannelNumber{ 0 };
+        bool m_advancedMode{ false };
+        std::wstring m_advancedSources{};
+        std::wstring m_advancedFilter{};
+        bool m_foldRepeats{ false };
+        bool m_showEndpointActivity{ true };
+        bool m_onlySendingEndpoints{ false };
+        bool m_sourcesPaneOpen{ true };
+        uint32_t m_sourcesPaneWidth{ 0 };
     };
 }

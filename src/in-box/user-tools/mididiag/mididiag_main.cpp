@@ -2652,6 +2652,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2SchedulerV2.h"
 #include "Feature_Servicing_MIDI2ServiceConfigJsonHardening.h"
 #include "Feature_Servicing_MIDI2SessionTrackerConnectionTime.h"
+#include "Feature_Servicing_MIDI2StreamConfigurationFromEndpoint.h"
 #include "Feature_Servicing_MIDI2StreamTextUtf8.h"
 #include "Feature_Servicing_MIDI2StringCharacterSets.h"
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
@@ -2672,6 +2673,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
+#include "Feature_Servicing_MIDI2TimestampRounding.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -2729,6 +2731,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SchedulerV2::IsEnabled(),                          L"MIDI2SchedulerV2 (replacement message scheduler, removes the busy wait and applies latency compensation)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ServiceConfigJsonHardening::IsEnabled(),           L"MIDI2ServiceConfigJsonHardening (harden parsing of the configuration json sent over rpc)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SessionTrackerConnectionTime::IsEnabled(),         L"MIDI2SessionTrackerConnectionTime (report when each client connected to an endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2StreamConfigurationFromEndpoint::IsEnabled(),   L"MIDI2StreamConfigurationFromEndpoint (record the protocol and jitter reduction timestamp settings a midi 2.0 device actually agreed to, not the ones the service asked for)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled(),                       L"MIDI2StreamTextUtf8 (decode ump stream message text as utf-8)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2StringCharacterSets::IsEnabled(),                  L"MIDI2StringCharacterSets (remove characters which are not allowed in ids and names)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SynchronizedStart::IsEnabled(),                    L"MIDI2SynchronizedStart (client waits for the service to finish enumerating devices)");
@@ -2749,6 +2752,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMUnprepareAfterDeviceRemoval::IsEnabled(),     L"MIDI2WinMMUnprepareAfterDeviceRemoval (let apps unprepare winmm buffers after a device is removed)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2TimestampRounding::IsEnabled(),                    L"MIDI2TimestampRounding (keep incoming midi 1.0 driver timestamps precise, and stop winmm dropping input that lands just before the port was started)");
 
     
 #endif    

@@ -1299,14 +1299,14 @@ The formats:
 
 #### Custom rules
 
-A `custom` row has rules instead of a format. Each rule turns one OSC address into one kind of MIDI message, and the MIDI back into that address. The first rule whose address matches a message that arrives takes it. Going out, the first rule whose message, channel, and number fit says the address. Rules only carry channel messages, never SysEx or clock.
+A `custom` row has rules instead of a format. Each rule turns one OSC address into one kind of MIDI message, and the MIDI back into that address. The first rule whose address matches a message that arrives takes it. Going out, the first rule whose message, channel, and number fit says the address, and it sends one OSC message with one float. A later rule that fits the same MIDI message never sends, so two rules can't put two values in one message. Rules only carry channel messages, never SysEx or clock.
 
 An address can have parts in braces where a number goes, like `/1/fader{n}`. A part stands for one or more digits, so `/1/fader{n}` takes `/1/fader1` to `/1/fader999999`. The channel and the number can use a part, plus or minus a number, like `"{n}+70"`, which makes `/1/fader3` controller 73.
 
 | Key | Values | If left out | What it does |
 | --- | --- | --- | --- |
 | `address` | text | required | Starts with a slash, with no spaces and none of `# * , ? [ ]`. Up to 4 parts, each lowercase letters in braces, like `{n}`. Two parts can't be next to each other, and a part can't be right before a digit. |
-| `argument` | 0 to 7 | 0 | Which argument carries the value, counted from 0. |
+| `argument` | 0 to 7 | 0 | Which argument of an OSC message that comes in carries the value, counted from 0. Not used going out: MIDI always becomes one float. |
 | `direction` | `both`, `in`, `out` | `both` | `in` only turns OSC into MIDI. `out` only turns MIDI into OSC. |
 | `message` | `controlChange`, `note`, `programChange`, `pitchBend`, `channelPressure`, `polyPressure` | `controlChange` | What it makes. A `note` with the value at `low` is a note off. A `programChange` is sent when the value isn't at `low`, like a button that's pressed. |
 | `channel` | 0 to 15, or text like `"{c}-1"` | 0 | The channel, counted from 0. |
@@ -1315,7 +1315,7 @@ An address can have parts in braces where a number goes, like `/1/fader{n}`. A p
 
 Going in, the value is scaled from `low` and `high` to 0 to 127, or 0 to 16383 for pitch bend. Going out, it's scaled back and sent as a float. For `out` and `both`, every part of the address has to come from the channel or the number, or the rule can't work out the address. Rules that break these rules are dropped when the file is read.
 
-TouchOSC's stock layouts send addresses like `/1/fader1` to `/1/fader5` and `/1/toggle1` to `/1/toggle4`, each with a float from 0 to 1. This row turns them into controllers 71 to 75 and 80 to 83, and push buttons into notes from middle C, which is what the TouchOSC preset in Windows MIDI Patchbay makes:
+TouchOSC's stock layouts send addresses like `/1/fader1` to `/1/fader5` and `/1/toggle1` to `/1/toggle4`, each with a float from 0 to 1. This row turns them into controllers 71 to 75 and 80 to 83, and push buttons into notes from middle C, which is what the TouchOSC preset in Windows MIDI Patchbay makes. The toggle rule comes first so that controller 80 goes out as `/1/toggle1`, not as `/1/fader10`:
 
 ```json
 "oscConnections": [
@@ -1326,8 +1326,8 @@ TouchOSC's stock layouts send addresses like `/1/fader1` to `/1/fader5` and `/1/
     "receive": { "port": 8000 },
     "send": { "host": "192.168.1.20", "port": 9000 },
     "rows": [ { "group": 0, "format": "custom", "rules": [
-      { "address": "/1/fader{n}", "message": "controlChange", "number": "{n}+70" },
       { "address": "/1/toggle{n}", "message": "controlChange", "number": "{n}+79" },
+      { "address": "/1/fader{n}", "message": "controlChange", "number": "{n}+70" },
       { "address": "/1/push{n}", "message": "note", "number": "{n}+59" }
     ] } ]
   }

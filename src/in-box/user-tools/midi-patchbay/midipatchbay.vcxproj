@@ -83,6 +83,9 @@
   <PropertyGroup>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <!-- set here, before IncludePath reads it: the default is "Generated Files", and the internal
+         Windows build can't take a path with a space -->
+    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -132,7 +135,7 @@
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="CordPath.h" />
     <ClInclude Include="DialogParts.h" />
-    <ClInclude Include="MessageFilter.h" />
+    <ClInclude Include="..\midi-app-shared\MessageFilter.h" />
     <ClInclude Include="MessageText.h" />
     <ClInclude Include="MessageTransform.h" />
     <ClInclude Include="PatchCanvas.h" />
@@ -171,6 +174,8 @@
     <ClInclude Include="CiFileStore.h" />
     <ClInclude Include="RouteEngine.h" />
     <ClInclude Include="SendQueue.h" />
+    <ClInclude Include="MessageWatch.h" />
+    <ClInclude Include="WatchWindow.h" />
     <ClInclude Include="SpinGuard.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -190,6 +195,7 @@
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
@@ -230,7 +236,7 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <!-- The patch model is free of pch.h and XAML so the unit tests compile it exactly as it ships. -->
-    <ClCompile Include="MessageFilter.cpp">
+    <ClCompile Include="..\midi-app-shared\MessageFilter.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MessageTransform.cpp">
@@ -311,6 +317,7 @@
     <ClCompile Include="MessageText.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
     <ClCompile Include="PatchCanvasCords.cpp" />
+    <ClCompile Include="PatchCanvasWatch.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
     <ClCompile Include="PatchLibrary.cpp" />
     <ClCompile Include="PatchModel.cpp" />
@@ -322,6 +329,9 @@
     <ClCompile Include="ControllerStepRunner.cpp" />
     <ClCompile Include="ControllerText.cpp" />
     <ClCompile Include="ConverterText.cpp" />
+    <ClCompile Include="MessageWatch.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="SendQueue.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -343,6 +353,9 @@
     <ClCompile Include="MainWindowControllerSteps.cpp" />
     <ClCompile Include="MainWindowConverterSteps.cpp" />
     <ClCompile Include="MainWindowTrace.cpp" />
+    <ClCompile Include="MainWindowLogicNames.cpp" />
+    <ClCompile Include="MainWindowWatch.cpp" />
+    <ClCompile Include="WatchWindow.cpp" />
     <ClCompile Include="MainWindowParameterSteps.cpp" />
     <ClCompile Include="MainWindowFilters.cpp" />
     <ClCompile Include="MainWindowGenerators.cpp" />
@@ -355,6 +368,7 @@
     <ClCompile Include="LibraryWindowDialogs.cpp" />
     <ClCompile Include="LibraryWindowTiles.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />

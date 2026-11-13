@@ -489,6 +489,81 @@ TransportState::GetDeviceOfflineRetentionOverrides()
 
 _Use_decl_annotations_
 void
+TransportState::SetDefaultIncomingTiming(MidiBleProtocol::IncomingTiming const timing)
+{
+    // There is nothing above the transport default to defer to
+    if (timing == MidiBleProtocol::IncomingTiming::UseTransportDefault)
+    {
+        return;
+    }
+
+    m_defaultIncomingTiming.store(timing);
+    m_incomingTimingGeneration++;
+}
+
+MidiBleProtocol::IncomingTiming
+TransportState::GetDefaultIncomingTiming()
+{
+    return m_defaultIncomingTiming.load();
+}
+
+_Use_decl_annotations_
+void
+TransportState::SetDeviceIncomingTiming(winrt::hstring const& deviceId, MidiBleProtocol::IncomingTiming const timing)
+{
+    if (deviceId.empty())
+    {
+        return;
+    }
+
+    {
+        auto lock = m_incomingTimingLock.lock_exclusive();
+
+        if (timing == MidiBleProtocol::IncomingTiming::UseTransportDefault)
+        {
+            // Stored as an absence, like offline retention, so only real overrides are reported
+            m_deviceIncomingTiming.erase(deviceId);
+        }
+        else
+        {
+            m_deviceIncomingTiming.insert_or_assign(deviceId, timing);
+        }
+    }
+
+    m_incomingTimingGeneration++;
+}
+
+_Use_decl_annotations_
+MidiBleProtocol::IncomingTiming
+TransportState::GetDeviceIncomingTiming(winrt::hstring const& deviceId)
+{
+    auto lock = m_incomingTimingLock.lock_exclusive();
+
+    if (auto entry = m_deviceIncomingTiming.find(deviceId); entry != m_deviceIncomingTiming.end())
+    {
+        return entry->second;
+    }
+
+    return MidiBleProtocol::IncomingTiming::UseTransportDefault;
+}
+
+_Use_decl_annotations_
+MidiBleProtocol::IncomingTiming
+TransportState::GetEffectiveIncomingTiming(winrt::hstring const& deviceId)
+{
+    auto const configured = GetDeviceIncomingTiming(deviceId);
+
+    if (configured != MidiBleProtocol::IncomingTiming::UseTransportDefault)
+    {
+        return configured;
+    }
+
+    return GetDefaultIncomingTiming();
+}
+
+
+_Use_decl_annotations_
+void
 TransportState::SetRadioCapabilities(MidiBleProtocol::RadioCapabilities const& capabilities)
 {
     auto lock = m_radioCapabilitiesLock.lock_exclusive();

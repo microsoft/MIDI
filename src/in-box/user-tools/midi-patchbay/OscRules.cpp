@@ -62,6 +62,24 @@ namespace midipatchbay::osc
             return message != OscRuleMessage::PitchBend && message != OscRuleMessage::ChannelPressure;
         }
 
+        // The address one rule sends this MIDI message to, or nothing when the rule doesn't fit it.
+        std::optional<std::string> RuleSendAddress(_In_ OscRule const& rule, _In_ OscRuleMessage message, _In_ int32_t channel, _In_ int32_t number)
+        {
+            if (rule.Direction == OscRuleDirection::In || rule.Message != message)
+            {
+                return std::nullopt;
+            }
+
+            RuleParts parts{};
+
+            if (!SolveRuleNumber(rule.Channel, channel, parts) || (UsesNumber(message) && !SolveRuleNumber(rule.Number, number, parts)))
+            {
+                return std::nullopt;
+            }
+
+            return BuildRuleAddress(rule.Address, parts);
+        }
+
         OscRule MakeRule(_In_ std::string_view address, _In_ OscRuleMessage message, _In_ int32_t offset)
         {
             OscRule rule{};
@@ -446,6 +464,73 @@ namespace midipatchbay::osc
     }
 
     _Use_decl_annotations_
+    std::optional<size_t> SendingRule(std::vector<OscRule> const& rules, OscRuleMessage message, int32_t channel, int32_t number, std::string& address)
+    {
+        address.clear();
+
+        for (size_t i = 0; i < rules.size(); i++)
+        {
+            if (auto sent = RuleSendAddress(rules[i], message, channel, number); sent.has_value())
+            {
+                address = std::move(*sent);
+                return i;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    _Use_decl_annotations_
+    std::vector<bool> RulesNeverSent(std::vector<OscRule> const& rules)
+    {
+        std::vector<bool> couldSend(rules.size(), false);
+        std::vector<bool> sends(rules.size(), false);
+
+        // Try every MIDI message a rule could send: 16 channels, and 128 numbers where one is used.
+        for (int32_t kind = 0; kind < OscRuleMessageCount; kind++)
+        {
+            auto const message = static_cast<OscRuleMessage>(kind);
+            auto const numbers = UsesNumber(message) ? 128 : 1;
+
+            for (int32_t channel = 0; channel < 16; channel++)
+            {
+                for (int32_t number = 0; number < numbers; number++)
+                {
+                    auto taken = false;
+
+                    for (size_t i = 0; i < rules.size(); i++)
+                    {
+                        if (taken && couldSend[i])
+                        {
+                            continue;
+                        }
+
+                        if (RuleSendAddress(rules[i], message, channel, number).has_value())
+                        {
+                            couldSend[i] = true;
+
+                            if (!taken)
+                            {
+                                sends[i] = true;
+                                taken = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        std::vector<bool> neverSent(rules.size(), false);
+
+        for (size_t i = 0; i < rules.size(); i++)
+        {
+            neverSent[i] = couldSend[i] && !sends[i];
+        }
+
+        return neverSent;
+    }
+
+    _Use_decl_annotations_
     uint32_t RuleHighest(OscRuleMessage message) noexcept
     {
         return message == OscRuleMessage::PitchBend ? 16383u : 127u;
@@ -454,10 +539,11 @@ namespace midipatchbay::osc
     std::vector<OscRule> TouchOscRules()
     {
         // Faders 1 to 5 are controllers 71 to 75, toggles 1 to 4 the general purpose on/off
-        // controllers 80 to 83, and push buttons play from middle C up.
+        // controllers 80 to 83, and push buttons play from middle C up. Toggles come first: going
+        // out, the first rule that fits sends, and {n}+70 would take controller 80 as fader 10.
         return {
-            MakeRule("/1/fader{n}", OscRuleMessage::ControlChange, 70),
             MakeRule("/1/toggle{n}", OscRuleMessage::ControlChange, 79),
+            MakeRule("/1/fader{n}", OscRuleMessage::ControlChange, 70),
             MakeRule("/1/push{n}", OscRuleMessage::Note, 59),
         };
     }

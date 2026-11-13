@@ -11,6 +11,7 @@
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
 #include "Feature_Servicing_MIDI2StreamTextUtf8.h"
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
+#include "Feature_Servicing_MIDI2StreamConfigurationFromEndpoint.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -1170,26 +1171,38 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
         }
         else
         {
-            //// we've already tried negotiating once. Don't do it again
-            //m_taskFinalStreamNegotiationResponseReceived = true;
+            if (Feature_Servicing_MIDI2StreamConfigurationFromEndpoint::IsEnabled())
+            {
+                // The endpoint has answered the one request and still differs, so it declined at
+                // least part of it. Its reply is final (UMP section 7.1.6), and its configuration
+                // is the one in effect.
+                LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
 
-            internal::PackedUmp128 configurationNotificationUmp{};
+                return S_OK;
+            }
+            else
+            {
+                //// we've already tried negotiating once. Don't do it again
+                //m_taskFinalStreamNegotiationResponseReceived = true;
 
-            configurationNotificationUmp.word0 = internal::BuildStreamConfigurationNotificationFirstWord(
-                m_preferredMidiProtocol,
-                m_preferToReceiveJRTimestampsFromEndpoint,  // reversed from the request message. See spec
-                m_preferToSendJRTimestampsToEndpoint        // reversed from the request message. See spec
-            );
+                internal::PackedUmp128 configurationNotificationUmp{};
 
-            LOG_IF_FAILED(UpdateStreamConfigurationProperties(configurationNotificationUmp));
+                configurationNotificationUmp.word0 = internal::BuildStreamConfigurationNotificationFirstWord(
+                    m_preferredMidiProtocol,
+                    m_preferToReceiveJRTimestampsFromEndpoint,  // reversed from the request message. See spec
+                    m_preferToSendJRTimestampsToEndpoint        // reversed from the request message. See spec
+                );
 
-            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(
-                MessageOptionFlags_None, 
-                (byte*)&configurationNotificationUmp, 
-                (UINT)sizeof(configurationNotificationUmp), 
-                0));
-            
-            return S_OK;
+                LOG_IF_FAILED(UpdateStreamConfigurationProperties(configurationNotificationUmp));
+
+                RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(
+                    MessageOptionFlags_None, 
+                    (byte*)&configurationNotificationUmp, 
+                    (UINT)sizeof(configurationNotificationUmp), 
+                    0));
+                
+                return S_OK;
+            }
         }
     }
     else
@@ -1202,7 +1215,15 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
             m_preferToSendJRTimestampsToEndpoint        // reversed from the request message. See spec
             );
 
-        LOG_IF_FAILED(UpdateStreamConfigurationProperties(configurationNotificationUmp));
+        if (Feature_Servicing_MIDI2StreamConfigurationFromEndpoint::IsEnabled())
+        {
+            // The endpoint's own notification, so the JR flags are recorded from its side of the link.
+            LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
+        }
+        else
+        {
+            LOG_IF_FAILED(UpdateStreamConfigurationProperties(configurationNotificationUmp));
+        }
 
         RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(
             MessageOptionFlags_None, 

@@ -110,7 +110,7 @@ The measurement code ships in this repository as part of the MIDI SDK integratio
 1. Build `src\in-box\Midi2-AppSDK.sln` for x64 Release.
 2. Connect a MIDI cable from the device's MIDI OUT to its own MIDI IN.
 3. Find the endpoint id with `midi enumerate endpoints --verbose`.
-4. Run the script from `src\in-box\Test\WinRT Client\Session.integrationtests\measure-device-round-trip.ps1`.
+4. Run the script from `src\in-box\Test\WinRTClient\Session.integrationtests\measure-device-round-trip.ps1`.
 
 Discover which input port an output port loops back to, which is worth doing first on any device with more than one port:
 

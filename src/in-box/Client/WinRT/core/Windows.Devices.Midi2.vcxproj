@@ -562,6 +562,9 @@
     <ClInclude Include="MidiBluetoothOfflineRetentionConfig.h">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiBluetoothIncomingTimingConfig.h">
+      <DependentUpon>MidiBluetoothIncomingTimingConfig.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSynthDrumKitInfo.h">
       <DependentUpon>MidiSynthDrumKitInfo.idl</DependentUpon>
     </ClInclude>
@@ -1211,6 +1214,9 @@
     <ClCompile Include="MidiBluetoothOfflineRetentionConfig.cpp">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiBluetoothIncomingTimingConfig.cpp">
+      <DependentUpon>MidiBluetoothIncomingTimingConfig.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSynthSoundSetInfo.cpp">
       <DependentUpon>MidiSynthSoundSetInfo.idl</DependentUpon>
     </ClCompile>
@@ -1694,6 +1700,8 @@
     <Midl Include="MidiRtpSavedClient.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionConfig.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionEnum.idl" />
+    <Midl Include="MidiBluetoothIncomingTimingConfig.idl" />
+    <Midl Include="MidiBluetoothIncomingTimingEnum.idl" />
     <Midl Include="MidiSynthRenderModeEnum.idl" />
     <Midl Include="MidiSynthAudioOutputModeEnum.idl" />
     <Midl Include="MidiSynthBankSelectModeEnum.idl" />

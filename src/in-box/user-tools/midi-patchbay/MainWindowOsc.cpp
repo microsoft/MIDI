@@ -1180,6 +1180,8 @@ namespace winrt::midipatchbay::implementation
 
                     if (isCustom)
                     {
+                        auto const neverSent = patchbay::osc::RulesNeverSent(row.Rules);
+
                         for (size_t i = 0; i < row.Rules.size(); i++)
                         {
                             auto const& rule = row.Rules[i];
@@ -1348,17 +1350,6 @@ namespace winrt::midipatchbay::implementation
                             ruleBody.Children().Append(TwoColumns(low, high));
                             ruleBody.Children().Append(parts::HeadingHint(resources::GetString(L"OscRuleRangeHint")));
 
-                            auto argument = parts::NumberBox(resources::GetString(L"OscRuleArgumentHeader"), 1, patchbay::MaximumOscRuleArgument + 1.0, rule.Argument + 1.0, 1);
-
-                            argument.ValueChanged([changeRule](controls::NumberBox const& box, auto&&)
-                                {
-                                    if (std::isfinite(box.Value()))
-                                    {
-                                        auto const value = static_cast<uint8_t>(std::clamp(box.Value() - 1, 0.0, static_cast<double>(patchbay::MaximumOscRuleArgument)));
-                                        changeRule([value](patchbay::OscRule& r) { r.Argument = value; }, false);
-                                    }
-                                });
-
                             controls::Button removeRule{};
                             removeRule.Content(winrt::box_value(resources::GetString(L"OscRuleRemove")));
                             removeRule.VerticalAlignment(xaml::VerticalAlignment::Bottom);
@@ -1374,8 +1365,30 @@ namespace winrt::midipatchbay::implementation
                                         }, true);
                                 });
 
-                            ruleBody.Children().Append(TwoColumns(argument, removeRule));
-                            midiapp::UseTouchSpinButtons({ low, high, argument });
+                            // The argument only says which one to read from OSC coming in. MIDI going
+                            // out always becomes one value.
+                            if (rule.Direction != patchbay::OscRuleDirection::Out)
+                            {
+                                auto argument = parts::NumberBox(resources::GetString(L"OscRuleArgumentHeader"), 1, patchbay::MaximumOscRuleArgument + 1.0, rule.Argument + 1.0, 1);
+
+                                argument.ValueChanged([changeRule](controls::NumberBox const& box, auto&&)
+                                    {
+                                        if (std::isfinite(box.Value()))
+                                        {
+                                            auto const value = static_cast<uint8_t>(std::clamp(box.Value() - 1, 0.0, static_cast<double>(patchbay::MaximumOscRuleArgument)));
+                                            changeRule([value](patchbay::OscRule& r) { r.Argument = value; }, false);
+                                        }
+                                    });
+
+                                ruleBody.Children().Append(TwoColumns(argument, removeRule));
+                                ruleBody.Children().Append(parts::HeadingHint(resources::GetString(L"OscRuleArgumentHint")));
+                                midiapp::UseTouchSpinButtons({ low, high, argument });
+                            }
+                            else
+                            {
+                                ruleBody.Children().Append(removeRule);
+                                midiapp::UseTouchSpinButtons({ low, high });
+                            }
 
                             // Say so when a rule can't do what it's set to.
                             if (rule.Direction != patchbay::OscRuleDirection::Out && !patchbay::osc::RuleReceives(rule))
@@ -1388,6 +1401,12 @@ namespace winrt::midipatchbay::implementation
                             if (rule.Direction != patchbay::OscRuleDirection::In && !patchbay::osc::RuleSends(rule))
                             {
                                 auto warning = Line(resources::GetString(L"OscRuleCantSend"), 11, L"SystemFillColorCautionBrush");
+                                warning.TextWrapping(xaml::TextWrapping::Wrap);
+                                ruleBody.Children().Append(warning);
+                            }
+                            else if (i < neverSent.size() && neverSent[i])
+                            {
+                                auto warning = Line(resources::GetString(L"OscRuleNeverSent"), 11, L"SystemFillColorCautionBrush");
                                 warning.TextWrapping(xaml::TextWrapping::Wrap);
                                 ruleBody.Children().Append(warning);
                             }

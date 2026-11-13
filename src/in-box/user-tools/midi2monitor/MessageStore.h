@@ -7,8 +7,13 @@
 
 #pragma once
 
+#include "MessageFilter.h"
+
 namespace midi2monitor
 {
+    // No source: simple mode, or a notice.
+    inline constexpr uint16_t NoSourceSlot = 0xFFFF;
+
     enum class RecordKind : uint8_t
     {
         MidiMessage = 0,
@@ -56,6 +61,13 @@ namespace midi2monitor
         uint8_t GroupNumber{ 0 };       // 1-16
         uint8_t ChannelNumber{ 0 };     // 1-16
 
+        // Advanced mode: which endpoint it came from, as a slot in SourceTable.
+        uint16_t SourceSlot{ NoSourceSlot };
+
+        // Folding repeats: a folded record has no row of its own, and the row it repeats counts it.
+        bool Folded{ false };
+        uint32_t RepeatCount{ 0 };
+
         winrt::hstring NoticeText{};
         winrt::hstring Comment{};
     };
@@ -66,6 +78,12 @@ namespace midi2monitor
         uint64_t TotalMessageCount{ 0 };
         uint64_t RealTimeMessageCount{ 0 };
         uint64_t DroppedMessageCount{ 0 };
+
+        // messages kept and not shown: the filter, or the Clock and Active Sensing switches
+        uint64_t HiddenMessageCount{ 0 };
+
+        // repeats counted on the row before them instead of shown
+        uint64_t FoldedMessageCount{ 0 };
 
         // bumped only for changes that cannot be described incrementally: clear, filter change
         uint64_t Generation{ 0 };
@@ -92,6 +110,16 @@ namespace midi2monitor
         void HiddenTraits(MessageTraits traits) noexcept;
         MessageTraits HiddenTraits() const noexcept { return m_hiddenTraits; }
 
+        // Advanced mode's filter. One that has never been touched passes everything.
+        void Filter(_In_ ::midiapp::MessageFilter const& filter) noexcept;
+
+        // A message with exactly the same words as the last row from the same source is counted
+        // on that row instead of getting its own.
+        void FoldRepeats(_In_ bool value) noexcept;
+
+        // Rows whose repeat count went up since the last call, by sequence, with the new count.
+        std::vector<std::pair<uint64_t, uint32_t>> TakeFoldUpdates() noexcept;
+
         size_t VisibleCount() const noexcept { return m_visibleSequences.size(); }
 
         bool TryGetVisibleRecord(size_t visibleIndex, MessageRecord& record) const noexcept;
@@ -112,8 +140,23 @@ namespace midi2monitor
         void RebuildVisible() noexcept;
         void EvictOverflow() noexcept;
 
+        // Folds the record into the last row from its source when the words match. Returns true
+        // when it was folded. Only called for records that would otherwise be visible.
+        bool TryFold(_Inout_ MessageRecord& record) noexcept;
+        MessageRecord* RecordAt(_In_ uint64_t sequence) noexcept;
+
         std::deque<MessageRecord> m_records{};
         std::deque<uint64_t> m_visibleSequences{};
+
+        ::midiapp::MessageFilter m_filter{};
+        bool m_foldRepeats{ false };
+
+        // the last visible row from each source, for folding
+        std::unordered_map<uint16_t, uint64_t> m_lastVisibleBySource{};
+        std::unordered_map<uint64_t, uint32_t> m_foldUpdates{};
+
+        uint64_t m_hiddenMessageCount{ 0 };
+        uint64_t m_foldedMessageCount{ 0 };
 
         uint32_t m_capacity{ 10000 };
         uint64_t m_firstSequence{ 0 };

@@ -77,6 +77,15 @@ namespace midi2monitor
         String Comment;
         Object CommentToolTip{ get; };
         Microsoft.UI.Xaml.Visibility CommentGlyphVisibility{ get; };
+
+        // advanced mode: where the message came from
+        String SourceText{ get; };
+        String SourceGroupText{ get; };
+        Microsoft.UI.Xaml.Media.Brush SourceBrush{ get; };
+
+        // folded repeats counted on this row; changes while the repeats arrive
+        String RepeatText{ get; };
+        Microsoft.UI.Xaml.Visibility RepeatVisibility{ get; };
     }
 
     // Lays the message list cells out in the order and widths the customer has chosen. The

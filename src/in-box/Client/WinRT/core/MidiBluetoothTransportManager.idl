@@ -25,6 +25,7 @@ import "MidiBluetoothPeripheralClientDecisionResponse.idl";
 import "MidiBluetoothApprovalScopeEnum.idl";
 import "MidiBluetoothRadioInformation.idl";
 import "MidiBluetoothSavedDevice.idl";
+import "MidiBluetoothIncomingTimingEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
@@ -90,6 +91,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // The transport-wide value every device set to UseTransportDefault falls back to. Never
         // UseTransportDefault itself, because there is nothing above it to defer to.
         [noexcept] static Int32 GetDefaultOfflineRetentionSeconds();
+
+        // The transport-wide incoming timing every device set to UseTransportDefault falls back
+        // to. Never UseTransportDefault itself. Smooth when the service cannot be reached.
+        [noexcept] static MidiBluetoothIncomingTiming GetDefaultIncomingTiming();
 
         // Devices saved in the configuration file, including ones kept but switched off. This is
         // what the service connects when it next starts, not what is connected now. Works when

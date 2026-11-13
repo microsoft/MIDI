@@ -13,6 +13,7 @@ $InBoxClientProcessNames = @(
     "midi1rtmonitor",
     "midi2monitor",
     "midibluetoothsetup",
+    "midicalculator",
     "midiclock",
     "mididiag",
     "midiglass",

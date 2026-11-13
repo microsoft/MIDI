@@ -83,6 +83,9 @@
   <PropertyGroup>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <!-- set here, before IncludePath reads it: the default is "Generated Files", and the internal
+         Windows build can't take a path with a space -->
+    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -134,7 +137,7 @@
     <ClInclude Include="ClockStore.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="StringResources.h" />
-    <ClInclude Include="TapTempo.h" />
+    <ClInclude Include="..\midi-app-shared\TapTempo.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="WindowVisibility.h" />
     <ClInclude Include="App.xaml.h">
@@ -168,7 +171,9 @@
     <ClCompile Include="ClockStore.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="StringResources.cpp" />
-    <ClCompile Include="TapTempo.cpp" />
+    <ClCompile Include="..\midi-app-shared\TapTempo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="WindowVisibility.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>

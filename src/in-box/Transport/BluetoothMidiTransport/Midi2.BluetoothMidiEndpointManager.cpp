@@ -1407,6 +1407,7 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
             device.PacketsSent = connection->PacketsSent();
             device.LastSendErrorHresult = connection->LastSendErrorHresult();
             device.IncomingTimestampSource = connection->IncomingTimestampSource();
+            device.IncomingSmoothingDelayMilliseconds = connection->IncomingSmoothingDelayMilliseconds();
 
             // The stored flag only records that a connection object exists. Asking the device
             // is what distinguishes a live link from one that went away without telling us,
@@ -3897,10 +3898,14 @@ CMidi2BluetoothMidiEndpointManager::InitiateDiscoveryAndNegotiation(
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
     negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
 
-    // The transport does not implement JR timestamps yet. Section 5.5 makes them optional and
-    // the service has no JR clock, so they are not requested.
-    negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
-    negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
+    // PROVISIONAL, from BLE MIDI 2.0 Working Group discussion: JR Timestamps are asked for in both
+    // directions through the normal negotiation. The service drops either request when the
+    // device's Endpoint Info Notification says it cannot do it, and the connection turns JR on
+    // only for what the device's own Stream Configuration Notification agrees to. A device which
+    // declines simply gets messages with no JR, and its incoming messages are timestamped on
+    // arrival.
+    negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = true;
+    negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = true;
 
     RETURN_IF_FAILED(midiProtocolManager->DiscoverAndNegotiate(
         m_transportId,

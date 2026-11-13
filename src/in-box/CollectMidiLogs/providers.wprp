@@ -92,6 +92,7 @@
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Glass" Name="89ed34c8-8095-561e-2b3e-233b39f39631" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Patchbay" Name="63051d43-f3c0-5fc5-8e54-6ff2ad9480ce" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Sequencer" Name="088f6e81-015a-5c8c-88eb-d409294999bb" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Calculator" Name="5830f992-086f-5a38-221c-d25c08be6f61" Level="5" NonPagedMemory="false" />
 
     <!-- Client side. The command-line tools (midi, midi1monitor, midi1rtmonitor, mididiag and
          the rest) have no provider of their own: what they do through Windows MIDI Services
@@ -157,6 +158,7 @@
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Glass" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Patchbay" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sequencer" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Calculator" />
             <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sdk" />
             <EventProviderId Value="Microsoft-Windows-Audio" />

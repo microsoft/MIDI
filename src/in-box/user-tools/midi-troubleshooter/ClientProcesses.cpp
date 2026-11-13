@@ -105,6 +105,7 @@ namespace miditroubleshooter
             L"midi1rtmonitor.exe",
             L"midi2monitor.exe",
             L"midibluetoothsetup.exe",
+            L"midicalculator.exe",
             L"midiclock.exe",
             L"mididiag.exe",
             L"midiglass.exe",

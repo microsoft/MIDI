@@ -870,6 +870,25 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnLiveRoutingToggleChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto const checked = LiveRoutingToggle().IsChecked();
+            auto const shown = checked != nullptr && checked.Value();
+
+            if (shown != m_showingLiveRouting)
+            {
+                ShowLiveRouting(shown);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to turn live routing on or off.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::ShowTestMenu(xaml::FrameworkElement const& anchor) noexcept
     {
         try
@@ -897,24 +916,6 @@ namespace winrt::midipatchbay::implementation
                 });
 
             menu.Items().Append(trace);
-
-            controls::ToggleMenuFlyoutItem liveRouting{};
-            liveRouting.Text(resources::GetString(L"TestLiveRouting"));
-            liveRouting.IsChecked(m_showingLiveRouting);
-            controls::ToolTipService::SetToolTip(liveRouting, winrt::box_value(resources::GetString(L"TestLiveRoutingTip")));
-
-            liveRouting.Click([weak](foundation::IInspectable const& sender, auto&&)
-                {
-                    auto strong = weak.get();
-                    auto const item = sender.try_as<controls::ToggleMenuFlyoutItem>();
-
-                    if (strong != nullptr && item != nullptr)
-                    {
-                        strong->ShowLiveRouting(item.IsChecked());
-                    }
-                });
-
-            menu.Items().Append(liveRouting);
             menu.Items().Append(controls::MenuFlyoutSeparator{});
 
             uint32_t tools{ 0 };
@@ -1122,6 +1123,8 @@ namespace winrt::midipatchbay::implementation
             {
                 return;
             }
+
+            AddWatchNodeItem(menu, nodeId);
 
             primitives::FlyoutShowOptions options{};
 

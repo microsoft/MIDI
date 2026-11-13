@@ -54,13 +54,28 @@ All of these are in the MIDI Settings app under global settings, and in MIDI Con
 
 | Setting | What it does |
 | --- | --- |
-| **Synthesizer mode** | **Modern** plays the sound set without the limits of the older Windows synthesizer. **Compatible** reproduces those limits on purpose: 32 voices, a 22050 Hz render rate, and no effects. Pick Compatible when you're comparing against how a file sounded on an older PC. This is the "retro" setting. |
+| **Synthesizer mode** | **Modern** plays the sound set without the limits of the older Windows synthesizer. **Compatible** reproduces how the older Windows synthesizer sounded: 32 voices, a 22050 Hz render rate, no effects, and the older synthesizer's handling of drums and other messages. See [Compatible mode](#compatible-mode) below. Pick Compatible when you're comparing against how a file sounded on an older PC. This is the "retro" setting. |
 | **Audio output** | **Shared** is the normal setting and mixes with everything else. **Shared, low latency** asks the audio engine for smaller buffers, which tightens timing at the cost of some CPU. Not all audio devices support this low-latency Windows API. **Exclusive** takes the audio device for the synthesizer alone, for the shortest delay. See [Exclusive mode](#exclusive-mode) below. |
 | **Bank select** | Which convention to read bank select messages in: follow the sender, Roland GS, Yamaha XG, or General MIDI 2. |
 | **Volume trim** | A volume control for the synthesizer alone, from -60 dB to +12 dB. The service runs in a place where Windows can't give it a slider in the Volume Mixer, so this is how you balance it against your other audio. |
 | **Reverb and chorus** | Turns the built-in effects on or off. They're always off in Compatible mode, because the synthesizer being reproduced didn't have them. |
 
 Changing the synthesizer mode, the audio output, or the reverb and chorus setting restarts the audio, which stops any notes that are sounding. Each channel keeps its program, controllers, and tuning. When **Bank select** is set to follow the sender, the synthesizer also keeps reading bank select the way the sender's last System On message chose. A new **Bank select** setting takes effect right away without a restart, but it can change the instrument each channel plays, so don't change it in the middle of a song. Volume trim is safe to change while music is playing.
+
+### Compatible mode
+
+Compatible mode is for songs written for the Microsoft GS Wavetable Synth, the synthesizer older versions of Windows used. Newer standards, mostly General MIDI 2, changed how some messages should work. Modern mode follows the newer standards. Compatible mode follows the older synthesizer, so those songs sound the way their authors heard them.
+
+Here's what Compatible mode does differently from Modern mode:
+
+- **32 voices, a 22050 Hz render rate, and no reverb or chorus**, like the older synthesizer.
+- **Bank select is read the Roland GS way, and only after a GS Reset.** Like the older synthesizer, Compatible mode ignores bank select until a song sends GS Reset, and a GM System On, GM2 System On or XG System On turns it off again. The GS part messages (Use For Rhythm Part, Scale Tuning and Rx. Channel) need a GS Reset first too.
+- **Drums respond to pitch bend, modulation, the damper pedal, pitch bend sensitivity, and fine tuning.** Only coarse tuning leaves them alone. In Modern mode, drums ignore all of these, as General MIDI 2 recommends. See [Registered parameters](#registered-parameters).
+- **Tuning is fixed when a note starts.** A fine or coarse tuning change leaves the notes that are already playing alone, and applies to the notes after it. In Modern mode, it retunes the notes that are playing too.
+- **Channel 10 has the highest priority when the synthesizer runs out of voices**, then channels 1 to 9, then 11 to 16. A note can only take a voice from a channel with the same priority or lower, and it takes one from a note that's already been let go before it takes one from a note that's held. So drums are the last thing to be cut off. A burst of notes can briefly use 8 voices beyond the 32, and the synthesizer then fades out the oldest notes on the lowest-priority channels to get back to 32. In Modern mode, with far more voices, the synthesizer gives up the quietest note first, starting with notes that have been let go.
+- **Pitch bend glides to its new value** over up to about 10 milliseconds, the way the older synthesizer moved pitch, instead of jumping there at once. A jump from one end of the bend range to the other makes a short slide rather than a click.
+- **Some messages are read the way the older synthesizer read them.** Pitch bend sensitivity takes whole semitones only, so CC 38 is ignored for it. A fine tuning data entry MSB keeps the LSB that was already there. Reset All Controllers (CC 121) also resets the reverb and chorus sends, and with a value other than zero it resets volume and pan as well. It leaves the selected registered parameter alone. Master fine and coarse tuning are ignored.
+- **Mono mode (CC 126), poly mode (CC 127), GS Scale Tuning and GS Rx. Channel work.** Modern mode ignores them. Rx. Channel is read the way the older synthesizer read it, counting channels from 1 and ignoring a value of 0, which is one off from the GS documentation. Songs written for that synthesizer were made to sound right that way.
 
 ### Exclusive mode
 
@@ -171,15 +186,19 @@ Messages on any group other than the one this endpoint owns are discarded, as ar
 | 64 | Damper (sustain) | Yes |
 | 91 | Reverb Send Level | Yes |
 | 93 | Chorus Send Level | Yes |
+| 98 | NRPN LSB | Deselects the registered parameter. No NRPN is implemented |
+| 99 | NRPN MSB | Deselects the registered parameter. No NRPN is implemented |
 | 100 | RPN LSB | Yes |
 | 101 | RPN MSB | Yes |
 | 120 | All Sound Off | Yes |
 | 121 | Reset All Controllers | Yes |
 | 123 | All Notes Off | Yes |
+| 126 | Mono Mode On | Compatible mode only. A new note ends the notes the channel holds |
+| 127 | Poly Mode On | Compatible mode only |
 
-Everything else is ignored, including CC 2, 4, 5, and 12-13, the other LSB pairs at 33-63, the pedals at 65-67, the sound controllers at 70-79, the NRPN selects at 98-99, and the channel mode messages at 122 and 124-127.
+Everything else is ignored, including CC 2, 4, 5, and 12-13, the other LSB pairs at 33-63, the pedals at 65-67, the sound controllers at 70-79, and the channel mode messages at 122, 124 and 125. Modern mode also ignores 126 and 127. Choosing an NRPN with CC 98 or 99 doesn't do anything on its own, but it means the data entry that follows can't change the pitch bend range or tuning by mistake.
 
-**Reset All Controllers follows General MIDI 2 section 3.5.2 and the MIDI-CI Default Control Change Mapping profile.** It resets modulation, expression, the pedals, the parameter number selects, and pitch bend. It deliberately does **not** reset channel volume, pan, bank select, program, or the effect send levels, because both specifications list those as not reset.
+**Reset All Controllers follows General MIDI 2 section 3.5.2 and the MIDI-CI Default Control Change Mapping profile.** It resets modulation, expression, the pedals, the parameter number selects, and pitch bend. It deliberately does **not** reset channel volume, pan, bank select, program, or the effect send levels, because both specifications list those as not reset. Compatible mode does what the older synthesizer did instead. See [Compatible mode](#compatible-mode).
 
 ### Registered parameters
 
@@ -194,9 +213,11 @@ A MIDI 2.0 Registered Controller message for bank 0, controller 0 is treated as 
 
 Controller 1 sets fine tuning from the whole 32-bit value. `0x80000000` is in tune, `0x00000000` is 100 cents flat, and `0xFFFFFFFF` is 100 cents sharp. Controller 2 sets coarse tuning from the top seven bits, in semitones, where 64 is in tune. The specification leaves the other bits undefined, so they're ignored. Over MIDI 1.0, fine tuning takes both data entry bytes as one 14-bit value, so it moves in steps of about 0.012 cents. As the MIDI 1.0 specification says, a data entry MSB on its own sets the LSB back to zero, and an LSB on its own adjusts the value that's already there.
 
-Fine and coarse tuning change notes that are already playing too. They add to a note's Pitch 7.9 attribute rather than replacing it, as the specification says.
+In Modern mode, fine and coarse tuning change notes that are already playing too. In Compatible mode they don't: as on the older Windows synthesizer, each note keeps the tuning it started with, and a change applies to the notes that follow it. Either way, tuning adds to a note's Pitch 7.9 attribute rather than replacing it, as the specification says.
 
-**Drum channels ignore modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine and coarse tuning, as General MIDI 2 recommends in sections 3.3, 3.4, and 3.6.** So none of them changes how a drum sounds or how long it rings. A drum channel is any channel that's playing a drum kit, such as channel 10, a channel given drums with the GS Use For Rhythm Part message, or a channel where bank select chose a kit under Yamaha XG or General MIDI 2 addressing. A drum channel doesn't store any of these values when it's sent them, with one exception: lifting the damper pedal always works, so a melodic note the pedal was holding when the channel switched to a kit can't get stuck. A channel that was set up before it switched to a kit keeps those values, because a program change doesn't reset them, but its drums don't use them. They work again if the channel switches back to a melodic program. A melodic note that's still playing when its channel switches to a kit keeps them.
+**In Modern mode, drum channels ignore modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine and coarse tuning, as General MIDI 2 recommends in sections 3.3, 3.4, and 3.6.** So none of them changes how a drum sounds or how long it rings. A drum channel is any channel that's playing a drum kit, such as channel 10, a channel given drums with the GS Use For Rhythm Part message, or a channel where bank select chose a kit under Yamaha XG or General MIDI 2 addressing. A drum channel doesn't store any of these values when it's sent them, with one exception: lifting the damper pedal always works, so a melodic note the pedal was holding when the channel switched to a kit can't get stuck. A channel that was set up before it switched to a kit keeps those values, because a program change doesn't reset them, but its drums don't use them. They work again if the channel switches back to a melodic program. A melodic note that's still playing when its channel switches to a kit keeps them.
+
+**In Compatible mode, drum channels work the way they did on the older Windows synthesizer.** They respond to modulation, the damper pedal, pitch bend, pitch bend sensitivity, and fine tuning. Only coarse tuning leaves drums alone, so a song that transposes with coarse tuning doesn't retune its drums.
 
 ### System messages
 
@@ -218,16 +239,18 @@ Sent as SysEx7 in UMP message type `0x3`. `dd` is the device ID byte, which is n
 | GM2 System On | `F0 7E dd 09 03 F7` | Yes, resets and selects General MIDI 2 bank addressing |
 | GM System Off | `F0 7E dd 09 02 F7` | Ignored. General MIDI 2 section 4.9.3 says a device that only does General MIDI ignores it, and this synth has no other mode |
 | Master Volume | `F0 7F dd 04 01 ll mm F7` | Yes |
-| Master Fine Tuning | `F0 7F dd 04 03 ll mm F7` | Yes, except on drum channels, as General MIDI 2 recommends |
-| Master Coarse Tuning | `F0 7F dd 04 04 ll mm F7` | Yes, except on drum channels, as General MIDI 2 recommends |
+| Master Fine Tuning | `F0 7F dd 04 03 ll mm F7` | Modern mode, except on drum channels, as General MIDI 2 recommends. Ignored in Compatible mode |
+| Master Coarse Tuning | `F0 7F dd 04 04 ll mm F7` | Modern mode, except on drum channels, as General MIDI 2 recommends. Ignored in Compatible mode |
 | Global Parameter Control | `F0 7F dd 04 05 ...` | Partial: reverb (slot 1) and chorus (slot 2), parameters 0 and 1, single-byte widths only |
 | GS Reset | `F0 41 dd 42 12 40 00 7F vv ss F7` | Yes, resets and selects Roland GS bank addressing |
-| GS Use For Rhythm Part | `F0 41 dd 42 12 40 1p 15 vv ss F7` | Yes. `p` is the GS part number, not the channel: part 0 is channel 10, parts 1-9 are channels 1-9 |
+| GS Use For Rhythm Part | `F0 41 dd 42 12 40 1p 15 vv ss F7` | Yes. `p` is the GS part number, not the channel: part 0 is channel 10, parts 1-9 are channels 1-9. Compatible mode needs a GS Reset first |
+| GS Scale Tuning | `F0 41 dd 42 12 40 1p 40 c ... b ss F7` | Compatible mode only, after a GS Reset. Up to 12 values, C first, 64 is in tune, each step is a cent. Applied when a note starts, drums included |
+| GS Rx. Channel | `F0 41 dd 42 12 40 1p 02 vv ss F7` | Compatible mode only, after a GS Reset. Read as the older synthesizer read it: `vv` counts channels from 1, and 0 is ignored |
 | XG System On | `F0 43 dd 4C 00 00 7E 00 F7` | Yes, resets and selects Yamaha XG bank addressing |
 | MIDI Capability Inquiry | `F0 7E dd 0D ...` | Yes, see the MIDI-CI chart below |
 | Anything else | | Ignored |
 
-Every reset above (GM System On, GM2 System On, GS Reset, XG System On and System Reset) puts all 16 channels back to their starting point: program 1 (piano), bank 0, volume 100, expression 127, pan center, no modulation, damper up, pitch bend centered with a range of 2 semitones, no fine or coarse tuning, no registered parameter selected, reverb send 40 and chorus send 0, with drums on channel 10 only. Master volume and master tuning go back to normal too. Notes that are sounding fade out over a few milliseconds rather than being cut off, so the reset doesn't click.
+Every reset above (GM System On, GM2 System On, GS Reset, XG System On and System Reset) puts all 16 channels back to their starting point: program 1 (piano), bank 0, volume 100, expression 127, pan center, no modulation, damper up, pitch bend centered with a range of 2 semitones, no fine or coarse tuning, no registered parameter selected, reverb send 40 and chorus send 0, with drums on channel 10 only. In Compatible mode, every channel also goes back to poly mode, no scale tuning, and receiving on its own channel. Master volume and master tuning go back to normal too. Notes that are sounding fade out over a few milliseconds rather than being cut off, so the reset doesn't click.
 
 The synth keeps these settings between applications. Closing an app doesn't reset it, so a file that never picks its sounds plays with whatever the last app left. To start from a known state, send one of these resets first. Windows MIDI Player has a **GM Reset** button, and a setting to send it before each file.
 
@@ -341,7 +364,7 @@ Both lists support pagination through `offset` and `limit` in the request header
 
 #### ChCtrlList
 
-Two lists, one for melodic channels and one for drum channels. The list with resource ID `channel` has 15 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, fine tuning, coarse tuning, and per-note volume, pan, and pitch. The list with resource ID `drums` leaves out what drum channels ignore: modulation, pitch bend, the sustain pedal, pitch bend sensitivity, and fine and coarse tuning. That leaves 9 controllers. Each channel's `ChannelList` entry links to the list that applies to it.
+Three lists, one for melodic channels and two for drum channels. The list with resource ID `channel` has 15 controllers, most useful first: volume, modulation, pitch bend, sustain pedal, pan, expression, reverb send, chorus send, per-note pitch bend, pitch bend sensitivity, fine tuning, coarse tuning, and per-note volume, pan, and pitch. The list with resource ID `drums` leaves out what drum channels ignore in Modern mode: modulation, pitch bend, the sustain pedal, pitch bend sensitivity, and fine and coarse tuning. That leaves 9 controllers. In Compatible mode, drum channels link to the list with resource ID `drumsCompatible` instead, which leaves out only coarse tuning, so it has 14 controllers. Each channel's `ChannelList` entry links to the list that applies to it.
 
 Every entry says `"transmit":"none"`, because the synthesizer only receives controllers. Each default is the value a reset returns to, written as a 32-bit MIDI 2.0 value. For example, the default volume of 100 is `3374617161`.
 

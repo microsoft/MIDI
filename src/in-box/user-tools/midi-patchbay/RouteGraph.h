@@ -249,6 +249,19 @@ namespace midipatchbay
         virtual void CountLink(_In_ uint32_t cell) noexcept = 0;
         virtual void CountBlock(_In_ uint32_t cell, _In_ bool passed) noexcept = 0;
 
+        // The message as it goes along a link, its group already changed when the link into a
+        // destination names one. For the connection monitor windows; a sink that doesn't show
+        // them leaves this alone.
+        virtual void LinkCarried(
+            _In_ uint32_t cell,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint8_t wordCount) noexcept
+        {
+            static_cast<void>(cell);
+            static_cast<void>(words);
+            static_cast<void>(wordCount);
+        }
+
         // The message as it leaves for the destination, its group already changed when the link
         // into the destination names one.
         virtual void Send(

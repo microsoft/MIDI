@@ -339,6 +339,42 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
 
+        // Order must match the incoming timing ComboBoxItems in MainWindow.xaml.
+        static midi2bt::MidiBluetoothIncomingTiming IncomingTimingFromIndex(_In_ int32_t const index) noexcept
+        {
+            switch (index)
+            {
+            case 1: return midi2bt::MidiBluetoothIncomingTiming::Smooth;
+            case 2: return midi2bt::MidiBluetoothIncomingTiming::AsSoonAsPossible;
+            default: return midi2bt::MidiBluetoothIncomingTiming::UseTransportDefault;
+            }
+        }
+
+        static int32_t IncomingTimingIndexFromValue(_In_ midi2bt::MidiBluetoothIncomingTiming const timing) noexcept
+        {
+            switch (timing)
+            {
+            case midi2bt::MidiBluetoothIncomingTiming::Smooth: return 1;
+            case midi2bt::MidiBluetoothIncomingTiming::AsSoonAsPossible: return 2;
+            default: return 0;
+            }
+        }
+
+        int32_t IncomingTimingIndex() const noexcept
+        {
+            return IncomingTimingIndexFromValue(m_incomingTiming);
+        }
+
+        winrt::hstring IncomingTimingText() const noexcept { return m_incomingTimingText; }
+        winrt::hstring SmoothingDelayText() const noexcept { return m_smoothingDelayText; }
+
+        winrt::Microsoft::UI::Xaml::Visibility SmoothingDelayVisibility() const noexcept
+        {
+            return m_smoothingDelayText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility ConnectedBadgeVisibility() const noexcept
         {
             return m_isConnected ?
@@ -506,6 +542,25 @@ namespace winrt::midibluetoothsetup::implementation
             RecordSignalSample(signalDecibels, isPresent && !isConnected);
         }
 
+        void InternalUpdateIncomingTiming(
+            _In_ midi2bt::MidiBluetoothIncomingTiming const incomingTiming,
+            _In_ winrt::hstring const& incomingTimingText,
+            _In_ winrt::hstring const& smoothingDelayText) noexcept
+        {
+            if (m_incomingTiming != incomingTiming)
+            {
+                m_incomingTiming = incomingTiming;
+                RaisePropertyChanged(L"IncomingTimingIndex");
+            }
+
+            UpdateField(m_incomingTimingText, incomingTimingText, L"IncomingTimingText");
+
+            if (UpdateField(m_smoothingDelayText, smoothingDelayText, L"SmoothingDelayText"))
+            {
+                RaisePropertyChanged(L"SmoothingDelayVisibility");
+            }
+        }
+
     private:
         // must match the sparkline's size in the device item template
         // must match the Border in the device item template in MainWindow.xaml
@@ -543,6 +598,9 @@ namespace winrt::midibluetoothsetup::implementation
 
         int32_t m_offlineRetentionSeconds{ -2 };
         winrt::hstring m_offlineRetentionText{};
+        midi2bt::MidiBluetoothIncomingTiming m_incomingTiming{ midi2bt::MidiBluetoothIncomingTiming::UseTransportDefault };
+        winrt::hstring m_incomingTimingText{};
+        winrt::hstring m_smoothingDelayText{};
         bool m_isRemembered{ false };
         bool m_isBusy{ false };
 

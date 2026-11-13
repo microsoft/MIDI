@@ -49,6 +49,7 @@ public:
     TEST_METHOD(RuleAddressesAndNumbersRead);
     TEST_METHOD(CustomRulesBecomeMidi);
     TEST_METHOD(CustomRulesSendOsc);
+    TEST_METHOD(LaterRulesForTheSameMidiNeverSend);
     TEST_METHOD(CustomRulesSurviveTheFile);
     TEST_METHOD(RulesAreSuggestedForTouchOsc);
     TEST_METHOD(AdvertisingIsSavedAndNamed);

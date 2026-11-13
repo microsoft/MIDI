@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="size" content="1300,1080">
+<title>1. Simple mode, with a shortcut for clearing</title>
+<link rel="stylesheet" href="mon.css">
+<script src="mon.js"></script>
+</head>
+<body>
+<div class="page">
+  <p class="caption-above"><b>1. Simple mode stays the way it is.</b> Three small additions: a button in the title bar that switches to advanced mode, a keyboard shortcut for clearing that the menu and tooltip both show, and a Clear button beside Save to File so clearing doesn't depend on finding the right-click menu.</p>
+
+  <div class="window" style="width:1240px; height:760px">
+    <div class="titlebar">
+      <img src="appicon.ico" alt="">
+      <div class="title">Windows MIDI Monitor</div>
+      <div class="preview">PREVIEW</div>
+      <div class="spacer"></div>
+      <div class="cap new" data-mark="1" title="Advanced mode (Ctrl+Shift+A)">&#xE9E9;</div>
+      <div class="cap">&#xE713;</div>
+      <div class="cap">&#xE718;</div>
+      <div class="sys"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+    </div>
+
+    <div class="header-card cardx">
+      <div class="pick" style="flex:2">
+        <div class="lbl">MIDI Device</div>
+        <div class="combo">MiniLab 3<span class="chev">&#xE70D;</span></div>
+      </div>
+      <div class="pick" style="flex:1; max-width:230px">
+        <div class="lbl">Group</div>
+        <div class="combo">All groups<span class="chev">&#xE70D;</span></div>
+      </div>
+      <div class="pick" style="width:120px">
+        <div class="lbl">Channel</div>
+        <div class="combo">All<span class="chev">&#xE70D;</span></div>
+      </div>
+      <div class="btn accent" style="min-width:150px"><span class="gl">&#xE71A;</span>Stop listening</div>
+    </div>
+
+    <div class="msgs layer" data-rows="simple" data-count="12" data-only="a,b" data-sel="3"></div>
+
+    <div class="flyout menu" style="left:520px; top:300px">
+      <div class="mi"><span class="gl">&#xE8B3;</span>Select All<span class="acc">Ctrl+A</span></div>
+      <div class="mi"><span class="gl">&#xE8E6;</span>Deselect All</div>
+      <div class="msep"></div>
+      <div class="mi"><span class="gl">&#xE8B3;</span>Select All SysEx 7</div>
+      <div class="msep"></div>
+      <div class="mi"><span class="gl"></span>Copy as UMP words<span class="acc">Ctrl+C</span></div>
+      <div class="mi"><span class="gl"></span>Copy as binary data</div>
+      <div class="mi"><span class="gl"></span>Copy as MIDI 1.0 bytes</div>
+      <div class="mi"><span class="gl"></span>Copy as SysEx bytes</div>
+      <div class="msep"></div>
+      <div class="mi hover new" data-mark="2"><span class="gl">&#xE74D;</span>Clear All Entries<span class="acc">Ctrl+L</span></div>
+    </div>
+
+    <div class="statusrow">
+      <span>Total: 1,196</span><span>Real time: 0</span>
+      <span class="div"></span>
+      <span class="btn sm icon"><span class="gl">&#xE823;</span></span>
+      <span class="btn sm icon"><span class="gl">&#xEA8F;</span></span>
+      <span class="center">
+        <span class="btn sm"><span class="gl">&#xEDE1;</span>Save to File</span>
+        <span class="btn sm new" data-mark="3"><span class="gl">&#xE74D;</span>Clear</span>
+      </span>
+      <span class="spacer"></span>
+      <span class="zoom"><span class="btn sm" style="min-width:78px">100%<span class="gl" style="font-size:10px">&#xE70D;</span></span><span class="gl" style="font-size:12px">&#xE71F;</span><span class="slider"></span><span class="gl" style="font-size:12px">&#xE8A3;</span></span>
+    </div>
+  </div>
+
+  <ol class="callouts">
+    <li><b>Advanced mode button</b>, beside Settings and Always on top. A toggle, so it stays lit while advanced mode is on. Tooltip: "Advanced mode (Ctrl+Shift+A)". The app opens in whichever mode you used last.</li>
+    <li><b>Ctrl+L clears the list</b> from anywhere in the window. Prior art: Ctrl+L clears the console in Chrome and Edge DevTools, and clears the screen in bash, zsh and PowerShell. There's no Windows-wide standard for "clear a log", and the Monitor has no address bar or other use for the key. It goes through the same confirmation as the menu item, so it can't wipe a capture with one stray key press. The menu shows the shortcut, and so do the button tooltips. While we're there, the menu also shows Ctrl+A (the list already handles it), and Ctrl+C is added as "Copy as UMP words", which today has no shortcut.</li>
+    <li><b>A Clear button</b> beside Save to File. Today the only way to clear is the right-click menu, which a lot of people never find. Tooltip: "Clear all entries (Ctrl+L)". Turned off when the list is empty, like the menu item.</li>
+  </ol>
+</div>
+</body>
+</html>

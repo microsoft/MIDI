@@ -47,6 +47,12 @@
           <RegistryValue Type="integer" Name="CustomDumpFlags" Value="6949" />
           <RegistryValue Type="integer" Name="DumpCount" Value="10" />
         </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\midicalculator.exe" ForceDeleteOnUninstall="yes">
+          <RegistryValue Type="expandable" Name="DumpFolder" Value="%LOCALAPPDATA%\Microsoft\MIDI\CrashDumps\midicalculator" />
+          <RegistryValue Type="integer" Name="DumpType" Value="0" />
+          <RegistryValue Type="integer" Name="CustomDumpFlags" Value="6949" />
+          <RegistryValue Type="integer" Name="DumpCount" Value="10" />
+        </RegistryKey>
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\midiclock.exe" ForceDeleteOnUninstall="yes">
           <RegistryValue Type="expandable" Name="DumpFolder" Value="%LOCALAPPDATA%\Microsoft\MIDI\CrashDumps\midiclock" />
           <RegistryValue Type="integer" Name="DumpType" Value="0" />

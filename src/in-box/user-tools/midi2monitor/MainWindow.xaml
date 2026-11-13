@@ -9,7 +9,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent"
+          KeyboardAcceleratorPlacementMode="Hidden">
+        <!-- Window-wide shortcuts. The menus show them through KeyboardAcceleratorTextOverride. -->
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Modifiers="Control" Key="L" Invoked="OnClearAcceleratorInvoked" />
+            <KeyboardAccelerator Modifiers="Control" Key="C" Invoked="OnCopyAcceleratorInvoked" />
+            <KeyboardAccelerator Modifiers="Control,Shift" Key="A" Invoked="OnAdvancedModeAcceleratorInvoked" />
+        </Grid.KeyboardAccelerators>
+
         <Grid.Resources>
             <!-- BasedOn matters: an explicit presenter style replaces the implicit one outright,
                  which loses the rounded corners, border and padding -->
@@ -106,6 +114,21 @@
                     <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
                 </StackPanel.Resources>
+
+                <ToggleButton x:Name="AdvancedModeToggle"
+                              x:Uid="AdvancedModeToggle"
+                              Width="46"
+                              Height="32"
+                              MinWidth="0"
+                              MinHeight="0"
+                              Padding="0"
+                              CornerRadius="0"
+                              Checked="OnAdvancedModeToggled"
+                              Unchecked="OnAdvancedModeToggled">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              Glyph="&#xE9E9;"
+                              FontSize="14" />
+                </ToggleButton>
 
                 <Button x:Name="SettingsButton"
                         x:Uid="SettingsButton"
@@ -292,7 +315,199 @@
             </Grid>
         </Border>
 
-        <!-- ============================== Middle: the messages ============================== -->
+        <!-- ============================ Middle: the messages ============================ -->
+        <!-- Advanced mode's top: why the sources look different (when another app opened this
+             window), then listening, the filter and its chips. Replaces HeaderCard. -->
+        <StackPanel x:Name="AdvancedHeaderPanel"
+                    Grid.Row="1"
+                    Margin="12,4,12,8"
+                    Spacing="8"
+                    Visibility="Collapsed">
+            <InfoBar x:Name="SessionSourcesInfoBar"
+                     x:Uid="SessionSourcesInfoBar"
+                     Severity="Informational"
+                     IsOpen="False"
+                     IsClosable="True">
+                <InfoBar.Content>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                        <Button x:Name="AddToSavedSourcesButton"
+                                x:Uid="AddToSavedSourcesButton"
+                                Content="Add to saved sources"
+                                Click="OnAddToSavedSourcesClick" />
+                        <Button x:Name="SwitchToSavedSourcesButton"
+                                x:Uid="SwitchToSavedSourcesButton"
+                                Content="Use saved sources"
+                                Click="OnSwitchToSavedSourcesClick" />
+                    </StackPanel>
+                </InfoBar.Content>
+            </InfoBar>
+
+            <Border x:Name="AdvancedToolbarCard"
+                    Padding="8"
+                    CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ToggleButton x:Name="SourcesPaneToggle"
+                                  x:Uid="SourcesPaneToggle"
+                                  Grid.Column="0"
+                                  Padding="8,0,8,0"
+                                  MinWidth="0"
+                                  Height="32"
+                                  VerticalAlignment="Center"
+                                  Checked="OnSourcesPaneToggled"
+                                  Unchecked="OnSourcesPaneToggled">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE700;" FontSize="14" />
+                    </ToggleButton>
+
+                    <Button x:Name="AdvancedCaptureButton"
+                            Grid.Column="1"
+                            MinWidth="150"
+                            Height="32"
+                            VerticalAlignment="Center"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="OnCaptureButtonClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon x:Name="AdvancedCaptureButtonIcon"
+                                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      Glyph="&#xE768;"
+                                      FontSize="14" />
+                            <TextBlock x:Name="AdvancedCaptureButtonText" Text="Start listening" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="FilterButton"
+                            x:Uid="FilterButton"
+                            Grid.Column="2"
+                            Height="32"
+                            VerticalAlignment="Center"
+                            Click="OnFilterButtonClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE71C;" FontSize="14" />
+                            <TextBlock x:Uid="FilterButtonText" Text="Filter" />
+                            <Border x:Name="FilterCountBadge"
+                                    Visibility="Collapsed"
+                                    MinWidth="18"
+                                    Height="18"
+                                    Padding="5,0,5,0"
+                                    CornerRadius="9"
+                                    VerticalAlignment="Center"
+                                    Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                <TextBlock x:Name="FilterCountText"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                            </Border>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- one chip for each filter rule, and in a narrow window one for each source.
+                         Built in code. -->
+                    <ScrollViewer Grid.Column="3"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Enabled"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  VerticalScrollMode="Disabled">
+                        <StackPanel x:Name="ChipsPanel" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- Advanced mode's Sources: every endpoint, its groups under it, a check box on each.
+             The rows are built in code (MainWindow.Sources.cpp). Beside the messages in a wide
+             window, over them in a narrow one. -->
+        <Border x:Name="SourcesCard"
+                Grid.Row="2"
+                Width="284"
+                Margin="12,0,0,8"
+                HorizontalAlignment="Left"
+                Canvas.ZIndex="10"
+                Visibility="Collapsed"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid RowSpacing="8" Padding="0,12,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Uid="SourcesHeader"
+                           Text="Sources"
+                           Margin="12,0,12,0"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                <TextBox x:Name="SourcesSearchBox"
+                         x:Uid="SourcesSearchBox"
+                         Grid.Row="1"
+                         Margin="12,0,12,0"
+                         PlaceholderText="Find an endpoint or group"
+                         TextChanged="OnSourcesSearchChanged" />
+
+                <ScrollViewer Grid.Row="2"
+                              Padding="4,0,4,0"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="SourcesListPanel" />
+                </ScrollViewer>
+
+                <Border Grid.Row="3"
+                        Padding="12,8,12,10"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="OnlySendingToggle"
+                                      x:Uid="OnlySendingToggle"
+                                      Header="Show only active or checked"
+                                      Toggled="OnOnlySendingToggled" />
+                        <TextBlock x:Name="SourcesSummaryText"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Drags the Sources list wider or narrower. It fills the gap beside the list, so it
+             never covers the list's scroll bar, and only shows itself under the pointer.
+             MainWindow.Advanced.cpp places it. -->
+        <Border x:Name="SourcesSplitter"
+                x:Uid="SourcesSplitter"
+                Grid.Row="2"
+                Width="8"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Left"
+                Canvas.ZIndex="11"
+                Visibility="Collapsed"
+                Background="Transparent"
+                PointerPressed="OnSourcesSplitterPressed"
+                PointerMoved="OnSourcesSplitterMoved"
+                PointerReleased="OnSourcesSplitterReleased"
+                PointerCaptureLost="OnSourcesSplitterReleased"
+                PointerEntered="OnSourcesSplitterEntered"
+                PointerExited="OnSourcesSplitterExited">
+            <Rectangle x:Name="SourcesSplitterLine"
+                       Width="2"
+                       RadiusX="1"
+                       RadiusY="1"
+                       Margin="0,8,0,8"
+                       HorizontalAlignment="Center"
+                       Opacity="0"
+                       Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+        </Border>
         <Border Grid.Row="2"
                 x:Name="MessagesCard"
                 Margin="12,0,12,8"
@@ -420,6 +635,7 @@
                         <TextBlock x:Name="ChannelHeaderText" x:Uid="ColumnHeaderChannel" Text="Channel" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
                         <TextBlock x:Name="DecodedHeaderText" x:Uid="ColumnHeaderDecoded" Text="Details" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
                         <TextBlock x:Name="DeltaHeaderText" x:Uid="ColumnHeaderDelta" Text="Since last" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
+                        <TextBlock x:Name="SourceHeaderText" x:Uid="ColumnHeaderSource" Text="From" Style="{StaticResource MidiMonitorHeaderTextStyle}" />
                     </local:MessageRowPanel>
                 </Border>
 
@@ -573,31 +789,78 @@
                                         </StackPanel>
                                         <Border Background="{x:Bind MessageNameBackground}"
                                                 Visibility="{x:Bind MessageNameVisibility}"
-                                                CornerRadius="9"
-                                                Padding="8,1,8,1"
+                                                CornerRadius="3"
+                                                Padding="5,0,5,1"
                                                 HorizontalAlignment="Left">
                                             <TextBlock Text="{x:Bind MessageName}"
                                                        FontSize="{x:Bind ChicletFontSize}"
+                                                       FontWeight="SemiBold"
                                                        Foreground="{x:Bind MessageNameForeground}" />
                                         </Border>
                                     </StackPanel>
 
                                     <TextBlock Text="{x:Bind GroupText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
                                     <TextBlock Text="{x:Bind ChannelText}" FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" />
-                                    <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
-                                        <Run Text="{x:Bind Detail0Label}" />
-                                        <Run Text="{x:Bind Detail0Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                        <Run Text="{x:Bind Detail1Label}" />
-                                        <Run Text="{x:Bind Detail1Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                        <Run Text="{x:Bind Detail2Label}" />
-                                        <Run Text="{x:Bind Detail2Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                        <Run Text="{x:Bind Detail3Label}" />
-                                        <Run Text="{x:Bind Detail3Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
-                                    </TextBlock>
+                                    <Grid ColumnSpacing="6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                            <Run Text="{x:Bind Detail0Label}" />
+                                            <Run Text="{x:Bind Detail0Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                            <Run Text="{x:Bind Detail1Label}" />
+                                            <Run Text="{x:Bind Detail1Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                            <Run Text="{x:Bind Detail2Label}" />
+                                            <Run Text="{x:Bind Detail2Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                            <Run Text="{x:Bind Detail3Label}" />
+                                            <Run Text="{x:Bind Detail3Value}" Foreground="{ThemeResource MidiDetailValueBrush}" FontWeight="SemiBold" />
+                                        </TextBlock>
+                                        <!-- repeats folded onto this row -->
+                                        <Border Grid.Column="1"
+                                                Visibility="{x:Bind RepeatVisibility, Mode=OneWay}"
+                                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="9"
+                                                Padding="7,0,7,1"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind RepeatText, Mode=OneWay}"
+                                                       FontSize="{x:Bind ChicletFontSize}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                        </Border>
+                                    </Grid>
                                     <TextBlock FontSize="{x:Bind RowFontSize}" Style="{StaticResource MidiMonitorCellTextStyle}">
                                         <Run Text="{x:Bind DeltaText}" />
                                         <Run Text="{x:Bind DeltaUnit}" Foreground="{ThemeResource MidiTimeUnitBrush}" />
                                     </TextBlock>
+
+                                    <!-- From, advanced mode only: the source's color, its name and the group -->
+                                    <Grid ColumnSpacing="8" Padding="6,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Rectangle Width="3"
+                                                   Height="18"
+                                                   RadiusX="1.5"
+                                                   RadiusY="1.5"
+                                                   VerticalAlignment="Center"
+                                                   Fill="{x:Bind SourceBrush}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{x:Bind SourceText}"
+                                                   FontSize="{x:Bind RowFontSize}"
+                                                   MaxWidth="130"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{x:Bind SourceGroupText}"
+                                                   FontSize="{x:Bind ChicletFontSize}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
                                 </local:MessageRowPanel>
 
                                 <Border Visibility="{x:Bind NoticeVisibility}"
@@ -632,7 +895,8 @@
                                Text="Nothing to show yet"
                                HorizontalAlignment="Center"
                                Style="{ThemeResource SubtitleTextBlockStyle}" />
-                    <TextBlock x:Uid="EmptyStateBody"
+                    <TextBlock x:Name="EmptyStateBody"
+                               x:Uid="EmptyStateBody"
                                Text="Pick a device above and select Start listening. Play a note or move a control, and the messages will appear here."
                                HorizontalAlignment="Center"
                                TextAlignment="Center"
@@ -664,6 +928,16 @@
                            VerticalAlignment="Center"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                <TextBlock x:Name="HiddenCountText"
+                           Visibility="Collapsed"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="FoldedCountText"
+                           Visibility="Collapsed"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                 <Border Width="1"
                         Height="18"
@@ -698,23 +972,43 @@
                 </ToggleButton>
             </StackPanel>
 
-            <Button Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    x:Name="ExportButton"
-                    x:Uid="ExportButton"
-                    TabIndex="9"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Height="28"
-                    MinHeight="28"
-                    FontSize="12"
-                    Padding="10,0,10,0"
-                    Click="OnExportClick">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEDE1;" FontSize="13" />
-                    <TextBlock x:Uid="ExportButtonText" Text="Save to File" FontSize="12" />
-                </StackPanel>
-            </Button>
+            <!-- Save and Clear sit together in the middle of the whole bar -->
+            <StackPanel Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <Button x:Name="ExportButton"
+                        x:Uid="ExportButton"
+                        TabIndex="9"
+                        VerticalAlignment="Center"
+                        Height="28"
+                        MinHeight="28"
+                        FontSize="12"
+                        Padding="10,0,10,0"
+                        Click="OnExportClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEDE1;" FontSize="13" />
+                        <TextBlock x:Uid="ExportButtonText" Text="Save to File" FontSize="12" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="ClearButton"
+                        x:Uid="ClearButton"
+                        TabIndex="9"
+                        VerticalAlignment="Center"
+                        Height="28"
+                        MinHeight="28"
+                        FontSize="12"
+                        Padding="10,0,10,0"
+                        Click="OnClearCaptureClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE74D;" FontSize="13" />
+                        <TextBlock x:Uid="ClearButtonText" Text="Clear" FontSize="12" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
 
             <StackPanel Grid.Column="2"
                         Orientation="Horizontal"

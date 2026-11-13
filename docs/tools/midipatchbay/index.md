@@ -136,7 +136,7 @@ Steps can't be connected in a circle, because nothing would ever leave it. Windo
 
 ### Filter steps
 
-- **Message type filter** is the coarsest switch. **Message types** works at the UMP message type level. **Channel messages** applies to both MIDI 1.0 and MIDI 2.0 channel voice messages, so you can drop program changes or keep only notes. **System messages** is where you stop a device flooding everything downstream with timing clock or active sensing.
+- **Message type filter** is the coarsest switch. **Message types** works at the UMP message type level. **Channel messages** applies to both MIDI 1.0 and MIDI 2.0 channel voice messages, so you can drop program changes or keep only notes. **System messages** is where you stop a device flooding everything downstream with timing clock or active sensing. **Message types** comes first: a message type you clear there is dropped whatever the other sections say. So **Channel messages** is turned off until **MIDI 1.0 channel voice** or **MIDI 2.0 channel voice** is on, and **System messages** is turned off until **System** is on.
 - **Channel filter** limits which of the sixteen channels get through. Messages without a channel, such as clock, always get through.
 - **Group filter** limits which of the sixteen groups get through.
 - **Note filter** picks out a range of notes, one note, or a list of notes, and either lets only those through or keeps them out. Click keys on the keyboard to pick them. For a range, click the lowest key, then hold Shift and click the highest. It applies to note on, note off, poly pressure and the MIDI 2.0 per note messages, so a held note can't be stranded. Everything else goes through.
@@ -257,6 +257,8 @@ To play notes only while a sequencer is playing, connect the sequencer's clock a
 
 - A tag belongs to one message. It starts empty, and a message that leaves a message throttler leaves its tags behind.
 - A memory belongs to the patch. It starts empty and keeps its value until Windows MIDI Patchbay closes, even while the patch isn't routing. It isn't saved in the patch. Select a step that uses a memory to see its value under **Activity**.
+
+**Seeing where each name is used.** Select **Memories and tags** on the toolbar. The list beside the canvas shows every memory and tag in the patch, the steps that set it, and the steps that read it. Point at a name to light up its steps on the canvas, and select a step to go to it. Each memory shows what it holds now, and **Reset** empties it without stopping the routing. A name that no step sets is marked, because it's almost always a name spelled two ways. So is a name that no step reads.
 
 **Notes stay together.** A Branch or a Switch sends a note off out the same output as its note on, even when the note off wouldn't pass the test on its own. A sustain pedal let go reaches every output it went down on, and the rest of a long message, such as system exclusive, follows its first packet.
 
@@ -466,7 +468,7 @@ In the **MIDI type tag** format, each message also carries a port number. Ports 
 
 ### Custom rules
 
-Some apps send addresses of their own that aren't MIDI at all, like a TouchOSC fader at `/1/fader3` with a value from 0 to 1. A row with the **Custom rules** format has rules instead. Each rule turns one OSC address into one MIDI message: a control change, a note, a program change, pitch bend, or pressure, on the channel and number you pick. It works the other way too, so a MIDI message the patch sends moves the control on the app. Put a part in braces where the address has a number, like `/1/fader{n}`, and use it in the channel or number, like `{n}+70`. Then one rule covers a whole set of faders: fader 1 is controller 71, fader 2 is controller 72, and so on. Each rule also says which OSC values stand for the bottom and the top of the MIDI range, and whether it works both ways or one way only. The **TouchOSC** preset is a row with rules ready for TouchOSC's own layouts: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons play notes from middle C.
+Some apps send addresses of their own that aren't MIDI at all, like a TouchOSC fader at `/1/fader3` with a value from 0 to 1. A row with the **Custom rules** format has rules instead. Each rule turns one OSC address into one MIDI message: a control change, a note, a program change, pitch bend, or pressure, on the channel and number you pick. It works the other way too, so a MIDI message the patch sends moves the control on the app. Put a part in braces where the address has a number, like `/1/fader{n}`, and use it in the channel or number, like `{n}+70`. Then one rule covers a whole set of faders: fader 1 is controller 71, fader 2 is controller 72, and so on. Each rule also says which OSC values stand for the bottom and the top of the MIDI range, and whether it works both ways or one way only. **Argument** says which value to read when an OSC message that comes in has more than one. It doesn't apply to MIDI going out: each MIDI message becomes one OSC message with one value, sent by the first rule that fits it. A second rule for the same MIDI message never sends, and the details panel says so. The **TouchOSC** preset is a row with rules ready for TouchOSC's own layouts: faders `/1/fader1` to `/1/fader5` are controllers 71 to 75, toggles `/1/toggle1` to `/1/toggle4` are controllers 80 to 83, and push buttons play notes from middle C.
 
 ### Recently heard
 
@@ -538,9 +540,9 @@ Right-click an endpoint, or use **Test** on the toolbar, to open [MIDI Monitor](
 
 ### Showing live routing
 
-**Show live routing**, under **Test**, lights up each connection and step as messages go through it, and then fades it out. Play a few notes on a keyboard and watch where they go. When a MIDI-CI responder answers, its dashed line back to the endpoint lights up too.
+**Show live routing**, on the toolbar next to **Test**, lights up each connection and step as messages go through it, and then fades it out. Play a few notes on a keyboard and watch where they go. When a MIDI-CI responder answers, its dashed line back to the endpoint lights up too.
 
-It only shows a patch that's routing, and it waits while a trace is on the canvas. It redraws the canvas many times a second, so turn it off when you're done. It's off each time you open a patch.
+It only shows a patch that's routing, and it waits while a trace is on the canvas or the window is minimized. It's off each time you open a patch.
 
 ### Tracing messages
 
@@ -555,6 +557,20 @@ The canvas shows where the first message went. The connections and steps it went
 The messages in a trace go through the patch one after another, the same way they would while it routes. A note off goes where its note on went, and memories start empty and carry from one message to the next. So to see how a footswitch changes where notes go, trace the footswitch message, then a note.
 
 A trace doesn't run generators, and it doesn't wait for a message throttler. What comes after a throttler is shown at once.
+
+### Watching a connection
+
+Right-click a connection and select **Watch messages**, or select it and press **Ctrl+M**. A small window opens and lists every message that goes along that connection, as it goes. It shows the time, the message in hex with its name, and a description of it, the same way [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) does. Messages from **Trace messages…** show up there too, marked **Test**, so you can watch a test without a device plugged in.
+
+Right-click a step or an endpoint and select **Watch output** to watch all of its connections out at once. That window has a **Destination** column, so you can tell where each message went.
+
+- Open as many as you like. Each window has a number and a color, and its connection shows a dot with the same number. Click the dot to bring that window to the front.
+- The windows stay on top of everything else, so they don't get lost behind the editor. Select the pin in a window's title bar to turn that off.
+- **Pause** stops adding messages so you can read them, but keeps counting. **Clear** empties the list. **Clock** and **Active Sensing** messages are hidden until you turn them on, because they'd crowd out everything else.
+- The count says how many messages went along the connection. If messages came faster than the window could keep up, some are dropped and counted. Routing never slows down for a window.
+- A window keeps the last 5,000 messages. Right-click a message to copy it.
+- Muting or removing the connection doesn't close its window, so you keep what it already showed. Undo brings the connection back, and the window picks up again.
+- The windows close when you close the patch's editor window, and they aren't saved with the patch.
 
 ## App provenance
 

@@ -77,4 +77,10 @@ namespace midi2monitor
     {
         return LookupBrush(alternate ? L"MidiRowAlternateBackgroundBrush" : L"MidiRowBackgroundBrush");
     }
+
+    _Use_decl_annotations_
+    media::Brush MonitorPalette::SourceBrush(uint32_t colorIndex) noexcept
+    {
+        return LookupBrush(std::format(L"MidiSource{}Brush", colorIndex % SourceColorCount));
+    }
 }

@@ -18,6 +18,7 @@
 #include "MainWindow.xaml.h"
 
 #include "MidiMessageDecoder.h"
+#include "SourceTable.h"
 #include "StringResources.h"
 #include "TimestampFormatter.h"
 
@@ -109,14 +110,16 @@ namespace winrt::midi2monitor::implementation
             line.append(last ? L"\r\n" : L",");
         }
 
-        std::wstring BuildTextHeader()
+        // Advanced mode's files name the source where simple mode's name the group, because
+        // the source already says the group.
+        std::wstring BuildTextHeader(bool hasSources)
         {
             std::wstring line{};
 
             AppendField(line, res::GetString(L"ExportHeaderIndex"));
             AppendField(line, res::GetString(L"ExportHeaderTimestamp"));
             AppendField(line, res::GetString(L"ExportHeaderDelta"));
-            AppendField(line, res::GetString(L"ExportHeaderGroup"));
+            AppendField(line, res::GetString(hasSources ? L"ExportHeaderSource" : L"ExportHeaderGroup"));
             AppendField(line, res::GetString(L"ExportHeaderChannel"));
             AppendField(line, res::GetString(L"ExportHeaderData"));
             AppendField(line, res::GetString(L"ExportHeaderMessageName"));
@@ -128,11 +131,12 @@ namespace winrt::midi2monitor::implementation
         }
 
         // Deliberately NOT localized. A script reading this file finds its columns by name, and a
-        // column called "Gruppe" on a German machine would break it.
+        // column called "Gruppe" on a German machine would break it. Source was added last, at
+        // the end, so a script that counts columns still finds the others where they were.
         std::wstring BuildCommaSeparatedHeader()
         {
             return L"Index,TimestampTicks,OffsetMicroseconds,DeltaMicroseconds,Group,Channel,"
-                   L"WordCount,Word0,Word1,Word2,Word3,MessageName,Decoded,Comment\r\n";
+                   L"WordCount,Word0,Word1,Word2,Word3,MessageName,Decoded,Comment,Source\r\n";
         }
 
         std::wstring CleanForSingleLine(std::wstring_view value)
@@ -154,9 +158,21 @@ namespace winrt::midi2monitor::implementation
             return std::format(L"{:.3f}", microseconds);
         }
 
+        // "MiniLab 3, group 1 · MIDI", or nothing for a simple mode record
+        std::wstring DescribeSource(native::MessageRecord const& record)
+        {
+            if (record.SourceSlot == native::NoSourceSlot)
+            {
+                return {};
+            }
+
+            return std::wstring{ native::SourceTable::Describe(record.SourceSlot, record.HasGroup ? record.GroupNumber : uint8_t{ 0 }) };
+        }
+
         std::wstring BuildExportLine(
             native::MessageRecord const& record,
-            native::TimestampDisplayFormat timestampFormat)
+            native::TimestampDisplayFormat timestampFormat,
+            bool hasSources)
         {
             std::wstring line{};
 
@@ -172,7 +188,16 @@ namespace winrt::midi2monitor::implementation
             AppendField(line, std::format(L"{}", record.MessageIndex));
             AppendField(line, native::TimestampFormatter::FormatTimestamp(record.Timestamp, timestampFormat).ToDisplayString());
             AppendField(line, native::TimestampFormatter::FormatDelta(record.DeltaTicks).ToDisplayString());
-            AppendField(line, record.HasGroup ? std::format(L"{}", record.GroupNumber) : std::wstring{});
+
+            if (hasSources)
+            {
+                AppendField(line, CleanForSingleLine(DescribeSource(record)));
+            }
+            else
+            {
+                AppendField(line, record.HasGroup ? std::format(L"{}", record.GroupNumber) : std::wstring{});
+            }
+
             AppendField(line, record.HasChannel ? std::format(L"{}", record.ChannelNumber) : std::wstring{});
 
             std::wstring words{};
@@ -217,6 +242,7 @@ namespace winrt::midi2monitor::implementation
                 }
 
                 AppendCsvField(line, CleanForSingleLine(record.NoticeText));
+                AppendCsvField(line, L"");
                 AppendCsvField(line, L"", true);
 
                 return line;
@@ -237,7 +263,8 @@ namespace winrt::midi2monitor::implementation
 
             AppendCsvField(line, std::wstring{ native::GetMessageDisplayName(record.Words[0]) });
             AppendCsvField(line, CleanForSingleLine(native::DecodeMessage(record).ToDisplayString()));
-            AppendCsvField(line, CleanForSingleLine(record.Comment), true);
+            AppendCsvField(line, CleanForSingleLine(record.Comment));
+            AppendCsvField(line, CleanForSingleLine(DescribeSource(record)), true);
 
             return line;
         }
@@ -291,13 +318,16 @@ namespace winrt::midi2monitor::implementation
 
                 auto const comma = format == ExportFormat::CommaSeparated;
 
-                std::wstring buffer{ comma ? BuildCommaSeparatedHeader() : BuildTextHeader() };
+                auto const hasSources = std::any_of(records.begin(), records.end(),
+                    [](native::MessageRecord const& record) { return record.SourceSlot != native::NoSourceSlot; });
+
+                std::wstring buffer{ comma ? BuildCommaSeparatedHeader() : BuildTextHeader(hasSources) };
 
                 for (auto const& record : records)
                 {
                     buffer.append(comma
                         ? BuildCommaSeparatedLine(record)
-                        : BuildExportLine(record, timestampFormat));
+                        : BuildExportLine(record, timestampFormat, hasSources));
 
                     if (buffer.size() >= ExportFlushThresholdCharacters)
                     {

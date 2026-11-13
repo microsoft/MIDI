@@ -18,9 +18,13 @@ namespace midi2monitor
         static media::Brush MessageTypeForeground(uint32_t colorIndex) noexcept;
         static media::Brush RowBackground(bool alternate) noexcept;
 
+        // Advanced mode's color for a source.
+        static media::Brush SourceBrush(_In_ uint32_t colorIndex) noexcept;
+
         // called when the app theme changes so the next set of rows picks up new brushes
         static void Invalidate() noexcept;
 
         static constexpr uint32_t MessageTypeColorCount = 8;
+        static constexpr uint32_t SourceColorCount = 8;
     };
 }

@@ -77,6 +77,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
             m_effectiveOfflineRetentionSeconds = btinternal::OfflineRetentionFromJsonString(
                 deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_OFFLINE_RETENTION_KEY, L""));
+
+            m_incomingTiming = btinternal::IncomingTimingFromJsonString(
+                deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_KEY, L""));
+
+            m_effectiveIncomingTiming = btinternal::ResolvedIncomingTimingFromJsonString(
+                deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_INCOMING_TIMING_KEY, L""));
+
+            auto const smoothingDelay = deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_SMOOTHING_DELAY_MS_KEY, 0.0);
+            m_incomingSmoothingDelayMilliseconds = (smoothingDelay > 0.0) ? smoothingDelay : 0.0;
         }
         catch (...)
         {

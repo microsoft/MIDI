@@ -83,6 +83,9 @@
   <PropertyGroup>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <!-- set here, before IncludePath reads it: the default is "Generated Files", and the internal
+         Windows build can't take a path with a space -->
+    <GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>

@@ -45,6 +45,12 @@
       <Component Id="cF864DE8313397783" Guid="b7b98b6e-16ec-5016-895b-5abd588b3923" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midibluetoothsetup.pri -->
         <File Id="fF864DE8313397783" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midibluetoothsetup.pri" Vital="true" />
       </Component>
+      <Component Id="c58D6BCE248DCD619" Guid="19da4e8c-9d75-5163-9415-a68097dbdfb2" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midicalculator.exe -->
+        <File Id="midicalculatorExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicalculator.exe" Vital="true" />
+      </Component>
+      <Component Id="cB71555D67A5B4C4F" Guid="b2308874-aa3a-5d8f-b72d-207cb3c40ab8" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midicalculator.pri -->
+        <File Id="fB71555D67A5B4C4F" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midicalculator.pri" Vital="true" />
+      </Component>
       <Component Id="cA7FBAA28DA9B8426" Guid="ab88a013-ff5d-51ba-a375-e4be26ae06fd" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiclock.exe -->
         <File Id="midiclockExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiclock.exe" Vital="true" />
       </Component>

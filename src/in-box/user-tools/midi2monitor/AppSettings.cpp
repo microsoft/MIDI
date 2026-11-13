@@ -22,6 +22,25 @@ namespace midi2monitor
         constexpr wchar_t ValueAutoHideColumns[] = L"AutoHideColumnsWhenNarrow";
         constexpr wchar_t ValueColumnLayout[] = L"ColumnLayout";
         constexpr wchar_t ValueTableZoomPercent[] = L"TableZoomPercent";
+        constexpr wchar_t ValueAskBeforeClear[] = L"AskBeforeClear";
+        constexpr wchar_t ValueLastEndpoint[] = L"LastEndpointDeviceId";
+        constexpr wchar_t ValueLastGroup[] = L"LastGroupNumber";
+        constexpr wchar_t ValueLastChannel[] = L"LastChannelNumber";
+        constexpr wchar_t ValueAdvancedMode[] = L"AdvancedMode";
+        constexpr wchar_t ValueAdvancedSources[] = L"AdvancedSources";
+        constexpr wchar_t ValueAdvancedFilter[] = L"AdvancedFilter";
+        constexpr wchar_t ValueFoldRepeats[] = L"FoldRepeats";
+        constexpr wchar_t ValueShowEndpointActivity[] = L"ShowEndpointActivity";
+        constexpr wchar_t ValueOnlySendingEndpoints[] = L"OnlySendingEndpoints";
+        constexpr wchar_t ValueSourcesPaneOpen[] = L"SourcesPaneOpen";
+        constexpr wchar_t ValueSourcesPaneWidth[] = L"SourcesPaneWidth";
+
+        // Generous: 256 endpoints of a few hundred characters each. A longer value isn't ours.
+        constexpr size_t MaximumSourcesLength = 256 * 1024;
+        constexpr size_t MaximumFilterLength = 16 * 1024;
+
+        // Endpoint ids are a few hundred characters at most. A longer value read back isn't one.
+        constexpr size_t MaximumEndpointIdLength = 1024;
     }
 
     AppSettings::AppSettings() noexcept :
@@ -56,6 +75,167 @@ namespace midi2monitor
 
         auto const zoom = ReadDword(ValueTableZoomPercent, DefaultZoomPercent);
         m_tableZoomPercent = std::clamp(zoom, MinimumZoomPercent, MaximumZoomPercent);
+
+        m_askBeforeClear = ReadDword(ValueAskBeforeClear, 1) != 0;
+
+        m_lastEndpointDeviceId = ReadString(ValueLastEndpoint, L"");
+
+        if (m_lastEndpointDeviceId.size() > MaximumEndpointIdLength)
+        {
+            m_lastEndpointDeviceId.clear();
+        }
+
+        auto const group = ReadDword(ValueLastGroup, 0);
+        auto const channel = ReadDword(ValueLastChannel, 0);
+
+        m_lastGroupNumber = static_cast<uint8_t>(group <= 16 ? group : 0);
+        m_lastChannelNumber = static_cast<uint8_t>(channel <= 16 ? channel : 0);
+
+        m_advancedMode = ReadDword(ValueAdvancedMode, 0) != 0;
+        m_foldRepeats = ReadDword(ValueFoldRepeats, 0) != 0;
+        m_showEndpointActivity = ReadDword(ValueShowEndpointActivity, 1) != 0;
+        m_onlySendingEndpoints = ReadDword(ValueOnlySendingEndpoints, 0) != 0;
+        m_sourcesPaneOpen = ReadDword(ValueSourcesPaneOpen, 1) != 0;
+        m_sourcesPaneWidth = ReadDword(ValueSourcesPaneWidth, 0);
+
+        // a width this window never drags to isn't one it saved
+        if (m_sourcesPaneWidth > 2000)
+        {
+            m_sourcesPaneWidth = 0;
+        }
+
+        m_advancedSources = ReadString(ValueAdvancedSources, L"");
+
+        if (m_advancedSources.size() > MaximumSourcesLength)
+        {
+            m_advancedSources.clear();
+        }
+
+        m_advancedFilter = ReadString(ValueAdvancedFilter, L"");
+
+        if (m_advancedFilter.size() > MaximumFilterLength)
+        {
+            m_advancedFilter.clear();
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AdvancedMode(bool value) noexcept
+    {
+        m_advancedMode = value;
+        WriteDword(ValueAdvancedMode, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AdvancedSources(std::wstring const& value) noexcept
+    {
+        try
+        {
+            if (value == m_advancedSources)
+            {
+                return;
+            }
+
+            m_advancedSources = value;
+            WriteString(ValueAdvancedSources, value);
+        }
+        catch (...)
+        {
+            // kept in memory only; written the next time it changes
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AdvancedFilter(std::wstring const& value) noexcept
+    {
+        try
+        {
+            if (value == m_advancedFilter)
+            {
+                return;
+            }
+
+            m_advancedFilter = value;
+            WriteString(ValueAdvancedFilter, value);
+        }
+        catch (...)
+        {
+            // kept in memory only; written the next time it changes
+        }
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::FoldRepeats(bool value) noexcept
+    {
+        m_foldRepeats = value;
+        WriteDword(ValueFoldRepeats, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ShowEndpointActivity(bool value) noexcept
+    {
+        m_showEndpointActivity = value;
+        WriteDword(ValueShowEndpointActivity, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::OnlySendingEndpoints(bool value) noexcept
+    {
+        m_onlySendingEndpoints = value;
+        WriteDword(ValueOnlySendingEndpoints, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SourcesPaneOpen(bool value) noexcept
+    {
+        m_sourcesPaneOpen = value;
+        WriteDword(ValueSourcesPaneOpen, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SourcesPaneWidth(uint32_t value) noexcept
+    {
+        m_sourcesPaneWidth = value;
+        WriteDword(ValueSourcesPaneWidth, value);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::AskBeforeClear(bool value) noexcept
+    {
+        m_askBeforeClear = value;
+        WriteDword(ValueAskBeforeClear, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::LastSimpleSelection(std::wstring const& endpointDeviceId, uint8_t groupNumber, uint8_t channelNumber) noexcept
+    {
+        try
+        {
+            auto const group = static_cast<uint8_t>(groupNumber <= 16 ? groupNumber : 0);
+            auto const channel = static_cast<uint8_t>(channelNumber <= 16 ? channelNumber : 0);
+
+            if (endpointDeviceId != m_lastEndpointDeviceId)
+            {
+                m_lastEndpointDeviceId = endpointDeviceId;
+                WriteString(ValueLastEndpoint, endpointDeviceId);
+            }
+
+            if (group != m_lastGroupNumber)
+            {
+                m_lastGroupNumber = group;
+                WriteDword(ValueLastGroup, group);
+            }
+
+            if (channel != m_lastChannelNumber)
+            {
+                m_lastChannelNumber = channel;
+                WriteDword(ValueLastChannel, channel);
+            }
+        }
+        catch (...)
+        {
+            // the in-memory values stay as they were; the next pick tries again
+        }
     }
 
     void AppSettings::TableZoomPercent(uint32_t value) noexcept

@@ -2187,6 +2187,9 @@ Every application using MIDI loses its connections when the service restarts, so
   <data name="CrashDumpsToolName_midiglass" xml:space="preserve">
     <value>Windows MIDI Glass</value>
   </data>
+  <data name="CrashDumpsToolName_midicalculator" xml:space="preserve">
+    <value>MIDI Calculator</value>
+  </data>
   <data name="CrashDumpsToolName_midisequencer" xml:space="preserve">
     <value>MIDI Sequencer</value>
   </data>

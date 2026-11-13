@@ -38,6 +38,7 @@ public:
     TEST_METHOD(ABypassedSwitchCanSendOnlyItsFirstWay);
     TEST_METHOD(ASetMemoryStepRunsWithNothingAfterIt);
     TEST_METHOD(NamesIgnoreCaseAndStopAtTheCap);
+    TEST_METHOD(TheNameListSaysWhereEachNameIsSetAndRead);
     TEST_METHOD(LogicSettingsSurviveTheFile);
     TEST_METHOD(TheFileKeepsTheWayEachLinkLeavesBy);
     TEST_METHOD(AFileFromANewerVersionIsMarked);

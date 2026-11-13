@@ -74,6 +74,13 @@
     processor on top of the other projects. 0 lifts both limits, which is a little faster and
     makes the desktop stutter.
 
+.PARAMETER VCToolsVersion
+    Builds with this MSVC toolset, for example 14.50.35717, instead of the newest one Visual
+    Studio has installed. Every project and every vcpkg library it links must build with that
+    toolset, so an older one usually doesn't work: some code and libraries here already need
+    14.52. The version is a folder name under VC\Tools\MSVC in the Visual Studio install. Leave it
+    empty to use the newest.
+
 .PARAMETER Priority
     Process priority for MSBuild and the compilers, which inherit it from this script.
     BelowNormal (the default) keeps the UI responsive. Use Normal on a build machine.
@@ -111,6 +118,9 @@ param(
 
     # Explicit MSBuild.exe. Leave empty to let vswhere find the newest install.
     [string] $MSBuildPath,
+
+    # MSVC toolset version, such as 14.50.35717. Leave empty for the newest installed.
+    [string] $VCToolsVersion,
 
     # Parallel MSBuild nodes. 0 means one per logical processor.
     [ValidateRange(0, 256)]
@@ -238,6 +248,7 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midipatchbay';       Display = 'MIDI Patchbay' }
     [pscustomobject]@{ Name = 'midiglass';          Display = 'MIDI Glass' }
     [pscustomobject]@{ Name = 'midisequencer';      Display = 'MIDI Sequencer' }
+    [pscustomobject]@{ Name = 'midicalculator';     Display = 'MIDI Calculator' }
     # midisoundmodule (Sound Module) builds with the SDK solution but is left out on purpose
     # until the Virtual Device transport it depends on works in the released service.
     [pscustomobject]@{ Name = 'miditroubleshooter'; Display = 'MIDI Troubleshooting and Repair' }
@@ -1012,6 +1023,8 @@ function Invoke-MSBuild {
 
     foreach ($key in $Properties.Keys) { $msbuildArgs += "/p:$key=$($Properties[$key])" }
 
+    if ($VCToolsVersion) { $msbuildArgs += "/p:VCToolsVersion=$VCToolsVersion" }
+
     Write-Detail "msbuild $(Split-Path -Leaf $ProjectOrSolution) [$Configuration|$BuildPlatform]$(if ($Targets.Count -gt 0) { " /t:$($Targets -join ';')" })"
 
     & $script:MSBuild @msbuildArgs
@@ -1263,8 +1276,21 @@ function Invoke-PrerequisiteProjects {
     }
 }
 
+# Restore has to be its own MSBuild call: the build that follows must load the props and targets
+# the restore just brought in. Without it, a project nobody has opened in Visual Studio yet has no
+# packages, and MIDL can't find the Windows App SDK types (MIDL2011).
+function Invoke-SolutionRestore {
+    param([Parameter(Mandatory)] [string] $Solution)
+
+    # RestorePackagesConfig covers the projects that still use packages.config.
+    Invoke-MSBuild -ProjectOrSolution $Solution -BuildPlatform $Platform[0] -Targets @('Restore') `
+        -Properties @{ 'RestorePackagesConfig' = 'true' }
+}
+
 function Invoke-ServiceTarget {
     Write-Step 'Build service and transports (Midi2.sln)'
+
+    Invoke-SolutionRestore -Solution $ServiceSolution
 
     foreach ($plat in $Platform) {
         Invoke-PrerequisiteProjects -Projects $ServicePrerequisiteProjects -BuildPlatform $plat `
@@ -1312,6 +1338,8 @@ function Update-ApiReferenceIdlOutput {
 
 function Invoke-SdkTarget {
     Write-Step 'Build SDK, apps and tools (Midi2-AppSDK.sln)'
+
+    Invoke-SolutionRestore -Solution $SdkSolution
 
     Update-ApiReferenceHeader
 
@@ -2605,6 +2633,13 @@ if ($Target -contains 'Clean') {
 $previousPriority = [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass
 [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
 
+# The Windows Driver Kit 10.0.28000 km\crt\ammintrin.h declares __rmpadjust with four arguments,
+# and MSVC 14.52 expects five (C4392). The driver projects treat warnings as errors, so
+# that stops the build. None of our code calls __rmpadjust. cl.exe adds _CL_ to every command line.
+# Remove this once a driver kit that matches the compiler is installed.
+$previousCl = $env:_CL_
+$env:_CL_ = (@($previousCl, '/wd4392') | Where-Object { $_ }) -join ' '
+
 try {
     Test-ServicingGateListing
     Test-AppReferenceVersion
@@ -2621,6 +2656,20 @@ try {
     if (@($targets | Where-Object { $_ -in @('Service', 'Sdk', 'Pack', 'Samples', 'Stage', 'Setup') }).Count -gt 0) {
         $script:MSBuild = Resolve-MSBuild
         Write-Detail "MSBuild       $script:MSBuild"
+
+        if ($VCToolsVersion) {
+            # MSBuild.exe is somewhere under the Visual Studio install; walk up to the folder that has VC\Tools\MSVC.
+            $vsRoot = Split-Path -Parent $script:MSBuild
+            while ($vsRoot -and -not (Test-Path (Join-Path $vsRoot 'VC\Tools\MSVC'))) { $vsRoot = Split-Path -Parent $vsRoot }
+            if (-not $vsRoot) { throw "Could not find VC\Tools\MSVC above $script:MSBuild to check -VCToolsVersion." }
+
+            $msvcRoot = Join-Path $vsRoot 'VC\Tools\MSVC'
+            if (-not (Test-Path (Join-Path $msvcRoot $VCToolsVersion))) {
+                $installed = (Get-ChildItem $msvcRoot -Directory | ForEach-Object Name) -join ', '
+                throw "MSVC toolset $VCToolsVersion isn't installed in $msvcRoot. Installed: $installed"
+            }
+            Write-Detail "MSVC          $VCToolsVersion"
+        }
     }
 
     # Anything the SDK build links before this moment is, by definition, not from this build.
@@ -2639,6 +2688,7 @@ try {
 }
 finally {
     [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = $previousPriority
+    $env:_CL_ = $previousCl
 }
 
 $stopwatch.Stop()

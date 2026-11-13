@@ -21,6 +21,7 @@ Run `pwsh -NoProfile -File build\tests\build-prerequisites.tests.ps1` to check p
 ```
 
 - **`SolutionDir` is required**, including the trailing double backslash, or the build fails with `C1083: Cannot open include file: 'MidiDefs.h'`. This applies to managed projects that reference a native project too.
+- **No spaces in build paths.** The internal Windows build can't handle them. Every C++/WinRT project in `Midi2-AppSDK.sln` sets `<GeneratedFilesDir>$(IntDir)GeneratedFiles\</GeneratedFilesDir>` before the `Microsoft.Cpp.targets` import. A new project must do the same, or the C++/WinRT and XAML defaults put a `Generated Files` folder in its intermediate or source folder.
 - Solution-level `/t:ProjectName` does not work on these solutions. Build the project file.
 - **Static libraries are not rebuilt by their dependents.** Build the library first, then everything that links it. Changing a shared static library means rebuilding the service, several transports and the WinMM driver.
 - Filter output with `": error C|: fatal error|: error MSB|: error LNK"`. Do not grep bare `error` — several source files have `Error` in their names and flood the match.
@@ -35,6 +36,7 @@ Run `pwsh -NoProfile -File build\tests\build-prerequisites.tests.ps1` to check p
 | `MIDL2011: unresolved type declaration Microsoft.UI.Xaml.*` | A deleted `obj\` took `project.assets.json` with it, so package targets never imported | `msbuild <sln> /t:Restore`, then build |
 | `C1301: error accessing program database ... .ipdb, invalid format` | Stale incremental link database | Delete the `.ipdb`/`.iobj` and rebuild |
 | `LNK1104: cannot open file ....dll` | Transient file lock | Re-run the build |
+| `LNK1104: cannot open file 'CMakeFiles\...\intermediate.manifest'` while vcpkg builds `libmidi2` | The repo path is too long for vcpkg's build tree, which lives under the project folder | Build from a shorter path. A junction to the repo works. Delete the project's `vcpkg_installed` folder first |
 | `C2259: cannot instantiate abstract class` after an IDL edit | Stale generated header, or a trailing `const` MIDL discarded | Compare header and `.idl` timestamps; rebuild the IDL project per platform |
 
 ## Running tests

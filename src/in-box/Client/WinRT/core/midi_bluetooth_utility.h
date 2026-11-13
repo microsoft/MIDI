@@ -271,6 +271,46 @@ namespace Windows::Devices::Midi2::Transports::Bluetooth::Internal
         return winrt::to_hstring(seconds);
     }
 
+    // A single device's own value. Missing or unknown means the device has no override.
+    inline bluetooth::MidiBluetoothIncomingTiming IncomingTimingFromJsonString(_In_ winrt::hstring const& value) noexcept
+    {
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_SMOOTH)
+        {
+            return bluetooth::MidiBluetoothIncomingTiming::Smooth;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_AS_SOON_AS_POSSIBLE)
+        {
+            return bluetooth::MidiBluetoothIncomingTiming::AsSoonAsPossible;
+        }
+
+        return bluetooth::MidiBluetoothIncomingTiming::UseTransportDefault;
+    }
+
+    // The transport default, or a value already resolved against it. Neither can defer to anything,
+    // so missing or unknown means Smooth, which is what the transport ships with.
+    inline bluetooth::MidiBluetoothIncomingTiming ResolvedIncomingTimingFromJsonString(_In_ winrt::hstring const& value) noexcept
+    {
+        return value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_AS_SOON_AS_POSSIBLE ?
+            bluetooth::MidiBluetoothIncomingTiming::AsSoonAsPossible :
+            bluetooth::MidiBluetoothIncomingTiming::Smooth;
+    }
+
+    inline winrt::hstring IncomingTimingToJsonString(_In_ bluetooth::MidiBluetoothIncomingTiming const timing) noexcept
+    {
+        switch (timing)
+        {
+        case bluetooth::MidiBluetoothIncomingTiming::Smooth:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_SMOOTH;
+
+        case bluetooth::MidiBluetoothIncomingTiming::AsSoonAsPossible:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_AS_SOON_AS_POSSIBLE;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INCOMING_TIMING_VALUE_DEFAULT;
+        }
+    }
+
     // The transport keys everything on the 12 hex digit address, so the numeric form is recovered
     // from the id rather than sent twice.
     inline uint64_t BluetoothAddressFromDeviceId(_In_ winrt::hstring const& bluetoothDeviceId) noexcept

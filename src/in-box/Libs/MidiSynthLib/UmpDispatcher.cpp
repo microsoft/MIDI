@@ -59,6 +59,19 @@ namespace MidiSynth
         constexpr size_t MaxSysExBytes = 1024;
 
         constexpr uint32_t MessageType(_In_ uint32_t word) noexcept { return (word >> 28) & 0xF; }
+
+        // The GS part number in a part address is not the MIDI channel: part 0 addresses channel
+        // 10, and parts 1 to 9 address channels 1 to 9.
+        constexpr uint8_t GsPartToChannel(_In_ uint8_t part) noexcept
+        {
+            return (part == 0) ? 9u : ((part < 10) ? static_cast<uint8_t>(part - 1) : part);
+        }
+
+        // Puts a channel number into the first word of a channel voice message.
+        constexpr uint32_t WithChannel(_In_ uint32_t word, _In_ uint8_t channel) noexcept
+        {
+            return (word & ~(0xFu << 16)) | (static_cast<uint32_t>(channel & 0x0F) << 16);
+        }
         constexpr uint8_t Group(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 24) & 0xF); }
         constexpr uint8_t Status(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 20) & 0xF); }
         constexpr uint8_t Channel(_In_ uint32_t word) noexcept { return static_cast<uint8_t>((word >> 16) & 0xF); }
@@ -1160,16 +1173,38 @@ namespace MidiSynth
                 break;
 
             case MessageTypeMidi1ChannelVoice:
-                HandleMidi1ChannelVoice(word0);
+            {
+                // Usually just the channel it was sent on. GS Receive Channel, which only the older
+                // message handling honors, can send it to other channels, or several, or none.
+                const uint16_t receiving = m_engine->EngineChannelsReceiving(Channel(word0));
+
+                for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+                {
+                    if ((receiving & (1u << channel)) != 0)
+                    {
+                        HandleMidi1ChannelVoice(WithChannel(word0, channel));
+                    }
+                }
                 break;
+            }
 
             case MessageTypeSysEx7:
                 HandleSysEx7(word0, words[consumed + 1]);
                 break;
 
             case MessageTypeMidi2ChannelVoice:
-                HandleMidi2ChannelVoice(word0, words[consumed + 1]);
+            {
+                const uint16_t receiving = m_engine->EngineChannelsReceiving(Channel(word0));
+
+                for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+                {
+                    if ((receiving & (1u << channel)) != 0)
+                    {
+                        HandleMidi2ChannelVoice(WithChannel(word0, channel), words[consumed + 1]);
+                    }
+                }
                 break;
+            }
 
             case MessageTypeStream:
                 HandleStream(words + consumed);
@@ -1534,6 +1569,7 @@ namespace MidiSynth
         {
             m_engine->SystemReset();
             m_engine->NotifyAddressingConvention(BankSelectMode::RolandGS);
+            m_engine->SetGsActive(true);
             return;
         }
 
@@ -1545,16 +1581,42 @@ namespace MidiSynth
             m_sysex[2] == 0x42 && m_sysex[3] == 0x12 &&
             m_sysex[4] == 0x40 && (m_sysex[5] & 0xF0) == 0x10 && m_sysex[6] == 0x15)
         {
-            // The GS part number in the address is not the MIDI channel: part 0 addresses channel
-            // 10, and parts 1 to 9 address channels 1 to 9.
-            const uint8_t part = m_sysex[5] & 0x0F;
-            const uint8_t channel = (part == 0) ? 9u : ((part < 10) ? static_cast<uint8_t>(part - 1) : part);
+            const uint8_t channel = GsPartToChannel(m_sysex[5] & 0x0F);
 
-            if (channel < MidiChannelCount)
+            if (channel < MidiChannelCount && m_engine->AcceptsGsPartMessages())
             {
                 m_engine->SetDrumChannel(channel, (m_sysex[7] & 0x7F) != 0);
                 return;
             }
+        }
+
+        // Roland GS "Scale Tuning", address 40 1p 40, then up to twelve offsets from C, then the
+        // checksum. Only the older message handling acts on it.
+        if (m_sysex[0] == 0x41 && size >= 9 &&
+            m_sysex[2] == 0x42 && m_sysex[3] == 0x12 &&
+            m_sysex[4] == 0x40 && (m_sysex[5] & 0xF0) == 0x10 && m_sysex[6] == 0x40 &&
+            m_engine->Config().OlderMessageHandling)
+        {
+            m_engine->SetScaleTuning(GsPartToChannel(m_sysex[5] & 0x0F), m_sysex + 7, size - 8);
+            return;
+        }
+
+        // Roland GS "Rx. Channel", address 40 1p 02. The older synthesizer read the value as a
+        // channel counted from 1 and ignored zero, where GS counts from 0. The older message
+        // handling copies that, so a file sounds the way it did there.
+        if (m_sysex[0] == 0x41 && size >= 9 &&
+            m_sysex[2] == 0x42 && m_sysex[3] == 0x12 &&
+            m_sysex[4] == 0x40 && (m_sysex[5] & 0xF0) == 0x10 && m_sysex[6] == 0x02 &&
+            m_engine->Config().OlderMessageHandling)
+        {
+            const uint8_t value = m_sysex[7] & 0x7F;
+
+            if (value != 0)
+            {
+                m_engine->SetReceiveChannel(GsPartToChannel(m_sysex[5] & 0x0F), static_cast<uint8_t>(value - 1));
+            }
+
+            return;
         }
 
         // Yamaha XG System On, address 00 00 7E 00. Seven bytes, one shorter than the GS messages

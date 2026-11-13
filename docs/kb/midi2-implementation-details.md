@@ -21,6 +21,8 @@ The hardware manufacturers, AMEI, and the MIDI Association agreed that JR Timest
 
 When (if) it is needed, we will implement JR clock generation, incoming JR timestamp generation, and outgoing JR timestamp/clock message creation in the service itself. Client applications should not send JR timestamps now or in the future.
 
+The one exception is Bluetooth LE MIDI 2.0. There, the Bluetooth transport handles JR timestamps itself, because only it knows where each Bluetooth packet starts and ends. Apps still never see JR messages from a Bluetooth device, and any JR messages an app sends are dropped. This is provisional until the BLE MIDI 2.0 specification is final. Details are in [the BLE MIDI transport architecture]({{ site.baseurl }}/kb/ble-midi-transport-architecture/).
+
 ## Message Translation
 
 Internally in Windows MIDI Services, all messages are UMP messages, whether they come from a MIDI 1.0 byte data format device, a UMP-native device or API, or a MIDI 1.0 classic API. This requires Windows to perform message data format translation in some cases.

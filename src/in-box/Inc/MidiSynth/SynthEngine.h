@@ -89,9 +89,24 @@ namespace MidiSynth
         double PerNoteGain{ 1.0 };
         double PerNotePan{ 0.0 };
 
+        // Channel and master tuning as they were when the note started, for SynthConfig::TuningFixedAtNoteOn.
+        double NoteOnTuningCents{ 0.0 };
+
+        // Pitch bend as the voice plays it while it glides to the channel's, for
+        // SynthConfig::PitchBendGlideMaximumSeconds. Zero glide time means no glide.
+        double BendGlideSeconds{ 0.0 };
+        double BendGlideFromCents{ 0.0 };
+        double BendGlideToCents{ 0.0 };
+        double BendGlideElapsedSeconds{ 0.0 };
+        double GlidedBendCents{ 0.0 };
+
         // A detached note keeps sounding under its own per-note control even when the same note
         // number is played again on the same channel, so a held note is not stolen by the retrigger.
         bool Detached{ false };
+
+        // Fading out after All Sound Off, a reset, a retrigger or a steal. No longer counts as one
+        // of the notes sounding.
+        bool Killed{ false };
 
         ResolvedArticulation Articulation;
 
@@ -102,6 +117,15 @@ namespace MidiSynth
         double DecaySeconds{ 0.0 };
         double ReleaseSeconds{ 0.0 };
         double SustainDb{ 0.0 };
+
+        // The DLS pitch envelope (EG2). It runs from 0 to 1 and back on a linear scale, and its level
+        // times Articulation.Eg2ToPitchCents is added to the pitch. Instruments use it for a pitch
+        // that falls after the strike, like Synth Drum, or for a fixed offset, like Bagpipe.
+        EnvelopeStage PitchStage{ EnvelopeStage::Idle };
+        double PitchEnvelopeLevel{ 0.0 };
+        double PitchAttackSeconds{ 0.0 };
+        double PitchDecaySeconds{ 0.0 };
+        double PitchReleaseSeconds{ 0.0 };
 
         double LfoPhase{ 0.0 };
         double LfoDelayRemainingSeconds{ 0.0 };
@@ -177,6 +201,11 @@ namespace MidiSynth
 
         uint8_t RpnMsb{ 0x7F };
         uint8_t RpnLsb{ 0x7F };
+
+        // SynthConfig::OlderMessageHandling only. Mono mode ends the notes a channel holds when it
+        // plays another, and scale tuning offsets each pitch class, C first, in cents.
+        bool MonoMode{ false };
+        std::array<int8_t, 12> ScaleTuningCents{};
 
         const DlsInstrument* Instrument{ nullptr };
     };
@@ -281,6 +310,25 @@ namespace MidiSynth
             return m_channels[channel & 0x0F].IsDrumChannel;
         }
 
+        // SynthConfig::OlderMessageHandling only, where the older synthesizer's GS state decides
+        // what is read. A GS Reset turns it on; any other reset turns it off.
+        void SetGsActive(_In_ bool active) noexcept { m_gsActive = active; }
+
+        // Whether GS part messages, such as Use For Rhythm Part, are acted on.
+        bool AcceptsGsPartMessages() const noexcept { return !m_config.OlderMessageHandling || m_gsActive; }
+
+        // GS Scale Tuning: count offsets, C first, each 64 for none. Ignored unless OlderMessageHandling
+        // is on and GS is active.
+        void SetScaleTuning(_In_ uint8_t channel, _In_reads_(count) const uint8_t* offsets, _In_ size_t count) noexcept;
+
+        // GS Receive Channel: which MIDI channel an engine channel takes its messages from. Ignored
+        // unless OlderMessageHandling is on and GS is active.
+        void SetReceiveChannel(_In_ uint8_t engineChannel, _In_ uint8_t midiChannel) noexcept;
+
+        // The engine channels that act on a message sent on a MIDI channel, one bit each. Only the
+        // same channel unless GS Receive Channel moved one; then none, one or several.
+        uint16_t EngineChannelsReceiving(_In_ uint8_t midiChannel) const noexcept;
+
         // Changing this re-resolves every channel, so a mode chosen mid-song takes effect at once
         // rather than at the next program change.
         void SetBankSelectMode(_In_ BankSelectMode mode);
@@ -336,6 +384,23 @@ namespace MidiSynth
         void Render(_Out_writes_(frameCount * 2) float* interleavedStereo, _In_ uint32_t frameCount) noexcept;
 
         uint32_t ActiveVoiceCount() const noexcept;
+
+        // Notes sounding on a channel, not counting voices fading out after a steal or a reset.
+        uint32_t SoundingVoiceCount(_In_ uint8_t channel) const noexcept
+        {
+            return static_cast<uint32_t>(std::count_if(m_voices.begin(), m_voices.end(), [channel](const SynthVoice& voice)
+            {
+                return voice.Active && !voice.Killed && voice.Channel == channel;
+            }));
+        }
+
+        bool IsNoteSounding(_In_ uint8_t channel, _In_ uint8_t note) const noexcept
+        {
+            return std::any_of(m_voices.begin(), m_voices.end(), [channel, note](const SynthVoice& voice)
+            {
+                return voice.Active && !voice.Killed && voice.Channel == channel && voice.Note == note;
+            });
+        }
         uint64_t StolenVoiceCount() const noexcept { return m_stolenVoiceCount; }
         uint64_t DroppedNoteCount() const noexcept { return m_droppedNoteCount; }
 
@@ -376,6 +441,16 @@ namespace MidiSynth
 
         void ResolveInstrument(_In_ uint8_t channel) noexcept;
         _Ret_maybenull_ SynthVoice* AllocateVoice(_In_ uint8_t channel) noexcept;
+
+        // The older synthesizer's channel priority: higher wins. See VoiceStealingPolicy::ChannelPriority.
+        static uint32_t ChannelPriority(_In_ uint8_t channel) noexcept;
+
+        // The voice the ChannelPriority policy gives up first. With lowestPriorityOnly, only voices
+        // at the lowest priority sounding are considered, otherwise any at or below maxPriority.
+        _Ret_maybenull_ SynthVoice* PriorityVictim(_In_ uint32_t maxPriority, _In_ bool lowestPriorityOnly) noexcept;
+
+        // Fades out notes until no more than MaxVoices are sounding, when SpareVoices allows more.
+        void ReleaseSpareVoices() noexcept;
         void StartVoice(
             _Inout_ SynthVoice& voice,
             _In_ const DlsRegion& region,
@@ -398,6 +473,24 @@ namespace MidiSynth
         void HoldControlsForReset(_Inout_ SynthVoice& voice) const noexcept;
 
         void UpdateVoiceControl(_Inout_ SynthVoice& voice, _In_ uint32_t frames) noexcept;
+
+        // True when a channel playing a kit should ignore the controls General MIDI 2 keeps off
+        // drums. Always false for a melodic channel, and false in Compatible mode.
+        bool ChannelIgnoresDrumControls(_In_ const SynthChannelState& state) const noexcept
+        {
+            return state.PlaysDrumKit && m_config.DrumsFollowGeneralMidi2;
+        }
+
+        bool VoiceIgnoresDrumControls(_In_ const SynthVoice& voice) const noexcept
+        {
+            return voice.DrumKit && m_config.DrumsFollowGeneralMidi2;
+        }
+
+        // Channel and master tuning for a voice, in cents, as the channel holds them now.
+        double ChannelTuningCents(_In_ const SynthVoice& voice, _In_ const SynthChannelState& state) const noexcept;
+
+        // Moves the pitch envelope on by one control block.
+        static void AdvancePitchEnvelope(_Inout_ SynthVoice& voice, _In_ double blockSeconds) noexcept;
         void RenderVoiceBlock(
             _Inout_ SynthVoice& voice,
             _Inout_updates_(frames * 2) float* output,
@@ -411,6 +504,9 @@ namespace MidiSynth
         std::array<SynthChannelState, MidiChannelCount> m_channels;
 
         uint64_t m_nextStartOrder{ 1 };
+
+        bool m_gsActive{ false };
+        std::array<uint8_t, MidiChannelCount> m_receiveChannels{};
 
         // What Automatic has settled on. Equal to the configured mode when it is not Automatic.
         BankSelectMode m_detectedBankSelectMode{ BankSelectMode::RolandGS };
