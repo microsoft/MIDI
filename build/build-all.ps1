@@ -74,6 +74,12 @@
     processor on top of the other projects. 0 lifts both limits, which is a little faster and
     makes the desktop stutter.
 
+.PARAMETER VCToolsVersion
+    Builds with this MSVC toolset, for example 14.50.35717, instead of the newest one Visual
+    Studio has installed. Use it when a Visual Studio update brings a compiler that the installed
+    Windows Driver Kit's headers don't build with yet. The version is a folder name under
+    VC\Tools\MSVC in the Visual Studio install. Leave it empty to use the newest.
+
 .PARAMETER Priority
     Process priority for MSBuild and the compilers, which inherit it from this script.
     BelowNormal (the default) keeps the UI responsive. Use Normal on a build machine.
@@ -111,6 +117,9 @@ param(
 
     # Explicit MSBuild.exe. Leave empty to let vswhere find the newest install.
     [string] $MSBuildPath,
+
+    # MSVC toolset version, such as 14.50.35717. Leave empty for the newest installed.
+    [string] $VCToolsVersion,
 
     # Parallel MSBuild nodes. 0 means one per logical processor.
     [ValidateRange(0, 256)]
@@ -1012,6 +1021,8 @@ function Invoke-MSBuild {
     if ($SolutionDir) { $msbuildArgs += "/p:SolutionDir=$($SolutionDir.TrimEnd('\'))\" }
 
     foreach ($key in $Properties.Keys) { $msbuildArgs += "/p:$key=$($Properties[$key])" }
+
+    if ($VCToolsVersion) { $msbuildArgs += "/p:VCToolsVersion=$VCToolsVersion" }
 
     Write-Detail "msbuild $(Split-Path -Leaf $ProjectOrSolution) [$Configuration|$BuildPlatform]$(if ($Targets.Count -gt 0) { " /t:$($Targets -join ';')" })"
 
@@ -2622,6 +2633,20 @@ try {
     if (@($targets | Where-Object { $_ -in @('Service', 'Sdk', 'Pack', 'Samples', 'Stage', 'Setup') }).Count -gt 0) {
         $script:MSBuild = Resolve-MSBuild
         Write-Detail "MSBuild       $script:MSBuild"
+
+        if ($VCToolsVersion) {
+            # MSBuild.exe is somewhere under the Visual Studio install; walk up to the folder that has VC\Tools\MSVC.
+            $vsRoot = Split-Path -Parent $script:MSBuild
+            while ($vsRoot -and -not (Test-Path (Join-Path $vsRoot 'VC\Tools\MSVC'))) { $vsRoot = Split-Path -Parent $vsRoot }
+            if (-not $vsRoot) { throw "Could not find VC\Tools\MSVC above $script:MSBuild to check -VCToolsVersion." }
+
+            $msvcRoot = Join-Path $vsRoot 'VC\Tools\MSVC'
+            if (-not (Test-Path (Join-Path $msvcRoot $VCToolsVersion))) {
+                $installed = (Get-ChildItem $msvcRoot -Directory | ForEach-Object Name) -join ', '
+                throw "MSVC toolset $VCToolsVersion isn't installed in $msvcRoot. Installed: $installed"
+            }
+            Write-Detail "MSVC          $VCToolsVersion"
+        }
     }
 
     # Anything the SDK build links before this moment is, by definition, not from this build.
