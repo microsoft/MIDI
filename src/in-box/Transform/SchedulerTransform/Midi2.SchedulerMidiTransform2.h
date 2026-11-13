@@ -51,6 +51,7 @@ private:
 
     std::wstring m_endpointDeviceId{};
 
+    std::mutex m_callbackMutex;
     IMidiCallback* m_callback{ nullptr };
     LONGLONG m_context{ 0 };
 

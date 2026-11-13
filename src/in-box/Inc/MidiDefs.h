@@ -36,7 +36,7 @@
 
 
 #define INVALID_GROUP_INDEX 0xFF
-#define IS_VALID_GROUP_INDEX(Context) (Context >= 0 && Context <= 15)
+#define IS_VALID_GROUP_INDEX(Context) ((INT)Context >= 0 && Context <= 15)
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
