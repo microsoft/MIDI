@@ -76,9 +76,10 @@
 
 .PARAMETER VCToolsVersion
     Builds with this MSVC toolset, for example 14.50.35717, instead of the newest one Visual
-    Studio has installed. Use it when a Visual Studio update brings a compiler that the installed
-    Windows Driver Kit's headers don't build with yet. The version is a folder name under
-    VC\Tools\MSVC in the Visual Studio install. Leave it empty to use the newest.
+    Studio has installed. Every project and every vcpkg library it links must build with that
+    toolset, so an older one usually doesn't work: some code and libraries here already need
+    14.52. The version is a folder name under VC\Tools\MSVC in the Visual Studio install. Leave it
+    empty to use the newest.
 
 .PARAMETER Priority
     Process priority for MSBuild and the compilers, which inherit it from this script.
@@ -1275,8 +1276,21 @@ function Invoke-PrerequisiteProjects {
     }
 }
 
+# Restore has to be its own MSBuild call: the build that follows must load the props and targets
+# the restore just brought in. Without it, a project nobody has opened in Visual Studio yet has no
+# packages, and MIDL can't find the Windows App SDK types (MIDL2011).
+function Invoke-SolutionRestore {
+    param([Parameter(Mandatory)] [string] $Solution)
+
+    # RestorePackagesConfig covers the projects that still use packages.config.
+    Invoke-MSBuild -ProjectOrSolution $Solution -BuildPlatform $Platform[0] -Targets @('Restore') `
+        -Properties @{ 'RestorePackagesConfig' = 'true' }
+}
+
 function Invoke-ServiceTarget {
     Write-Step 'Build service and transports (Midi2.sln)'
+
+    Invoke-SolutionRestore -Solution $ServiceSolution
 
     foreach ($plat in $Platform) {
         Invoke-PrerequisiteProjects -Projects $ServicePrerequisiteProjects -BuildPlatform $plat `
@@ -1324,6 +1338,8 @@ function Update-ApiReferenceIdlOutput {
 
 function Invoke-SdkTarget {
     Write-Step 'Build SDK, apps and tools (Midi2-AppSDK.sln)'
+
+    Invoke-SolutionRestore -Solution $SdkSolution
 
     Update-ApiReferenceHeader
 
@@ -2617,6 +2633,13 @@ if ($Target -contains 'Clean') {
 $previousPriority = [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass
 [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
 
+# The Windows Driver Kit 10.0.28000 km\crt\ammintrin.h declares __rmpadjust with four arguments,
+# and MSVC 14.52 expects five (C4392). The driver projects treat warnings as errors, so
+# that stops the build. None of our code calls __rmpadjust. cl.exe adds _CL_ to every command line.
+# Remove this once a driver kit that matches the compiler is installed.
+$previousCl = $env:_CL_
+$env:_CL_ = (@($previousCl, '/wd4392') | Where-Object { $_ }) -join ' '
+
 try {
     Test-ServicingGateListing
     Test-AppReferenceVersion
@@ -2665,6 +2688,7 @@ try {
 }
 finally {
     [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = $previousPriority
+    $env:_CL_ = $previousCl
 }
 
 $stopwatch.Stop()
