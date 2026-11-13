@@ -161,6 +161,7 @@
     <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
     <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
     <ClInclude Include="..\midi-app-shared\TapTempo.h" />
+    <ClInclude Include="..\midi-app-shared\ChordTheory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -210,6 +211,9 @@
     <ClCompile Include="MainWindowTime.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MainWindowChords.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MainWindowTimecode.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
@@ -223,6 +227,9 @@
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
     <ClCompile Include="..\midi-app-shared\TapTempo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\ChordTheory.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />

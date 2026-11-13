@@ -145,6 +145,50 @@ namespace midicalculator::ui
         std::function<void(int32_t)> m_changed{};
     };
 
+    // Piano keys from C2 (MIDI note 48) up, two octaves as in the comps or more. Lit keys are
+    // the accent color and the bass key orange. With a handler, each key is a toggle button the
+    // customer can click or use from the keyboard; without one, it only shows notes.
+    class PianoKeyboard
+    {
+    public:
+        static constexpr uint8_t LowestNote = 48;
+
+        // namer gives a key's accessible name and, for each C, its label ("C3")
+        PianoKeyboard(
+            _In_ winrt::hstring const& name,
+            _In_ std::function<winrt::hstring(uint8_t note, bool label)> const& namer,
+            _In_ std::function<void(uint8_t note, bool on)> const& toggled,
+            _In_ int32_t octaves = 2);
+        PianoKeyboard(PianoKeyboard const&) = delete;
+        PianoKeyboard& operator=(PianoKeyboard const&) = delete;
+
+        controls::Grid Root() const noexcept { return m_grid; }
+
+        // Lights these notes, and the bass in orange. Doesn't call the handler.
+        void Show(_In_ std::vector<uint8_t> const& notes, _In_ std::optional<uint8_t> bass);
+
+        // After the middle C setting changes.
+        void Rename();
+
+    private:
+        struct Key
+        {
+            uint8_t Note{ 0 };
+            bool Black{ false };
+            controls::Primitives::ToggleButton Button{ nullptr };
+            controls::Border Face{ nullptr };
+            controls::TextBlock Label{ nullptr };
+        };
+
+        void Paint(_In_ Key const& key, _In_ bool on, _In_ bool bass);
+
+        controls::Grid m_grid{ nullptr };
+        std::vector<Key> m_keys{};
+        std::function<winrt::hstring(uint8_t, bool)> m_namer{};
+        std::function<void(uint8_t, bool)> m_toggled{};
+        bool m_updating{ false };
+    };
+
     // One field of a bit diagram: a short name over its value, as wide as its bits.
     struct BitField
     {

@@ -26,6 +26,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Data.Json.h>
 
+#include "ChordTheory.h"
 #include "ContentProvenance.h"
 
 namespace midisequencer
@@ -423,20 +424,7 @@ namespace midisequencer
         bool operator==(EuclidRing const&) const = default;
     };
 
-    enum class ScaleKind : uint8_t
-    {
-        Major = 0,
-        NaturalMinor = 1,
-        Dorian = 2,
-        Phrygian = 3,
-        Lydian = 4,
-        Mixolydian = 5,
-        HarmonicMinor = 6,
-        MajorPentatonic = 7,
-        MinorPentatonic = 8,
-        Blues = 9,
-        Chromatic = 10,
-    };
+    using ScaleKind = midiapp::ScaleKind;
 
     // How a generator of design section 28 sets each note's velocity, inside VelocityLow to
     // VelocityHigh. The first four work the same for every generator. The rest are each
@@ -853,31 +841,10 @@ namespace midisequencer
 
     // ---- key and chords (#1326 follow-up, Pete's proposal of November 1 2026) ----
 
-    // The kinds of chord the picker offers. A chord's name is its root, spelled in the key, then
-    // the suffix for its type (Harmony.h).
-    enum class ChordType : uint8_t
-    {
-        Major = 0,          // C
-        Minor = 1,          // Cm
-        Seventh = 2,        // C7
-        Major7 = 3,         // Cmaj7
-        Minor7 = 4,         // Cm7
-        Diminished = 5,     // Cdim
-        Sus4 = 6,           // Csus4
-        Sus2 = 7,           // Csus2
-        Sixth = 8,          // C6
-        Minor6 = 9,         // Cm6
-        Ninth = 10,         // C9
-        Major9 = 11,        // Cmaj9
-        Minor9 = 12,        // Cm9
-        Add9 = 13,          // Cadd9
-        Augmented = 14,     // Caug
-        Diminished7 = 15,   // Cdim7
-        HalfDiminished = 16, // Cm7♭5
-        SeventhSus4 = 17,   // C7sus4
-        Eleventh = 18,      // C11
-        Thirteenth = 19,    // C13
-    };
+    // A chord's name is its root, spelled in the key, then the suffix for its type. The chord types
+    // and scales live in midi-app-shared\ChordTheory.h, so the Windows MIDI Calculator spells,
+    // reads and voices a chord the same way.
+    using ChordType = midiapp::ChordType;
 
     // Where a key starts. It lasts until the next one.
     struct KeyChange
