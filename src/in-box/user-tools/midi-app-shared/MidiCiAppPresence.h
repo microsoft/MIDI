@@ -42,9 +42,10 @@ namespace midiapp
         MidiCiPresence(MidiCiPresence const&) = delete;
         MidiCiPresence& operator=(MidiCiPresence const&) = delete;
 
-        // Raised when a device that was not here before answers or announces itself, which is the
-        // signal that anything previously asked and not answered is worth asking again. Runs on a
-        // background thread.
+        // Raised when a device that was not here before replies to this app's Discovery and offers
+        // property exchange, which is the signal that anything previously asked and not answered
+        // is worth asking again. A device that only announces itself with a Discovery of its own
+        // is answered but not acted on. Runs on a background thread.
         using ResponderAppearedHandler = std::function<void()>;
 
         // Safe to call more than once; an existing session is closed first. Does nothing useful

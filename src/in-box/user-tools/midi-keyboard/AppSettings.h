@@ -124,6 +124,16 @@ namespace midikeyboard
         bool RetryProgramListQuery() const noexcept { return m_retryProgramListQuery; }
         void RetryProgramListQuery(bool value) noexcept;
 
+        // Whether this app takes part in MIDI-CI at all: asking a device for its programs and
+        // answering a Discovery. Off means it sends and answers no MIDI-CI SysEx.
+        bool UseMidiCi() const noexcept { return m_useMidiCi; }
+        void UseMidiCi(_In_ bool value) noexcept;
+
+        // Starting the app on its own brings an open keyboard window forward instead of opening
+        // another. A launch that names a destination always opens a window.
+        bool SingleWindow() const noexcept { return m_singleWindow; }
+        void SingleWindow(_In_ bool value) noexcept;
+
         // octave of the leftmost C, in the numbering where note 60 is C3
         int32_t BaseOctave() const noexcept { return m_baseOctave; }
         void BaseOctave(int32_t value) noexcept;
@@ -242,6 +252,8 @@ namespace midikeyboard
         bool m_sendPatchOnStartup{ false };
         bool m_programsByCategory{ false };
         bool m_retryProgramListQuery{ true };
+        bool m_useMidiCi{ true };
+        bool m_singleWindow{ true };
 
         int32_t m_baseOctave{ 1 };
 

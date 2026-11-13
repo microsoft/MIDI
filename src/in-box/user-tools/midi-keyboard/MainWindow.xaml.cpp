@@ -11,6 +11,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "KeyboardInstance.h"
 #include "MidiServiceAvailability.h"
 #include "PopupBackdrop.h"
 #include "SpinButtons.h"
@@ -228,8 +229,22 @@ namespace winrt::midikeyboard::implementation
 
     void MainWindow::RestoreWindowPlacement() noexcept
     {
+        auto placement = native::AppSettings::Current().WindowPlacement();
+
+        // A window opened while another keyboard is already open goes a step down and to the
+        // right of the saved spot, so the two don't sit exactly on top of each other and look
+        // like one. With nothing saved, Windows already staggers new windows by itself.
+        if (auto const slot = native::KeyboardInstance::WindowSlot(); slot != 0 && placement.Valid)
+        {
+            auto const step = ::MulDiv(32, static_cast<int>(::GetDpiForSystem()), USER_DEFAULT_SCREEN_DPI);
+
+            placement.X += step * static_cast<int32_t>(slot);
+            placement.Y += step * static_cast<int32_t>(slot);
+            placement.Maximized = false;
+        }
+
         // static, because this runs before the chrome is initialized
-        midiapp::WindowChrome::RestorePlacement(*this, native::AppSettings::Current(), 1320, 560);
+        midiapp::WindowChrome::RestorePlacement(*this, placement, 1320, 560);
     }
 
     _Use_decl_annotations_
@@ -239,6 +254,10 @@ namespace winrt::midikeyboard::implementation
         {
             InitializeBrushes();
             InitializeWindowChrome();
+
+            // So a second plain launch brings this window forward rather than opening another.
+            native::KeyboardInstance::PublishMainWindow(m_chrome.WindowHandle());
+
             InitializeChoiceLists();
             InitializeControlsFromSettings();
 
@@ -300,7 +319,13 @@ namespace winrt::midikeyboard::implementation
                         // it has gone rather than waiting for it to time out.
                         strong->m_ciPresence.Close();
 
-                        strong->m_chrome.SavePlacement();
+                        // Only the first window remembers where it was. An extra one was put out of
+                        // the way on purpose, and saving that would move every later launch.
+                        if (native::KeyboardInstance::WindowSlot() == 0)
+                        {
+                            strong->m_chrome.SavePlacement();
+                        }
+
                         strong->m_chrome.Shutdown();
                         strong->ShutdownAsync();
                     }
@@ -577,6 +602,9 @@ namespace winrt::midikeyboard::implementation
             ShowNoteNamesCheckBox().IsChecked(settings.ShowNoteNames());
             ShowComputerKeysCheckBox().IsChecked(settings.ShowComputerKeys());
             RetryProgramListCheckBox().IsChecked(settings.RetryProgramListQuery());
+            UseMidiCiCheckBox().IsChecked(settings.UseMidiCi());
+            RetryProgramListCheckBox().IsEnabled(settings.UseMidiCi());
+            SingleWindowCheckBox().IsChecked(settings.SingleWindow());
 
             auto layoutChoices = winrt::single_threaded_vector<foundation::IInspectable>();
             AppendChoice(layoutChoices, L"ComputerKeyboardLayoutAutomatic");
@@ -1033,28 +1061,19 @@ namespace winrt::midikeyboard::implementation
             {
                 SendStartupPatchIfRequested();
 
+                // A new connection starts the retry from the short wait again.
+                m_programListRetrySeconds = ProgramListRetrySeconds;
+
                 // Opened before anything is asked, because this is what answers a device that
                 // discovers this app rather than the other way round.
-                auto const weak = get_weak();
-                auto const queue = m_dispatcherQueue;
-                auto const ciConnection = m_programsConnection.IsConnected() ? m_programsConnection.Connection() : m_output.Connection();
-
-                m_ciPresence.Open(ciConnection, ProgramsGroupIndex(),
-                    [weak, queue]()
-                    {
-                        if (queue == nullptr)
-                        {
-                            return;
-                        }
-
-                        queue.TryEnqueue([weak]()
-                            {
-                                if (auto strong = weak.get())
-                                {
-                                    strong->StartProgramListQuery();
-                                }
-                            });
-                    });
+                if (native::AppSettings::Current().UseMidiCi())
+                {
+                    OpenMidiCi();
+                }
+                else
+                {
+                    m_ciPresence.Close();
+                }
 
                 StartProgramListQuery();
             }
@@ -2801,6 +2820,10 @@ namespace winrt::midikeyboard::implementation
             {
                 ApplyProgramList(m_programListResult, m_programList);
             }
+            else if (!settings.UseMidiCi())
+            {
+                SetStripText(ProgramListStatusText(), res::GetString(L"ProgramListMidiCiOff"));
+            }
             else if (m_output.Connection() != nullptr)
             {
                 SetStripText(ProgramListStatusText(), res::GetString(L"ProgramListSearching"));
@@ -2959,7 +2982,13 @@ namespace winrt::midikeyboard::implementation
                 if (m_patchControlsInitialized)
                 {
                     HideProgramLists();
-                    SetStripText(ProgramListStatusText(), L"");
+
+                    // With MIDI-CI off there is no session, and the customer should know why the
+                    // programs aren't listed rather than think the device has none.
+                    SetStripText(ProgramListStatusText(),
+                        native::AppSettings::Current().UseMidiCi()
+                            ? winrt::hstring{}
+                            : res::GetString(L"ProgramListMidiCiOff"));
                 }
 
                 return;
@@ -3082,6 +3111,7 @@ namespace winrt::midikeyboard::implementation
             // Only while nothing answered Discovery at all. A device that answered and has no
             // programs is a settled answer, and asking it again would be noise on the wire.
             auto const wanted =
+                native::AppSettings::Current().UseMidiCi() &&
                 native::AppSettings::Current().RetryProgramListQuery() &&
                 m_output.Connection() != nullptr &&
                 m_programListQueryRan &&
@@ -3090,6 +3120,9 @@ namespace winrt::midikeyboard::implementation
 
             if (!wanted)
             {
+                // The next time nothing answers starts from the short wait again.
+                m_programListRetrySeconds = ProgramListRetrySeconds;
+
                 if (m_programListRetryTimer != nullptr)
                 {
                     m_programListRetryTimer.Stop();
@@ -3107,7 +3140,6 @@ namespace winrt::midikeyboard::implementation
 
                 m_programListRetryTimer = m_dispatcherQueue.CreateTimer();
                 m_programListRetryTimer.IsRepeating(false);
-                m_programListRetryTimer.Interval(std::chrono::seconds(ProgramListRetrySeconds));
 
                 auto const weak = get_weak();
 
@@ -3121,6 +3153,9 @@ namespace winrt::midikeyboard::implementation
                         }
                     });
             }
+
+            m_programListRetryTimer.Interval(std::chrono::seconds(m_programListRetrySeconds));
+            m_programListRetrySeconds = (std::min)(m_programListRetrySeconds * 2, ProgramListRetryMaximumSeconds);
 
             m_programListRetryTimer.Start();
         }
@@ -3921,6 +3956,102 @@ namespace winrt::midikeyboard::implementation
             }
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change how the programs are looked for.")
+    }
+
+    void MainWindow::OpenMidiCi() noexcept
+    {
+        try
+        {
+            auto const connection = m_programsConnection.IsConnected()
+                ? m_programsConnection.Connection()
+                : m_output.Connection();
+
+            auto const weak = get_weak();
+            auto const queue = m_dispatcherQueue;
+
+            m_ciPresence.Open(connection, ProgramsGroupIndex(),
+                [weak, queue]()
+                {
+                    if (queue == nullptr)
+                    {
+                        return;
+                    }
+
+                    queue.TryEnqueue([weak]()
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->StartProgramListQuery();
+                            }
+                        });
+                });
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to start MIDI-CI.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnUseMidiCiChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressSettingHandlers)
+            {
+                return;
+            }
+
+            auto const checked = UseMidiCiCheckBox().IsChecked();
+            auto const use = checked != nullptr && checked.Value();
+
+            if (use == native::AppSettings::Current().UseMidiCi())
+            {
+                return;
+            }
+
+            native::AppSettings::Current().UseMidiCi(use);
+            RetryProgramListCheckBox().IsEnabled(use);
+
+            if (use)
+            {
+                if (m_output.Connection() != nullptr)
+                {
+                    m_programListRetrySeconds = ProgramListRetrySeconds;
+                    OpenMidiCi();
+                }
+            }
+            else
+            {
+                if (m_programListQuery != nullptr)
+                {
+                    m_programListQuery->Cancel();
+                    m_programListQuery = nullptr;
+                }
+
+                // Withdraws this app's identifier, so a device that found it stops asking.
+                m_ciPresence.Close();
+            }
+
+            // Either asks now, or clears what an earlier answer left showing and says why.
+            StartProgramListQuery();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to turn MIDI-CI on or off.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSingleWindowChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressSettingHandlers)
+            {
+                return;
+            }
+
+            auto const checked = SingleWindowCheckBox().IsChecked();
+
+            // Takes effect at the next launch. The window already open stays as it is.
+            native::AppSettings::Current().SingleWindow(checked != nullptr && checked.Value());
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change whether only one window opens.")
     }
 
     _Use_decl_annotations_

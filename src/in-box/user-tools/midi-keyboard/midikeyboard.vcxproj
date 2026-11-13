@@ -159,6 +159,8 @@
     <ClInclude Include="..\midi-app-shared\MidiCiAppPresence.h" />
     <ClInclude Include="..\midi-app-shared\MidiCiProgramListQuery.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
+    <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
+    <ClInclude Include="KeyboardInstance.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -169,6 +171,8 @@
     <ClCompile Include="Arpeggiator.cpp" />
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
+    <ClCompile Include="KeyboardInstance.cpp" />
+    <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="KeyboardLayout.cpp" />
     <ClCompile Include="KeyColors.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
