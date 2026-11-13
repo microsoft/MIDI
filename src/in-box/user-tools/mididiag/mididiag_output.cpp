@@ -8,6 +8,7 @@
 
 #include "pch.h"
 #include "mididiag_output.h"
+#include "mididiag_sections.h"
 
 #include <userenv.h>
 
@@ -308,8 +309,18 @@ namespace mididiag
 
                     if (servicePhase)
                     {
-                        AddFinding(L"service_not_responding",
-                            FormatResourceString(IDS_FINDING_SERVICE_NOT_RESPONDING, seconds));
+                        // a stopped service that never came up isn't stuck, and a restart
+                        // won't help it
+                        if (MidiServiceState() == SERVICE_RUNNING)
+                        {
+                            AddFinding(L"service_not_responding",
+                                FormatResourceString(IDS_FINDING_SERVICE_NOT_RESPONDING, seconds));
+                        }
+                        else
+                        {
+                            AddFinding(L"service_did_not_start",
+                                FormatResourceString(IDS_FINDING_SERVICE_DID_NOT_START, seconds));
+                        }
                     }
                     else
                     {
