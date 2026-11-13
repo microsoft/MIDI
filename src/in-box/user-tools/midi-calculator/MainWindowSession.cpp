@@ -77,6 +77,7 @@ namespace winrt::midicalculator::implementation
         UpdateReferenceLabel();
         UpdateTempoPage();
         UpdatePitchPage();
+        UpdateChordsPage();
         UpdateTimecodePage();
         UpdateMidi2Page();
     }

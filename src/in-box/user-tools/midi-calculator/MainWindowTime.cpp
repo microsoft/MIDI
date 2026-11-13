@@ -250,8 +250,8 @@ namespace winrt::midicalculator::implementation
         {
             strip.Background(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"CardBackgroundFillColorDefaultBrush")).as<media::Brush>());
             strip.BorderBrush(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"CardStrokeColorDefaultBrush")).as<media::Brush>());
-            strip.BorderThickness(xaml::Thickness{ 1 });
-            strip.CornerRadius(xaml::CornerRadius{ 8 });
+            strip.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+            strip.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(8));
             strip.Padding(xaml::Thickness{ 16, 12, 16, 12 });
 
             controls::Grid row{};

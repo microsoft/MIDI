@@ -70,4 +70,9 @@ public:
     TEST_METHOD(TimecodeToRealTimeSamplesAndBars);
     TEST_METHOD(SameMomentAtAnotherFrameRate);
     TEST_METHOD(BufferLengths);
+
+    // ---- chords and scales (shared with the Sequencer) ----
+    TEST_METHOD(ChordToNotesVoicesLikeTheSequencer);
+    TEST_METHOD(NamesChordsFromNotes);
+    TEST_METHOD(ChordsInAKey);
 };

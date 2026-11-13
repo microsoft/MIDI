@@ -11,6 +11,7 @@
 
 #include "AppSettings.h"
 #include "CardBuilder.h"
+#include "ChordTheory.h"
 #include "TapTempo.h"
 
 namespace winrt::midicalculator::implementation
@@ -70,6 +71,15 @@ namespace winrt::midicalculator::implementation
         void BuildPitchPage();
         void UpdatePitchPage() noexcept;
         void UpdateNoteTable() noexcept;
+
+        // ---- Chords and scales (MainWindowChords.cpp) ----
+        void BuildChordsPage();
+        void UpdateChordsPage() noexcept;
+        void UpdateChordToNotes() noexcept;
+        void UpdateNamedChord() noexcept;
+        void UpdateKeyChords() noexcept;
+        void ShowChordInPickers(_In_ ::midiapp::ChordSymbol const& chord) noexcept;
+        void HighlightKeyChord() noexcept;
 
         // ---- Timecode and samples (MainWindowTimecode.cpp) ----
         void BuildTimecodePage();
@@ -178,6 +188,29 @@ namespace winrt::midicalculator::implementation
         controls::NumberBox m_tableOctave{ nullptr };
         std::array<controls::TextBlock, 12> m_tableNames{};
         std::array<controls::TextBlock, 12> m_tableHertz{};
+
+        // ---- Chords and scales ----
+        controls::TextBox m_chordText{ nullptr };
+        controls::ComboBox m_chordRoot{ nullptr };
+        controls::ComboBox m_chordType{ nullptr };
+        controls::ComboBox m_chordBass{ nullptr };
+        std::shared_ptr<::midicalculator::ui::PianoKeyboard> m_chordKeys{};
+        controls::StackPanel m_chordNotes{ nullptr };
+        controls::TextBlock m_chordProblem{ nullptr };
+        controls::Button m_chordCopy{ nullptr };
+        std::optional<::midiapp::ChordSymbol> m_chord{};
+        bool m_suppressChord{ false };
+
+        std::shared_ptr<::midicalculator::ui::PianoKeyboard> m_nameKeys{};
+        std::vector<uint8_t> m_heldNotes{};
+        controls::StackPanel m_nameResults{ nullptr };
+
+        controls::ComboBox m_keyRoot{ nullptr };
+        controls::ComboBox m_keyScale{ nullptr };
+        std::shared_ptr<::midicalculator::ui::Segmented> m_keySevenths{};
+        controls::TextBlock m_keyNotes{ nullptr };
+        controls::Grid m_keyChords{ nullptr };
+        std::vector<::midiapp::ChordSymbol> m_keyChordList{};
 
         // ---- Timecode and samples ----
         controls::ComboBox m_tcRate{ nullptr };

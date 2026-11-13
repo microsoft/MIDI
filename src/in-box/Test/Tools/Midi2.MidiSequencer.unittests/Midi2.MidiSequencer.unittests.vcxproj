@@ -158,6 +158,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ClockFollower.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-app-shared\ChordTheory.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\Deflate.h" />
   </ItemGroup>
@@ -250,6 +251,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ContentProvenance.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ClockFollower.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\MidiTimeCode.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-app-shared\ChordTheory.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\ZipArchive.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\Deflate.cpp" />
     <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />

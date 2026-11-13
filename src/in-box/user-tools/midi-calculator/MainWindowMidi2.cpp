@@ -242,7 +242,7 @@ namespace winrt::midicalculator::implementation
             for (int row = 0; row < 4; ++row)
             {
                 m_scaleHighlights[row] = controls::Border{};
-                m_scaleHighlights[row].CornerRadius(xaml::CornerRadius{ 4 });
+                m_scaleHighlights[row].CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
                 controls::Grid::SetRow(m_scaleHighlights[row], row + 1);
                 controls::Grid::SetColumnSpan(m_scaleHighlights[row], 4);
                 table.Children().Append(m_scaleHighlights[row]);

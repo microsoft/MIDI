@@ -1358,4 +1358,160 @@
   <data name="SmHelp" xml:space="preserve">
     <value>Milliseconds for one buffer. Your interface adds its own converter and driver time on top, in each direction.</value>
   </data>
+  <data name="PageChords" xml:space="preserve">
+    <value>Chords and scales</value>
+  </data>
+  <data name="NavChords.Content" xml:space="preserve">
+    <value>Chords and scales</value>
+  </data>
+  <data name="ChordToNotesTitle" xml:space="preserve">
+    <value>Chord to notes</value>
+  </data>
+  <data name="ChordLabel" xml:space="preserve">
+    <value>Chord</value>
+  </data>
+  <data name="ChordPickLabel" xml:space="preserve">
+    <value>Or pick</value>
+  </data>
+  <data name="ChordRootName" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="ChordTypeName" xml:space="preserve">
+    <value>Chord type</value>
+  </data>
+  <data name="ChordBassName" xml:space="preserve">
+    <value>Bass note</value>
+  </data>
+  <data name="ChordBassNone" xml:space="preserve">
+    <value>No bass</value>
+  </data>
+  <data name="ChordTypeMajor" xml:space="preserve">
+    <value>major</value>
+  </data>
+  <data name="ChordKeysName" xml:space="preserve">
+    <value>The chord&apos;s notes on a piano keyboard</value>
+  </data>
+  <data name="ChordKeyName" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="ChordNotesName" xml:space="preserve">
+    <value>The chord&apos;s notes</value>
+  </data>
+  <data name="ChordRoleBass" xml:space="preserve">
+    <value>bass</value>
+  </data>
+  <data name="ChordRoleRoot" xml:space="preserve">
+    <value>root</value>
+  </data>
+  <data name="ChordRoleFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="ChordNoteName" xml:space="preserve">
+    <value>{0}, {1}, note {2}</value>
+  </data>
+  <data name="ChordCopyNotes" xml:space="preserve">
+    <value>Copy notes</value>
+  </data>
+  <data name="ChordNotesOf" xml:space="preserve">
+    <value>Notes of {0}</value>
+  </data>
+  <data name="ChordNotUnderstood" xml:space="preserve">
+    <value>Type a chord such as Dm7/G, B♭maj7, F#m7b5 or C/E: a root from A to G, then the chord type, then a slash and a bass note if it has one.</value>
+  </data>
+  <data name="ChordNoChord" xml:space="preserve">
+    <value>N.C. means no chord, so there are no notes to show.</value>
+  </data>
+  <data name="NameChordTitle" xml:space="preserve">
+    <value>Name a chord</value>
+  </data>
+  <data name="NameChordHelp" xml:space="preserve">
+    <value>Click keys to choose notes. The lowest one is the bass.</value>
+  </data>
+  <data name="NameChordClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="NameChordKeysName" xml:space="preserve">
+    <value>Piano keys. Choose notes to name the chord they make.</value>
+  </data>
+  <data name="NameChordResultsName" xml:space="preserve">
+    <value>Names for these notes</value>
+  </data>
+  <data name="NameChordPickNotes" xml:space="preserve">
+    <value>Choose at least two different notes.</value>
+  </data>
+  <data name="NameChordNone" xml:space="preserve">
+    <value>These notes aren&apos;t one of the chords the Windows MIDI tools know.</value>
+  </data>
+  <data name="NameChordRootLowest" xml:space="preserve">
+    <value>{0} · lowest note is the root</value>
+  </data>
+  <data name="NameChordOverBass" xml:space="preserve">
+    <value>{0} with {1} in the bass</value>
+  </data>
+  <data name="NameChordQuestion" xml:space="preserve">
+    <value>Chord with {0}</value>
+  </data>
+  <data name="KeyChordsTitle" xml:space="preserve">
+    <value>Chords in a key</value>
+  </data>
+  <data name="KeyRootLabel" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="KeyScaleLabel" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="KeyChordsLabel" xml:space="preserve">
+    <value>Chords</value>
+  </data>
+  <data name="KeyTriads" xml:space="preserve">
+    <value>Triads</value>
+  </data>
+  <data name="KeySevenths" xml:space="preserve">
+    <value>Sevenths</value>
+  </data>
+  <data name="KeyScaleNotesLabel" xml:space="preserve">
+    <value>Scale notes</value>
+  </data>
+  <data name="KeySameNotesAs" xml:space="preserve">
+    <value>same notes as {0} major</value>
+  </data>
+  <data name="KeyChordName" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="KeyChordsHelp" xml:space="preserve">
+    <value>Select a chord to see its notes in Chord to notes. Pentatonic, blues and chromatic keys use the chords of the major or minor key they sound like.</value>
+  </data>
+  <data name="ScaleName0" xml:space="preserve">
+    <value>Major</value>
+  </data>
+  <data name="ScaleName1" xml:space="preserve">
+    <value>Natural minor</value>
+  </data>
+  <data name="ScaleName2" xml:space="preserve">
+    <value>Dorian</value>
+  </data>
+  <data name="ScaleName3" xml:space="preserve">
+    <value>Phrygian</value>
+  </data>
+  <data name="ScaleName4" xml:space="preserve">
+    <value>Lydian</value>
+  </data>
+  <data name="ScaleName5" xml:space="preserve">
+    <value>Mixolydian</value>
+  </data>
+  <data name="ScaleName6" xml:space="preserve">
+    <value>Harmonic minor</value>
+  </data>
+  <data name="ScaleName7" xml:space="preserve">
+    <value>Major pentatonic</value>
+  </data>
+  <data name="ScaleName8" xml:space="preserve">
+    <value>Minor pentatonic</value>
+  </data>
+  <data name="ScaleName9" xml:space="preserve">
+    <value>Blues</value>
+  </data>
+  <data name="ScaleName10" xml:space="preserve">
+    <value>Chromatic</value>
+  </data>
 </root>

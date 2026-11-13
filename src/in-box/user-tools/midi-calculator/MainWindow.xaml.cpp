@@ -49,6 +49,7 @@ namespace winrt::midicalculator::implementation
             // A page that fails to build leaves the rest of the app working.
             try { BuildTempoPage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Tempo and beats page.")
             try { BuildPitchPage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Notes and pitch page.")
+            try { BuildChordsPage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Chords and scales page.")
             try { BuildTimecodePage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Timecode and samples page.")
             try { BuildMidi2Page(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the MIDI 2.0 values page.")
             try { BuildTimePage(); } MIDI_CALCULATOR_CATCH_AND_LOG(L"Unable to build the Windows timestamps page.")
@@ -149,6 +150,7 @@ namespace winrt::midicalculator::implementation
 
             TempoPage().Visibility(page == native::CalculatorPage::Tempo ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             PitchPage().Visibility(page == native::CalculatorPage::Pitch ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ChordsPage().Visibility(page == native::CalculatorPage::Chords ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             TimecodePage().Visibility(page == native::CalculatorPage::Timecode ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             Midi2Page().Visibility(page == native::CalculatorPage::Midi2 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             WindowsTimePage().Visibility(page == native::CalculatorPage::WindowsTime ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -156,7 +158,7 @@ namespace winrt::midicalculator::implementation
 
             // Windows timestamps and History don't use the session values
             auto const usesSession = page == native::CalculatorPage::Tempo || page == native::CalculatorPage::Pitch ||
-                page == native::CalculatorPage::Timecode || page == native::CalculatorPage::Midi2;
+                page == native::CalculatorPage::Chords || page == native::CalculatorPage::Timecode || page == native::CalculatorPage::Midi2;
             SessionStrip().Visibility(usesSession ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             controls::NavigationViewItem item{ nullptr };
@@ -165,6 +167,7 @@ namespace winrt::midicalculator::implementation
             switch (page)
             {
             case native::CalculatorPage::Pitch: item = NavPitch(); title = res::GetString(L"PagePitch"); break;
+            case native::CalculatorPage::Chords: item = NavChords(); title = res::GetString(L"PageChords"); break;
             case native::CalculatorPage::Timecode: item = NavTimecode(); title = res::GetString(L"PageTimecode"); break;
             case native::CalculatorPage::Midi2: item = NavMidi2(); title = res::GetString(L"PageMidi2"); break;
             case native::CalculatorPage::WindowsTime: item = NavWindowsTime(); title = res::GetString(L"PageWindowsTime"); break;
@@ -418,6 +421,9 @@ namespace winrt::midicalculator::implementation
                 break;
             case native::CalculatorPage::Pitch:
                 m_pitchNote.Text(value);
+                break;
+            case native::CalculatorPage::Chords:
+                m_chordText.Text(value);
                 break;
             case native::CalculatorPage::Timecode:
                 m_cvTimecode.Text(value);

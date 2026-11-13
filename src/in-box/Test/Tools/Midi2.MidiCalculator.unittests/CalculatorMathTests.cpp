@@ -13,6 +13,7 @@
 #include <cmath>
 
 #include "CalcMidi2.h"
+#include "ChordTheory.h"
 #include "CalcPitch.h"
 #include "CalcTempo.h"
 #include "CalcTime.h"
@@ -663,4 +664,89 @@ void CalculatorMathTests::BufferLengths()
     VERIFY_IS_TRUE(Near(BufferMilliseconds(128, 48000.0), 2.6667, 1e-4));
     VERIFY_IS_TRUE(Near(BufferMilliseconds(1024, 44100.0), 23.2200, 1e-4));
     VERIFY_IS_TRUE(Near(BufferMilliseconds(32, 0.0), 0.0, 1e-12));
+}
+
+// ---------------------------------------------------------------- chords and scales
+
+void CalculatorMathTests::ChordToNotesVoicesLikeTheSequencer()
+{
+    // the comp: Dm7/G is G2 under D3 F3 A3 C4
+    auto const parsed = midiapp::ParseChordName(L"Dm7/G");
+    VERIFY_IS_TRUE(parsed.has_value());
+    VERIFY_IS_FALSE(parsed->NoChord);
+    VERIFY_ARE_EQUAL(uint8_t{ 2 }, parsed->Chord.Root);
+    VERIFY_IS_TRUE(parsed->Chord.Type == midiapp::ChordType::Minor7);
+    VERIFY_ARE_EQUAL(uint8_t{ 7 }, *parsed->Chord.Bass);
+
+    VERIFY_IS_TRUE((std::vector<uint8_t>{ 55, 62, 65, 69, 72 }) == midiapp::ChordNotes(parsed->Chord));
+    VERIFY_IS_TRUE((std::vector<uint8_t>{ 0, 3, 7, 10 }) == midiapp::ChordIntervals(midiapp::ChordType::Minor7));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Dm7/G" }, midiapp::ChordName(parsed->Chord, nullptr));
+
+    // the other spellings the comp's callout lists
+    VERIFY_ARE_EQUAL(std::wstring{ L"B\u266Dmaj7" }, midiapp::ChordName(midiapp::ParseChordName(L"B\u266Dmaj7")->Chord, nullptr));
+    VERIFY_ARE_EQUAL(std::wstring{ L"F\u266Fm7\u266D5" }, midiapp::ChordName(midiapp::ParseChordName(L"F#m7b5")->Chord, nullptr));
+    VERIFY_ARE_EQUAL(std::wstring{ L"C/E" }, midiapp::ChordName(midiapp::ParseChordName(L"C/E")->Chord, nullptr));
+    VERIFY_IS_FALSE(midiapp::ParseChordName(L"H7").has_value());
+    VERIFY_IS_FALSE(midiapp::ParseChordName(L"Cm7/X").has_value());
+}
+
+void CalculatorMathTests::NamesChordsFromNotes()
+{
+    // the comp: C E G A with C lowest is C6 first, then Am7 over C
+    auto names = midiapp::NameChords({ 60, 64, 67, 69 });
+    VERIFY_IS_TRUE(names.size() >= 2);
+    VERIFY_ARE_EQUAL(std::wstring{ L"C6" }, midiapp::ChordName(names[0], nullptr));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Am7/C" }, midiapp::ChordName(names[1], nullptr));
+
+    // order and octaves don't matter, only which note is lowest
+    names = midiapp::NameChords({ 76, 55, 72 });
+    VERIFY_ARE_EQUAL(size_t{ 1 }, names.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"C/G" }, midiapp::ChordName(names[0], nullptr));
+
+    // every name it gives reads back as the same notes
+    for (auto const& chord : midiapp::NameChords({ 62, 65, 69, 72 }))
+    {
+        auto const again = midiapp::ParseChordName(midiapp::ChordName(chord, nullptr));
+        VERIFY_IS_TRUE(again.has_value());
+        VERIFY_IS_TRUE(again->Chord == chord);
+    }
+
+    VERIFY_IS_TRUE(midiapp::NameChords({}).empty());
+    VERIFY_IS_TRUE(midiapp::NameChords({ 60, 72 }).empty());
+    VERIFY_IS_TRUE(midiapp::NameChords({ 60, 61, 62 }).empty());
+}
+
+void CalculatorMathTests::ChordsInAKey()
+{
+    // the comp: A natural minor
+    midiapp::MusicKey const aMinor{ 9, midiapp::ScaleKind::NaturalMinor };
+    std::wstring const names[7]{ L"Am", L"Bdim", L"C", L"Dm", L"Em", L"F", L"G" };
+    std::wstring const numerals[7]{ L"i", L"ii\u00B0", L"III", L"iv", L"v", L"VI", L"VII" };
+
+    auto const triads = midiapp::ChordsInKey(aMinor, false);
+    VERIFY_ARE_EQUAL(size_t{ 7 }, triads.size());
+
+    for (size_t i = 0; i < 7; ++i)
+    {
+        VERIFY_ARE_EQUAL(names[i], midiapp::ChordName(triads[i], &aMinor));
+        VERIFY_ARE_EQUAL(numerals[i], midiapp::RomanNumeral(triads[i], aMinor));
+        VERIFY_IS_TRUE(midiapp::ChordIsInKey(triads[i], aMinor));
+    }
+
+    auto const sevenths = midiapp::ChordsInKey({ 0, midiapp::ScaleKind::Major }, true);
+    std::wstring const seventhNames[7]{ L"Cmaj7", L"Dm7", L"Em7", L"Fmaj7", L"G7", L"Am7", L"Bm7\u266D5" };
+
+    for (size_t i = 0; i < 7; ++i)
+    {
+        VERIFY_ARE_EQUAL(seventhNames[i], midiapp::ChordName(sevenths[i], nullptr));
+    }
+
+    // harmonic minor's i has no seventh type here, so it stays a triad; V gets its 7
+    auto const harmonic = midiapp::ChordsInKey({ 9, midiapp::ScaleKind::HarmonicMinor }, true);
+    VERIFY_IS_TRUE(harmonic[0].Type == midiapp::ChordType::Minor);
+    VERIFY_IS_TRUE(harmonic[4].Type == midiapp::ChordType::Seventh);
+
+    VERIFY_IS_TRUE((std::vector<uint8_t>{ 9, 11, 0, 2, 4, 5, 7 }) == midiapp::ScalePitchClasses(aMinor));
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, midiapp::ParentMajorRoot(aMinor));
+    VERIFY_ARE_EQUAL(std::wstring{ L"G\u266F" }, midiapp::NoteNameInKey(8, &aMinor));
 }

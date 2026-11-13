@@ -10,6 +10,9 @@
 // The Key and chords row (Pete's proposal of November 1 2026, revision 2): chord names spelled in
 // the key, Roman numerals, the notes a chord plays, keeping the row in order, its undo step, and
 // the sequence file. No XAML here, so the tests compile it unchanged.
+//
+// The music itself (names, numerals, voicing) is in midi-app-shared\ChordTheory.h, shared with the
+// Windows MIDI Calculator. These take the row's own chords and keys and pass them on.
 
 #include <sal.h>
 
@@ -30,8 +33,22 @@ namespace midisequencer
 
     // ---- names ----
 
-    // Whether a key is written with flats (F major, B♭ major, D minor...) rather than sharps.
-    bool KeyUsesFlats(_In_ uint8_t root, _In_ ScaleKind scale) noexcept;
+    using midiapp::KeyUsesFlats;
+    using midiapp::NoteName;
+    using midiapp::ChordTypeSuffix;
+    using midiapp::ScaleId;
+    using midiapp::ScaleFromId;
+    using midiapp::TonicChordType;
+
+    inline midiapp::ChordSymbol ChordSymbolOf(_In_ ChordEvent const& chord) noexcept
+    {
+        return { chord.Root, chord.Type, chord.Bass };
+    }
+
+    inline midiapp::MusicKey MusicKeyOf(_In_ KeyChange const& key) noexcept
+    {
+        return { key.Root, key.Scale };
+    }
 
     // A Standard MIDI File key signature (FF 59): sharps (positive) or flats (negative), -7 to 7,
     // and major or minor. That event only knows major and minor, so a mode becomes the key
@@ -45,13 +62,6 @@ namespace midisequencer
 
     KeySignature KeySignatureOf(_In_ KeyChange const& key) noexcept;
     KeyChange KeyFromSignature(_In_ KeySignature signature, _In_ int64_t tick) noexcept;
-
-    // A note's name, 0 to 11, with ♯ or ♭ (U+266F, U+266D): "C", "C♯", "D♭".
-    std::wstring NoteName(_In_ uint8_t pitchClass, _In_ bool flats);
-
-    // What follows the root in a chord's name: "" for major, "m", "7", "maj7", "m7", "dim", "sus4",
-    // "sus2", "6", "m6", "9", "maj9", "m9", "add9", "aug", "dim7", "m7♭5", "7sus4", "11", "13".
-    std::wstring ChordTypeSuffix(_In_ ChordType type);
 
     // "Dm7", "C/E", "B♭maj7", spelled in the key, or with flats for E♭, A♭ and B♭ and sharps
     // for F♯ and C♯ when there's no key.
@@ -79,12 +89,6 @@ namespace midisequencer
     // True when every note of the chord is in the key's scale. Chromatic counts everything in.
     bool ChordIsInKey(_In_ ChordEvent const& chord, _In_ KeyChange const& key);
 
-    // The id each scale has in the sequence file and the AI assistant's format: "major",
-    // "naturalMinor", "dorian", "phrygian", "lydian", "mixolydian", "harmonicMinor",
-    // "majorPentatonic", "minorPentatonic", "blues", "chromatic".
-    std::wstring_view ScaleId(_In_ ScaleKind scale) noexcept;
-    std::optional<ScaleKind> ScaleFromId(_In_ std::wstring_view id) noexcept;
-
     // ---- notes ----
 
     // The pitch classes of a chord, root first, in the order they're stacked.
@@ -94,10 +98,6 @@ namespace midisequencer
     // with the root from middle C (60) up to B (71), then the bass (the root, or the chord's own
     // bass) an octave below, in 48 to 59. Sorted low to high, no repeats.
     std::vector<uint8_t> ChordNotes(_In_ ChordEvent const& chord);
-
-    // A sensible first chord on a key's root: minor for minor-sounding scales (natural and
-    // harmonic minor, dorian, phrygian, minor pentatonic, blues), major for the rest.
-    ChordType TonicChordType(_In_ ScaleKind scale) noexcept;
 
     // ---- the row ----
 

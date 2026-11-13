@@ -88,8 +88,8 @@ namespace midicalculator::ui
         card.Root = controls::Border{};
         card.Root.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush"));
         card.Root.BorderBrush(ThemeBrush(L"CardStrokeColorDefaultBrush"));
-        card.Root.BorderThickness(xaml::Thickness{ 1 });
-        card.Root.CornerRadius(xaml::CornerRadius{ 8 });
+        card.Root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+        card.Root.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(8));
         card.Root.Padding(xaml::Thickness{ 16, 14, 16, 14 });
 
         card.Body = controls::StackPanel{};
@@ -283,8 +283,8 @@ namespace midicalculator::ui
     {
         controls::Border holder{};
         holder.Height(32);
-        holder.BorderThickness(xaml::Thickness{ 1 });
-        holder.CornerRadius(xaml::CornerRadius{ 4 });
+        holder.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+        holder.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
         // measured: 1 DIP higher than a text box's own padding puts the baselines together
         holder.Padding(xaml::Thickness{ framed ? 10.0 : 0.0, 4, framed ? 10.0 : 0.0, 7 });
         holder.BorderBrush(framed ? ThemeBrush(L"CardStrokeColorDefaultBrush") : media::SolidColorBrush{ winrt::Microsoft::UI::Colors::Transparent() });
@@ -340,8 +340,8 @@ namespace midicalculator::ui
         result.Root = controls::Border{};
         result.Root.Background(ThemeBrush(L"SolidBackgroundFillColorBaseBrush"));
         result.Root.BorderBrush(ThemeBrush(L"CardStrokeColorDefaultBrush"));
-        result.Root.BorderThickness(xaml::Thickness{ 1 });
-        result.Root.CornerRadius(xaml::CornerRadius{ 6 });
+        result.Root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
+        result.Root.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6));
         result.Root.Padding(xaml::Thickness{ 12, 10, 12, 10 });
 
         controls::Grid grid{};
@@ -623,7 +623,7 @@ namespace midicalculator::ui
     {
         controls::Grid grid{};
         grid.Height(44);
-        grid.CornerRadius(xaml::CornerRadius{ 4 });
+        grid.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
         return grid;
     }
 
@@ -681,6 +681,186 @@ namespace midicalculator::ui
             diagram.Children().Append(cell);
         }
     }
+
+    namespace
+    {
+        media::SolidColorBrush ColorBrush(_In_ uint8_t r, _In_ uint8_t g, _In_ uint8_t b)
+        {
+            return media::SolidColorBrush{ winrt::Windows::UI::Color{ 0xFF, r, g, b } };
+        }
+
+        media::SolidColorBrush AccentBrush(_In_ wchar_t const* key)
+        {
+            return media::SolidColorBrush{ winrt::unbox_value<winrt::Windows::UI::Color>(xaml::Application::Current().Resources().Lookup(winrt::box_value(key))) };
+        }
+    }
+
+    _Use_decl_annotations_
+    PianoKeyboard::PianoKeyboard(
+        winrt::hstring const& name,
+        std::function<winrt::hstring(uint8_t, bool)> const& namer,
+        std::function<void(uint8_t, bool)> const& toggled,
+        int32_t octaves) :
+        m_namer{ namer },
+        m_toggled{ toggled }
+    {
+        constexpr uint8_t WhiteSteps[7]{ 0, 2, 4, 5, 7, 9, 11 };
+        // the white key each black key sits after, and its note, in one octave
+        constexpr uint8_t BlackAfter[5]{ 0, 1, 3, 4, 5 };
+        constexpr uint8_t BlackSteps[5]{ 1, 3, 6, 8, 10 };
+        auto const Whites = std::clamp(octaves, 1, 4) * 7 + 1;
+
+        m_grid = controls::Grid{};
+        m_grid.Height(112);
+        m_grid.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
+        automation::AutomationProperties::SetName(m_grid, name);
+
+        if (!m_toggled)
+        {
+            // only a picture of the notes, which are listed in words beside it
+            automation::AutomationProperties::SetAccessibilityView(m_grid, automation::Peers::AccessibilityView::Raw);
+        }
+
+        // two columns a white key, so a black key can sit across the line between two
+        for (int32_t i = 0; i < Whites * 2; ++i)
+        {
+            controls::ColumnDefinition column{};
+            column.Width(xaml::GridLengthHelper::FromValueAndType(1, xaml::GridUnitType::Star));
+            m_grid.ColumnDefinitions().Append(column);
+        }
+
+        auto const transparent = media::SolidColorBrush{ winrt::Microsoft::UI::Colors::Transparent() };
+
+        auto const makeKey = [&](uint8_t note, bool black, int32_t column)
+            {
+                Key key{};
+                key.Note = note;
+                key.Black = black;
+                key.Button = controls::Primitives::ToggleButton{};
+                key.Button.Padding(xaml::Thickness{ 0 });
+                key.Button.MinWidth(0);
+                key.Button.MinHeight(0);
+                key.Button.BorderThickness(xaml::Thickness{ 0 });
+                key.Button.CornerRadius(xaml::CornerRadius{ 0 });
+                key.Button.HorizontalAlignment(black ? xaml::HorizontalAlignment::Center : xaml::HorizontalAlignment::Stretch);
+                key.Button.VerticalAlignment(black ? xaml::VerticalAlignment::Top : xaml::VerticalAlignment::Stretch);
+                key.Button.HorizontalContentAlignment(xaml::HorizontalAlignment::Stretch);
+                key.Button.VerticalContentAlignment(xaml::VerticalAlignment::Stretch);
+
+                if (black)
+                {
+                    key.Button.Height(72);
+                }
+
+                // the face below draws every state, so the button itself draws nothing
+                for (auto const resource : { L"ToggleButtonBackground", L"ToggleButtonBackgroundPointerOver", L"ToggleButtonBackgroundPressed",
+                    L"ToggleButtonBackgroundChecked", L"ToggleButtonBackgroundCheckedPointerOver", L"ToggleButtonBackgroundCheckedPressed",
+                    L"ToggleButtonBorderBrush", L"ToggleButtonBorderBrushPointerOver", L"ToggleButtonBorderBrushPressed",
+                    L"ToggleButtonBorderBrushChecked", L"ToggleButtonBorderBrushCheckedPointerOver", L"ToggleButtonBorderBrushCheckedPressed" })
+                {
+                    key.Button.Resources().Insert(winrt::box_value(resource), transparent);
+                }
+
+                key.Face = controls::Border{};
+                key.Face.BorderBrush(ColorBrush(0x9A, 0x9A, 0x9A));
+                key.Face.BorderThickness(xaml::Thickness{ 0, 0, black ? 0.0 : 1.0, 0 });
+                key.Face.CornerRadius(black ? xaml::CornerRadius{ 0, 0, 3, 3 } : xaml::CornerRadius{ 0 });
+
+                key.Label = controls::TextBlock{};
+                key.Label.FontSize(10);
+                key.Label.Foreground(ColorBrush(0x44, 0x44, 0x44));
+                key.Label.HorizontalAlignment(xaml::HorizontalAlignment::Center);
+                key.Label.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+                key.Label.Margin(xaml::Thickness{ 0, 0, 0, 6 });
+                key.Face.Child(key.Label);
+                key.Button.Content(key.Face);
+
+                if (m_toggled)
+                {
+                    key.Button.Checked([this, note](auto&&, auto&&) { if (!m_updating) m_toggled(note, true); });
+                    key.Button.Unchecked([this, note](auto&&, auto&&) { if (!m_updating) m_toggled(note, false); });
+                }
+                else
+                {
+                    key.Button.IsHitTestVisible(false);
+                    key.Button.IsTabStop(false);
+                }
+
+                controls::Grid::SetColumn(key.Button, column);
+                controls::Grid::SetColumnSpan(key.Button, 2);
+                m_grid.Children().Append(key.Button);
+                m_keys.push_back(key);
+            };
+
+        for (int32_t i = 0; i < Whites; ++i)
+        {
+            makeKey(static_cast<uint8_t>(LowestNote + (i / 7) * 12 + WhiteSteps[i % 7]), false, i * 2);
+        }
+
+        for (int32_t octave = 0; octave < Whites / 7; ++octave)
+        {
+            for (int32_t i = 0; i < 5; ++i)
+            {
+                makeKey(static_cast<uint8_t>(LowestNote + octave * 12 + BlackSteps[i]), true, (octave * 7 + BlackAfter[i]) * 2 + 1);
+            }
+        }
+
+        // a black key is 62% as wide as a white one, whatever the width
+        m_grid.SizeChanged([this, Whites](auto&&, xaml::SizeChangedEventArgs const& args)
+            {
+                auto const width = args.NewSize().Width / Whites * 0.62;
+
+                for (auto const& key : m_keys)
+                {
+                    if (key.Black)
+                    {
+                        key.Button.Width(width);
+                    }
+                }
+            });
+
+        Rename();
+        Show({}, std::nullopt);
+    }
+
+    _Use_decl_annotations_
+    void PianoKeyboard::Paint(Key const& key, bool on, bool bass)
+    {
+        if (key.Black)
+        {
+            key.Face.Background(bass ? ColorBrush(0xE0, 0x9A, 0x40) : on ? AccentBrush(L"SystemAccentColorDark1") : ColorBrush(0x1B, 0x1B, 0x1B));
+        }
+        else
+        {
+            key.Face.Background(bass ? ColorBrush(0xFF, 0xCF, 0x8A) : on ? AccentBrush(L"SystemAccentColorLight2") : ColorBrush(0xE9, 0xE9, 0xE9));
+        }
+    }
+
+    _Use_decl_annotations_
+    void PianoKeyboard::Show(std::vector<uint8_t> const& notes, std::optional<uint8_t> bass)
+    {
+        m_updating = true;
+
+        for (auto const& key : m_keys)
+        {
+            auto const isBass = bass.has_value() && *bass == key.Note;
+            auto const on = isBass || std::find(notes.begin(), notes.end(), key.Note) != notes.end();
+            key.Button.IsChecked(on);
+            Paint(key, on, isBass);
+        }
+
+        m_updating = false;
+    }
+
+    void PianoKeyboard::Rename()
+    {
+        for (auto const& key : m_keys)
+        {
+            automation::AutomationProperties::SetName(key.Button, m_namer(key.Note, false));
+            key.Label.Text(!key.Black && key.Note % 12 == 0 ? m_namer(key.Note, true) : winrt::hstring{});
+        }
+    }
+
     _Use_decl_annotations_
     void CopyText(winrt::hstring const& text) noexcept
     {

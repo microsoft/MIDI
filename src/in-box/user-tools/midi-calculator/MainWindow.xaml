@@ -138,6 +138,11 @@
                         <FontIcon Glyph="&#xE8D6;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="NavChords" x:Uid="NavChords" Tag="6">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEC4F;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem x:Name="NavTimecode" x:Uid="NavTimecode" Tag="5">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE823;" />
@@ -301,6 +306,7 @@
                     <Grid x:Name="PageHost" Margin="24,4,24,24" SizeChanged="OnPageHostSizeChanged">
                         <Grid x:Name="TempoPage" Visibility="Collapsed" />
                         <Grid x:Name="PitchPage" Visibility="Collapsed" />
+                        <Grid x:Name="ChordsPage" Visibility="Collapsed" />
                         <Grid x:Name="TimecodePage" Visibility="Collapsed" />
                         <Grid x:Name="Midi2Page" Visibility="Collapsed" />
                         <Grid x:Name="WindowsTimePage" Visibility="Collapsed" />

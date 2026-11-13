@@ -81,4 +81,4 @@ That lets other tools hand off to it. The first one I'd add is in the MIDI Monit
 
 ## Built so far (November 11 2026)
 
-Tempo and beats, Notes and pitch, Timecode and samples (with the session frame rate), MIDI 2.0 values, Windows timestamps and History, laid out to these comps. Timecode and samples was added November 12. Still to come: Chords and scales, the compact overlay, and the MIDI input features (tap from a note, measure MIDI Clock, play a note or chord).
+Tempo and beats, Notes and pitch, Chords and scales, Timecode and samples (with the session frame rate), MIDI 2.0 values, Windows timestamps and History, laid out to these comps. Timecode and samples was added November 12 and Chords and scales November 13, using the chord code moved from the Sequencer to `midi-app-shared\ChordTheory`. Chord to notes shows three octaves of keys rather than the comp's two, so a chord's top notes are on it. Still to come: the compact overlay, and the MIDI input features (tap from a note, measure MIDI Clock, Play and Listen on Chords and scales).
