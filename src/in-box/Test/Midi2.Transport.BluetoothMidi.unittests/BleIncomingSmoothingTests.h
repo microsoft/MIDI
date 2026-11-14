@@ -45,9 +45,15 @@ public:
     TEST_METHOD(TestSmootherNeverReleasesEarlyOrOutOfOrder);
     TEST_METHOD(TestSmootherNeverHoldsLongerThanTheMaximum);
     TEST_METHOD(TestSmootherResetClockKeepsTheDelay);
+    TEST_METHOD(TestSmootherTreatsAFutureTimestampAsArrival);
 
     // BLE MIDI 1.0 correlator support
     TEST_METHOD(TestCorrelatorReportsContinuousSenderTime);
     TEST_METHOD(TestCorrelatorClockGenerationChangesOnResynchronize);
     TEST_METHOD(TestSmootherWithTheBleMidi1Correlator);
+
+    // BLE MIDI 2.0 with JR
+    TEST_METHOD(TestJrDecoderReportsSenderTimeAndClockSamples);
+    TEST_METHOD(TestJrDecoderClockGenerationChangesOnRestart);
+    TEST_METHOD(TestJrSmoothingStartsFromTheStartupBurst);
 };

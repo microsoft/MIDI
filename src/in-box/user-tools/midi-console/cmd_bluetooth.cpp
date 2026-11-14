@@ -639,6 +639,7 @@ namespace midi2console
             }
         }
 
+        // Still validated and passed on, but the transport publishes both Characteristics whatever it says
         config.Protocol(protocol);
         config.IsEnabled(true);
 

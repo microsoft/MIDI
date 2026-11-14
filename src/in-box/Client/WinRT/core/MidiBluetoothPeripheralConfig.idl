@@ -16,8 +16,8 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
     [contract(MidiTransportsBluetoothApiContract, 1)]
 
-    // Publishing this PC is the one place a Bluetooth MIDI protocol is chosen rather than
-    // reported, because a peripheral has to advertise as one or the other.
+    // Publishes this PC as a Bluetooth MIDI peripheral. Both the BLE MIDI 1.0 and the BLE MIDI 2.0
+    // Characteristic are published, and the device which connects chooses between them.
     [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothPeripheralConfig", UUID_IMidiBluetoothPeripheralConfig)]
     [constructor_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothPeripheralConfigFactory", UUID_IMidiBluetoothPeripheralConfigFactory)]
     runtimeclass MidiBluetoothPeripheralConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
@@ -25,6 +25,7 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         MidiBluetoothPeripheralConfig();
         MidiBluetoothPeripheralConfig(MidiBluetoothProtocol protocol);
 
+        // No longer used: both protocols are always published. Kept for compatibility.
         [noexcept] MidiBluetoothProtocol Protocol;
 
         // Saving with this false is how a caller stops the peripheral being published on the next

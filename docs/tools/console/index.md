@@ -891,7 +891,7 @@ Publishes this PC as a Bluetooth MIDI device, so a phone, tablet or another comp
 
 | Command | What it does |
 | ----- | ----- |
-| `bluetooth peripheral start` | Starts publishing this PC. `--protocol` (`-p`) chooses `midi1`, the default, or `midi2`. Only one can be published at a time |
+| `bluetooth peripheral start` | Starts publishing this PC, with both BLE MIDI 1.0 and BLE MIDI 2.0. The device which connects picks one. `--protocol` (`-p`) is still accepted so existing scripts keep working, but it no longer does anything |
 | `bluetooth peripheral stop` | Stops publishing this PC |
 | `bluetooth peripheral status` | Shows whether this PC is published, and what's connected to it |
 | `bluetooth peripheral customize` | Sets the name, description and picture shown for the device connected to this PC. It takes the same options as `bluetooth customize`, except `--keep-when-offline` and `--incoming-timing` |
@@ -904,7 +904,7 @@ Publishes this PC as a Bluetooth MIDI device, so a phone, tablet or another comp
 `approve`, `deny` and `forget` take the twelve-digit Bluetooth address of the device that connected to this PC. `approve` and `deny` also take `--scope` (`-s`), which says how long the decision lasts: `once`, the default, `untilRestart` or `always`.
 
 ```
-midi bluetooth peripheral start --protocol midi2
+midi bluetooth peripheral start
 midi bluetooth peripheral approve 0123456789AB --scope always
 ```
 

@@ -792,6 +792,10 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingPortNameInputs, 961);            // DEVPRO
 // The Windows MIDI Sequencer app, when it asks a device for its program list over MIDI-CI.
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_MIDI_SEQUENCER      ((uint16_t)4)
 
+// This PC acting as a Bluetooth LE MIDI 2.0 Peripheral, when a remote Central asks for its
+// device identity during UMP Endpoint Discovery.
+#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_BLUETOOTH_MIDI_PERIPHERAL ((uint16_t)5)
+
 
 // for PKEY_MIDI_DeviceIdentification
 struct MidiDeviceIdentityProperty

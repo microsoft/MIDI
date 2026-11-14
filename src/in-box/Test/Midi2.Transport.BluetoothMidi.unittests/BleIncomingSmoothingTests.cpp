@@ -728,3 +728,233 @@ void BleIncomingSmoothingTests::TestSmootherWithTheBleMidi1Correlator()
     VERIFY_IS_TRUE(smoother.IsActive());
     VERIFY_IS_TRUE(releaseError < 1.3);
 }
+
+namespace
+{
+    // A BLE MIDI 2.0 device with JR: notes stamped with JR Timestamps, and JR Clocks read at their
+    // scheduled time, a startup burst of 16 clocks 8 ms apart and then one every 97 ms. Everything
+    // waits for the next connection event, and the Windows stack adds up to 0.3 ms.
+    struct JrSimulation
+    {
+        std::vector<SimulatedMessage> Messages{ };
+        double ActiveFromMilliseconds{ -1.0 };
+        double DelayMilliseconds{ 0.0 };
+    };
+
+    JrSimulation RunJrLink(_In_ double const intervalMilliseconds, _In_ double const durationMilliseconds)
+    {
+        constexpr uint64_t LocalTicksPerSecond = TicksPerMillisecond * 1000;
+        constexpr double JrTicksPerMillisecond = 31.25;
+        constexpr double SenderStart = 1234.5;
+
+        auto const jrTime = [](double const playedMs)
+        {
+            return static_cast<uint16_t>(static_cast<uint64_t>(std::floor((SenderStart + playedMs) * JrTicksPerMillisecond)) & 0xFFFF);
+        };
+
+        std::vector<double> clocks;
+
+        for (uint32_t i = 0; i < 16; i++)
+        {
+            clocks.push_back(1.0 + i * 8.0);
+        }
+
+        for (double t = clocks.back() + 97.0; t < durationMilliseconds; t += 97.0)
+        {
+            clocks.push_back(t);
+        }
+
+        auto const notes = SteadyStream(10.3, durationMilliseconds, 3.7);
+
+        std::mt19937 random{ 11 };
+        std::uniform_real_distribution<double> stack{ 0.0, 0.3 };
+
+        MidiBleJr::IncomingDecoder decoder;
+        MidiBleSmoothing::IncomingSmoother smoother;
+        smoother.SetConnectionIntervalMicroseconds(static_cast<uint32_t>(intervalMilliseconds * 1000));
+
+        JrSimulation result;
+        size_t noteIndex{ 0 };
+        size_t clockIndex{ 0 };
+        uint32_t generation = decoder.ClockGeneration();
+
+        for (double event = 2.9; event < durationMilliseconds + intervalMilliseconds; event += intervalMilliseconds)
+        {
+            std::vector<uint32_t> words;
+            std::vector<double> members;
+
+            while (noteIndex < notes.size() && notes[noteIndex] <= event)
+            {
+                words.push_back(MidiBleJr::BuildJrTimestamp(jrTime(notes[noteIndex])));
+                words.push_back(0x20903C7F);
+                members.push_back(notes[noteIndex]);
+                noteIndex++;
+            }
+
+            while (clockIndex < clocks.size() && clocks[clockIndex] <= event)
+            {
+                words.push_back(MidiBleJr::BuildJrClock(jrTime(clocks[clockIndex])));
+                clockIndex++;
+            }
+
+            if (words.empty())
+            {
+                continue;
+            }
+
+            auto const arrival = BaseArrival + static_cast<uint64_t>(Ms(event + stack(random)));
+
+            std::vector<MidiBleJr::TimestampedRun> runs;
+            std::vector<int64_t> clockSamples;
+            decoder.DecodePayload(words.data(), words.size(), arrival, LocalTicksPerSecond, runs, &clockSamples);
+
+            if (decoder.ClockGeneration() != generation)
+            {
+                smoother.ResetClock();
+                generation = decoder.ClockGeneration();
+            }
+
+            for (auto const sample : clockSamples)
+            {
+                smoother.AddClockSample(sample, arrival, TicksPerMillisecond);
+            }
+
+            if (runs.empty())
+            {
+                continue;
+            }
+
+            std::vector<int64_t> senderTicks;
+            bool everyRunHasSenderTime{ true };
+
+            for (auto const& run : runs)
+            {
+                everyRunHasSenderTime = everyRunHasSenderTime && run.HasSenderTime;
+                senderTicks.push_back(run.SenderLocalTicks);
+            }
+
+            std::vector<uint64_t> releases;
+
+            if (everyRunHasSenderTime && decoder.ClockIsUsable())
+            {
+                smoother.ProcessPacket(senderTicks, arrival, true, TicksPerMillisecond, releases, false);
+            }
+            else
+            {
+                smoother.ReleaseAtArrival(runs.size(), arrival, releases);
+            }
+
+            if (smoother.IsActive() && result.ActiveFromMilliseconds < 0.0)
+            {
+                result.ActiveFromMilliseconds = event;
+            }
+
+            // one note per run here, because every note has its own JR tick
+            VERIFY_ARE_EQUAL(members.size(), runs.size());
+
+            for (size_t i = 0; i < members.size(); i++)
+            {
+                result.Messages.push_back({ members[i], arrival, releases[i] });
+            }
+        }
+
+        result.DelayMilliseconds = ToMs(smoother.DelayTicks());
+
+        return result;
+    }
+}
+
+void BleIncomingSmoothingTests::TestJrDecoderReportsSenderTimeAndClockSamples()
+{
+    constexpr uint64_t LocalTicksPerSecond = TicksPerMillisecond * 1000;
+
+    MidiBleJr::IncomingDecoder decoder;
+
+    // 3125 JR ticks is 100 ms
+    std::vector<uint32_t> words{ MidiBleJr::BuildJrClock(1000), MidiBleJr::BuildJrTimestamp(4125), 0x20903C7F, MidiBleJr::BuildJrClock(4125) };
+
+    std::vector<MidiBleJr::TimestampedRun> runs;
+    std::vector<int64_t> clocks;
+
+    decoder.DecodePayload(words.data(), words.size(), BaseArrival, LocalTicksPerSecond, runs, &clocks);
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(2), clocks.size());
+    VERIFY_ARE_EQUAL(Ms(100.0), clocks[1] - clocks[0]);
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(1), runs.size());
+    VERIFY_IS_TRUE(runs[0].HasSenderTime);
+    VERIFY_ARE_EQUAL(clocks[1], runs[0].SenderLocalTicks);
+}
+
+void BleIncomingSmoothingTests::TestJrDecoderClockGenerationChangesOnRestart()
+{
+    constexpr uint64_t LocalTicksPerSecond = TicksPerMillisecond * 1000;
+
+    MidiBleJr::IncomingDecoder decoder;
+    std::vector<MidiBleJr::TimestampedRun> runs;
+
+    std::vector<uint32_t> first{ MidiBleJr::BuildJrClock(1000) };
+    decoder.DecodePayload(first.data(), first.size(), BaseArrival, LocalTicksPerSecond, runs);
+
+    auto const generation = decoder.ClockGeneration();
+
+    std::vector<uint32_t> next{ MidiBleJr::BuildJrClock(4125) };
+    decoder.DecodePayload(next.data(), next.size(), BaseArrival + static_cast<uint64_t>(Ms(100.0)), LocalTicksPerSecond, runs);
+
+    VERIFY_ARE_EQUAL(generation, decoder.ClockGeneration());
+
+    // backwards by more than half a wrap: the device restarted its clock
+    std::vector<uint32_t> restarted{ MidiBleJr::BuildJrClock(10) };
+    decoder.DecodePayload(restarted.data(), restarted.size(), BaseArrival + static_cast<uint64_t>(Ms(200.0)), LocalTicksPerSecond, runs);
+
+    VERIFY_ARE_NOT_EQUAL(generation, decoder.ClockGeneration());
+}
+
+void BleIncomingSmoothingTests::TestJrSmoothingStartsFromTheStartupBurst()
+{
+    for (auto const interval : { 7.5, 15.0 })
+    {
+        auto const result = RunJrLink(interval, 10000.0);
+
+        auto const arrivalError = MaxSpacingErrorMilliseconds(result.Messages, 300.0, false);
+        auto const releaseError = MaxSpacingErrorMilliseconds(result.Messages, 300.0, true);
+
+        Log::Comment(String().Format(
+            L"Interval %.1f ms: smoothing from %.1f ms, spacing error %.3f ms on arrival, %.3f ms released, delay %.2f ms",
+            interval, result.ActiveFromMilliseconds, arrivalError, releaseError, result.DelayMilliseconds));
+
+        VerifyReleasesAreSane(result.Messages);
+
+        // the burst alone is enough to begin
+        VERIFY_IS_TRUE(result.ActiveFromMilliseconds >= 0.0);
+        VERIFY_IS_TRUE(result.ActiveFromMilliseconds <= 200.0);
+
+        // JR time is 32 microseconds, so what is left is the stack and the timer
+        VERIFY_IS_TRUE(arrivalError > interval * 0.5);
+        VERIFY_IS_TRUE(releaseError < 0.5);
+
+        VERIFY_IS_TRUE(result.DelayMilliseconds < interval + 2.0);
+    }
+}
+
+void BleIncomingSmoothingTests::TestSmootherTreatsAFutureTimestampAsArrival()
+{
+    MidiBleSmoothing::IncomingSmoother smoother;
+    smoother.SetConnectionIntervalMicroseconds(7500);
+
+    RunLink(smoother, SteadyStream(10.3, 5000.0), LinkModel{});
+
+    VERIFY_IS_TRUE(smoother.IsActive());
+
+    // A message stamped half a second after it arrived. It is held no longer than the delay plus
+    // the small allowance for clock estimate error, not the half second.
+    uint64_t const arrival = BaseArrival + static_cast<uint64_t>(Ms(6000.0));
+    int64_t const future = Ms(100.0 + 6000.0 + 500.0);
+
+    std::vector<uint64_t> releases;
+    smoother.ProcessPacket({ future }, arrival, true, TicksPerMillisecond, releases);
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(1), releases.size());
+    VERIFY_IS_TRUE(releases[0] >= arrival);
+    VERIFY_IS_TRUE(releases[0] <= arrival + static_cast<uint64_t>(smoother.DelayTicks() + Ms(MidiBleSmoothing::FutureTimestampToleranceMicroseconds / 1000.0)));
+}

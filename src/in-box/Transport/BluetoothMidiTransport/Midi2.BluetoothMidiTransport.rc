@@ -155,6 +155,7 @@ BEGIN
     IDS_CONNECT_UNEXPECTED_ERROR                        "An unexpected Bluetooth error occurred."
     IDS_CONNECT_SUBSCRIBE_FAILED                        "The device's MIDI characteristic could not be subscribed to."
     IDS_CONNECT_ENDPOINT_CREATION_FAILED                "The MIDI endpoint for this device could not be created."
+    IDS_CONNECT_SLOW_CONNECTION_INTERVAL                "The Bluetooth link was running at a {0} ms connection interval, slower than the 15 ms or less that Bluetooth MIDI needs, and some devices drop a link that slow. Windows chooses slower links when it's saving power. Set the power mode to Best performance in Settings > System > Power & battery, then connect again."
 END
 
 IDR_MIDI2BLE2MIDITRANSPORT REGISTRY "Midi2.BluetoothMidiTransport.rgs"

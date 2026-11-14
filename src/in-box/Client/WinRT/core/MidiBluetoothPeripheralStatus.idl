@@ -23,6 +23,8 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
     {
         [noexcept] Boolean IsRunning{ get; };
 
+        // The protocol of the Characteristic the connected device subscribed to. Unknown while
+        // no device is connected, because both are published.
         [noexcept] MidiBluetoothProtocol Protocol{ get; };
 
         // The name remote devices see. Windows takes this from the computer name and gives an

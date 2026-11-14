@@ -12,14 +12,14 @@ Implements `IMidiServiceTransportPluginConfig`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBluetoothPeripheralConfig()` | Creates a configuration that advertises Bluetooth Low Energy MIDI 1.0 |
-| `MidiBluetoothPeripheralConfig(protocol)` | Creates a configuration that advertises this `MidiBluetoothProtocol` |
+| `MidiBluetoothPeripheralConfig()` | Creates a configuration that publishes this PC |
+| `MidiBluetoothPeripheralConfig(protocol)` | The same. The protocol is no longer used, because both are always published |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Protocol` | Which `MidiBluetoothProtocol` to advertise. Only one can be advertised at a time, so a MIDI 1.0 device can't connect while MIDI 2.0 is selected |
+| `Protocol` | No longer used. This PC is published with both BLE MIDI 1.0 and BLE MIDI 2.0, and the device which connects picks one. Kept so existing code still compiles and runs |
 | `IsEnabled` | Save with this set to false to stop publishing this PC when the service next starts. Otherwise, stopping the peripheral only lasts until the service restarts |
 | `TransportId` | The Bluetooth transport's GUID |
 | `ConfigJson` | This setting, as JSON |

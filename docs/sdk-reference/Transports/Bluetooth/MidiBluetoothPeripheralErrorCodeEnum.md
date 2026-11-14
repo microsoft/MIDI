@@ -18,7 +18,7 @@ Returned in `MidiBluetoothPeripheralResponse` and in `MidiBluetoothPeripheralCli
 | `NotRunning` | `0x00000202` | This PC isn't published, so there was nothing to stop |
 | `PeripheralRoleNotAvailable` | `0x00000203` | The radio wouldn't publish the GATT service. Not every Bluetooth radio or driver supports the peripheral role. Everything else keeps working when this happens |
 | `NoClientConnected` | `0x00000204` | No remote device is subscribed |
-| `InvalidProtocol` | `0x00000205` | You have to choose a Bluetooth MIDI protocol before this PC can be published |
+| `InvalidProtocol` | `0x00000205` | No longer returned. Both protocols are always published |
 | `AdvertisingFailed` | `0x00000206` | The radio wouldn't start advertising |
 | `RadioNotAvailable` | `0x00000301` | This PC has no Bluetooth radio it can use. See `MidiBluetoothRadioInformation` |
 

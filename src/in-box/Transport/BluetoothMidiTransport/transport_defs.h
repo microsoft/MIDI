@@ -89,6 +89,10 @@
 // an interval: multiply by the negotiated unit count to get the interval.
 #define MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS                  1250
 
+// Both BLE MIDI specifications require 15 ms or less. Windows picks longer intervals to save power,
+// and some devices drop a link which is slower than this.
+#define MIDI_BLE_MAXIMUM_CONNECTION_INTERVAL_UNITS                      12
+
 // How often the worker re-examines the remembered devices which are not connected. Advertisements
 // are the usual trigger, but a bonded device which is not advertising produces none, so without
 // this a device that failed once is never tried again. Deliberately shorter than the retry

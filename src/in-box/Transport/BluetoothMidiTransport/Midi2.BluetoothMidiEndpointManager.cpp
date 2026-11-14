@@ -1658,7 +1658,8 @@ CMidi2BluetoothMidiEndpointManager::StartPeripheral(MidiBleProtocol::Protocol co
     );
 
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
-    RETURN_HR_IF(E_INVALIDARG, protocol == MidiBleProtocol::Protocol::Unknown);
+
+    // Both Characteristics are published whatever protocol was asked for, so Unknown is fine
 
     // Plenty of radios cannot advertise at all. Refusing here means the caller is told why,
     // instead of the GATT service provider failing later with nothing to explain it.
@@ -1818,18 +1819,37 @@ CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
 
         winrt::hstring knownClientDeviceId{ };
         winrt::hstring evaluatedClientDeviceId{ };
+        auto knownProtocol{ MidiBleProtocol::Protocol::Unknown };
 
         {
             auto lock = m_peripheralClientStateLock.lock_exclusive();
 
             knownClientDeviceId = m_peripheralClientDeviceId;
             evaluatedClientDeviceId = m_peripheralEvaluatedClientDeviceId;
+            knownProtocol = m_peripheralClientProtocol;
         }
 
-        // The same Central which already has an endpoint means nothing has changed.
+        auto const protocol = peripheral != nullptr ? peripheral->Protocol() : MidiBleProtocol::Protocol::Unknown;
+
+        // The same Central which already has an endpoint means nothing has changed, unless it moved
+        // to the other Characteristic. Then its endpoint is rebuilt for the new protocol, and the
+        // approval it was given still stands.
         if (!clientDeviceId.empty() && clientDeviceId == knownClientDeviceId)
         {
-            return S_OK;
+            if (protocol == knownProtocol)
+            {
+                return S_OK;
+            }
+
+            LOG_IF_FAILED(RemovePeripheralEndpoint());
+
+            {
+                auto lock = m_peripheralClientStateLock.lock_exclusive();
+
+                m_peripheralEvaluatedClientDeviceId = clientDeviceId;
+            }
+
+            evaluatedClientDeviceId = clientDeviceId;
         }
 
         if (clientDeviceId != evaluatedClientDeviceId)
@@ -2027,6 +2047,7 @@ CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
 
             m_peripheralEndpointInstanceId = endpointInstanceId;
             m_peripheralClientDeviceId = clientDeviceId;
+            m_peripheralClientProtocol = connection->Protocol();
         }
 
         // StopPeripheral can run on a configuration call while this is under way. It stops the
@@ -2833,6 +2854,34 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
         MidiBleUtilities::CloseIfOpen(service);
         MidiBleUtilities::CloseIfOpen(session);
         MidiBleUtilities::CloseIfOpen(bleDevice);
+    });
+
+    // Declared after closeResources so it runs first, while the device can still be asked. A link
+    // slower than BLE MIDI allows is a likely reason a device gave up, and it is something the
+    // customer can change, so a failed attempt says so. Success clears failureDetail.
+    auto noteSlowConnectionInterval = wil::scope_exit([&]() noexcept
+    {
+        if (failureDetail.empty() || bleDevice == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const parameters = bleDevice.GetConnectionParameters();
+
+            if (parameters != nullptr && parameters.ConnectionInterval() > MIDI_BLE_MAXIMUM_CONNECTION_INTERVAL_UNITS)
+            {
+                auto const milliseconds =
+                    (static_cast<double>(parameters.ConnectionInterval()) * MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS) / 1000.0;
+
+                failureDetail = failureDetail + L" " + FormatResourceString(IDS_CONNECT_SLOW_CONNECTION_INTERVAL, milliseconds);
+            }
+        }
+        catch (...)
+        {
+            // the link is already gone, so there is nothing to add
+        }
     });
 
     try
