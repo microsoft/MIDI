@@ -138,9 +138,17 @@ private:
         _In_ size_t const wordCount,
         _In_ uint64_t const timestamp);
 
-    // Incoming smoothing (BLE MIDI 1.0). Messages being smoothed wait in the release queue until
-    // their release time, and the release thread hands them to the service. Called with
-    // m_incomingLock held.
+    // Incoming smoothing. Messages being smoothed wait in the release queue until their release
+    // time, and the release thread hands them to the service. Called with m_incomingLock held.
+    //
+    // The sender clock smoothing is built on: the BLE MIDI 1.0 timestamp, or the BLE MIDI 2.0 JR
+    // Clock. Its generation changes whenever that clock restarts.
+    uint32_t IncomingClockGeneration() const noexcept
+    {
+        return m_protocol == MidiBleProtocol::Protocol::Midi2Ump ?
+            m_incomingJrDecoder.ClockGeneration() :
+            m_incomingTimestampCorrelator.ClockGeneration();
+    }
     bool RefreshIncomingTimingSetting();
     void DeliverIncomingMessage(
         _In_ bool const smoothing,
@@ -275,6 +283,9 @@ private:
     // Set to start the JR Clock schedule over: JR was just agreed, or the interval changed.
     std::atomic<bool> m_jrClockRestartPending{ false };
     std::atomic<bool> m_jrClockThreadRunning{ false };
+
+    // so a too-small UMP payload is reported once per connection, not per send
+    std::atomic<bool> m_reportedSmallUmpPayload{ false };
     wil::unique_event_nothrow m_jrClockWakeup;
     wil::unique_handle m_jrClockTimer;
 

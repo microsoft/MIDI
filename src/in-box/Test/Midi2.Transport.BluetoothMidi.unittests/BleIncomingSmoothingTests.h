@@ -50,4 +50,9 @@ public:
     TEST_METHOD(TestCorrelatorReportsContinuousSenderTime);
     TEST_METHOD(TestCorrelatorClockGenerationChangesOnResynchronize);
     TEST_METHOD(TestSmootherWithTheBleMidi1Correlator);
+
+    // BLE MIDI 2.0 with JR
+    TEST_METHOD(TestJrDecoderReportsSenderTimeAndClockSamples);
+    TEST_METHOD(TestJrDecoderClockGenerationChangesOnRestart);
+    TEST_METHOD(TestJrSmoothingStartsFromTheStartupBurst);
 };

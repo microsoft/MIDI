@@ -144,6 +144,12 @@ While a smoothed device is connected, **Details** shows the **Smoothing delay**,
 
 You can set this per device, or set the default for every device on the **Transport settings** page. The `midi` console can set it too, with `midi bluetooth customize --incoming-timing` for one device and `midi bluetooth defaults --incoming-timing` for the default.
 
+## Slow Bluetooth link
+
+Bluetooth MIDI needs a connection interval of 15 ms or less. A slower link adds delay and uneven timing to every message, and Windows tends to choose one when it's saving power. If a connected device's interval is over 15 ms, its row shows a **Slow Bluetooth link** warning. To fix it, select **Open power settings**, set the power mode to **Best performance**, then disconnect and connect the device again.
+
+Some devices drop a link that slow. If a connection fails while the link was slower than 15 ms, the error under the device says so and suggests the same fix.
+
 ## Keeping an endpoint when a device goes offline
 
 **Keep endpoint when offline** is the setting most worth understanding, and it is here because Bluetooth LE devices come and go constantly. They sleep, they go out of range, and their batteries die.

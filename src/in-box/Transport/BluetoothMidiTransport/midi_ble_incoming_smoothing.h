@@ -405,16 +405,47 @@ namespace MidiBleSmoothing
 
         uint64_t LateMessageCount() const noexcept { return m_lateMessageCount; }
 
+        // A sample of the sender's clock that carries no message, such as a BLE MIDI 2.0 JR Clock.
+        // Its wait for the connection event is like any packet's, so it counts toward the delay too.
+        void AddClockSample(
+            _In_ int64_t const senderTicks,
+            _In_ uint64_t const arrivalTicks,
+            _In_ uint64_t const ticksPerMillisecond)
+        {
+            if (ticksPerMillisecond == 0)
+            {
+                return;
+            }
+
+            m_clock.AddSample(senderTicks, arrivalTicks, ticksPerMillisecond);
+            m_delays.Add(senderTicks, arrivalTicks, ticksPerMillisecond);
+        }
+
+        // For messages with no sender time of their own. They go out as they arrive, but never
+        // ahead of anything already released, and what has been learned about the clock is kept.
+        void ReleaseAtArrival(
+            _In_ size_t const count,
+            _In_ uint64_t const arrivalTicks,
+            _Inout_ std::vector<uint64_t>& releaseTicks)
+        {
+            ReleaseAllAtArrival(count, arrivalTicks, releaseTicks);
+        }
+
         // senderTicks holds one sender time per message, oldest first, already converted to local
         // ticks and continuous across packets. releaseTicks gets one release time per message.
         // Release times never go backwards and are never before the packet arrived. Returns false
         // when every release time is simply the arrival time.
+        //
+        // sampleClock is false when the clock is sampled separately through AddClockSample, as for
+        // BLE MIDI 2.0, where a message's JR Timestamp says when it was played rather than when
+        // its packet was sent.
         bool ProcessPacket(
             _In_ std::vector<int64_t> const& senderTicks,
             _In_ uint64_t const arrivalTicks,
             _In_ bool const senderClockUsable,
             _In_ uint64_t const ticksPerMillisecond,
-            _Inout_ std::vector<uint64_t>& releaseTicks)
+            _Inout_ std::vector<uint64_t>& releaseTicks,
+            _In_ bool const sampleClock = true)
         {
             releaseTicks.clear();
 
@@ -437,7 +468,11 @@ namespace MidiBleSmoothing
                 return false;
             }
 
-            m_clock.AddSample(senderTicks.back(), arrivalTicks, ticksPerMillisecond);
+            if (sampleClock)
+            {
+                m_clock.AddSample(senderTicks.back(), arrivalTicks, ticksPerMillisecond);
+            }
+
             m_delays.Add(senderTicks.front(), arrivalTicks, ticksPerMillisecond);
 
             if (m_clock.SampleCount() < WarmUpPacketCount)

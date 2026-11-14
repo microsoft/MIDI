@@ -29,6 +29,9 @@ namespace
     // ATT overhead. The usable payload is always the negotiated MTU minus these three bytes.
     constexpr size_t AttHeaderByteCount = 3;
 
+    // BLE MIDI 2.0: both ends of a UMP Characteristic link support at least this ATT payload
+    constexpr size_t MinimumUmpAttPayloadByteCount = 64;
+
     std::vector<uint8_t> ReadBufferBytes(_In_ IBuffer const& buffer)
     {
         std::vector<uint8_t> bytes;
@@ -186,12 +189,9 @@ MidiBleConnection::Start()
             CATCH_LOG();
         });
 
-    // Only the MIDI 1.0 Characteristic is smoothed so far. If the thread can't start, incoming
-    // messages are delivered as they arrive, which is how this transport always behaved.
-    if (m_protocol == MidiBleProtocol::Protocol::Midi1)
-    {
-        LOG_IF_FAILED(StartIncomingReleaseThread());
-    }
+    // If the release thread can't start, incoming messages are delivered as they arrive, which is
+    // how this transport always behaved.
+    LOG_IF_FAILED(StartIncomingReleaseThread());
 
     // JR is only sent in the Central role. If this thread can't start no JR Clock can go out, so
     // messages are then sent without JR even when the device agreed to it.
@@ -1235,9 +1235,6 @@ MidiBleConnection::ProcessIncomingPacket(
         m_incomingPacketDecoder.Reset();
         m_bytestreamToUmp.resetBuffer();
         m_incomingTimestampCorrelator.Reset();
-        m_incomingSmoother.Reset();
-        m_incomingSmootherClockGeneration = m_incomingTimestampCorrelator.ClockGeneration();
-        m_incomingSmoothingDelayTicks.store(0);
 
         // BLE MIDI 2.0 does not keep UMP stream state, which includes the JR configuration, across
         // a disconnection
@@ -1245,6 +1242,10 @@ MidiBleConnection::ProcessIncomingPacket(
         m_haveEndpointStreamConfiguration = false;
         m_endpointStreamConfiguration = { };
         m_endpointStreamConfigurationTimestamp = 0;
+
+        m_incomingSmoother.Reset();
+        m_incomingSmootherClockGeneration = IncomingClockGeneration();
+        m_incomingSmoothingDelayTicks.store(0);
     }
 
     m_packetsReceived++;
@@ -1461,22 +1462,100 @@ MidiBleConnection::ProcessIncomingUmpPayload(
     // so applications get the timing they carry rather than the messages themselves. A device
     // which sends them before negotiation, or without agreeing to, is handled the same way.
     std::vector<MidiBleJr::TimestampedRun> runs;
+    std::vector<int64_t> clockSenderTicks;
 
     m_incomingJrDecoder.DecodePayload(
         words.data(),
         validWordCount,
         arrivalTimestamp,
         internal::GetMidiTimestampFrequency(),
-        runs);
+        runs,
+        &clockSenderTicks);
 
     UpdateUmpIncomingTimestampSource(arrivalTimestamp);
 
-    for (auto const& run : runs)
+    // Smoothing lines the device's JR Clock up with ours from the JR Clocks themselves. Each one
+    // waits a different time for its connection event, and the startup burst a device sends when
+    // JR starts gives enough of them to begin within about a tenth of a second.
+    auto const smooth = RefreshIncomingTimingSetting();
+    auto const ticksPerMillisecond = MidiTimestampTicksPerMillisecond();
+    bool smoothing{ false };
+    std::vector<uint64_t> releaseTimestamps;
+
+    if (smooth)
     {
-        if (!run.Words.empty())
+        if (m_incomingJrDecoder.ClockGeneration() != m_incomingSmootherClockGeneration)
         {
-            LOG_IF_FAILED(SendUmpWordsToCallback(run.Words.data(), run.Words.size(), run.Timestamp));
+            m_incomingSmoother.ResetClock();
+            m_incomingSmootherClockGeneration = m_incomingJrDecoder.ClockGeneration();
         }
+
+        m_incomingSmoother.SetConnectionIntervalMicroseconds(
+            static_cast<uint32_t>(m_connectionIntervalUnits.load()) * MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS);
+
+        for (auto const sender : clockSenderTicks)
+        {
+            m_incomingSmoother.AddClockSample(sender, arrivalTimestamp, ticksPerMillisecond);
+        }
+
+        bool everyRunHasSenderTime = !runs.empty();
+        std::vector<int64_t> senderTicks;
+        senderTicks.reserve(runs.size());
+
+        for (auto const& run : runs)
+        {
+            everyRunHasSenderTime = everyRunHasSenderTime && run.HasSenderTime;
+            senderTicks.push_back(run.SenderLocalTicks);
+        }
+
+        if (runs.empty())
+        {
+            // only JR messages, which are consumed here
+        }
+        else if (everyRunHasSenderTime && m_incomingJrDecoder.ClockIsUsable())
+        {
+            smoothing = m_incomingSmoother.ProcessPacket(
+                senderTicks,
+                arrivalTimestamp,
+                true,
+                ticksPerMillisecond,
+                releaseTimestamps,
+                false);
+        }
+        else if (!m_incomingJrDecoder.ClockIsUsable())
+        {
+            // no usable clock, so there's nothing to line up with
+            m_incomingSmoother.ProcessPacket(senderTicks, arrivalTimestamp, false, ticksPerMillisecond, releaseTimestamps);
+        }
+        else
+        {
+            // A message with no JR Timestamp of its own. It goes as it arrives, without losing
+            // what has been learned about the clock.
+            m_incomingSmoother.ReleaseAtArrival(runs.size(), arrivalTimestamp, releaseTimestamps);
+        }
+
+        m_incomingSmoothingDelayTicks.store(m_incomingSmoother.DelayTicks());
+    }
+    else
+    {
+        m_incomingSmoothingDelayTicks.store(0);
+    }
+
+    for (size_t runIndex = 0; runIndex < runs.size(); runIndex++)
+    {
+        auto& run = runs[runIndex];
+
+        if (run.Words.empty())
+        {
+            continue;
+        }
+
+        // When smoothing, the timestamp is the release time, as for BLE MIDI 1.0
+        auto const timestamp = smoothing ? releaseTimestamps[runIndex] : run.Timestamp;
+        auto const releaseTimestamp = smooth && runIndex < releaseTimestamps.size() ?
+            releaseTimestamps[runIndex] : arrivalTimestamp;
+
+        DeliverIncomingMessage(smoothing, releaseTimestamp, timestamp, run.Words);
     }
 }
 
@@ -1680,7 +1759,6 @@ MidiBleConnection::RefreshIncomingTimingSetting()
     m_incomingTimingGeneration = generation;
 
     auto const smooth =
-        m_protocol == MidiBleProtocol::Protocol::Midi1 &&
         m_releaseThreadRunning.load() &&
         TransportState::Current().GetEffectiveIncomingTiming(m_deviceId) == MidiBleProtocol::IncomingTiming::Smooth;
 
@@ -1688,7 +1766,7 @@ MidiBleConnection::RefreshIncomingTimingSetting()
     {
         // Starts over either way. Anything learned before smoothing was switched off is stale.
         m_incomingSmoother.Reset();
-        m_incomingSmootherClockGeneration = m_incomingTimestampCorrelator.ClockGeneration();
+        m_incomingSmootherClockGeneration = IncomingClockGeneration();
         m_smoothIncoming = smooth;
 
         TraceLoggingWrite(
@@ -2035,8 +2113,29 @@ MidiBleConnection::BuildOutgoingUmpPackets(
 )
 {
     bool const sendJr = m_sendJrToDevice.load();
+    auto const payloadByteCount = MaxAttPayloadByteCount();
 
-    m_outgoingUmpPacketBuilder.SetMaxPayloadByteCount(MaxAttPayloadByteCount());
+    // BLE MIDI 2.0 requires both ends to support at least this payload for UMP. Below it the link
+    // still works, with smaller packets. Judged only once the device has sent something, by which
+    // time the MTU exchange is done.
+    if (payloadByteCount < MinimumUmpAttPayloadByteCount &&
+        m_packetsReceived.load() > 0 &&
+        !m_reportedSmallUmpPayload.exchange(true))
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"The UMP link negotiated an ATT payload smaller than BLE MIDI 2.0 requires", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingUInt64(static_cast<uint64_t>(payloadByteCount), "payload bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(MinimumUmpAttPayloadByteCount), "required payload bytes")
+        );
+    }
+
+    m_outgoingUmpPacketBuilder.SetMaxPayloadByteCount(payloadByteCount);
     m_outgoingUmpPacketBuilder.SetJrEnabled(sendJr);
 
     // The service hands messages over when they are due, so they are stamped with the time they

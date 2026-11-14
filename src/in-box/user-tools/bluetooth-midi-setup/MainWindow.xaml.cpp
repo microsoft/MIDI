@@ -159,6 +159,29 @@ namespace winrt::midibluetoothsetup::implementation
             }
         }
 
+        // Both BLE MIDI specifications require 15 ms or less. Windows picks a slower link when it's
+        // saving power, which adds delay and jitter to every message, so the customer is told how
+        // to fix it. The device still works, so this is a warning rather than an error.
+        winrt::hstring SlowIntervalWarning(_In_ foundation::TimeSpan const interval) noexcept
+        {
+            try
+            {
+                auto const milliseconds =
+                    std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(interval).count();
+
+                if (milliseconds <= 15.0)
+                {
+                    return {};
+                }
+
+                return res::FormatString(L"SlowConnectionIntervalWarningFormat", milliseconds);
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
         // Only knowable from traffic the device has sent, so a device which has sent nothing says
         // nothing rather than claiming its timestamps are good.
         winrt::hstring TimestampSourceDescription(_In_ midi2bt::MidiBluetoothTimestampSource const source) noexcept
@@ -839,6 +862,9 @@ namespace winrt::midibluetoothsetup::implementation
                     OfflineRetentionDescription(device.EffectiveOfflineRetentionSeconds()));
 
                 ApplyDeviceIncomingTiming(item, device);
+
+                winrt::get_self<implementation::BluetoothDeviceItem>(item)->InternalSetSlowIntervalWarning(
+                    device.IsConnected() ? SlowIntervalWarning(device.ConnectionInterval()) : winrt::hstring{});
             }
 
             // The service drops a device it has not heard from for a while, so rows go away too

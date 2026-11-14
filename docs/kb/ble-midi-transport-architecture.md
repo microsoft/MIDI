@@ -148,7 +148,7 @@ Every message carries a timestamp from your device's clock. If Windows knows how
 
 This is the **Smooth** setting, and it's the default. **As soon as possible** turns it off for a device, so each message is handed on the moment it arrives. That's the lowest latency with the full jitter. The setting is per device, it's saved, and it's in the Bluetooth MIDI setup app as "Smooth (add some latency to improve jitter)" and "As soon as possible". In the console, it's `midi bluetooth customize <device> --incoming-timing smooth|asap|default` for one device and `midi bluetooth defaults --incoming-timing smooth|asap` for the transport default. `midi bluetooth list` shows each device's setting and the delay smoothing is adding right now. When smoothing is on, the timestamp an app sees is the time the message was released, so apps that use timestamps and apps that don't hear the same steady timing.
 
-Smoothing is BLE MIDI 1.0 only for now. BLE MIDI 2.0 messages are still delivered as they arrive.
+BLE MIDI 2.0 devices are smoothed the same way when they send JR Timestamps. There the samples are the device's JR Clocks rather than the message timestamps. JR time is in 32 microsecond steps, so the 1 ms floor is gone. A device that sends the startup burst of JR Clocks when JR is agreed gives enough samples to start smoothing within about a tenth of a second. A BLE MIDI 2.0 device that doesn't send JR is delivered as it arrives.
 
 ### How the clock is recovered
 
@@ -202,7 +202,7 @@ The ATT notification payload is UMP data with no header or other framing. Words 
 
 - The transport asks for JR in both directions during the normal protocol negotiation. A device that can't do JR, or turns it down, simply doesn't get it.
 - Incoming JR Clock and JR Timestamp messages never reach apps. The transport uses them to timestamp the messages they describe, lining the device's JR clock up with this PC's clock the same way BLE MIDI 1.0 timestamps are. A message with no usable JR Timestamp gets the time it arrived.
-- Incoming messages are timestamped and delivered right away, even when their JR Timestamp is slightly in the future. When to act on a message is left to the app, as with every other transport.
+- With "As soon as possible" timing, incoming messages are timestamped and delivered right away, even when their JR Timestamp is slightly in the future. With "Smooth", the default, they are held until their release time, as described under [Incoming timing](#incoming-timing-smoothing-out-connection-interval-jitter).
 - Nothing goes out with JR until the device has said it will receive it. After that, each packet has a JR Timestamp in front of each group of messages that share a JR tick. A JR Timestamp is never later than the time the packet is handed to Bluetooth.
 - JR Clocks go out on their own schedule, separate from data. When JR is agreed, and whenever the connection interval changes, Windows sends a burst of 16 JR Clocks 8 ms apart. After that it sends one about every 80 ms, at a period that is a whole number of connection intervals plus 0.618 of one (84.27 ms at a 15 ms interval, 79.635 ms at 7.5 ms), or every 97 ms if the interval isn't known. A clock that always waited the same time for its connection event would hide part of the link's delay from the device. These periods make each clock land at a new point in the interval, so the device can find the shortest wait. Each JR Clock's time is read just before it's handed to Bluetooth.
 - JR Clock and JR Timestamp messages sent by apps are dropped. Only the transport can time them against the link.
@@ -345,7 +345,7 @@ For the UMP Characteristic: big-endian words, multiple UMPs per payload, no frag
 | Peripheral limited to one active connection | Partial | The first subscriber is served and later ones are ignored, but their subscription cannot be refused, for the same reason. |
 | Encryption | Not enabled | Optional in both specifications. Requiring it would force pairing, and an unpaired device connecting is a case which has to keep working. |
 | Bluetooth 5.0 required for the UMP Characteristic | Not enforced | No check that the radio is 5.0 or higher before offering UMP. |
-| Peripheral minimum 64-byte ATT payload for UMP | Not enforced | The negotiated size is used as-is, with a floor of the 20-byte MIDI 1.0 default. |
+| Minimum 64-byte ATT payload for UMP | Met by Windows | Windows supports large payloads in both roles, and the negotiated size is used as-is. A link that negotiates less than 64 bytes for UMP still works, with smaller packets, and is logged as a warning. |
 | Jitter Reduction Timestamps | Provisional | Handled in the transport, following Working Group discussion that is not in a published draft yet. Not sent in the Peripheral role. |
 | Endpoint Discovery retried three times before disconnecting | Service-side | Retry policy belongs to the service's protocol manager, not this transport. |
 
@@ -364,7 +364,9 @@ Nothing below 15 ms has been observed **in the Central role**. Making no request
 
 The Peripheral role does better, because the remote Central chooses. An iPhone connecting to this PC negotiated **7.5 ms**, which is the rate both specifications recommend for live performance and which Windows has not been observed to reach as Central.
 
-The preference is settable with `midi bluetooth connection-parameters`, and the negotiated value is shown per device by `midi bluetooth list` and, for the peripheral role, by `midi bluetooth peripheral status`. The peripheral case is worth watching separately: there the remote Central chooses the interval, so it shows what a phone asks for rather than what Windows requests.
+The preference is settable with `midi bluetooth connection-parameters`, and the negotiated value is shown per device by `midi bluetooth list` and, for the peripheral role, by `midi bluetooth peripheral status`.
+
+A link slower than 15 ms adds delay and uneven timing to every message, and Windows tends to choose one when it's saving power. So when a connected device's interval is over 15 ms, the Bluetooth MIDI setup app shows a warning that suggests setting the Windows power mode to Best performance, with a button that opens the power settings. If a connection attempt fails while the link was slower than 15 ms, the connection error says so and makes the same suggestion, because some devices drop a link that slow. The peripheral case is worth watching separately: there the remote Central chooses the interval, so it shows what a phone asks for rather than what Windows requests.
 
 ## Not yet implemented
 

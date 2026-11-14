@@ -67,6 +67,7 @@
 #define IDS_CONNECT_UNEXPECTED_ERROR                            2124
 #define IDS_CONNECT_SUBSCRIBE_FAILED                            2125
 #define IDS_CONNECT_ENDPOINT_CREATION_FAILED                    2126
+#define IDS_CONNECT_SLOW_CONNECTION_INTERVAL                    2127
 
 
 

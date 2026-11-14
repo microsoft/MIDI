@@ -352,6 +352,15 @@
   <data name="ConnectionIntervalFormat" xml:space="preserve">
     <value>Connection interval {0:.2f} ms</value>
   </data>
+  <data name="SlowConnectionIntervalWarningFormat" xml:space="preserve">
+    <value>This device is connected with a {0:.2f} ms connection interval. Bluetooth MIDI needs 15 ms or less, and a slower link adds delay and uneven timing to every message. Windows chooses slower links when it's saving power. Set the power mode to Best performance, then disconnect and connect the device again.</value>
+  </data>
+  <data name="SlowConnectionIntervalBar.Title" xml:space="preserve">
+    <value>Slow Bluetooth link</value>
+  </data>
+  <data name="OpenPowerSettingsButton.Content" xml:space="preserve">
+    <value>Open power settings</value>
+  </data>
   <data name="AddressPublicFormat" xml:space="preserve">
     <value>{0} (public address)</value>
   </data>

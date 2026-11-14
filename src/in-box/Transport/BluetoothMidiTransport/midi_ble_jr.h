@@ -183,11 +183,15 @@ namespace MidiBleJr
     }
 
 
-    // A run of incoming messages which share one local timestamp.
+    // A run of incoming messages which share one local timestamp. When the run was placed by a JR
+    // Timestamp, SenderLocalTicks is that time on the sender's continuous clock, in local ticks.
+    // It only means anything while the decoder's ClockGeneration stays the same.
     struct TimestampedRun
     {
         uint64_t Timestamp{ 0 };
         std::vector<uint32_t> Words{ };
+        bool HasSenderTime{ false };
+        int64_t SenderLocalTicks{ 0 };
     };
 
     // A clock not heard from in this long is not trusted to place messages. The sender owes one
@@ -234,7 +238,12 @@ namespace MidiBleJr
             m_haveSeenClockAdvance = false;
             m_haveCarriedTimestamp = false;
             m_carriedTimestampJrTicks = 0;
+            m_clockGeneration++;
         }
+
+        // Changes whenever the sender's clock restarts, stops or jumps, which is when anything
+        // built on the continuous sender time has to start over.
+        uint32_t ClockGeneration() const noexcept { return m_clockGeneration; }
 
         bool HaveSeenClock() const noexcept { return m_haveClock; }
 
@@ -250,15 +259,22 @@ namespace MidiBleJr
         }
 
         // Takes the complete UMPs of one BLE payload. Every UMP except JR Clock and JR Timestamp
-        // comes back in runs, in the order received.
+        // comes back in runs, in the order received. clockSenderLocalTicks, when given, gets the
+        // sender time of each usable JR Clock in the payload, in local ticks.
         void DecodePayload(
             _In_reads_(wordCount) uint32_t const* const words,
             _In_ size_t const wordCount,
             _In_ uint64_t const localArrivalTimestamp,
             _In_ uint64_t const localTicksPerSecond,
-            _Inout_ std::vector<TimestampedRun>& runs)
+            _Inout_ std::vector<TimestampedRun>& runs,
+            _Out_opt_ std::vector<int64_t>* const clockSenderLocalTicks = nullptr)
         {
             runs.clear();
+
+            if (clockSenderLocalTicks != nullptr)
+            {
+                clockSenderLocalTicks->clear();
+            }
 
             if (words == nullptr || wordCount == 0 || localTicksPerSecond == 0)
             {
@@ -267,8 +283,8 @@ namespace MidiBleJr
 
             uint64_t const ticksPerMillisecond = (std::max<uint64_t>)(localTicksPerSecond / 1000, 1);
 
-            // Clocks first. The working group recommends the clock at the end of the packet, but
-            // it is the newest reference for the timestamps before it too.
+            // Clocks first. A clock is the newest reference for the timestamps before it in the
+            // same payload too.
             for (size_t i = 0; i < wordCount; )
             {
                 auto const messageWordCount = GetUmpWordCount(words[i]);
@@ -280,7 +296,23 @@ namespace MidiBleJr
 
                 if (IsJrClock(words[i]))
                 {
+                    auto const generation = m_clockGeneration;
+
                     ProcessClock(GetJrTime(words[i]), localArrivalTimestamp, localTicksPerSecond, ticksPerMillisecond);
+
+                    if (clockSenderLocalTicks != nullptr)
+                    {
+                        // samples from before a restart don't belong to the clock after it
+                        if (generation != m_clockGeneration)
+                        {
+                            clockSenderLocalTicks->clear();
+                        }
+
+                        if (!ClockIsStalled())
+                        {
+                            clockSenderLocalTicks->push_back(JrTicksToLocalTicks(m_clockContinuousJrTicks, localTicksPerSecond));
+                        }
+                    }
                 }
 
                 i += messageWordCount;
@@ -334,10 +366,12 @@ namespace MidiBleJr
                 else
                 {
                     uint64_t timestamp{ 0 };
+                    int64_t senderLocalTicks{ 0 };
 
                     if (haveTimestamp)
                     {
                         timestamp = MapSenderTicks(timestampJrTicks, localArrivalTimestamp, localTicksPerSecond);
+                        senderLocalTicks = JrTicksToLocalTicks(timestampJrTicks, localTicksPerSecond);
                         timestampWasUsed = true;
                     }
                     else
@@ -345,9 +379,12 @@ namespace MidiBleJr
                         timestamp = ClampToEmitted(localArrivalTimestamp);
                     }
 
-                    if (runs.empty() || runs.back().Timestamp != timestamp)
+                    if (runs.empty() ||
+                        runs.back().Timestamp != timestamp ||
+                        runs.back().HasSenderTime != haveTimestamp ||
+                        runs.back().SenderLocalTicks != senderLocalTicks)
                     {
-                        runs.push_back({ timestamp, { } });
+                        runs.push_back({ timestamp, { }, haveTimestamp, senderLocalTicks });
                     }
 
                     runs.back().Words.insert(runs.back().Words.end(), words + i, words + i + messageWordCount);
@@ -405,6 +442,7 @@ namespace MidiBleJr
                 {
                     m_clockContinuousJrTicks = jrTime;
                     m_offsetSamples.clear();
+                    m_clockGeneration++;
                 }
                 else
                 {
@@ -416,6 +454,7 @@ namespace MidiBleJr
                         {
                             // Running again, so nothing learned while it was stopped still applies.
                             m_offsetSamples.clear();
+                            m_clockGeneration++;
                         }
 
                         m_clockStallObservations = 0;
@@ -458,6 +497,7 @@ namespace MidiBleJr
             {
                 // Waiting for the window to age out would strand every message in the past until it did.
                 m_offsetSamples.clear();
+                m_clockGeneration++;
             }
 
             // a younger and smaller sample means the older, larger ones can never be the minimum again
@@ -512,6 +552,8 @@ namespace MidiBleJr
 
         bool m_haveCarriedTimestamp{ false };
         int64_t m_carriedTimestampJrTicks{ 0 };
+
+        uint32_t m_clockGeneration{ 0 };
     };
 
 
