@@ -161,7 +161,7 @@ The 13-bit timestamp is unwrapped into a continuous millisecond count first, as 
 5. The first 8 packets after connecting, or after your clock restarts, are delivered as they arrive while the line is built.
 6. Messages always come out in the order they arrived. A message that arrives after its release time goes out the moment it arrives. When the link drops, anything still waiting goes out right away.
 
-The BLE MIDI 1.0 specification says timestamps can't be in the future. Windows still treats them as untrusted, which is why the delay has a ceiling and the slope has a limit.
+Both BLE MIDI specifications say timestamps can't be in the future, and Windows never sends one. Windows still treats incoming timestamps as untrusted. A message whose timestamp lands more than 2 ms after it arrived is treated as played when it arrived, the delay has a ceiling, and the slope has a limit.
 
 ### What jitter to expect
 

@@ -936,3 +936,25 @@ void BleIncomingSmoothingTests::TestJrSmoothingStartsFromTheStartupBurst()
         VERIFY_IS_TRUE(result.DelayMilliseconds < interval + 2.0);
     }
 }
+
+void BleIncomingSmoothingTests::TestSmootherTreatsAFutureTimestampAsArrival()
+{
+    MidiBleSmoothing::IncomingSmoother smoother;
+    smoother.SetConnectionIntervalMicroseconds(7500);
+
+    RunLink(smoother, SteadyStream(10.3, 5000.0), LinkModel{});
+
+    VERIFY_IS_TRUE(smoother.IsActive());
+
+    // A message stamped half a second after it arrived. It is held no longer than the delay plus
+    // the small allowance for clock estimate error, not the half second.
+    uint64_t const arrival = BaseArrival + static_cast<uint64_t>(Ms(6000.0));
+    int64_t const future = Ms(100.0 + 6000.0 + 500.0);
+
+    std::vector<uint64_t> releases;
+    smoother.ProcessPacket({ future }, arrival, true, TicksPerMillisecond, releases);
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(1), releases.size());
+    VERIFY_IS_TRUE(releases[0] >= arrival);
+    VERIFY_IS_TRUE(releases[0] <= arrival + static_cast<uint64_t>(smoother.DelayTicks() + Ms(MidiBleSmoothing::FutureTimestampToleranceMicroseconds / 1000.0)));
+}

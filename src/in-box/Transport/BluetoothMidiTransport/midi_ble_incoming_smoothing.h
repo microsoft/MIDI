@@ -86,6 +86,10 @@ namespace MidiBleSmoothing
     // lower edge is not something smoothing can fix, and timestamps are untrusted input.
     inline constexpr uint32_t MaximumDelayMilliseconds = 50;
 
+    // How far after its arrival a message's mapped time may land before it counts as stamped in
+    // the future. Covers the error in a clock estimate built from a startup burst.
+    inline constexpr uint32_t FutureTimestampToleranceMicroseconds = 2000;
+
     // Before any delays have been measured, start at one connection interval plus this.
     inline constexpr uint32_t InitialDelayMarginMilliseconds = 2;
 
@@ -499,7 +503,20 @@ namespace MidiBleSmoothing
 
             for (auto const sender : senderTicks)
             {
-                int64_t release = static_cast<int64_t>(std::llround(m_clock.Map(sender))) + m_delayTicks;
+                int64_t mapped = static_cast<int64_t>(std::llround(m_clock.Map(sender)));
+
+                // Timestamps are untrusted. A message can't have been played after it arrived, but a
+                // young clock estimate can place one a little late, so only a timestamp clearly in
+                // the future is pulled back.
+                int64_t const latestMapped =
+                    static_cast<int64_t>(arrivalTicks) + MicrosecondsToTicks(FutureTimestampToleranceMicroseconds, ticksPerMillisecond);
+
+                if (mapped > latestMapped)
+                {
+                    mapped = latestMapped;
+                }
+
+                int64_t release = mapped + m_delayTicks;
 
                 if (release < static_cast<int64_t>(arrivalTicks))
                 {

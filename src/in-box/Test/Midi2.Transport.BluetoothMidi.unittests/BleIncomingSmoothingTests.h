@@ -45,6 +45,7 @@ public:
     TEST_METHOD(TestSmootherNeverReleasesEarlyOrOutOfOrder);
     TEST_METHOD(TestSmootherNeverHoldsLongerThanTheMaximum);
     TEST_METHOD(TestSmootherResetClockKeepsTheDelay);
+    TEST_METHOD(TestSmootherTreatsAFutureTimestampAsArrival);
 
     // BLE MIDI 1.0 correlator support
     TEST_METHOD(TestCorrelatorReportsContinuousSenderTime);
