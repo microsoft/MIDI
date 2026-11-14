@@ -8,7 +8,7 @@ description: Which Bluetooth MIDI protocol a device speaks
 
 Which Bluetooth Low Energy MIDI protocol is in use. The service reports it. You don't choose it. When a device offers both, the service always picks Bluetooth Low Energy MIDI 2.0.
 
-The one place an app does choose is `MidiBluetoothPeripheralConfig`, because a peripheral has to advertise one protocol or the other.
+When this PC is published as a peripheral, both protocols are offered and the device which connects picks one.
 
 ## Values
 

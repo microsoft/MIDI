@@ -365,16 +365,6 @@ namespace winrt::midibluetoothsetup::implementation
             PeripheralClientsList().ItemsSource(m_peripheralClients);
             PendingClientsList().ItemsSource(m_pendingClients);
 
-            // Publishing is the one place a Bluetooth MIDI protocol is chosen rather than
-            // reported, because a peripheral has to advertise as one or the other.
-            auto protocols = winrt::single_threaded_vector<foundation::IInspectable>();
-
-            protocols.Append(winrt::box_value(res::GetString(L"ProtocolMidi1")));
-            protocols.Append(winrt::box_value(res::GetString(L"ProtocolMidi2")));
-
-            PeripheralProtocolCombo().ItemsSource(protocols);
-            PeripheralProtocolCombo().SelectedIndex(0);
-
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
@@ -946,21 +936,18 @@ namespace winrt::midibluetoothsetup::implementation
             PeripheralNameText().Text(status.AdvertisedName().empty() ?
                 res::GetString(L"UnknownDeviceName") : status.AdvertisedName());
 
-            PeripheralStateText().Text(isRunning ?
-                res::FormatString(L"PeripheralRunningFormat", ProtocolDisplayName(status.Protocol())) :
-                res::GetString(L"PeripheralStopped"));
+            // Both protocols are advertised. Which one is in use is decided by the Central which
+            // connects, so it's only known once one has.
+            auto const connectedProtocol = status.Protocol();
+
+            PeripheralStateText().Text(!isRunning ?
+                res::GetString(L"PeripheralStopped") :
+                connectedProtocol == midi2bt::MidiBluetoothProtocol::Unknown ?
+                    res::GetString(L"PeripheralRunning") :
+                    res::FormatString(L"PeripheralConnectedFormat", ProtocolDisplayName(connectedProtocol)));
 
             StartPeripheralButton().Visibility(isRunning ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
             StopPeripheralButton().Visibility(isRunning ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-
-            // the protocol cannot be changed while advertising, because only one is published
-            PeripheralProtocolCombo().IsEnabled(!isRunning);
-
-            if (isRunning)
-            {
-                PeripheralProtocolCombo().SelectedIndex(
-                    status.Protocol() == midi2bt::MidiBluetoothProtocol::BluetoothLowEnergyMidi2Ump ? 1 : 0);
-            }
 
             auto const client = status.ConnectedClient();
 

@@ -111,6 +111,9 @@ public:
     void RefreshConnectionParameters();
     void WriteCalculatedLatencyProperty();
 
+    // As a Peripheral, the remote Central chooses the interval and the peripheral reports it here
+    void SetConnectionIntervalUnits(_In_ uint16_t const intervalUnits) noexcept;
+
 private:
     void OnCharacteristicValueChanged(_In_ gatt::GattCharacteristic const& sender, _In_ gatt::GattValueChangedEventArgs const& args);
     void OnDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice const& sender, _In_ foundation::IInspectable const& args);
@@ -130,6 +133,11 @@ private:
     void UpdateJrStateFromEndpointStreamConfigurationNotifications(
         _In_reads_(wordCount) uint32_t const* const words,
         _In_ size_t const wordCount);
+
+    // Peripheral role, UMP: answers the remote Central's Endpoint Discovery and Stream
+    // Configuration Request, which nothing above the transport can. Called with m_incomingLock held.
+    void AnswerPeripheralStreamRequests(_Inout_ std::vector<uint32_t>& words);
+    void QueueRawUmpPackets(_In_ std::vector<uint32_t> const& words);
 
     void UpdateUmpIncomingTimestampSource(_In_ uint64_t const localArrivalTimestamp);
 
@@ -229,6 +237,9 @@ private:
 
     // BLE MIDI 2.0: JR Clock and JR Timestamp messages are consumed here and never reach the service
     MidiBleJr::IncomingDecoder m_incomingJrDecoder{ };
+
+    // Guarded by m_incomingLock. Peripheral role only: what this PC tells the remote Central.
+    MidiBleStreamResponder::Responder m_streamResponder{ };
 
     // Guarded by m_incomingLock. The local time the device's Stream Configuration Notification
     // arrived, so a device which agreed to send JR and then never does can be called out.

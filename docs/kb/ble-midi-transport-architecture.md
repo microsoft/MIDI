@@ -208,7 +208,7 @@ The ATT notification payload is UMP data with no header or other framing. Words 
 - JR Clock and JR Timestamp messages sent by apps are dropped. Only the transport can time them against the link.
 - A device that never sends JR, or whose JR Clock stops or goes quiet, is reported as `ArrivalTime` in `MidiBluetoothTimestampSource`, the same as a BLE MIDI 1.0 device whose clock doesn't run.
 - The transport learns what the device agreed to from the device's own Stream Configuration Notification as it passes through, not from the service. That way it works with any version of the service.
-- JR is not sent in the Peripheral role, where Windows answers the remote Central's negotiation rather than starting it.
+- In the Peripheral role, Windows answers the remote Central's negotiation itself and agrees to JR in both directions. See [Peripheral role](#peripheral-role).
 
 ## Sending
 
@@ -248,15 +248,17 @@ The console command is `midi bluetooth customize <device id> [--name] [--descrip
 
 ## Peripheral role
 
-Windows can publish itself as a BLE MIDI Peripheral, so a phone or tablet acting as a Central can connect to the PC. `MidiBlePeripheral` owns a `GattServiceProvider` for the MIDI service UUID and a single `GattLocalCharacteristic` with `Notify | WriteWithoutResponse | Read`.
+Windows can publish itself as a BLE MIDI Peripheral, so a phone or tablet acting as a Central can connect to the PC. `MidiBlePeripheral` owns a `GattServiceProvider` for the MIDI service UUID with two `GattLocalCharacteristic` objects, MIDI 1.0 and UMP, each with `Notify | WriteWithoutResponse | Read`.
 
 The translation, queuing, timestamping, and callback plumbing are the same code as the Central role: `MidiBleConnection` takes a small link abstraction supplying only the three things which differ, which are how a packet is written, what the maximum payload is, and whether the link is up. Everything downstream of that is shared and already exercised by the codec tests.
 
-**Only one characteristic is published at a time**, selected by the configured protocol and defaulting to BLE MIDI 1.0. The specification allows a Peripheral to implement a single protocol, and WinRT provides no way to reject the CCCD subscription a Central makes, so offering both characteristics would let a Central subscribe to the one which is not being served.
+**Both characteristics are published, and the first subscription is served.** A Central which follows the specification subscribes to only one, preferring UMP when it supports it, so a BLE MIDI 1.0 Central and a BLE MIDI 2.0 Central can both connect. The specification asks a Peripheral to refuse a second subscription with ATT error 0x80. WinRT can't refuse a subscription, so a second one, on either characteristic, is simply ignored: it gets no endpoint and no data. If the Central later moves to the other characteristic, its endpoint is rebuilt for that protocol and its approval still stands.
 
 **One Central is served at a time**, which matches the single active connection the specification permits. The first client to subscribe keeps the link until it goes away; a new client resets the translation state, because anything queued for the previous one is stale.
 
-**A read of the characteristic is answered with an empty payload**, which is the specified connection handshake and the mirror of what the Central role performs.
+**A read of either characteristic is answered with an empty payload**, which is the specified connection handshake and the mirror of what the Central role performs.
+
+**On the UMP characteristic, Windows answers the Central's UMP Endpoint questions itself.** The endpoint apps see represents the remote Central, so nothing above the transport is in a position to answer, and these requests never reach apps. Endpoint Discovery gets an Endpoint Info Notification (UMP 1.1, no Function Blocks, both protocols, JR in both directions), a Device Identity (Microsoft, Windows 11 family, model 5), the PC's Bluetooth name, and the current Stream Configuration. A Stream Configuration Request gets whatever it asked for that Windows can do, as a final Stream Configuration Notification. JR then works in both directions, with the same startup burst and clock schedule as the Central role, timed against the interval the Central chose.
 
 ### What the endpoint represents
 
@@ -270,7 +272,7 @@ The name this PC advertises is separate, and is the PC's Bluetooth name. The GAT
 
 ### Commands
 
-Commands are `startPeripheral` (argument `protocol`), `stopPeripheral`, and `getPeripheralStatus`. The console equivalents are `midi bluetooth peripheral start|stop|status`. The configuration file section is:
+Commands are `startPeripheral` (its `protocol` argument is still accepted but no longer used), `stopPeripheral`, and `getPeripheralStatus`. The console equivalents are `midi bluetooth peripheral start|stop|status`. The configuration file section is:
 
 ```json
 "peripheral": { "enabled": true, "protocol": "bleMidi1" }
@@ -341,12 +343,12 @@ For the UMP Characteristic: big-endian words, multiple UMPs per payload, no frag
 |---|---|---|
 | Connection interval ≤ 15 ms, Central role | Requested | `RequestPreferredConnectionParameters` with the throughput-optimized preset. The interval is ultimately negotiated, so this is advisory. |
 | Connection interval ≤ 15 ms, Peripheral role | **Not done** | A Peripheral is meant to propose the interval with a Connection Parameter Update Request. `GattServiceProvider` exposes no way to do so. |
-| Peripheral rejects a second Characteristic subscription with ATT 0x80 | **Not possible** | WinRT does not let an application fail a CCCD write. Avoided instead by publishing a single Characteristic, which the specification permits. |
+| Peripheral rejects a second Characteristic subscription with ATT 0x80 | **Not possible** | WinRT does not let an application fail a CCCD write. Both Characteristics are published and a second subscription is ignored instead. A Central which follows the specification subscribes to only one, so it sees no difference. |
 | Peripheral limited to one active connection | Partial | The first subscriber is served and later ones are ignored, but their subscription cannot be refused, for the same reason. |
 | Encryption | Not enabled | Optional in both specifications. Requiring it would force pairing, and an unpaired device connecting is a case which has to keep working. |
 | Bluetooth 5.0 required for the UMP Characteristic | Not enforced | No check that the radio is 5.0 or higher before offering UMP. |
 | Minimum 64-byte ATT payload for UMP | Met by Windows | Windows supports large payloads in both roles, and the negotiated size is used as-is. A link that negotiates less than 64 bytes for UMP still works, with smaller packets, and is logged as a warning. |
-| Jitter Reduction Timestamps | Provisional | Handled in the transport, following Working Group discussion that is not in a published draft yet. Not sent in the Peripheral role. |
+| Jitter Reduction Timestamps | Provisional | Handled in the transport in both roles, following the BLE MIDI 2.0 Working Group's draft guidance, which isn't published yet. |
 | Endpoint Discovery retried three times before disconnecting | Service-side | Retry policy belongs to the service's protocol manager, not this transport. |
 
 ### Connection interval
@@ -370,4 +372,4 @@ A link slower than 15 ms adds delay and uneven timing to every message, and Wind
 
 ## Not yet implemented
 
-- Sending Jitter Reduction Timestamps in the Peripheral role.
+- Nothing known. The open questions are the Bluetooth 5.0 requirement for the UMP Characteristic, which is with the specification editors, and choosing a connection interval below 15 ms, which Windows doesn't offer an app.

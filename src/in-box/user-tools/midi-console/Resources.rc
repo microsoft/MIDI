@@ -275,7 +275,7 @@ IDS_OPT_BT_DESCRIPTION                      L"The description to show for this d
 IDS_OPT_BT_IMAGE                            L"The file name of the image to show for this device. This is a file name only, not a path"
 IDS_OPT_BT_CLEAR                            L"Remove the name, description and image customizations for this device"
 IDS_OPT_BT_KEEP_WHEN_OFFLINE                L"How long to keep this device's MIDI endpoint after it goes offline: always, immediate, default, or a number of seconds"
-IDS_OPT_BT_PROTOCOL                         L"The BLE MIDI protocol to publish, either 'midi1' or 'midi2'. Only one can be published at a time"
+IDS_OPT_BT_PROTOCOL                         L"No longer used. Both BLE MIDI 1.0 and BLE MIDI 2.0 are published, and the device that connects chooses. Accepted so existing scripts keep working"
 IDS_OPT_BT_ADDRESS_ARGUMENT                 L"The twelve hex digit Bluetooth address of the device which connected to this PC"
 IDS_OPT_BT_SCOPE                            L"How long the decision applies: once, untilRestart, or always"
 IDS_OPT_CAPTURE_FORMAT                      L"Capture file format. ump writes Universal MIDI Packet words and can be replayed with send-message-file, csv writes one row per message under a fixed heading, smf writes a Standard MIDI File and replaces the file rather than appending to it"

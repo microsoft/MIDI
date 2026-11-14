@@ -25,6 +25,8 @@ struct MidiBleRemoteClientInfo
 class MidiBlePeripheral : public std::enable_shared_from_this<MidiBlePeripheral>
 {
 public:
+    // Publishes both the MIDI 1.0 and the UMP Characteristic. The protocol argument is no longer
+    // used, and is kept so older configuration and callers still work.
     HRESULT Start(_In_ MidiBleProtocol::Protocol const protocol);
     HRESULT Stop();
 
@@ -34,6 +36,8 @@ public:
     bool IsRunning() const noexcept { return m_running.load(); }
     bool IsClientSubscribed() const;
 
+    // The protocol of the Characteristic the active Central subscribed to. Unknown when no
+    // Central is subscribed.
     MidiBleProtocol::Protocol Protocol() const noexcept { return m_protocol.load(); }
 
     // The name this PC advertises. Windows takes it from the computer name and the GATT service
@@ -64,38 +68,51 @@ public:
     uint32_t SubscribedClientCount() const;
 
 private:
-    HRESULT CreateServiceProvider(_In_ MidiBleProtocol::Protocol const protocol);
+    HRESULT CreateServiceProvider();
+    HRESULT CreateMidiCharacteristic(
+        _In_ gatt::GattServiceProvider const& serviceProvider,
+        _In_ MidiBleProtocol::Protocol const protocol);
     HRESULT StartAdvertising();
 
     void OnReadRequested(_In_ gatt::GattLocalCharacteristic const& sender, _In_ gatt::GattReadRequestedEventArgs const& args);
-    void OnWriteRequested(_In_ gatt::GattLocalCharacteristic const& sender, _In_ gatt::GattWriteRequestedEventArgs const& args);
-    void OnSubscribedClientsChanged(_In_ gatt::GattLocalCharacteristic const& sender, _In_ foundation::IInspectable const& args);
+    void OnWriteRequested(_In_ MidiBleProtocol::Protocol const protocol, _In_ gatt::GattWriteRequestedEventArgs const& args);
+    void OnSubscribedClientsChanged(_In_ MidiBleProtocol::Protocol const protocol);
     void OnAdvertisementStatusChanged(_In_ gatt::GattServiceProvider const& sender, _In_ gatt::GattServiceProviderAdvertisementStatusChangedEventArgs const& args);
+    void OnRemoteConnectionParametersChanged();
 
     HRESULT NotifyPacket(_In_ std::vector<uint8_t> const& packet);
     size_t MaxNotificationByteCount() const;
 
     gatt::GattSubscribedClient ActiveClient() const;
-    gatt::GattLocalCharacteristic Characteristic() const;
+    gatt::GattLocalCharacteristic Characteristic(_In_ MidiBleProtocol::Protocol const protocol) const;
     gatt::GattServiceProvider ServiceProvider() const;
+
+    // One per published Characteristic, so each knows which protocol it carries
+    struct PublishedCharacteristic
+    {
+        gatt::GattLocalCharacteristic Characteristic{ nullptr };
+        winrt::event_token ReadRequestedToken{ };
+        winrt::event_token WriteRequestedToken{ };
+        winrt::event_token SubscribedClientsChangedToken{ };
+    };
 
     // Stop clears these while the data path, configuration calls and Bluetooth callbacks may be
     // reading them, so every reader copies under this lock.
     mutable wil::srwlock m_providerLock;
     winrt::hstring m_advertisedName{ };
     gatt::GattServiceProvider m_serviceProvider{ nullptr };
-    gatt::GattLocalCharacteristic m_characteristic{ nullptr };
+    PublishedCharacteristic m_midi1Characteristic{ };
+    PublishedCharacteristic m_umpCharacteristic{ };
 
     std::atomic<MidiBleProtocol::Protocol> m_protocol{ MidiBleProtocol::Protocol::Unknown };
 
-    // Only Start and Stop touch these, and never at the same time
-    winrt::event_token m_readRequestedToken{ };
-    winrt::event_token m_writeRequestedToken{ };
-    winrt::event_token m_subscribedClientsChangedToken{ };
+    // Only Start and Stop touch this, and never at the same time
     winrt::event_token m_advertisementStatusChangedToken{ };
 
-    // BLE MIDI permits one active connection at a time. WinRT cannot refuse a subscription, so
-    // the first client to subscribe is the one served and any others are ignored.
+    // BLE MIDI permits one active connection, on one Characteristic. WinRT cannot refuse a
+    // subscription, so the first Central to subscribe, on whichever Characteristic, is the one
+    // served, and anything else is ignored. A Central which follows the specification subscribes
+    // to only one, preferring UMP.
     mutable wil::srwlock m_clientLock;
     gatt::GattSubscribedClient m_activeClient{ nullptr };
     winrt::hstring m_activeClientDeviceId{ };
@@ -110,6 +127,7 @@ private:
     winrt::hstring m_connectionClientDeviceId{ };
     MidiBleRemoteClientInfo m_remoteClientInfo{ };
     bt::BluetoothLEDevice m_remoteDevice{ nullptr };
+    winrt::event_token m_remoteConnectionParametersChangedToken{ };
 
     wil::srwlock m_clientChangedCallbackLock;
     std::function<void()> m_clientChangedCallback{ nullptr };

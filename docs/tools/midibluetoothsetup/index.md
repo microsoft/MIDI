@@ -177,10 +177,7 @@ The name a remote device sees is this PC's Bluetooth name. That is a Windows set
 
 The MIDI endpoint on this side represents *the device which connected*, so it exists only while something is connected. Until then the page says nothing is connected, and that is normal.
 
-**Protocol** chooses which Bluetooth MIDI protocol to advertise. Only one is published at a time:
-
-- **Bluetooth LE MIDI 1.0** is what to use. Every Bluetooth MIDI device and app in the world speaks it.
-- **Bluetooth LE MIDI 2.0** implements the draft standard, and is here for testing and development. Almost nothing supports it yet, and while it is selected a MIDI 1.0 device cannot connect. The specification has not been published, so expect it to change.
+This PC is published with both Bluetooth MIDI protocols, BLE MIDI 1.0 and BLE MIDI 2.0, so any Bluetooth MIDI device or app can connect. The device which connects picks one, preferring BLE MIDI 2.0 if it supports it, and the page shows which one it picked. BLE MIDI 2.0 follows a draft standard that hasn't been published, so expect it to change.
 
 ### Approving a device which connects
 

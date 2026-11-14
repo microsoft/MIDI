@@ -176,6 +176,7 @@
     <ClInclude Include="BleMidi1CodecTests.h" />
     <ClInclude Include="BleMidi2JrTests.h" />
     <ClInclude Include="BleIncomingSmoothingTests.h" />
+    <ClInclude Include="BlePeripheralStreamTests.h" />
     <ClInclude Include="BluetoothMidiValidationTests.h" />
     <ClInclude Include="BluetoothMidiRobustnessTests.h" />
   </ItemGroup>
@@ -184,6 +185,7 @@
     <ClCompile Include="BleMidi1CodecTests.cpp" />
     <ClCompile Include="BleMidi2JrTests.cpp" />
     <ClCompile Include="BleIncomingSmoothingTests.cpp" />
+    <ClCompile Include="BlePeripheralStreamTests.cpp" />
     <ClCompile Include="BluetoothMidiValidationTests.cpp" />
     <ClCompile Include="BluetoothMidiRobustnessTests.cpp" />
     <ClCompile Include="pch.cpp">

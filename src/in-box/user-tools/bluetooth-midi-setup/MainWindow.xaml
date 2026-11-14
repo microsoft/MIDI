@@ -689,10 +689,6 @@
                                                     Orientation="Horizontal"
                                                     Spacing="8"
                                                     VerticalAlignment="Center">
-                                            <ComboBox x:Name="PeripheralProtocolCombo"
-                                                      x:Uid="PeripheralProtocolCombo"
-                                                      MinWidth="190"
-                                                      Header="Protocol" />
                                             <Button x:Name="StartPeripheralButton"
                                                     x:Uid="StartPeripheralButton"
                                                     Content="Publish"

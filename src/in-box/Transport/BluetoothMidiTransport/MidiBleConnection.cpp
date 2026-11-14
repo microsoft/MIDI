@@ -150,6 +150,24 @@ MidiBleConnection::InitializeAsPeripheral(
 
     m_outgoingPacketBuilder.SetMaxPacketByteCount(MaxAttPayloadByteCount());
 
+    // What this PC tells a remote Central about itself when asked. The name is the one the
+    // Central already sees in the advertisement.
+    try
+    {
+        MidiBleStreamResponder::Identity identity{};
+
+        identity.EndpointName = winrt::to_string(MidiBleUtilities::GetLocalBluetoothName());
+        identity.ManufacturerSysExId[0] = MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE1;
+        identity.ManufacturerSysExId[1] = MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE2;
+        identity.ManufacturerSysExId[2] = MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE3;
+        identity.DeviceFamily = MIDI_DEVICE_FAMILY_WINDOWS_11;
+        identity.DeviceFamilyModelNumber = MIDI_DEVICE_FAMILY_MODEL_NUMBER_BLUETOOTH_MIDI_PERIPHERAL;
+        identity.SoftwareRevision[0] = 1;
+
+        m_streamResponder.SetIdentity(identity);
+    }
+    CATCH_LOG();
+
     return S_OK;
 }
 
@@ -193,9 +211,9 @@ MidiBleConnection::Start()
     // how this transport always behaved.
     LOG_IF_FAILED(StartIncomingReleaseThread());
 
-    // JR is only sent in the Central role. If this thread can't start no JR Clock can go out, so
-    // messages are then sent without JR even when the device agreed to it.
-    if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump && !m_isPeripheral)
+    // If this thread can't start no JR Clock can go out, so messages are then sent without JR
+    // even when the other side agreed to it.
+    if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump)
     {
         LOG_IF_FAILED(StartJrClockThread());
     }
@@ -1246,6 +1264,9 @@ MidiBleConnection::ProcessIncomingPacket(
         m_incomingSmoother.Reset();
         m_incomingSmootherClockGeneration = IncomingClockGeneration();
         m_incomingSmoothingDelayTicks.store(0);
+
+        // Stream state, including what was agreed about JR, starts over on a new link
+        m_streamResponder.Reset();
     }
 
     m_packetsReceived++;
@@ -1452,6 +1473,19 @@ MidiBleConnection::ProcessIncomingUmpPayload(
 
     auto const arrivalTimestamp = internal::GetCurrentMidiTimestamp();
 
+    if (m_isPeripheral)
+    {
+        // The Central's questions to this PC as a UMP Endpoint are answered here and go no further
+        words.resize(validWordCount);
+        AnswerPeripheralStreamRequests(words);
+        validWordCount = words.size();
+
+        if (validWordCount == 0)
+        {
+            return;
+        }
+    }
+
     if (!m_isPeripheral)
     {
         // TEMPORARY. Remove with the function. See its definition.
@@ -1572,8 +1606,8 @@ MidiBleConnection::ProcessIncomingUmpPayload(
 // gate. Nothing else depends on how the state is learned: the rest of the transport reads only
 // m_sendJrToDevice and the m_endpointStreamConfiguration members this sets.
 //
-// Only the Central role negotiates. As a Peripheral, Windows answers the remote Central's
-// negotiation rather than starting it, so JR is not sent in that role.
+// Only the Central role negotiates through the service. As a Peripheral, Windows answers the remote
+// Central's negotiation itself, in AnswerPeripheralStreamRequests.
 _Use_decl_annotations_
 void
 MidiBleConnection::UpdateJrStateFromEndpointStreamConfigurationNotifications(
@@ -1627,6 +1661,116 @@ MidiBleConnection::UpdateJrStateFromEndpointStreamConfigurationNotifications(
         }
 
         i += messageWordCount;
+    }
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::AnswerPeripheralStreamRequests(std::vector<uint32_t>& words)
+{
+    // Receiving JR needs nothing more than the decoder, which is always there. Sending it needs the
+    // JR Clock schedule running.
+    m_streamResponder.SetJrCapabilities(true, m_jrClockThreadRunning.load());
+
+    std::vector<uint32_t> forward;
+    std::vector<uint32_t> replies;
+
+    bool const changed = m_streamResponder.ProcessPayload(words.data(), words.size(), forward, replies);
+
+    // Queued before anything this changes, so the Central has the Stream Configuration
+    // Notification before the first JR message goes out
+    if (!replies.empty())
+    {
+        QueueRawUmpPackets(replies);
+    }
+
+    if (changed)
+    {
+        bool const sendJr = m_streamResponder.SendsJr() && m_jrClockThreadRunning.load();
+        bool const wasSending = m_sendJrToDevice.exchange(sendJr);
+
+        // Seen from the Central's side, which is how the Central role records it too
+        m_endpointStreamConfiguration.Protocol = m_streamResponder.Protocol();
+        m_endpointStreamConfiguration.EndpointSendsJr = m_streamResponder.ReceivesJr();
+        m_endpointStreamConfiguration.EndpointReceivesJr = sendJr;
+        m_endpointStreamConfigurationTimestamp = internal::GetCurrentMidiTimestamp();
+        m_haveEndpointStreamConfiguration = true;
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Agreed a stream configuration with the remote Central", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt8(m_streamResponder.Protocol(), "protocol"),
+            TraceLoggingBool(m_streamResponder.ReceivesJr(), "this PC receives JR"),
+            TraceLoggingBool(sendJr, "this PC sends JR")
+        );
+
+        if (sendJr && !wasSending)
+        {
+            RestartJrClockSchedule();
+        }
+    }
+
+    words.swap(forward);
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::QueueRawUmpPackets(std::vector<uint32_t> const& words)
+{
+    // Stream messages, which carry no JR Timestamp. Whole UMPs only, never split across packets.
+    auto const maxPayloadByteCount = (std::max)(MaxAttPayloadByteCount(), MidiBleJr::WordByteCount * 4);
+
+    std::vector<std::vector<uint8_t>> packets;
+    std::vector<uint8_t> current;
+
+    for (size_t i = 0; i < words.size(); )
+    {
+        auto const messageWordCount = (std::min<size_t>)(MidiBleJr::GetUmpWordCount(words[i]), words.size() - i);
+        auto const messageByteCount = messageWordCount * MidiBleJr::WordByteCount;
+
+        if (!current.empty() && current.size() + messageByteCount > maxPayloadByteCount)
+        {
+            packets.push_back(std::move(current));
+            current.clear();
+        }
+
+        for (size_t w = 0; w < messageWordCount; w++)
+        {
+            MidiBleJr::OutgoingPacketBuilder::AppendWordBigEndian(current, words[i + w]);
+        }
+
+        i += messageWordCount;
+    }
+
+    if (!current.empty())
+    {
+        packets.push_back(std::move(current));
+    }
+
+    QueueOutgoingPackets(std::move(packets));
+}
+
+
+_Use_decl_annotations_
+void
+MidiBleConnection::SetConnectionIntervalUnits(uint16_t const intervalUnits) noexcept
+{
+    if (m_connectionIntervalUnits.exchange(intervalUnits) == intervalUnits)
+    {
+        return;
+    }
+
+    // A new interval means the clocks now land at different points in it, so the other side gets
+    // a fresh startup burst
+    if (m_sendJrToDevice.load())
+    {
+        RestartJrClockSchedule();
     }
 }
 

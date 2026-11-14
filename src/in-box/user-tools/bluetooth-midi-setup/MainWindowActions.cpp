@@ -1038,8 +1038,6 @@ namespace winrt::midibluetoothsetup::implementation
     {
         auto strongThis = get_strong();
 
-        auto const useMidi2 = PeripheralProtocolCombo().SelectedIndex() == 1;
-
         auto const dispatcher = DispatcherQueue();
 
         co_await winrt::resume_background();
@@ -1048,10 +1046,9 @@ namespace winrt::midibluetoothsetup::implementation
 
         try
         {
-            midi2bt::MidiBluetoothPeripheralConfig config{
-                useMidi2 ?
-                    midi2bt::MidiBluetoothProtocol::BluetoothLowEnergyMidi2Ump :
-                    midi2bt::MidiBluetoothProtocol::BluetoothLowEnergyMidi1 };
+            // Both protocols are published whatever this says. MIDI 1.0 is what a transport from
+            // before that change would publish, so it's the safe value to save.
+            midi2bt::MidiBluetoothPeripheralConfig config{ midi2bt::MidiBluetoothProtocol::BluetoothLowEnergyMidi1 };
 
             response = co_await midi2bt::MidiBluetoothTransportManager::StartPeripheralAsync(config);
 
@@ -1069,7 +1066,7 @@ namespace winrt::midibluetoothsetup::implementation
             co_return;
         }
 
-        dispatcher.TryEnqueue([this, strongThis, response, useMidi2]()
+        dispatcher.TryEnqueue([this, strongThis, response]()
             {
                 try
                 {
@@ -1082,10 +1079,6 @@ namespace winrt::midibluetoothsetup::implementation
                         SetPeripheralStatus(res::FormatString(
                             L"StatusPeripheralStartFailedFormat",
                             response.ErrorMessage()));
-                    }
-                    else if (useMidi2)
-                    {
-                        SetPeripheralStatus(res::GetString(L"StatusPeripheralMidi2Warning"));
                     }
                     else
                     {
