@@ -375,9 +375,9 @@ void BleMidi2JrTests::TestBuilderSharesOneTimestampWithinATick()
 
     auto packets = builder.TakePackets();
 
-    // one timestamp for the pair, and the clock at the end carries the same time
+    // one timestamp for the pair, and no clock: clocks go out on their own schedule
     VERIFY_ARE_EQUAL(static_cast<size_t>(1), packets.size());
-    VerifyPacket({ Stamp(700), NoteOn, NoteOff, Clock(700) }, packets[0]);
+    VerifyPacket({ Stamp(700), NoteOn, NoteOff }, packets[0]);
 }
 
 void BleMidi2JrTests::TestBuilderTimestampsEachMessageInADifferentTick()
@@ -392,30 +392,10 @@ void BleMidi2JrTests::TestBuilderTimestampsEachMessageInADifferentTick()
     auto packets = builder.TakePackets();
 
     VERIFY_ARE_EQUAL(static_cast<size_t>(1), packets.size());
-    VerifyPacket({ Stamp(700), NoteOn, Stamp(750), NoteOff, Clock(750) }, packets[0]);
+    VerifyPacket({ Stamp(700), NoteOn, Stamp(750), NoteOff }, packets[0]);
 }
 
-void BleMidi2JrTests::TestBuilderKeepsRoomForTheClock()
-{
-    MidiBleJr::OutgoingPacketBuilder builder;
-    builder.SetMaxPayloadByteCount(16);
-    builder.SetJrEnabled(true);
-
-    uint32_t const midi2NoteOn[]{ 0x40903C00, 0xFFFF0000 };
-
-    builder.AppendMessage(midi2NoteOn, 2, 900);
-    builder.AppendMessage(midi2NoteOn, 2, 900);
-
-    auto packets = builder.TakePackets();
-
-    // Each packet holds one 8-byte message, its timestamp and the clock. The second message
-    // starts a new packet, so it gets a timestamp of its own there.
-    VERIFY_ARE_EQUAL(static_cast<size_t>(2), packets.size());
-    VerifyPacket({ Stamp(900), midi2NoteOn[0], midi2NoteOn[1], Clock(900) }, packets[0]);
-    VerifyPacket({ Stamp(900), midi2NoteOn[0], midi2NoteOn[1], Clock(900) }, packets[1]);
-}
-
-void BleMidi2JrTests::TestBuilderSendsTheClockSeparatelyWhenItCannotFit()
+void BleMidi2JrTests::TestBuilderNeverAddsAClock()
 {
     MidiBleJr::OutgoingPacketBuilder builder;
     builder.SetMaxPayloadByteCount(12);
@@ -424,15 +404,164 @@ void BleMidi2JrTests::TestBuilderSendsTheClockSeparatelyWhenItCannotFit()
     uint32_t const midi2NoteOn[]{ 0x40903C00, 0xFFFF0000 };
 
     builder.AppendMessage(midi2NoteOn, 2, 900);
+    builder.AppendMessage(midi2NoteOn, 2, 900);
 
     auto packets = builder.TakePackets();
 
+    // A message and its timestamp fill each payload exactly. The second message starts a new
+    // packet, so it gets a timestamp of its own there.
     VERIFY_ARE_EQUAL(static_cast<size_t>(2), packets.size());
     VerifyPacket({ Stamp(900), midi2NoteOn[0], midi2NoteOn[1] }, packets[0]);
-    VerifyPacket({ Clock(900) }, packets[1]);
+    VerifyPacket({ Stamp(900), midi2NoteOn[0], midi2NoteOn[1] }, packets[1]);
 }
 
 void BleMidi2JrTests::TestClockOnlyPacket()
 {
     VerifyPacket({ Clock(0xBEEF) }, MidiBleJr::OutgoingPacketBuilder::BuildClockOnlyPacket(0xBEEF));
+}
+
+void BleMidi2JrTests::TestClockPeriodForKnownIntervals()
+{
+    // whole intervals plus 0.618 of one, the smallest such period of at least 75 ms
+    VERIFY_ARE_EQUAL(79635u, MidiBleJr::ClockPeriodMicroseconds(7500));
+    VERIFY_ARE_EQUAL(85703u, MidiBleJr::ClockPeriodMicroseconds(11250));
+    VERIFY_ARE_EQUAL(80243u, MidiBleJr::ClockPeriodMicroseconds(12125));
+    VERIFY_ARE_EQUAL(84270u, MidiBleJr::ClockPeriodMicroseconds(15000));
+
+    // well past what BLE MIDI asks for: fewer whole intervals, so it stays within 100 ms
+    VERIFY_ARE_EQUAL(78540u, MidiBleJr::ClockPeriodMicroseconds(30000));
+    VERIFY_ARE_EQUAL(55620u, MidiBleJr::ClockPeriodMicroseconds(90000));
+
+    // unknown, or too long to fit 0.618 of it within 100 ms
+    VERIFY_ARE_EQUAL(97000u, MidiBleJr::ClockPeriodMicroseconds(0));
+    VERIFY_ARE_EQUAL(97000u, MidiBleJr::ClockPeriodMicroseconds(200000));
+}
+
+void BleMidi2JrTests::TestClockPeriodIsNeverAWholeNumberOfIntervals()
+{
+    // every interval a BLE link can negotiate up to 15 ms
+    for (uint32_t units = 6; units <= 12; units++)
+    {
+        uint32_t const interval = units * 1250;
+        uint32_t const period = MidiBleJr::ClockPeriodMicroseconds(interval);
+
+        double const fraction = std::fmod(static_cast<double>(period), static_cast<double>(interval)) / interval;
+
+        Log::Comment(String().Format(L"Interval %u us: period %u us, fraction %.3f", interval, period, fraction));
+
+        VERIFY_IS_TRUE(period >= 75000 && period <= 95000);
+        VERIFY_IS_TRUE(std::fabs(fraction - 0.618) < 0.001);
+    }
+}
+
+void BleMidi2JrTests::TestClockScheduleStartsWithABurst()
+{
+    MidiBleJr::ClockSchedule schedule;
+    schedule.Start(BaseArrival, 15000, LocalTicksPerSecond);
+
+    VERIFY_IS_TRUE(schedule.IsRunning());
+
+    for (uint32_t i = 0; i < MidiBleJr::StartupBurstClockCount; i++)
+    {
+        VERIFY_IS_TRUE(schedule.InBurst());
+        VERIFY_ARE_EQUAL(BaseArrival + i * 8 * LocalTicksPerMillisecond, schedule.NextDueTicks());
+
+        schedule.Advance(schedule.NextDueTicks());
+    }
+
+    VERIFY_IS_FALSE(schedule.InBurst());
+
+    uint64_t const lastBurst = BaseArrival + 15 * 8 * LocalTicksPerMillisecond;
+
+    VERIFY_ARE_EQUAL(lastBurst + 842'700, schedule.NextDueTicks());
+}
+
+void BleMidi2JrTests::TestClockScheduleNeverLeavesMoreThan100Milliseconds()
+{
+    for (auto const interval : { 0u, 7500u, 11250u, 15000u, 30000u, 90000u })
+    {
+        MidiBleJr::ClockSchedule schedule;
+        schedule.Start(BaseArrival, interval, LocalTicksPerSecond);
+
+        uint64_t previous = schedule.NextDueTicks();
+        schedule.Advance(previous);
+
+        for (uint32_t i = 0; i < 200; i++)
+        {
+            auto const due = schedule.NextDueTicks();
+
+            VERIFY_IS_TRUE(due > previous);
+            VERIFY_IS_TRUE(due - previous <= 100 * LocalTicksPerMillisecond);
+
+            previous = due;
+            schedule.Advance(due);
+        }
+    }
+}
+
+void BleMidi2JrTests::TestClockScheduleDoesNotBuildUpRounding()
+{
+    MidiBleJr::ClockSchedule schedule;
+    schedule.Start(BaseArrival, 7500, LocalTicksPerSecond);
+
+    for (uint32_t i = 0; i < MidiBleJr::StartupBurstClockCount; i++)
+    {
+        schedule.Advance(schedule.NextDueTicks());
+    }
+
+    auto const first = schedule.NextDueTicks();
+
+    for (uint32_t i = 0; i < 10000; i++)
+    {
+        schedule.Advance(schedule.NextDueTicks());
+    }
+
+    // 10,000 periods of 79.635 ms, to the tick
+    VERIFY_ARE_EQUAL(first + 10000ULL * 796'350, schedule.NextDueTicks());
+}
+
+void BleMidi2JrTests::TestClockScheduleSkipsClocksItMissed()
+{
+    MidiBleJr::ClockSchedule schedule;
+    schedule.Start(BaseArrival, 15000, LocalTicksPerSecond);
+
+    for (uint32_t i = 0; i < MidiBleJr::StartupBurstClockCount; i++)
+    {
+        schedule.Advance(schedule.NextDueTicks());
+    }
+
+    auto const first = schedule.NextDueTicks();
+
+    // the sender stalled for two seconds after sending that clock
+    uint64_t const now = first + 2 * LocalTicksPerSecond;
+    schedule.Advance(now);
+
+    auto const next = schedule.NextDueTicks();
+
+    VERIFY_IS_TRUE(next <= now);
+    VERIFY_IS_TRUE(now - next < 842'700);
+
+    // and stays on the same grid
+    VERIFY_ARE_EQUAL(0ULL, (next - first) % 842'700);
+}
+
+void BleMidi2JrTests::TestClockScheduleRestartsWithANewBurst()
+{
+    MidiBleJr::ClockSchedule schedule;
+    schedule.Start(BaseArrival, 15000, LocalTicksPerSecond);
+
+    for (uint32_t i = 0; i < 40; i++)
+    {
+        schedule.Advance(schedule.NextDueTicks());
+    }
+
+    VERIFY_IS_FALSE(schedule.InBurst());
+
+    // the interval changed to 7.5 ms
+    uint64_t const restart = BaseArrival + 10 * LocalTicksPerSecond;
+    schedule.Start(restart, 7500, LocalTicksPerSecond);
+
+    VERIFY_IS_TRUE(schedule.InBurst());
+    VERIFY_ARE_EQUAL(restart, schedule.NextDueTicks());
+    VERIFY_ARE_EQUAL(79635u, schedule.PeriodMicroseconds());
 }

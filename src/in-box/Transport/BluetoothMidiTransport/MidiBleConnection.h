@@ -157,9 +157,13 @@ private:
 
     void QueueOutgoingPackets(_In_ std::vector<std::vector<uint8_t>>&& packets);
 
-    // The UMP Characteristic needs a JR Clock at least every 250 ms once JR is on, data or not.
-    bool IsIdleJrClockDue(_Out_ DWORD& millisecondsUntilDue) const noexcept;
-    void QueueIdleJrClock();
+    // Once the device agrees to receive JR, JR Clocks go out on their own schedule (see
+    // MidiBleJr::ClockSchedule) from a thread with a high resolution timer. A clock is queued as a
+    // packet of its own and the writer fills in its time just before the write.
+    HRESULT StartJrClockThread();
+    HRESULT JrClockWorker(_In_ std::stop_token stopToken);
+    void QueueJrClock();
+    void RestartJrClockSchedule() noexcept;
 
     HRESULT WriterWorker(_In_ std::stop_token stopToken);
     HRESULT WritePacketToDevice(_In_ std::vector<uint8_t> const& packet);
@@ -268,10 +272,11 @@ private:
     // the writer thread, so it is atomic rather than guarded by the receive path's lock.
     std::atomic<bool> m_sendJrToDevice{ false };
 
-    // GetTickCount64 when a packet carrying a JR Clock was last queued, or zero to send one now.
-    // Clocks are queued under m_outgoingTranslationLock so they go out in the order their times
-    // were taken.
-    std::atomic<uint64_t> m_lastJrClockQueuedTickCount{ 0 };
+    // Set to start the JR Clock schedule over: JR was just agreed, or the interval changed.
+    std::atomic<bool> m_jrClockRestartPending{ false };
+    std::atomic<bool> m_jrClockThreadRunning{ false };
+    wil::unique_event_nothrow m_jrClockWakeup;
+    wil::unique_handle m_jrClockTimer;
 
     wil::srwlock m_outgoingQueueLock;
     std::deque<std::vector<uint8_t>> m_outgoingPackets{ };
@@ -304,4 +309,5 @@ private:
     // jthread members are declared last so they are destroyed first
     std::jthread m_writerThread;
     std::jthread m_releaseThread;
+    std::jthread m_jrClockThread;
 };

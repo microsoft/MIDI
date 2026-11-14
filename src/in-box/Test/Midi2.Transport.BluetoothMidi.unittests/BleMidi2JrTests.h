@@ -45,7 +45,15 @@ public:
     TEST_METHOD(TestBuilderDropsApplicationJrMessages);
     TEST_METHOD(TestBuilderSharesOneTimestampWithinATick);
     TEST_METHOD(TestBuilderTimestampsEachMessageInADifferentTick);
-    TEST_METHOD(TestBuilderKeepsRoomForTheClock);
-    TEST_METHOD(TestBuilderSendsTheClockSeparatelyWhenItCannotFit);
+    TEST_METHOD(TestBuilderNeverAddsAClock);
     TEST_METHOD(TestClockOnlyPacket);
+
+    // outgoing JR Clock schedule
+    TEST_METHOD(TestClockPeriodForKnownIntervals);
+    TEST_METHOD(TestClockPeriodIsNeverAWholeNumberOfIntervals);
+    TEST_METHOD(TestClockScheduleStartsWithABurst);
+    TEST_METHOD(TestClockScheduleNeverLeavesMoreThan100Milliseconds);
+    TEST_METHOD(TestClockScheduleDoesNotBuildUpRounding);
+    TEST_METHOD(TestClockScheduleSkipsClocksItMissed);
+    TEST_METHOD(TestClockScheduleRestartsWithANewBurst);
 };

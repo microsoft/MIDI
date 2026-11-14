@@ -193,6 +193,13 @@ MidiBleConnection::Start()
         LOG_IF_FAILED(StartIncomingReleaseThread());
     }
 
+    // JR is only sent in the Central role. If this thread can't start no JR Clock can go out, so
+    // messages are then sent without JR even when the device agreed to it.
+    if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump && !m_isPeripheral)
+    {
+        LOG_IF_FAILED(StartJrClockThread());
+    }
+
     // A peripheral has no Characteristic to subscribe to and no BluetoothLEDevice to watch. Its
     // link state is reported by the GATT service provider instead.
     if (!m_isPeripheral)
@@ -719,6 +726,13 @@ MidiBleConnection::BeginShutdown() noexcept
     {
         m_releaseWakeup.SetEvent();
     }
+
+    m_jrClockThread.request_stop();
+
+    if (m_jrClockWakeup)
+    {
+        m_jrClockWakeup.SetEvent();
+    }
 }
 
 
@@ -761,6 +775,12 @@ MidiBleConnection::Shutdown()
         {
             m_releaseThread.detach();
         }
+    }
+
+    // Never calls into the service, so it can't be on this thread, but checked the same way
+    if (m_jrClockThread.joinable() && m_jrClockThread.get_id() != std::this_thread::get_id())
+    {
+        m_jrClockThread.join();
     }
 
     // Taken out under the lock, so a reader on another thread either already holds its own
@@ -1071,6 +1091,13 @@ MidiBleConnection::RefreshConnectionParameters()
         );
 
         WriteCalculatedLatencyProperty();
+
+        // A new interval means the clocks now land at different points in it, so the receiver
+        // gets a fresh startup burst
+        if (m_sendJrToDevice.load())
+        {
+            RestartJrClockSchedule();
+        }
     }
     CATCH_LOG();
 }
@@ -1497,7 +1524,8 @@ MidiBleConnection::UpdateJrStateFromEndpointStreamConfigurationNotifications(
             m_endpointStreamConfigurationTimestamp = internal::GetCurrentMidiTimestamp();
             m_haveEndpointStreamConfiguration = true;
 
-            bool const wasSending = m_sendJrToDevice.exchange(configuration.EndpointReceivesJr);
+            bool const sendJr = configuration.EndpointReceivesJr && m_jrClockThreadRunning.load();
+            bool const wasSending = m_sendJrToDevice.exchange(sendJr);
 
             TraceLoggingWrite(
                 MidiBluetoothMidiTransportTelemetryProvider::Provider(),
@@ -1512,11 +1540,10 @@ MidiBleConnection::UpdateJrStateFromEndpointStreamConfigurationNotifications(
                 TraceLoggingBool(configuration.EndpointSendsJr, "device sends JR")
             );
 
-            if (configuration.EndpointReceivesJr && !wasSending)
+            if (sendJr && !wasSending)
             {
-                // the first JR Clock goes out now rather than at the next 250 ms mark
-                m_lastJrClockQueuedTickCount.store(0);
-                m_outgoingWakeup.Signal();
+                // JR was just agreed, so the startup burst goes out now
+                RestartJrClockSchedule();
             }
         }
 
@@ -2041,12 +2068,6 @@ MidiBleConnection::BuildOutgoingUmpPackets(
 
     auto packets = m_outgoingUmpPacketBuilder.TakePackets();
 
-    if (sendJr && !packets.empty())
-    {
-        // every packet built with JR on ends with a clock
-        m_lastJrClockQueuedTickCount.store(GetTickCount64());
-    }
-
     QueueOutgoingPackets(std::move(packets));
 }
 
@@ -2095,58 +2116,139 @@ MidiBleConnection::QueueOutgoingPackets(std::vector<std::vector<uint8_t>>&& pack
 }
 
 
-_Use_decl_annotations_
-bool
-MidiBleConnection::IsIdleJrClockDue(DWORD& millisecondsUntilDue) const noexcept
+HRESULT
+MidiBleConnection::StartJrClockThread()
 {
-    millisecondsUntilDue = INFINITE;
+    RETURN_IF_FAILED(m_jrClockWakeup.create(wil::EventOptions::None));
 
-    if (!m_sendJrToDevice.load() || m_shutdown.load())
+    // An ordinary timer is less accurate but still works, so it is the fallback
+    m_jrClockTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS));
+
+    if (!m_jrClockTimer)
     {
-        return false;
+        m_jrClockTimer.reset(CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS));
     }
 
-    auto const now = GetTickCount64();
-    auto const last = m_lastJrClockQueuedTickCount.load();
-    auto const elapsed = now > last ? now - last : 0;
+    RETURN_LAST_ERROR_IF(!m_jrClockTimer);
 
-    if (last == 0 || elapsed >= MidiBleJr::IdleClockIntervalMilliseconds)
+    try
     {
-        millisecondsUntilDue = 0;
-        return true;
+        m_jrClockThread = std::jthread([weakThis = weak_from_this()](std::stop_token stopToken)
+            {
+                // An exception leaving a jthread body terminates the whole service
+                try
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        LOG_IF_FAILED(self->JrClockWorker(stopToken));
+
+                        // Without clocks, JR must not be sent at all
+                        self->m_jrClockThreadRunning = false;
+                        self->m_sendJrToDevice = false;
+                    }
+                }
+                CATCH_LOG();
+            });
     }
+    CATCH_RETURN();
 
-    millisecondsUntilDue = static_cast<DWORD>(MidiBleJr::IdleClockIntervalMilliseconds - elapsed);
+    m_jrClockThreadRunning = true;
 
-    return false;
+    return S_OK;
 }
 
 
 void
-MidiBleConnection::QueueIdleJrClock()
+MidiBleConnection::RestartJrClockSchedule() noexcept
 {
-    // Same lock as the send path, so this clock's time cannot fall between a data packet's
-    // timestamp and its own clock, and send a JR Clock backwards.
-    auto lock = m_outgoingTranslationLock.lock_exclusive();
+    m_jrClockRestartPending = true;
 
-    DWORD millisecondsUntilDue{ INFINITE };
-
-    // a data packet may have carried a clock out while this thread waited for the lock
-    if (!IsIdleJrClockDue(millisecondsUntilDue))
+    if (m_jrClockWakeup)
     {
-        return;
+        m_jrClockWakeup.SetEvent();
     }
+}
 
-    auto const jrTime = MidiBleJr::LocalTimestampToJrTime(
-        internal::GetCurrentMidiTimestamp(),
-        internal::GetMidiTimestampFrequency());
 
+void
+MidiBleConnection::QueueJrClock()
+{
+    // The time is a placeholder. The writer reads the clock just before the write, so the JR
+    // Clock says when it was really handed to Bluetooth and is never later than that.
     std::vector<std::vector<uint8_t>> packets;
-    packets.push_back(MidiBleJr::OutgoingPacketBuilder::BuildClockOnlyPacket(jrTime));
-
-    m_lastJrClockQueuedTickCount.store(GetTickCount64());
+    packets.push_back(MidiBleJr::OutgoingPacketBuilder::BuildClockOnlyPacket(0));
 
     QueueOutgoingPackets(std::move(packets));
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiBleConnection::JrClockWorker(std::stop_token stopToken)
+{
+    auto const frequency = internal::GetMidiTimestampFrequency();
+
+    MidiBleJr::ClockSchedule schedule{};
+    HANDLE const waitHandles[] = { m_jrClockWakeup.get(), m_jrClockTimer.get() };
+
+    while (!stopToken.stop_requested() && !m_shutdown.load())
+    {
+        if (!m_sendJrToDevice.load())
+        {
+            schedule.Stop();
+
+            // Auto-reset, and set whenever JR is agreed, so this can't sleep through it
+            WaitForSingleObject(m_jrClockWakeup.get(), INFINITE);
+
+            continue;
+        }
+
+        auto now = internal::GetCurrentMidiTimestamp();
+
+        if (!schedule.IsRunning() || m_jrClockRestartPending.exchange(false))
+        {
+            auto const intervalMicroseconds =
+                static_cast<uint32_t>(m_connectionIntervalUnits.load()) * MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS;
+
+            schedule.Start(now, intervalMicroseconds, frequency);
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Starting the JR Clock schedule with a startup burst", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+                TraceLoggingUInt32(intervalMicroseconds, "connection interval microseconds"),
+                TraceLoggingUInt32(schedule.PeriodMicroseconds(), "clock period microseconds")
+            );
+        }
+
+        auto const due = schedule.NextDueTicks();
+
+        if (now >= due)
+        {
+            QueueJrClock();
+            schedule.Advance(internal::GetCurrentMidiTimestamp());
+
+            continue;
+        }
+
+        LARGE_INTEGER dueTime{};
+        dueTime.QuadPart = -static_cast<LONGLONG>((std::max<uint64_t>)(((due - now) * 10'000'000ULL) / frequency, 1));
+
+        if (SetWaitableTimer(m_jrClockTimer.get(), &dueTime, 0, nullptr, nullptr, FALSE))
+        {
+            WaitForMultipleObjects(ARRAYSIZE(waitHandles), waitHandles, FALSE, INFINITE);
+        }
+        else
+        {
+            WaitForSingleObject(m_jrClockWakeup.get(), static_cast<DWORD>((std::max<uint64_t>)(((due - now) * 1000) / frequency, 1)));
+        }
+    }
+
+    return S_OK;
 }
 
 
@@ -2173,7 +2275,6 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
                 std::vector<uint8_t> packet;
                 bool havePacket{ false };
                 bool renewSubscription{ false };
-                bool sendIdleJrClock{ false };
                 bool stopping{ false };
                 DWORD waitMilliseconds{ INFINITE };
 
@@ -2206,18 +2307,7 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
                         }
                         else
                         {
-                            DWORD millisecondsUntilJrClock{ INFINITE };
-
-                            if (IsIdleJrClockDue(millisecondsUntilJrClock))
-                            {
-                                sendIdleJrClock = true;
-                            }
-                            else
-                            {
-                                waitMilliseconds = (std::min)(waitMilliseconds, millisecondsUntilJrClock);
-
-                                stopping = !m_outgoingWakeup.PrepareToSleep(stopToken.stop_requested() || m_shutdown.load());
-                            }
+                            stopping = !m_outgoingWakeup.PrepareToSleep(stopToken.stop_requested() || m_shutdown.load());
                         }
                     }
                 }
@@ -2233,12 +2323,24 @@ MidiBleConnection::WriterWorker(std::stop_token stopToken)
                 }
                 else if (havePacket)
                 {
+                    // A JR Clock queued on its own says when it really leaves, so its time is read
+                    // here rather than when it was queued
+                    if (m_protocol == MidiBleProtocol::Protocol::Midi2Ump && packet.size() == MidiBleJr::WordByteCount)
+                    {
+                        uint32_t const word =
+                            (static_cast<uint32_t>(packet[0]) << 24) | (static_cast<uint32_t>(packet[1]) << 16) |
+                            (static_cast<uint32_t>(packet[2]) << 8) | static_cast<uint32_t>(packet[3]);
+
+                        if (MidiBleJr::IsJrClock(word))
+                        {
+                            packet = MidiBleJr::OutgoingPacketBuilder::BuildClockOnlyPacket(
+                                MidiBleJr::LocalTimestampToJrTime(
+                                    internal::GetCurrentMidiTimestamp(),
+                                    internal::GetMidiTimestampFrequency()));
+                        }
+                    }
+
                     LOG_IF_FAILED(WritePacketToDevice(packet));
-                }
-                else if (sendIdleJrClock)
-                {
-                    // queued rather than written here, so it goes out behind anything queued meanwhile
-                    QueueIdleJrClock();
                 }
                 else
                 {
