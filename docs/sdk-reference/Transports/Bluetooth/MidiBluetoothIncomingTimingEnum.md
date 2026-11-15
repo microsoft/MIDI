@@ -8,6 +8,8 @@ description: When messages from a Bluetooth MIDI device are handed to apps
 
 Bluetooth sends MIDI in packets, on a schedule the radio sets. So notes that were played evenly can arrive in uneven bunches. If each message is passed on the moment its packet arrives, that unevenness can be heard as timing jitter. This setting controls when incoming messages are handed to apps.
 
+Added in version 2 of `MidiTransportsBluetoothApiContract`.
+
 ## Values
 
 | Value | Numeric Value | Description |
