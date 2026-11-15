@@ -25,7 +25,7 @@ Read [CONTRIBUTING.md](../../../CONTRIBUTING.md) for process, licensing and the 
 4. **The configuration file is written through the API, never by hand.** See [the configuration file is off limits](#the-configuration-file-is-off-limits) below before you write anything that persists a setting.
 5. **Match the surrounding code.** This repository has strong local conventions per project (naming, tracing, error codes, resource ids). Copy the neighboring file rather than importing a style from elsewhere.
 
-## The five rules that get broken most often
+## The six rules that get broken most often
 
 ### 1. Changes to shipping code must be wrapped in a servicing gate (KIR)
 
@@ -92,6 +92,23 @@ Before submitting, walk your diff against this list. Every one of these has caus
 - **Silent failure** — a `catch` that returns a default, a fallback that logs nothing, a wrong-type JSON value that quietly disappears. A defect you cannot see in a trace is worse than a crash.
 
 The concrete patterns, the idioms that look correct and are not, and what to grep for: [references/code-safety-review.md](references/code-safety-review.md).
+
+### 6. Never add to an interface that shipped in the baseline SDK
+
+The SDK API is compared against a **baseline**: the `Windows.Devices.Midi2.winmd` in the last public SDK NuGet package. Apps are built against that winmd, so every interface in it is frozen. Adding a member to one, even at the end, changes its IID and breaks every app built against the baseline.
+
+**The baseline today is Preview 11** (NuGet `0.99.92-preview.11`, tag `inbox-preview-11`). It will change when the next public SDK package is released, so **confirm the current baseline winmd with the maintainers before you change any `.idl` file.** Don't work it out from a version number or a tag name. For example, the older `preview-11` tag isn't the same as `inbox-preview-11`, and it doesn't contain the in-box transport APIs.
+
+Before you edit an `.idl` file:
+
+1. **Check whether the type is in the baseline winmd.**
+2. **If it is, don't touch its existing interface.** Add a nested block with its own `[interface_name(...)]` (or `[static_name(...)]` for statics) and a new UUID in `Inc/midi_sdk_idl_defs.h`. Put it on the next version of that namespace's contract, and raise `[contractversion(n)]` in `MidiApiContracts.idl` if it hasn't been raised since the baseline. Mark it with a comment such as `// Added after Preview 11, so a new interface rather than a change to the one above`. `MidiNetworkConfiguredClient.idl` and `MidiApi.idl` show the shape.
+3. **If the class already has an interface added after the baseline, add to that one.** Don't make an `IFoo3` or bump the contract again until a new baseline is released. Group additions so a class doesn't collect a pile of small interfaces.
+4. **New types go on the new contract version too.**
+5. **In the reference docs, mark each addition** "Added in version n of `<Contract>`", and update `docs/sdk-reference/MidiApiContracts.md`.
+6. **Build the SDK and compare its winmd to the baseline winmd.** No interface, enum value or method that is in the baseline may be changed or missing. New interfaces and types are the only differences you should see.
+
+Anything added after the baseline isn't frozen yet and can still change, but rule 2 in [Before you write anything](#before-you-write-anything) still applies: ask before you change public API surface at all.
 
 ## The configuration file is off limits
 
