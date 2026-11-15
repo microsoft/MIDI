@@ -14,7 +14,7 @@ import "MidiBluetoothIncomingTimingEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
-    [contract(MidiTransportsBluetoothApiContract, 1)]
+    [contract(MidiTransportsBluetoothApiContract, 2)]
 
     // Sets when incoming messages are handed to applications, either for one device or for the
     // transport as a whole. Send it to apply it now, save it to keep it across a service restart;

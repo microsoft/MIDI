@@ -10,6 +10,8 @@ Implements `IMidiServiceTransportPluginConfig`.
 
 Sets when incoming messages are handed to apps, for one device or for the whole transport. `MidiBluetoothIncomingTiming` explains what the values mean and why the choice matters.
 
+Added in version 2 of `MidiTransportsBluetoothApiContract`.
+
 ## Constructors
 
 | Constructor | Description |
