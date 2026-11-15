@@ -189,7 +189,7 @@
     <value>{0} =</value>
   </data>
   <data name="SessionReferenceName" xml:space="preserve">
-    <value>Tuning reference: the frequency of {0}, in hertz</value>
+    <value>Frequency of {0}, in hertz</value>
   </data>
   <data name="SessionResetButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Reset the session values</value>
@@ -204,7 +204,7 @@
     <value>C{0}</value>
   </data>
   <data name="SettingsMiddleCHelp" xml:space="preserve">
-    <value>C3 is what the Windows MIDI Services API and the other Windows MIDI tools use. Some apps call it C4.</value>
+    <value>The Windows MIDI tools use C3. Some other apps use C4.</value>
   </data>
   <data name="SettingsTicksLabel" xml:space="preserve">
     <value>Ticks per quarter note</value>
@@ -231,7 +231,7 @@
     <value>{0} taps</value>
   </data>
   <data name="TapDetailFormat" xml:space="preserve">
-    <value>{0} taps, steady within {1} ms</value>
+    <value>{0} taps. Timing varied by {1} ms.</value>
   </data>
   <data name="TapReset" xml:space="preserve">
     <value>Reset</value>
@@ -243,7 +243,7 @@
     <value>Beat calculator</value>
   </data>
   <data name="BeatHelp" xml:space="preserve">
-    <value>You know how long a part is and how many bars it fills. A drum loop, a sample, a section of a recording you&apos;re lining up to a grid.</value>
+    <value>Find the tempo, length or number of bars from the other two. For example, the tempo of an 8-bar drum loop that lasts 15.6 seconds.</value>
   </data>
   <data name="BeatFindLabel" xml:space="preserve">
     <value>What to work out</value>
@@ -333,7 +333,7 @@
     <value>{0} {1}</value>
   </data>
   <data name="NoteHelp" xml:space="preserve">
-    <value>Click any cell to copy it. Bars and beats use the session meter.</value>
+    <value>Click a value to copy it. Bar lengths use the session meter.</value>
   </data>
   <data name="NoteOneBar" xml:space="preserve">
     <value>One bar</value>
@@ -369,7 +369,7 @@
     <value>New length</value>
   </data>
   <data name="ChangePitch" xml:space="preserve">
-    <value>Pitch, if you don&apos;t time-stretch</value>
+    <value>Pitch change without time-stretching</value>
   </data>
   <data name="ChangeSpeedValue" xml:space="preserve">
     <value>{0}% (× {1})</value>
@@ -387,7 +387,7 @@
     <value>1/4 (one beat)</value>
   </data>
   <data name="NotePreDelay" xml:space="preserve">
-    <value>Pre-delay that ends on a 1/64</value>
+    <value>Pre-delay of a 1/64 note</value>
   </data>
   <data name="M2PitchTitle" xml:space="preserve">
     <value>Note pitch</value>
@@ -429,7 +429,7 @@
     <value>Per-note controller #3, Pitch 7.25</value>
   </data>
   <data name="M2Widened" xml:space="preserve">
-    <value>The 7.9 value, widened to 7.25</value>
+    <value>Pitch 7.9 value converted to Pitch 7.25</value>
   </data>
   <data name="M2ReadLabel" xml:space="preserve">
     <value>Read a pitch value (hex)</value>
@@ -471,7 +471,7 @@
     <value>{0} · bytes {1}</value>
   </data>
   <data name="M2Bend14In32" xml:space="preserve">
-    <value>That 14-bit value in MIDI 2.0</value>
+    <value>14-bit value as MIDI 2.0</value>
   </data>
   <data name="M2Bend14In32Lower" xml:space="preserve">
     <value>{0} ({1} cents lower)</value>
@@ -489,7 +489,7 @@
     <value>Set a range first</value>
   </data>
   <data name="M2BendHelp" xml:space="preserve">
-    <value>Channel 1 in the bytes. The range is how far a full bend goes either way, set on the receiver with RPN 0.</value>
+    <value>Bytes are shown for channel 1. The bend range is how far a full bend goes up or down. The receiver sets it with RPN 0.</value>
   </data>
   <data name="M2ScaleTitle" xml:space="preserve">
     <value>Value scaling</value>
@@ -534,7 +534,7 @@
     <value>32 (MIDI 2.0 controllers)</value>
   </data>
   <data name="M2ScaleHelp" xml:space="preserve">
-    <value>Min-center-max keeps the bottom, the center and the top where they are. Zero-extension, for RPNs 0 to 31 and pitch values, pads with zeros instead.</value>
+    <value>Min-center-max keeps the lowest, center and highest values the same at every size. Zero-extension adds zeros. Use it for RPNs 0 to 31 and pitch values.</value>
   </data>
   <data name="M2TimingTitle" xml:space="preserve">
     <value>UMP timing</value>
@@ -588,7 +588,7 @@
     <value>This message type needs {0} words.</value>
   </data>
   <data name="M2WordsExtra" xml:space="preserve">
-    <value>   (the next {0} words aren&apos;t part of this message)</value>
+    <value>   ({0} more words belong to another message)</value>
   </data>
   <data name="M2GroupChannel" xml:space="preserve">
     <value>, group {0}, channel {1}</value>
@@ -744,13 +744,13 @@
     <value>System timer</value>
   </data>
   <data name="TimeTimerValue" xml:space="preserve">
-    <value>{0} ms (this PC can do {1} to {2} ms)</value>
+    <value>{0} ms (range {1} to {2} ms)</value>
   </data>
   <data name="TimeLiveFreeze" xml:space="preserve">
     <value>Freeze</value>
   </data>
   <data name="TimeLiveHelp" xml:space="preserve">
-    <value>These come from the Windows MIDI Services SDK&apos;s MidiClock, the same clock the MIDI service stamps every message with. Freeze stops the numbers so you can copy them.</value>
+    <value>The MIDI service timestamps messages with this same clock. Select Freeze to stop the numbers so you can copy them.</value>
   </data>
   <data name="TimeSinceFormat" xml:space="preserve">
     <value>{0} h {1} min {2} s</value>
@@ -780,7 +780,7 @@
     <value>Clock time</value>
   </data>
   <data name="TimeClockHelp" xml:space="preserve">
-    <value>Clock time is worked out from this PC&apos;s clock, so it&apos;s only right for a timestamp taken on this PC since it last started. For a timestamp from another PC or a log, set its ticks per second.</value>
+    <value>Clock time is only guaranteed to be correct for timestamps taken on this PC since it last started. For a timestamp from another PC or a log file, set its ticks per second.</value>
   </data>
   <data name="TimeClockOtherPc" xml:space="preserve">
     <value>Only for this PC&apos;s own timestamps</value>
@@ -822,7 +822,7 @@
     <value>Other Windows time values</value>
   </data>
   <data name="TimeOtherHelp" xml:space="preserve">
-    <value>Pick what you&apos;re typing, then type it. Every other format follows.</value>
+    <value>Choose the kind of value, then type it. The other formats update to match.</value>
   </data>
   <data name="TimeOtherKindLabel" xml:space="preserve">
     <value>I&apos;m typing</value>
@@ -894,7 +894,7 @@
     <value>Clear</value>
   </data>
   <data name="HistoryClearTip" xml:space="preserve">
-    <value>Clear everything but the pinned answers</value>
+    <value>Clear all answers except pinned ones</value>
   </data>
   <data name="HistoryPinned" xml:space="preserve">
     <value>Pinned</value>
@@ -915,7 +915,7 @@
     <value>Keeps the last {0} answers. Pinned ones stay until you unpin them.</value>
   </data>
   <data name="HistoryEmpty" xml:space="preserve">
-    <value>Nothing here yet. Copy an answer on any page and it shows up here.</value>
+    <value>Nothing here yet. Answers you copy show up here.</value>
   </data>
   <data name="HistoryNoMatch" xml:space="preserve">
     <value>Nothing matches that search.</value>
@@ -975,7 +975,7 @@
     <value>Note {0}, {1} Hz from it</value>
   </data>
   <data name="FrequencyOutOfRange" xml:space="preserve">
-    <value>That frequency is outside the 128 MIDI notes.</value>
+    <value>That frequency is outside the MIDI note range.</value>
   </data>
   <data name="FrequencyFraction" xml:space="preserve">
     <value>As a fractional note</value>
@@ -1062,7 +1062,7 @@
     <value>Note table</value>
   </data>
   <data name="TableHelp" xml:space="preserve">
-    <value>The tuning is used on this page, and A3 keeps the session frequency in every tuning. In a tuning other than equal temperament, each note shows how many cents it moved. MIDI 2.0 pitch values always count in equal-tempered semitones.</value>
+    <value>A3 stays at the session frequency in every tuning. In other tunings, each note shows the offset in cents from equal temperament. MIDI 2.0 pitch values always use equal temperament.</value>
   </data>
   <data name="TemperamentLabel" xml:space="preserve">
     <value>Tuning</value>
@@ -1278,7 +1278,7 @@
     <value>{0} {1} {2} at {3}</value>
   </data>
   <data name="TcNeedA" xml:space="preserve">
-    <value>Type a timecode such as 01:00:00:00. Fewer numbers fill from the right, so 1:20 is one second and twenty frames.</value>
+    <value>Type a timecode such as 01:00:00:00. Short entries fill from the right, so 1:20 is 1 second and 20 frames.</value>
   </data>
   <data name="TcNeedB" xml:space="preserve">
     <value>Type a second timecode to add or take away.</value>
@@ -1290,7 +1290,7 @@
     <value>Type a number to multiply or divide by.</value>
   </data>
   <data name="TcSkipped" xml:space="preserve">
-    <value>{0} isn&apos;t a frame number at {1}. Drop frame skips the first {2} numbers of every minute except each tenth minute.</value>
+    <value>{0} doesn&apos;t exist at {1}. Drop frame skips the first {2} frame numbers of each minute, except every tenth minute.</value>
   </data>
   <data name="TcDivideByZero" xml:space="preserve">
     <value>You can&apos;t divide by zero.</value>
@@ -1356,7 +1356,7 @@
     <value>{0} kHz</value>
   </data>
   <data name="SmHelp" xml:space="preserve">
-    <value>Milliseconds for one buffer. Your interface adds its own converter and driver time on top, in each direction.</value>
+    <value>Time for one buffer, in milliseconds. This isn&apos;t your total latency. Your audio interface and driver add more, both in and out.</value>
   </data>
   <data name="PageChords" xml:space="preserve">
     <value>Chords and scales</value>
@@ -1416,10 +1416,10 @@
     <value>Notes of {0}</value>
   </data>
   <data name="ChordNotUnderstood" xml:space="preserve">
-    <value>Type a chord such as Dm7/G, B♭maj7, F#m7b5 or C/E: a root from A to G, then the chord type, then a slash and a bass note if it has one.</value>
+    <value>Specify a chord using the root and optionally a bass note. Examples: Dm7/G, B♭maj7, F#m7b5 or C/E.</value>
   </data>
   <data name="ChordNoChord" xml:space="preserve">
-    <value>N.C. means no chord, so there are no notes to show.</value>
+    <value>&quot;N.C.&quot; means no chord.</value>
   </data>
   <data name="NameChordTitle" xml:space="preserve">
     <value>Name a chord</value>
@@ -1431,7 +1431,7 @@
     <value>Clear</value>
   </data>
   <data name="NameChordKeysName" xml:space="preserve">
-    <value>Piano keys. Choose notes to name the chord they make.</value>
+    <value>Piano keyboard. Choose notes to name a chord.</value>
   </data>
   <data name="NameChordResultsName" xml:space="preserve">
     <value>Names for these notes</value>
@@ -1440,7 +1440,7 @@
     <value>Choose at least two different notes.</value>
   </data>
   <data name="NameChordNone" xml:space="preserve">
-    <value>These notes aren&apos;t one of the chords the Windows MIDI tools know.</value>
+    <value>These notes don&apos;t match any chord the calculator knows.</value>
   </data>
   <data name="NameChordRootLowest" xml:space="preserve">
     <value>{0} · lowest note is the root</value>
@@ -1479,7 +1479,7 @@
     <value>{0}, {1}</value>
   </data>
   <data name="KeyChordsHelp" xml:space="preserve">
-    <value>Select a chord to see its notes in Chord to notes. Pentatonic, blues and chromatic keys use the chords of the major or minor key they sound like.</value>
+    <value>Select a chord to view its notes. Pentatonic, blues and chromatic keys show the chords of the major or minor key they&apos;re based on.</value>
   </data>
   <data name="ScaleName0" xml:space="preserve">
     <value>Major</value>
