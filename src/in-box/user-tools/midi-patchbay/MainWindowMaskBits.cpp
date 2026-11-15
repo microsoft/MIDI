@@ -440,7 +440,8 @@ namespace winrt::midipatchbay::implementation
                             return;
                         }
 
-                        element.CapturePointer(args.Pointer());
+                        // No pointer capture, the same as a drag on the canvas: the rows follow the
+                        // moves themselves, and the drag ends when the button comes up.
                         s->OnMaskBitPressed(word, bit);
                     });
 
@@ -454,25 +455,31 @@ namespace winrt::midipatchbay::implementation
                             return;
                         }
 
-                        s->OnMaskBitDragged(BitAt(args.GetCurrentPoint(element).Position().X));
+                        auto const point = args.GetCurrentPoint(element);
+
+                        // The button came up somewhere these rows never heard about.
+                        if (!point.Properties().IsLeftButtonPressed())
+                        {
+                            s->EndMaskBitDrag();
+                            return;
+                        }
+
+                        s->OnMaskBitDragged(BitAt(point.Position().X));
                     });
 
                 row.PointerReleased([weak](foundation::IInspectable const& sender, input::PointerRoutedEventArgs const& args)
                     {
-                        if (auto const element = sender.try_as<xaml::UIElement>())
+                        auto s = weak.get();
+                        auto const element = sender.try_as<xaml::UIElement>();
+
+                        // Moves are coalesced, so a quick drag can deliver none near its end.
+                        // Where the button came up decides it.
+                        if (s != nullptr && element != nullptr && s->m_maskDragging)
                         {
-                            element.ReleasePointerCapture(args.Pointer());
+                            s->OnMaskBitDragged(BitAt(args.GetCurrentPoint(element).Position().X));
                         }
 
-                        if (auto s = weak.get())
-                        {
-                            s->EndMaskBitDrag();
-                        }
-                    });
-
-                row.PointerCaptureLost([weak](auto&&, auto&&)
-                    {
-                        if (auto s = weak.get())
+                        if (s != nullptr)
                         {
                             s->EndMaskBitDrag();
                         }
