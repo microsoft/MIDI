@@ -233,6 +233,9 @@ namespace winrt::midipatchbay::implementation
                 m_canvas.Select(patchbay::CanvasSelectionKind::Block, blockId);
             }
 
+            // A right click selects it without opening the inspector.
+            OpenInspector();
+
             // After the press that got here has finished, or it takes the focus back.
             DispatcherQueue().TryEnqueue([weak = get_weak()]()
                 {

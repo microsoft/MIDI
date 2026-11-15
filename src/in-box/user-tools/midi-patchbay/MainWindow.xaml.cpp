@@ -239,6 +239,7 @@ namespace winrt::midipatchbay::implementation
                         m_watchWindows->BringForward(number);
                     }
                 };
+            callbacks.InspectorRequested = [this]() { OpenInspector(); };
 
             m_canvas.Initialize(CanvasScroller(), CanvasSurface(), MinimapSurface(), std::move(callbacks));
 

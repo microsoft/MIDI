@@ -244,6 +244,16 @@ namespace winrt::midipatchbay::implementation
         void BuildMaskSection() noexcept;
         void RebuildMaskConditions() noexcept;
 
+        // ---- the mask filter's bit picture, in MainWindowMaskBits.cpp ----
+        controls::StackPanel BuildMaskBitsSection() noexcept;
+        void RebuildMaskBits() noexcept;
+        void RefreshMaskBits() noexcept;
+        void OnMaskBitPressed(_In_ uint8_t word, _In_ uint8_t bit) noexcept;
+        void OnMaskBitDragged(_In_ uint8_t bit) noexcept;
+        void EndMaskBitDrag() noexcept;
+        void PickMaskField(_In_ uint8_t word, _In_ uint8_t highBit, _In_ uint8_t lowBit) noexcept;
+        void SetActiveMaskCondition(_In_ size_t position) noexcept;
+
         // Fills the value set from what a device plays, for as long as the dialog is open.
         winrt::fire_and_forget StartLearningAsync();
         void StopLearning() noexcept;
@@ -290,6 +300,9 @@ namespace winrt::midipatchbay::implementation
 
         // ---- inspector, in MainWindowInspector.cpp ----
         void RefreshInspector() noexcept;
+
+        // Shows the inspector for what is selected, for a click or a menu item that asks for it.
+        void OpenInspector() noexcept;
         void BuildEndpointInspector(_In_ ::midipatchbay::PatchEndpoint const& endpoint) noexcept;
         void BuildConnectionInspector(_In_ ::midipatchbay::PatchConnection const& connection) noexcept;
         void BuildBlockInspector(_In_ ::midipatchbay::PatchBlock const& block) noexcept;
@@ -576,6 +589,10 @@ namespace winrt::midipatchbay::implementation
         // Typed into the patch but not yet a step for Undo.
         bool m_annotationTextChanged{ false };
 
+        // The inspector is showing. While it is, it follows the selection however that changes;
+        // while it isn't, only a click or a request for it opens it.
+        bool m_inspectorOpen{ false };
+
         bool m_settingZoomBox{ false };
 
         // A resize bar being dragged: which one, and where the drag started.
@@ -618,6 +635,17 @@ namespace winrt::midipatchbay::implementation
         uint64_t m_learnGeneration{ 0 };
 
         controls::StackPanel m_maskConditionsPanel{ nullptr };
+
+        // The bit picture: one cell per bit, word by word, and the condition a drag changes.
+        controls::StackPanel m_maskBitsHost{ nullptr };
+        std::vector<controls::Border> m_maskBitCells{};
+        controls::TextBlock m_maskVerdictText{ nullptr };
+        std::vector<uint32_t> m_maskTestWords{};
+        size_t m_maskActiveCondition{ 0 };
+        bool m_maskDragging{ false };
+        bool m_maskDragChanges{ false };
+        uint8_t m_maskDragWord{ 0 };
+        uint8_t m_maskDragAnchor{ 0 };
 
         // Every box that shows a fraction of full scale, so switching between 0 to 127 and
         // percent can retext them all in place.

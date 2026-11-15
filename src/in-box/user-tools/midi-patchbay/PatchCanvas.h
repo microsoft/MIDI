@@ -97,6 +97,10 @@ namespace midipatchbay
 
             // The numbered dot of a window watching a connection was clicked, by window number.
             std::function<void(uint32_t)> WatchMarkClicked{};
+
+            // A node or connection was clicked: pressed and let go without moving. A press, a
+            // drag or a right click selects without asking for the inspector.
+            std::function<void()> InspectorRequested{};
         };
 
         void Initialize(
@@ -126,6 +130,10 @@ namespace midipatchbay
 
         // Every selected node, the primary one included. Ctrl and a click add or take away one.
         std::vector<std::wstring> const& SelectedNodeIds() const noexcept { return m_selectedNodeIds; }
+
+        // False when the selection came from a press, a drag or a right click on the canvas,
+        // which select without opening the inspector. True for everything else.
+        bool SelectionWantsInspector() const noexcept { return m_selectionWantsInspector; }
 
         void Select(_In_ CanvasSelectionKind kind, _In_ std::wstring const& id) noexcept;
 
@@ -370,6 +378,13 @@ namespace midipatchbay
         // Saves where the dragged nodes ended up, the same as letting go of the button.
         void FinishNodeDrag() noexcept;
 
+        // Selects for a press, a drag or a right click, which leave the inspector as it is.
+        void SelectQuietly(_In_ CanvasSelectionKind kind, _In_ std::wstring const& id) noexcept;
+
+        // A left press that is a click if it comes up within ClickSlop of where it went down.
+        void StartClick(_In_ foundation::Point const& position) noexcept;
+        void RaiseClickIfPending() noexcept;
+
         void OnDragOver(_In_ xaml::DragEventArgs const& args) noexcept;
         void OnDrop(_In_ xaml::DragEventArgs const& args) noexcept;
         void SetDropTarget(_In_ std::wstring const& connectionId) noexcept;
@@ -455,6 +470,15 @@ namespace midipatchbay
         std::wstring m_selectedNodeId{};
         std::wstring m_selectedConnectionId{};
         std::vector<std::wstring> m_selectedNodeIds{};
+
+        bool m_selectionWantsInspector{ true };
+        bool m_quietSelection{ false };
+
+        // A left press on a node or a cord, which is a click if it is let go without moving.
+        bool m_clickPending{ false };
+        foundation::Point m_clickStart{};
+        foundation::Point m_clickLast{};
+        static constexpr float ClickSlop = 4.0f;
 
         // The connection a palette drag would land on, shown so the customer knows before
         // letting go.
