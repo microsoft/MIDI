@@ -152,7 +152,7 @@
     <value>From the device</value>
   </data>
   <data name="TimestampSourceArrivalTime" xml:space="preserve">
-    <value>Estimated. This device does not timestamp its messages, so the time each one arrived is used instead.</value>
+    <value>Estimated. This device's timestamps can't be used, so the time each message arrived is used instead.</value>
   </data>
   <data name="DeviceStatisticsLabel.Text" xml:space="preserve">
     <value>Messages</value>

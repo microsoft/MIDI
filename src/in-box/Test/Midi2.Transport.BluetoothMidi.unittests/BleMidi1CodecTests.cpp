@@ -825,6 +825,52 @@ void BleMidi1CodecTests::TestCorrelatorDoesNotAbandonASenderClockOverOneCoalesce
     VERIFY_IS_FALSE(correlator.SenderClockIsStalled());
 }
 
+void BleMidi1CodecTests::TestCorrelatorAbandonsASenderClockThatWrapsEarly()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // A Numark Party Mix III's timestamp wraps at about 6554 ms instead of 8192, so every wrap
+    // reads as the clock leaping 1.6 seconds ahead.
+    uint64_t const start = 1000 * TestTicksPerMillisecond;
+    std::vector<uint64_t> mapped;
+    uint64_t arrival{ 0 };
+
+    for (uint64_t t = 0; t < 25000; t += 15)
+    {
+        arrival = start + (t + 3) * TestTicksPerMillisecond;
+        mapped = MapPacket(correlator, { static_cast<uint16_t>((t % 6554) & MidiBleMidi1::TimestampMask) }, arrival);
+    }
+
+    VERIFY_IS_TRUE(correlator.SenderClockIsUnreliable());
+    VERIFY_IS_TRUE(correlator.SenderClockIsUnusable());
+    VERIFY_IS_FALSE(correlator.SenderClockIsStalled());
+    VERIFY_ARE_EQUAL(arrival, mapped[0]);
+
+    // only a new link gets a fresh judgment
+    correlator.Reset();
+    VERIFY_IS_FALSE(correlator.SenderClockIsUnreliable());
+}
+
+void BleMidi1CodecTests::TestCorrelatorKeepsASenderClockThroughRetransmissions()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // On a 40 ms connection interval, a retransmitted packet arrives 80 ms late. That isn't the
+    // clock jumping, however often it happens, and neither is the very first packet being late.
+    uint64_t const start = 1000 * TestTicksPerMillisecond;
+
+    for (uint64_t i = 0; i < 4500; i++)
+    {
+        uint64_t const t = i * 40;
+        uint64_t const transit = (i % 10 == 0) ? 80 : 2;
+
+        MapPacket(correlator, { static_cast<uint16_t>(t & MidiBleMidi1::TimestampMask) }, start + (t + transit) * TestTicksPerMillisecond);
+    }
+
+    VERIFY_IS_FALSE(correlator.SenderClockIsUnreliable());
+    VERIFY_IS_FALSE(correlator.SenderClockIsUnusable());
+}
+
 void BleMidi1CodecTests::TestCorrelatorResetRebuildsMapping()
 {
     MidiBleMidi1::TimestampCorrelator correlator;

@@ -77,6 +77,8 @@ public:
     TEST_METHOD(TestCorrelatorJudgesASteadilyStreamingDeviceWithoutLongGaps);
     TEST_METHOD(TestCorrelatorResumesCorrelatingWhenASenderClockStartsMoving);
     TEST_METHOD(TestCorrelatorDoesNotAbandonASenderClockOverOneCoalescedBurst);
+    TEST_METHOD(TestCorrelatorAbandonsASenderClockThatWrapsEarly);
+    TEST_METHOD(TestCorrelatorKeepsASenderClockThroughRetransmissions);
     TEST_METHOD(TestCorrelatorResetRebuildsMapping);
     TEST_METHOD(TestDecoderReportsSenderTimestamp);
 };

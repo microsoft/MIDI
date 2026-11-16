@@ -20,7 +20,7 @@ Bluetooth Low Energy MIDI 2.0 works the same way, using jitter reduction (JR) ti
 | ----- | ------------- | ----------- |
 | `Unknown` | `0` | The device hasn't sent enough yet for the service to judge its clock |
 | `Device` | `1` | The device's own timestamps are used |
-| `ArrivalTime` | `2` | The device doesn't keep time, so the moment each message arrived is used instead. Timing is approximate |
+| `ArrivalTime` | `2` | The device doesn't keep usable time, so the moment each message arrived is used instead. That happens when its timestamp never moves, when it keeps jumping, or when it's too uneven to smooth. Timing is approximate |
 
 The service works this out from the messages it receives. The device doesn't declare it. So it stays `Unknown` until the device has sent something, and it's checked again for as long as the device stays connected. Nothing is saved, so if a device's firmware is updated to keep time, that's noticed automatically.
 

@@ -165,7 +165,7 @@ Both BLE MIDI specifications say timestamps can't be in the future, and Windows 
 
 ### What jitter to expect
 
-These figures come from a simulated link (the `BleIncomingSmoothingTests` unit tests), with a sender that stamps each message when it happens and a stack delay of up to 0.3 ms. Real links add skipped events and resends, which the delay grows to cover.
+These figures come from a simulated link (the `BleIncomingSmoothingTests` unit tests), with a sender that stamps each message when it happens and a stack delay of up to 0.3 ms. Real links add skipped events and resends, which the delay grows to cover. For example, a keyboard measured on a 15 ms interval settled at 25 to 29 ms, because about 5% of its messages missed one connection event.
 
 | Connection interval | As soon as possible: added delay | As soon as possible: jitter | Smooth: added delay, once settled | Smooth: jitter |
 | --- | --- | --- | --- | --- |
@@ -181,16 +181,18 @@ The 1 ms that's left is the timestamp itself: BLE MIDI 1.0 timestamps are whole 
 | --- | --- |
 | Stamps each message when it happens, from a crystal-accurate millisecond clock | The best case. About 1 ms of jitter, with a delay of about one connection interval. |
 | Clock runs fast or slow by up to 2% (for example an RC oscillator) | Once 5 seconds of data are in, the slope is measured and the result is the same as the best case. Before that, the delay grows to cover the drift, and with a large drift some messages miss their release time and go out as they arrive. |
-| Clock is off by more than 2% | The slope stops at 2%. Messages start missing their release time and go out as they arrive, so timing falls back toward "as soon as possible". |
+| Clock is off by more than 2% | The slope stops at 2%. Messages start missing their release time, and the delay climbs to its 50 ms ceiling. If even 50 ms can't cover the packets for 10 seconds, Windows stops smoothing that device until it reconnects, delivers its messages as they arrive, and reports a timestamp source of `ArrivalTime`. Holding every message for 50 ms while many still arrive late is worse than not smoothing at all. |
 | Stamps messages when it builds the packet, not when they happen | Smoothing can only recreate the spacing in the timestamps. Messages in one packet come out together, and the spacing between packets still follows the connection events. You get the full connection interval jitter plus the smoothing delay. |
 | Timestamp never moves | Detected after three packets, as described above. Messages are delivered as they arrive, and the device is reported with a timestamp source of `ArrivalTime`. |
-| Clock restarts or jumps | The line is thrown away and rebuilt from the next packets. The delay the link needs is kept. |
+| Clock restarts or jumps | The line is thrown away and rebuilt from the next packets. The delay the link needs is kept. A packet can't arrive before it was sent, so a timestamp that suddenly reads more than 50 ms ahead of every recent packet is counted as a jump. A packet that's late, for example because it was resent, isn't. |
+| Clock keeps jumping, for example because it wraps somewhere other than 8,192 ms | After three jumps within a minute, Windows stops using the device's timestamps until it reconnects. Its messages are delivered as they arrive, and it's reported with a timestamp source of `ArrivalTime`. |
 
 ### Recommendations for device makers
 
 - Stamp each message with the time it happened: the key press, the knob move, the clock tick. Not the time the packet was built.
 - Run the timestamp from a crystal-accurate millisecond clock, and never freeze it.
-- Never put a timestamp in the future, and wrap the 13-bit value correctly.
+- Never put a timestamp in the future, and wrap the 13-bit value at 8,192 ms. A counter that wraps anywhere else, such as a 16-bit count of 0.1 ms divided by 10, which wraps at 6,553 ms, looks like a clock jumping 1.6 seconds every time it wraps.
+- Keep the clock running while your firmware is busy. A clock that stalls during a burst of messages, or that skips ahead after a pause, places those messages in the wrong spot.
 - Ask for the shortest connection interval your stack allows. 7.5 ms is recommended for live playing, and the smoothing delay follows the interval.
 - Send each message at the next connection event. Holding messages back to fill packets adds latency that smoothing can't take away.
 
