@@ -85,6 +85,13 @@ namespace midiapp
         static WindowPlacementInfo CapturePlacement(
             winrt::Microsoft::UI::Xaml::Window const& window) noexcept;
 
+        // Puts a window at a position and size in physical pixels, on any monitor. Moving onto a
+        // monitor with a different scale makes Windows rescale the window, so it goes there small
+        // first, takes that monitor's scale, and only then gets its real size.
+        static void MoveAndResizeOnMonitor(
+            _In_ winrt::Microsoft::UI::Windowing::AppWindow const& appWindow,
+            _In_ winrt::Windows::Graphics::RectInt32 const& bounds) noexcept;
+
         void SavePlacement() noexcept;
 
         // releases the backdrop controllers; call from the window's Closed handler
