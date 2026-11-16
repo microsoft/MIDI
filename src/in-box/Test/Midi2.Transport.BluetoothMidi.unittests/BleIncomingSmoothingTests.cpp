@@ -517,7 +517,9 @@ void BleIncomingSmoothingTests::TestSmootherGrowsTheDelayWhenMessagesArriveLate(
 
     VerifyReleasesAreSane(messages);
     VERIFY_IS_TRUE(delay >= 30.0);
-    VERIFY_IS_TRUE(late < 0.02);
+
+    // the delay leaves out the allowed share on purpose, so about that many are late
+    VERIFY_IS_TRUE(late < MidiBleSmoothing::LateAllowancePerTenThousand / 10000.0 + 0.01);
 }
 
 void BleIncomingSmoothingTests::TestSmootherNeverReleasesEarlyOrOutOfOrder()

@@ -157,7 +157,7 @@ The 13-bit timestamp is unwrapped into a continuous millisecond count first, as 
 1. For every packet, Windows compares your timestamp with the time the packet arrived. The difference is your clock's offset from ours plus however long the packet waited. Waiting is never negative, so the packets that waited least show the true offset.
 2. It keeps the smallest difference from each second, for the last 30 seconds, and fits a straight line under them (the lower convex hull). The line's height is the offset. Its slope is how fast your clock runs compared with ours. The slope is only measured once there are 5 seconds of data, and it's limited to 2%.
 3. Each message's place on that line is when you played it, in Windows time. The release time is that plus the delay.
-4. The delay is measured, not guessed. Over the last 10 seconds, Windows works out how long packets waited after their place on the line, and picks a delay that covers all but 0.5% of them, plus 0.5 ms for timer wake-up. It starts at one connection interval plus 2 ms (or 17 ms if the interval isn't known). It grows straight away if messages start arriving after their release time. It shrinks in small steps (an eighth of the difference, 0.1 to 0.5 ms at a time, every 100 ms), so nobody hears it settle. It's never less than 1 ms and never more than 50 ms.
+4. The delay is measured, not guessed. Over the last 10 seconds, Windows works out how long packets waited after their place on the line, and picks a delay that covers all but 3% of them, plus 0.5 ms for timer wake-up. On real links a few percent of packets miss a connection event and arrive a whole interval late. Covering those would add a whole interval of delay to every message, so they're left out and delivered as they arrive. It starts at one connection interval plus 2 ms (or 17 ms if the interval isn't known). It grows straight away if messages start arriving after their release time. It shrinks in small steps (an eighth of the difference, 0.1 to 0.5 ms at a time, every 100 ms), so nobody hears it settle. It's never less than 1 ms and never more than 50 ms.
 5. The first 8 packets after connecting, or after your clock restarts, are delivered as they arrive while the line is built.
 6. Messages always come out in the order they arrived. A message that arrives after its release time goes out the moment it arrives. When the link drops, anything still waiting goes out right away.
 
@@ -165,13 +165,13 @@ Both BLE MIDI specifications say timestamps can't be in the future, and Windows 
 
 ### What jitter to expect
 
-These figures come from a simulated link (the `BleIncomingSmoothingTests` unit tests), with a sender that stamps each message when it happens and a stack delay of up to 0.3 ms. Real links add skipped events and resends, which the delay grows to cover. For example, a keyboard measured on a 15 ms interval settled at 25 to 29 ms, because about 5% of its messages missed one connection event.
+These figures come from a simulated link (the `BleIncomingSmoothingTests` unit tests), with a sender that stamps each message when it happens and a stack delay of up to 0.3 ms. Real links add skipped events and resends, which the delay grows to cover. For example, about 3% of the messages from one keyboard measured on a 15 ms interval missed a connection event and arrived 15 ms late. Covering them would have needed about 28 ms of delay. Leaving them out, the delay settles at about 16 ms in a replay of that capture.
 
 | Connection interval | As soon as possible: added delay | As soon as possible: jitter | Smooth: added delay, once settled | Smooth: jitter |
 | --- | --- | --- | --- | --- |
-| 7.5 ms | none | up to about 7.5 ms | about 8.7 ms | about 1 ms |
-| 11.25 ms | none | up to about 11.25 ms | about 12.4 ms | about 1 ms |
-| 15 ms | none | up to about 15 ms | about 15.8 ms | about 1 ms |
+| 7.5 ms | none | up to about 7.5 ms | about 8.3 ms | about 1 ms |
+| 11.25 ms | none | up to about 11.25 ms | about 11.9 ms | about 1 ms |
+| 15 ms | none | up to about 15 ms | about 15.7 ms | about 1 ms |
 
 The 1 ms that's left is the timestamp itself: BLE MIDI 1.0 timestamps are whole milliseconds, so no receiver can do better. Smooth delay settles at about one connection interval because that's how long a packet can wait. Windows has only been seen to negotiate 15 ms as the Central, so most devices connected to a PC will see the 15 ms row. A Central that negotiates a shorter interval, such as a phone connected to this PC as a peripheral, gets a lower delay.
 

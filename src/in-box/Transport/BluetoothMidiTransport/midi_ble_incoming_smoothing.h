@@ -72,10 +72,11 @@ namespace MidiBleSmoothing
     // The delay is chosen from the packets seen over this much local time.
     inline constexpr uint32_t DelayWindowMilliseconds = 10000;
 
-    // The delay covers all but this share of packets, in parts per ten thousand (0.5%). Covering
-    // every last one would let a single retransmitted packet hold the delay up for the whole
-    // window, and a message that is a little late is delivered the moment it arrives anyway.
-    inline constexpr uint32_t LateAllowancePerTenThousand = 50;
+    // The delay covers all but this share of packets, in parts per ten thousand (3%). On real
+    // links a few percent of packets miss a connection event and arrive a whole interval late, so
+    // covering them costs a whole interval more delay for every message. Leaving them out keeps
+    // the delay near one interval, and a message that is late is delivered the moment it arrives.
+    inline constexpr uint32_t LateAllowancePerTenThousand = 300;
 
     // Added to the measured delay to cover how late the release timer can wake.
     inline constexpr uint32_t DelayGuardMicroseconds = 500;
