@@ -34,7 +34,7 @@ Routing happens only while Windows MIDI Patchbay is running. [Routing only runs 
 
 1. **Steps and Endpoints.** The panel on the left has everything you can add. Drag a device from **Endpoints** onto the canvas. Each one shows the picture set for it in MIDI Settings, or an empty square when it has none. Drag a step from **Steps** onto a connection to put it in the way, or anywhere on the canvas to connect it yourself.
 2. **Draw a connection** by dragging from an **Out** point to an **In** point.
-3. **The details panel** shows whatever you've selected. For a step, **Edit settings…** changes what it does.
+3. **The details panel** shows whatever you've selected. It opens when you click something on the canvas. Dragging something or right-clicking it selects it without opening the panel, so the panel doesn't pop up over what you're moving. Once the panel is open, it follows what you select. For a step, **Edit settings…** changes what it does.
 4. **Routing** turns the patch on and off. **Start automatically** starts it each time Windows MIDI Patchbay starts.
 5. **The toolbar** has **Undo**, **Redo**, **Cut**, **Copy**, **Paste**, and **Remove**, and buttons to add an endpoint, create a loopback, or arrange the canvas for you.
 6. **The zoom controls**, at the bottom right of the canvas, change how much of the canvas you see. **Fit** shows all of it. The overview above them shows the whole patch.
@@ -143,7 +143,7 @@ Steps can't be connected in a circle, because nothing would ever leave it. Windo
 - **Control change filter** does the same for controllers: a range, one controller, or a list, picked from a grid of numbers. Everything that isn't a control change goes through.
 - **Velocity filter** picks out notes by how hard they're played, which is how you send soft playing to one sound and hard playing to another. It only looks at note on. Note off always goes through, so no note is left sounding.
 - **(N)RPN filter** picks out RPNs and NRPNs by bank and index, such as RPN 0/0, pitch bend range, and lets only those through or keeps them out. Leave a bank or an index empty to match any. A MIDI 1.0 device sends a parameter as several control changes: the bank and index always go through, and the values that follow are let through or kept out. Everything that isn't an RPN or NRPN goes through.
-- **Message mask filter** is for anything the others don't cover. It looks at the bits in messages of one size, such as "word 1, bits 14 down to 8", and lets the matching ones through or keeps them out. Messages of other sizes go through.
+- **Message mask filter** is for anything the others don't cover. It looks at the bits in messages of one size, such as "word 1, bits 14 down to 8", and lets the matching ones through or keeps them out. Messages of other sizes go through. Its settings show the message as a row of bits for each word. Drag across the bits to pick where a condition looks, or click a name under them, such as **Channel**. Type a message in hex under **Try a message** to see its bits and whether the step lets it through.
 
 The note filter and the control change filter can also **Learn**. Turn it on and play the notes, or move the controls, on your device. Learn listens to the devices connected to the step's **In**, through any steps before it, so connect the step first.
 

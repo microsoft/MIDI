@@ -348,6 +348,7 @@
     <ClCompile Include="MainWindowInspector.cpp" />
     <ClCompile Include="MainWindowStepSettings.cpp" />
     <ClCompile Include="MainWindowMapSteps.cpp" />
+    <ClCompile Include="MainWindowMaskBits.cpp" />
     <ClCompile Include="MainWindowCapabilityInquiry.cpp" />
     <ClCompile Include="MainWindowLogicSteps.cpp" />
     <ClCompile Include="MainWindowControllerSteps.cpp" />

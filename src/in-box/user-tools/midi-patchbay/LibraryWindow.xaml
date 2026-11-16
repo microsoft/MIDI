@@ -188,6 +188,7 @@
             <Border x:Name="SystemFillColorAttentionBackgroundBrush" Background="{ThemeResource SystemFillColorAttentionBackgroundBrush}" />
             <Border x:Name="AccentTextFillColorPrimaryBrush" Background="{ThemeResource AccentTextFillColorPrimaryBrush}" />
             <Border x:Name="CanvasSurfaceBrush" Background="{ThemeResource CanvasSurfaceBrush}" />
+            <Border x:Name="TextOnAccentFillColorPrimaryBrush" Background="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
         </Grid>
 
         <!-- ============================ Title bar drag region ============================ -->

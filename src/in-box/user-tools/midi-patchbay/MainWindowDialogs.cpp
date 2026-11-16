@@ -1038,11 +1038,9 @@ namespace winrt::midipatchbay::implementation
                 }
                 else
                 {
-                    if (!EditsInInspector(block->Kind))
-                    {
-                        addItem(resources::GetString(L"ActionEditStep"),
-                            [blockId](MainWindow& window) { window.ShowBlockDialogAsync(blockId); });
-                    }
+                    // Steps edited in the inspector open it; the rest open their settings dialog.
+                    addItem(resources::GetString(L"ActionEditStep"),
+                        [blockId](MainWindow& window) { window.ShowBlockDialogAsync(blockId); });
 
                     controls::ToggleMenuFlyoutItem bypassItem{};
 
