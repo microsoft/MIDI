@@ -644,7 +644,9 @@ namespace midipatchbay
                 return;
             }
 
-            auto const dpi = ::GetDpiForWindow(handle);
+            // The editor's scale, not this window's: it opens on the main monitor and is then
+            // moved beside the editor, which can be on a monitor with a different scale.
+            auto const dpi = ::GetDpiForWindow(m_owner != nullptr ? m_owner : handle);
             auto const scale = dpi == 0 ? 1.0 : dpi / 96.0;
 
             auto const width = static_cast<int32_t>(DefaultWidth * scale);
@@ -674,7 +676,7 @@ namespace midipatchbay
                 y = std::clamp(y, static_cast<int32_t>(work.top), (std::max)(static_cast<int32_t>(work.top), static_cast<int32_t>(work.bottom) - height));
             }
 
-            m_window.AppWindow().MoveAndResize({ x, y, width, height });
+            midiapp::WindowChrome::MoveAndResizeOnMonitor(m_window.AppWindow(), { x, y, width, height });
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to place a monitor window.")
     }
