@@ -86,6 +86,12 @@ namespace MidiBleSmoothing
     // lower edge is not something smoothing can fix, and timestamps are untrusted input.
     inline constexpr uint32_t MaximumDelayMilliseconds = 50;
 
+    // When even MaximumDelayMilliseconds can't cover the packets for this long, the sender's
+    // timestamps are no use for smoothing, and messages go out as they arrive until the link
+    // is reset. Holding every message for the longest time allowed and still delivering many of
+    // them late is worse than not smoothing at all.
+    inline constexpr uint32_t GiveUpAtMaximumDelayMilliseconds = 10000;
+
     // How far after its arrival a message's mapped time may land before it counts as stamped in
     // the future. Covers the error in a clock estimate built from a startup burst.
     inline constexpr uint32_t FutureTimestampToleranceMicroseconds = 2000;
@@ -379,6 +385,8 @@ namespace MidiBleSmoothing
             m_active = false;
             m_lastReleaseTicks = 0;
             m_lastShrinkArrivalTicks = 0;
+            m_targetAtMaximumSinceTicks = 0;
+            m_gaveUp = false;
         }
 
         // The sender's clock restarted or jumped. The mapping is rebuilt, but the delay the link
@@ -408,6 +416,10 @@ namespace MidiBleSmoothing
         double Skew() const noexcept { return m_clock.Skew(); }
 
         uint64_t LateMessageCount() const noexcept { return m_lateMessageCount; }
+
+        // True once the delay couldn't cover the packets for GiveUpAtMaximumDelayMilliseconds.
+        // Messages then go out as they arrive until Reset.
+        bool GaveUp() const noexcept { return m_gaveUp; }
 
         // A sample of the sender's clock that carries no message, such as a BLE MIDI 2.0 JR Clock.
         // Its wait for the connection event is like any packet's, so it counts toward the delay too.
@@ -465,6 +477,15 @@ namespace MidiBleSmoothing
                     ResetClock();
                 }
 
+                m_active = false;
+
+                ReleaseAllAtArrival(senderTicks.size(), arrivalTicks, releaseTicks);
+
+                return false;
+            }
+
+            if (m_gaveUp)
+            {
                 m_active = false;
 
                 ReleaseAllAtArrival(senderTicks.size(), arrivalTicks, releaseTicks);
@@ -578,6 +599,19 @@ namespace MidiBleSmoothing
 
                 m_haveTarget = true;
                 m_lastMeasureArrivalTicks = arrivalTicks;
+
+                if (m_targetTicks < maximum)
+                {
+                    m_targetAtMaximumSinceTicks = 0;
+                }
+                else if (m_targetAtMaximumSinceTicks == 0)
+                {
+                    m_targetAtMaximumSinceTicks = arrivalTicks;
+                }
+                else if (arrivalTicks - m_targetAtMaximumSinceTicks >= static_cast<uint64_t>(GiveUpAtMaximumDelayMilliseconds) * ticksPerMillisecond)
+                {
+                    m_gaveUp = true;
+                }
             }
 
             if (m_delayTicks == 0)
@@ -630,6 +664,10 @@ namespace MidiBleSmoothing
         uint64_t m_lastShrinkArrivalTicks{ 0 };
         uint32_t m_connectionIntervalMicroseconds{ 0 };
         uint64_t m_lateMessageCount{ 0 };
+
+        // when the target delay first reached the maximum, or zero when it's below it
+        uint64_t m_targetAtMaximumSinceTicks{ 0 };
+        bool m_gaveUp{ false };
     };
 }
 

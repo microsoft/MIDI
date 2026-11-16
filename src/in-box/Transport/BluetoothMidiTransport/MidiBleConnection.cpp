@@ -1322,12 +1322,12 @@ MidiBleConnection::ProcessIncomingMidi1Packet(
     m_incomingTimestampCorrelator.MapPacket(segments, receiveTimestamp, ticksPerMillisecond, segmentTimestamps, &senderMilliseconds);
 
     m_incomingTimestampSource.store(static_cast<uint8_t>(
-        m_incomingTimestampCorrelator.SenderClockIsStalled() ? MidiBleProtocol::TimestampSource::ArrivalTime :
+        m_incomingTimestampCorrelator.SenderClockIsUnusable() || m_incomingSmoother.GaveUp() ? MidiBleProtocol::TimestampSource::ArrivalTime :
         m_incomingTimestampCorrelator.HaveSeenSenderClockAdvance() ? MidiBleProtocol::TimestampSource::Device :
         MidiBleProtocol::TimestampSource::Unknown));
 
     // Smoothing needs a sender clock which has been seen to run. Until then, and for a device
-    // whose clock never moves, messages are released as they arrive.
+    // whose clock never moves or keeps jumping, messages are released as they arrive.
     auto const smooth = RefreshIncomingTimingSetting();
     bool smoothing{ false };
     std::vector<uint64_t> releaseTimestamps;
@@ -1354,7 +1354,7 @@ MidiBleConnection::ProcessIncomingMidi1Packet(
         smoothing = m_incomingSmoother.ProcessPacket(
             senderTicks,
             receiveTimestamp,
-            m_incomingTimestampCorrelator.HaveSeenSenderClockAdvance() && !m_incomingTimestampCorrelator.SenderClockIsStalled(),
+            m_incomingTimestampCorrelator.HaveSeenSenderClockAdvance() && !m_incomingTimestampCorrelator.SenderClockIsUnusable(),
             ticksPerMillisecond,
             releaseTimestamps);
     }
@@ -1781,7 +1781,12 @@ MidiBleConnection::UpdateUmpIncomingTimestampSource(uint64_t const localArrivalT
 {
     auto source = MidiBleProtocol::TimestampSource::Unknown;
 
-    if (m_incomingJrDecoder.ClockIsUsable())
+    if (m_incomingSmoother.GaveUp())
+    {
+        // the JR Clock is running, but too unevenly to place messages in time with
+        source = MidiBleProtocol::TimestampSource::ArrivalTime;
+    }
+    else if (m_incomingJrDecoder.ClockIsUsable())
     {
         source = MidiBleProtocol::TimestampSource::Device;
     }

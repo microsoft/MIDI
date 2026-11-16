@@ -579,6 +579,40 @@ void BleIncomingSmoothingTests::TestSmootherNeverHoldsLongerThanTheMaximum()
     }
 }
 
+void BleIncomingSmoothingTests::TestSmootherGivesUpWhenTheMaximumCannotCover()
+{
+    // A sender clock 6% slow is outside what the clock estimate will follow, so the gap between
+    // where it puts messages and when they arrive keeps growing past the longest hold allowed.
+    LinkModel slow{};
+    slow.IntervalMilliseconds = 15.0;
+    slow.SenderRate = 0.94;
+
+    MidiBleSmoothing::IncomingSmoother smoother;
+    smoother.SetConnectionIntervalMicroseconds(15000);
+
+    auto const messages = RunLink(smoother, SteadyStream(20.3, 40000.0), slow);
+
+    VERIFY_IS_TRUE(smoother.GaveUp());
+    VERIFY_IS_FALSE(smoother.IsActive());
+    VERIFY_ARE_EQUAL(messages.back().Arrival, messages.back().Release);
+
+    // a new link is judged again
+    smoother.Reset();
+    VERIFY_IS_FALSE(smoother.GaveUp());
+
+    // and a healthy link on the same interval never gives up
+    MidiBleSmoothing::IncomingSmoother healthy;
+    healthy.SetConnectionIntervalMicroseconds(15000);
+
+    LinkModel steady{};
+    steady.IntervalMilliseconds = 15.0;
+
+    RunLink(healthy, SteadyStream(20.3, 40000.0), steady);
+
+    VERIFY_IS_FALSE(healthy.GaveUp());
+    VERIFY_IS_TRUE(healthy.IsActive());
+}
+
 void BleIncomingSmoothingTests::TestSmootherResetClockKeepsTheDelay()
 {
     MidiBleSmoothing::IncomingSmoother smoother;
@@ -708,7 +742,7 @@ void BleIncomingSmoothingTests::TestSmootherWithTheBleMidi1Correlator()
         smoother.ProcessPacket(
             senderTicks,
             arrival,
-            correlator.HaveSeenSenderClockAdvance() && !correlator.SenderClockIsStalled(),
+            correlator.HaveSeenSenderClockAdvance() && !correlator.SenderClockIsUnusable(),
             TicksPerMillisecond,
             releases);
 

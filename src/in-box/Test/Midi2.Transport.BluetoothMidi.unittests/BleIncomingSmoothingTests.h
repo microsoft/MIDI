@@ -44,6 +44,7 @@ public:
     TEST_METHOD(TestSmootherGrowsTheDelayWhenMessagesArriveLate);
     TEST_METHOD(TestSmootherNeverReleasesEarlyOrOutOfOrder);
     TEST_METHOD(TestSmootherNeverHoldsLongerThanTheMaximum);
+    TEST_METHOD(TestSmootherGivesUpWhenTheMaximumCannotCover);
     TEST_METHOD(TestSmootherResetClockKeepsTheDelay);
     TEST_METHOD(TestSmootherTreatsAFutureTimestampAsArrival);
 
