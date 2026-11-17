@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "CardBuilder.h"
 
 namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
@@ -26,7 +27,7 @@ namespace midicalculator::ui
 
         media::Brush ThemeBrush(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
         }
 
         controls::Button MakeCopyButton(_In_ winrt::hstring const& label, _In_ std::function<winrt::hstring()> const& value, _In_ CopyHandler const& copy)

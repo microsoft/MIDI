@@ -9,6 +9,7 @@
 // Laid out as src\prototypes\midi-calculator\design\4-timecode-and-samples.html.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcTempo.h"
@@ -42,7 +43,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
         }
 
         ::midicalc::FrameRate RateOf(controls::ComboBox const& box) noexcept

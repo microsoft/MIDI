@@ -11,6 +11,7 @@
 // are in CalcMidi2.h.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcMidi2.h"
@@ -67,7 +68,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
         }
 
         // The MIDI 1.0 bytes for a MIDI 1.0 or MIDI 2.0 channel voice message, the way the

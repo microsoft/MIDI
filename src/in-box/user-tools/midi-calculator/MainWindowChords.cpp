@@ -11,6 +11,7 @@
 // read and voiced the same way in both apps.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcText.h"
@@ -30,7 +31,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
         }
 
         media::SolidColorBrush BassBrush()

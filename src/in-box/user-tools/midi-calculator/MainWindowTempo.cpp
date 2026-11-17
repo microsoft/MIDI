@@ -9,6 +9,7 @@
 // src\prototypes\midi-calculator\design\1-tempo-and-beats.html.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcTempo.h"
@@ -48,7 +49,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
         }
 
         std::wstring MeterText(::midicalc::Meter const& meter)
@@ -151,7 +152,7 @@ namespace winrt::midicalculator::implementation
                         ui::SetBigText(s->m_tapValue, res::GetString(L"TapNoTempo"), 40.0, 16.0);
                         s->m_tapDetail.Text(res::GetString(L"TapHint"));
 
-                        auto const off = xaml::Application::Current().Resources().Lookup(winrt::box_value(L"ControlStrongFillColorDisabledBrush")).as<media::Brush>();
+                        auto const off = ::midicalculator::ui::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush");
 
                         for (auto const& dot : s->m_tapDots.Children())
                         {
@@ -452,8 +453,8 @@ namespace winrt::midicalculator::implementation
 
             // light a dot for each tap that counts
             auto const count = static_cast<uint32_t>(m_tapTempo.TapCount());
-            auto const on = xaml::Application::Current().Resources().Lookup(winrt::box_value(L"AccentFillColorDefaultBrush")).as<media::Brush>();
-            auto const off = xaml::Application::Current().Resources().Lookup(winrt::box_value(L"ControlStrongFillColorDisabledBrush")).as<media::Brush>();
+            auto const on = ::midicalculator::ui::ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush");
+            auto const off = ::midicalculator::ui::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush");
 
             for (uint32_t i = 0; i < m_tapDots.Children().Size(); ++i)
             {

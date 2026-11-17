@@ -9,6 +9,7 @@
 // tuning the customer picks. Laid out as src\prototypes\midi-calculator\design\2-notes-and-pitch.html.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcMidi2.h"
@@ -33,7 +34,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
         }
 
         // The names of the 12 pitch classes, for the tuning's root. Sharps, as in the note boxes.
