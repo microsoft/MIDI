@@ -297,6 +297,13 @@
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
+  <!-- build\build-all.ps1 passes the SDK release here, so each release's DLL has a higher file
+       version than the last and an installer upgrade replaces it. Resource.rc uses 0 without it. -->
+  <ItemDefinitionGroup Condition="'$(MidiSdkFileVersionRevision)' != ''">
+    <ResourceCompile>
+      <PreprocessorDefinitions>MIDI_SDK_FILE_VERSION_REVISION=$(MidiSdkFileVersionRevision);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="MidiBytestreamToUmpMessageConverterState.h" />
     <ClInclude Include="MidiSystemExclusiveReceivedEventArgs.h" />
