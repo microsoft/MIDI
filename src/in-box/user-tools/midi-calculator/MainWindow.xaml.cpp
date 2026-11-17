@@ -41,7 +41,7 @@ namespace winrt::midicalculator::implementation
         {
             // Before the chrome applies the saved theme, so that change is caught too. This also
             // catches a change of the Windows theme, which raises no settings change.
-            ::midiapp::ThemeBrushes::Current().Initialize(ThemeBrushSource());
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
             RootGrid().ActualThemeChanged([](auto&&, auto&&)
                 {
                     ::midiapp::ThemeBrushes::Current().Refresh();
@@ -79,6 +79,7 @@ namespace winrt::midicalculator::implementation
                         strong->StopLiveClock();
                         native::History::Current().Changed(nullptr);
                         strong->m_chrome.SavePlacement();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });

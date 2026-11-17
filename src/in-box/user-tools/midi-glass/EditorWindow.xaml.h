@@ -66,6 +66,9 @@ namespace winrt::midiglass::implementation
         // so a second one does not land exactly on the first. Called before Activate.
         void RestoreWindowPlacement(_In_ int32_t cascadeOffset);
 
+        // The tool's Appearance settings, applied again after they change in any window.
+        void ApplyAppearance() noexcept;
+
         void OnLayoutSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCloseLayoutSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSettingsAddPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

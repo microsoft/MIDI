@@ -22,6 +22,7 @@
 //     to 1.22 : 1 against the middle of its own glass.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -45,8 +46,7 @@ namespace winrt::midiglass::implementation
 
         media::SolidColorBrush ThemeBrush(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources()
-                .Lookup(box_value(key)).as<media::SolidColorBrush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key).as<media::SolidColorBrush>();
         }
 
         controls::TextBlock RowLabel(_In_ wchar_t const* key)

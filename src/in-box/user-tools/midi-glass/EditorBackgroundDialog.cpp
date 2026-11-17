@@ -12,6 +12,7 @@
 // layout from a stranger cannot point this app at a file somewhere else on the PC.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -210,8 +211,7 @@ namespace winrt::midiglass::implementation
             previewFrame.Height(150.0);
             previewFrame.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(6.0));
             previewFrame.Background(
-                xaml::Application::Current().Resources()
-                    .Lookup(box_value(L"SubtleFillColorSecondaryBrush")).as<media::Brush>());
+                ::midiapp::ThemeBrushes::Current().Get(L"SubtleFillColorSecondaryBrush"));
             previewFrame.Child(preview);
 
             controls::TextBlock fileText{};
@@ -223,8 +223,7 @@ namespace winrt::midiglass::implementation
             copyNote.TextWrapping(xaml::TextWrapping::Wrap);
             copyNote.Visibility(xaml::Visibility::Collapsed);
             copyNote.Foreground(
-                xaml::Application::Current().Resources()
-                    .Lookup(box_value(L"SystemFillColorCautionBrush")).as<media::Brush>());
+                ::midiapp::ThemeBrushes::Current().Get(L"SystemFillColorCautionBrush"));
 
             controls::ComboBox fitCombo{};
             fitCombo.Header(box_value(resources::GetString(L"BackgroundFitHeader")));

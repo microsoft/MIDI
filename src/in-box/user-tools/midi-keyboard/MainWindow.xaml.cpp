@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "MainWindow.g.cpp"
 
@@ -90,8 +91,7 @@ namespace winrt::midikeyboard::implementation
             try
             {
                 // Lookup, not HasKey: the theme brushes live in a merged dictionary
-                return xaml::Application::Current().Resources()
-                    .Lookup(winrt::box_value(winrt::hstring{ key })).try_as<media::Brush>();
+                return ::midiapp::ThemeBrushes::Current().Get(std::wstring{ key }.c_str());
             }
             catch (...)
             {
@@ -301,6 +301,7 @@ namespace winrt::midikeyboard::implementation
                         strong->m_ciPresence.Close();
 
                         strong->m_chrome.SavePlacement();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                         strong->ShutdownAsync();
                     }
@@ -440,6 +441,13 @@ namespace winrt::midikeyboard::implementation
             elements.TitleBar = AppTitleBar();
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
+
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);

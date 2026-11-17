@@ -13,6 +13,7 @@
 // turn a sequencer into a way to deliver code.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -29,7 +30,7 @@ namespace winrt::midiglass::implementation
     {
         media::Brush SequenceBrushNamed(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         // The step kinds the design's "add a step" row offers, in its order.

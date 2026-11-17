@@ -9,6 +9,7 @@
 // cannot do without asking.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "App.xaml.h"
 
@@ -97,8 +98,7 @@ namespace winrt::midiglass::implementation
                 detail.Text(resources::GetString(info.DescriptionResourceKey));
                 detail.FontSize(12);
                 detail.TextWrapping(xaml::TextWrapping::Wrap);
-                detail.Foreground(xaml::Application::Current().Resources()
-                    .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+                detail.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
                 text.Children().Append(name);
                 text.Children().Append(detail);

@@ -15,6 +15,7 @@
 // Edit mode always draws everything, because a control nobody can see is one nobody can edit.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -36,7 +37,7 @@ namespace winrt::midiglass::implementation
 
         media::Brush RemoteBrush(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         controls::TextBlock RemoteText(_In_ winrt::hstring const& text, _In_ double size, _In_ wchar_t const* brushKey)

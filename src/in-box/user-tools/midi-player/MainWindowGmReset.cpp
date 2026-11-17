@@ -11,6 +11,7 @@
 // with whatever the last file left behind.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
@@ -198,8 +199,6 @@ namespace winrt::midiplayer::implementation
     {
         try
         {
-            auto const resources = xaml::Application::Current().Resources();
-
             controls::StackPanel panel{};
             panel.Spacing(8);
 
@@ -255,7 +254,7 @@ namespace winrt::midiplayer::implementation
             controls::TextBlock hint{};
             hint.Text(hintText);
             hint.TextWrapping(xaml::TextWrapping::Wrap);
-            hint.Foreground(resources.Lookup(winrt::box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            hint.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
             panel.Children().Append(hint);
 
             return panel;

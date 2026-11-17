@@ -13,6 +13,7 @@
 // about this machine it belongs to app settings.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -42,8 +43,7 @@ namespace winrt::midiglass::implementation
 
         media::SolidColorBrush PaneBrush(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources()
-                .Lookup(box_value(key)).as<media::SolidColorBrush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key).as<media::SolidColorBrush>();
         }
 
         // Somewhere to put a theme or a package, or one to read. The Win32 common item dialog,

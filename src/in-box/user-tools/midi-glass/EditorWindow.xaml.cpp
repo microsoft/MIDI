@@ -10,6 +10,7 @@
 // three dialogs in EditorDialogs.cpp.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 #include "SysExReview.h"
 #include "EditorWindow.g.cpp"
@@ -104,6 +105,13 @@ namespace winrt::midiglass::implementation
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
 
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
+
             m_chrome.Initialize(elements, ::midiglass::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
@@ -193,6 +201,11 @@ namespace winrt::midiglass::implementation
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to set up the editor window.")
     }
 
+    void EditorWindow::ApplyAppearance() noexcept
+    {
+        m_chrome.ApplyTheme();
+    }
+
     _Use_decl_annotations_
     void EditorWindow::OnWindowClosed(foundation::IInspectable const& sender, xaml::WindowEventArgs const& args)
     {
@@ -230,6 +243,7 @@ namespace winrt::midiglass::implementation
 
             StopVideoPlayheadTimer();
             m_renderer.Teardown();
+            ::midiapp::ThemeBrushes::Current().RemoveSource(ThemeBrushSource());
             m_chrome.Shutdown();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to shut the editor window down cleanly.")
@@ -295,11 +309,9 @@ namespace winrt::midiglass::implementation
     {
         try
         {
-            auto const& application = xaml::Application::Current().Resources();
-
-            auto const brushNamed = [&application](wchar_t const* key)
+            auto const brushNamed = [](wchar_t const* key)
                 {
-                    return application.Lookup(box_value(key)).as<media::Brush>();
+                    return ::midiapp::ThemeBrushes::Current().Get(key);
                 };
 
             if (m_saveFailed)
@@ -366,8 +378,6 @@ namespace winrt::midiglass::implementation
 
             // What the next arrange or repeat will act on, said where the eye already is for
             // the Saved chip rather than at the far corner of the window.
-            auto const& application = xaml::Application::Current().Resources();
-
             SelectionChip().Visibility(selected == 0
                 ? xaml::Visibility::Collapsed
                 : xaml::Visibility::Visible);
@@ -377,10 +387,8 @@ namespace winrt::midiglass::implementation
                 SelectionChipText().Text(resources::FormatString(
                     L"EditorSelectedFormat", std::to_wstring(selected)));
 
-                SelectionChipShape().Fill(application
-                    .Lookup(box_value(L"AccentFillColorSelectedTextBackgroundBrush")).as<media::Brush>());
-                SelectionChipShape().Stroke(application
-                    .Lookup(box_value(L"AccentControlElevationBorderBrush")).as<media::Brush>());
+                SelectionChipShape().Fill(::midiapp::ThemeBrushes::Current().Get(L"AccentFillColorSelectedTextBackgroundBrush"));
+                SelectionChipShape().Stroke(::midiapp::ThemeBrushes::Current().Get(L"AccentControlElevationBorderBrush"));
             }
 
             // In Try mode the question stops being "what have I built" and becomes "is this
@@ -504,7 +512,7 @@ namespace winrt::midiglass::implementation
                 {
                     if (auto strong = weak.get())
                     {
-                        strong->m_chrome.ApplyTheme();
+                        App::ApplyAppearanceToAllWindows();
                     }
                 },
                 nullptr,

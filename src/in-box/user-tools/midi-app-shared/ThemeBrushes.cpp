@@ -25,23 +25,36 @@ namespace midiapp
     }
 
     _Use_decl_annotations_
-    void ThemeBrushes::Initialize(wuxc::Panel const& source) noexcept
+    void ThemeBrushes::AddSource(wuxc::Panel const& source) noexcept
     {
         try
         {
-            m_entries.clear();
-
-            if (source == nullptr)
+            if (source != nullptr)
             {
-                return;
+                m_sources.push_back(source);
             }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
 
-            for (auto const& child : source.Children())
+    _Use_decl_annotations_
+    void ThemeBrushes::RemoveSource(wuxc::Panel const& source) noexcept
+    {
+        try
+        {
+            m_sources.erase(std::remove(m_sources.begin(), m_sources.end(), source), m_sources.end());
+
+            if (m_sources.empty())
             {
-                if (auto const border = child.try_as<wuxc::Border>())
-                {
-                    m_entries.emplace(std::wstring{ border.Name() }, Entry{ border, nullptr });
-                }
+                m_brushes.clear();
+            }
+            else
+            {
+                // The colors may have come from the window that just closed.
+                Refresh();
             }
         }
         catch (...)
@@ -53,36 +66,37 @@ namespace midiapp
     _Use_decl_annotations_
     wuxm::Brush ThemeBrushes::Get(wchar_t const* key)
     {
-        auto const found = m_entries.find(key);
+        if (auto const found = m_brushes.find(key); found != m_brushes.end())
+        {
+            return found->second;
+        }
 
-        if (found == m_entries.end())
+        auto const source = FindSource(key);
+
+        if (source == nullptr)
         {
             // A key missing from the window's brush source panel. It still draws, but in the
             // Windows theme rather than the tool's.
-            LOG_HR_MSG(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "Theme brush is not published by the window: %ls", key);
+            LOG_HR_MSG(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "Theme brush is not published by any window: %ls", key);
             return wux::Application::Current().Resources().Lookup(winrt::box_value(key)).as<wuxm::Brush>();
         }
 
-        auto& entry = found->second;
+        wuxm::SolidColorBrush brush{};
+        CopyInto(source, brush);
+        m_brushes.emplace(key, brush);
 
-        if (entry.Brush == nullptr)
-        {
-            entry.Brush = wuxm::SolidColorBrush{};
-            CopyInto(entry.Source, entry.Brush);
-        }
-
-        return entry.Brush;
+        return brush;
     }
 
     void ThemeBrushes::Refresh() noexcept
     {
-        for (auto const& [key, entry] : m_entries)
+        for (auto const& [key, brush] : m_brushes)
         {
             try
             {
-                if (entry.Brush != nullptr)
+                if (auto const source = FindSource(key))
                 {
-                    CopyInto(entry.Source, entry.Brush);
+                    CopyInto(source, brush);
                 }
             }
             catch (...)
@@ -90,6 +104,23 @@ namespace midiapp
                 LOG_CAUGHT_EXCEPTION();
             }
         }
+    }
+
+    _Use_decl_annotations_
+    wuxc::Border ThemeBrushes::FindSource(std::wstring_view key) const
+    {
+        for (auto source = m_sources.rbegin(); source != m_sources.rend(); ++source)
+        {
+            for (auto const& child : source->Children())
+            {
+                if (auto const border = child.try_as<wuxc::Border>(); border != nullptr && border.Name() == key)
+                {
+                    return border;
+                }
+            }
+        }
+
+        return nullptr;
     }
 
     _Use_decl_annotations_

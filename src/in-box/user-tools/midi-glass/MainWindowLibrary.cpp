@@ -9,6 +9,7 @@
 // recent, the search and the sort, and everything the card menu does to a file.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "App.xaml.h"
 
@@ -851,16 +852,14 @@ namespace winrt::midiglass::implementation
 
             ServiceChipIcon().Glyph(m_serviceRunning ? L"\uE73E" : L"\uE7BA");
 
-            auto const& appResources = xaml::Application::Current().Resources();
-
-            auto const foreground = appResources.Lookup(box_value(m_serviceRunning
+            auto const foreground = ::midiapp::ThemeBrushes::Current().Get(m_serviceRunning
                 ? L"SystemFillColorSuccessBrush"
-                : L"SystemFillColorCriticalBrush")).as<media::Brush>();
+                : L"SystemFillColorCriticalBrush");
 
             ServiceChipShape().Stroke(foreground);
-            ServiceChipShape().Fill(appResources.Lookup(box_value(m_serviceRunning
+            ServiceChipShape().Fill(::midiapp::ThemeBrushes::Current().Get(m_serviceRunning
                 ? L"SystemFillColorSuccessBackgroundBrush"
-                : L"SystemFillColorCriticalBackgroundBrush")).as<media::Brush>());
+                : L"SystemFillColorCriticalBackgroundBrush"));
 
             ServiceChipIcon().Foreground(foreground);
             ServiceChipText().Foreground(foreground);

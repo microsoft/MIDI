@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "ProvenanceForm.h"
 
 #include "SharingDialogs.h"
@@ -239,7 +240,7 @@ namespace midiglass::sharing
     _Use_decl_annotations_
     media::Brush ThemeBrush(wchar_t const* key)
     {
-        return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+        return ::midiapp::ThemeBrushes::Current().Get(key);
     }
 
     _Use_decl_annotations_

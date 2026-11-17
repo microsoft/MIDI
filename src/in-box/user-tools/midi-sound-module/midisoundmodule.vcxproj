@@ -160,6 +160,7 @@
     <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\ThemeBrushes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -190,6 +191,7 @@
     <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\ThemeBrushes.cpp" />
     <!-- Parses Property Exchange headers with Windows.Data.Json, so it is kept out of the engine
          library and compiled here, the same file the tests compile. -->
     <ClCompile Include="engine\SynthPropertyRequests.cpp">

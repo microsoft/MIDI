@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #if __has_include("MainWindow.g.cpp")
 #include "MainWindow.g.cpp"
@@ -163,6 +164,7 @@ namespace winrt::midiplayer::implementation
                         strong->m_keyboardRoll.Shutdown();
 
                         strong->m_chrome.SavePlacement();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -324,6 +326,13 @@ namespace winrt::midiplayer::implementation
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
 
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
+
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
@@ -448,7 +457,7 @@ namespace winrt::midiplayer::implementation
             controls::TextBlock hint{};
             hint.Text(hintText);
             hint.TextWrapping(xaml::TextWrapping::Wrap);
-            hint.Foreground(resources.Lookup(winrt::box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            hint.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
             panel.Children().Append(hint);
 
             if (auto const gmReset = BuildGmResetSetting())

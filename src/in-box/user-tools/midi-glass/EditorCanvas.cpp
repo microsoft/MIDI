@@ -16,6 +16,7 @@
 // the surface; see EditorTryMode.cpp.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -67,7 +68,7 @@ namespace winrt::midiglass::implementation
 
         media::Brush BrushNamed(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         glass::EditRect RectOf(_In_ glass::Control const& control) noexcept

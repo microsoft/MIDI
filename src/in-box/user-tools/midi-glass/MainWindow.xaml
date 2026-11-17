@@ -505,6 +505,41 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Theme brushes for what's built in code. XAML re-resolves each of these on every theme
+             change, and midiapp::ThemeBrushes copies them into the brushes the code shares. A key
+             used in code must be listed here. Zero sized rather than collapsed, so nothing here
+             can be skipped as unrealized. -->
+        <Grid x:Name="ThemeBrushSource" Grid.Row="0" Width="0" Height="0"
+              Opacity="0" IsHitTestVisible="False"
+              HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Border x:Name="AccentControlElevationBorderBrush" Background="{ThemeResource AccentControlElevationBorderBrush}" />
+            <Border x:Name="AccentFillColorDefaultBrush" Background="{ThemeResource AccentFillColorDefaultBrush}" />
+            <Border x:Name="AccentFillColorSelectedTextBackgroundBrush" Background="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}" />
+            <Border x:Name="AccentFillColorTertiaryBrush" Background="{ThemeResource AccentFillColorTertiaryBrush}" />
+            <Border x:Name="AccentTextFillColorPrimaryBrush" Background="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+            <Border x:Name="CardBackgroundFillColorDefaultBrush" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Border x:Name="CardBackgroundFillColorSecondaryBrush" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+            <Border x:Name="ControlAltFillColorSecondaryBrush" Background="{ThemeResource ControlAltFillColorSecondaryBrush}" />
+            <Border x:Name="ControlFillColorSecondaryBrush" Background="{ThemeResource ControlFillColorSecondaryBrush}" />
+            <Border x:Name="ControlStrokeColorDefaultBrush" Background="{ThemeResource ControlStrokeColorDefaultBrush}" />
+            <Border x:Name="ControlStrongFillColorDefaultBrush" Background="{ThemeResource ControlStrongFillColorDefaultBrush}" />
+            <Border x:Name="DividerStrokeColorDefaultBrush" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            <Border x:Name="SolidBackgroundFillColorBaseBrush" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" />
+            <Border x:Name="SubtleFillColorSecondaryBrush" Background="{ThemeResource SubtleFillColorSecondaryBrush}" />
+            <Border x:Name="SystemFillColorAttentionBrush" Background="{ThemeResource SystemFillColorAttentionBrush}" />
+            <Border x:Name="SystemFillColorCautionBackgroundBrush" Background="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+            <Border x:Name="SystemFillColorCautionBrush" Background="{ThemeResource SystemFillColorCautionBrush}" />
+            <Border x:Name="SystemFillColorCriticalBackgroundBrush" Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}" />
+            <Border x:Name="SystemFillColorCriticalBrush" Background="{ThemeResource SystemFillColorCriticalBrush}" />
+            <Border x:Name="SystemFillColorSuccessBackgroundBrush" Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}" />
+            <Border x:Name="SystemFillColorSuccessBrush" Background="{ThemeResource SystemFillColorSuccessBrush}" />
+            <Border x:Name="TextFillColorDisabledBrush" Background="{ThemeResource TextFillColorDisabledBrush}" />
+            <Border x:Name="TextFillColorPrimaryBrush" Background="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Border x:Name="TextFillColorSecondaryBrush" Background="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Border x:Name="TextFillColorTertiaryBrush" Background="{ThemeResource TextFillColorTertiaryBrush}" />
+            <Border x:Name="TextOnAccentFillColorPrimaryBrush" Background="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+        </Grid>
+
         <!-- hidden when a system backdrop is in use, so the material shows through -->
         <Border x:Name="WindowFill"
                 Grid.Row="0"

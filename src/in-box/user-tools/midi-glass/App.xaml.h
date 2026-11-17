@@ -34,6 +34,12 @@ namespace winrt::midiglass::implementation
 
         static void ActivateLibraryWindow();
 
+        // The Appearance settings belong to the whole app, so a change made in one window
+        // reaches the library and every editor. Their visuals built in code share one set of
+        // theme brushes, which is only right while they're all in the same theme. Runtime
+        // windows keep the theme they opened with, and build nothing from those brushes.
+        static void ApplyAppearanceToAllWindows() noexcept;
+
         // A layout file was replaced by one from another PC. A window running it offers to load
         // the new copy rather than swapping the surface in the middle of a performance.
         static void NotifyLayoutUpdated(_In_ std::wstring const& filePath);

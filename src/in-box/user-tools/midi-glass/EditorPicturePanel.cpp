@@ -13,6 +13,7 @@
 // is one way to position a picture and the buttons, the box and the arrow keys cannot disagree.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -85,7 +86,7 @@ namespace winrt::midiglass::implementation
 
         media::Brush ThemeBrush(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         winrt::Windows::UI::Color ThemeColorOf(_In_ wchar_t const* key)

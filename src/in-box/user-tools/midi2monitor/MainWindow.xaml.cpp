@@ -173,6 +173,7 @@ namespace winrt::midi2monitor::implementation
                         strong->StopMonitoring(false);
                         strong->StopEndpointWatcher();
                         strong->m_pipeline.Stop();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -199,7 +200,7 @@ namespace winrt::midi2monitor::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             // Before the chrome applies the saved theme, so the brushes start in that theme.
-            midiapp::ThemeBrushes::Current().Initialize(ThemeBrushSource());
+            midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);

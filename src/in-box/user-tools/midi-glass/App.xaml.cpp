@@ -62,6 +62,23 @@ namespace winrt::midiglass::implementation
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to bring the library forward.")
     }
 
+    void App::ApplyAppearanceToAllWindows() noexcept
+    {
+        try
+        {
+            if (auto const library = g_libraryWindow.try_as<midiglass::MainWindow>())
+            {
+                winrt::get_self<MainWindow>(library)->ApplyAppearance();
+            }
+
+            for (auto const& editor : g_editorWindows)
+            {
+                winrt::get_self<EditorWindow>(editor)->ApplyAppearance();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to apply the appearance to every window.")
+    }
+
     _Use_decl_annotations_
     void App::OpenEditorWindow(std::wstring const& filePath, std::wstring const& settingsPane)
     {

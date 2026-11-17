@@ -12,6 +12,7 @@
 // or the keyboard moves to another port.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -30,7 +31,7 @@ namespace winrt::midiglass::implementation
 
         media::SolidColorBrush BrushFromKey(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::SolidColorBrush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key).as<media::SolidColorBrush>();
         }
 
         controls::TextBlock MakeText(
@@ -1108,8 +1109,7 @@ namespace winrt::midiglass::implementation
             // is what puts the system highlight color on them rather than one invented here.
             itemStyle.Setters().Append(xaml::Setter{
                 controls::Control::BackgroundProperty(),
-                xaml::Application::Current().Resources().Lookup(
-                    box_value(L"CardBackgroundFillColorDefaultBrush")) });
+                ::midiapp::ThemeBrushes::Current().Get(L"CardBackgroundFillColorDefaultBrush") });
 
             endpointList.ItemContainerStyle(itemStyle);
 
