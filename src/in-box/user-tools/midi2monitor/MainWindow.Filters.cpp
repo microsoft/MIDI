@@ -18,6 +18,7 @@
 
 #include "MonitorPalette.h"
 #include "PopupBackdrop.h"
+#include "ThemeBrushes.h"
 #include "SourceTable.h"
 #include "StringResources.h"
 
@@ -172,8 +173,7 @@ namespace winrt::midi2monitor::implementation
             title.Text(res::GetString(key));
             title.Style(xaml::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
-            title.Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
+            title.Foreground(midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
             title.Margin(xaml::ThicknessHelper::FromLengths(0, 6, 0, 2));
             return title;
         }
@@ -346,8 +346,7 @@ namespace winrt::midi2monitor::implementation
             help.TextWrapping(xaml::TextWrapping::Wrap);
             help.Style(xaml::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
-            help.Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
+            help.Foreground(midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
             top.Children().Append(help);
 
             // a check box whose change runs the given update, then applies the filter
@@ -619,8 +618,7 @@ namespace winrt::midi2monitor::implementation
             controls::Border line{};
             line.Height(1);
             line.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 6));
-            line.Background(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"DividerStrokeColorDefaultBrush")).as<media::Brush>());
+            line.Background(midiapp::ThemeBrushes::Current().Get(L"DividerStrokeColorDefaultBrush"));
             panel.Children().Append(line);
 
             panel.Children().Append(makeCheck(L"FilterFoldRepeats", settings.FoldRepeats(),
@@ -688,17 +686,15 @@ namespace winrt::midi2monitor::implementation
                 return;
             }
 
-            auto const resources = xaml::Application::Current().Resources();
-
-            auto const makeChip = [&resources](winrt::hstring const& text, media::Brush const& swatch, std::function<void()> remove)
+            auto const makeChip = [](winrt::hstring const& text, media::Brush const& swatch, std::function<void()> remove)
                 {
                     controls::Border chip{};
                     chip.Height(28);
                     chip.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(14));
                     chip.Padding(xaml::ThicknessHelper::FromLengths(10, 0, 2, 0));
                     chip.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-                    chip.Background(resources.Lookup(winrt::box_value(L"ControlFillColorSecondaryBrush")).as<media::Brush>());
-                    chip.BorderBrush(resources.Lookup(winrt::box_value(L"ControlStrokeColorDefaultBrush")).as<media::Brush>());
+                    chip.Background(midiapp::ThemeBrushes::Current().Get(L"ControlFillColorSecondaryBrush"));
+                    chip.BorderBrush(midiapp::ThemeBrushes::Current().Get(L"ControlStrokeColorDefaultBrush"));
                     chip.VerticalAlignment(xaml::VerticalAlignment::Center);
 
                     controls::StackPanel content{};

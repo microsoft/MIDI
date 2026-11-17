@@ -34,7 +34,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         // The names of the 12 pitch classes, for the tuning's root. Sharps, as in the note boxes.

@@ -133,7 +133,6 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="StringResources.h" />
-    <ClInclude Include="ThemeBrushes.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="CalcTempo.h" />
     <ClInclude Include="CalcPitch.h" />
@@ -163,6 +162,7 @@
     <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
     <ClInclude Include="..\midi-app-shared\TapTempo.h" />
     <ClInclude Include="..\midi-app-shared\ChordTheory.h" />
+    <ClInclude Include="..\midi-app-shared\ThemeBrushes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -172,7 +172,6 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="StringResources.cpp" />
-    <ClCompile Include="ThemeBrushes.cpp" />
     <ClCompile Include="CalcText.cpp" />
     <ClCompile Include="CalcHistory.cpp" />
     <ClCompile Include="CardBuilder.cpp" />
@@ -226,6 +225,7 @@
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\ThemeBrushes.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
     <ClCompile Include="..\midi-app-shared\TapTempo.cpp">

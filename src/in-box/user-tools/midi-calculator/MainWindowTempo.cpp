@@ -49,7 +49,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         std::wstring MeterText(::midicalc::Meter const& meter)
@@ -152,7 +152,7 @@ namespace winrt::midicalculator::implementation
                         ui::SetBigText(s->m_tapValue, res::GetString(L"TapNoTempo"), 40.0, 16.0);
                         s->m_tapDetail.Text(res::GetString(L"TapHint"));
 
-                        auto const off = ::midicalculator::ui::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush");
+                        auto const off = ::midiapp::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush");
 
                         for (auto const& dot : s->m_tapDots.Children())
                         {
@@ -453,8 +453,8 @@ namespace winrt::midicalculator::implementation
 
             // light a dot for each tap that counts
             auto const count = static_cast<uint32_t>(m_tapTempo.TapCount());
-            auto const on = ::midicalculator::ui::ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush");
-            auto const off = ::midicalculator::ui::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush");
+            auto const on = ::midiapp::ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush");
+            auto const off = ::midiapp::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush");
 
             for (uint32_t i = 0; i < m_tapDots.Children().Size(); ++i)
             {

@@ -43,7 +43,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         ::midicalc::FrameRate RateOf(controls::ComboBox const& box) noexcept

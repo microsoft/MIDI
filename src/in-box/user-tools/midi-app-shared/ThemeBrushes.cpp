@@ -8,8 +8,15 @@
 #include "pch.h"
 #include "ThemeBrushes.h"
 
-namespace midicalculator::ui
+namespace midiapp
 {
+    namespace
+    {
+        namespace wux = winrt::Microsoft::UI::Xaml;
+        namespace wuxc = winrt::Microsoft::UI::Xaml::Controls;
+        namespace wuxm = winrt::Microsoft::UI::Xaml::Media;
+    }
+
     ThemeBrushes& ThemeBrushes::Current() noexcept
     {
         static ThemeBrushes instance{};
@@ -18,7 +25,7 @@ namespace midicalculator::ui
     }
 
     _Use_decl_annotations_
-    void ThemeBrushes::Initialize(controls::Panel const& source) noexcept
+    void ThemeBrushes::Initialize(wuxc::Panel const& source) noexcept
     {
         try
         {
@@ -31,7 +38,7 @@ namespace midicalculator::ui
 
             for (auto const& child : source.Children())
             {
-                if (auto const border = child.try_as<controls::Border>())
+                if (auto const border = child.try_as<wuxc::Border>())
                 {
                     m_entries.emplace(std::wstring{ border.Name() }, Entry{ border, nullptr });
                 }
@@ -44,23 +51,23 @@ namespace midicalculator::ui
     }
 
     _Use_decl_annotations_
-    media::Brush ThemeBrushes::Get(wchar_t const* key)
+    wuxm::Brush ThemeBrushes::Get(wchar_t const* key)
     {
         auto const found = m_entries.find(key);
 
         if (found == m_entries.end())
         {
-            // A key missing from ThemeBrushSource in MainWindow.xaml. It still draws, but in the
-            // Windows theme rather than the app's.
-            LOG_HR_MSG(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "Theme brush is not published by ThemeBrushSource: %ls", key);
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            // A key missing from the window's brush source panel. It still draws, but in the
+            // Windows theme rather than the tool's.
+            LOG_HR_MSG(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "Theme brush is not published by the window: %ls", key);
+            return wux::Application::Current().Resources().Lookup(winrt::box_value(key)).as<wuxm::Brush>();
         }
 
         auto& entry = found->second;
 
         if (entry.Brush == nullptr)
         {
-            entry.Brush = media::SolidColorBrush{};
+            entry.Brush = wuxm::SolidColorBrush{};
             CopyInto(entry.Source, entry.Brush);
         }
 
@@ -86,10 +93,10 @@ namespace midicalculator::ui
     }
 
     _Use_decl_annotations_
-    void ThemeBrushes::CopyInto(controls::Border const& source, media::SolidColorBrush const& target)
+    void ThemeBrushes::CopyInto(wuxc::Border const& source, wuxm::SolidColorBrush const& target)
     {
         // Read every time rather than cached: XAML replaces this brush when the theme changes.
-        if (auto const brush = source.Background().try_as<media::SolidColorBrush>())
+        if (auto const brush = source.Background().try_as<wuxm::SolidColorBrush>())
         {
             target.Color(brush.Color());
             target.Opacity(brush.Opacity());

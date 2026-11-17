@@ -31,7 +31,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return ::midicalculator::ui::ThemeBrushes::Current().Get(key);
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         media::SolidColorBrush BassBrush()

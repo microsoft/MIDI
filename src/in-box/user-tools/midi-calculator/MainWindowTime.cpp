@@ -249,8 +249,8 @@ namespace winrt::midicalculator::implementation
         // ---- this PC, live: a strip across the top, as in the comp ----
         controls::Border strip{};
         {
-            strip.Background(::midicalculator::ui::ThemeBrushes::Current().Get(L"CardBackgroundFillColorDefaultBrush"));
-            strip.BorderBrush(::midicalculator::ui::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
+            strip.Background(::midiapp::ThemeBrushes::Current().Get(L"CardBackgroundFillColorDefaultBrush"));
+            strip.BorderBrush(::midiapp::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
             strip.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
             strip.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(8));
             strip.Padding(xaml::Thickness{ 16, 12, 16, 12 });
