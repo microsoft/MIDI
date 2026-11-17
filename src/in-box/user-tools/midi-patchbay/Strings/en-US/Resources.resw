@@ -2690,6 +2690,63 @@
   <data name="MaskValueInvalidFormat" xml:space="preserve">
     <value>Type a number from 0 to {0}. Start it with 0x for hexadecimal.</value>
   </data>
+  <data name="MaskBitsHeading" xml:space="preserve">
+    <value>Where to look</value>
+  </data>
+  <data name="MaskBitsHint" xml:space="preserve">
+    <value>Drag across the bits to pick where the selected condition looks, or click a name under the bits to pick that field. The selected condition is filled in; click inside another condition's bits to select it. The names are only a guide, because messages of one size can be of several types.</value>
+  </data>
+  <data name="MaskGuideType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="MaskGuideGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="MaskGuideStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="MaskGuideChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="MaskGuideIndex" xml:space="preserve">
+    <value>Note or CC</value>
+  </data>
+  <data name="MaskGuideMidi1Value" xml:space="preserve">
+    <value>Velocity or value</value>
+  </data>
+  <data name="MaskGuideMidi2Velocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="MaskTryHeader" xml:space="preserve">
+    <value>Try a message</value>
+  </data>
+  <data name="MaskTryPlaceholder" xml:space="preserve">
+    <value>For example 40903C00 7FFF0000</value>
+  </data>
+  <data name="MaskTryInvalid" xml:space="preserve">
+    <value>Type the message in hexadecimal, up to four words, such as 40903C00 7FFF0000.</value>
+  </data>
+  <data name="MaskTryLengthFormat" xml:space="preserve">
+    <value>A message of this type is {0} bits long. Type all of it.</value>
+  </data>
+  <data name="MaskTryOtherSizeFormat" xml:space="preserve">
+    <value>That's a {0}-bit message. This step looks only at {1}-bit messages, so it goes through.</value>
+  </data>
+  <data name="MaskTryNoConditions" xml:space="preserve">
+    <value>Nothing to match yet, so it goes through.</value>
+  </data>
+  <data name="MaskTryMatchPasses" xml:space="preserve">
+    <value>It matches, so it goes through.</value>
+  </data>
+  <data name="MaskTryMatchKeptOut" xml:space="preserve">
+    <value>It matches, so it's kept out.</value>
+  </data>
+  <data name="MaskTryNoMatchPasses" xml:space="preserve">
+    <value>It doesn't match, so it goes through.</value>
+  </data>
+  <data name="MaskTryNoMatchKeptOut" xml:space="preserve">
+    <value>It doesn't match, so it's kept out.</value>
+  </data>
 
   <!-- ===================================================== transform settings -->
   <data name="TransformSectionGroupMap" xml:space="preserve">

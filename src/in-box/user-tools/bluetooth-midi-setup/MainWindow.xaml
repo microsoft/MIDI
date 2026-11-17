@@ -607,6 +607,21 @@
                                                 </Grid>
                                             </Expander>
 
+                                            <!-- Shown only while a connected device's link is slower than
+                                                 BLE MIDI allows. -->
+                                            <InfoBar x:Uid="SlowConnectionIntervalBar"
+                                                     Title="Slow Bluetooth link"
+                                                     Severity="Warning"
+                                                     IsClosable="False"
+                                                     IsOpen="{x:Bind IsSlowIntervalWarningOpen, Mode=OneWay}"
+                                                     Message="{x:Bind SlowIntervalWarningText, Mode=OneWay}">
+                                                <InfoBar.ActionButton>
+                                                    <HyperlinkButton x:Uid="OpenPowerSettingsButton"
+                                                                     Content="Open power settings"
+                                                                     NavigateUri="ms-settings:powersleep" />
+                                                </InfoBar.ActionButton>
+                                            </InfoBar>
+
                                             <!-- The transport's own wording, which is more specific than
                                                  an error code can be. -->
                                             <TextBlock Text="{x:Bind LastErrorText, Mode=OneWay}"
@@ -674,10 +689,6 @@
                                                     Orientation="Horizontal"
                                                     Spacing="8"
                                                     VerticalAlignment="Center">
-                                            <ComboBox x:Name="PeripheralProtocolCombo"
-                                                      x:Uid="PeripheralProtocolCombo"
-                                                      MinWidth="190"
-                                                      Header="Protocol" />
                                             <Button x:Name="StartPeripheralButton"
                                                     x:Uid="StartPeripheralButton"
                                                     Content="Publish"

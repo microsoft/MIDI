@@ -99,6 +99,19 @@ namespace MidiBleMidi1
     // which merely coalesced one burst is not mistaken for one whose clock never runs.
     inline constexpr uint32_t SenderClockStallObservationCount = 3;
 
+    // How far a packet's offset (arrival minus sender time) may fall below the smallest offset
+    // seen recently before it counts as the sender's clock jumping forward. A real packet can only
+    // beat the recent best by how much less it waited for its connection event. A device whose
+    // timestamp wraps somewhere other than 8192, or whose clock stops while it's busy, jumps by
+    // far more. This matches the longest smoothing will hold a message, because a jump larger
+    // than that can't be smoothed over anyway.
+    inline constexpr uint32_t MaximumClockDisagreementMilliseconds = 50;
+
+    // This many jumps inside the window and the sender's timestamps are abandoned in favor of
+    // arrival time, the same as for a clock which never moves, until the link is reset.
+    inline constexpr uint32_t UnreliableClockJumpCount = 3;
+    inline constexpr uint32_t UnreliableClockWindowMilliseconds = 60000;
+
     // Maps the sender's 13-bit millisecond clock onto the local timestamp clock.
     //
     // RP-052 leaves this to the implementation, saying only that correlation "must be performed".
@@ -129,6 +142,8 @@ namespace MidiBleMidi1
             m_offsetSamples.clear();
             m_senderClockStallObservations = 0;
             m_haveSeenSenderClockAdvance = false;
+            m_clockJumpArrivals.clear();
+            m_senderClockIsUnreliable = false;
             m_clockGeneration++;
         }
 
@@ -149,6 +164,21 @@ namespace MidiBleMidi1
         bool HaveSeenSenderClockAdvance() const noexcept
         {
             return m_haveSeenSenderClockAdvance;
+        }
+
+        // True once the sender's clock jumped UnreliableClockJumpCount times inside
+        // UnreliableClockWindowMilliseconds. Arrival time is then substituted for its timestamps
+        // until Reset, because a clock that broken stays broken, and coming back to it after
+        // every pause would mean relearning it and failing again each time.
+        bool SenderClockIsUnreliable() const noexcept
+        {
+            return m_senderClockIsUnreliable;
+        }
+
+        // True when the sender's timestamps aren't being used, for either reason.
+        bool SenderClockIsUnusable() const noexcept
+        {
+            return SenderClockIsStalled() || SenderClockIsUnreliable();
         }
 
         // Maps every segment of one packet onto the local clock. Whole packets rather than single
@@ -201,6 +231,9 @@ namespace MidiBleMidi1
             m_lastArrivalTimestamp = localArrivalTimestamp;
             m_haveArrival = true;
 
+            ExpireClockJumps(localArrivalTimestamp, ticksPerMillisecond);
+
+            bool const longGap = m_resynchronize;
             uint16_t const previousSenderTimestamp = m_lastSenderTimestamp;
             bool const hadSenderClock = m_haveClock;
 
@@ -229,6 +262,10 @@ namespace MidiBleMidi1
                         m_offsetSamples.clear();
                         m_clockGeneration++;
                     }
+                    else if (!longGap)
+                    {
+                        CheckForClockJump(localArrivalTimestamp, ticksPerMillisecond);
+                    }
 
                     m_haveSeenSenderClockAdvance = true;
                     m_senderClockStallObservations = 0;
@@ -244,11 +281,12 @@ namespace MidiBleMidi1
                 }
             }
 
-            if (SenderClockIsStalled())
+            if (SenderClockIsUnusable())
             {
                 // Nothing in the packet carries usable timing, so when it arrived is the only
                 // honest answer. Correlating against a stopped clock would instead pin every
-                // message to one instant and drag it further into the past as time passed.
+                // message to one instant and drag it further into the past as time passed, and
+                // one that keeps jumping would throw messages out of place at every jump.
                 for (auto& value : localTimestamps)
                 {
                     value = localArrivalTimestamp < m_lastEmittedTimestamp ?
@@ -323,6 +361,64 @@ namespace MidiBleMidi1
             uint64_t ArrivalTicks{ 0 };
             int64_t Offset{ 0 };
         };
+
+        // A packet can't arrive before it was sent, so its offset (arrival minus sender time) can't
+        // be much smaller than the smallest one seen recently: it can only improve on it by however
+        // much less this packet waited for its connection event. An offset far smaller means the
+        // sender's clock jumped forward, as it does on a device whose timestamp wraps early. A
+        // larger offset is left alone, because one packet held up by retransmission looks exactly
+        // like that, and a clock which runs slow shows up in smoothing as a delay it can't cover.
+        void CheckForClockJump(
+            _In_ uint64_t const localArrivalTimestamp,
+            _In_ uint64_t const ticksPerMillisecond)
+        {
+            bool jumped{ false };
+
+            if (m_resynchronize)
+            {
+                // re-seeded while advancing, because the sender's clock moved implausibly far
+                jumped = true;
+            }
+            else if (!m_offsetSamples.empty())
+            {
+                int64_t const candidateOffset =
+                    static_cast<int64_t>(localArrivalTimestamp) - static_cast<int64_t>(m_senderContinuousMilliseconds * ticksPerMillisecond);
+
+                int64_t const limit =
+                    static_cast<int64_t>(MaximumClockDisagreementMilliseconds) * static_cast<int64_t>(ticksPerMillisecond);
+
+                if (candidateOffset < m_offsetSamples.front().Offset - limit)
+                {
+                    // Nothing measured against the old correlation fits the new one.
+                    m_resynchronize = true;
+                    jumped = true;
+                }
+            }
+
+            if (!jumped)
+            {
+                return;
+            }
+
+            m_clockJumpArrivals.push_back(localArrivalTimestamp);
+
+            if (m_clockJumpArrivals.size() >= UnreliableClockJumpCount)
+            {
+                m_senderClockIsUnreliable = true;
+            }
+        }
+
+        void ExpireClockJumps(_In_ uint64_t const nowTicks, _In_ uint64_t const ticksPerMillisecond)
+        {
+            uint64_t const windowTicks = static_cast<uint64_t>(UnreliableClockWindowMilliseconds) * ticksPerMillisecond;
+
+            while (!m_clockJumpArrivals.empty() &&
+                   nowTicks > m_clockJumpArrivals.front() &&
+                   nowTicks - m_clockJumpArrivals.front() > windowTicks)
+            {
+                m_clockJumpArrivals.pop_front();
+            }
+        }
 
         void ExpireOffsetSamples(_In_ uint64_t const nowTicks, _In_ uint64_t const windowTicks) noexcept
         {
@@ -400,6 +496,10 @@ namespace MidiBleMidi1
 
         uint32_t m_senderClockStallObservations{ 0 };
         bool m_haveSeenSenderClockAdvance{ false };
+
+        // arrival times of recent sender clock jumps, oldest first
+        std::deque<uint64_t> m_clockJumpArrivals{ };
+        bool m_senderClockIsUnreliable{ false };
 
         uint32_t m_clockGeneration{ 0 };
     };

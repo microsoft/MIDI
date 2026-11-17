@@ -11,6 +11,8 @@
 #ifndef MIDI_BLE_JR_H
 #define MIDI_BLE_JR_H
 
+#include <cmath>
+
 // Jitter Reduction (JR) Clock and JR Timestamp handling for the BLE MIDI 2.0 UMP Characteristic.
 //
 // PROVISIONAL. The UMP rules come from M2-104-UM sections 7.1.6 and 7.2.2. The BLE-specific rules
@@ -18,14 +20,16 @@
 //
 //   - JR Clock and JR Timestamp messages are generated and consumed inside the transport. They
 //     are never passed to or accepted from applications.
-//   - A sender puts one JR Clock at the end of every BLE packet, carrying the same time as the
-//     last message in that packet, and sends one on its own when no packet has gone out for
-//     250 ms.
+//   - JR Clocks go out on their own schedule, never tied to when data is sent: a startup burst
+//     when JR is agreed and when the connection interval changes, then a steady period which is
+//     not a whole number of connection intervals. Each clock then waits a different time for its
+//     connection event, so the receiver can find the shortest wait. See ClockSchedule.
 //   - Every message gets a JR Timestamp, except that messages in the same packet which fall in
-//     the same JR tick share one.
+//     the same JR tick share one. A JR Timestamp is never later than the sender's JR time when
+//     the message is handed to Bluetooth.
 //   - Nothing is sent with JR until the other side has agreed to receive it.
-//   - Incoming JR Timestamps place messages in time. The per-packet JR Clock tracks the
-//     correlation between the two clocks.
+//   - Incoming JR Timestamps place messages in time. Incoming JR Clocks track the correlation
+//     between the two clocks.
 //
 // Expect this to change when the specification is updated.
 //
@@ -39,12 +43,27 @@ namespace MidiBleJr
     inline constexpr uint32_t JrTimeWrap = 0x10000;
     inline constexpr uint32_t JrTimeHalfWrap = JrTimeWrap / 2;
 
-    // UMP section 7.2.2.1: a sender shall send a JR Clock at least this often.
+    // UMP section 7.2.2.1: a sender shall send a JR Clock at least this often. The BLE rule below
+    // is stricter.
     inline constexpr uint32_t RequiredClockIntervalMilliseconds = 250;
 
-    // Sent early on purpose, so the clock still meets 250 ms when the writer thread or the
-    // connection interval runs late.
-    inline constexpr uint32_t IdleClockIntervalMilliseconds = 200;
+    // BLE MIDI 2.0 Working Group discussion: no more than this between JR Clocks.
+    inline constexpr uint32_t MaximumClockSpacingMilliseconds = 100;
+
+    // The startup burst. Sixteen clocks this far apart land at well spread points in any
+    // connection interval of 15 ms or less, so the receiver can line up the clocks quickly.
+    inline constexpr uint32_t StartupBurstClockCount = 16;
+    inline constexpr uint32_t StartupBurstSpacingMicroseconds = 8000;
+
+    // After the burst, a sender which knows the connection interval but not when its connection
+    // events happen (Windows doesn't say) sends a clock every whole number of intervals plus this
+    // fraction of one. Each clock then lands at a new point in the interval, and the points never
+    // repeat. The whole number is the smallest that makes the period at least the minimum.
+    inline constexpr double ClockPeriodIntervalFraction = 0.618;
+    inline constexpr uint32_t MinimumClockPeriodMicroseconds = 75000;
+
+    // When the connection interval isn't known. Not a whole number of any common interval.
+    inline constexpr uint32_t UnknownIntervalClockPeriodMicroseconds = 97000;
 
     inline constexpr uint8_t UtilityMessageType = 0x0;
     inline constexpr uint8_t JrClockStatus = 0x1;
@@ -164,11 +183,15 @@ namespace MidiBleJr
     }
 
 
-    // A run of incoming messages which share one local timestamp.
+    // A run of incoming messages which share one local timestamp. When the run was placed by a JR
+    // Timestamp, SenderLocalTicks is that time on the sender's continuous clock, in local ticks.
+    // It only means anything while the decoder's ClockGeneration stays the same.
     struct TimestampedRun
     {
         uint64_t Timestamp{ 0 };
         std::vector<uint32_t> Words{ };
+        bool HasSenderTime{ false };
+        int64_t SenderLocalTicks{ 0 };
     };
 
     // A clock not heard from in this long is not trusted to place messages. The sender owes one
@@ -215,7 +238,12 @@ namespace MidiBleJr
             m_haveSeenClockAdvance = false;
             m_haveCarriedTimestamp = false;
             m_carriedTimestampJrTicks = 0;
+            m_clockGeneration++;
         }
+
+        // Changes whenever the sender's clock restarts, stops or jumps, which is when anything
+        // built on the continuous sender time has to start over.
+        uint32_t ClockGeneration() const noexcept { return m_clockGeneration; }
 
         bool HaveSeenClock() const noexcept { return m_haveClock; }
 
@@ -231,15 +259,22 @@ namespace MidiBleJr
         }
 
         // Takes the complete UMPs of one BLE payload. Every UMP except JR Clock and JR Timestamp
-        // comes back in runs, in the order received.
+        // comes back in runs, in the order received. clockSenderLocalTicks, when given, gets the
+        // sender time of each usable JR Clock in the payload, in local ticks.
         void DecodePayload(
             _In_reads_(wordCount) uint32_t const* const words,
             _In_ size_t const wordCount,
             _In_ uint64_t const localArrivalTimestamp,
             _In_ uint64_t const localTicksPerSecond,
-            _Inout_ std::vector<TimestampedRun>& runs)
+            _Inout_ std::vector<TimestampedRun>& runs,
+            _Out_opt_ std::vector<int64_t>* const clockSenderLocalTicks = nullptr)
         {
             runs.clear();
+
+            if (clockSenderLocalTicks != nullptr)
+            {
+                clockSenderLocalTicks->clear();
+            }
 
             if (words == nullptr || wordCount == 0 || localTicksPerSecond == 0)
             {
@@ -248,8 +283,8 @@ namespace MidiBleJr
 
             uint64_t const ticksPerMillisecond = (std::max<uint64_t>)(localTicksPerSecond / 1000, 1);
 
-            // Clocks first. The working group recommends the clock at the end of the packet, but
-            // it is the newest reference for the timestamps before it too.
+            // Clocks first. A clock is the newest reference for the timestamps before it in the
+            // same payload too.
             for (size_t i = 0; i < wordCount; )
             {
                 auto const messageWordCount = GetUmpWordCount(words[i]);
@@ -261,7 +296,23 @@ namespace MidiBleJr
 
                 if (IsJrClock(words[i]))
                 {
+                    auto const generation = m_clockGeneration;
+
                     ProcessClock(GetJrTime(words[i]), localArrivalTimestamp, localTicksPerSecond, ticksPerMillisecond);
+
+                    if (clockSenderLocalTicks != nullptr)
+                    {
+                        // samples from before a restart don't belong to the clock after it
+                        if (generation != m_clockGeneration)
+                        {
+                            clockSenderLocalTicks->clear();
+                        }
+
+                        if (!ClockIsStalled())
+                        {
+                            clockSenderLocalTicks->push_back(JrTicksToLocalTicks(m_clockContinuousJrTicks, localTicksPerSecond));
+                        }
+                    }
                 }
 
                 i += messageWordCount;
@@ -315,10 +366,12 @@ namespace MidiBleJr
                 else
                 {
                     uint64_t timestamp{ 0 };
+                    int64_t senderLocalTicks{ 0 };
 
                     if (haveTimestamp)
                     {
                         timestamp = MapSenderTicks(timestampJrTicks, localArrivalTimestamp, localTicksPerSecond);
+                        senderLocalTicks = JrTicksToLocalTicks(timestampJrTicks, localTicksPerSecond);
                         timestampWasUsed = true;
                     }
                     else
@@ -326,9 +379,12 @@ namespace MidiBleJr
                         timestamp = ClampToEmitted(localArrivalTimestamp);
                     }
 
-                    if (runs.empty() || runs.back().Timestamp != timestamp)
+                    if (runs.empty() ||
+                        runs.back().Timestamp != timestamp ||
+                        runs.back().HasSenderTime != haveTimestamp ||
+                        runs.back().SenderLocalTicks != senderLocalTicks)
                     {
-                        runs.push_back({ timestamp, { } });
+                        runs.push_back({ timestamp, { }, haveTimestamp, senderLocalTicks });
                     }
 
                     runs.back().Words.insert(runs.back().Words.end(), words + i, words + i + messageWordCount);
@@ -386,6 +442,7 @@ namespace MidiBleJr
                 {
                     m_clockContinuousJrTicks = jrTime;
                     m_offsetSamples.clear();
+                    m_clockGeneration++;
                 }
                 else
                 {
@@ -397,6 +454,7 @@ namespace MidiBleJr
                         {
                             // Running again, so nothing learned while it was stopped still applies.
                             m_offsetSamples.clear();
+                            m_clockGeneration++;
                         }
 
                         m_clockStallObservations = 0;
@@ -439,6 +497,7 @@ namespace MidiBleJr
             {
                 // Waiting for the window to age out would strand every message in the past until it did.
                 m_offsetSamples.clear();
+                m_clockGeneration++;
             }
 
             // a younger and smaller sample means the older, larger ones can never be the minimum again
@@ -493,14 +552,16 @@ namespace MidiBleJr
 
         bool m_haveCarriedTimestamp{ false };
         int64_t m_carriedTimestampJrTicks{ 0 };
+
+        uint32_t m_clockGeneration{ 0 };
     };
 
 
     // Packs outgoing UMPs into BLE payloads. A UMP is never split across packets.
     //
     // With JR enabled, each message is preceded by a JR Timestamp unless the message before it in
-    // the same packet had the same JR time, and each packet ends with a JR Clock carrying the time
-    // of its last message. Room for that clock is kept free in every packet.
+    // the same packet had the same JR time. JR Clocks are not added here: they go out on their own
+    // schedule, because a clock tied to when data is sent waits the same way every time.
     //
     // JR Clock and JR Timestamp messages handed in by applications are dropped whether or not JR
     // is enabled. They belong to this link and only the transport can generate them correctly.
@@ -559,8 +620,7 @@ namespace MidiBleJr
 
             bool needTimestamp = !m_haveTimestampInPacket || m_lastJrTimeInPacket != jrTime;
 
-            // the JR Clock at the end needs its word too
-            size_t needed = messageByteCount + (needTimestamp ? WordByteCount : 0) + WordByteCount;
+            size_t needed = messageByteCount + (needTimestamp ? WordByteCount : 0);
 
             if (!m_current.empty() && m_current.size() + needed > m_maxPayloadByteCount)
             {
@@ -596,7 +656,7 @@ namespace MidiBleJr
             return packets;
         }
 
-        // For the 250 ms rule when there is nothing else to send.
+        // A JR Clock on its own. The writer fills in the time just before the write.
         static std::vector<uint8_t> BuildClockOnlyPacket(_In_ uint16_t const jrTime)
         {
             std::vector<uint8_t> packet;
@@ -629,25 +689,7 @@ namespace MidiBleJr
 
         void FinishPacket()
         {
-            if (m_jrEnabled && m_haveTimestampInPacket)
-            {
-                if (m_current.size() + WordByteCount <= m_maxPayloadByteCount)
-                {
-                    AppendWord(BuildJrClock(m_lastJrTimeInPacket));
-                    m_packets.push_back(std::move(m_current));
-                }
-                else
-                {
-                    // Only when a payload is too small to hold a message, its timestamp and a
-                    // clock together. The clock still goes out, right behind it.
-                    m_packets.push_back(std::move(m_current));
-                    m_packets.push_back(BuildClockOnlyPacket(m_lastJrTimeInPacket));
-                }
-            }
-            else
-            {
-                m_packets.push_back(std::move(m_current));
-            }
+            m_packets.push_back(std::move(m_current));
 
             m_current.clear();
             m_haveTimestampInPacket = false;
@@ -662,6 +704,117 @@ namespace MidiBleJr
 
         bool m_haveTimestampInPacket{ false };
         uint16_t m_lastJrTimeInPacket{ 0 };
+    };
+
+    // The period between JR Clocks after the startup burst, for a connection interval in
+    // microseconds. Zero means the interval isn't known.
+    inline uint32_t ClockPeriodMicroseconds(_In_ uint32_t const connectionIntervalMicroseconds) noexcept
+    {
+        if (connectionIntervalMicroseconds == 0)
+        {
+            return UnknownIntervalClockPeriodMicroseconds;
+        }
+
+        double const interval = static_cast<double>(connectionIntervalMicroseconds);
+
+        double wholeIntervals = std::ceil(static_cast<double>(MinimumClockPeriodMicroseconds) / interval - ClockPeriodIntervalFraction);
+        wholeIntervals = (std::max)(wholeIntervals, 0.0);
+
+        double period = (wholeIntervals + ClockPeriodIntervalFraction) * interval;
+
+        // Only a connection interval well beyond what BLE MIDI asks for gets here
+        while (period > static_cast<double>(MaximumClockSpacingMilliseconds) * 1000.0 && wholeIntervals > 0.0)
+        {
+            wholeIntervals -= 1.0;
+            period = (wholeIntervals + ClockPeriodIntervalFraction) * interval;
+        }
+
+        if (period > static_cast<double>(MaximumClockSpacingMilliseconds) * 1000.0)
+        {
+            return UnknownIntervalClockPeriodMicroseconds;
+        }
+
+        return static_cast<uint32_t>(std::llround(period));
+    }
+
+    // When each outgoing JR Clock is due, in local timestamp ticks. Starts with the burst, then
+    // runs at ClockPeriodMicroseconds. Every due time is worked out from the first one, not from
+    // the one before, so rounding never builds up. A sender which falls behind skips the clocks
+    // it missed rather than sending them in a rush.
+    class ClockSchedule
+    {
+    public:
+        void Start(
+            _In_ uint64_t const nowTicks,
+            _In_ uint32_t const connectionIntervalMicroseconds,
+            _In_ uint64_t const localTicksPerSecond) noexcept
+        {
+            m_running = localTicksPerSecond != 0;
+            m_ticksPerMicrosecond = static_cast<double>(localTicksPerSecond) / 1'000'000.0;
+            m_burstStartTicks = nowTicks;
+            m_index = 0;
+            m_periodMicroseconds = ClockPeriodMicroseconds(connectionIntervalMicroseconds);
+            m_periodStartTicks = BurstTime(StartupBurstClockCount - 1) +
+                static_cast<uint64_t>(std::llround(m_periodMicroseconds * m_ticksPerMicrosecond));
+        }
+
+        void Stop() noexcept
+        {
+            m_running = false;
+        }
+
+        bool IsRunning() const noexcept { return m_running; }
+        bool InBurst() const noexcept { return m_running && m_index < StartupBurstClockCount; }
+        uint32_t PeriodMicroseconds() const noexcept { return m_periodMicroseconds; }
+
+        uint64_t NextDueTicks() const noexcept
+        {
+            return m_index < StartupBurstClockCount ?
+                BurstTime(m_index) :
+                PeriodTime(m_index - StartupBurstClockCount);
+        }
+
+        // After the clock that was due has been sent.
+        void Advance(_In_ uint64_t const nowTicks) noexcept
+        {
+            m_index++;
+
+            if (m_index < StartupBurstClockCount)
+            {
+                return;
+            }
+
+            // Behind by more than a period: carry on from the next time still ahead, keeping
+            // the same grid
+            uint64_t const periodTicks = static_cast<uint64_t>(std::llround(m_periodMicroseconds * m_ticksPerMicrosecond));
+
+            if (periodTicks != 0 && nowTicks > NextDueTicks() + periodTicks)
+            {
+                uint64_t const behind = (nowTicks - m_periodStartTicks) / periodTicks;
+
+                m_index = StartupBurstClockCount + static_cast<uint32_t>((std::min<uint64_t>)(behind, UINT32_MAX - StartupBurstClockCount));
+            }
+        }
+
+    private:
+        uint64_t BurstTime(_In_ uint32_t const index) const noexcept
+        {
+            return m_burstStartTicks + static_cast<uint64_t>(std::llround(
+                static_cast<double>(index) * StartupBurstSpacingMicroseconds * m_ticksPerMicrosecond));
+        }
+
+        uint64_t PeriodTime(_In_ uint32_t const index) const noexcept
+        {
+            return m_periodStartTicks + static_cast<uint64_t>(std::llround(
+                static_cast<double>(index) * m_periodMicroseconds * m_ticksPerMicrosecond));
+        }
+
+        bool m_running{ false };
+        double m_ticksPerMicrosecond{ 0.0 };
+        uint64_t m_burstStartTicks{ 0 };
+        uint64_t m_periodStartTicks{ 0 };
+        uint32_t m_index{ 0 };
+        uint32_t m_periodMicroseconds{ UnknownIntervalClockPeriodMicroseconds };
     };
 }
 

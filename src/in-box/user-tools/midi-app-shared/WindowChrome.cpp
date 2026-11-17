@@ -759,7 +759,7 @@ namespace midiapp
                 bounds.Y = std::clamp(bounds.Y, work.Y, work.Y + work.Height - bounds.Height);
             }
 
-            appWindow.MoveAndResize(bounds);
+            MoveAndResizeOnMonitor(appWindow, bounds);
 
             if (saved.Valid && saved.Maximized)
             {
@@ -768,6 +768,43 @@ namespace midiapp
                     presenter.Maximize();
                 }
             }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    _Use_decl_annotations_
+    void WindowChrome::MoveAndResizeOnMonitor(
+        wuw::AppWindow const& appWindow,
+        winrt::Windows::Graphics::RectInt32 const& bounds) noexcept
+    {
+        try
+        {
+            if (appWindow == nullptr)
+            {
+                return;
+            }
+
+            auto const current = wuw::DisplayArea::GetFromWindowId(appWindow.Id(), wuw::DisplayAreaFallback::Nearest);
+            auto const target = wuw::DisplayArea::GetFromRect(bounds, wuw::DisplayAreaFallback::Nearest);
+
+            // A window that crosses to a monitor with a different scale is rescaled by Windows,
+            // which would turn a size saved on that monitor into the wrong one. So it crosses
+            // while it is small, entirely inside the saved bounds, and is sized once it's there.
+            if (current != nullptr && target != nullptr && current.DisplayId().Value != target.DisplayId().Value)
+            {
+                constexpr int32_t crossingSize = 200;
+
+                appWindow.MoveAndResize(winrt::Windows::Graphics::RectInt32{
+                    bounds.X,
+                    bounds.Y,
+                    (std::min)(bounds.Width, crossingSize),
+                    (std::min)(bounds.Height, crossingSize) });
+            }
+
+            appWindow.MoveAndResize(bounds);
         }
         catch (...)
         {

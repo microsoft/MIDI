@@ -111,6 +111,9 @@ public:
     void RefreshConnectionParameters();
     void WriteCalculatedLatencyProperty();
 
+    // As a Peripheral, the remote Central chooses the interval and the peripheral reports it here
+    void SetConnectionIntervalUnits(_In_ uint16_t const intervalUnits) noexcept;
+
 private:
     void OnCharacteristicValueChanged(_In_ gatt::GattCharacteristic const& sender, _In_ gatt::GattValueChangedEventArgs const& args);
     void OnDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice const& sender, _In_ foundation::IInspectable const& args);
@@ -131,6 +134,11 @@ private:
         _In_reads_(wordCount) uint32_t const* const words,
         _In_ size_t const wordCount);
 
+    // Peripheral role, UMP: answers the remote Central's Endpoint Discovery and Stream
+    // Configuration Request, which nothing above the transport can. Called with m_incomingLock held.
+    void AnswerPeripheralStreamRequests(_Inout_ std::vector<uint32_t>& words);
+    void QueueRawUmpPackets(_In_ std::vector<uint32_t> const& words);
+
     void UpdateUmpIncomingTimestampSource(_In_ uint64_t const localArrivalTimestamp);
 
     HRESULT SendUmpWordsToCallback(
@@ -138,9 +146,17 @@ private:
         _In_ size_t const wordCount,
         _In_ uint64_t const timestamp);
 
-    // Incoming smoothing (BLE MIDI 1.0). Messages being smoothed wait in the release queue until
-    // their release time, and the release thread hands them to the service. Called with
-    // m_incomingLock held.
+    // Incoming smoothing. Messages being smoothed wait in the release queue until their release
+    // time, and the release thread hands them to the service. Called with m_incomingLock held.
+    //
+    // The sender clock smoothing is built on: the BLE MIDI 1.0 timestamp, or the BLE MIDI 2.0 JR
+    // Clock. Its generation changes whenever that clock restarts.
+    uint32_t IncomingClockGeneration() const noexcept
+    {
+        return m_protocol == MidiBleProtocol::Protocol::Midi2Ump ?
+            m_incomingJrDecoder.ClockGeneration() :
+            m_incomingTimestampCorrelator.ClockGeneration();
+    }
     bool RefreshIncomingTimingSetting();
     void DeliverIncomingMessage(
         _In_ bool const smoothing,
@@ -157,9 +173,13 @@ private:
 
     void QueueOutgoingPackets(_In_ std::vector<std::vector<uint8_t>>&& packets);
 
-    // The UMP Characteristic needs a JR Clock at least every 250 ms once JR is on, data or not.
-    bool IsIdleJrClockDue(_Out_ DWORD& millisecondsUntilDue) const noexcept;
-    void QueueIdleJrClock();
+    // Once the device agrees to receive JR, JR Clocks go out on their own schedule (see
+    // MidiBleJr::ClockSchedule) from a thread with a high resolution timer. A clock is queued as a
+    // packet of its own and the writer fills in its time just before the write.
+    HRESULT StartJrClockThread();
+    HRESULT JrClockWorker(_In_ std::stop_token stopToken);
+    void QueueJrClock();
+    void RestartJrClockSchedule() noexcept;
 
     HRESULT WriterWorker(_In_ std::stop_token stopToken);
     HRESULT WritePacketToDevice(_In_ std::vector<uint8_t> const& packet);
@@ -218,6 +238,9 @@ private:
     // BLE MIDI 2.0: JR Clock and JR Timestamp messages are consumed here and never reach the service
     MidiBleJr::IncomingDecoder m_incomingJrDecoder{ };
 
+    // Guarded by m_incomingLock. Peripheral role only: what this PC tells the remote Central.
+    MidiBleStreamResponder::Responder m_streamResponder{ };
+
     // Guarded by m_incomingLock. The local time the device's Stream Configuration Notification
     // arrived, so a device which agreed to send JR and then never does can be called out.
     bool m_haveEndpointStreamConfiguration{ false };
@@ -268,10 +291,14 @@ private:
     // the writer thread, so it is atomic rather than guarded by the receive path's lock.
     std::atomic<bool> m_sendJrToDevice{ false };
 
-    // GetTickCount64 when a packet carrying a JR Clock was last queued, or zero to send one now.
-    // Clocks are queued under m_outgoingTranslationLock so they go out in the order their times
-    // were taken.
-    std::atomic<uint64_t> m_lastJrClockQueuedTickCount{ 0 };
+    // Set to start the JR Clock schedule over: JR was just agreed, or the interval changed.
+    std::atomic<bool> m_jrClockRestartPending{ false };
+    std::atomic<bool> m_jrClockThreadRunning{ false };
+
+    // so a too-small UMP payload is reported once per connection, not per send
+    std::atomic<bool> m_reportedSmallUmpPayload{ false };
+    wil::unique_event_nothrow m_jrClockWakeup;
+    wil::unique_handle m_jrClockTimer;
 
     wil::srwlock m_outgoingQueueLock;
     std::deque<std::vector<uint8_t>> m_outgoingPackets{ };
@@ -304,4 +331,5 @@ private:
     // jthread members are declared last so they are destroyed first
     std::jthread m_writerThread;
     std::jthread m_releaseThread;
+    std::jthread m_jrClockThread;
 };

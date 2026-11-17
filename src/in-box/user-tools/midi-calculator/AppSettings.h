@@ -29,10 +29,11 @@ namespace midicalculator
         Midi2 = 2,
         WindowsTime = 3,
         History = 4,
-        Timecode = 5
+        Timecode = 5,
+        Chords = 6
     };
 
-    inline constexpr CalculatorPage LastCalculatorPage = CalculatorPage::Timecode;
+    inline constexpr CalculatorPage LastCalculatorPage = CalculatorPage::Chords;
 
     class AppSettings : public midiapp::MidiAppSettings
     {

@@ -13,7 +13,7 @@ Returned by `MidiBluetoothTransportManager.GetPeripheralStatus`, and carried on 
 | Property | Description |
 | -------- | ----------- |
 | `IsRunning` | True when this PC is published as a Bluetooth MIDI device |
-| `Protocol` | The `MidiBluetoothProtocol` being advertised. Only one can be advertised at a time |
+| `Protocol` | The `MidiBluetoothProtocol` the connected device picked. Both are published, so this is `Unknown` until a device connects |
 | `AdvertisedName` | The name remote devices see. Windows takes it from the computer name and gives apps no way to change it, so it's reported, not set |
 | `SubscribedClientCount` | How many remote devices have subscribed |
 | `ClientPolicy` | The `MidiBluetoothPeripheralClientPolicy` for the next remote device that connects. It's reported whether or not the peripheral is running, because it's a rule, not the current state |

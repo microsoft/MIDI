@@ -684,8 +684,8 @@ namespace
             return;
         }
 
-        // MIDI 1.0 by default, because nothing on the market speaks BLE MIDI 2.0 yet and only one
-        // characteristic can be published at a time.
+        // Both Characteristics are published whatever this says. It is still read, because a parked
+        // protocol is how the endpoint manager knows a peripheral was configured at all.
         auto const protocol = ParseProtocolJsonString(
             MidiBleProtocol::SafeJson::GetString(peripheralObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERIPHERAL_PROTOCOL_KEY),
             MidiBleProtocol::Protocol::Midi1);

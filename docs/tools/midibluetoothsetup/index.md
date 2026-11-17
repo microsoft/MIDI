@@ -144,6 +144,12 @@ While a smoothed device is connected, **Details** shows the **Smoothing delay**,
 
 You can set this per device, or set the default for every device on the **Transport settings** page. The `midi` console can set it too, with `midi bluetooth customize --incoming-timing` for one device and `midi bluetooth defaults --incoming-timing` for the default.
 
+## Slow Bluetooth link
+
+Bluetooth MIDI needs a connection interval of 15 ms or less. A slower link adds delay and uneven timing to every message, and Windows tends to choose one when it's saving power. If a connected device's interval is over 15 ms, its row shows a **Slow Bluetooth link** warning. To fix it, select **Open power settings**, set the power mode to **Best performance**, then disconnect and connect the device again.
+
+Some devices drop a link that slow. If a connection fails while the link was slower than 15 ms, the error under the device says so and suggests the same fix.
+
 ## Keeping an endpoint when a device goes offline
 
 **Keep endpoint when offline** is the setting most worth understanding, and it is here because Bluetooth LE devices come and go constantly. They sleep, they go out of range, and their batteries die.
@@ -171,10 +177,7 @@ The name a remote device sees is this PC's Bluetooth name. That is a Windows set
 
 The MIDI endpoint on this side represents *the device which connected*, so it exists only while something is connected. Until then the page says nothing is connected, and that is normal.
 
-**Protocol** chooses which Bluetooth MIDI protocol to advertise. Only one is published at a time:
-
-- **Bluetooth LE MIDI 1.0** is what to use. Every Bluetooth MIDI device and app in the world speaks it.
-- **Bluetooth LE MIDI 2.0** implements the draft standard, and is here for testing and development. Almost nothing supports it yet, and while it is selected a MIDI 1.0 device cannot connect. The specification has not been published, so expect it to change.
+This PC is published with both Bluetooth MIDI protocols, BLE MIDI 1.0 and BLE MIDI 2.0, so any Bluetooth MIDI device or app can connect. The device which connects picks one, preferring BLE MIDI 2.0 if it supports it, and the page shows which one it picked. BLE MIDI 2.0 follows a draft standard that hasn't been published, so expect it to change.
 
 ### Approving a device which connects
 

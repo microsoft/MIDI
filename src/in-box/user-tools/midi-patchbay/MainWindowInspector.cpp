@@ -161,10 +161,20 @@ namespace winrt::midipatchbay::implementation
 
             if (patch == nullptr || kind == patchbay::CanvasSelectionKind::None)
             {
+                m_inspectorOpen = false;
                 SetInspectorVisible(false);
                 return;
             }
 
+            // Pressing, dragging or right-clicking a node selects it but doesn't open the
+            // inspector, which would take room from the canvas and could cover the node.
+            if (!m_inspectorOpen && !m_canvas.SelectionWantsInspector())
+            {
+                SetInspectorVisible(false);
+                return;
+            }
+
+            m_inspectorOpen = true;
             SetInspectorVisible(true);
 
             // Several nodes at once: only what can be done to all of them.
@@ -221,6 +231,37 @@ namespace winrt::midipatchbay::implementation
             SetInspectorVisible(false);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the inspector.")
+    }
+
+    void MainWindow::OpenInspector() noexcept
+    {
+        try
+        {
+            if (m_closing)
+            {
+                return;
+            }
+
+            auto const wasOpen = m_inspectorOpen;
+
+            m_inspectorOpen = true;
+            RefreshInspector();
+
+            if (wasOpen || !m_inspectorOpen)
+            {
+                return;
+            }
+
+            // The inspector takes its room from the canvas, which can put the node that was just
+            // clicked under it. The scroller is laid out first so it knows its new width.
+            CanvasScroller().UpdateLayout();
+
+            if (auto const& nodeId = m_canvas.SelectedNodeId(); !nodeId.empty())
+            {
+                m_canvas.BringIntoView(nodeId);
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to open the inspector.")
     }
 
     _Use_decl_annotations_
@@ -1642,6 +1683,9 @@ namespace winrt::midipatchbay::implementation
             {
                 m_canvas.Select(patchbay::CanvasSelectionKind::Block, blockId);
             }
+
+            // A right click selects it without opening the inspector.
+            OpenInspector();
 
             // After the press or the drop that got here has finished, or it takes the focus back.
             DispatcherQueue().TryEnqueue([weak = get_weak()]()

@@ -87,7 +87,8 @@ namespace Windows.Devices.Midi2
 
         namespace Bluetooth
         {
-            [contractversion(1)]
+            // 2: incoming timing (smoothing), added after Preview 11
+            [contractversion(2)]
             apicontract MidiTransportsBluetoothApiContract { };
         }
 

@@ -272,6 +272,7 @@ namespace winrt::midipatchbay::implementation
 
             m_editingKind = block->Kind;
             m_editingSettings = block->Settings;
+            m_maskActiveCondition = 0;
             m_editingFilter = block->Settings.Filter;
             m_editingTransform = block->Settings.Transform;
             m_learnedLow = false;
@@ -365,6 +366,7 @@ namespace winrt::midipatchbay::implementation
             DrawVelocityCurve();
             DrawShapePreviews();
             RefreshMessageTypeSections();
+            RefreshMaskBits();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to summarize the step.")
     }
@@ -388,6 +390,10 @@ namespace winrt::midipatchbay::implementation
             m_valueKeyFills.clear();
             m_valueToggles.clear();
             m_maskConditionsPanel = nullptr;
+            m_maskBitsHost = nullptr;
+            m_maskBitCells.clear();
+            m_maskVerdictText = nullptr;
+            m_maskDragging = false;
 
             m_velocityCurveCanvas = nullptr;
             m_fixedVelocityBox = nullptr;
@@ -1437,6 +1443,7 @@ namespace winrt::midipatchbay::implementation
                     }
 
                     s->RebuildMaskConditions();
+                    s->RebuildMaskBits();
                     s->UpdateBlockSummary();
                 });
 
@@ -1487,6 +1494,9 @@ namespace winrt::midipatchbay::implementation
 
             body.Children().Append(hex);
 
+            // A picture of the message, to see and pick the bits each condition looks at.
+            body.Children().Append(BuildMaskBitsSection());
+
             m_maskConditionsPanel = controls::StackPanel{};
             m_maskConditionsPanel.Spacing(10);
             m_maskConditionsPanel.Margin(xaml::ThicknessHelper::FromLengths(0, 6, 0, 6));
@@ -1521,6 +1531,7 @@ namespace winrt::midipatchbay::implementation
                     condition.LowBit = MaskFields[0].LowBit;
 
                     target.Conditions.push_back(condition);
+                    s->m_maskActiveCondition = target.Conditions.size() - 1;
 
                     s->RebuildMaskConditions();
                     s->UpdateBlockSummary();
@@ -1555,6 +1566,7 @@ namespace winrt::midipatchbay::implementation
                 auto empty = HeadingHint(resources::GetString(L"MaskNoConditions"));
                 empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
                 m_maskConditionsPanel.Children().Append(empty);
+                RefreshMaskBits();
                 return;
             }
 
@@ -1604,6 +1616,15 @@ namespace winrt::midipatchbay::implementation
 
                 controls::StackPanel conditionPanel{};
                 conditionPanel.Spacing(6);
+
+                // Working in a condition's boxes makes it the one a drag across the bits changes.
+                conditionPanel.GotFocus([weak, position](auto&&, auto&&)
+                    {
+                        if (auto s = weak.get())
+                        {
+                            s->SetActiveMaskCondition(position);
+                        }
+                    });
 
                 controls::TextBlock description{};
                 description.FontSize(12);
@@ -1762,6 +1783,8 @@ namespace winrt::midipatchbay::implementation
                             picked.HighBit = field.HighBit;
                             picked.LowBit = field.LowBit;
 
+                            s->m_maskActiveCondition = position;
+
                             // The size can have changed too, so the whole section is drawn again.
                             s->BuildBlockDialog();
                         });
@@ -1787,6 +1810,12 @@ namespace winrt::midipatchbay::implementation
 
                         auto& conditions = s->m_editingSettings.Mask.Conditions;
                         conditions.erase(conditions.begin() + static_cast<ptrdiff_t>(position));
+
+                        // The selected one keeps its place in the list.
+                        if (s->m_maskActiveCondition > position)
+                        {
+                            s->m_maskActiveCondition--;
+                        }
 
                         s->RebuildMaskConditions();
                         s->UpdateBlockSummary();
@@ -1983,6 +2012,8 @@ namespace winrt::midipatchbay::implementation
 
                 m_maskConditionsPanel.Children().Append(conditionPanel);
             }
+
+            RefreshMaskBits();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the mask conditions.")
     }

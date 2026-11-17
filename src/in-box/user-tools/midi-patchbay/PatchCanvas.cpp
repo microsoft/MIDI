@@ -1520,7 +1520,7 @@ namespace midipatchbay
                     // selected first.
                     if (!IsNodeSelected(nodeId))
                     {
-                        Select(isBlock ? CanvasSelectionKind::Block : CanvasSelectionKind::Endpoint, nodeId);
+                        SelectQuietly(isBlock ? CanvasSelectionKind::Block : CanvasSelectionKind::Endpoint, nodeId);
                     }
 
                     if (m_callbacks.NodeContextMenuRequested)
@@ -2158,7 +2158,7 @@ namespace midipatchbay
                     args.Handled(true);
                     FocusCanvas();
                     CancelDrags();
-                    Select(CanvasSelectionKind::Connection, connectionId);
+                    SelectQuietly(CanvasSelectionKind::Connection, connectionId);
 
                     // A right click opens the connection's menu, and picks nothing up.
                     if (args.GetCurrentPoint(m_surface).Properties().IsRightButtonPressed())
@@ -2169,6 +2169,8 @@ namespace midipatchbay
                     // Grabbing a cord picks up whichever end is nearer, so it can be dropped on
                     // a different connection point.
                     auto const position = args.GetCurrentPoint(m_surface).Position();
+
+                    StartClick(position);
 
                     if (auto const* connection = m_patch == nullptr
                         ? nullptr : m_patch->FindConnection(connectionId))
@@ -2191,12 +2193,18 @@ namespace midipatchbay
                                 distanceTo(sourcePoint.value()) <= distanceTo(destinationPoint.value()));
                         }
                     }
+
+                    // No end could be picked up, so there is no release to wait for.
+                    if (!m_draggingConnection)
+                    {
+                        RaiseClickIfPending();
+                    }
                 });
 
             visual.HitArea.RightTapped([this, connectionId](auto&&, input::RightTappedRoutedEventArgs const& args)
                 {
                     args.Handled(true);
-                    Select(CanvasSelectionKind::Connection, connectionId);
+                    SelectQuietly(CanvasSelectionKind::Connection, connectionId);
 
                     if (m_callbacks.ConnectionContextMenuRequested)
                     {
@@ -2810,6 +2818,7 @@ namespace midipatchbay
     {
         try
         {
+            m_selectionWantsInspector = !m_quietSelection;
             m_selectionKind = id.empty() ? CanvasSelectionKind::None : kind;
             m_selectedNodeId = kind == CanvasSelectionKind::Endpoint || kind == CanvasSelectionKind::Block ? id : std::wstring{};
             m_selectedConnectionId = kind == CanvasSelectionKind::Connection ? id : std::wstring{};
@@ -2846,6 +2855,7 @@ namespace midipatchbay
     {
         try
         {
+            m_selectionWantsInspector = !m_quietSelection;
             m_selectedNodeIds.clear();
 
             for (auto const& id : nodeIds)
@@ -3105,9 +3115,11 @@ namespace midipatchbay
                 return;
             }
 
+            // A press only selects. Letting go without moving is a click, which is what opens
+            // the inspector, so it never pops up over a node that is being dragged.
             if (!IsNodeSelected(nodeId))
             {
-                Select(kind, nodeId);
+                SelectQuietly(kind, nodeId);
             }
             else if (m_selectedNodeId != nodeId)
             {
@@ -3129,6 +3141,7 @@ namespace midipatchbay
                 return;
             }
 
+            StartClick(point.Position());
             m_draggingNode = true;
             m_dragStartPointer = point.Position();
             m_dragStartPositions.clear();
@@ -3189,6 +3202,8 @@ namespace midipatchbay
     {
         try
         {
+            m_clickLast = position;
+
             if (m_draggingConnection)
             {
                 UpdateConnectionDrag(position);
@@ -3281,8 +3296,43 @@ namespace midipatchbay
             {
                 m_callbacks.LayoutChanged();
             }
+
+            RaiseClickIfPending();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish a node drag.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::SelectQuietly(CanvasSelectionKind kind, std::wstring const& id) noexcept
+    {
+        m_quietSelection = true;
+        Select(kind, id);
+        m_quietSelection = false;
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::StartClick(foundation::Point const& position) noexcept
+    {
+        m_clickPending = true;
+        m_clickStart = position;
+        m_clickLast = position;
+    }
+
+    void PatchCanvas::RaiseClickIfPending() noexcept
+    {
+        auto const pending = m_clickPending;
+
+        m_clickPending = false;
+
+        // A hand is never perfectly still, so a few pixels of wobble still count as a click.
+        auto const dx = m_clickLast.X - m_clickStart.X;
+        auto const dy = m_clickLast.Y - m_clickStart.Y;
+        auto const still = dx * dx + dy * dy <= ClickSlop * ClickSlop;
+
+        if (pending && still && m_selectionKind != CanvasSelectionKind::None && m_callbacks.InspectorRequested)
+        {
+            m_callbacks.InspectorRequested();
+        }
     }
 
     _Use_decl_annotations_
@@ -3472,6 +3522,11 @@ namespace midipatchbay
             // for the keyboard friendly two step path.
             m_suppressNextPortClick = m_dragMoved;
 
+            if (wasRetargeting)
+            {
+                RaiseClickIfPending();
+            }
+
             if (!m_dragMoved || !target.has_value())
             {
                 return;
@@ -3617,6 +3672,7 @@ namespace midipatchbay
     void PatchCanvas::CancelDrags() noexcept
     {
         m_draggingNode = false;
+        m_clickPending = false;
 
         if (m_banding)
         {

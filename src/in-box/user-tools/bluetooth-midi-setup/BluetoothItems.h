@@ -396,6 +396,17 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        winrt::hstring SlowIntervalWarningText() const noexcept { return m_slowIntervalWarningText; }
+        bool IsSlowIntervalWarningOpen() const noexcept { return !m_slowIntervalWarningText.empty(); }
+
+        void InternalSetSlowIntervalWarning(_In_ winrt::hstring const& warningText) noexcept
+        {
+            if (UpdateField(m_slowIntervalWarningText, warningText, L"SlowIntervalWarningText"))
+            {
+                RaisePropertyChanged(L"IsSlowIntervalWarningOpen");
+            }
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility TimestampSourceVisibility() const noexcept
         {
             return m_timestampSourceText.empty() ?
@@ -583,6 +594,7 @@ namespace winrt::midibluetoothsetup::implementation
         winrt::hstring m_statusText{};
         winrt::hstring m_statisticsText{};
         winrt::hstring m_intervalText{};
+        winrt::hstring m_slowIntervalWarningText{};
         winrt::hstring m_timestampSourceText{};
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_endpointDeviceInstanceId{};

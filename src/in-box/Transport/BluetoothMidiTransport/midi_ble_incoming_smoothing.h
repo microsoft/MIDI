@@ -72,10 +72,11 @@ namespace MidiBleSmoothing
     // The delay is chosen from the packets seen over this much local time.
     inline constexpr uint32_t DelayWindowMilliseconds = 10000;
 
-    // The delay covers all but this share of packets, in parts per ten thousand (0.5%). Covering
-    // every last one would let a single retransmitted packet hold the delay up for the whole
-    // window, and a message that is a little late is delivered the moment it arrives anyway.
-    inline constexpr uint32_t LateAllowancePerTenThousand = 50;
+    // The delay covers all but this share of packets, in parts per ten thousand (3%). On real
+    // links a few percent of packets miss a connection event and arrive a whole interval late, so
+    // covering them costs a whole interval more delay for every message. Leaving them out keeps
+    // the delay near one interval, and a message that is late is delivered the moment it arrives.
+    inline constexpr uint32_t LateAllowancePerTenThousand = 300;
 
     // Added to the measured delay to cover how late the release timer can wake.
     inline constexpr uint32_t DelayGuardMicroseconds = 500;
@@ -85,6 +86,16 @@ namespace MidiBleSmoothing
     // Never hold a message longer than this. A sender whose timestamps put it this far from the
     // lower edge is not something smoothing can fix, and timestamps are untrusted input.
     inline constexpr uint32_t MaximumDelayMilliseconds = 50;
+
+    // When even MaximumDelayMilliseconds can't cover the packets for this long, the sender's
+    // timestamps are no use for smoothing, and messages go out as they arrive until the link
+    // is reset. Holding every message for the longest time allowed and still delivering many of
+    // them late is worse than not smoothing at all.
+    inline constexpr uint32_t GiveUpAtMaximumDelayMilliseconds = 10000;
+
+    // How far after its arrival a message's mapped time may land before it counts as stamped in
+    // the future. Covers the error in a clock estimate built from a startup burst.
+    inline constexpr uint32_t FutureTimestampToleranceMicroseconds = 2000;
 
     // Before any delays have been measured, start at one connection interval plus this.
     inline constexpr uint32_t InitialDelayMarginMilliseconds = 2;
@@ -375,6 +386,8 @@ namespace MidiBleSmoothing
             m_active = false;
             m_lastReleaseTicks = 0;
             m_lastShrinkArrivalTicks = 0;
+            m_targetAtMaximumSinceTicks = 0;
+            m_gaveUp = false;
         }
 
         // The sender's clock restarted or jumped. The mapping is rebuilt, but the delay the link
@@ -405,16 +418,51 @@ namespace MidiBleSmoothing
 
         uint64_t LateMessageCount() const noexcept { return m_lateMessageCount; }
 
+        // True once the delay couldn't cover the packets for GiveUpAtMaximumDelayMilliseconds.
+        // Messages then go out as they arrive until Reset.
+        bool GaveUp() const noexcept { return m_gaveUp; }
+
+        // A sample of the sender's clock that carries no message, such as a BLE MIDI 2.0 JR Clock.
+        // Its wait for the connection event is like any packet's, so it counts toward the delay too.
+        void AddClockSample(
+            _In_ int64_t const senderTicks,
+            _In_ uint64_t const arrivalTicks,
+            _In_ uint64_t const ticksPerMillisecond)
+        {
+            if (ticksPerMillisecond == 0)
+            {
+                return;
+            }
+
+            m_clock.AddSample(senderTicks, arrivalTicks, ticksPerMillisecond);
+            m_delays.Add(senderTicks, arrivalTicks, ticksPerMillisecond);
+        }
+
+        // For messages with no sender time of their own. They go out as they arrive, but never
+        // ahead of anything already released, and what has been learned about the clock is kept.
+        void ReleaseAtArrival(
+            _In_ size_t const count,
+            _In_ uint64_t const arrivalTicks,
+            _Inout_ std::vector<uint64_t>& releaseTicks)
+        {
+            ReleaseAllAtArrival(count, arrivalTicks, releaseTicks);
+        }
+
         // senderTicks holds one sender time per message, oldest first, already converted to local
         // ticks and continuous across packets. releaseTicks gets one release time per message.
         // Release times never go backwards and are never before the packet arrived. Returns false
         // when every release time is simply the arrival time.
+        //
+        // sampleClock is false when the clock is sampled separately through AddClockSample, as for
+        // BLE MIDI 2.0, where a message's JR Timestamp says when it was played rather than when
+        // its packet was sent.
         bool ProcessPacket(
             _In_ std::vector<int64_t> const& senderTicks,
             _In_ uint64_t const arrivalTicks,
             _In_ bool const senderClockUsable,
             _In_ uint64_t const ticksPerMillisecond,
-            _Inout_ std::vector<uint64_t>& releaseTicks)
+            _Inout_ std::vector<uint64_t>& releaseTicks,
+            _In_ bool const sampleClock = true)
         {
             releaseTicks.clear();
 
@@ -437,7 +485,20 @@ namespace MidiBleSmoothing
                 return false;
             }
 
-            m_clock.AddSample(senderTicks.back(), arrivalTicks, ticksPerMillisecond);
+            if (m_gaveUp)
+            {
+                m_active = false;
+
+                ReleaseAllAtArrival(senderTicks.size(), arrivalTicks, releaseTicks);
+
+                return false;
+            }
+
+            if (sampleClock)
+            {
+                m_clock.AddSample(senderTicks.back(), arrivalTicks, ticksPerMillisecond);
+            }
+
             m_delays.Add(senderTicks.front(), arrivalTicks, ticksPerMillisecond);
 
             if (m_clock.SampleCount() < WarmUpPacketCount)
@@ -464,7 +525,20 @@ namespace MidiBleSmoothing
 
             for (auto const sender : senderTicks)
             {
-                int64_t release = static_cast<int64_t>(std::llround(m_clock.Map(sender))) + m_delayTicks;
+                int64_t mapped = static_cast<int64_t>(std::llround(m_clock.Map(sender)));
+
+                // Timestamps are untrusted. A message can't have been played after it arrived, but a
+                // young clock estimate can place one a little late, so only a timestamp clearly in
+                // the future is pulled back.
+                int64_t const latestMapped =
+                    static_cast<int64_t>(arrivalTicks) + MicrosecondsToTicks(FutureTimestampToleranceMicroseconds, ticksPerMillisecond);
+
+                if (mapped > latestMapped)
+                {
+                    mapped = latestMapped;
+                }
+
+                int64_t release = mapped + m_delayTicks;
 
                 if (release < static_cast<int64_t>(arrivalTicks))
                 {
@@ -526,6 +600,19 @@ namespace MidiBleSmoothing
 
                 m_haveTarget = true;
                 m_lastMeasureArrivalTicks = arrivalTicks;
+
+                if (m_targetTicks < maximum)
+                {
+                    m_targetAtMaximumSinceTicks = 0;
+                }
+                else if (m_targetAtMaximumSinceTicks == 0)
+                {
+                    m_targetAtMaximumSinceTicks = arrivalTicks;
+                }
+                else if (arrivalTicks - m_targetAtMaximumSinceTicks >= static_cast<uint64_t>(GiveUpAtMaximumDelayMilliseconds) * ticksPerMillisecond)
+                {
+                    m_gaveUp = true;
+                }
             }
 
             if (m_delayTicks == 0)
@@ -578,6 +665,10 @@ namespace MidiBleSmoothing
         uint64_t m_lastShrinkArrivalTicks{ 0 };
         uint32_t m_connectionIntervalMicroseconds{ 0 };
         uint64_t m_lateMessageCount{ 0 };
+
+        // when the target delay first reached the maximum, or zero when it's below it
+        uint64_t m_targetAtMaximumSinceTicks{ 0 };
+        bool m_gaveUp{ false };
     };
 }
 

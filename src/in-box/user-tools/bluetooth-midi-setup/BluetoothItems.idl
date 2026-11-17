@@ -29,6 +29,11 @@ namespace midibluetoothsetup
         String IntervalText{ get; };
         String TimestampSourceText{ get; };
 
+        // Shown when a connected device's link is slower than BLE MIDI allows, with what to do
+        // about it. Empty otherwise.
+        String SlowIntervalWarningText{ get; };
+        Boolean IsSlowIntervalWarningOpen{ get; };
+
         String EndpointDeviceId{ get; };
         String EndpointDeviceInstanceId{ get; };
 

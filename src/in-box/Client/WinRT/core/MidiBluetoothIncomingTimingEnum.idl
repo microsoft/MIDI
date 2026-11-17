@@ -11,7 +11,7 @@ import "MidiApiContracts.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
 {
-    [contract(MidiTransportsBluetoothApiContract, 1)]
+    [contract(MidiTransportsBluetoothApiContract, 2)]
 
     // When messages from a device are handed to applications.
     //

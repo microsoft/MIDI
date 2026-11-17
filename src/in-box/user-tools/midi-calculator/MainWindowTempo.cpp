@@ -76,7 +76,7 @@ namespace winrt::midicalculator::implementation
             pad.Height(128);
             pad.Padding(xaml::Thickness{ 0 });
             pad.BorderThickness(xaml::Thickness{ 0 });
-            pad.CornerRadius(xaml::CornerRadius{ 8 });
+            pad.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(8));
             {
                 auto accent = winrt::unbox_value<winrt::Windows::UI::Color>(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"SystemAccentColorLight2")));
                 accent.A = 0x10;
@@ -338,7 +338,7 @@ namespace winrt::midicalculator::implementation
                 accent.A = 0x24;
                 highlight.Background(media::SolidColorBrush{ accent });
             }
-            highlight.CornerRadius(xaml::CornerRadius{ 4 });
+            highlight.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(4));
             controls::Grid::SetRow(highlight, static_cast<int32_t>(QuarterRow) + 1);
             controls::Grid::SetColumnSpan(highlight, 4);
             table.Children().Append(highlight);

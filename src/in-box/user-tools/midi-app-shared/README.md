@@ -20,6 +20,8 @@ The generators are shared too. `BeatClockGenerator` and `TimeCodeGenerator` take
 
 `TapTempo` is plain C++ as well. It turns taps into a tempo, starting over when a gap doesn't fit the tempo being tapped, and says how evenly the taps were spaced. Windows MIDI Clock and Windows MIDI Calculator both use it.
 
+`ChordTheory` is plain C++ too. It names, reads and voices chords, gives Roman numerals and the chords in a key, and names the chords that fit a set of notes. The Windows MIDI Sequencer's Key and chords row and Windows MIDI Calculator both use it, so a chord is spelled and read the same way in both. Its scale and chord type numbers are saved in Sequencer files, so only add to them.
+
 `FontCatalog` lists the font families a customer can pick: the ones every Windows PC has, or every family installed on this PC. It reads them from DirectWrite, so a project that takes it links `dwrite.lib`. `FontNames.h` is plain C++ and header only: the default family, and the check a family name read from a file has to pass. Windows MIDI Glass uses both for control labels and Windows MIDI Patchbay for annotations, so the two apps offer the same fonts.
 
 `EndpointCatalog` watches the live endpoints and answers "which live endpoint does this saved one

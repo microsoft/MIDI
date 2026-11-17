@@ -213,6 +213,10 @@ private:
     // thread a configuration update arrives on through StopPeripheral, so it is not worker-only.
     winrt::hstring m_peripheralClientDeviceId{ };
 
+    // Which Characteristic that Central's endpoint was built for. The same Central moving to the
+    // other one needs a new endpoint, but keeps its approval.
+    MidiBleProtocol::Protocol m_peripheralClientProtocol{ MidiBleProtocol::Protocol::Unknown };
+
     // The Central the approval decision was last made about. Separate from the one above because
     // a Central waiting for approval has no endpoint, and re-running the check after a person
     // answers must not look like a different device arriving.
