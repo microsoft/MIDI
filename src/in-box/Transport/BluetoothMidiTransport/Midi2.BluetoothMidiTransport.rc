@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,3
- PRODUCTVERSION 1,0,0,3
+ FILEVERSION 1,0,0,15
+ PRODUCTVERSION 1,0,0,15
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -71,8 +71,8 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Microsoft Corporation"
             VALUE "FileDescription", "Windows MIDI Services Bluetooth LE MIDI Plugin"
-            VALUE "FileVersion", "1.0.0.3"
-            VALUE "ProductVersion", "1.0.0.3"
+            VALUE "FileVersion", "1.0.0.15"
+            VALUE "ProductVersion", "1.0.0.15"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation.  All rights reserved."
             VALUE "InternalName", "Midi2.BluetoothMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.BluetoothMidiTransport.dll"
