@@ -5,343 +5,270 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
 #include "LaunchpadXController.h"
+
+#include "SequenceModel.h"
+#include "SequenceRender.h"
+
+#include <algorithm>
+#include <utility>
 
 namespace midisequencer::launchpad
 {
-    _Use_decl_annotations_
-    LaunchpadXSessionTransport::LaunchpadXSessionTransport(midi2::MidiSession const& session) noexcept :
-        m_session(session)
+    namespace
     {
-    }
-
-    LaunchpadXSessionTransport::~LaunchpadXSessionTransport()
-    {
-        Close();
-    }
-
-    _Use_decl_annotations_
-    LaunchpadEndpointCandidate LaunchpadXSessionTransport::BuildCandidate(
-        midiapp::LiveEndpoint const& live,
-        uint16_t sourceGroupsOffMask,
-        uint16_t destinationGroupsOffMask) noexcept
-    {
-        LaunchpadEndpointCandidate candidate{};
-
-        try
+        [[nodiscard]] bool IsNoteAction(_In_ SurfaceActionKind kind) noexcept
         {
-            candidate.endpointDeviceId = live.EndpointDeviceId;
-            candidate.name = live.Name;
-            candidate.transportSuppliedName = live.TransportSuppliedName;
-            candidate.usbVendorId = live.UsbVendorId;
-            candidate.usbProductId = live.UsbProductId;
-            candidate.isLoopback = live.IsLoopback;
-
-            for (size_t g = 0; g < 16; ++g)
-            {
-                uint16_t const bit = static_cast<uint16_t>(1u << g);
-                candidate.sourceGroups[g] = live.SourceGroups[g] && ((sourceGroupsOffMask & bit) == 0);
-                candidate.destinationGroups[g] = live.DestinationGroups[g] && ((destinationGroupsOffMask & bit) == 0);
-                candidate.sourcePortNames[g] = live.SourcePortNames[g];
-                candidate.destinationPortNames[g] = live.DestinationPortNames[g];
-                candidate.sourceGroupNames[g] = live.SourceGroupNames[g];
-                candidate.destinationGroupNames[g] = live.DestinationGroupNames[g];
-            }
-        }
-        catch (...)
-        {
+            return kind == SurfaceActionKind::EmitNoteOn ||
+                kind == SurfaceActionKind::EmitNoteOff ||
+                kind == SurfaceActionKind::EmitPolyAftertouch;
         }
 
-        return candidate;
+        // The group a message is on, for the message types the device sends.
+        [[nodiscard]] bool OnGroup(_In_ uint32_t word0, _In_ uint8_t group) noexcept
+        {
+            return ((word0 >> 24) & 0x0Fu) == group;
+        }
     }
 
     _Use_decl_annotations_
-    bool LaunchpadXSessionTransport::Open(
-        std::wstring const& endpointDeviceId,
-        uint8_t group,
-        OnUmpCallback onUmp,
-        OnStateCallback onState) noexcept
+    LaunchpadXController::LaunchpadXController(std::shared_ptr<ILaunchpadOutput> output, uint8_t group, NoteHandler notes, ActionHandler actions) :
+        m_output(std::move(output)),
+        m_group(static_cast<uint8_t>(group & 0x0Fu)),
+        m_notes(std::move(notes)),
+        m_actions(std::move(actions))
     {
-        Close();
+    }
 
+    _Use_decl_annotations_
+    bool LaunchpadXController::Start(SurfaceStateSnapshot const& snapshot)
+    {
+        std::vector<LedSpec> leds{};
+
+        {
+            std::scoped_lock guard{ m_lock };
+            m_snapshot = snapshot;
+            m_accumulator.Reset();
+            m_surface.InvalidateLeds();
+            leds = m_surface.BuildLedFeedback(m_snapshot, true);
+        }
+
+        if (!m_output->SendUmpPackets(BuildProgrammerModePackets(m_group, true)))
+        {
+            return false;
+        }
+
+        {
+            std::scoped_lock guard{ m_lock };
+            m_started = true;
+        }
+
+        SendLeds(leds);
+        return true;
+    }
+
+    void LaunchpadXController::Stop() noexcept
+    {
         try
         {
-            if (m_session == nullptr || endpointDeviceId.empty())
-            {
-                return false;
-            }
-
-            auto const connection = m_session.CreateEndpointConnection(winrt::hstring{ endpointDeviceId });
-            if (connection == nullptr)
-            {
-                return false;
-            }
+            std::vector<SurfaceAction> releases{};
+            bool wasStarted = false;
 
             {
                 std::scoped_lock guard{ m_lock };
-                m_endpointDeviceId = endpointDeviceId;
-                m_group = static_cast<uint8_t>(group & 0x0Fu);
-                m_onUmp = std::move(onUmp);
-                m_onState = std::move(onState);
+                wasStarted = std::exchange(m_started, false);
+                m_surface.ReleaseHeldNotes(releases);
+                m_accumulator.Reset();
             }
 
-            std::weak_ptr<LaunchpadXSessionTransport> const weak = weak_from_this();
+            Dispatch(std::move(releases), 0);
 
-            auto const msgToken = connection.MessageReceived([weak](auto&&, midi2::MidiMessageReceivedEventArgs const& args)
+            if (wasStarted)
             {
-                if (auto self = weak.lock())
-                {
-                    self->DeliverMessage(args);
-                }
-            });
-
-            auto const discToken = connection.EndpointDeviceDisconnected([weak](auto&&, auto&&)
-            {
-                if (auto self = weak.lock())
-                {
-                    self->DeliverState(false);
-                }
-            });
-
-            auto const reconnToken = connection.EndpointDeviceReconnected([weak](auto&&, auto&&)
-            {
-                if (auto self = weak.lock())
-                {
-                    self->DeliverState(true);
-                }
-            });
-
-            if (!connection.Open())
-            {
-                try
-                {
-                    connection.MessageReceived(msgToken);
-                    connection.EndpointDeviceDisconnected(discToken);
-                    connection.EndpointDeviceReconnected(reconnToken);
-                    m_session.DisconnectEndpointConnection(connection.ConnectionId());
-                }
-                catch (...)
-                {
-                }
-
-                std::scoped_lock guard{ m_lock };
-                m_endpointDeviceId.clear();
-                m_onUmp = nullptr;
-                m_onState = nullptr;
-                return false;
+                (void)m_output->SendUmpPackets(BuildProgrammerModePackets(m_group, false));
             }
-
-            uint32_t maxWords = connection.GetSupportedMaxMidiWordsPerTransmission();
-            if (maxWords < 4)
-            {
-                maxWords = 4;
-            }
-
-            std::scoped_lock guard{ m_lock };
-            m_connection = connection;
-            m_messageToken = msgToken;
-            m_disconnectedToken = discToken;
-            m_reconnectedToken = reconnToken;
-            m_maxWordsPerTransmission = maxWords;
-            return true;
         }
         catch (...)
         {
-            LOG_CAUGHT_EXCEPTION();
-            Close();
-            return false;
         }
     }
 
-    void LaunchpadXSessionTransport::Close() noexcept
+    bool LaunchpadXController::IsStarted() const noexcept
     {
-        midi2::MidiEndpointConnection connection{ nullptr };
-        winrt::event_token msgToken{};
-        winrt::event_token discToken{};
-        winrt::event_token reconnToken{};
-
-        {
-            std::scoped_lock guard{ m_lock };
-            connection = std::exchange(m_connection, nullptr);
-            msgToken = std::exchange(m_messageToken, {});
-            discToken = std::exchange(m_disconnectedToken, {});
-            reconnToken = std::exchange(m_reconnectedToken, {});
-            m_endpointDeviceId.clear();
-            m_group = 0;
-            m_onUmp = nullptr;
-            m_onState = nullptr;
-        }
-
-        if (connection == nullptr)
-        {
-            return;
-        }
-
-        try
-        {
-            if (msgToken)
-            {
-                connection.MessageReceived(msgToken);
-            }
-
-            if (discToken)
-            {
-                connection.EndpointDeviceDisconnected(discToken);
-            }
-
-            if (reconnToken)
-            {
-                connection.EndpointDeviceReconnected(reconnToken);
-            }
-
-            if (m_session != nullptr)
-            {
-                m_session.DisconnectEndpointConnection(connection.ConnectionId());
-            }
-        }
-        catch (...)
-        {
-        }
+        std::scoped_lock guard{ m_lock };
+        return m_started;
     }
 
     _Use_decl_annotations_
-    bool LaunchpadXSessionTransport::SendUmpPackets(std::span<const UmpPacket> packets) noexcept
-    {
-        if (packets.empty())
-        {
-            return true;
-        }
-
-        midi2::MidiEndpointConnection connection{ nullptr };
-        uint32_t maxWords = 684;
-
-        {
-            std::scoped_lock guard{ m_lock };
-            connection = m_connection;
-            maxWords = m_maxWordsPerTransmission;
-        }
-
-        if (connection == nullptr)
-        {
-            return false;
-        }
-
-        try
-        {
-            if (packets.size() == 1)
-            {
-                auto const& packet = packets[0];
-                midi2::MidiSendMessageResults result = midi2::MidiSendMessageResults::Failed;
-
-                switch (packet.wordCount)
-                {
-                case 1:
-                    result = connection.SendSingleMessageWords(0, packet.words[0]);
-                    break;
-                case 2:
-                    result = connection.SendSingleMessageWords(0, packet.words[0], packet.words[1]);
-                    break;
-                case 3:
-                    result = connection.SendSingleMessageWords(0, packet.words[0], packet.words[1], packet.words[2]);
-                    break;
-                case 4:
-                    result = connection.SendSingleMessageWords(0, packet.words[0], packet.words[1], packet.words[2], packet.words[3]);
-                    break;
-                default:
-                    return false;
-                }
-
-                return midi2::MidiEndpointConnection::SendMessageSucceeded(result);
-            }
-
-            std::vector<uint32_t> chunkWords{};
-            chunkWords.reserve(std::min<size_t>(packets.size() * 2, maxWords));
-
-            for (auto const& packet : packets)
-            {
-                if (packet.wordCount == 0 || packet.wordCount > 4)
-                {
-                    return false;
-                }
-
-                if (!chunkWords.empty() && chunkWords.size() + packet.wordCount > maxWords)
-                {
-                    auto const result = connection.SendMultipleMessagesWordArray(
-                        0,
-                        0,
-                        static_cast<uint32_t>(chunkWords.size()),
-                        winrt::array_view<uint32_t const>{ chunkWords.data(), chunkWords.data() + chunkWords.size() });
-
-                    if (!midi2::MidiEndpointConnection::SendMessageSucceeded(result))
-                    {
-                        return false;
-                    }
-
-                    chunkWords.clear();
-                }
-
-                for (uint8_t i = 0; i < packet.wordCount; ++i)
-                {
-                    chunkWords.push_back(packet.words[i]);
-                }
-            }
-
-            if (!chunkWords.empty())
-            {
-                auto const result = connection.SendMultipleMessagesWordArray(
-                    0,
-                    0,
-                    static_cast<uint32_t>(chunkWords.size()),
-                    winrt::array_view<uint32_t const>{ chunkWords.data(), chunkWords.data() + chunkWords.size() });
-
-                if (!midi2::MidiEndpointConnection::SendMessageSucceeded(result))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        catch (...)
-        {
-            return false;
-        }
-    }
-
-    std::wstring LaunchpadXSessionTransport::EndpointDeviceId() const
-    {
-        std::scoped_lock guard{ m_lock };
-        return m_endpointDeviceId;
-    }
-
-    uint8_t LaunchpadXSessionTransport::Group() const noexcept
-    {
-        std::scoped_lock guard{ m_lock };
-        return m_group;
-    }
-
-    _Use_decl_annotations_
-    void LaunchpadXSessionTransport::DeliverMessage(midi2::MidiMessageReceivedEventArgs const& args) noexcept
+    void LaunchpadXController::OnInput(uint32_t const* words, uint8_t wordCount, uint64_t timestamp) noexcept
     {
         try
         {
-            uint32_t words[4]{};
-            auto const count = args.FillWords(words[0], words[1], words[2], words[3]);
-            if (count == 0 || count > 4)
+            if (words == nullptr || wordCount == 0 || !OnGroup(words[0], m_group))
             {
                 return;
             }
 
-            OnUmpCallback callback{};
+            std::vector<SurfaceAction> actions{};
+
             {
                 std::scoped_lock guard{ m_lock };
-                callback = m_onUmp;
+
+                if (!m_started)
+                {
+                    return;
+                }
+
+                InputEvent event{};
+
+                if (!TryParseInputUmp(words, wordCount, event, &m_accumulator))
+                {
+                    return;
+                }
+
+                m_surface.HandleInput(event, m_snapshot, actions);
             }
 
-            if (callback)
+            Dispatch(std::move(actions), timestamp);
+        }
+        catch (...)
+        {
+            // Called on the service's thread, which must never see an exception.
+        }
+    }
+
+    _Use_decl_annotations_
+    void LaunchpadXController::Update(SurfaceStateSnapshot snapshot, bool forceFullRefresh) noexcept
+    {
+        try
+        {
+            std::vector<LedSpec> leds{};
+
             {
-                callback(words, count, args.Timestamp());
+                std::scoped_lock guard{ m_lock };
+                m_snapshot = std::move(snapshot);
+
+                if (!m_started)
+                {
+                    return;
+                }
+
+                leds = m_surface.BuildLedFeedback(m_snapshot, forceFullRefresh);
+            }
+
+            SendLeds(leds);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void LaunchpadXController::SetMode(ControllerMode mode) noexcept
+    {
+        try
+        {
+            std::vector<SurfaceAction> releases{};
+
+            {
+                std::scoped_lock guard{ m_lock };
+                m_surface.SetMode(mode, releases);
+            }
+
+            Dispatch(std::move(releases), 0);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    ControllerMode LaunchpadXController::Mode() const noexcept
+    {
+        std::scoped_lock guard{ m_lock };
+        return m_surface.Mode();
+    }
+
+    _Use_decl_annotations_
+    void LaunchpadXController::SetNoteConfig(NoteLayoutConfig const& config) noexcept
+    {
+        try
+        {
+            std::vector<SurfaceAction> releases{};
+
+            {
+                std::scoped_lock guard{ m_lock };
+                m_surface.SetNoteConfig(config, releases);
+            }
+
+            Dispatch(std::move(releases), 0);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    NoteLayoutConfig LaunchpadXController::NoteConfig() const noexcept
+    {
+        std::scoped_lock guard{ m_lock };
+        return m_surface.NoteConfig();
+    }
+
+    _Use_decl_annotations_
+    uint8_t LaunchpadXController::BuildNoteWords(SurfaceAction const& action, uint32_t* words) noexcept
+    {
+        words[0] = 0;
+        words[1] = 0;
+
+        Note note{};
+        note.Number = static_cast<uint8_t>(action.midiNote & 0x7Fu);
+
+        switch (action.kind)
+        {
+        case SurfaceActionKind::EmitNoteOn:
+            // A note-on with no velocity would be a note-off to a MIDI 1.0 device.
+            note.Velocity = static_cast<uint16_t>(ScaleUp(std::clamp<uint32_t>(action.velocity, 1, 127), 7, 16));
+            BuildNoteOn(note, 0, words);
+            return 2;
+
+        case SurfaceActionKind::EmitNoteOff:
+            BuildNoteOff(note, 0, words);
+            return 2;
+
+        case SurfaceActionKind::EmitPolyAftertouch:
+            words[0] = 0x40A00000u | (static_cast<uint32_t>(note.Number) << 8);
+            words[1] = ScaleUp(static_cast<uint32_t>(action.velocity & 0x7Fu), 7, 32);
+            return 2;
+
+        default:
+            return 0;
+        }
+    }
+
+    _Use_decl_annotations_
+    void LaunchpadXController::Dispatch(std::vector<SurfaceAction> actions, uint64_t timestamp) noexcept
+    {
+        try
+        {
+            std::vector<SurfaceAction> others{};
+
+            for (auto const& action : actions)
+            {
+                if (IsNoteAction(action.kind))
+                {
+                    if (m_notes)
+                    {
+                        m_notes(action, timestamp);
+                    }
+                }
+                else
+                {
+                    others.push_back(action);
+                }
+            }
+
+            if (!others.empty() && m_actions)
+            {
+                m_actions(std::move(others));
             }
         }
         catch (...)
@@ -350,23 +277,34 @@ namespace midisequencer::launchpad
     }
 
     _Use_decl_annotations_
-    void LaunchpadXSessionTransport::DeliverState(bool reconnected) noexcept
+    bool LaunchpadXController::SendLeds(std::vector<LedSpec> const& leds) noexcept
     {
         try
         {
-            OnStateCallback callback{};
+            if (leds.empty())
             {
-                std::scoped_lock guard{ m_lock };
-                callback = m_onState;
+                return true;
             }
 
-            if (callback)
+            if (m_output->SendUmpPackets(BuildLedSysExPackets(m_group, leds)))
             {
-                callback(reconnected);
+                return true;
             }
         }
         catch (...)
         {
         }
+
+        // Some of them may not have reached the device, so the next update paints them all.
+        try
+        {
+            std::scoped_lock guard{ m_lock };
+            m_surface.InvalidateLeds();
+        }
+        catch (...)
+        {
+        }
+
+        return false;
     }
 }

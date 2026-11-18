@@ -497,6 +497,9 @@
                             <MenuFlyoutItem x:Uid="MenuRemoteControl" Click="OnRemoteControlClick">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AF;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="MenuLaunchpad" Click="OnLaunchpadClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE80A;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
                             <MenuFlyoutItem x:Uid="MenuClose" Click="OnCloseWindowClick" />
                         </MenuFlyout>
@@ -1559,6 +1562,14 @@
                 <Button x:Name="DevicesStatusButton" x:Uid="DevicesStatusButton" Height="22" MinHeight="0" Padding="5,0,5,0" Margin="-5,0,-5,0"
                         Background="Transparent" BorderThickness="0" VerticalAlignment="Center" VerticalContentAlignment="Center" Visibility="Collapsed" Click="OnStudioSetupClick">
                     <TextBlock x:Name="DevicesStatusText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </Button>
+                <!-- The Launchpad X's mode while one is connected: Clip or Note. Pressing it switches. -->
+                <Button x:Name="LaunchpadModeButton" x:Uid="LaunchpadModeButton" Height="22" MinHeight="0" Padding="5,0,5,0" Margin="-5,0,-5,0"
+                        Background="Transparent" BorderThickness="0" VerticalAlignment="Center" VerticalContentAlignment="Center" Visibility="Collapsed" Click="OnLaunchpadModeClick">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE80A;" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock x:Name="LaunchpadModeText" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
                 </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center" HorizontalAlignment="Right">

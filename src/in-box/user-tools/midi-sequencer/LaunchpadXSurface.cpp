@@ -22,6 +22,27 @@ namespace midisequencer::launchpad
         inline constexpr uint8_t PaletteAmber = 9;
         inline constexpr uint8_t PaletteGreen = 21;
 
+        // The track or scene that sits `step` places past `offset`, when it's below `count`. Checks
+        // without adding first, so a very large offset can't wrap around to a small index.
+        [[nodiscard]] constexpr std::optional<uint32_t> ViewIndex(
+            _In_ uint32_t offset,
+            _In_ uint32_t step,
+            _In_ uint32_t count) noexcept
+        {
+            if (offset >= count || step >= count - offset)
+            {
+                return std::nullopt;
+            }
+
+            return offset + step;
+        }
+
+        // Whether `index` has another one after it among `count`.
+        [[nodiscard]] constexpr bool HasNext(_In_ uint32_t index, _In_ uint32_t count) noexcept
+        {
+            return count > 0 && index < count - 1;
+        }
+
         [[nodiscard]] NoteLayoutConfig NormalizeNoteConfig(_In_ const NoteLayoutConfig& config) noexcept
         {
             NoteLayoutConfig normalized = config;
@@ -79,13 +100,18 @@ namespace midisequencer::launchpad
     void LaunchpadXSurface::SetMode(ControllerMode mode, std::vector<SurfaceAction>& outReleaseActions)
     {
         outReleaseActions.clear();
+        SwitchMode(mode, outReleaseActions);
+    }
 
+    _Use_decl_annotations_
+    void LaunchpadXSurface::SwitchMode(ControllerMode mode, std::vector<SurfaceAction>& outActions)
+    {
         if (mode == m_mode)
         {
             return;
         }
 
-        ReleaseAllHeldNotes(outReleaseActions);
+        ReleaseAllHeldNotes(outActions);
         m_mode = mode;
         m_forceFullLedRefresh = true;
     }
@@ -222,8 +248,6 @@ namespace midisequencer::launchpad
         const SurfaceStateSnapshot& snapshot,
         std::vector<SurfaceAction>& outActions)
     {
-        outActions.clear();
-
         if (event.kind == InputEventKind::ButtonRelease || event.kind == InputEventKind::DeviceInquiryReply)
         {
             return;
@@ -236,7 +260,7 @@ namespace midisequencer::launchpad
             case ButtonSession:
                 if (m_mode != ControllerMode::Clip)
                 {
-                    SetMode(ControllerMode::Clip, outActions);
+                    SwitchMode(ControllerMode::Clip, outActions);
                     SurfaceAction sw{};
                     sw.kind = SurfaceActionKind::SwitchMode;
                     sw.targetMode = ControllerMode::Clip;
@@ -247,7 +271,7 @@ namespace midisequencer::launchpad
             case ButtonNote:
                 if (m_mode != ControllerMode::Note)
                 {
-                    SetMode(ControllerMode::Note, outActions);
+                    SwitchMode(ControllerMode::Note, outActions);
                     SurfaceAction sw{};
                     sw.kind = SurfaceActionKind::SwitchMode;
                     sw.targetMode = ControllerMode::Note;
@@ -346,7 +370,7 @@ namespace midisequencer::launchpad
                     }
                     else if (event.index == ButtonRight)
                     {
-                        if (snapshot.totalTracks > 0 && snapshot.selectedTrackIndex < (snapshot.totalTracks - 1))
+                        if (HasNext(snapshot.selectedTrackIndex, snapshot.totalTracks))
                         {
                             SurfaceAction sel{};
                             sel.kind = SurfaceActionKind::SelectTrack;
@@ -361,12 +385,12 @@ namespace midisequencer::launchpad
                 if (m_mode == ControllerMode::Clip && IsSceneButtonIndex(event.index))
                 {
                     uint32_t const topDownRow = GridRows - static_cast<uint32_t>(event.index / 10);
-                    if (m_sceneOffset < snapshot.totalScenes && topDownRow < (snapshot.totalScenes - m_sceneOffset))
+                    auto const sceneIndex = ViewIndex(m_sceneOffset, topDownRow, snapshot.totalScenes);
+                    if (sceneIndex.has_value())
                     {
-                        uint32_t const sceneIndex = m_sceneOffset + topDownRow;
                         SurfaceAction launch{};
                         launch.kind = SurfaceActionKind::LaunchScene;
-                        launch.sceneIndex = sceneIndex;
+                        launch.sceneIndex = *sceneIndex;
                         outActions.push_back(launch);
                     }
                 }
@@ -389,17 +413,15 @@ namespace midisequencer::launchpad
             }
 
             uint32_t const topDownRow = (GridRows - 1u) - rowBottomUp;
-            if (m_trackOffset < snapshot.totalTracks &&
-                colLeftRight < (snapshot.totalTracks - m_trackOffset) &&
-                m_sceneOffset < snapshot.totalScenes &&
-                topDownRow < (snapshot.totalScenes - m_sceneOffset))
+            auto const trackIndex = ViewIndex(m_trackOffset, colLeftRight, snapshot.totalTracks);
+            auto const sceneIndex = ViewIndex(m_sceneOffset, topDownRow, snapshot.totalScenes);
+
+            if (trackIndex.has_value() && sceneIndex.has_value())
             {
-                uint32_t const trackIndex = m_trackOffset + colLeftRight;
-                uint32_t const sceneIndex = m_sceneOffset + topDownRow;
                 SurfaceAction trigger{};
                 trigger.kind = SurfaceActionKind::TriggerOrStopSlot;
-                trigger.trackIndex = trackIndex;
-                trigger.sceneIndex = sceneIndex;
+                trigger.trackIndex = *trackIndex;
+                trigger.sceneIndex = *sceneIndex;
                 outActions.push_back(trigger);
             }
             return;
@@ -468,19 +490,16 @@ namespace midisequencer::launchpad
                 if (m_mode == ControllerMode::Clip)
                 {
                     uint32_t const topDownRow = (GridRows - 1u) - row;
-                    if (m_trackOffset >= snapshot.totalTracks ||
-                        col >= (snapshot.totalTracks - m_trackOffset) ||
-                        m_sceneOffset >= snapshot.totalScenes ||
-                        topDownRow >= (snapshot.totalScenes - m_sceneOffset))
+                    auto const trackIndex = ViewIndex(m_trackOffset, col, snapshot.totalTracks);
+                    auto const sceneIndex = ViewIndex(m_sceneOffset, topDownRow, snapshot.totalScenes);
+
+                    if (!trackIndex.has_value() || !sceneIndex.has_value())
                     {
                         leds[cursor++] = MakeRgbLed(padIndex, 0, 0, 0);
                         continue;
                     }
 
-                    uint32_t const trackIndex = m_trackOffset + col;
-                    uint32_t const sceneIndex = m_sceneOffset + topDownRow;
-
-                    size_t const gridIdx = static_cast<size_t>(sceneIndex) * snapshot.totalTracks + trackIndex;
+                    size_t const gridIdx = static_cast<size_t>(*sceneIndex) * snapshot.totalTracks + *trackIndex;
                     ClipPadSnapshot const cell = gridIdx < snapshot.gridClips.size() ? snapshot.gridClips[gridIdx] : ClipPadSnapshot{};
 
                     if (cell.recording)
@@ -548,10 +567,10 @@ namespace midisequencer::launchpad
             auto const btnIndex = SceneButtonIndex(topDownRow);
             if (m_mode == ControllerMode::Clip)
             {
-                if (m_sceneOffset < snapshot.totalScenes && topDownRow < (snapshot.totalScenes - m_sceneOffset))
+                auto const sceneIndex = ViewIndex(m_sceneOffset, topDownRow, snapshot.totalScenes);
+                if (sceneIndex.has_value())
                 {
-                    uint32_t const sceneIndex = m_sceneOffset + topDownRow;
-                    if (sceneIndex == snapshot.selectedSceneIndex)
+                    if (*sceneIndex == snapshot.selectedSceneIndex)
                     {
                         leds[cursor++] = MakeRgbLed(btnIndex, 96, 127, 96);
                     }
@@ -575,9 +594,9 @@ namespace midisequencer::launchpad
         if (m_mode == ControllerMode::Clip)
         {
             bool const canUp = m_sceneOffset > 0;
-            bool const canDown = snapshot.totalScenes > GridRows && m_sceneOffset < (snapshot.totalScenes - GridRows);
+            bool const canDown = ViewIndex(m_sceneOffset, GridRows, snapshot.totalScenes).has_value();
             bool const canLeft = m_trackOffset > 0;
-            bool const canRight = snapshot.totalTracks > GridCols && m_trackOffset < (snapshot.totalTracks - GridCols);
+            bool const canRight = ViewIndex(m_trackOffset, GridCols, snapshot.totalTracks).has_value();
 
             leds[cursor++] = canUp ? MakeRgbLed(ButtonUp, 64, 64, 64) : MakeRgbLed(ButtonUp, 0, 0, 0);
             leds[cursor++] = canDown ? MakeRgbLed(ButtonDown, 64, 64, 64) : MakeRgbLed(ButtonDown, 0, 0, 0);
@@ -589,7 +608,7 @@ namespace midisequencer::launchpad
             bool const canOctUp = m_noteConfig.octave < MaxOctave;
             bool const canOctDown = m_noteConfig.octave > MinOctave;
             bool const canTrackLeft = snapshot.totalTracks > 0 && snapshot.selectedTrackIndex > 0;
-            bool const canTrackRight = snapshot.totalTracks > 0 && snapshot.selectedTrackIndex < (snapshot.totalTracks - 1);
+            bool const canTrackRight = HasNext(snapshot.selectedTrackIndex, snapshot.totalTracks);
 
             leds[cursor++] = canOctUp ? MakeRgbLed(ButtonUp, 64, 64, 64) : MakeRgbLed(ButtonUp, 0, 0, 0);
             leds[cursor++] = canOctDown ? MakeRgbLed(ButtonDown, 64, 64, 64) : MakeRgbLed(ButtonDown, 0, 0, 0);

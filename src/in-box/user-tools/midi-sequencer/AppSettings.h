@@ -237,6 +237,41 @@ namespace midisequencer
         bool RemoteControlEnabled() const noexcept { return m_remoteControlEnabled; }
         void RemoteControlEnabled(bool value) noexcept;
 
+        // Whether the sequencer drives a Novation Launchpad X. Off by default: turning it on puts
+        // the device in Programmer mode, which takes it away from any other app using it.
+        bool LaunchpadEnabled() const noexcept { return m_launchpadEnabled; }
+        void LaunchpadEnabled(bool value) noexcept;
+
+        // The Launchpad X picked when there's more than one. Empty means the first one found.
+        std::wstring const& LaunchpadEndpointId() const noexcept { return m_launchpadEndpointId; }
+        void LaunchpadEndpointId(_In_ std::wstring const& value) noexcept;
+
+        // Where the pads were left: Note mode or not, and the octave Note mode plays in.
+        bool LaunchpadNoteMode() const noexcept { return m_launchpadNoteMode; }
+        void LaunchpadNoteMode(bool value) noexcept;
+        int32_t LaunchpadOctave() const noexcept { return m_launchpadOctave; }
+        void LaunchpadOctave(int32_t value) noexcept;
+
+        // The key Note mode plays in. On by default, the song's key at the playhead. Off, or when
+        // the song has no key, the root (a pitch class, C = 0) and scale picked here instead.
+        bool LaunchpadFollowSongKey() const noexcept { return m_launchpadFollowSongKey; }
+        void LaunchpadFollowSongKey(bool value) noexcept;
+        uint8_t LaunchpadRoot() const noexcept { return m_launchpadRoot; }
+        void LaunchpadRoot(uint8_t value) noexcept;
+        uint8_t LaunchpadScale() const noexcept { return m_launchpadScale; }
+        void LaunchpadScale(uint8_t value) noexcept;
+
+        // Whether every pad plays a note in the key. Off, each row is a fourth above the one below.
+        bool LaunchpadInScaleOnly() const noexcept { return m_launchpadInScaleOnly; }
+        void LaunchpadInScaleOnly(bool value) noexcept;
+
+        // How many scales there are to pick from: midiapp::ScaleKindCount.
+        static constexpr uint8_t LaunchpadScaleCount = 11;
+
+        static constexpr int32_t MinimumLaunchpadOctave = -2;
+        static constexpr int32_t MaximumLaunchpadOctave = 8;
+        static constexpr int32_t DefaultLaunchpadOctave = 3;
+
         // The look picked in Appearance: a theme's id ("night-drive", "tactile"). An id that isn't
         // a theme any more falls back to Night drive when the window applies it.
         std::wstring const& StyleId() const noexcept { return m_styleId; }
@@ -292,6 +327,14 @@ namespace midisequencer
         TimeCodeSetting m_timeCode{};
         FollowClockSetting m_followClock{};
         bool m_remoteControlEnabled{ false };
+        bool m_launchpadEnabled{ false };
+        std::wstring m_launchpadEndpointId{};
+        bool m_launchpadNoteMode{ false };
+        int32_t m_launchpadOctave{ DefaultLaunchpadOctave };
+        bool m_launchpadFollowSongKey{ true };
+        uint8_t m_launchpadRoot{ 0 };
+        uint8_t m_launchpadScale{ 0 };
+        bool m_launchpadInScaleOnly{ false };
         std::wstring m_styleId{ DefaultStyleId };
     };
 }

@@ -777,8 +777,6 @@ namespace winrt::midisequencer::implementation
             }
 
             InvalidateLaunchers();
-            SyncLaunchpadXKeyFromSong();
-            UpdateLaunchpadXFeedback();
 
             if (m_recording)
             {
@@ -962,8 +960,10 @@ namespace winrt::midisequencer::implementation
                 m_engine->StopThread();
             }
 
-            StopLaunchpadX(false);
             StopRemoteControl();
+
+            // Before the outputs close: notes still held on its pads have note-offs to send.
+            StopLaunchpad();
             CloseCiLinks();
 
             if (m_sources != nullptr)

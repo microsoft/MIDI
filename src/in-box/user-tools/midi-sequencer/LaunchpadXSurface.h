@@ -120,16 +120,30 @@ namespace midisequencer::launchpad
             _Out_ bool& outIsRoot,
             _Out_ bool& outInScale) const;
 
+        // Appends the actions for one input event to outActions, so the caller can collect a burst
+        // of events and dispatch them together. The caller clears the vector between batches.
         void HandleInput(
             _In_ const InputEvent& event,
             _In_ const SurfaceStateSnapshot& snapshot,
-            _Out_ std::vector<SurfaceAction>& outActions);
+            _Inout_ std::vector<SurfaceAction>& outActions);
 
         [[nodiscard]] std::vector<LedSpec> BuildLedFeedback(
             _In_ const SurfaceStateSnapshot& snapshot,
             _In_ bool forceFullRefresh);
 
+        // Lets go of every note held in Note mode, such as when the device goes away.
+        void ReleaseHeldNotes(_Out_ std::vector<SurfaceAction>& outReleaseActions)
+        {
+            outReleaseActions.clear();
+            ReleaseAllHeldNotes(outReleaseActions);
+        }
+
+        // Forgets what the pads were last told, so the next feedback repaints all 81 LEDs. For
+        // when an update may not have reached the device, or the device was reconnected.
+        void InvalidateLeds() noexcept { m_forceFullLedRefresh = true; }
+
     private:
+        void SwitchMode(_In_ ControllerMode mode, _Inout_ std::vector<SurfaceAction>& outActions);
         void ReleaseAllHeldNotes(_Inout_ std::vector<SurfaceAction>& outActions);
         void ReleasePadNote(_In_ uint8_t padSlotIndex, _Inout_ std::vector<SurfaceAction>& outActions);
         [[nodiscard]] std::array<LedSpec, TotalLedCount> ComputeDesiredLeds(_In_ const SurfaceStateSnapshot& snapshot) const;

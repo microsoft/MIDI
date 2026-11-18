@@ -9,11 +9,9 @@
 
 #include "LaunchpadXProtocol.h"
 #include "LaunchpadXSurface.h"
-#include "LaunchpadXController.h"
 
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <set>
 #include <vector>
 
@@ -21,7 +19,7 @@ using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 using namespace midisequencer;
-using namespace seq::launchpad;
+using namespace midisequencer::launchpad;
 
 namespace
 {
@@ -488,6 +486,7 @@ void LaunchpadXTests::ClipModePadPressTriggersSlotsAndIgnoresOutOfBounds()
     std::vector<SurfaceAction> actions{};
 
     // Top-left pad 81 -> track 0, scene 0
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 81, 100, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::TriggerOrStopSlot), static_cast<uint8_t>(actions[0].kind));
@@ -495,18 +494,22 @@ void LaunchpadXTests::ClipModePadPressTriggersSlotsAndIgnoresOutOfBounds()
     VERIFY_ARE_EQUAL(uint32_t{ 0 }, actions[0].sceneIndex);
 
     // Row 5 (topDownRow = 3), col 3 -> pad 53 -> track 2, scene 3
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 53, 100, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint32_t{ 2 }, actions[0].trackIndex);
     VERIFY_ARE_EQUAL(uint32_t{ 3 }, actions[0].sceneIndex);
 
     // Out-of-bounds track (pad 84 -> track 3) and out-of-bounds scene (pad 11 -> scene 7)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 84, 100, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 100, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
 
     // Pad release does nothing in Clip mode
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadRelease, 81, 0, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
 }
@@ -517,27 +520,67 @@ void LaunchpadXTests::ClipModeSceneButtonsMapTopDown89To19()
     auto const snap = MakeClipSnapshot(4, 4);
     std::vector<SurfaceAction> actions{};
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, 89, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::LaunchScene), static_cast<uint8_t>(actions[0].kind));
     VERIFY_ARE_EQUAL(uint32_t{ 0 }, actions[0].sceneIndex);
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, 69, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint32_t{ 2 }, actions[0].sceneIndex);
 
     surface.SetViewport(0, 2);
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, 79, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint32_t{ 3 }, actions[0].sceneIndex);
 
     // Scene 4 out of bounds
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, 69, 127, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
 
     // Release ignored
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonRelease, 89, 0, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
+}
+
+void LaunchpadXTests::ClipModeHugeViewportOffsetNeverWrapsAround()
+{
+    // An offset near the top of uint32_t would wrap around to a small index if it were added
+    // before the bounds check, and a pad would then trigger a real slot.
+    LaunchpadXSurface surface{};
+    auto const snap = MakeClipSnapshot(4, 4);
+    std::vector<SurfaceAction> actions{};
+
+    surface.SetViewport(UINT32_MAX - 2u, UINT32_MAX - 2u);
+
+    for (uint8_t const pad : { uint8_t{ 81 }, uint8_t{ 84 }, uint8_t{ 11 }, uint8_t{ 88 } })
+    {
+        actions.clear();
+        surface.HandleInput(InputEvent{ InputEventKind::PadPress, pad, 100, false, {} }, snap, actions);
+        VERIFY_IS_TRUE(actions.empty());
+    }
+
+    for (uint8_t const scene : { uint8_t{ 89 }, uint8_t{ 59 }, uint8_t{ 19 } })
+    {
+        actions.clear();
+        surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, scene, 127, false, {} }, snap, actions);
+        VERIFY_IS_TRUE(actions.empty());
+    }
+
+    // Every pad and scene button is dark, and there's nowhere further to scroll.
+    auto const leds = surface.BuildLedFeedback(snap, true);
+    VERIFY_ARE_EQUAL(size_t{ 81 }, leds.size());
+    for (uint8_t const index : { uint8_t{ 81 }, uint8_t{ 11 }, uint8_t{ 89 }, uint8_t{ 19 }, ButtonDown, ButtonRight })
+    {
+        auto const* led = FindLedSpec(leds, index);
+        VERIFY_IS_TRUE(led != nullptr);
+        VERIFY_IS_TRUE(led->rgb == RgbColor{});
+    }
 }
 
 void LaunchpadXTests::ClipModeNavigationButtonsScrollViewportWithClamping()
@@ -547,50 +590,44 @@ void LaunchpadXTests::ClipModeNavigationButtonsScrollViewportWithClamping()
     std::vector<SurfaceAction> actions{};
 
     // Clamped at 0 for Left/Up
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonLeft, 127, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
     VERIFY_ARE_EQUAL(uint32_t{ 0 }, surface.TrackOffset());
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonUp, 127, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
     VERIFY_ARE_EQUAL(uint32_t{ 0 }, surface.SceneOffset());
 
     // Scroll Right and Down
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonRight, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::SetViewport), static_cast<uint8_t>(actions[0].kind));
     VERIFY_ARE_EQUAL(uint32_t{ 1 }, surface.TrackOffset());
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonDown, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint32_t{ 1 }, surface.SceneOffset());
 
     // Clamp at max (10 - 8 = 2)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonRight, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(uint32_t{ 2 }, surface.TrackOffset());
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonRight, 127, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
     VERIFY_ARE_EQUAL(uint32_t{ 2 }, surface.TrackOffset());
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonDown, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(uint32_t{ 2 }, surface.SceneOffset());
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonDown, 127, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
     VERIFY_ARE_EQUAL(uint32_t{ 2 }, surface.SceneOffset());
-
-    // Extreme viewport offsets do not wrap unsigned arithmetic on pad/scene input or LED computation
-    surface.SetViewport((std::numeric_limits<uint32_t>::max)(), (std::numeric_limits<uint32_t>::max)());
-    surface.HandleInput(InputEvent{ InputEventKind::PadPress, 81, 100, false, {} }, snap, actions);
-    VERIFY_IS_TRUE(actions.empty());
-    surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, 89, 127, false, {} }, snap, actions);
-    VERIFY_IS_TRUE(actions.empty());
-    auto const extremeLeds = surface.BuildLedFeedback(snap, true);
-    VERIFY_ARE_EQUAL(size_t{ 81 }, extremeLeds.size());
-    auto const* downLed = FindLedSpec(extremeLeds, ButtonDown);
-    auto const* rightLed = FindLedSpec(extremeLeds, ButtonRight);
-    VERIFY_IS_TRUE(downLed != nullptr && rightLed != nullptr);
-    VERIFY_ARE_EQUAL(uint8_t{ 0 }, downLed->rgb.r);
-    VERIFY_ARE_EQUAL(uint8_t{ 0 }, rightLed->rgb.r);
 }
 
 void LaunchpadXTests::ClipModeStopAndRecordButtonsEmitExpectedActions()
@@ -599,16 +636,20 @@ void LaunchpadXTests::ClipModeStopAndRecordButtonsEmitExpectedActions()
     auto const snap = MakeClipSnapshot(2, 2);
     std::vector<SurfaceAction> actions{};
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonCustom, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::StopAll), static_cast<uint8_t>(actions[0].kind));
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonRecord, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::ToggleRecord), static_cast<uint8_t>(actions[0].kind));
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonRelease, ButtonCustom, 0, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonRelease, ButtonRecord, 0, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
 }
@@ -760,6 +801,7 @@ void LaunchpadXTests::NoteModePadPressReleaseAndAftertouchTrackActiveNotes()
     auto const snap = MakeClipSnapshot(2, 2);
 
     // Press pad 11 (C3 = 60)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 96, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOn), static_cast<uint8_t>(actions[0].kind));
@@ -767,6 +809,7 @@ void LaunchpadXTests::NoteModePadPressReleaseAndAftertouchTrackActiveNotes()
     VERIFY_ARE_EQUAL(uint8_t{ 96 }, actions[0].velocity);
 
     // Aftertouch on held pad 11
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadAftertouch, 11, 70, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitPolyAftertouch), static_cast<uint8_t>(actions[0].kind));
@@ -774,29 +817,35 @@ void LaunchpadXTests::NoteModePadPressReleaseAndAftertouchTrackActiveNotes()
     VERIFY_ARE_EQUAL(uint8_t{ 70 }, actions[0].velocity);
 
     // Aftertouch on unpressed pad 12 -> ignored safely
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadAftertouch, 12, 80, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
 
     // Release pad 11 -> EmitNoteOff(60)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadRelease, 11, 0, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(actions[0].kind));
     VERIFY_ARE_EQUAL(uint8_t{ 60 }, actions[0].midiNote);
 
     // Overlapping isomorphic pitch: pad 16 (row 0, col 5 -> 65) and pad 21 (row 1, col 0 -> 65)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 16, 100, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[0].midiNote);
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 21, 110, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[0].midiNote);
 
     // Releasing pad 16 must NOT kill note 65 while pad 21 is still held
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadRelease, 16, 0, false, {} }, snap, actions);
     VERIFY_IS_TRUE(actions.empty());
 
     // Releasing pad 21 emits EmitNoteOff(65)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadRelease, 21, 0, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(actions[0].kind));
@@ -812,10 +861,12 @@ void LaunchpadXTests::NoteModeOctaveShiftReleasesHeldNotesAndClampsBounds()
     auto const snap = MakeClipSnapshot(1, 1);
 
     // Hold pad 11 (note 60 at octave 3)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 90, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(uint8_t{ 60 }, actions[0].midiNote);
 
     // ButtonUp shifts octave +1 after releasing held note 60
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonUp, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(size_t{ 2 }, actions.size());
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(actions[0].kind));
@@ -825,46 +876,35 @@ void LaunchpadXTests::NoteModeOctaveShiftReleasesHeldNotesAndClampsBounds()
     VERIFY_ARE_EQUAL(4, surface.NoteConfig().octave);
 
     // Pressing pad 11 now plays C4 (72)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 90, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(uint8_t{ 72 }, actions[0].midiNote);
 
     // Shift down twice -> octave 2 (C2 = 48)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonDown, 127, false, {} }, snap, actions);
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonDown, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(2, surface.NoteConfig().octave);
 
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 90, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(uint8_t{ 48 }, actions[0].midiNote);
 
     // Clamp bounds [-2, 8]
     for (int i = 0; i < 12; ++i)
     {
+        actions.clear();
         surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonDown, 127, false, {} }, snap, actions);
     }
     VERIFY_ARE_EQUAL(LaunchpadXSurface::MinOctave, surface.NoteConfig().octave);
 
     for (int i = 0; i < 20; ++i)
     {
+        actions.clear();
         surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonUp, 127, false, {} }, snap, actions);
     }
     VERIFY_ARE_EQUAL(LaunchpadXSurface::MaxOctave, surface.NoteConfig().octave);
-
-    // Note mode Left/Right selects tracks with bounds clamping
-    auto multiTrackSnap = MakeClipSnapshot(3, 1);
-    multiTrackSnap.selectedTrackIndex = 1;
-    surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonLeft, 127, false, {} }, multiTrackSnap, actions);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::SelectTrack), static_cast<uint8_t>(actions[0].kind));
-    VERIFY_ARE_EQUAL(uint32_t{ 0 }, actions[0].trackIndex);
-
-    surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonRight, 127, false, {} }, multiTrackSnap, actions);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::SelectTrack), static_cast<uint8_t>(actions[0].kind));
-    VERIFY_ARE_EQUAL(uint32_t{ 2 }, actions[0].trackIndex);
-
-    multiTrackSnap.selectedTrackIndex = 2;
-    surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonRight, 127, false, {} }, multiTrackSnap, actions);
-    VERIFY_IS_TRUE(actions.empty());
 }
 
 void LaunchpadXTests::NoteModeLedFeedbackHighlightsRootScaleAndPressedPads()
@@ -896,6 +936,7 @@ void LaunchpadXTests::NoteModeLedFeedbackHighlightsRootScaleAndPressedPads()
     VERIFY_IS_TRUE(noteBtnLed->rgb.b > 0);
 
     // Press pad 11 -> differential update highlights pad 11 brightly
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 100, false, {} }, snap, actions);
     auto const pressDiff = surface.BuildLedFeedback(snap, false);
     VERIFY_ARE_EQUAL(size_t{ 1 }, pressDiff.size());
@@ -905,6 +946,7 @@ void LaunchpadXTests::NoteModeLedFeedbackHighlightsRootScaleAndPressedPads()
     VERIFY_ARE_EQUAL(uint8_t{ 127 }, pressDiff[0].rgb.b);
 
     // Release pad 11 -> differential update restores original root color
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadRelease, 11, 0, false, {} }, snap, actions);
     auto const releaseDiff = surface.BuildLedFeedback(snap, false);
     VERIFY_ARE_EQUAL(size_t{ 1 }, releaseDiff.size());
@@ -919,6 +961,7 @@ void LaunchpadXTests::ModeSwitchingViaButtonsAndApiReleasesNotesAndRepaints81Led
     std::vector<SurfaceAction> actions{};
 
     // Switch Clip -> Note via CC 96
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonNote, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(ControllerMode::Note), static_cast<uint8_t>(surface.Mode()));
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
@@ -929,10 +972,13 @@ void LaunchpadXTests::ModeSwitchingViaButtonsAndApiReleasesNotesAndRepaints81Led
     VERIFY_ARE_EQUAL(size_t{ 81 }, noteLeds.size());
 
     // Hold two pads (11 = 60, 12 = 61)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 100, false, {} }, snap, actions);
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 12, 100, false, {} }, snap, actions);
 
     // Switch Note -> Clip via CC 95 -> releases both held notes then emits SwitchMode(Clip)
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::ButtonPress, ButtonSession, 127, false, {} }, snap, actions);
     VERIFY_ARE_EQUAL(static_cast<uint8_t>(ControllerMode::Clip), static_cast<uint8_t>(surface.Mode()));
     VERIFY_ARE_EQUAL(size_t{ 3 }, actions.size());
@@ -954,6 +1000,7 @@ void LaunchpadXTests::ModeSwitchingViaButtonsAndApiReleasesNotesAndRepaints81Led
     // Switch via SetMode API while holding a note
     surface.SetMode(ControllerMode::Note, actions);
     VERIFY_IS_TRUE(actions.empty());
+    actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 11, 100, false, {} }, snap, actions);
     surface.SetMode(ControllerMode::Clip, actions);
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
@@ -1053,419 +1100,4 @@ void LaunchpadXTests::BuildSurfaceSnapshotMapsSequenceLaunchViewsAndFolders()
     VERIFY_IS_FALSE(snap.gridClips[2 * 3 + 2].hasClip);
     VERIFY_IS_TRUE(snap.gridClips[2 * 3 + 2].recording);
     VERIFY_ARE_EQUAL(uint32_t{ 0x336699u }, snap.gridClips[2 * 3 + 2].trackColorRgb24);
-
-    // Unknown selectedTrackId falls back to default color and track index 0
-    auto const fallbackSnap = BuildSurfaceSnapshot(doc, {}, L"missing", 0, false, false, false, L"", 0, noteCfg);
-    VERIFY_ARE_EQUAL(uint32_t{ 0 }, fallbackSnap.selectedTrackIndex);
-    VERIFY_ARE_EQUAL(uint32_t{ 0x4080FFu }, fallbackSnap.activeTrackColorRgb24);
-    VERIFY_IS_FALSE(fallbackSnap.selectedTrackArmed);
-}
-
-namespace
-{
-    class FakeLaunchpadOutput final : public ILaunchpadOutput
-    {
-    public:
-        bool failSends{ false };
-        std::vector<std::vector<UmpPacket>> batches{};
-        std::vector<UmpPacket> allPackets{};
-
-        bool SendUmpPackets(_In_ std::span<const UmpPacket> packets) noexcept override
-        {
-            if (failSends)
-            {
-                return false;
-            }
-
-            try
-            {
-                batches.emplace_back(packets.begin(), packets.end());
-                allPackets.insert(allPackets.end(), packets.begin(), packets.end());
-                return true;
-            }
-            catch (...)
-            {
-                return false;
-            }
-        }
-    };
-
-    [[nodiscard]] std::vector<std::pair<uint8_t, std::vector<uint8_t>>> ExtractSysExMessages(
-        _In_ std::span<const UmpPacket> packets)
-    {
-        std::vector<std::pair<uint8_t, std::vector<uint8_t>>> messages{};
-        SysEx7Accumulator acc{};
-        uint8_t group = 0;
-        std::vector<uint8_t> payload{};
-
-        for (auto const& packet : packets)
-        {
-            if (packet.wordCount >= 2 && (packet.words[0] >> 28) == 0x3u)
-            {
-                if (acc.Feed(packet.words[0], packet.words[1], group, payload))
-                {
-                    messages.emplace_back(group, std::move(payload));
-                    payload.clear();
-                }
-            }
-        }
-
-        return messages;
-    }
-
-    [[nodiscard]] std::vector<UmpPacket> BuildDeviceInquiryReplyPackets(
-        _In_ uint8_t group,
-        _In_ bool isBootloader,
-        _In_ std::array<uint8_t, 4> version)
-    {
-        std::array<uint8_t, 15> payload{
-            0x7E, 0x00, 0x06, 0x02,
-            0x00, 0x20, 0x29,
-            0x13, static_cast<uint8_t>(isBootloader ? 0x11 : 0x01),
-            0x00, 0x00,
-            version[0], version[1], version[2], version[3],
-        };
-        return PacketizeSysEx7(group, payload);
-    }
-}
-
-void LaunchpadXTests::ControllerEndpointAndMultiGroupSelection()
-{
-    // Separate endpoints: LPX DAW vs MIDIIN2 (LPX MIDI)
-    LaunchpadEndpointCandidate dawOnly{};
-    dawOnly.endpointDeviceId = L"\\\\?\\SWD#MIDISRV#LPX_DAW";
-    dawOnly.name = L"LPX DAW";
-    dawOnly.usbVendorId = NovationUsbVendorId;
-    dawOnly.sourceGroups[0] = true;
-    dawOnly.destinationGroups[0] = true;
-
-    LaunchpadEndpointCandidate midiPort{};
-    midiPort.endpointDeviceId = L"\\\\?\\SWD#MIDISRV#LPX_MIDI";
-    midiPort.name = L"MIDIIN2 (LPX MIDI)";
-    midiPort.usbVendorId = NovationUsbVendorId;
-    midiPort.sourceGroups[0] = true;
-    midiPort.destinationGroups[0] = true;
-
-    std::vector<LaunchpadEndpointCandidate> separate{ dawOnly, midiPort };
-    auto const selectedSeparate = SelectLaunchpadEndpoint(separate);
-    VERIFY_IS_TRUE(selectedSeparate.has_value());
-    VERIFY_ARE_EQUAL(midiPort.endpointDeviceId, selectedSeparate->endpointDeviceId);
-    VERIFY_ARE_EQUAL(uint8_t{ 0 }, selectedSeparate->group);
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(LaunchpadHandshakeMode::Immediate), static_cast<uint8_t>(selectedSeparate->handshake));
-    VERIFY_IS_FALSE(selectedSeparate->explicitMatch);
-
-    // Multi-group single endpoint: group 0 = LPX DAW, group 1 = LPX MIDI
-    LaunchpadEndpointCandidate multiGroup{};
-    multiGroup.endpointDeviceId = L"\\\\?\\SWD#MIDISRV#LPX_MULTI";
-    multiGroup.name = L"Launchpad X";
-    multiGroup.usbVendorId = NovationUsbVendorId;
-    multiGroup.sourceGroups[0] = true;
-    multiGroup.destinationGroups[0] = true;
-    multiGroup.sourcePortNames[0] = L"LPX DAW";
-    multiGroup.destinationPortNames[0] = L"LPX DAW";
-    multiGroup.sourceGroups[1] = true;
-    multiGroup.destinationGroups[1] = true;
-    multiGroup.sourcePortNames[1] = L"MIDIIN2 (LPX MIDI)";
-    multiGroup.destinationPortNames[1] = L"MIDIOUT2 (LPX MIDI)";
-
-    std::vector<LaunchpadEndpointCandidate> multi{ multiGroup };
-    auto const selectedMulti = SelectLaunchpadEndpoint(multi);
-    VERIFY_IS_TRUE(selectedMulti.has_value());
-    VERIFY_ARE_EQUAL(multiGroup.endpointDeviceId, selectedMulti->endpointDeviceId);
-    VERIFY_ARE_EQUAL(uint8_t{ 1 }, selectedMulti->group);
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(LaunchpadHandshakeMode::Immediate), static_cast<uint8_t>(selectedMulti->handshake));
-
-    // "Launchpad X DAW" must also be excluded from auto-detection
-    LaunchpadEndpointCandidate lpxDawLong{};
-    lpxDawLong.endpointDeviceId = L"\\\\?\\SWD#MIDISRV#LPX_LONG_DAW";
-    lpxDawLong.name = L"Launchpad X DAW";
-    lpxDawLong.sourceGroups[0] = true;
-    lpxDawLong.destinationGroups[0] = true;
-    std::vector<LaunchpadEndpointCandidate> dawOnlyList{ dawOnly, lpxDawLong };
-    VERIFY_IS_FALSE(SelectLaunchpadEndpoint(dawOnlyList).has_value());
-
-    // Unnamed Novation VID 0x1235 falls back to ConfirmWithDeviceInquiry
-    LaunchpadEndpointCandidate novationUnknown{};
-    novationUnknown.endpointDeviceId = L"\\\\?\\SWD#MIDISRV#NOVATION_GENERIC";
-    novationUnknown.name = L"Novation USB MIDI";
-    novationUnknown.usbVendorId = NovationUsbVendorId;
-    novationUnknown.sourceGroups[2] = true;
-    novationUnknown.destinationGroups[2] = true;
-    std::vector<LaunchpadEndpointCandidate> fallbackList{ novationUnknown };
-    auto const selectedFallback = SelectLaunchpadEndpoint(fallbackList);
-    VERIFY_IS_TRUE(selectedFallback.has_value());
-    VERIFY_ARE_EQUAL(uint8_t{ 2 }, selectedFallback->group);
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(LaunchpadHandshakeMode::ConfirmWithDeviceInquiry), static_cast<uint8_t>(selectedFallback->handshake));
-
-    // Explicit preference honors matching ID/name case-insensitively and returns nullopt if absent
-    std::vector<LaunchpadEndpointCandidate> mixed{ dawOnly, multiGroup, novationUnknown };
-    auto const explicitByName = SelectLaunchpadEndpoint(mixed, L"", L"novation usb midi");
-    VERIFY_IS_TRUE(explicitByName.has_value());
-    VERIFY_ARE_EQUAL(novationUnknown.endpointDeviceId, explicitByName->endpointDeviceId);
-    VERIFY_IS_TRUE(explicitByName->explicitMatch);
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(LaunchpadHandshakeMode::Immediate), static_cast<uint8_t>(explicitByName->handshake));
-
-    VERIFY_IS_FALSE(SelectLaunchpadEndpoint(mixed, L"missing-id", L"missing-name").has_value());
-}
-
-void LaunchpadXTests::ControllerConnectImmediateSendsInquiryProgrammerModeAnd81Leds()
-{
-    auto output = std::make_shared<FakeLaunchpadOutput>();
-    LaunchpadXController controller{};
-    auto const snap = MakeClipSnapshot(4, 4);
-
-    VERIFY_IS_TRUE(controller.Connect(output, 1, snap, LaunchpadHandshakeMode::Immediate, true));
-    VERIFY_IS_TRUE(controller.IsConnected());
-    VERIFY_IS_TRUE(controller.IsProgrammerModeActive());
-    VERIFY_IS_FALSE(controller.IsInquiryConfirmed());
-    VERIFY_IS_FALSE(controller.IsBootloader());
-    VERIFY_ARE_EQUAL(uint8_t{ 1 }, controller.Group());
-
-    auto const sysex = ExtractSysExMessages(output->allPackets);
-    VERIFY_ARE_EQUAL(size_t{ 3 }, sysex.size());
-
-    // 1: Device Inquiry on group 1
-    VERIFY_ARE_EQUAL(uint8_t{ 1 }, sysex[0].first);
-    VERIFY_ARE_EQUAL(size_t{ 4 }, sysex[0].second.size());
-    VERIFY_ARE_EQUAL(uint8_t{ 0x7E }, sysex[0].second[0]);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x06 }, sysex[0].second[2]);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x01 }, sysex[0].second[3]);
-
-    // 2: Enter Programmer Mode (0E 01) on group 1
-    VERIFY_ARE_EQUAL(uint8_t{ 1 }, sysex[1].first);
-    VERIFY_ARE_EQUAL(size_t{ 7 }, sysex[1].second.size());
-    VERIFY_ARE_EQUAL(uint8_t{ 0x0E }, sysex[1].second[5]);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x01 }, sysex[1].second[6]);
-
-    // 3: Full 81-LED bulk frame (6-byte header + 81 * 5-byte RGB entries = 411 bytes) on group 1
-    VERIFY_ARE_EQUAL(uint8_t{ 1 }, sysex[2].first);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x03 }, sysex[2].second[5]);
-    VERIFY_ARE_EQUAL(size_t{ 6 + 81 * 5 }, sysex[2].second.size());
-}
-
-void LaunchpadXTests::ControllerConnectInquiryConfirmWaitsForAppAndRejectsBootloader()
-{
-    auto output = std::make_shared<FakeLaunchpadOutput>();
-    LaunchpadXController controller{};
-    auto const snap = MakeClipSnapshot(2, 2);
-
-    VERIFY_IS_TRUE(controller.Connect(output, 0, snap, LaunchpadHandshakeMode::ConfirmWithDeviceInquiry, true));
-    VERIFY_IS_TRUE(controller.IsConnected());
-    VERIFY_IS_FALSE(controller.IsProgrammerModeActive());
-    VERIFY_IS_FALSE(controller.IsInquiryConfirmed());
-
-    // Before reply: only Device Inquiry was sent
-    auto const initialSysEx = ExtractSysExMessages(output->allPackets);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, initialSysEx.size());
-    VERIFY_ARE_EQUAL(uint8_t{ 0x7E }, initialSysEx[0].second[0]);
-
-    // Pad input before confirmation is ignored
-    std::vector<SurfaceAction> actions{};
-    uint32_t const padWord = Midi1Word(0, 0x9, 0, 81, 100);
-    VERIFY_IS_FALSE(controller.OnUmpMessage(&padWord, 1, snap, actions));
-    VERIFY_IS_TRUE(actions.empty());
-
-    // Application Device Inquiry reply (13 01, version 1.2.3.4) triggers 0E 01 + 81 LEDs
-    output->allPackets.clear();
-    auto const appReply = BuildDeviceInquiryReplyPackets(0, false, { 1, 2, 3, 4 });
-    VERIFY_IS_TRUE(!appReply.empty());
-    for (size_t i = 0; i < appReply.size(); ++i)
-    {
-        bool const parsed = controller.OnUmpMessage(appReply[i].words, appReply[i].wordCount, snap, actions);
-        VERIFY_ARE_EQUAL(i + 1 == appReply.size(), parsed);
-        VERIFY_IS_TRUE(actions.empty());
-    }
-
-    VERIFY_IS_TRUE(controller.IsInquiryConfirmed());
-    VERIFY_IS_TRUE(controller.IsProgrammerModeActive());
-    VERIFY_IS_FALSE(controller.IsBootloader());
-    auto const fw = controller.FirmwareVersion();
-    VERIFY_ARE_EQUAL(uint8_t{ 1 }, fw[0]);
-    VERIFY_ARE_EQUAL(uint8_t{ 2 }, fw[1]);
-    VERIFY_ARE_EQUAL(uint8_t{ 3 }, fw[2]);
-    VERIFY_ARE_EQUAL(uint8_t{ 4 }, fw[3]);
-
-    auto const confirmSysEx = ExtractSysExMessages(output->allPackets);
-    VERIFY_ARE_EQUAL(size_t{ 2 }, confirmSysEx.size());
-    VERIFY_ARE_EQUAL(uint8_t{ 0x0E }, confirmSysEx[0].second[5]);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x01 }, confirmSysEx[0].second[6]);
-    VERIFY_ARE_EQUAL(size_t{ 6 + 81 * 5 }, confirmSysEx[1].second.size());
-
-    // Pad input now dispatches TriggerOrStopSlot
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&padWord, 1, snap, actions));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::TriggerOrStopSlot), static_cast<uint8_t>(actions[0].kind));
-
-    // Bootloader Device Inquiry reply (13 11) must reject Programmer Mode and ignore pads
-    auto bootOutput = std::make_shared<FakeLaunchpadOutput>();
-    LaunchpadXController bootController{};
-    VERIFY_IS_TRUE(bootController.Connect(bootOutput, 0, snap, LaunchpadHandshakeMode::ConfirmWithDeviceInquiry, true));
-    bootOutput->allPackets.clear();
-
-    auto const bootReply = BuildDeviceInquiryReplyPackets(0, true, { 0, 1, 0, 2 });
-    VERIFY_IS_TRUE(!bootReply.empty());
-    for (size_t i = 0; i < bootReply.size(); ++i)
-    {
-        bool const parsed = bootController.OnUmpMessage(bootReply[i].words, bootReply[i].wordCount, snap, actions);
-        VERIFY_ARE_EQUAL(i + 1 == bootReply.size(), parsed);
-    }
-
-    VERIFY_IS_TRUE(bootController.IsBootloader());
-    VERIFY_IS_FALSE(bootController.IsInquiryConfirmed());
-    VERIFY_IS_FALSE(bootController.IsProgrammerModeActive());
-    VERIFY_IS_TRUE(bootOutput->allPackets.empty());
-    VERIFY_IS_FALSE(bootController.OnUmpMessage(&padWord, 1, snap, actions));
-    VERIFY_IS_TRUE(actions.empty());
-}
-
-void LaunchpadXTests::ControllerInputDispatchClipNoteOctaveAndModeSwitch()
-{
-    auto output = std::make_shared<FakeLaunchpadOutput>();
-    LaunchpadXController controller{};
-    auto const snap = MakeClipSnapshot(4, 4);
-
-    VERIFY_IS_TRUE(controller.Connect(output, 1, snap, LaunchpadHandshakeMode::Immediate, false));
-    std::vector<SurfaceAction> actions{};
-
-    // Wrong group (group 0 instead of 1) must be ignored
-    uint32_t const wrongGroupPad = Midi1Word(0, 0x9, 0, 81, 127);
-    VERIFY_IS_FALSE(controller.OnUmpMessage(&wrongGroupPad, 1, snap, actions));
-
-    // Clip mode actions on group 1: pad 81 -> TriggerOrStopSlot(0,0), scene 89 -> LaunchScene(0), 98 -> ToggleRecord, 97 -> StopAll
-    uint32_t const pad81 = Midi1Word(1, 0x9, 0, 81, 100);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&pad81, 1, snap, actions));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::TriggerOrStopSlot), static_cast<uint8_t>(actions[0].kind));
-
-    uint32_t const scene89 = Midi1Word(1, 0xB, 0, SceneButtonIndex(0), 127);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&scene89, 1, snap, actions));
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::LaunchScene), static_cast<uint8_t>(actions[0].kind));
-
-    uint32_t const rec98 = Midi1Word(1, 0xB, 0, ButtonRecord, 127);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&rec98, 1, snap, actions));
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::ToggleRecord), static_cast<uint8_t>(actions[0].kind));
-
-    uint32_t const stop97 = Midi1Word(1, 0xB, 0, ButtonCustom, 127);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&stop97, 1, snap, actions));
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::StopAll), static_cast<uint8_t>(actions[0].kind));
-
-    // Switch to Note mode via CC 96
-    uint32_t const noteBtn = Midi1Word(1, 0xB, 0, ButtonNote, 127);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&noteBtn, 1, snap, actions));
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(ControllerMode::Note), static_cast<uint8_t>(controller.Mode()));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::SwitchMode), static_cast<uint8_t>(actions[0].kind));
-
-    // Pad 11 press + poly aftertouch
-    uint32_t const pad11On = Midi1Word(1, 0x9, 0, 11, 110);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&pad11On, 1, snap, actions));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOn), static_cast<uint8_t>(actions[0].kind));
-    VERIFY_ARE_EQUAL(uint8_t{ 60 }, actions[0].midiNote);
-
-    uint32_t const pad11At = Midi1Word(1, 0xA, 0, 11, 88);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&pad11At, 1, snap, actions));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitPolyAftertouch), static_cast<uint8_t>(actions[0].kind));
-    VERIFY_ARE_EQUAL(uint8_t{ 88 }, actions[0].velocity);
-
-    // ButtonUp shifts octave up, releases held note 60, and updates controller.NoteConfig().octave
-    uint32_t const octUp = Midi1Word(1, 0xB, 0, ButtonUp, 127);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&octUp, 1, snap, actions));
-    VERIFY_ARE_EQUAL(size_t{ 2 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(actions[0].kind));
-    VERIFY_ARE_EQUAL(uint8_t{ 60 }, actions[0].midiNote);
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::ShiftOctave), static_cast<uint8_t>(actions[1].kind));
-    VERIFY_ARE_EQUAL(4, controller.NoteConfig().octave);
-
-    // Hold pad 11 at octave 4 (note 72), then switch to Clip via CC 95 -> flushes EmitNoteOff(72)
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&pad11On, 1, snap, actions));
-    VERIFY_ARE_EQUAL(uint8_t{ 72 }, actions[0].midiNote);
-
-    uint32_t const clipBtn = Midi1Word(1, 0xB, 0, ButtonSession, 127);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&clipBtn, 1, snap, actions));
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(ControllerMode::Clip), static_cast<uint8_t>(controller.Mode()));
-    VERIFY_ARE_EQUAL(size_t{ 2 }, actions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(actions[0].kind));
-    VERIFY_ARE_EQUAL(uint8_t{ 72 }, actions[0].midiNote);
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::SwitchMode), static_cast<uint8_t>(actions[1].kind));
-}
-
-void LaunchpadXTests::ControllerSyncLedsDiffsAndDisconnectExitsCleanly()
-{
-    auto output = std::make_shared<FakeLaunchpadOutput>();
-    LaunchpadXController controller{};
-    auto snap = MakeClipSnapshot(4, 4);
-
-    VERIFY_IS_TRUE(controller.Connect(output, 2, snap, LaunchpadHandshakeMode::Immediate, false));
-    output->batches.clear();
-    output->allPackets.clear();
-
-    // Unchanged state sends 0 packets
-    VERIFY_IS_TRUE(controller.SyncLeds(snap, false));
-    VERIFY_IS_TRUE(output->batches.empty());
-
-    // Transport change sends a small differential update (< 81 LEDs)
-    snap.transportPlaying = true;
-    VERIFY_IS_TRUE(controller.SyncLeds(snap, false));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, output->batches.size());
-    auto const diffSysEx = ExtractSysExMessages(output->allPackets);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, diffSysEx.size());
-    VERIFY_ARE_EQUAL(uint8_t{ 2 }, diffSysEx[0].first);
-    VERIFY_IS_TRUE(diffSysEx[0].second.size() < size_t{ 6 + 81 * 5 });
-
-    // Switch to Note mode, hold pad 11, then Disconnect(true) -> emits NoteOff and 0E 00 on group 2
-    std::vector<SurfaceAction> actions{};
-    controller.SetMode(ControllerMode::Note, actions);
-    uint32_t const pad11On = Midi1Word(2, 0x9, 0, 11, 100);
-    VERIFY_IS_TRUE(controller.OnUmpMessage(&pad11On, 1, snap, actions));
-
-    output->allPackets.clear();
-    std::vector<SurfaceAction> releaseActions{};
-    controller.Disconnect(true, releaseActions);
-
-    VERIFY_IS_FALSE(controller.IsConnected());
-    VERIFY_IS_FALSE(controller.IsProgrammerModeActive());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(ControllerMode::Note), static_cast<uint8_t>(controller.Mode()));
-    VERIFY_ARE_EQUAL(size_t{ 1 }, releaseActions.size());
-    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(releaseActions[0].kind));
-    VERIFY_ARE_EQUAL(uint8_t{ 60 }, releaseActions[0].midiNote);
-
-    auto const exitSysEx = ExtractSysExMessages(output->allPackets);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, exitSysEx.size());
-    VERIFY_ARE_EQUAL(uint8_t{ 2 }, exitSysEx[0].first);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x0E }, exitSysEx[0].second[5]);
-    VERIFY_ARE_EQUAL(uint8_t{ 0x00 }, exitSysEx[0].second[6]);
-}
-
-void LaunchpadXTests::ControllerHandlesOutputFailureGracefully()
-{
-    auto output = std::make_shared<FakeLaunchpadOutput>();
-    output->failSends = true;
-
-    LaunchpadXController controller{};
-    auto snap = MakeClipSnapshot(2, 2);
-
-    // Connect fails cleanly when output fails
-    VERIFY_IS_FALSE(controller.Connect(output, 0, snap, LaunchpadHandshakeMode::Immediate, true));
-    VERIFY_IS_FALSE(controller.IsConnected());
-    VERIFY_IS_FALSE(controller.IsProgrammerModeActive());
-
-    // Connect succeeds when output works
-    output->failSends = false;
-    VERIFY_IS_TRUE(controller.Connect(output, 0, snap, LaunchpadHandshakeMode::Immediate, false));
-    VERIFY_IS_TRUE(controller.IsConnected());
-
-    // SyncLeds returns false when output fails, and recovers full refresh when output returns
-    output->failSends = true;
-    snap.transportRecording = true;
-    VERIFY_IS_FALSE(controller.SyncLeds(snap, false));
-
-    output->failSends = false;
-    output->allPackets.clear();
-    VERIFY_IS_TRUE(controller.SyncLeds(snap, false));
-    auto const recoveredSysEx = ExtractSysExMessages(output->allPackets);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, recoveredSysEx.size());
-    // 80 RGB LEDs (5 bytes each) + 1 flashing record LED (4 bytes) + 6-byte SysEx header
-    VERIFY_ARE_EQUAL(size_t{ 6 + 80 * 5 + 4 }, recoveredSysEx[0].second.size());
 }

@@ -46,12 +46,9 @@ namespace midisequencer::launchpad
             _In_ uint8_t byteCount) noexcept
         {
             std::array<uint8_t, 6> padded{};
-            if (bytes != nullptr)
+            for (uint8_t i = 0; bytes != nullptr && i < byteCount && i < 6; ++i)
             {
-                for (uint8_t i = 0; i < byteCount && i < 6; ++i)
-                {
-                    padded[i] = bytes[i];
-                }
+                padded[i] = bytes[i];
             }
 
             UmpPacket packet{};
@@ -553,5 +550,129 @@ namespace midisequencer::launchpad
 
         return ContainsCaseInsensitive(name, L"lpx midi") ||
             ContainsCaseInsensitive(name, L"launchpad x");
+    }
+
+    namespace
+    {
+        // How sure a candidate is to be the Launchpad X MIDI port. Higher is surer.
+        enum class PortConfidence : uint8_t
+        {
+            None = 0,
+
+            // A Launchpad X by its USB ids or its name, whose groups say nothing more. Its MIDI
+            // port is the second of its two ports.
+            Device = 1,
+
+            // An endpoint for the MIDI port alone, such as one per MIDI 1.0 port.
+            EndpointName = 2,
+
+            // A group that names itself LPX MIDI.
+            GroupName = 3,
+        };
+
+        struct PortChoice
+        {
+            PortConfidence Confidence{ PortConfidence::None };
+            uint8_t Group{ 0 };
+        };
+
+        [[nodiscard]] PortChoice ChoosePort(_In_ EndpointCandidate const& candidate) noexcept
+        {
+            std::array<uint8_t, 16> bidirectional{};
+            size_t bidirectionalCount = 0;
+            bool namesDaw = false;
+
+            for (uint8_t group = 0; group < 16; ++group)
+            {
+                if (!candidate.SourceGroups[group] || !candidate.DestinationGroups[group])
+                {
+                    continue;
+                }
+
+                std::array<std::wstring_view, 4> const names{
+                    candidate.SourcePortNames[group],
+                    candidate.DestinationPortNames[group],
+                    candidate.SourceGroupNames[group],
+                    candidate.DestinationGroupNames[group],
+                };
+
+                auto const has = [&names](std::wstring_view text) noexcept
+                {
+                    return std::any_of(names.begin(), names.end(), [text](std::wstring_view name) noexcept { return ContainsCaseInsensitive(name, text); });
+                };
+
+                if (has(L"lpx daw"))
+                {
+                    namesDaw = true;
+                    continue;
+                }
+
+                if (has(L"lpx midi"))
+                {
+                    return { PortConfidence::GroupName, group };
+                }
+
+                bidirectional[bidirectionalCount++] = group;
+            }
+
+            if (bidirectionalCount == 0 || ContainsCaseInsensitive(candidate.Name, L"lpx daw"))
+            {
+                return {};
+            }
+
+            if (ContainsCaseInsensitive(candidate.Name, L"lpx midi"))
+            {
+                return { PortConfidence::EndpointName, bidirectional[0] };
+            }
+
+            auto const isLaunchpadX =
+                (candidate.UsbVendorId == NovationUsbVendorId && candidate.UsbProductId == LaunchpadXUsbProductId) ||
+                ContainsCaseInsensitive(candidate.Name, L"launchpad x");
+
+            if (!isLaunchpadX)
+            {
+                return {};
+            }
+
+            // With the DAW port already named and set aside, what's left is the MIDI port.
+            auto const index = (!namesDaw && bidirectionalCount >= 2) ? 1u : 0u;
+            return { PortConfidence::Device, bidirectional[index] };
+        }
+    }
+
+    _Use_decl_annotations_
+    std::optional<LaunchpadPort> FindLaunchpadPort(
+        std::span<const EndpointCandidate> candidates,
+        std::wstring_view preferredEndpointId)
+    {
+        std::optional<LaunchpadPort> best{};
+        auto bestConfidence = PortConfidence::None;
+        bool bestIsPreferred = false;
+
+        for (auto const& candidate : candidates)
+        {
+            auto const choice = ChoosePort(candidate);
+
+            if (choice.Confidence == PortConfidence::None)
+            {
+                continue;
+            }
+
+            bool const preferred = !preferredEndpointId.empty() && candidate.EndpointId == preferredEndpointId;
+
+            auto const better =
+                !best.has_value() ||
+                (preferred && !bestIsPreferred) ||
+                (preferred == bestIsPreferred && choice.Confidence > bestConfidence);
+
+            if (better)
+            {
+                best = LaunchpadPort{ candidate.EndpointId, choice.Group };
+                bestConfidence = choice.Confidence;
+                bestIsPreferred = preferred;
+            }
+        }
+
+        return best;
     }
 }

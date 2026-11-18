@@ -43,7 +43,6 @@ namespace winrt::midisequencer::implementation
             UpdateTransport();
             InvalidateLaunchers();
             InvalidateArrange();
-            UpdateLaunchpadXFeedback();
 
             if (m_engine != nullptr && m_engine->IsPlaying() && m_frames != nullptr)
             {

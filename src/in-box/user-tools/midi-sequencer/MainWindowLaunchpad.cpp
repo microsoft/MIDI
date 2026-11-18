@@ -11,493 +11,284 @@
 #include "BackgroundWork.h"
 #include "HarmonyFollow.h"
 #include "RemoteControl.h"
-#include "SequenceArpeggiator.h"
-#include "SequenceRender.h"
+#include "StringResources.h"
+
+namespace res = ::midisequencer::resources;
+namespace lpx = ::midisequencer::launchpad;
 
 namespace winrt::midisequencer::implementation
 {
     namespace
     {
-        constexpr size_t LaunchpadMaximumHeardMessages = 50000;
-        constexpr double LaunchpadHeardSeconds = 120.0;
-        constexpr int64_t LaunchpadSlotEarlyTicks = seq::TicksPerQuarterNote / 4;
+        // Often enough that a pressed pad lights while it's held, and a launch shows on the beat.
+        constexpr auto LaunchpadInterval = std::chrono::milliseconds{ 50 };
 
-        bool LaunchpadSameEndpoint(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
+        // The scales Note mode can play in, in midiapp::ScaleKind order.
+        constexpr wchar_t const* ScaleNameKeys[]{
+            L"ScaleMajor", L"ScaleMinor", L"ScaleDorian", L"ScalePhrygian", L"ScaleLydian", L"ScaleMixolydian",
+            L"ScaleHarmonicMinor", L"ScaleMajorPentatonic", L"ScaleMinorPentatonic", L"ScaleBlues", L"ScaleChromatic",
+        };
+
+        static_assert(std::size(ScaleNameKeys) == midiapp::ScaleKindCount);
+        static_assert(seq::AppSettings::LaunchpadScaleCount == midiapp::ScaleKindCount);
+
+        lpx::EndpointCandidate ToCandidate(midiapp::LiveEndpoint const& live)
         {
-            try
-            {
-                return midiapp::EndpointIdsMatch(winrt::hstring{ left }, winrt::hstring{ right });
-            }
-            catch (...)
-            {
-                return false;
-            }
-        }
+            lpx::EndpointCandidate candidate{};
+            candidate.EndpointId = live.EndpointDeviceId;
+            candidate.Name = live.Name;
+            candidate.UsbVendorId = live.UsbVendorId;
+            candidate.UsbProductId = live.UsbProductId;
 
-        seq::RecordFilter LaunchpadFilterFor(_In_ seq::TrackSource const& source) noexcept
-        {
-            seq::RecordFilter filter{};
-            filter.Group = source.Group;
-            filter.Channels = source.Channels;
-            filter.Notes = (source.Record & seq::RecordNotes) != 0;
-            filter.Controllers = (source.Record & seq::RecordControllers) != 0;
-            filter.PitchBend = (source.Record & seq::RecordPitchBend) != 0;
-            filter.Pressure = (source.Record & seq::RecordPressure) != 0;
-            filter.Program = (source.Record & seq::RecordProgram) != 0;
-            filter.SystemExclusive = source.SystemExclusive;
-            return filter;
-        }
-
-        uint8_t ResolveRecordChannel(_In_ uint16_t allowedChannels, _In_ uint8_t preferredChannel) noexcept
-        {
-            uint8_t const maskedPreferred = static_cast<uint8_t>(preferredChannel & 0x0Fu);
-            if ((allowedChannels & (1u << maskedPreferred)) != 0)
+            for (size_t group = 0; group < candidate.SourceGroups.size() && group < live.SourceGroups.size(); ++group)
             {
-                return maskedPreferred;
+                candidate.SourceGroups[group] = live.SourceGroups[group];
+                candidate.DestinationGroups[group] = live.DestinationGroups[group];
+                candidate.SourcePortNames[group] = live.SourcePortNames[group];
+                candidate.DestinationPortNames[group] = live.DestinationPortNames[group];
+                candidate.SourceGroupNames[group] = live.SourceGroupNames[group];
+                candidate.DestinationGroupNames[group] = live.DestinationGroupNames[group];
             }
 
-            for (uint8_t ch = 0; ch < 16; ++ch)
-            {
-                if ((allowedChannels & (1u << ch)) != 0)
-                {
-                    return ch;
-                }
-            }
-
-            return maskedPreferred;
+            return candidate;
         }
     }
 
-    // ---------------------------------------------------------------- public M2/M3 binding API
+    // ---------------------------------------------------------------- the connection
 
-    _Use_decl_annotations_
-    void MainWindow::SetLaunchpadXEnabled(bool enabled) noexcept
-    {
-        try
-        {
-            if (m_launchpadEnabled == enabled)
-            {
-                return;
-            }
-
-            m_launchpadEnabled = enabled;
-
-            if (enabled)
-            {
-                RefreshLaunchpadXConnectionAsync();
-            }
-            else
-            {
-                StopLaunchpadX(true);
-            }
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to toggle Launchpad X integration.")
-    }
-
-    bool MainWindow::LaunchpadXEnabled() const noexcept
-    {
-        return m_launchpadEnabled;
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::SetLaunchpadXEndpoint(seq::EndpointRef const& endpoint) noexcept
-    {
-        try
-        {
-            if (m_launchpadEndpoint == endpoint)
-            {
-                return;
-            }
-
-            m_launchpadEndpoint = endpoint;
-
-            if (m_launchpadEnabled)
-            {
-                RefreshLaunchpadXConnectionAsync();
-            }
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to select Launchpad X endpoint.")
-    }
-
-    seq::EndpointRef const& MainWindow::LaunchpadXEndpoint() const noexcept
-    {
-        return m_launchpadEndpoint;
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::SetLaunchpadXMode(seq::launchpad::ControllerMode mode) noexcept
-    {
-        try
-        {
-            if (m_launchpadMode == mode)
-            {
-                return;
-            }
-
-            m_launchpadMode = mode;
-
-            if (m_launchpadController != nullptr)
-            {
-                std::vector<seq::launchpad::SurfaceAction> releaseActions{};
-                m_launchpadController->SetMode(mode, releaseActions);
-
-                if (!releaseActions.empty())
-                {
-                    DispatchLaunchpadXActions(releaseActions, 0);
-                }
-            }
-
-            FlushLaunchpadXHeldNotes();
-            UpdateLaunchpadXFeedback(true);
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to switch Launchpad X mode.")
-    }
-
-    seq::launchpad::ControllerMode MainWindow::LaunchpadXMode() const noexcept
-    {
-        return m_launchpadMode;
-    }
-
-    bool MainWindow::IsLaunchpadXConnected() const noexcept
-    {
-        return m_launchpadConnected && m_launchpadController != nullptr && m_launchpadController->IsConnected();
-    }
-
-    std::wstring MainWindow::LaunchpadXConnectedEndpointName() const
-    {
-        return IsLaunchpadXConnected() ? m_launchpadConnectedEndpointName : std::wstring{};
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::SetLaunchpadXNoteConfig(seq::launchpad::NoteLayoutConfig const& config) noexcept
-    {
-        try
-        {
-            m_launchpadNoteConfig = config;
-
-            if (m_launchpadController != nullptr)
-            {
-                std::vector<seq::launchpad::SurfaceAction> releaseActions{};
-                m_launchpadController->SetNoteConfig(m_launchpadNoteConfig, releaseActions);
-
-                if (!releaseActions.empty())
-                {
-                    DispatchLaunchpadXActions(releaseActions, 0);
-                }
-            }
-
-            FlushLaunchpadXHeldNotes();
-            UpdateLaunchpadXFeedback(false);
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update Launchpad X note layout settings.")
-    }
-
-    seq::launchpad::NoteLayoutConfig const& MainWindow::LaunchpadXNoteConfig() const noexcept
-    {
-        return m_launchpadNoteConfig;
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::SetLaunchpadXFollowSongKey(bool follow) noexcept
-    {
-        try
-        {
-            if (m_launchpadFollowSongKey == follow)
-            {
-                return;
-            }
-
-            m_launchpadFollowSongKey = follow;
-            SyncLaunchpadXKeyFromSong();
-            UpdateLaunchpadXFeedback(false);
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update Launchpad X song key tracking.")
-    }
-
-    bool MainWindow::LaunchpadXFollowSongKey() const noexcept
-    {
-        return m_launchpadFollowSongKey;
-    }
-
-    // ---------------------------------------------------------------- lifecycle & hot-plug
-
-    winrt::fire_and_forget MainWindow::RefreshLaunchpadXConnectionAsync()
+    winrt::fire_and_forget MainWindow::UpdateLaunchpadConnectionAsync()
     {
         auto strong = get_strong();
 
         try
         {
-            if (m_closing || m_session == nullptr || m_directory == nullptr)
+            if (m_session == nullptr || m_closing)
             {
                 co_return;
             }
 
-            if (!m_launchpadEnabled)
+            // One at a time. A change while connecting is looked at again when it's done.
+            if (m_launchpadConnecting)
             {
-                StopLaunchpadX(true);
+                m_launchpadAgain = true;
                 co_return;
             }
 
-            if (m_launchpadRefreshPending)
+            auto& settings = seq::AppSettings::Current();
+            std::optional<lpx::LaunchpadPort> port{};
+            std::wstring name{};
+
+            if (settings.LaunchpadEnabled())
             {
-                m_launchpadRefreshAgain = true;
-                co_return;
-            }
+                std::vector<lpx::EndpointCandidate> candidates{};
 
-            m_launchpadRefreshPending = true;
-
-            do
-            {
-                m_launchpadRefreshAgain = false;
-
-                if (auto closing = std::exchange(m_launchpadClosing, nullptr); closing != nullptr)
+                for (auto const& summary : m_directory->Snapshot())
                 {
-                    try
-                    {
-                        co_await closing;
-                    }
-                    catch (...)
-                    {
-                    }
-
-                    if (m_closing || !m_launchpadEnabled || m_session == nullptr)
-                    {
-                        break;
-                    }
+                    candidates.push_back(ToCandidate(summary.Live));
                 }
 
-                std::vector<seq::launchpad::LaunchpadEndpointCandidate> candidates{};
-                auto const snapshotEndpoints = m_directory->Snapshot();
-                candidates.reserve(snapshotEndpoints.size());
+                port = lpx::FindLaunchpadPort(candidates, settings.LaunchpadEndpointId());
 
-                for (auto const& summary : snapshotEndpoints)
+                if (port.has_value())
                 {
-                    seq::EndpointRef const ref{ summary.Live.Name, summary.Live.EndpointDeviceId };
-                    uint16_t const srcOff = GroupsTurnedOff(ref, false);
-                    uint16_t const dstOff = GroupsTurnedOff(ref, true);
-                    auto candidate = seq::launchpad::LaunchpadXSessionTransport::BuildCandidate(summary.Live, srcOff, dstOff);
+                    auto const found = std::find_if(candidates.begin(), candidates.end(), [&port](lpx::EndpointCandidate const& c) { return c.EndpointId == port->EndpointId; });
+                    name = found != candidates.end() ? found->Name : std::wstring{};
+                }
+            }
 
-                    if (summary.Live.DestinationGroupCount() > 0)
+            // Still on the one it should be.
+            if (m_launchpad != nullptr && m_launchpadEndpoint != nullptr && port.has_value() &&
+                m_launchpadEndpoint->EndpointId() == port->EndpointId && m_launchpad->Group() == port->Group)
+            {
+                co_return;
+            }
+
+            if (m_launchpad != nullptr)
+            {
+                StopLaunchpad(true);
+            }
+
+            if (!port.has_value())
+            {
+                co_return;
+            }
+
+            m_launchpadConnecting = true;
+
+            // The connection closed last has to be gone first: the device takes one at a time.
+            if (auto closing = std::exchange(m_launchpadClosing, nullptr); closing != nullptr)
+            {
+                try
+                {
+                    co_await closing;
+                }
+                catch (...)
+                {
+                }
+            }
+
+            auto const endpoint = std::make_shared<::midisequencer::LaunchpadXEndpoint>(m_session);
+            auto const weak = get_weak();
+            auto const queue = DispatcherQueue();
+
+            auto const controller = std::make_shared<lpx::LaunchpadXController>(
+                endpoint,
+                port->Group,
+                [weak](lpx::SurfaceAction const& action, uint64_t timestamp)
+                {
+                    if (auto window = weak.get())
                     {
-                        bool anyDestLeft = false;
-                        for (bool const enabled : candidate.destinationGroups)
+                        window->OnLaunchpadNote(action, timestamp);
+                    }
+                },
+                [weak, queue](std::vector<lpx::SurfaceAction> actions)
+                {
+                    queue.TryEnqueue([weak, actions = std::move(actions)]()
+                    {
+                        if (auto window = weak.get())
                         {
-                            if (enabled)
-                            {
-                                anyDestLeft = true;
-                                break;
-                            }
+                            window->OnLaunchpadActions(actions);
                         }
-
-                        if (!anyDestLeft)
-                        {
-                            continue;
-                        }
-                    }
-                    else if ((dstOff & 1u) != 0)
-                    {
-                        continue;
-                    }
-
-                    candidates.push_back(std::move(candidate));
-                }
-
-                auto const selection = seq::launchpad::SelectLaunchpadEndpoint(
-                    candidates,
-                    m_launchpadEndpoint.Id,
-                    m_launchpadEndpoint.Name);
-
-                if (!selection.has_value())
-                {
-                    if (m_launchpadConnected || m_launchpadTransport != nullptr)
-                    {
-                        StopLaunchpadX(true);
-                    }
-
-                    continue;
-                }
-
-                if (m_launchpadConnected &&
-                    m_launchpadTransport != nullptr &&
-                    LaunchpadSameEndpoint(m_launchpadConnectedEndpointId, selection->endpointDeviceId) &&
-                    m_launchpadConnectedGroup == selection->group)
-                {
-                    m_launchpadConnectedEndpointName = selection->displayName;
-                    UpdateLaunchpadXFeedback(false);
-                    continue;
-                }
-
-                // Tear down any previous endpoint before opening the new one.
-                FlushLaunchpadXHeldNotes();
-                m_launchpadConnected = false;
-                m_launchpadConnectedEndpointId.clear();
-                m_launchpadConnectedEndpointName.clear();
-                m_launchpadConnectedGroup = 0;
-
-                if (m_launchpadController != nullptr)
-                {
-                    std::vector<seq::launchpad::SurfaceAction> releaseActions{};
-                    m_launchpadController->Disconnect(true, releaseActions);
-                }
-
-                UpdateLaunchpadXSourceSuppression({}, 0);
-                UpdateEchoRoutes();
-                PrepareConnectionsAsync();
-
-                if (auto oldTransport = std::exchange(m_launchpadTransport, nullptr); oldTransport != nullptr)
-                {
-                    co_await ::midisequencer::RunOnBackgroundAsync([oldTransport]() { oldTransport->Close(); });
-                }
-
-                if (m_closing || !m_launchpadEnabled || m_session == nullptr)
-                {
-                    break;
-                }
-
-                auto transport = std::make_shared<seq::launchpad::LaunchpadXSessionTransport>(m_session);
-                auto const weak = get_weak();
-                auto const queue = DispatcherQueue();
-                auto const selectedId = selection->endpointDeviceId;
-                auto const selectedGroup = selection->group;
-                bool opened = false;
-
-                co_await ::midisequencer::RunOnBackgroundAsync([&]()
-                {
-                    opened = transport->Open(
-                        selectedId,
-                        selectedGroup,
-                        [weak, queue](uint32_t const* words, uint8_t count, uint64_t timestamp)
-                        {
-                            if (queue == nullptr || words == nullptr || count == 0 || count > 4)
-                            {
-                                return;
-                            }
-
-                            std::array<uint32_t, 4> copy{};
-                            std::copy_n(words, count, copy.begin());
-
-                            queue.TryEnqueue([weak, copy, count, timestamp]()
-                            {
-                                if (auto window = weak.get())
-                                {
-                                    window->OnLaunchpadXUmp(copy.data(), count, timestamp);
-                                }
-                            });
-                        },
-                        [weak, queue, selectedId](bool reconnected)
-                        {
-                            if (queue == nullptr)
-                            {
-                                return;
-                            }
-
-                            queue.TryEnqueue([weak, reconnected, selectedId]()
-                            {
-                                if (auto window = weak.get())
-                                {
-                                    if (LaunchpadSameEndpoint(window->m_launchpadConnectedEndpointId, selectedId))
-                                    {
-                                        window->OnLaunchpadXTransportState(reconnected);
-                                    }
-                                }
-                            });
-                        });
+                    });
                 });
 
-                if (m_closing || !m_launchpadEnabled)
+            controller->SetMode(settings.LaunchpadNoteMode() ? lpx::ControllerMode::Note : lpx::ControllerMode::Clip);
+            controller->SetNoteConfig(LaunchpadNoteLayout());
+
+            auto const snapshot = CurrentLaunchpadState();
+            auto const endpointId = port->EndpointId;
+            auto opened = false;
+
+            co_await ::midisequencer::RunOnBackgroundAsync([&]()
+            {
+                opened = endpoint->Open(endpointId, [controller](uint32_t const* words, uint8_t count, uint64_t timestamp)
                 {
-                    co_await ::midisequencer::RunOnBackgroundAsync([transport]() { transport->Close(); });
-                    break;
+                    controller->OnInput(words, count, timestamp);
+                });
+
+                if (opened && !controller->Start(snapshot))
+                {
+                    endpoint->Close();
+                    opened = false;
                 }
+            });
 
-                if (!opened)
+            m_launchpadConnecting = false;
+
+            // Turned off, or closing, while it was connecting.
+            if (m_closing || !settings.LaunchpadEnabled())
+            {
+                if (opened)
                 {
-                    continue;
-                }
-
-                m_launchpadTransport = transport;
-                m_launchpadConnected = true;
-                m_launchpadConnectedEndpointId = selection->endpointDeviceId;
-                m_launchpadConnectedEndpointName = selection->displayName;
-                m_launchpadConnectedGroup = selection->group;
-
-                SyncLaunchpadXKeyFromSong();
-
-                if (m_launchpadController != nullptr)
-                {
-                    std::vector<seq::launchpad::SurfaceAction> dummy{};
-                    m_launchpadController->SetMode(m_launchpadMode, dummy);
-                    m_launchpadController->SetNoteConfig(m_launchpadNoteConfig, dummy);
-
-                    auto const initialSnapshot = BuildLaunchpadXSnapshot();
-                    if (!m_launchpadController->Connect(
-                        transport,
-                        selection->group,
-                        initialSnapshot,
-                        selection->handshake,
-                        true))
+                    m_launchpadClosing = ::midisequencer::RunOnBackgroundAsync([controller, endpoint]()
                     {
-                        m_launchpadConnected = false;
-                        m_launchpadConnectedEndpointId.clear();
-                        m_launchpadConnectedEndpointName.clear();
-                        m_launchpadConnectedGroup = 0;
-                        m_launchpadTransport.reset();
-                        co_await ::midisequencer::RunOnBackgroundAsync([transport]() { transport->Close(); });
-                        continue;
-                    }
+                        controller->Stop();
+                        endpoint->Close();
+                    });
                 }
 
-                UpdateLaunchpadXSourceSuppression(selection->endpointDeviceId, selection->group);
-                UpdateEchoRoutes();
-                PrepareConnectionsAsync();
-            } while (m_launchpadRefreshAgain && !m_closing && m_launchpadEnabled);
+                co_return;
+            }
 
-            m_launchpadRefreshPending = false;
+            if (!opened)
+            {
+                ShowMessage(res::GetString(L"LaunchpadUnavailable"));
+            }
+            else
+            {
+                m_launchpadEndpoint = endpoint;
+                m_launchpad = controller;
+                m_launchpadName = name;
+
+                {
+                    std::scoped_lock guard{ m_inputLock };
+                    m_launchpadSourceId = endpointId;
+                    m_launchpadGroup = port->Group;
+                }
+
+                UpdateLaunchpadTarget();
+
+                if (m_launchpadTimer == nullptr)
+                {
+                    m_launchpadTimer = xaml::DispatcherTimer{};
+                    m_launchpadTimer.Interval(LaunchpadInterval);
+                    m_launchpadTimer.Tick([weak](auto&&, auto&&)
+                    {
+                        if (auto window = weak.get())
+                        {
+                            window->UpdateLaunchpadFeedback();
+                        }
+                    });
+                }
+
+                m_launchpadTimer.Start();
+                UpdateLaunchpadModeButton();
+                ShowMessage(res::FormatString(L"LaunchpadOnFormat", m_launchpadName));
+            }
+
+            if (std::exchange(m_launchpadAgain, false))
+            {
+                UpdateLaunchpadConnectionAsync();
+            }
         }
         catch (...)
         {
-            m_launchpadRefreshPending = false;
+            m_launchpadConnecting = false;
             LOG_CAUGHT_EXCEPTION();
         }
     }
 
     _Use_decl_annotations_
-    void MainWindow::StopLaunchpadX(bool inBackground) noexcept
+    void MainWindow::StopLaunchpad(bool inBackground) noexcept
     {
         try
         {
-            FlushLaunchpadXHeldNotes();
-
-            bool const hadSuppression = !m_launchpadConnectedEndpointId.empty();
-            m_launchpadConnected = false;
-            m_launchpadConnectedEndpointId.clear();
-            m_launchpadConnectedEndpointName.clear();
-            m_launchpadConnectedGroup = 0;
-
-            UpdateLaunchpadXSourceSuppression({}, 0);
-
-            if (hadSuppression && !m_closing)
+            if (m_launchpadTimer != nullptr)
             {
-                UpdateEchoRoutes();
-                PrepareConnectionsAsync();
+                m_launchpadTimer.Stop();
             }
 
-            if (m_launchpadController != nullptr)
+            auto controller = std::exchange(m_launchpad, nullptr);
+            auto endpoint = std::exchange(m_launchpadEndpoint, nullptr);
+            m_launchpadName.clear();
+
+            if (!m_closing)
             {
-                std::vector<seq::launchpad::SurfaceAction> releaseActions{};
-                m_launchpadController->Disconnect(true, releaseActions);
+                UpdateLaunchpadModeButton();
             }
 
-            if (auto transport = std::exchange(m_launchpadTransport, nullptr); transport != nullptr)
             {
-                if (inBackground)
+                std::scoped_lock guard{ m_inputLock };
+                m_launchpadSourceId.clear();
+                m_launchpadTarget.reset();
+            }
+
+            if (controller == nullptr && endpoint == nullptr)
+            {
+                return;
+            }
+
+            // Stopping lets go of held notes, which still go out to where they were played.
+            auto const close = [controller, endpoint]()
+            {
+                if (controller != nullptr)
                 {
-                    m_launchpadClosing = ::midisequencer::RunOnBackgroundAsync([transport]() { transport->Close(); });
+                    controller->Stop();
                 }
-                else
+
+                if (endpoint != nullptr)
                 {
-                    transport->Close();
+                    endpoint->Close();
                 }
+            };
+
+            if (inBackground)
+            {
+                m_launchpadClosing = ::midisequencer::RunOnBackgroundAsync(close);
+            }
+            else
+            {
+                close();
             }
         }
         catch (...)
@@ -505,152 +296,76 @@ namespace winrt::midisequencer::implementation
         }
     }
 
+    // ---------------------------------------------------------------- what the pads ask for
+
     _Use_decl_annotations_
-    void MainWindow::OnLaunchpadXUmp(uint32_t const* words, uint8_t wordCount, uint64_t timestamp) noexcept
+    void MainWindow::OnLaunchpadActions(std::vector<lpx::SurfaceAction> const& actions) noexcept
     {
         try
         {
-            if (m_closing || !m_launchpadEnabled || m_launchpadController == nullptr || !m_launchpadConnected)
+            if (m_closing || m_launchpad == nullptr)
             {
                 return;
             }
 
-            auto const snapshot = BuildLaunchpadXSnapshot();
-            std::vector<seq::launchpad::SurfaceAction> actions{};
-
-            if (m_launchpadController->OnUmpMessage(words, wordCount, snapshot, actions))
-            {
-                DispatchLaunchpadXActions(actions, timestamp);
-            }
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to process Launchpad X MIDI input.")
-    }
-
-    _Use_decl_annotations_
-    void MainWindow::OnLaunchpadXTransportState(bool reconnected) noexcept
-    {
-        try
-        {
-            if (m_closing || m_launchpadTransport == nullptr || m_launchpadController == nullptr)
-            {
-                return;
-            }
-
-            if (!reconnected)
-            {
-                FlushLaunchpadXHeldNotes();
-
-                std::vector<seq::launchpad::SurfaceAction> releaseActions{};
-                m_launchpadController->Disconnect(false, releaseActions);
-                m_launchpadConnected = false;
-
-                UpdateLaunchpadXSourceSuppression({}, 0);
-                UpdateEchoRoutes();
-                PrepareConnectionsAsync();
-                return;
-            }
-
-            if (!m_launchpadEnabled)
-            {
-                StopLaunchpadX(true);
-                return;
-            }
-
-            m_launchpadConnected = true;
-            SyncLaunchpadXKeyFromSong();
-
-            std::vector<seq::launchpad::SurfaceAction> dummy{};
-            m_launchpadController->SetMode(m_launchpadMode, dummy);
-            m_launchpadController->SetNoteConfig(m_launchpadNoteConfig, dummy);
-
-            auto const snapshot = BuildLaunchpadXSnapshot();
-            if (m_launchpadController->Connect(
-                m_launchpadTransport,
-                m_launchpadConnectedGroup,
-                snapshot,
-                seq::launchpad::LaunchpadHandshakeMode::Immediate,
-                true))
-            {
-                UpdateLaunchpadXSourceSuppression(m_launchpadConnectedEndpointId, m_launchpadConnectedGroup);
-                UpdateEchoRoutes();
-                PrepareConnectionsAsync();
-            }
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to handle Launchpad X connection state change.")
-    }
-
-    // ---------------------------------------------------------------- action dispatch & note routing
-
-    _Use_decl_annotations_
-    void MainWindow::DispatchLaunchpadXActions(std::vector<seq::launchpad::SurfaceAction> const& actions, uint64_t timestamp) noexcept
-    {
-        try
-        {
-            bool forceRefresh = false;
+            auto const order = seq::RemoteTrackOrder(m_doc);
+            auto& settings = seq::AppSettings::Current();
 
             for (auto const& action : actions)
             {
                 switch (action.kind)
                 {
-                case seq::launchpad::SurfaceActionKind::TriggerOrStopSlot:
+                case lpx::SurfaceActionKind::TriggerOrStopSlot:
                 {
-                    auto const order = seq::RemoteTrackOrder(m_doc);
-                    if (action.trackIndex >= order.size() || action.sceneIndex >= m_doc.Scenes.size())
+                    if (action.trackIndex >= order.size())
                     {
                         break;
                     }
 
                     auto const& trackId = order[action.trackIndex];
-                    auto const* track = seq::FindTrack(m_doc, trackId);
-                    if (track == nullptr || track->IsFolder)
+                    auto const track = seq::FindTrack(m_doc, trackId);
+                    size_t const scene = action.sceneIndex;
+
+                    if (track == nullptr)
                     {
                         break;
                     }
 
-                    m_selectedSlotTrackId = trackId;
-                    m_selectedSlot = action.sceneIndex;
-                    SelectTrack(trackId);
+                    // The same as pressing the slot in the launcher.
+                    auto const empty = scene >= track->Slots.size() || track->Slots[scene].empty();
 
-                    auto const clipId = action.sceneIndex < track->Slots.size() ? track->Slots[action.sceneIndex] : std::wstring{};
-
-                    if (m_slotTake.has_value() && m_slotTake->TrackId == trackId && m_slotTake->Scene == action.sceneIndex)
+                    if (m_slotTake.has_value() && m_slotTake->TrackId == trackId && m_slotTake->Scene == scene)
                     {
                         FinishSlotRecording(SlotTakeEnd::Early);
                     }
-                    else if (clipId.empty() && m_armed.contains(trackId))
+                    else if (empty && m_armed.contains(trackId) && !track->IsFolder)
                     {
-                        StartSlotRecording(trackId, action.sceneIndex);
+                        StartSlotRecording(trackId, scene);
                     }
                     else
                     {
-                        LaunchSlot(trackId, action.sceneIndex);
+                        LaunchSlot(trackId, scene);
                     }
+
                     break;
                 }
 
-                case seq::launchpad::SurfaceActionKind::LaunchScene:
-                {
-                    if (action.sceneIndex < m_doc.Scenes.size())
-                    {
-                        m_selectedSlot = action.sceneIndex;
-                        ShowScene(action.sceneIndex);
-                        LaunchScene(action.sceneIndex);
-                    }
+                case lpx::SurfaceActionKind::LaunchScene:
+                    LaunchScene(action.sceneIndex);
                     break;
-                }
 
-                case seq::launchpad::SurfaceActionKind::StopAll:
+                case lpx::SurfaceActionKind::StopAll:
                     Stop();
                     break;
 
-                case seq::launchpad::SurfaceActionKind::ToggleRecord:
-                    if (m_recording)
-                    {
-                        StopRecording();
-                    }
-                    else if (m_slotTake.has_value())
+                case lpx::SurfaceActionKind::ToggleRecord:
+                    if (m_slotRecording)
                     {
                         FinishSlotRecording(SlotTakeEnd::Early);
+                    }
+                    else if (m_recording)
+                    {
+                        StopRecording();
                     }
                     else
                     {
@@ -658,40 +373,28 @@ namespace winrt::midisequencer::implementation
                     }
                     break;
 
-                case seq::launchpad::SurfaceActionKind::SelectTrack:
-                {
-                    auto const order = seq::RemoteTrackOrder(m_doc);
+                case lpx::SurfaceActionKind::SelectTrack:
                     if (action.trackIndex < order.size())
                     {
-                        FlushLaunchpadXHeldNotes();
                         SelectTrack(order[action.trackIndex]);
                     }
                     break;
-                }
 
-                case seq::launchpad::SurfaceActionKind::SetViewport:
+                case lpx::SurfaceActionKind::SetViewport:
+                    // Keep the launcher's view on the scenes the pads show.
                     if (action.sceneIndex < m_doc.Scenes.size())
                     {
                         ShowScene(action.sceneIndex);
                     }
                     break;
 
-                case seq::launchpad::SurfaceActionKind::SwitchMode:
-                    m_launchpadMode = action.targetMode;
-                    forceRefresh = true;
+                case lpx::SurfaceActionKind::SwitchMode:
+                    settings.LaunchpadNoteMode(action.targetMode == lpx::ControllerMode::Note);
+                    UpdateLaunchpadModeButton();
                     break;
 
-                case seq::launchpad::SurfaceActionKind::ShiftOctave:
-                    if (m_launchpadController != nullptr)
-                    {
-                        m_launchpadNoteConfig.octave = m_launchpadController->NoteConfig().octave;
-                    }
-                    break;
-
-                case seq::launchpad::SurfaceActionKind::EmitNoteOn:
-                case seq::launchpad::SurfaceActionKind::EmitNoteOff:
-                case seq::launchpad::SurfaceActionKind::EmitPolyAftertouch:
-                    RouteLaunchpadXNoteAction(action, timestamp);
+                case lpx::SurfaceActionKind::ShiftOctave:
+                    settings.LaunchpadOctave(m_launchpad->NoteConfig().octave);
                     break;
 
                 default:
@@ -699,286 +402,71 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
-            UpdateLaunchpadXFeedback(forceRefresh);
+            UpdateLaunchpadFeedback();
         }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to dispatch Launchpad X actions.")
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to act on the Launchpad X.")
     }
 
     _Use_decl_annotations_
-    void MainWindow::RouteLaunchpadXNoteAction(seq::launchpad::SurfaceAction const& action, uint64_t timestamp) noexcept
+    void MainWindow::OnLaunchpadNote(lpx::SurfaceAction const& action, uint64_t timestamp) noexcept
     {
+        // On the service's thread for a pad, or the UI thread for a note let go by a mode change.
+        // Quick, and nothing here touches XAML.
         try
         {
-            uint64_t const effectiveTimestamp = timestamp != 0 ? timestamp : midi2::MidiClock::Now();
-            int64_t const tick = (m_engine != nullptr && m_recording) ? m_engine->TickAtTime(effectiveTimestamp) : -1;
-            int64_t const slotTick = (m_engine != nullptr && m_slotRecording) ? m_engine->UnwrappedTickAtTime(effectiveTimestamp) : -1;
-            double const frequency = static_cast<double>(midi2::MidiClock::TimestampFrequency());
-            bool heardUpdated = false;
+            uint32_t words[2]{};
+            auto const count = lpx::LaunchpadXController::BuildNoteWords(action, words);
 
-            auto const recordForTrack = [&](seq::Track const& track, uint32_t const* recWords, uint8_t wordCount)
+            if (count == 0)
             {
-                if (!m_armed.contains(track.Id))
+                return;
+            }
+
+            auto const when = timestamp != 0 ? timestamp : midi2::MidiClock::Now();
+            auto const tick = m_engine != nullptr && m_recording ? m_engine->TickAtTime(when) : -1;
+            auto const slotTick = m_engine != nullptr && m_slotRecording ? m_engine->UnwrappedTickAtTime(when) : -1;
+
+            std::scoped_lock guard{ m_inputLock };
+
+            LaunchpadTarget target{};
+
+            if (action.kind == lpx::SurfaceActionKind::EmitNoteOn)
+            {
+                if (!m_launchpadTarget.has_value())
                 {
                     return;
                 }
 
-                if (tick >= 0)
-                {
-                    if (auto take = m_takes.find(track.Id); take != m_takes.end())
-                    {
-                        take->second.Add(tick, recWords, wordCount);
-                    }
-                }
-
-                if (slotTick >= 0 &&
-                    m_slotInput.has_value() &&
-                    m_slotInput->TrackId == track.Id &&
-                    slotTick >= m_slotInput->Start - LaunchpadSlotEarlyTicks &&
-                    slotTick < m_slotInput->Start + m_slotInput->Length)
-                {
-                    m_slotInput->Take.Add(slotTick, recWords, wordCount);
-                }
-
-                auto const filter = LaunchpadFilterFor(track.Source);
-                if (seq::PassesRecordFilter(filter, recWords, wordCount))
-                {
-                    auto& heard = m_heard[track.Id];
-
-                    HeardMessage msg{};
-                    msg.Timestamp = effectiveTimestamp;
-                    msg.WordCount = wordCount;
-                    std::copy_n(recWords, wordCount, msg.Words.begin());
-                    heard.push_back(msg);
-
-                    while (heard.size() > LaunchpadMaximumHeardMessages ||
-                        (!heard.empty() &&
-                         effectiveTimestamp >= heard.front().Timestamp &&
-                         static_cast<double>(effectiveTimestamp - heard.front().Timestamp) / frequency > LaunchpadHeardSeconds))
-                    {
-                        heard.pop_front();
-                    }
-
-                    heardUpdated = true;
-                }
-            };
-
-            if (action.kind == seq::launchpad::SurfaceActionKind::EmitNoteOn)
-            {
-                // Release any previously active targets for this note before starting new ones.
-                if (auto existing = m_launchpadHeldNotes.find(action.midiNote); existing != m_launchpadHeldNotes.end())
-                {
-                    for (auto const& held : existing->second)
-                    {
-                        if (held.Arpeggiated)
-                        {
-                            if (m_engine != nullptr)
-                            {
-                                m_engine->ReleaseKey(held.TrackId, action.midiNote);
-                            }
-                        }
-                        else if (!held.Destination.Endpoint.IsEmpty())
-                        {
-                            SendNow(held.Destination, held.OffWords.data(), held.WordCount);
-                        }
-                    }
-
-                    m_launchpadHeldNotes.erase(existing);
-                }
-
-                auto const targets = LaunchpadXNoteTargetTrackIds();
-                std::vector<LaunchpadHeldNoteTarget> heldTargets{};
-                uint16_t const vel16 = static_cast<uint16_t>(seq::ScaleUp(action.velocity, 7, 16));
-
-                for (auto const& trackId : targets)
-                {
-                    auto const* track = seq::FindTrack(m_doc, trackId);
-                    if (track == nullptr || track->IsFolder)
-                    {
-                        continue;
-                    }
-
-                    uint8_t const destChannel = static_cast<uint8_t>(std::max<int8_t>(0, track->Destination.Channel));
-
-                    seq::Note note{};
-                    note.Number = action.midiNote;
-                    note.Channel = destChannel;
-                    note.Velocity = vel16;
-                    note.ReleaseVelocity = 0x8000;
-
-                    uint32_t onWords[2]{};
-                    uint32_t offWords[2]{};
-                    seq::BuildNoteOn(note, track->Destination.Group, onWords);
-                    seq::BuildNoteOff(note, track->Destination.Group, offWords);
-
-                    bool arpeggiating = false;
-                    if (m_engine != nullptr && seq::TrackHasHeldKeysArpeggiator(m_doc, *track))
-                    {
-                        m_engine->PressKey(track->Id, action.midiNote, vel16);
-                        arpeggiating = m_engine->IsArpeggiating(track->Id);
-                    }
-
-                    if (!arpeggiating && !track->Destination.Endpoint.IsEmpty())
-                    {
-                        SendNow(track->Destination, onWords, 2);
-                    }
-
-                    heldTargets.push_back(LaunchpadHeldNoteTarget{
-                        track->Id,
-                        track->Destination,
-                        { offWords[0], offWords[1] },
-                        2,
-                        arpeggiating,
-                    });
-
-                    if (!arpeggiating && m_armed.contains(track->Id))
-                    {
-                        uint8_t const recGroup = track->Source.Group >= 0
-                            ? static_cast<uint8_t>(track->Source.Group & 0x0Fu)
-                            : track->Destination.Group;
-                        seq::Note recNote = note;
-                        recNote.Channel = ResolveRecordChannel(track->Source.Channels, destChannel);
-
-                        uint32_t recWords[2]{};
-                        seq::BuildNoteOn(recNote, recGroup, recWords);
-
-                        std::scoped_lock guard{ m_inputLock };
-                        recordForTrack(*track, recWords, 2);
-                    }
-                }
-
-                if (!heldTargets.empty())
-                {
-                    m_launchpadHeldNotes.emplace(action.midiNote, std::move(heldTargets));
-                }
+                target = *m_launchpadTarget;
+                m_launchpadSounding[action.midiNote] = target;
             }
-            else if (action.kind == seq::launchpad::SurfaceActionKind::EmitNoteOff)
+            else
             {
-                auto it = m_launchpadHeldNotes.find(action.midiNote);
-                if (it != m_launchpadHeldNotes.end())
+                // A note-off, or pressure, goes where its note-on went.
+                auto const sounding = m_launchpadSounding.find(action.midiNote);
+
+                if (sounding == m_launchpadSounding.end())
                 {
-                    for (auto const& held : it->second)
-                    {
-                        if (held.Arpeggiated)
-                        {
-                            if (m_engine != nullptr)
-                            {
-                                m_engine->ReleaseKey(held.TrackId, action.midiNote);
-                            }
-                        }
-                        else if (!held.Destination.Endpoint.IsEmpty())
-                        {
-                            SendNow(held.Destination, held.OffWords.data(), held.WordCount);
-                        }
-
-                        if (!held.Arpeggiated && m_armed.contains(held.TrackId))
-                        {
-                            if (auto const* track = seq::FindTrack(m_doc, held.TrackId); track != nullptr && !track->IsFolder)
-                            {
-                                uint8_t const destChannel = static_cast<uint8_t>(std::max<int8_t>(0, track->Destination.Channel));
-                                uint8_t const recGroup = track->Source.Group >= 0
-                                    ? static_cast<uint8_t>(track->Source.Group & 0x0Fu)
-                                    : track->Destination.Group;
-
-                                seq::Note recNote{};
-                                recNote.Number = action.midiNote;
-                                recNote.Channel = ResolveRecordChannel(track->Source.Channels, destChannel);
-                                recNote.ReleaseVelocity = 0x8000;
-
-                                uint32_t recOffWords[2]{};
-                                seq::BuildNoteOff(recNote, recGroup, recOffWords);
-
-                                std::scoped_lock guard{ m_inputLock };
-                                recordForTrack(*track, recOffWords, 2);
-                            }
-                        }
-                    }
-
-                    m_launchpadHeldNotes.erase(it);
+                    return;
                 }
-            }
-            else if (action.kind == seq::launchpad::SurfaceActionKind::EmitPolyAftertouch)
-            {
-                auto const targets = LaunchpadXNoteTargetTrackIds();
-                uint32_t const pressure32 = seq::ScaleUp(action.velocity, 7, 32);
 
-                for (auto const& trackId : targets)
+                target = sounding->second;
+
+                if (action.kind == lpx::SurfaceActionKind::EmitNoteOff)
                 {
-                    auto const* track = seq::FindTrack(m_doc, trackId);
-                    if (track == nullptr || track->IsFolder)
-                    {
-                        continue;
-                    }
-
-                    uint8_t const destChannel = static_cast<uint8_t>(std::max<int8_t>(0, track->Destination.Channel));
-                    uint32_t words[2]{
-                        0x40A00000u |
-                            (static_cast<uint32_t>(track->Destination.Group & 0x0Fu) << 24) |
-                            (static_cast<uint32_t>(destChannel & 0x0Fu) << 16) |
-                            (static_cast<uint32_t>(action.midiNote & 0x7Fu) << 8),
-                        pressure32,
-                    };
-
-                    if (!track->Destination.Endpoint.IsEmpty())
-                    {
-                        SendNow(track->Destination, words, 2);
-                    }
-
-                    if (m_armed.contains(track->Id))
-                    {
-                        uint8_t const recGroup = track->Source.Group >= 0
-                            ? static_cast<uint8_t>(track->Source.Group & 0x0Fu)
-                            : track->Destination.Group;
-                        uint8_t const recChannel = ResolveRecordChannel(track->Source.Channels, destChannel);
-
-                        uint32_t recWords[2]{
-                            0x40A00000u |
-                                (static_cast<uint32_t>(recGroup & 0x0Fu) << 24) |
-                                (static_cast<uint32_t>(recChannel & 0x0Fu) << 16) |
-                                (static_cast<uint32_t>(action.midiNote & 0x7Fu) << 8),
-                            pressure32,
-                        };
-
-                        std::scoped_lock guard{ m_inputLock };
-                        recordForTrack(*track, recWords, 2);
-                    }
+                    m_launchpadSounding.erase(sounding);
                 }
             }
 
-            if (heardUpdated)
-            {
-                UpdateTransport();
-            }
-        }
-        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to route Launchpad X note event.")
-    }
+            // The track's channel, like the notes it plays. SendNow moves it to the track's group.
+            auto const channel = static_cast<uint32_t>(std::max<int8_t>(0, target.Destination.Channel) & 0x0F);
+            words[0] = (words[0] & 0xFFF0FFFFu) | (channel << 16);
 
-    void MainWindow::FlushLaunchpadXHeldNotes() noexcept
-    {
-        try
-        {
-            if (m_launchpadHeldNotes.empty())
-            {
-                return;
-            }
+            SendNow(target.Destination, words, count);
 
-            auto held = std::exchange(m_launchpadHeldNotes, {});
-
-            for (auto const& [note, targets] : held)
+            if (target.Armed)
             {
-                for (auto const& target : targets)
-                {
-                    if (target.Arpeggiated)
-                    {
-                        if (m_engine != nullptr)
-                        {
-                            m_engine->ReleaseKey(target.TrackId, note);
-                        }
-                    }
-                    else if (!target.Destination.Endpoint.IsEmpty())
-                    {
-                        SendNow(target.Destination, target.OffWords.data(), target.WordCount);
-                    }
-                }
+                RecordHeard(target.TrackId, tick, slotTick, when, words, count);
             }
         }
         catch (...)
@@ -986,104 +474,33 @@ namespace winrt::midisequencer::implementation
         }
     }
 
-    // ---------------------------------------------------------------- key, suppression & LED sync
+    // ---------------------------------------------------------------- what goes back
 
-    void MainWindow::SyncLaunchpadXKeyFromSong() noexcept
+    lpx::NoteLayoutConfig MainWindow::LaunchpadNoteLayout() const
     {
-        try
+        auto const& settings = seq::AppSettings::Current();
+
+        lpx::NoteLayoutConfig config{};
+        config.octave = settings.LaunchpadOctave();
+        config.rootNote = settings.LaunchpadRoot();
+        config.scale = static_cast<midiapp::ScaleKind>(settings.LaunchpadScale());
+        config.inScaleOnly = settings.LaunchpadInScaleOnly();
+
+        // The song's key where the playhead is, so the pads play in key as the song moves on. A
+        // song with no key keeps the one picked in the dialog.
+        if (settings.LaunchpadFollowSongKey())
         {
-            if (!m_launchpadFollowSongKey || m_launchpadController == nullptr)
+            if (auto const key = seq::SongKeyAt(m_doc, m_position); key.has_value())
             {
-                return;
+                config.rootNote = static_cast<uint8_t>(key->Root % 12);
+                config.scale = key->Scale;
             }
-
-            auto const key = seq::SongKeyAt(m_doc, m_position);
-            if (!key.has_value())
-            {
-                return;
-            }
-
-            uint8_t const targetRoot = static_cast<uint8_t>(key->Root % 12u);
-            if (targetRoot == m_launchpadNoteConfig.rootNote && key->Scale == m_launchpadNoteConfig.scale)
-            {
-                return;
-            }
-
-            m_launchpadNoteConfig.rootNote = targetRoot;
-            m_launchpadNoteConfig.scale = key->Scale;
-
-            std::vector<seq::launchpad::SurfaceAction> releaseActions{};
-            m_launchpadController->SetNoteConfig(m_launchpadNoteConfig, releaseActions);
-
-            if (!releaseActions.empty())
-            {
-                DispatchLaunchpadXActions(releaseActions, 0);
-            }
-
-            FlushLaunchpadXHeldNotes();
         }
-        catch (...)
-        {
-        }
+
+        return config;
     }
 
-    _Use_decl_annotations_
-    void MainWindow::UpdateLaunchpadXSourceSuppression(std::wstring const& endpointId, uint8_t group) noexcept
-    {
-        try
-        {
-            std::scoped_lock guard{ m_inputLock };
-            m_launchpadSourceId = endpointId;
-            m_launchpadSourceGroup = static_cast<uint8_t>(group & 0x0Fu);
-        }
-        catch (...)
-        {
-        }
-    }
-
-    std::wstring MainWindow::EffectiveLaunchpadXTrackId() const
-    {
-        if (!m_selectedTrackId.empty())
-        {
-            if (auto const* track = seq::FindTrack(m_doc, m_selectedTrackId); track != nullptr && !track->IsFolder)
-            {
-                return m_selectedTrackId;
-            }
-        }
-
-        auto const order = seq::RemoteTrackOrder(m_doc);
-        return order.empty() ? std::wstring{} : order.front();
-    }
-
-    std::vector<std::wstring> MainWindow::LaunchpadXNoteTargetTrackIds() const
-    {
-        std::vector<std::wstring> targets{};
-
-        if (!m_armed.empty())
-        {
-            for (auto const& id : seq::RemoteTrackOrder(m_doc))
-            {
-                if (m_armed.contains(id))
-                {
-                    targets.push_back(id);
-                }
-            }
-
-            if (!targets.empty())
-            {
-                return targets;
-            }
-        }
-
-        if (auto const effective = EffectiveLaunchpadXTrackId(); !effective.empty())
-        {
-            targets.push_back(effective);
-        }
-
-        return targets;
-    }
-
-    seq::launchpad::SurfaceStateSnapshot MainWindow::BuildLaunchpadXSnapshot() const
+    lpx::SurfaceStateSnapshot MainWindow::CurrentLaunchpadState() const
     {
         std::vector<seq::TrackLaunchView> views{};
         views.reserve(m_launchViews.size());
@@ -1093,48 +510,304 @@ namespace winrt::midisequencer::implementation
             views.push_back(view);
         }
 
-        auto const selectedTrackId = EffectiveLaunchpadXTrackId();
-        uint32_t const selectedScene =
-            (m_selectedSlot != SIZE_MAX && m_selectedSlot < m_doc.Scenes.size())
-                ? static_cast<uint32_t>(m_selectedSlot)
-                : 0u;
+        auto const slotRecording = m_slotTake.has_value();
 
-        bool const transportPlaying = m_engine != nullptr && m_engine->IsPlaying();
-        bool const transportRecording = m_recording.load() || m_slotRecording.load();
-        bool const slotRecording = m_slotTake.has_value();
-        std::wstring_view const slotTrackId = slotRecording ? std::wstring_view{ m_slotTake->TrackId } : std::wstring_view{};
-        uint32_t const slotScene = slotRecording ? static_cast<uint32_t>(m_slotTake->Scene) : 0u;
-        bool const selectedTrackArmed = !selectedTrackId.empty() && m_armed.contains(selectedTrackId);
-
-        return seq::launchpad::BuildSurfaceSnapshot(
+        return lpx::BuildSurfaceSnapshot(
             m_doc,
             views,
-            selectedTrackId,
-            selectedScene,
-            transportPlaying,
-            transportRecording,
+            m_selectedTrackId,
+            m_selectedSlot != SIZE_MAX ? static_cast<uint32_t>(m_selectedSlot) : 0u,
+            m_engine != nullptr && m_engine->IsPlaying(),
+            m_recording || m_slotRecording,
             slotRecording,
-            slotTrackId,
-            slotScene,
-            m_launchpadNoteConfig,
-            selectedTrackArmed);
+            slotRecording ? std::wstring_view{ m_slotTake->TrackId } : std::wstring_view{},
+            slotRecording ? static_cast<uint32_t>(m_slotTake->Scene) : 0u,
+            LaunchpadNoteLayout(),
+            m_armed.contains(m_selectedTrackId));
     }
 
-    _Use_decl_annotations_
-    void MainWindow::UpdateLaunchpadXFeedback(bool forceFullRefresh) noexcept
+    void MainWindow::UpdateLaunchpadTarget() noexcept
     {
         try
         {
-            if (!m_launchpadEnabled || m_launchpadController == nullptr || !IsLaunchpadXConnected())
+            std::optional<LaunchpadTarget> target{};
+
+            if (auto const track = seq::FindTrack(m_doc, m_selectedTrackId); track != nullptr && !track->IsFolder && !track->Destination.Endpoint.IsEmpty())
             {
-                return;
+                target = LaunchpadTarget{ track->Id, track->Destination, m_armed.contains(track->Id) };
             }
 
-            auto const snapshot = BuildLaunchpadXSnapshot();
-            (void)m_launchpadController->SyncLeds(snapshot, forceFullRefresh);
+            std::scoped_lock guard{ m_inputLock };
+            m_launchpadTarget = std::move(target);
         }
         catch (...)
         {
         }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::UpdateLaunchpadFeedback(bool forceFullRefresh) noexcept
+    {
+        try
+        {
+            if (m_launchpad == nullptr || m_closing)
+            {
+                return;
+            }
+
+            // The key and layout from the settings, or the song. The octave is the pads' own, from
+            // Up and Down.
+            auto layout = LaunchpadNoteLayout();
+            layout.octave = m_launchpad->NoteConfig().octave;
+            m_launchpad->SetNoteConfig(layout);
+
+            UpdateLaunchpadTarget();
+            m_launchpad->Update(CurrentLaunchpadState(), forceFullRefresh);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    // ---------------------------------------------------------------- the mode button
+
+    void MainWindow::UpdateLaunchpadModeButton() noexcept
+    {
+        try
+        {
+            if (m_launchpad == nullptr)
+            {
+                LaunchpadModeButton().Visibility(xaml::Visibility::Collapsed);
+                return;
+            }
+
+            auto const text = res::GetString(m_launchpad->Mode() == lpx::ControllerMode::Note ? L"LaunchpadModeNote" : L"LaunchpadModeClip");
+            LaunchpadModeText().Text(text);
+            automation::AutomationProperties::SetName(LaunchpadModeButton(), text);
+            LaunchpadModeButton().Visibility(xaml::Visibility::Visible);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnLaunchpadModeClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            if (m_launchpad == nullptr)
+            {
+                return;
+            }
+
+            // The same as the Session and Note buttons on the device. Notes held in Note mode stop.
+            auto const note = m_launchpad->Mode() != lpx::ControllerMode::Note;
+            m_launchpad->SetMode(note ? lpx::ControllerMode::Note : lpx::ControllerMode::Clip);
+            seq::AppSettings::Current().LaunchpadNoteMode(note);
+
+            UpdateLaunchpadModeButton();
+            UpdateLaunchpadFeedback();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to switch the Launchpad X mode.")
+    }
+
+    // ---------------------------------------------------------------- the dialog
+
+    _Use_decl_annotations_
+    void MainWindow::OnLaunchpadClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            ShowLaunchpadDialog();
+        }
+        MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the Launchpad X settings.")
+    }
+
+    void MainWindow::ShowLaunchpadDialog()
+    {
+        [](winrt::com_ptr<MainWindow> strong) -> winrt::fire_and_forget
+        {
+            try
+            {
+                auto const secondary = strong->BrushFor(strong->m_palette.Text2);
+
+                auto const note = [&secondary](winrt::hstring const& text)
+                {
+                    controls::TextBlock block{};
+                    block.Text(text);
+                    block.TextWrapping(xaml::TextWrapping::Wrap);
+                    block.FontSize(12);
+                    block.Foreground(secondary);
+                    return block;
+                };
+
+                controls::StackPanel panel{};
+                panel.Spacing(10);
+                panel.MaxWidth(560);
+
+                controls::TextBlock intro{};
+                intro.Text(res::GetString(L"LaunchpadDialogIntro"));
+                intro.TextWrapping(xaml::TextWrapping::Wrap);
+                panel.Children().Append(intro);
+
+                controls::ToggleSwitch enabled{};
+                enabled.Header(winrt::box_value(res::GetString(L"LaunchpadSwitchHeader")));
+                enabled.IsOn(seq::AppSettings::Current().LaunchpadEnabled());
+                panel.Children().Append(enabled);
+
+                auto status = note(strong->m_launchpad != nullptr
+                    ? res::FormatString(L"LaunchpadStatusConnectedFormat", strong->m_launchpadName)
+                    : res::GetString(L"LaunchpadStatusNotConnected"));
+                panel.Children().Append(status);
+
+                controls::TextBlock heading{};
+                heading.Text(res::GetString(L"LaunchpadMapHeading"));
+                heading.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
+                heading.Margin(xaml::Thickness{ 0, 6, 0, 0 });
+                automation::AutomationProperties::SetHeadingLevel(heading, automation::Peers::AutomationHeadingLevel::Level2);
+
+                // Note mode's key and layout.
+                auto& settings = seq::AppSettings::Current();
+
+                controls::TextBlock keyHeading{};
+                keyHeading.Text(res::GetString(L"LaunchpadKeyHeading"));
+                keyHeading.FontWeight(winrt::Microsoft::UI::Text::FontWeights::SemiBold());
+                keyHeading.Margin(xaml::Thickness{ 0, 6, 0, 0 });
+                automation::AutomationProperties::SetHeadingLevel(keyHeading, automation::Peers::AutomationHeadingLevel::Level2);
+                panel.Children().Append(keyHeading);
+
+                controls::ToggleSwitch follow{};
+                follow.Header(winrt::box_value(res::GetString(L"LaunchpadFollowSongKey")));
+                automation::AutomationProperties::SetHelpText(follow, res::GetString(L"LaunchpadFollowSongKeyHelp"));
+                follow.IsOn(settings.LaunchpadFollowSongKey());
+                panel.Children().Append(follow);
+                panel.Children().Append(note(res::GetString(L"LaunchpadFollowSongKeyHelp")));
+
+                controls::StackPanel keyRow{};
+                keyRow.Orientation(controls::Orientation::Horizontal);
+                keyRow.Spacing(12);
+
+                auto const scaleKind = static_cast<midiapp::ScaleKind>(settings.LaunchpadScale());
+
+                controls::ComboBox root{};
+                root.Header(winrt::box_value(res::GetString(L"LaunchpadRoot")));
+                root.MinWidth(96);
+
+                for (uint8_t i = 0; i < 12; ++i)
+                {
+                    root.Items().Append(winrt::box_value(winrt::hstring{ midiapp::NoteName(i, midiapp::KeyUsesFlats(i, scaleKind)) }));
+                }
+
+                root.SelectedIndex(settings.LaunchpadRoot());
+                keyRow.Children().Append(root);
+
+                controls::ComboBox scale{};
+                scale.Header(winrt::box_value(res::GetString(L"LaunchpadScale")));
+                scale.MinWidth(200);
+
+                for (auto const key : ScaleNameKeys)
+                {
+                    scale.Items().Append(winrt::box_value(res::GetString(key)));
+                }
+
+                scale.SelectedIndex(settings.LaunchpadScale());
+                keyRow.Children().Append(scale);
+
+                panel.Children().Append(keyRow);
+                panel.Children().Append(note(res::GetString(L"LaunchpadKeyHelp")));
+
+                controls::ToggleSwitch inScale{};
+                inScale.Header(winrt::box_value(res::GetString(L"LaunchpadInScaleOnly")));
+                automation::AutomationProperties::SetHelpText(inScale, res::GetString(L"LaunchpadInScaleOnlyHelp"));
+                inScale.IsOn(settings.LaunchpadInScaleOnly());
+                panel.Children().Append(inScale);
+                panel.Children().Append(note(res::GetString(L"LaunchpadInScaleOnlyHelp")));
+
+                // Each change is saved, and the pads relit, straight away.
+                auto const relight = [weak = strong->get_weak()]()
+                {
+                    if (auto window = weak.get())
+                    {
+                        window->UpdateLaunchpadFeedback();
+                    }
+                };
+
+                follow.Toggled([relight, weakSwitch = winrt::make_weak(follow)](auto&&, auto&&)
+                {
+                    if (auto toggle = weakSwitch.get())
+                    {
+                        seq::AppSettings::Current().LaunchpadFollowSongKey(toggle.IsOn());
+                        relight();
+                    }
+                });
+
+                root.SelectionChanged([relight, weakRoot = winrt::make_weak(root)](auto&&, auto&&)
+                {
+                    if (auto box = weakRoot.get(); box && box.SelectedIndex() >= 0)
+                    {
+                        seq::AppSettings::Current().LaunchpadRoot(static_cast<uint8_t>(box.SelectedIndex()));
+                        relight();
+                    }
+                });
+
+                scale.SelectionChanged([relight, weakScale = winrt::make_weak(scale)](auto&&, auto&&)
+                {
+                    if (auto box = weakScale.get(); box && box.SelectedIndex() >= 0)
+                    {
+                        seq::AppSettings::Current().LaunchpadScale(static_cast<uint8_t>(box.SelectedIndex()));
+                        relight();
+                    }
+                });
+
+                inScale.Toggled([relight, weakSwitch = winrt::make_weak(inScale)](auto&&, auto&&)
+                {
+                    if (auto toggle = weakSwitch.get())
+                    {
+                        seq::AppSettings::Current().LaunchpadInScaleOnly(toggle.IsOn());
+                        relight();
+                    }
+                });
+
+                panel.Children().Append(heading);
+                panel.Children().Append(note(res::GetString(L"LaunchpadMapClip")));
+                panel.Children().Append(note(res::GetString(L"LaunchpadMapNote")));
+                panel.Children().Append(note(res::GetString(L"LaunchpadMapTransport")));
+
+                enabled.Toggled([weak = strong->get_weak(), weakSwitch = winrt::make_weak(enabled)](auto&&, auto&&)
+                {
+                    auto window = weak.get();
+                    auto toggle = weakSwitch.get();
+
+                    if (!window || !toggle)
+                    {
+                        return;
+                    }
+
+                    seq::AppSettings::Current().LaunchpadEnabled(toggle.IsOn());
+
+                    if (toggle.IsOn())
+                    {
+                        window->UpdateLaunchpadConnectionAsync();
+                    }
+                    else
+                    {
+                        window->StopLaunchpad(true);
+                        window->ShowMessage(res::GetString(L"LaunchpadOff"));
+                    }
+                });
+
+                controls::ContentDialog dialog{};
+                dialog.XamlRoot(strong->Content().XamlRoot());
+                dialog.Title(winrt::box_value(res::GetString(L"LaunchpadDialogTitle")));
+                dialog.Content(panel);
+                dialog.CloseButtonText(res::GetString(L"DialogDone"));
+                dialog.DefaultButton(controls::ContentDialogButton::Close);
+                dialog.RequestedTheme(strong->RootGrid().ActualTheme());
+
+                co_await dialog.ShowAsync();
+            }
+            MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to show the Launchpad X settings.")
+        }(get_strong());
     }
 }

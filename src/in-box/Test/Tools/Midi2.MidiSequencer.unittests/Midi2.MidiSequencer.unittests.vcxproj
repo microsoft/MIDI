@@ -105,6 +105,8 @@
     <ClInclude Include="GeneratorTests.h" />
     <ClInclude Include="RemoteControlTests.h" />
     <ClInclude Include="LaunchpadXTests.h" />
+    <ClInclude Include="LaunchpadXE2ETests.h" />
+    <ClInclude Include="LaunchpadXControllerTests.h" />
     <ClInclude Include="DawProjectTests.h" />
     <ClInclude Include="CaptureImportTests.h" />
     <ClInclude Include="LyricsTests.h" />
@@ -149,6 +151,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\RemoteControl.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\LaunchpadXProtocol.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\LaunchpadXSurface.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-sequencer\LaunchpadXController.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\GlassLayoutWriter.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.h" />
     <ClInclude Include="..\..\..\user-tools\midi-sequencer\StudioSetup.h" />
@@ -182,6 +185,8 @@
     <ClCompile Include="GeneratorTests.cpp" />
     <ClCompile Include="RemoteControlTests.cpp" />
     <ClCompile Include="LaunchpadXTests.cpp" />
+    <ClCompile Include="LaunchpadXE2ETests.cpp" />
+    <ClCompile Include="LaunchpadXControllerTests.cpp" />
     <ClCompile Include="DawProjectTests.cpp" />
     <ClCompile Include="CaptureImportTests.cpp" />
     <ClCompile Include="LyricsTests.cpp" />
@@ -237,6 +242,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\RemoteControl.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\LaunchpadXProtocol.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\LaunchpadXSurface.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-sequencer\LaunchpadXController.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\GlassLayoutWriter.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\ArrangeLayout.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-sequencer\SampleSequence.cpp" />

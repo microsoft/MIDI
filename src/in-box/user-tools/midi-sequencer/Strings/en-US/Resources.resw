@@ -195,6 +195,78 @@
   <data name="RemoteOnFormat" xml:space="preserve">
     <value>Remote control is on. Other apps and devices can send to {0}.</value>
   </data>
+  <data name="MenuLaunchpad.Text" xml:space="preserve">
+    <value>Launchpad X…</value>
+  </data>
+  <data name="LaunchpadDialogTitle" xml:space="preserve">
+    <value>Novation Launchpad X</value>
+  </data>
+  <data name="LaunchpadDialogIntro" xml:space="preserve">
+    <value>Launch clips and play notes from a Novation Launchpad X. While this is on, the sequencer puts the Launchpad X in Programmer mode, so other apps can't use it at the same time. Turn it off to give the Launchpad X back.</value>
+  </data>
+  <data name="LaunchpadSwitchHeader" xml:space="preserve">
+    <value>Use a Launchpad X</value>
+  </data>
+  <data name="LaunchpadStatusConnectedFormat" xml:space="preserve">
+    <value>Connected to {0}.</value>
+  </data>
+  <data name="LaunchpadStatusNotConnected" xml:space="preserve">
+    <value>No Launchpad X is connected. Plug one in and it connects on its own.</value>
+  </data>
+  <data name="LaunchpadMapHeading" xml:space="preserve">
+    <value>What the buttons do</value>
+  </data>
+  <data name="LaunchpadMapClip" xml:space="preserve">
+    <value>Session: Clip mode. Each pad is a launcher slot. Press it to launch or stop the clip, or to record into an empty slot on an armed track. The buttons down the right launch scenes, and the arrows move the pads one track or one scene at a time.</value>
+  </data>
+  <data name="LaunchpadMapNote" xml:space="preserve">
+    <value>Note: Note mode. The pads play the selected track in the key set above, with each root note lit brightest. Up and Down change the octave, and Left and Right pick the track. An armed track records what you play.</value>
+  </data>
+  <data name="LaunchpadMapTransport" xml:space="preserve">
+    <value>Custom stops playback, and Capture MIDI starts or stops recording.</value>
+  </data>
+  <data name="LaunchpadOnFormat" xml:space="preserve">
+    <value>Launchpad X is on: {0}.</value>
+  </data>
+  <data name="LaunchpadOff" xml:space="preserve">
+    <value>Launchpad X is off.</value>
+  </data>
+  <data name="LaunchpadUnavailable" xml:space="preserve">
+    <value>The Launchpad X couldn't be opened. Another app may be using it.</value>
+  </data>
+  <data name="LaunchpadModeClip" xml:space="preserve">
+    <value>Launchpad X: Clip mode</value>
+  </data>
+  <data name="LaunchpadModeNote" xml:space="preserve">
+    <value>Launchpad X: Note mode</value>
+  </data>
+  <data name="LaunchpadModeButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Switch the Launchpad X between Clip mode and Note mode</value>
+  </data>
+  <data name="LaunchpadKeyHeading" xml:space="preserve">
+    <value>Key for Note mode</value>
+  </data>
+  <data name="LaunchpadFollowSongKey" xml:space="preserve">
+    <value>Follow the song's key</value>
+  </data>
+  <data name="LaunchpadFollowSongKeyHelp" xml:space="preserve">
+    <value>The pads play in the song's key at the playhead, and change when the key does.</value>
+  </data>
+  <data name="LaunchpadRoot" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="LaunchpadScale" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="LaunchpadKeyHelp" xml:space="preserve">
+    <value>The pads use this key when Follow the song's key is off, or when the song doesn't have a key.</value>
+  </data>
+  <data name="LaunchpadInScaleOnly" xml:space="preserve">
+    <value>Only notes in the key</value>
+  </data>
+  <data name="LaunchpadInScaleOnlyHelp" xml:space="preserve">
+    <value>Every pad plays a note in the key, so there are no wrong notes. When this is off, each row of pads starts five semitones above the row below, and notes outside the key are lit dimly.</value>
+  </data>
   <data name="RemoteOff" xml:space="preserve">
     <value>Remote control is off.</value>
   </data>

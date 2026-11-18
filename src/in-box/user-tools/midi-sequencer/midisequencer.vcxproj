@@ -151,6 +151,7 @@
     <ClInclude Include="LaunchpadXProtocol.h" />
     <ClInclude Include="LaunchpadXSurface.h" />
     <ClInclude Include="LaunchpadXController.h" />
+    <ClInclude Include="LaunchpadXEndpoint.h" />
     <ClInclude Include="RemoteEndpoint.h" />
     <ClInclude Include="GlassLayoutWriter.h" />
     <ClInclude Include="SampleSequence.h" />
@@ -407,11 +408,14 @@
     <ClCompile Include="LaunchpadXSurface.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="LaunchpadXController.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="GlassLayoutWriter.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RemoteEndpoint.cpp" />
-    <ClCompile Include="LaunchpadXController.cpp" />
+    <ClCompile Include="LaunchpadXEndpoint.cpp" />
     <ClCompile Include="SampleSequence.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -15,7 +15,9 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -232,6 +234,45 @@ namespace midisequencer::launchpad
         _Inout_opt_ SysEx7Accumulator* accumulator = nullptr) noexcept;
 
     [[nodiscard]] bool IsLaunchpadMidiEndpointName(_In_ std::wstring_view name) noexcept;
+
+    // Novation's USB vendor id, and the Launchpad X's product id.
+    inline constexpr uint16_t NovationUsbVendorId = 0x1235;
+    inline constexpr uint16_t LaunchpadXUsbProductId = 0x0103;
+
+    // What the app knows about one endpoint, copied out of the endpoint catalog so the choice
+    // below can be made, and tested, without Windows MIDI Services.
+    struct EndpointCandidate
+    {
+        std::wstring EndpointId{};
+        std::wstring Name{};
+        uint16_t UsbVendorId{ 0 };
+        uint16_t UsbProductId{ 0 };
+
+        // Per group: whether it carries messages each way, and the MIDI 1.0 port name and the
+        // block name it goes by. A Launchpad X on Windows MIDI Services is usually one endpoint
+        // whose groups are its two ports, LPX DAW and LPX MIDI.
+        std::array<bool, 16> SourceGroups{};
+        std::array<bool, 16> DestinationGroups{};
+        std::array<std::wstring, 16> SourcePortNames{};
+        std::array<std::wstring, 16> DestinationPortNames{};
+        std::array<std::wstring, 16> SourceGroupNames{};
+        std::array<std::wstring, 16> DestinationGroupNames{};
+    };
+
+    // The endpoint and group that reach a Launchpad X's MIDI port, which is the one that takes
+    // Programmer mode. Its DAW port is for Ableton Live's own protocol and is never chosen.
+    struct LaunchpadPort
+    {
+        std::wstring EndpointId{};
+        uint8_t Group{ 0 };
+
+        bool operator==(LaunchpadPort const&) const = default;
+    };
+
+    // The Launchpad X MIDI port among the candidates. The preferred endpoint wins when it has
+    // one, so a person with two Launchpads keeps the one they picked. Nothing when none is here.
+    [[nodiscard]] std::optional<LaunchpadPort> FindLaunchpadPort(
+        _In_ std::span<const EndpointCandidate> candidates,
+        _In_ std::wstring_view preferredEndpointId = {});
 }
 
-namespace seq = ::midisequencer;

@@ -56,6 +56,14 @@ namespace midisequencer
         constexpr wchar_t ValueFollowClock[] = L"FollowClock";
         constexpr wchar_t ValueClockSendsTempo[] = L"ClockSendsTempo";
         constexpr wchar_t ValueRemoteControlEnabled[] = L"RemoteControlEnabled";
+        constexpr wchar_t ValueLaunchpadEnabled[] = L"LaunchpadEnabled";
+        constexpr wchar_t ValueLaunchpadEndpointId[] = L"LaunchpadEndpointId";
+        constexpr wchar_t ValueLaunchpadNoteMode[] = L"LaunchpadNoteMode";
+        constexpr wchar_t ValueLaunchpadOctave[] = L"LaunchpadOctave";
+        constexpr wchar_t ValueLaunchpadFollowSongKey[] = L"LaunchpadFollowSongKey";
+        constexpr wchar_t ValueLaunchpadRoot[] = L"LaunchpadRoot";
+        constexpr wchar_t ValueLaunchpadScale[] = L"LaunchpadScale";
+        constexpr wchar_t ValueLaunchpadInScaleOnly[] = L"LaunchpadInScaleOnly";
         constexpr wchar_t ValuePortsOff[] = L"PortsOff";
         constexpr wchar_t ValueRecentSequences[] = L"RecentSequences";
         constexpr wchar_t ValueStyle[] = L"Style";
@@ -410,6 +418,19 @@ namespace midisequencer
         m_timeCode = ParseTimeCode(ReadString(ValueTimeCode, L""));
         m_followClock = ParseFollowClock(ReadString(ValueFollowClock, L""));
         m_remoteControlEnabled = ReadDword(ValueRemoteControlEnabled, 0) != 0;
+        m_launchpadEnabled = ReadDword(ValueLaunchpadEnabled, 0) != 0;
+        m_launchpadEndpointId = ReadString(ValueLaunchpadEndpointId, L"");
+        m_launchpadNoteMode = ReadDword(ValueLaunchpadNoteMode, 0) != 0;
+
+        // Kept as a count up from the lowest octave, since the registry value has no sign.
+        m_launchpadOctave = MinimumLaunchpadOctave + static_cast<int32_t>(std::min<uint32_t>(
+            ReadDword(ValueLaunchpadOctave, static_cast<uint32_t>(DefaultLaunchpadOctave - MinimumLaunchpadOctave)),
+            static_cast<uint32_t>(MaximumLaunchpadOctave - MinimumLaunchpadOctave)));
+
+        m_launchpadFollowSongKey = ReadDword(ValueLaunchpadFollowSongKey, 1) != 0;
+        m_launchpadRoot = static_cast<uint8_t>(std::min<uint32_t>(ReadDword(ValueLaunchpadRoot, 0), 11));
+        m_launchpadScale = static_cast<uint8_t>(std::min<uint32_t>(ReadDword(ValueLaunchpadScale, 0), LaunchpadScaleCount - 1u));
+        m_launchpadInScaleOnly = ReadDword(ValueLaunchpadInScaleOnly, 0) != 0;
 
         auto style = ReadString(ValueStyle, DefaultStyleId);
         auto const validStyle = !style.empty() && style.size() <= MaximumStyleIdLength &&
@@ -694,6 +715,55 @@ namespace midisequencer
     {
         m_remoteControlEnabled = value;
         WriteDword(ValueRemoteControlEnabled, value ? 1 : 0);
+    }
+
+    void AppSettings::LaunchpadEnabled(bool value) noexcept
+    {
+        m_launchpadEnabled = value;
+        WriteDword(ValueLaunchpadEnabled, value ? 1 : 0);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::LaunchpadEndpointId(std::wstring const& value) noexcept
+    {
+        m_launchpadEndpointId = value;
+        WriteString(ValueLaunchpadEndpointId, value);
+    }
+
+    void AppSettings::LaunchpadNoteMode(bool value) noexcept
+    {
+        m_launchpadNoteMode = value;
+        WriteDword(ValueLaunchpadNoteMode, value ? 1 : 0);
+    }
+
+    void AppSettings::LaunchpadOctave(int32_t value) noexcept
+    {
+        m_launchpadOctave = std::clamp(value, MinimumLaunchpadOctave, MaximumLaunchpadOctave);
+        WriteDword(ValueLaunchpadOctave, static_cast<uint32_t>(m_launchpadOctave - MinimumLaunchpadOctave));
+    }
+
+    void AppSettings::LaunchpadFollowSongKey(bool value) noexcept
+    {
+        m_launchpadFollowSongKey = value;
+        WriteDword(ValueLaunchpadFollowSongKey, value ? 1 : 0);
+    }
+
+    void AppSettings::LaunchpadRoot(uint8_t value) noexcept
+    {
+        m_launchpadRoot = static_cast<uint8_t>(std::min<uint32_t>(value, 11));
+        WriteDword(ValueLaunchpadRoot, m_launchpadRoot);
+    }
+
+    void AppSettings::LaunchpadScale(uint8_t value) noexcept
+    {
+        m_launchpadScale = static_cast<uint8_t>(std::min<uint32_t>(value, LaunchpadScaleCount - 1u));
+        WriteDword(ValueLaunchpadScale, m_launchpadScale);
+    }
+
+    void AppSettings::LaunchpadInScaleOnly(bool value) noexcept
+    {
+        m_launchpadInScaleOnly = value;
+        WriteDword(ValueLaunchpadInScaleOnly, value ? 1 : 0);
     }
 
     _Use_decl_annotations_

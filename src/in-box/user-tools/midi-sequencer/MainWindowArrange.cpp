@@ -1900,12 +1900,10 @@ namespace winrt::midisequencer::implementation
             m_selectionAnchorId = trackId;
 
             // In place: rebuilding the headers here would remove the one being double-clicked.
-            FlushLaunchpadXHeldNotes();
             RefreshHeaderBackgrounds();
             FollowSelectionInInspector();
 
             InvalidateArrange();
-            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to select a track.")
     }
@@ -1956,12 +1954,10 @@ namespace winrt::midisequencer::implementation
                     m_armed.erase(trackId);
                 }
 
-                FlushLaunchpadXHeldNotes();
                 UpdateEchoRoutes();
                 PrepareConnectionsAsync();
                 RebuildHeaders();
                 InvalidateLaunchers();
-                UpdateLaunchpadXFeedback();
 
                 if (value)
                 {
@@ -4185,7 +4181,6 @@ namespace winrt::midisequencer::implementation
             }
 
             InvalidateLaunchers();
-            UpdateLaunchpadXFeedback();
             args.Handled(true);
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to handle a click in the clip launcher.")

@@ -199,10 +199,7 @@ namespace winrt::midisequencer::implementation
                 StartRemoteControlAsync();
             }
 
-            if (m_launchpadEnabled)
-            {
-                RefreshLaunchpadXConnectionAsync();
-            }
+            // The Launchpad X connects once the endpoints are known, from RefreshEndpoints.
 
             // A launch or Play pressed while MIDI was starting.
             RunWaitingForMidi();
@@ -340,10 +337,8 @@ namespace winrt::midisequencer::implementation
                     strong->UpdateStatusBar();
                     strong->PrepareConnectionsAsync();
 
-                    if (strong->m_launchpadEnabled)
-                    {
-                        strong->RefreshLaunchpadXConnectionAsync();
-                    }
+                    // A Launchpad X plugged in or unplugged.
+                    strong->UpdateLaunchpadConnectionAsync();
 
                     if (strong->m_endpointRefreshAgain.exchange(false))
                     {
@@ -365,8 +360,6 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            FlushLaunchpadXHeldNotes();
-
             if (m_output == nullptr || m_sources == nullptr)
             {
                 co_return;
@@ -398,15 +391,6 @@ namespace winrt::midisequencer::implementation
                     groups = static_cast<uint16_t>(groups | (1u << (group & 0x0F)));
                 };
 
-                std::wstring launchpadSourceId{};
-                uint8_t launchpadSourceGroup{ 0 };
-
-                {
-                    std::scoped_lock guard{ m_inputLock };
-                    launchpadSourceId = m_launchpadSourceId;
-                    launchpadSourceGroup = m_launchpadSourceGroup;
-                }
-
                 seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
                 {
                     if (!track.IsFolder && !track.Destination.Endpoint.IsEmpty())
@@ -426,22 +410,10 @@ namespace winrt::midisequencer::implementation
 
                         if (!id.empty())
                         {
-                            uint16_t mask = track.Source.Group >= 0
-                                ? static_cast<uint16_t>(1u << (track.Source.Group & 0x0F))
-                                : AnySourceGroups(track.Source.Endpoint);
+                            sources.push_back(id);
 
-                            if (!launchpadSourceId.empty() && SameEndpoint(launchpadSourceId, id))
-                            {
-                                mask = static_cast<uint16_t>(mask & ~(1u << (launchpadSourceGroup & 0x0F)));
-                            }
-
-                            if (mask != 0)
-                            {
-                                sources.push_back(id);
-
-                                auto& groups = listensTo[id];
-                                groups = static_cast<uint16_t>(groups | mask);
-                            }
+                            auto& groups = listensTo[id];
+                            groups = static_cast<uint16_t>(groups | (track.Source.Group >= 0 ? (1u << (track.Source.Group & 0x0F)) : AnySourceGroups(track.Source.Endpoint)));
                         }
                     }
 
@@ -670,11 +642,9 @@ namespace winrt::midisequencer::implementation
             }
 
             FinishSlotRecording(SlotTakeEnd::Stopped);
-            FlushLaunchpadXHeldNotes();
 
             if (m_engine == nullptr)
             {
-                UpdateLaunchpadXFeedback();
                 return;
             }
 
@@ -683,7 +653,6 @@ namespace winrt::midisequencer::implementation
                 // Stop when already stopped goes back to the start.
                 SetPosition(0);
                 ScrollToTick(0);
-                UpdateLaunchpadXFeedback();
                 return;
             }
 
@@ -751,7 +720,6 @@ namespace winrt::midisequencer::implementation
                 return true;
             });
 
-            FlushLaunchpadXHeldNotes();
             RefreshLaunchViews();
             ShowMessage(res::GetString(L"Silenced"));
         }
@@ -774,8 +742,6 @@ namespace winrt::midisequencer::implementation
             UpdatePlayhead();
             InvalidateArrange();
             InvalidateEditor();
-            SyncLaunchpadXKeyFromSong();
-            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to move the playhead.")
     }
@@ -812,7 +778,6 @@ namespace winrt::midisequencer::implementation
             auto const on = seq::AppSettings::Current().MetronomeEnabled();
             MetronomeToggle().IsChecked(on);
             ColorMetronome();
-            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the transport.")
     }
@@ -836,8 +801,6 @@ namespace winrt::midisequencer::implementation
             UpdateLeds();
             UpdateLaneChips(tick);
             UpdateMixer(tick);
-            SyncLaunchpadXKeyFromSong();
-            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the displays.")
     }
@@ -1331,6 +1294,17 @@ namespace winrt::midisequencer::implementation
                 return;
             }
 
+            // While the sequencer drives a Launchpad X, what its pads send are commands, not
+            // notes, even for a track that records from it.
+            {
+                std::scoped_lock guard{ m_inputLock };
+
+                if (!m_launchpadSourceId.empty() && ((words[0] >> 24) & 0x0F) == m_launchpadGroup && SameEndpoint(m_launchpadSourceId, endpointId))
+                {
+                    return;
+                }
+            }
+
             // The clock this sequence follows goes to the engine, not to recording.
             if ((words[0] >> 28) == 0x1)
             {
@@ -1345,18 +1319,6 @@ namespace winrt::midisequencer::implementation
                 {
                     OnFollowedClock(timestamp, words[0]);
                     return;
-                }
-            }
-
-            {
-                std::scoped_lock guard{ m_inputLock };
-                if (!m_launchpadSourceId.empty() && SameEndpoint(m_launchpadSourceId, endpointId))
-                {
-                    auto const msgGroup = seq::MessageGroup(words[0]);
-                    if (msgGroup >= 0 && static_cast<uint8_t>(msgGroup) == m_launchpadSourceGroup)
-                    {
-                        return;
-                    }
                 }
             }
 
@@ -1446,40 +1408,47 @@ namespace winrt::midisequencer::implementation
                     }
                 }
 
-                if (tick >= 0)
-                {
-                    if (auto take = m_takes.find(route.TrackId); take != m_takes.end())
-                    {
-                        take->second.Add(tick, words, wordCount);
-                    }
-                }
-
-                // A slot take keeps what's played from just before its start until its end.
-                if (slotTick >= 0 && m_slotInput.has_value() && m_slotInput->TrackId == route.TrackId &&
-                    slotTick >= m_slotInput->Start - SlotEarlyTicks && slotTick < m_slotInput->Start + m_slotInput->Length)
-                {
-                    m_slotInput->Take.Add(slotTick, words, wordCount);
-                }
-
-                auto& heard = m_heard[route.TrackId];
-
-                HeardMessage message{};
-                message.Timestamp = timestamp;
-                message.WordCount = wordCount;
-                std::copy_n(words, wordCount, message.Words.begin());
-                heard.push_back(message);
-
-                auto const frequency = static_cast<double>(midi2::MidiClock::TimestampFrequency());
-
-                while (heard.size() > MaximumHeardMessages ||
-                    (!heard.empty() && static_cast<double>(timestamp - heard.front().Timestamp) / frequency > HeardSeconds))
-                {
-                    heard.pop_front();
-                }
+                RecordHeard(route.TrackId, tick, slotTick, timestamp, words, wordCount);
             }
         }
         catch (...)
         {
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::RecordHeard(std::wstring const& trackId, int64_t tick, int64_t slotTick, uint64_t timestamp, uint32_t const* words, uint8_t wordCount)
+    {
+        // Under m_inputLock, on the service's thread.
+        if (tick >= 0)
+        {
+            if (auto take = m_takes.find(trackId); take != m_takes.end())
+            {
+                take->second.Add(tick, words, wordCount);
+            }
+        }
+
+        // A slot take keeps what's played from just before its start until its end.
+        if (slotTick >= 0 && m_slotInput.has_value() && m_slotInput->TrackId == trackId &&
+            slotTick >= m_slotInput->Start - SlotEarlyTicks && slotTick < m_slotInput->Start + m_slotInput->Length)
+        {
+            m_slotInput->Take.Add(slotTick, words, wordCount);
+        }
+
+        auto& heard = m_heard[trackId];
+
+        HeardMessage message{};
+        message.Timestamp = timestamp;
+        message.WordCount = wordCount;
+        std::copy_n(words, wordCount, message.Words.begin());
+        heard.push_back(message);
+
+        auto const frequency = static_cast<double>(midi2::MidiClock::TimestampFrequency());
+
+        while (heard.size() > MaximumHeardMessages ||
+            (!heard.empty() && static_cast<double>(timestamp - heard.front().Timestamp) / frequency > HeardSeconds))
+        {
+            heard.pop_front();
         }
     }
 
@@ -1570,15 +1539,6 @@ namespace winrt::midisequencer::implementation
 
         try
         {
-            std::wstring launchpadSourceId{};
-            uint8_t launchpadSourceGroup{ 0 };
-
-            {
-                std::scoped_lock guard{ m_inputLock };
-                launchpadSourceId = m_launchpadSourceId;
-                launchpadSourceGroup = m_launchpadSourceGroup;
-            }
-
             std::vector<EchoRoute> routes{};
 
             seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
@@ -1591,14 +1551,6 @@ namespace winrt::midisequencer::implementation
                 EchoRoute route{};
                 route.TrackId = track.Id;
                 route.SourceId = m_directory->ResolveId(track.Source.Endpoint);
-
-                if (!launchpadSourceId.empty() &&
-                    SameEndpoint(route.SourceId, launchpadSourceId) &&
-                    (track.Source.Group < 0 || static_cast<uint8_t>(track.Source.Group & 0x0F) == launchpadSourceGroup))
-                {
-                    return true;
-                }
-
                 route.Filter = FilterFor(track.Source);
                 route.Destination = track.Destination;
                 route.Echo = track.Source.Echo && !track.Destination.Endpoint.IsEmpty();

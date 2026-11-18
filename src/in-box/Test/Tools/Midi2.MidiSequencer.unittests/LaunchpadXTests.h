@@ -28,6 +28,7 @@ public:
 
     TEST_METHOD(ClipModePadPressTriggersSlotsAndIgnoresOutOfBounds);
     TEST_METHOD(ClipModeSceneButtonsMapTopDown89To19);
+    TEST_METHOD(ClipModeHugeViewportOffsetNeverWrapsAround);
     TEST_METHOD(ClipModeNavigationButtonsScrollViewportWithClamping);
     TEST_METHOD(ClipModeStopAndRecordButtonsEmitExpectedActions);
     TEST_METHOD(ClipModeLedFeedbackEncodesStatesAndDiffsIncrementally);
@@ -39,11 +40,4 @@ public:
 
     TEST_METHOD(ModeSwitchingViaButtonsAndApiReleasesNotesAndRepaints81Leds);
     TEST_METHOD(BuildSurfaceSnapshotMapsSequenceLaunchViewsAndFolders);
-
-    TEST_METHOD(ControllerEndpointAndMultiGroupSelection);
-    TEST_METHOD(ControllerConnectImmediateSendsInquiryProgrammerModeAnd81Leds);
-    TEST_METHOD(ControllerConnectInquiryConfirmWaitsForAppAndRejectsBootloader);
-    TEST_METHOD(ControllerInputDispatchClipNoteOctaveAndModeSwitch);
-    TEST_METHOD(ControllerSyncLedsDiffsAndDisconnectExitsCleanly);
-    TEST_METHOD(ControllerHandlesOutputFailureGracefully);
 };
