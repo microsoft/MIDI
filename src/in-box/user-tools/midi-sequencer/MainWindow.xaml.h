@@ -35,6 +35,7 @@
 #include "RecordingTake.h"
 #include "RemoteControl.h"
 #include "RemoteEndpoint.h"
+#include "LaunchpadXController.h"
 #include "SequenceEdits.h"
 #include "SequenceModel.h"
 #include "SequenceUndo.h"
@@ -202,6 +203,25 @@ namespace winrt::midisequencer::implementation
             Pitch,
             Velocity,
         };
+
+        // ---- Launchpad X (MainWindowLaunchpad.cpp) ----
+        void SetLaunchpadXEnabled(_In_ bool enabled) noexcept;
+        [[nodiscard]] bool LaunchpadXEnabled() const noexcept;
+
+        void SetLaunchpadXEndpoint(_In_ seq::EndpointRef const& endpoint) noexcept;
+        [[nodiscard]] seq::EndpointRef const& LaunchpadXEndpoint() const noexcept;
+
+        void SetLaunchpadXMode(_In_ seq::launchpad::ControllerMode mode) noexcept;
+        [[nodiscard]] seq::launchpad::ControllerMode LaunchpadXMode() const noexcept;
+
+        [[nodiscard]] bool IsLaunchpadXConnected() const noexcept;
+        [[nodiscard]] std::wstring LaunchpadXConnectedEndpointName() const;
+
+        void SetLaunchpadXNoteConfig(_In_ seq::launchpad::NoteLayoutConfig const& config) noexcept;
+        [[nodiscard]] seq::launchpad::NoteLayoutConfig const& LaunchpadXNoteConfig() const noexcept;
+
+        void SetLaunchpadXFollowSongKey(_In_ bool follow) noexcept;
+        [[nodiscard]] bool LaunchpadXFollowSongKey() const noexcept;
 
     private:
         // ---- window (MainWindow.xaml.cpp) ----
@@ -1747,6 +1767,48 @@ namespace winrt::midisequencer::implementation
         std::optional<seq::RemoteState> m_remoteShown{};
         xaml::DispatcherTimer m_remoteTimer{ nullptr };
         uint32_t m_remoteTicks{ 0 };
+
+        // ---- Launchpad X (MainWindowLaunchpad.cpp) ----
+        struct LaunchpadHeldNoteTarget
+        {
+            std::wstring TrackId{};
+            seq::TrackDestination Destination{};
+            std::array<uint32_t, 2> OffWords{};
+            uint8_t WordCount{ 0 };
+            bool Arpeggiated{ false };
+        };
+
+        winrt::fire_and_forget RefreshLaunchpadXConnectionAsync();
+        void StopLaunchpadX(_In_ bool inBackground) noexcept;
+        void OnLaunchpadXUmp(_In_reads_(wordCount) uint32_t const* words, _In_ uint8_t wordCount, _In_ uint64_t timestamp) noexcept;
+        void OnLaunchpadXTransportState(_In_ bool reconnected) noexcept;
+        void DispatchLaunchpadXActions(_In_ std::vector<seq::launchpad::SurfaceAction> const& actions, _In_ uint64_t timestamp) noexcept;
+        void RouteLaunchpadXNoteAction(_In_ seq::launchpad::SurfaceAction const& action, _In_ uint64_t timestamp) noexcept;
+        void FlushLaunchpadXHeldNotes() noexcept;
+        void SyncLaunchpadXKeyFromSong() noexcept;
+        void UpdateLaunchpadXSourceSuppression(_In_ std::wstring const& endpointId, _In_ uint8_t group) noexcept;
+        [[nodiscard]] std::wstring EffectiveLaunchpadXTrackId() const;
+        [[nodiscard]] std::vector<std::wstring> LaunchpadXNoteTargetTrackIds() const;
+        [[nodiscard]] seq::launchpad::SurfaceStateSnapshot BuildLaunchpadXSnapshot() const;
+        void UpdateLaunchpadXFeedback(_In_ bool forceFullRefresh = false) noexcept;
+
+        std::shared_ptr<seq::launchpad::LaunchpadXController> m_launchpadController{ std::make_shared<seq::launchpad::LaunchpadXController>() };
+        std::shared_ptr<seq::launchpad::LaunchpadXSessionTransport> m_launchpadTransport{};
+        bool m_launchpadEnabled{ true };
+        seq::EndpointRef m_launchpadEndpoint{};
+        seq::launchpad::NoteLayoutConfig m_launchpadNoteConfig{};
+        bool m_launchpadFollowSongKey{ true };
+        seq::launchpad::ControllerMode m_launchpadMode{ seq::launchpad::ControllerMode::Clip };
+        bool m_launchpadConnected{ false };
+        std::wstring m_launchpadConnectedEndpointId{};
+        std::wstring m_launchpadConnectedEndpointName{};
+        uint8_t m_launchpadConnectedGroup{ 0 };
+        bool m_launchpadRefreshPending{ false };
+        bool m_launchpadRefreshAgain{ false };
+        winrt::Windows::Foundation::IAsyncAction m_launchpadClosing{ nullptr };
+        std::wstring m_launchpadSourceId{}; // guarded by m_inputLock
+        uint8_t m_launchpadSourceGroup{ 0 }; // guarded by m_inputLock
+        std::unordered_map<uint8_t, std::vector<LaunchpadHeldNoteTarget>> m_launchpadHeldNotes{};
 
         // MIDI-CI: a connection and presence for each device asked for its sounds, kept until
         // the window closes so the device sees one identifier. The lists it shared are kept by

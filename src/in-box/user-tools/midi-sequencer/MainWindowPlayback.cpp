@@ -199,6 +199,11 @@ namespace winrt::midisequencer::implementation
                 StartRemoteControlAsync();
             }
 
+            if (m_launchpadEnabled)
+            {
+                RefreshLaunchpadXConnectionAsync();
+            }
+
             // A launch or Play pressed while MIDI was starting.
             RunWaitingForMidi();
         }
@@ -335,6 +340,11 @@ namespace winrt::midisequencer::implementation
                     strong->UpdateStatusBar();
                     strong->PrepareConnectionsAsync();
 
+                    if (strong->m_launchpadEnabled)
+                    {
+                        strong->RefreshLaunchpadXConnectionAsync();
+                    }
+
                     if (strong->m_endpointRefreshAgain.exchange(false))
                     {
                         strong->RefreshEndpoints();
@@ -355,6 +365,8 @@ namespace winrt::midisequencer::implementation
 
         try
         {
+            FlushLaunchpadXHeldNotes();
+
             if (m_output == nullptr || m_sources == nullptr)
             {
                 co_return;
@@ -386,6 +398,15 @@ namespace winrt::midisequencer::implementation
                     groups = static_cast<uint16_t>(groups | (1u << (group & 0x0F)));
                 };
 
+                std::wstring launchpadSourceId{};
+                uint8_t launchpadSourceGroup{ 0 };
+
+                {
+                    std::scoped_lock guard{ m_inputLock };
+                    launchpadSourceId = m_launchpadSourceId;
+                    launchpadSourceGroup = m_launchpadSourceGroup;
+                }
+
                 seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
                 {
                     if (!track.IsFolder && !track.Destination.Endpoint.IsEmpty())
@@ -405,10 +426,22 @@ namespace winrt::midisequencer::implementation
 
                         if (!id.empty())
                         {
-                            sources.push_back(id);
+                            uint16_t mask = track.Source.Group >= 0
+                                ? static_cast<uint16_t>(1u << (track.Source.Group & 0x0F))
+                                : AnySourceGroups(track.Source.Endpoint);
 
-                            auto& groups = listensTo[id];
-                            groups = static_cast<uint16_t>(groups | (track.Source.Group >= 0 ? (1u << (track.Source.Group & 0x0F)) : AnySourceGroups(track.Source.Endpoint)));
+                            if (!launchpadSourceId.empty() && SameEndpoint(launchpadSourceId, id))
+                            {
+                                mask = static_cast<uint16_t>(mask & ~(1u << (launchpadSourceGroup & 0x0F)));
+                            }
+
+                            if (mask != 0)
+                            {
+                                sources.push_back(id);
+
+                                auto& groups = listensTo[id];
+                                groups = static_cast<uint16_t>(groups | mask);
+                            }
                         }
                     }
 
@@ -637,9 +670,11 @@ namespace winrt::midisequencer::implementation
             }
 
             FinishSlotRecording(SlotTakeEnd::Stopped);
+            FlushLaunchpadXHeldNotes();
 
             if (m_engine == nullptr)
             {
+                UpdateLaunchpadXFeedback();
                 return;
             }
 
@@ -648,6 +683,7 @@ namespace winrt::midisequencer::implementation
                 // Stop when already stopped goes back to the start.
                 SetPosition(0);
                 ScrollToTick(0);
+                UpdateLaunchpadXFeedback();
                 return;
             }
 
@@ -715,6 +751,7 @@ namespace winrt::midisequencer::implementation
                 return true;
             });
 
+            FlushLaunchpadXHeldNotes();
             RefreshLaunchViews();
             ShowMessage(res::GetString(L"Silenced"));
         }
@@ -737,6 +774,8 @@ namespace winrt::midisequencer::implementation
             UpdatePlayhead();
             InvalidateArrange();
             InvalidateEditor();
+            SyncLaunchpadXKeyFromSong();
+            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to move the playhead.")
     }
@@ -773,6 +812,7 @@ namespace winrt::midisequencer::implementation
             auto const on = seq::AppSettings::Current().MetronomeEnabled();
             MetronomeToggle().IsChecked(on);
             ColorMetronome();
+            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the transport.")
     }
@@ -796,6 +836,8 @@ namespace winrt::midisequencer::implementation
             UpdateLeds();
             UpdateLaneChips(tick);
             UpdateMixer(tick);
+            SyncLaunchpadXKeyFromSong();
+            UpdateLaunchpadXFeedback();
         }
         MIDI_SEQUENCER_CATCH_AND_LOG(L"Unable to update the displays.")
     }
@@ -1306,6 +1348,18 @@ namespace winrt::midisequencer::implementation
                 }
             }
 
+            {
+                std::scoped_lock guard{ m_inputLock };
+                if (!m_launchpadSourceId.empty() && SameEndpoint(m_launchpadSourceId, endpointId))
+                {
+                    auto const msgGroup = seq::MessageGroup(words[0]);
+                    if (msgGroup >= 0 && static_cast<uint8_t>(msgGroup) == m_launchpadSourceGroup)
+                    {
+                        return;
+                    }
+                }
+            }
+
             // Keys for arpeggiators go to the engine. A track whose arpeggiator is playing them
             // doesn't echo or record them: it plays, and records, the arpeggiator's notes.
             std::vector<std::wstring> arpeggiated{};
@@ -1516,6 +1570,15 @@ namespace winrt::midisequencer::implementation
 
         try
         {
+            std::wstring launchpadSourceId{};
+            uint8_t launchpadSourceGroup{ 0 };
+
+            {
+                std::scoped_lock guard{ m_inputLock };
+                launchpadSourceId = m_launchpadSourceId;
+                launchpadSourceGroup = m_launchpadSourceGroup;
+            }
+
             std::vector<EchoRoute> routes{};
 
             seq::ForEachTrack(m_doc, [&](seq::Track const& track, size_t)
@@ -1528,6 +1591,14 @@ namespace winrt::midisequencer::implementation
                 EchoRoute route{};
                 route.TrackId = track.Id;
                 route.SourceId = m_directory->ResolveId(track.Source.Endpoint);
+
+                if (!launchpadSourceId.empty() &&
+                    SameEndpoint(route.SourceId, launchpadSourceId) &&
+                    (track.Source.Group < 0 || static_cast<uint8_t>(track.Source.Group & 0x0F) == launchpadSourceGroup))
+                {
+                    return true;
+                }
+
                 route.Filter = FilterFor(track.Source);
                 route.Destination = track.Destination;
                 route.Echo = track.Source.Echo && !track.Destination.Endpoint.IsEmpty();

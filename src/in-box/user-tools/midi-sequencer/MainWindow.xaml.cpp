@@ -777,6 +777,8 @@ namespace winrt::midisequencer::implementation
             }
 
             InvalidateLaunchers();
+            SyncLaunchpadXKeyFromSong();
+            UpdateLaunchpadXFeedback();
 
             if (m_recording)
             {
@@ -960,6 +962,7 @@ namespace winrt::midisequencer::implementation
                 m_engine->StopThread();
             }
 
+            StopLaunchpadX(false);
             StopRemoteControl();
             CloseCiLinks();
 
