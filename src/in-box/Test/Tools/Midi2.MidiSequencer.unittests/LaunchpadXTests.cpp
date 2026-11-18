@@ -834,10 +834,15 @@ void LaunchpadXTests::NoteModePadPressReleaseAndAftertouchTrackActiveNotes()
     VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
     VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[0].midiNote);
 
+    // Playing 65 again while it sounds starts it over: a note-off, then the note-on, so each
+    // note-on has its own note-off.
     actions.clear();
     surface.HandleInput(InputEvent{ InputEventKind::PadPress, 21, 110, false, {} }, snap, actions);
-    VERIFY_ARE_EQUAL(size_t{ 1 }, actions.size());
+    VERIFY_ARE_EQUAL(size_t{ 2 }, actions.size());
+    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOff), static_cast<uint8_t>(actions[0].kind));
     VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[0].midiNote);
+    VERIFY_ARE_EQUAL(static_cast<uint8_t>(SurfaceActionKind::EmitNoteOn), static_cast<uint8_t>(actions[1].kind));
+    VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[1].midiNote);
 
     // Releasing pad 16 must NOT kill note 65 while pad 21 is still held
     actions.clear();

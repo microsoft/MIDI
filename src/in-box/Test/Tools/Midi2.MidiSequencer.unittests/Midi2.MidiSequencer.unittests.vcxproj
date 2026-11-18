@@ -107,6 +107,7 @@
     <ClInclude Include="LaunchpadXTests.h" />
     <ClInclude Include="LaunchpadXE2ETests.h" />
     <ClInclude Include="LaunchpadXControllerTests.h" />
+    <ClInclude Include="LaunchpadXHardeningTests.h" />
     <ClInclude Include="DawProjectTests.h" />
     <ClInclude Include="CaptureImportTests.h" />
     <ClInclude Include="LyricsTests.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="LaunchpadXTests.cpp" />
     <ClCompile Include="LaunchpadXE2ETests.cpp" />
     <ClCompile Include="LaunchpadXControllerTests.cpp" />
+    <ClCompile Include="LaunchpadXHardeningTests.cpp" />
     <ClCompile Include="DawProjectTests.cpp" />
     <ClCompile Include="CaptureImportTests.cpp" />
     <ClCompile Include="LyricsTests.cpp" />

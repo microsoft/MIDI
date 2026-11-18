@@ -1161,9 +1161,15 @@ void LaunchpadXE2ETests::T1_F4_NoteModeScaleLayout()
         actions.clear();
         surface.HandleInput(ParseSingleWord(Midi1Word(0, 0x9, 0, 16, 100)), snap, actions);
         surface.HandleInput(ParseSingleWord(Midi1Word(0, 0x9, 0, 21, 100)), snap, actions);
-        VERIFY_ARE_EQUAL(size_t{ 2 }, actions.size());
+
+        // The second press starts 65 over: on, then off and on again, so ons and offs pair up.
+        VERIFY_ARE_EQUAL(size_t{ 3 }, actions.size());
+        VERIFY_IS_TRUE(actions[0].kind == SurfaceActionKind::EmitNoteOn);
+        VERIFY_IS_TRUE(actions[1].kind == SurfaceActionKind::EmitNoteOff);
+        VERIFY_IS_TRUE(actions[2].kind == SurfaceActionKind::EmitNoteOn);
         VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[0].midiNote);
         VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[1].midiNote);
+        VERIFY_ARE_EQUAL(uint8_t{ 65 }, actions[2].midiNote);
 
         // Release pad 16 while still holding pad 21 -> ref-counted unison keeps note 65 active
         actions.clear();

@@ -43,6 +43,7 @@ namespace midisequencer::launchpad
     _Use_decl_annotations_
     bool LaunchpadXController::Start(SurfaceStateSnapshot const& snapshot)
     {
+        std::scoped_lock order{ m_sendLock };
         std::vector<LedSpec> leds{};
 
         {
@@ -71,6 +72,7 @@ namespace midisequencer::launchpad
     {
         try
         {
+            std::scoped_lock order{ m_sendLock };
             std::vector<SurfaceAction> releases{};
             bool wasStarted = false;
 
@@ -109,6 +111,10 @@ namespace midisequencer::launchpad
                 return;
             }
 
+            // Held until what this message asks for has gone out, so it can't overtake, or be
+            // overtaken by, notes let go on another thread.
+            std::scoped_lock order{ m_sendLock };
+
             std::vector<SurfaceAction> actions{};
 
             {
@@ -142,6 +148,7 @@ namespace midisequencer::launchpad
     {
         try
         {
+            std::scoped_lock order{ m_sendLock };
             std::vector<LedSpec> leds{};
 
             {
@@ -168,6 +175,7 @@ namespace midisequencer::launchpad
     {
         try
         {
+            std::scoped_lock order{ m_sendLock };
             std::vector<SurfaceAction> releases{};
 
             {
@@ -193,6 +201,7 @@ namespace midisequencer::launchpad
     {
         try
         {
+            std::scoped_lock order{ m_sendLock };
             std::vector<SurfaceAction> releases{};
 
             {

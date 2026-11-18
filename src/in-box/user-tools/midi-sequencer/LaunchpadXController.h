@@ -42,7 +42,8 @@ namespace midisequencer::launchpad
     {
     public:
         // A note played, let go or pressed harder in Note mode. Called on the thread the input
-        // came in on, so the note sounds without waiting for the app's thread. Must not block.
+        // came in on, so the note sounds without waiting for the app's thread. Must not block,
+        // or call back into the controller: both handlers run while it holds its send lock.
         // The timestamp is the input's, or 0 for a note let go by a mode or layout change.
         using NoteHandler = std::function<void(_In_ SurfaceAction const& action, _In_ uint64_t timestamp)>;
 
@@ -91,6 +92,10 @@ namespace midisequencer::launchpad
         NoteHandler const m_notes;
         ActionHandler const m_actions;
 
+        // Taken first, and held from working out what to send until it has gone to the device and
+        // the handlers, so a note-off never reaches the app ahead of its note-on, and LED updates
+        // reach the device in the order they were worked out. m_lock guards the state below.
+        std::mutex m_sendLock{};
         mutable std::mutex m_lock{};
         LaunchpadXSurface m_surface{};
         SurfaceStateSnapshot m_snapshot{};

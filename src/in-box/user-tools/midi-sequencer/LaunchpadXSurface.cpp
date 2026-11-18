@@ -442,6 +442,19 @@ namespace midisequencer::launchpad
             }
 
             auto const note = *mappedNote;
+
+            // Pads can share a note when rows overlap. Played again while it's sounding, the note
+            // starts over: a note-off first keeps every note-on paired with a note-off, so a synth
+            // that stacks voices for one note is never left with one sounding.
+            if (m_activeNoteRefCounts[note] > 0)
+            {
+                SurfaceAction retrigger{};
+                retrigger.kind = SurfaceActionKind::EmitNoteOff;
+                retrigger.targetMode = ControllerMode::Note;
+                retrigger.midiNote = note;
+                outActions.push_back(retrigger);
+            }
+
             m_heldPadNotes[padSlot] = note;
             ++m_activeNoteRefCounts[note];
 
