@@ -148,6 +148,8 @@
     <ClInclude Include="PlaybackEngine.h" />
     <ClInclude Include="RecordingTake.h" />
     <ClInclude Include="RemoteControl.h" />
+    <ClInclude Include="LaunchpadXProtocol.h" />
+    <ClInclude Include="LaunchpadXSurface.h" />
     <ClInclude Include="RemoteEndpoint.h" />
     <ClInclude Include="GlassLayoutWriter.h" />
     <ClInclude Include="SampleSequence.h" />
@@ -395,6 +397,12 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RemoteControl.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LaunchpadXProtocol.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LaunchpadXSurface.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="GlassLayoutWriter.cpp">
