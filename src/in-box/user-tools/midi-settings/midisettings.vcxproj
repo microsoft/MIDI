@@ -185,6 +185,7 @@
     <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
     <ClInclude Include="..\midi-app-shared\Deflate.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

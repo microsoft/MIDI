@@ -159,6 +159,7 @@
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\BeatClockGenerator.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

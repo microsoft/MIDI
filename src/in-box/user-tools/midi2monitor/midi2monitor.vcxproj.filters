@@ -72,6 +72,7 @@
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>

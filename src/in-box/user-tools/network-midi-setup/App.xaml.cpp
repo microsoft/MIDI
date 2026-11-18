@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "XamlErrors.h"
 #include "MainWindow.xaml.h"
 
 #include "AppSettings.h"
@@ -42,8 +43,9 @@ namespace winrt::midinetworksetup::implementation
                 TraceLoggingHResult(static_cast<HRESULT>(args.Exception()), MIDI_NETSETUP_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(args.Message().c_str(), MIDI_NETSETUP_TRACE_ERROR_FIELD));
 
-            // the app stays usable rather than terminating in front of the customer
-            args.Handled(true);
+            // the app stays usable rather than terminating in front of the customer, except after an
+            // error XAML can't recover from: then it crashes, so the crash dump shows what happened
+            args.Handled(!::midiapp::IsUnrecoverableXamlError(static_cast<HRESULT>(args.Exception())));
         }
         catch (...)
         {

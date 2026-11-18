@@ -163,6 +163,7 @@
     <ClInclude Include="..\midi-app-shared\TapTempo.h" />
     <ClInclude Include="..\midi-app-shared\ChordTheory.h" />
     <ClInclude Include="..\midi-app-shared\ThemeBrushes.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

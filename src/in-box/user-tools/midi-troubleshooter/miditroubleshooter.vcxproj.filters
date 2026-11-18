@@ -86,6 +86,7 @@
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\Deflate.h" />
     <ClInclude Include="..\midi-app-shared\ZipArchive.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
     <ClInclude Include="..\mididiag\mididiag_report_parser.h" />
     <ClInclude Include="..\mididiag\mididiag_field_defs.h" />
     <ClInclude Include="resource.h">

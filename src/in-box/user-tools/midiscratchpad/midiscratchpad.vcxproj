@@ -155,6 +155,7 @@
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\UmpPrimerLink.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
