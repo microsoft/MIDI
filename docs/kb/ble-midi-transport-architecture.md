@@ -348,7 +348,7 @@ For the UMP Characteristic: big-endian words, multiple UMPs per payload, no frag
 | Peripheral rejects a second Characteristic subscription with ATT 0x80 | **Not possible** | WinRT does not let an application fail a CCCD write. Both Characteristics are published and a second subscription is ignored instead. A Central which follows the specification subscribes to only one, so it sees no difference. |
 | Peripheral limited to one active connection | Partial | The first subscriber is served and later ones are ignored, but their subscription cannot be refused, for the same reason. |
 | Encryption | Not enabled | Optional in both specifications. Requiring it would force pairing, and an unpaired device connecting is a case which has to keep working. |
-| Bluetooth 5.0 required for the UMP Characteristic | Not enforced | No check that the radio is 5.0 or higher before offering UMP. |
+| Data Length Extension (DLE) required for the UMP Characteristic, Bluetooth 5.0 recommended | Not checked | Whether a link uses DLE depends on the radio and its driver, and Windows doesn't report it to apps or services, so the transport can't check it. |
 | Minimum 64-byte ATT payload for UMP | Met by Windows | Windows supports large payloads in both roles, and the negotiated size is used as-is. A link that negotiates less than 64 bytes for UMP still works, with smaller packets, and is logged as a warning. |
 | Jitter Reduction Timestamps | Provisional | Handled in the transport in both roles, following the BLE MIDI 2.0 Working Group's draft guidance, which isn't published yet. |
 | Endpoint Discovery retried three times before disconnecting | Service-side | Retry policy belongs to the service's protocol manager, not this transport. |
@@ -374,4 +374,4 @@ A link slower than 15 ms adds delay and uneven timing to every message, and Wind
 
 ## Not yet implemented
 
-- Nothing known. The open questions are the Bluetooth 5.0 requirement for the UMP Characteristic, which is with the specification editors, and choosing a connection interval below 15 ms, which Windows doesn't offer an app.
+- Nothing known. The open question is choosing a connection interval below 15 ms, which Windows doesn't offer an app.
