@@ -14,8 +14,8 @@
 LANGUAGE 9, 1
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,1,0,3
- PRODUCTVERSION 0,1,0,3
+ FILEVERSION 1,0,0,15
+ PRODUCTVERSION 1,0,0,15
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -32,8 +32,8 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Microsoft Corporation"
             VALUE "FileDescription", "Windows MIDI Services RTP-MIDI Plugin"
-            VALUE "FileVersion", "0.1.0.3"
-            VALUE "ProductVersion", "0.1.0.3"
+            VALUE "FileVersion", "1.0.0.15"
+            VALUE "ProductVersion", "1.0.0.15"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation. All rights reserved."
             VALUE "InternalName", "Midi2.RtpMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.RtpMidiTransport.dll"

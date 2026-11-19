@@ -768,8 +768,9 @@ void BleIncomingSmoothingTests::TestSmootherWithTheBleMidi1Correlator()
 namespace
 {
     // A BLE MIDI 2.0 device with JR: notes stamped with JR Timestamps, and JR Clocks read at their
-    // scheduled time, a startup burst of 16 clocks 8 ms apart and then one every 97 ms. Everything
-    // waits for the next connection event, and the Windows stack adds up to 0.3 ms.
+    // scheduled time, a startup burst of 12 clocks one interval plus a twelfth apart and then one
+    // every 97 ms. Everything waits for the next connection event, and the Windows stack adds up
+    // to 0.3 ms.
     struct JrSimulation
     {
         std::vector<SimulatedMessage> Messages{ };
@@ -790,9 +791,10 @@ namespace
 
         std::vector<double> clocks;
 
-        for (uint32_t i = 0; i < 16; i++)
+        // the startup burst: twelve clocks one interval plus a twelfth apart
+        for (uint32_t i = 0; i < MidiBleJr::StartupBurstClockCount; i++)
         {
-            clocks.push_back(1.0 + i * 8.0);
+            clocks.push_back(1.0 + i * intervalMilliseconds * 13.0 / 12.0);
         }
 
         for (double t = clocks.back() + 97.0; t < durationMilliseconds; t += 97.0)
@@ -819,18 +821,25 @@ namespace
             std::vector<uint32_t> words;
             std::vector<double> members;
 
-            while (noteIndex < notes.size() && notes[noteIndex] <= event)
+            // in the order they were handed over, so a timestamp is never later than a clock after it
+            while ((noteIndex < notes.size() && notes[noteIndex] <= event) ||
+                   (clockIndex < clocks.size() && clocks[clockIndex] <= event))
             {
-                words.push_back(MidiBleJr::BuildJrTimestamp(jrTime(notes[noteIndex])));
-                words.push_back(0x20903C7F);
-                members.push_back(notes[noteIndex]);
-                noteIndex++;
-            }
+                bool const noteNext = noteIndex < notes.size() && notes[noteIndex] <= event &&
+                    (clockIndex >= clocks.size() || clocks[clockIndex] > event || notes[noteIndex] <= clocks[clockIndex]);
 
-            while (clockIndex < clocks.size() && clocks[clockIndex] <= event)
-            {
-                words.push_back(MidiBleJr::BuildJrClock(jrTime(clocks[clockIndex])));
-                clockIndex++;
+                if (noteNext)
+                {
+                    words.push_back(MidiBleJr::BuildJrTimestamp(jrTime(notes[noteIndex])));
+                    words.push_back(0x20903C7F);
+                    members.push_back(notes[noteIndex]);
+                    noteIndex++;
+                }
+                else
+                {
+                    words.push_back(MidiBleJr::BuildJrClock(jrTime(clocks[clockIndex])));
+                    clockIndex++;
+                }
             }
 
             if (words.empty())
@@ -965,9 +974,10 @@ void BleIncomingSmoothingTests::TestJrSmoothingStartsFromTheStartupBurst()
         VERIFY_IS_TRUE(result.ActiveFromMilliseconds >= 0.0);
         VERIFY_IS_TRUE(result.ActiveFromMilliseconds <= 200.0);
 
-        // JR time is 32 microseconds, so what is left is the stack and the timer
+        // JR time is 32 microseconds, so what is left is how closely the burst's best clock caught
+        // a connection event, at most half of a twelfth of the interval, plus the stack and timer
         VERIFY_IS_TRUE(arrivalError > interval * 0.5);
-        VERIFY_IS_TRUE(releaseError < 0.5);
+        VERIFY_IS_TRUE(releaseError < interval / 24.0 + 0.2);
 
         VERIFY_IS_TRUE(result.DelayMilliseconds < interval + 2.0);
     }

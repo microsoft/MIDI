@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,4
- PRODUCTVERSION 1,0,0,4
+ FILEVERSION 1,0,0,15
+ PRODUCTVERSION 1,0,0,15
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -75,8 +75,8 @@ BEGIN
             VALUE "InternalName", "Midi2.NetworkMidiTransport.dll"
             VALUE "OriginalFilename", "Midi2.NetworkMidiTransport.dll"
             VALUE "ProductName", "Windows MIDI Services"
-            VALUE "FileVersion", "1.0.0.4"
-            VALUE "ProductVersion", "1.0.0.4"
+            VALUE "FileVersion", "1.0.0.15"
+            VALUE "ProductVersion", "1.0.0.15"
             VALUE "OLESelfRegister", ""
         END
     END
