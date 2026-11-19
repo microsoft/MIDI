@@ -52,6 +52,8 @@ public:
     TEST_METHOD(TestClockPeriodForKnownIntervals);
     TEST_METHOD(TestClockPeriodIsNeverAWholeNumberOfIntervals);
     TEST_METHOD(TestClockScheduleStartsWithABurst);
+    TEST_METHOD(TestClockScheduleBurstCoversTheWholeInterval);
+    TEST_METHOD(TestDecoderDropsTimestampsLaterThanTheFollowingClock);
     TEST_METHOD(TestClockScheduleNeverLeavesMoreThan100Milliseconds);
     TEST_METHOD(TestClockScheduleDoesNotBuildUpRounding);
     TEST_METHOD(TestClockScheduleSkipsClocksItMissed);

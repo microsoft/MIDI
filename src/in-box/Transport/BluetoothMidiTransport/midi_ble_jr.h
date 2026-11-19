@@ -50,10 +50,16 @@ namespace MidiBleJr
     // BLE MIDI 2.0 Working Group discussion: no more than this between JR Clocks.
     inline constexpr uint32_t MaximumClockSpacingMilliseconds = 100;
 
-    // The startup burst. Sixteen clocks this far apart land at well spread points in any
-    // connection interval of 15 ms or less, so the receiver can line up the clocks quickly.
-    inline constexpr uint32_t StartupBurstClockCount = 16;
-    inline constexpr uint32_t StartupBurstSpacingMicroseconds = 8000;
+    // The startup burst. With the connection interval known, each clock goes one interval plus a
+    // twelfth of one after the last, so each lands a twelfth of the interval later in the cycle and
+    // twelve of them cover it evenly at any interval. This follows BLE MIDI 2.0 Working Group
+    // guidance.
+    inline constexpr uint32_t StartupBurstClockCount = 12;
+
+    // With the interval unknown, sixteen clocks this far apart land at well spread points in any
+    // connection interval of 15 ms or less.
+    inline constexpr uint32_t UnknownIntervalBurstClockCount = 16;
+    inline constexpr uint32_t UnknownIntervalBurstSpacingMicroseconds = 8000;
 
     // After the burst, a sender which knows the connection interval but not when its connection
     // events happen (Windows doesn't say) sends a clock every whole number of intervals plus this
@@ -210,6 +216,13 @@ namespace MidiBleJr
     inline constexpr uint32_t ClockStallEvidenceMilliseconds = 50;
     inline constexpr uint32_t ClockStallObservationCount = 3;
 
+    // A JR Timestamp is never later than the sender's JR time when it's handed to the transport,
+    // and so never later than a JR Clock that follows it. One that is shows the sender future-dates
+    // its timestamps, which would make every message look as if it traveled faster than it did,
+    // so its timestamps aren't used again until the link resets. This much is allowed for a sender
+    // which rounds to the nearest tick rather than down: 32 ticks of 32 microseconds, about 1 ms.
+    inline constexpr uint32_t FutureTimestampToleranceJrTicks = 32;
+
     // Removes JR Clock and JR Timestamp messages from an incoming UMP stream and uses them to give
     // the remaining messages local timestamps.
     //
@@ -238,6 +251,9 @@ namespace MidiBleJr
             m_haveSeenClockAdvance = false;
             m_haveCarriedTimestamp = false;
             m_carriedTimestampJrTicks = 0;
+            m_haveTimestampSinceClock = false;
+            m_latestTimestampSinceClock = 0;
+            m_timestampsAreFutureDated = false;
             m_clockGeneration++;
         }
 
@@ -252,10 +268,14 @@ namespace MidiBleJr
         // A clock was heard from, but not recently enough to be used.
         bool ClockIsStale() const noexcept { return m_haveClock && m_clockIsStale; }
 
+        // The sender sent a JR Timestamp later than a JR Clock after it. See
+        // FutureTimestampToleranceJrTicks.
+        bool TimestampsAreFutureDated() const noexcept { return m_timestampsAreFutureDated; }
+
         // JR Timestamps are being used to place messages.
         bool ClockIsUsable() const noexcept
         {
-            return m_haveClock && !m_clockIsStale && !ClockIsStalled() && !m_offsetSamples.empty();
+            return m_haveClock && !m_clockIsStale && !ClockIsStalled() && !m_timestampsAreFutureDated && !m_offsetSamples.empty();
         }
 
         // Takes the complete UMPs of one BLE payload. Every UMP except JR Clock and JR Timestamp
@@ -282,6 +302,8 @@ namespace MidiBleJr
             }
 
             uint64_t const ticksPerMillisecond = (std::max<uint64_t>)(localTicksPerSecond / 1000, 1);
+
+            CheckForFutureDatedTimestamps(words, wordCount);
 
             // Clocks first. A clock is the newest reference for the timestamps before it in the
             // same payload too.
@@ -406,6 +428,55 @@ namespace MidiBleJr
             uint64_t ArrivalTicks{ 0 };
             int64_t Offset{ 0 };
         };
+
+        // Walks the JR messages in the order they were sent, across payloads, and compares each
+        // JR Clock with the latest JR Timestamp since the clock before it.
+        void CheckForFutureDatedTimestamps(
+            _In_reads_(wordCount) uint32_t const* const words,
+            _In_ size_t const wordCount) noexcept
+        {
+            for (size_t i = 0; i < wordCount; )
+            {
+                auto const messageWordCount = GetUmpWordCount(words[i]);
+
+                if (i + messageWordCount > wordCount)
+                {
+                    break;
+                }
+
+                if (IsJrTimestamp(words[i]))
+                {
+                    auto const jrTime = GetJrTime(words[i]);
+
+                    if (!m_haveTimestampSinceClock ||
+                        static_cast<int16_t>(static_cast<uint16_t>(jrTime - m_latestTimestampSinceClock)) > 0)
+                    {
+                        m_latestTimestampSinceClock = jrTime;
+                    }
+
+                    m_haveTimestampSinceClock = true;
+                }
+                else if (IsJrClock(words[i]))
+                {
+                    if (m_haveTimestampSinceClock)
+                    {
+                        // Signed, so a timestamp ahead of the clock comes out negative. Clocks are at
+                        // most a few hundred milliseconds apart, far inside half the 2 s wrap.
+                        auto const clockAhead =
+                            static_cast<int16_t>(static_cast<uint16_t>(GetJrTime(words[i]) - m_latestTimestampSinceClock));
+
+                        if (clockAhead < -static_cast<int32_t>(FutureTimestampToleranceJrTicks))
+                        {
+                            m_timestampsAreFutureDated = true;
+                        }
+                    }
+
+                    m_haveTimestampSinceClock = false;
+                }
+
+                i += messageWordCount;
+            }
+        }
 
         void ProcessClock(
             _In_ uint16_t const jrTime,
@@ -552,6 +623,11 @@ namespace MidiBleJr
 
         bool m_haveCarriedTimestamp{ false };
         int64_t m_carriedTimestampJrTicks{ 0 };
+
+        // the latest JR Timestamp since the last JR Clock, in the order sent
+        bool m_haveTimestampSinceClock{ false };
+        uint16_t m_latestTimestampSinceClock{ 0 };
+        bool m_timestampsAreFutureDated{ false };
 
         uint32_t m_clockGeneration{ 0 };
     };
@@ -754,7 +830,23 @@ namespace MidiBleJr
             m_burstStartTicks = nowTicks;
             m_index = 0;
             m_periodMicroseconds = ClockPeriodMicroseconds(connectionIntervalMicroseconds);
-            m_periodStartTicks = BurstTime(StartupBurstClockCount - 1) +
+
+            double const knownSpacing =
+                static_cast<double>(connectionIntervalMicroseconds) * (StartupBurstClockCount + 1) / StartupBurstClockCount;
+
+            if (connectionIntervalMicroseconds != 0 &&
+                knownSpacing <= static_cast<double>(MaximumClockSpacingMilliseconds) * 1000.0)
+            {
+                m_burstClockCount = StartupBurstClockCount;
+                m_burstSpacingMicroseconds = knownSpacing;
+            }
+            else
+            {
+                m_burstClockCount = UnknownIntervalBurstClockCount;
+                m_burstSpacingMicroseconds = UnknownIntervalBurstSpacingMicroseconds;
+            }
+
+            m_periodStartTicks = BurstTime(m_burstClockCount - 1) +
                 static_cast<uint64_t>(std::llround(m_periodMicroseconds * m_ticksPerMicrosecond));
         }
 
@@ -764,14 +856,16 @@ namespace MidiBleJr
         }
 
         bool IsRunning() const noexcept { return m_running; }
-        bool InBurst() const noexcept { return m_running && m_index < StartupBurstClockCount; }
+        bool InBurst() const noexcept { return m_running && m_index < m_burstClockCount; }
         uint32_t PeriodMicroseconds() const noexcept { return m_periodMicroseconds; }
+        uint32_t BurstClockCount() const noexcept { return m_burstClockCount; }
+        double BurstSpacingMicroseconds() const noexcept { return m_burstSpacingMicroseconds; }
 
         uint64_t NextDueTicks() const noexcept
         {
-            return m_index < StartupBurstClockCount ?
+            return m_index < m_burstClockCount ?
                 BurstTime(m_index) :
-                PeriodTime(m_index - StartupBurstClockCount);
+                PeriodTime(m_index - m_burstClockCount);
         }
 
         // After the clock that was due has been sent.
@@ -779,7 +873,7 @@ namespace MidiBleJr
         {
             m_index++;
 
-            if (m_index < StartupBurstClockCount)
+            if (m_index < m_burstClockCount)
             {
                 return;
             }
@@ -792,7 +886,7 @@ namespace MidiBleJr
             {
                 uint64_t const behind = (nowTicks - m_periodStartTicks) / periodTicks;
 
-                m_index = StartupBurstClockCount + static_cast<uint32_t>((std::min<uint64_t>)(behind, UINT32_MAX - StartupBurstClockCount));
+                m_index = m_burstClockCount + static_cast<uint32_t>((std::min<uint64_t>)(behind, UINT32_MAX - m_burstClockCount));
             }
         }
 
@@ -800,7 +894,7 @@ namespace MidiBleJr
         uint64_t BurstTime(_In_ uint32_t const index) const noexcept
         {
             return m_burstStartTicks + static_cast<uint64_t>(std::llround(
-                static_cast<double>(index) * StartupBurstSpacingMicroseconds * m_ticksPerMicrosecond));
+                static_cast<double>(index) * m_burstSpacingMicroseconds * m_ticksPerMicrosecond));
         }
 
         uint64_t PeriodTime(_In_ uint32_t const index) const noexcept
@@ -815,6 +909,8 @@ namespace MidiBleJr
         uint64_t m_periodStartTicks{ 0 };
         uint32_t m_index{ 0 };
         uint32_t m_periodMicroseconds{ UnknownIntervalClockPeriodMicroseconds };
+        uint32_t m_burstClockCount{ UnknownIntervalBurstClockCount };
+        double m_burstSpacingMicroseconds{ UnknownIntervalBurstSpacingMicroseconds };
     };
 }
 

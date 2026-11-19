@@ -201,6 +201,37 @@ void BleMidi2JrTests::TestDecoderPlacesMessagesByJrTimestamp()
     VERIFY_ARE_EQUAL(500 * LocalTicksPerJrTick, runs[1].Timestamp - runs[0].Timestamp);
 }
 
+void BleMidi2JrTests::TestDecoderDropsTimestampsLaterThanTheFollowingClock()
+{
+    MidiBleJr::IncomingDecoder decoder;
+
+    Decode(decoder, { Clock(1000) }, BaseArrival);
+
+    // within the rounding allowance: still trusted
+    Decode(decoder, { Stamp(1220), NoteOn, Clock(1200) }, BaseArrival + 200 * LocalTicksPerJrTick);
+    VERIFY_IS_FALSE(decoder.TimestampsAreFutureDated());
+    VERIFY_IS_TRUE(decoder.ClockIsUsable());
+
+    // A timestamp 300 ticks (about 10 ms) past the clock sent after it, split across payloads.
+    // The sender is future-dating, so its timestamps aren't used for the rest of the link.
+    Decode(decoder, { Stamp(1700), NoteOn }, BaseArrival + 400 * LocalTicksPerJrTick);
+    Decode(decoder, { Clock(1400) }, BaseArrival + 400 * LocalTicksPerJrTick);
+
+    VERIFY_IS_TRUE(decoder.TimestampsAreFutureDated());
+    VERIFY_IS_FALSE(decoder.ClockIsUsable());
+
+    auto const arrival = BaseArrival + 600 * LocalTicksPerJrTick;
+    auto runs = Decode(decoder, { Stamp(1590), NoteOff, Clock(1600) }, arrival);
+
+    VERIFY_ARE_EQUAL(static_cast<size_t>(1), runs.size());
+    VERIFY_ARE_EQUAL(arrival, runs[0].Timestamp);
+    VERIFY_IS_FALSE(runs[0].HasSenderTime);
+
+    // a new link is judged again
+    decoder.Reset();
+    VERIFY_IS_FALSE(decoder.TimestampsAreFutureDated());
+}
+
 void BleMidi2JrTests::TestDecoderSharesATimestampAcrossSimultaneousMessages()
 {
     MidiBleJr::IncomingDecoder decoder;
@@ -460,20 +491,59 @@ void BleMidi2JrTests::TestClockScheduleStartsWithABurst()
     schedule.Start(BaseArrival, 15000, LocalTicksPerSecond);
 
     VERIFY_IS_TRUE(schedule.IsRunning());
+    VERIFY_ARE_EQUAL(MidiBleJr::StartupBurstClockCount, schedule.BurstClockCount());
 
-    for (uint32_t i = 0; i < MidiBleJr::StartupBurstClockCount; i++)
+    // one interval plus a twelfth apart: 16.25 ms at 15 ms
+    for (uint32_t i = 0; i < schedule.BurstClockCount(); i++)
     {
         VERIFY_IS_TRUE(schedule.InBurst());
-        VERIFY_ARE_EQUAL(BaseArrival + i * 8 * LocalTicksPerMillisecond, schedule.NextDueTicks());
+        VERIFY_ARE_EQUAL(BaseArrival + i * 162'500ULL, schedule.NextDueTicks());
 
         schedule.Advance(schedule.NextDueTicks());
     }
 
     VERIFY_IS_FALSE(schedule.InBurst());
 
-    uint64_t const lastBurst = BaseArrival + 15 * 8 * LocalTicksPerMillisecond;
+    uint64_t const lastBurst = BaseArrival + 11 * 162'500ULL;
 
     VERIFY_ARE_EQUAL(lastBurst + 842'700, schedule.NextDueTicks());
+
+    // without an interval, sixteen clocks 8 ms apart
+    MidiBleJr::ClockSchedule unknown;
+    unknown.Start(BaseArrival, 0, LocalTicksPerSecond);
+
+    VERIFY_ARE_EQUAL(MidiBleJr::UnknownIntervalBurstClockCount, unknown.BurstClockCount());
+    unknown.Advance(unknown.NextDueTicks());
+    VERIFY_ARE_EQUAL(BaseArrival + 8 * LocalTicksPerMillisecond, unknown.NextDueTicks());
+}
+
+void BleMidi2JrTests::TestClockScheduleBurstCoversTheWholeInterval()
+{
+    // 8 ms steps hit only five points in a 10 ms interval. Stepping a twelfth of the interval
+    // each time hits twelve, evenly spread, at any interval.
+    for (auto const interval : { 7500u, 10000u, 11250u, 15000u, 30000u })
+    {
+        MidiBleJr::ClockSchedule schedule;
+        schedule.Start(BaseArrival, interval, LocalTicksPerSecond);
+
+        uint64_t const intervalTicks = static_cast<uint64_t>(interval) * LocalTicksPerSecond / 1'000'000;
+        std::vector<uint64_t> phases;
+
+        for (uint32_t i = 0; i < schedule.BurstClockCount(); i++)
+        {
+            phases.push_back((schedule.NextDueTicks() - BaseArrival) % intervalTicks);
+            schedule.Advance(schedule.NextDueTicks());
+        }
+
+        std::sort(phases.begin(), phases.end());
+
+        for (size_t i = 1; i < phases.size(); i++)
+        {
+            auto const gap = phases[i] - phases[i - 1];
+
+            VERIFY_IS_TRUE(gap + 1 >= intervalTicks / 12 && gap <= intervalTicks / 12 + 1);
+        }
+    }
 }
 
 void BleMidi2JrTests::TestClockScheduleNeverLeavesMoreThan100Milliseconds()

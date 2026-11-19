@@ -1781,9 +1781,10 @@ MidiBleConnection::UpdateUmpIncomingTimestampSource(uint64_t const localArrivalT
 {
     auto source = MidiBleProtocol::TimestampSource::Unknown;
 
-    if (m_incomingSmoother.GaveUp())
+    if (m_incomingSmoother.GaveUp() || m_incomingJrDecoder.TimestampsAreFutureDated())
     {
-        // the JR Clock is running, but too unevenly to place messages in time with
+        // the JR Clock is running, but too unevenly to place messages in time with, or the
+        // device's timestamps were later than its own clock
         source = MidiBleProtocol::TimestampSource::ArrivalTime;
     }
     else if (m_incomingJrDecoder.ClockIsUsable())
