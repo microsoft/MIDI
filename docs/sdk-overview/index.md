@@ -15,13 +15,15 @@ Once set up, I recommend going to the samples area of the repo and learning how 
 
 Before you get far into your own implementation, read [Best practices and performance optimizations]({{"/kb/best-practices/" | relative_url}}). It covers the things which are easy to get wrong early and expensive to change later, including how to send and receive messages efficiently, how many connections and sessions to open, and how to present endpoints, groups and function blocks to your users.
 
-## Porting from WinMM or WinRT MIDI 1.0
+## Porting from WinMM, DirectMusic or WinRT MIDI 1.0
 
 If you have an existing MIDI 1.0 codebase, start with the article which matches what you are building.
 
 | You are building | Start here |
 | ---------------- | ---------- |
-| An application | [Moving from WinMM to Windows MIDI Services]({{"/kb/moving-from-winmm-to-wms/" | relative_url}}) |
+| An application that uses WinMM | [Moving from WinMM to Windows MIDI Services]({{"/kb/moving-from-winmm-to-wms/" | relative_url}}) |
+| An application that uses DirectMusic | [Moving from DirectMusic to Windows MIDI Services]({{"/kb/moving-from-directmusic-to-wms/" | relative_url}}), after the WinMM article |
+| An application that uses WinRT MIDI 1.0 (`Windows.Devices.Midi`) | [Moving from WinRT MIDI 1.0 to Windows MIDI Services]({{"/kb/moving-from-winrt-midi1-to-wms/" | relative_url}}), after the WinMM article |
 | A library, language binding or app framework that other people build on | [Porting a MIDI Library or Framework to Windows MIDI Services]({{"/kb/porting-midi-libraries/" | relative_url}}) ([aka.ms/MidiLibraryPorting](https://aka.ms/MidiLibraryPorting)) |
 
 The application article explains how WinMM and WinRT MIDI 1.0 concepts map onto UMP endpoints, groups and channels. The library article assumes you have read it, and then covers what is different when you have a port-based public API you cannot break, including the WinMM habits which are now defects.

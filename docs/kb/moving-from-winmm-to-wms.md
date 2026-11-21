@@ -9,6 +9,8 @@ categories:
 
 This article is targeted to developers looking to move from WinMM to Windows MIDI Services APIs.
 
+> Coming from DirectMusic or from WinRT MIDI 1.0 (`Windows.Devices.Midi`)? Read this article for the concepts, then [Moving from DirectMusic to Windows MIDI Services]({{ site.baseurl }}/kb/moving-from-directmusic-to-wms/) or [Moving from WinRT MIDI 1.0 to Windows MIDI Services]({{ site.baseurl }}/kb/moving-from-winrt-midi1-to-wms/) for what's different.
+
 > If you maintain a cross-platform MIDI library, a language binding, or an application framework rather than an application, read this article first and then see [Porting a MIDI Library or Framework to Windows MIDI Services]({{ site.baseurl }}/kb/porting-midi-libraries/). That article covers what is different when you have a port-based public API you cannot change, and the WinMM habits which are now defects.
 
 ## Quick reference: what you used to call, and what to call now
