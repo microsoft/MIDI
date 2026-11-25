@@ -70,6 +70,10 @@
                   Name="MIDI Calculator"
                   Target="[#midicalculatorExe]"
                   WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
+        <Shortcut Id="Shortcut_midisoundmodule"
+                  Name="MIDI Sound Module"
+                  Target="[#midisoundmoduleExe]"
+                  WorkingDirectory="TOOLSROOT_INSTALLFOLDER" />
         <Shortcut Id="Shortcut_miditroubleshooter"
                   Name="MIDI Troubleshooting and Repair"
                   Target="[#miditroubleshooterExe]"

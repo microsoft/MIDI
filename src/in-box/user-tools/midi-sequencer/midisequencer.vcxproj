@@ -555,7 +555,11 @@
     <None Include="Themes\vellum.json" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Assets\AppIcon.ico" />
+    <!-- Embedded in the exe by Resources.rc. Not deployed: every tool installs into one shared
+         folder, and a loose Assets\AppIcon.ico would collide with another tool's icon. -->
+    <Image Include="Assets\AppIcon.ico">
+      <DeploymentContent>false</DeploymentContent>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="midisequencer.exe.manifest" />

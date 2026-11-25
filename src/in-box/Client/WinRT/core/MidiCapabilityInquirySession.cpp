@@ -25,6 +25,9 @@
 
 #include "MidiCiMessage.h"
 
+#include "WindowsMidiServicesAppSdkComExtensions.h"
+#include "Feature_Servicing_MIDI2CapabilityInquiryWholeMessageSend.h"
+
 #include "CapabilityInquiry.MidiCapabilityInquirySession.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
@@ -169,6 +172,105 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 LOG_CAUGHT_EXCEPTION();
                 return L"";
             }
+        }
+
+        // True when this packet is the last one of a message: anything that is not System
+        // Exclusive 7, or a System Exclusive 7 packet that is complete in itself or an end.
+        bool PacketEndsMessage(_In_ uint32_t const word0) noexcept
+        {
+            constexpr uint8_t SystemExclusive7MessageType{ 0x3 };
+            constexpr uint8_t SystemExclusive7Complete{ 0x0 };
+            constexpr uint8_t SystemExclusive7End{ 0x3 };
+
+            if (internal::GetUmpMessageTypeFromFirstWord(word0) != SystemExclusive7MessageType)
+            {
+                return true;
+            }
+
+            auto const status = internal::GetStatusFromDataMessage64FirstWord(word0);
+
+            return status == SystemExclusive7Complete || status == SystemExclusive7End;
+        }
+
+        // Sends whole messages in single calls. The service delivers each call without splitting
+        // it, so another app sending to the same endpoint and group can't land in the middle of
+        // a System Exclusive message. Calls break only between messages, unless one message is
+        // too long for a single call, or the timestamp changes.
+        bool SendWholeMessages(
+            _In_ IMidiEndpointConnectionRaw* const raw,
+            _In_ foundation::Collections::IVector<midi2::MidiMessage64> const& messages)
+        {
+            constexpr size_t WordsPerPacket{ 2 };
+
+            auto const maxWords = static_cast<size_t>(raw->GetSupportedMaxMidiWordsPerTransmission());
+
+            if (maxWords < WordsPerPacket)
+            {
+                return false;
+            }
+
+            std::vector<uint32_t> words{};
+            words.reserve((std::min)(static_cast<size_t>(messages.Size()) * WordsPerPacket, maxWords));
+
+            // Where the message still being added began. Everything before it is whole messages.
+            size_t unfinishedMessageStart{ 0 };
+            uint64_t batchTimestamp{ 0 };
+
+            auto sendFront = [&](size_t const wordCount) -> bool
+            {
+                if (FAILED(raw->SendMidiMessagesRaw(batchTimestamp, static_cast<UINT32>(wordCount), words.data())))
+                {
+                    return false;
+                }
+
+                words.erase(words.begin(), words.begin() + wordCount);
+                unfinishedMessageStart = unfinishedMessageStart > wordCount ? unfinishedMessageStart - wordCount : 0;
+
+                return true;
+            };
+
+            for (auto const& message : messages)
+            {
+                if (!words.empty() && message.Timestamp() != batchTimestamp)
+                {
+                    if (!sendFront(words.size()))
+                    {
+                        return false;
+                    }
+                }
+
+                if (words.size() + WordsPerPacket > maxWords)
+                {
+                    // Send the whole messages and keep the unfinished one. When there are none,
+                    // the one message is too long for a single call and goes in pieces.
+                    if (!sendFront(unfinishedMessageStart > 0 ? unfinishedMessageStart : words.size()))
+                    {
+                        return false;
+                    }
+                }
+
+                if (words.empty())
+                {
+                    batchTimestamp = message.Timestamp();
+                }
+
+                auto const word0 = message.Word0();
+
+                words.push_back(word0);
+                words.push_back(message.Word1());
+
+                if (PacketEndsMessage(word0))
+                {
+                    unfinishedMessageStart = words.size();
+                }
+            }
+
+            if (!words.empty())
+            {
+                return sendFront(words.size());
+            }
+
+            return true;
         }
     }
 
@@ -421,16 +523,30 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 return false;
             }
 
-            auto packets = winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
-
-            for (auto const& message : messages)
+            if (Feature_Servicing_MIDI2CapabilityInquiryWholeMessageSend::IsEnabled())
             {
-                packets.Append(message);
+                auto const raw = connection.try_as<IMidiEndpointConnectionRaw>();
+
+                if (raw == nullptr)
+                {
+                    return false;
+                }
+
+                return SendWholeMessages(raw.get(), messages);
             }
+            else
+            {
+                auto packets = winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
 
-            auto const result = connection.SendMultipleMessagesPacketList(packets);
+                for (auto const& message : messages)
+                {
+                    packets.Append(message);
+                }
 
-            return midi2::MidiEndpointConnection::SendMessageSucceeded(result);
+                auto const result = connection.SendMultipleMessagesPacketList(packets);
+
+                return midi2::MidiEndpointConnection::SendMessageSucceeded(result);
+            }
         }
         catch (...)
         {

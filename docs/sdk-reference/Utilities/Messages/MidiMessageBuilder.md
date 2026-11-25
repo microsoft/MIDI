@@ -8,7 +8,7 @@ description: Helper class to construct common message types
 
 This class builds Universal MIDI Packets (UMPs) from their parts, so you don't have to shift and mask the bits yourself. Each function returns a message object you can send with `MidiEndpointConnection.SendSingleMessagePacket`. If something goes wrong while building, the function returns null.
 
-Every function takes a `timestamp` first. Pass `0` or `MidiClock.TimestampConstantSendImmediately` to send the message right away.
+Every function takes a `timestamp` first. Pass `MidiClock.TimestampConstantSendImmediately` to send the message right away.
 
 A value that is too big for its field is trimmed to fit instead of being rejected. For example, a 7-bit data byte keeps only its lower 7 bits. Check your values before building, because a trimmed value is sent without any warning.
 
