@@ -704,6 +704,64 @@ namespace
         return std::format(L"TimeCreated[timediff(@SystemTime) <= {}]", static_cast<uint64_t>(HistoryDays) * 86'400'000);
     }
 
+    // The service control manager logs an error code as text. A Win32 error or HRESULT is
+    // written "%%2147550924" (a message insert), a service-specific code as plain digits.
+    std::optional<uint32_t> ParseServiceErrorCode(_In_ std::wstring const& text)
+    {
+        std::wstring_view digits{ text };
+
+        while (!digits.empty() && (digits.front() == L'%' || digits.front() == L' '))
+        {
+            digits.remove_prefix(1);
+        }
+
+        uint32_t base{ 10 };
+
+        if (StartsWithNoCase(digits, L"0x"))
+        {
+            digits.remove_prefix(2);
+            base = 16;
+        }
+
+        if (digits.empty())
+        {
+            return std::nullopt;
+        }
+
+        uint64_t value{ 0 };
+
+        for (auto const c : digits)
+        {
+            uint32_t digit{};
+
+            if (c >= L'0' && c <= L'9')
+            {
+                digit = static_cast<uint32_t>(c - L'0');
+            }
+            else if (base == 16 && c >= L'a' && c <= L'f')
+            {
+                digit = static_cast<uint32_t>(c - L'a' + 10);
+            }
+            else if (base == 16 && c >= L'A' && c <= L'F')
+            {
+                digit = static_cast<uint32_t>(c - L'A' + 10);
+            }
+            else
+            {
+                return std::nullopt;
+            }
+
+            value = value * base + digit;
+
+            if (value > 0xFFFFFFFFull)
+            {
+                return std::nullopt;
+            }
+        }
+
+        return static_cast<uint32_t>(value);
+    }
+
     // Like ForEachEvent, for providers such as Windows Installer whose event data has no names.
     // The second event passed back holds the event data values, in order.
     bool ForEachEventWithUnnamedData(
@@ -1738,6 +1796,8 @@ bool DoSectionServiceHistory()
         // services stopping on their own, or failing to start
         uint32_t serviceEventCount{ 0 };
         uint32_t midiServiceExitCount{ 0 };
+        uint32_t midiServiceErrorCount{ 0 };
+        std::optional<uint32_t> latestMidiServiceError{};
         std::vector<KeyValueText> serviceEvents{};
 
         auto const serviceQuery = std::format(
@@ -1746,7 +1806,13 @@ bool DoSectionServiceHistory()
             HistoryTimeFilter());
 
         bool const serviceLogRead = ForEachEvent(L"System", serviceQuery,
-            { L"Event/System/TimeCreated/@SystemTime", L"Event/System/EventID", L"Event/EventData/Data[@Name='param1']", L"Event/EventData/Binary" },
+            {
+                L"Event/System/TimeCreated/@SystemTime",
+                L"Event/System/EventID",
+                L"Event/EventData/Data[@Name='param1']",
+                L"Event/EventData/Binary",
+                L"Event/EventData/Data[@Name='param2']"
+            },
             [&](RenderedEvent const& event)
             {
                 // the key name is the same in every language, the display name in param1 is not
@@ -1766,20 +1832,48 @@ bool DoSectionServiceHistory()
                 }
 
                 auto const eventId = event.Number(1);
+                bool const isMidiServiceEvent = LowerCopy(serviceName) == MidiServiceName;
 
-                if ((eventId == 7031 || eventId == 7034) && LowerCopy(serviceName) == MidiServiceName)
+                if ((eventId == 7031 || eventId == 7034) && isMidiServiceEvent)
                 {
                     midiServiceExitCount++;
+                }
+
+                // 7000 failed to start, 7023 stopped with an error, 7024 stopped with a
+                // service-specific error. The code is what says why.
+                std::optional<uint32_t> errorCode{};
+
+                if (eventId == 7000 || eventId == 7023 || eventId == 7024)
+                {
+                    errorCode = ParseServiceErrorCode(event.String(4));
+
+                    if (isMidiServiceEvent)
+                    {
+                        midiServiceErrorCount++;
+
+                        // newest first, so the first one seen is the latest
+                        if (!latestMidiServiceError.has_value())
+                        {
+                            latestMidiServiceError = errorCode;
+                        }
+                    }
                 }
 
                 serviceEventCount++;
 
                 if (serviceEvents.size() < MaxHistoryEntries)
                 {
-                    serviceEvents.push_back(KeyValueText{}
+                    auto values = KeyValueText{}
                         .Add(L"time", FormatLocalTime(event.Time(0)))
                         .AddNumber(L"id", eventId)
-                        .Add(L"service", serviceName));
+                        .Add(L"service", serviceName);
+
+                    if (errorCode.has_value())
+                    {
+                        values.AddHex(L"error", errorCode.value(), 8);
+                    }
+
+                    serviceEvents.push_back(values);
                 }
             });
 
@@ -1798,6 +1892,14 @@ bool DoSectionServiceHistory()
         if (midiServiceExitCount > 0)
         {
             AddFinding(L"service_crashes", FormatResourceString(IDS_FINDING_SERVICE_CRASHES, midiServiceExitCount, HistoryDays));
+        }
+
+        if (midiServiceErrorCount > 0)
+        {
+            AddFinding(L"service_stopped_with_error", latestMidiServiceError.has_value() ?
+                FormatResourceString(IDS_FINDING_SERVICE_STOPPED_WITH_ERROR, midiServiceErrorCount, HistoryDays,
+                    std::format(L"0x{:08X}", latestMidiServiceError.value())) :
+                FormatResourceString(IDS_FINDING_SERVICE_STOPPED_WITH_UNKNOWN_ERROR, midiServiceErrorCount, HistoryDays));
         }
 
         // programs that crashed in the service or in a MIDI component
