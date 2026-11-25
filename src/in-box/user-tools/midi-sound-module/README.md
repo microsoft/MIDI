@@ -31,7 +31,7 @@ It's one of the in-box MIDI tools, and it builds with the rest of them. It isn't
 | --- | --- |
 | `src/in-box/user-tools/midi-sound-module` | The WinUI 3 app. It uses the shared files in `src/in-box/user-tools/midi-app-shared`. |
 | `src/in-box/user-tools/midi-sound-module/engine` | The synth engine as a static library: the SoundFont parser, the voice engine, MIDI-CI and Property Exchange, and the WASAPI output. It has no UI code, so the tests can use it directly. It reuses the in-box synth's reverb and chorus from `src/in-box/Libs/MidiSynthLib`. |
-| `src/in-box/Test/Tools/Midi2.MidiSoundModule.unittests` | TAEF tests for the parser (including a test that damages thousands of banks at random), the voice engine and MIDI-CI. They build their own small banks in memory, so no `.sf2` file is needed. |
+| `src/in-box/Test/Apps/Midi2.MidiSoundModule.unittests` | TAEF tests for the parser (including a test that damages thousands of banks at random), the voice engine and MIDI-CI. They build their own small banks in memory, so no `.sf2` file is needed. |
 
 Synths are saved to `%LOCALAPPDATA%\Microsoft\MIDI Sound Module\synths.json`. The app reads that file as untrusted input too. If the file is there but can't be read, or holds something the app can't use as it is, the app says why and doesn't start. That way it never saves an empty list over your synths. Fix the file, or move it somewhere else to start with no synths. App settings are under `HKEY_CURRENT_USER\Software\Microsoft\Windows MIDI Services\Tools\midisoundmodule`.
 

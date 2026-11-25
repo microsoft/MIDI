@@ -20,7 +20,7 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 | 7 Full screen, windows, displays | **The corner button, its flyout and display-required are done. The designer now remembers its window placement, pane widths and zoom, and several layouts can be open at once.** Per-layout display memory and the virtual device are not. | `RuntimeWindowFullScreen.cpp`, `EditorPanes.cpp`, `App.xaml.cpp` |
 | 8–9 | Not started | — |
 
-**Tests: 317, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
+**Tests: 317, all passing, none needing a window or a device.** `src/in-box/Test/Apps/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
 
 ```
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false

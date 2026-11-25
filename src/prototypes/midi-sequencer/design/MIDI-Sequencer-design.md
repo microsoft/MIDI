@@ -512,7 +512,7 @@ Each phase ends with something you can use.
 
 ### Phase 0 results
 
-Measured October 9 on a development PC, mostly idle, Release x64. The tests are in `src/in-box/Test/Tools/Midi2.MidiSequencer.unittests` (`MeasurementTests`, and `ServiceTimingTests`, which needs the service and runs only when asked).
+Measured October 9 on a development PC, mostly idle, Release x64. The tests are in `src/in-box/Test/Apps/Midi2.MidiSequencer.unittests` (`MeasurementTests`, and `ServiceTimingTests`, which needs the service and runs only when asked).
 
 | What | Result |
 | --- | --- |
