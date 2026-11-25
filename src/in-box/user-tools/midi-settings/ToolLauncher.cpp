@@ -292,9 +292,48 @@ namespace midisettings
     _Use_decl_annotations_
     bool LaunchTool(MidiTool tool) noexcept
     {
-        auto const& location = GetToolLocation(tool);
+        // People double-click the toolbar buttons. The second click would start a second copy
+        // of any tool that doesn't hand off to a running one, and a second Keyboard sends its
+        // MIDI-CI SysEx at the same moment as the first. Long enough to cover a double-click
+        // on a slow start, short enough that a deliberate second window still opens.
+        constexpr ULONGLONG RepeatLaunchIgnoreMilliseconds{ 2000 };
 
-        return StartProcess(location.FullPath, {}, false);
+        static std::mutex lock{};
+        static std::array<ULONGLONG, ToolCount> lastLaunchTicks{};
+
+        auto const index = static_cast<size_t>(tool);
+
+        if (index >= ToolCount)
+        {
+            return false;
+        }
+
+        try
+        {
+            std::lock_guard<std::mutex> guard(lock);
+
+            auto const now = ::GetTickCount64();
+            auto const last = lastLaunchTicks[index];
+
+            if (last != 0 && now - last < RepeatLaunchIgnoreMilliseconds)
+            {
+                return true;
+            }
+
+            auto const& location = GetToolLocation(tool);
+
+            if (!StartProcess(location.FullPath, {}, false))
+            {
+                return false;
+            }
+
+            lastLaunchTicks[index] = now;
+
+            return true;
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to start a MIDI tool.")
+
+        return false;
     }
 
     std::wstring GetMidiConsolePath() noexcept

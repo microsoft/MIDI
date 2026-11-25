@@ -168,7 +168,28 @@
     <value>Keep looking for the device's programs</value>
   </data>
   <data name="RetryProgramListHint.Text" xml:space="preserve">
-    <value>Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination.</value>
+    <value>Asks again until something answers, waiting longer each time, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination.</value>
+  </data>
+  <data name="SingleWindowCheckBox.Content" xml:space="preserve">
+    <value>Open only one window</value>
+  </data>
+  <data name="SingleWindowCheckBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open only one window</value>
+  </data>
+  <data name="SingleWindowHint.Text" xml:space="preserve">
+    <value>Starting the keyboard again brings this window forward instead of opening another one. MIDI Sequencer and MIDI Patchbay can still open a keyboard for each track.</value>
+  </data>
+  <data name="UseMidiCiCheckBox.Content" xml:space="preserve">
+    <value>Ask the device for its programs with MIDI-CI</value>
+  </data>
+  <data name="UseMidiCiCheckBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Ask the device for its programs with MIDI-CI</value>
+  </data>
+  <data name="UseMidiCiHint.Text" xml:space="preserve">
+    <value>MIDI-CI lets this app show a device's program names. It sends a few short SysEx messages when you connect. Turn it off if another app on the same loopback is also sending SysEx and the messages get mixed up.</value>
+  </data>
+  <data name="ProgramListMidiCiOff" xml:space="preserve">
+    <value>MIDI-CI is turned off in settings, so enter the bank and program by number.</value>
   </data>
   <data name="ProgramViewRadioButtons.Header" xml:space="preserve">
     <value>Show programs</value>

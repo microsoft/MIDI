@@ -784,13 +784,39 @@
                         </StackPanel>
 
                         <StackPanel Spacing="4">
+                            <CheckBox x:Name="SingleWindowCheckBox"
+                                      x:Uid="SingleWindowCheckBox"
+                                      AutomationProperties.AutomationId="SingleWindowCheckBox"
+                                      Content="Open only one window"
+                                      Click="OnSingleWindowChanged" />
+                            <TextBlock x:Uid="SingleWindowHint"
+                                       Text="Starting the keyboard again brings this window forward instead of opening another one. MIDI Sequencer and MIDI Patchbay can still open a keyboard for each track."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <CheckBox x:Name="UseMidiCiCheckBox"
+                                      x:Uid="UseMidiCiCheckBox"
+                                      AutomationProperties.AutomationId="UseMidiCiCheckBox"
+                                      Content="Ask the device for its programs with MIDI-CI"
+                                      Click="OnUseMidiCiChanged" />
+                            <TextBlock x:Uid="UseMidiCiHint"
+                                       Text="MIDI-CI lets this app show a device's program names. It sends a few short SysEx messages when you connect. Turn it off if another app on the same loopback is also sending SysEx and the messages get mixed up."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
                             <CheckBox x:Name="RetryProgramListCheckBox"
                                       x:Uid="RetryProgramListCheckBox"
                                       AutomationProperties.AutomationId="RetryProgramListCheckBox"
                                       Content="Keep looking for the device's programs"
                                       Click="OnRetryProgramListChanged" />
                             <TextBlock x:Uid="RetryProgramListHint"
-                                       Text="Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination."
+                                       Text="Asks again until something answers, waiting longer each time, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination."
                                        TextWrapping="Wrap"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

@@ -7,7 +7,10 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "AppSettings.h"
+#include "CommandLineOptions.h"
 #include "CrashHandlerRegistration.h"
+#include "KeyboardInstance.h"
 
 // The XAML compiler emits its own wWinMain; we supply this one so startup stays under our
 // control. The apartment must stay STA: an MTA UI thread makes UI Automation fail with
@@ -21,10 +24,21 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
+    // Read here because whether to open a window at all depends on it.
+    ::midikeyboard::AppSettings::Current().Load();
+
+    if (!::midikeyboard::KeyboardInstance::AcquireOrActivateExisting(
+            ::midikeyboard::CommandLineOptions::ParseProcessCommandLine()))
+    {
+        return 0;
+    }
+
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)
         {
             ::winrt::make<::winrt::midikeyboard::implementation::App>();
         });
+
+    ::midikeyboard::KeyboardInstance::Release();
 
     return 0;
 }

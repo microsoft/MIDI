@@ -93,6 +93,8 @@ namespace winrt::midikeyboard::implementation
         void OnTransposeChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnShowNoteNamesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRetryProgramListChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnUseMidiCiChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnSingleWindowChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
         void OnShowComputerKeysChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnComputerKeyboardLayoutChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
@@ -159,6 +161,10 @@ namespace winrt::midikeyboard::implementation
         // Asks the connected device for its programs over MIDI-CI. Quietly does nothing when
         // there is no connection; the numeric controls stay usable either way.
         void StartProgramListQuery() noexcept;
+
+        // Starts answering and asking over MIDI-CI on the connection program names come from.
+        // Only called while the MIDI-CI setting is on.
+        void OpenMidiCi() noexcept;
         void ApplyProgramList(
             _In_ ::midikeyboard::ProgramListResult result,
             _In_ std::vector<::midikeyboard::ProgramListEntry> entries) noexcept;
@@ -381,7 +387,12 @@ namespace winrt::midikeyboard::implementation
         // Runs only while nothing has answered a capability inquiry, and stops the moment
         // something does. MIDI-CI is rare enough today that this is a setting.
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_programListRetryTimer{ nullptr };
+
+        // Each retry waits twice as long as the one before, up to the cap. Every Discovery is
+        // SysEx on the destination, and on a shared loopback it can collide with another app's.
         static constexpr int32_t ProgramListRetrySeconds = 8;
+        static constexpr int32_t ProgramListRetryMaximumSeconds = 240;
+        int32_t m_programListRetrySeconds{ ProgramListRetrySeconds };
 
         bool m_startupOptionsApplied{ false };
         bool m_reconnectInProgress{ false };
