@@ -5,16 +5,9 @@
   <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
 
   <Fragment>
-    <DirectoryRef Id="TOOLSROOT_INSTALLFOLDER">
-      <Directory Id="TOOLSROOT_INSTALLFOLDER_Assets" Name="Assets" />
-    </DirectoryRef>
-
     <ComponentGroup Id="SdkRedistFiles">
 
       <!-- app-sdk\$(var.Platform) -->
-      <Component Id="c7E8B17D66ACC18FF" Guid="11c465b3-99bb-5ad7-9150-436d9f3b3ef8" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER_Assets"> <!-- Assets\AppIcon.ico -->
-        <File Id="f7E8B17D66ACC18FF" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Assets\AppIcon.ico" Vital="true" />
-      </Component>
       <Component Id="c95D3F84EFCBD455B" Guid="15251297-ff85-5d52-bb71-3533703ef73c" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Microsoft.Graphics.Canvas.dll -->
         <File Id="f95D3F84EFCBD455B" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Graphics.Canvas.dll" Vital="true" />
       </Component>
@@ -122,6 +115,12 @@
       </Component>
       <Component Id="cDE8ECBDA592334FF" Guid="6363ab6b-43af-5e3b-b954-6046eb83af6d" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisettings.pri -->
         <File Id="fDE8ECBDA592334FF" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisettings.pri" Vital="true" />
+      </Component>
+      <Component Id="c4EA1A058A356390C" Guid="a566c735-44b0-5de8-a0b2-4bda04e8c5dd" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisoundmodule.exe -->
+        <File Id="midisoundmoduleExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisoundmodule.exe" Vital="true" />
+      </Component>
+      <Component Id="c467A6199E4BC5E9C" Guid="6fcde144-c1e5-5706-92a2-fbad9ac0475b" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisoundmodule.pri -->
+        <File Id="f467A6199E4BC5E9C" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisoundmodule.pri" Vital="true" />
       </Component>
       <Component Id="c279335F7294FF336" Guid="1448efd4-8167-5ddc-bbf1-dc15bd535a20" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midisysextool.exe -->
         <File Id="midisysextoolExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midisysextool.exe" Vital="true" />
