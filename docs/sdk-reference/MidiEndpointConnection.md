@@ -64,7 +64,7 @@ Each of these functions sends one message. The message must be one complete, val
 | `SendSingleMessageWords(timestamp, word0, word1, word2, word3)` | Sends one 128-bit UMP, given as four 32-bit words. This is often the fastest way to send a message of this size |
 | `SendSingleMessageBuffer(timestamp, byteOffset, byteCount, buffer)` | Sends one UMP from a buffer of bytes, starting at `byteOffset`. `byteCount` must match the size that the message type in the first 4 bits calls for. The bytes must be in order, starting with the most significant byte of the first word, which is the byte that holds the message type. `IMemoryBuffer` is how WinRT lets you work with a block of memory, so it's the closest you can get to passing a pointer |
 
-> **Tip:** In every function that takes a timestamp, **pass 0 (zero) to skip the scheduler and send the message right away**. `MidiClock::TimestampConstantSendImmediately` is the same value. Any other timestamp is the exact time the service should send the message. The service's scheduler slows down when it holds thousands of messages, so don't schedule too many at once, or too far ahead.
+> **Tip:** In every function that takes a timestamp, **pass `MidiClock::TimestampConstantSendImmediately` to skip the scheduler and send the message right away**. Any other timestamp is the exact time the service should send the message. The service's scheduler slows down when it holds thousands of messages, so don't schedule too many at once, or too far ahead.
 
 ### Sending several messages in one call
 
@@ -87,7 +87,7 @@ These functions copy the data into a new buffer first, and then send it in one c
 | `SendMultipleMessagesStructList(timestamp, messages)` | Sends an `IIterable` of `MidiMessageStruct` messages |
 | `SendMultipleMessagesStructArray(timestamp, startIndex, messageCount, messages)` | Sends an array of `MidiMessageStruct` messages, starting at `startIndex` and continuing for `messageCount` messages |
 
-This function sends each packet separately, because each one has its own timestamp.
+This function sends each packet separately, because each one has its own timestamp. This function is not suitable for sending multi-UMP SysEx7 because other apps can easily interrupt the send with their own SysEx, corrupting the resulting SysEx stream.
 
 | Function | Description |
 | -------- | ----------- |
