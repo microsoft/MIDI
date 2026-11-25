@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released in 2027. It's currently available in preview at [https://aka.ms/midireleases](https://aka.ms/midireleases).
 
 Windows MIDI Calculator answers the questions that come up while you make music or write MIDI software. What tempo is this loop? How long is a dotted eighth at 128 BPM? What note is 450 Hz? What's in a Dm7/G? How far apart are these two timestamps? What number goes in a MIDI 2.0 message for this pitch?
 
