@@ -1117,6 +1117,13 @@ namespace miditroubleshooter
         scroller.VerticalScrollBarVisibility(controls::ScrollBarVisibility::Disabled);
         scroller.Content(table);
 
+        // Left, not stretched. A stretched scroller can be given one physical pixel more width than
+        // it was measured with at a fractional display scale, and it measures again each time it
+        // is, so layout never finishes. WinUI then gives up on layout for every window the app has
+        // open. Left aligned, it's placed at the width it measured, which is the whole window for a
+        // table that needs it.
+        scroller.HorizontalAlignment(xaml::HorizontalAlignment::Left);
+
         // A sideways scroller gives its content unlimited width, so nothing in it would wrap.
         // A table with a wide column is made exactly as wide as the window instead, and only
         // wider when its other columns leave the wide one less than its minimum.

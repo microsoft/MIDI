@@ -152,7 +152,7 @@ Pete: "keep this code self-contained. The MIDI Settings app is the app most like
 
 ## Tests
 
-- A TAEF test project for the engine, following `src/in-box/Test/Tools/Midi2.MidiPatchbay.unittests/`.
+- A TAEF test project for the engine, following `src/in-box/Test/Apps/Midi2.MidiPatchbay.unittests/`.
 - Package: round trip; too many entries, entries too big, bad checksums, names with `..`, a drive or a leading slash, unknown names, a newer format version, and a plain `.midiconfig.json`.
 - Merge: every rule above. That includes clashes and free names, new IDs with their `updateEntries`, other-PC hosts, adapter fallback, keep-mine defaults, Replace mine, and an unknown transport section.
 - Write: a file changed between plan and apply, a link or reparse point, a sharing violation that clears, and identical bytes.

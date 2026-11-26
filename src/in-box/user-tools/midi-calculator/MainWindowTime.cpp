@@ -12,6 +12,7 @@
 // the SDK isn't there, the same counter is read directly so the page still works.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcText.h"
@@ -248,8 +249,8 @@ namespace winrt::midicalculator::implementation
         // ---- this PC, live: a strip across the top, as in the comp ----
         controls::Border strip{};
         {
-            strip.Background(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"CardBackgroundFillColorDefaultBrush")).as<media::Brush>());
-            strip.BorderBrush(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"CardStrokeColorDefaultBrush")).as<media::Brush>());
+            strip.Background(::midiapp::ThemeBrushes::Current().Get(L"CardBackgroundFillColorDefaultBrush"));
+            strip.BorderBrush(::midiapp::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
             strip.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
             strip.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(8));
             strip.Padding(xaml::Thickness{ 16, 12, 16, 12 });

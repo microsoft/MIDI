@@ -13,6 +13,7 @@
 // the control in front of you is worse than a shorter page.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -473,8 +474,7 @@ namespace winrt::midiglass::implementation
                 }
                 else
                 {
-                    PictureSettings().Foreground(xaml::Application::Current().Resources()
-                        .Lookup(box_value(L"TextFillColorDisabledBrush")).as<media::Brush>());
+                    PictureSettings().Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorDisabledBrush"));
                 }
 
                 PictureFitCombo().SelectedIndex(IndexOfValue(PictureFitOrder, image.Fit));

@@ -18,6 +18,8 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="KeyboardLayout.cpp" />
+    <ClCompile Include="KeyboardInstance.cpp" />
+    <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="KeyColors.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -25,6 +27,7 @@
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\ThemeBrushes.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiServiceAvailability.cpp" />
@@ -37,6 +40,8 @@
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="KeyboardLayout.h" />
+    <ClInclude Include="KeyboardInstance.h" />
+    <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="KeyColors.h" />
     <ClInclude Include="MidiOutput.h" />
     <ClInclude Include="StringResources.h" />
@@ -45,11 +50,13 @@
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\ThemeBrushes.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
     <ClInclude Include="..\midi-app-shared\PopupBackdrop.h" />
     <ClInclude Include="..\midi-app-shared\SpinButtons.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceAvailability.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>

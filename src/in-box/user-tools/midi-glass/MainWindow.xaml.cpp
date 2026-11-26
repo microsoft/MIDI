@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "MainWindow.g.cpp"
 #include "App.xaml.h"
@@ -105,6 +106,11 @@ namespace winrt::midiglass::implementation
             *this, ::midiglass::AppSettings::Current(), DefaultWindowWidth, DefaultWindowHeight);
     }
 
+    void MainWindow::ApplyAppearance() noexcept
+    {
+        m_chrome.ApplyTheme();
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
@@ -124,6 +130,13 @@ namespace winrt::midiglass::implementation
             elements.TitleBar = AppTitleBar();
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
+
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
 
             m_chrome.Initialize(elements, ::midiglass::AppSettings::Current());
 
@@ -282,6 +295,7 @@ namespace winrt::midiglass::implementation
             }
 
             m_chrome.SavePlacement();
+            ::midiapp::ThemeBrushes::Current().RemoveSource(ThemeBrushSource());
             m_chrome.Shutdown();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to shut the window down cleanly.")
@@ -319,7 +333,7 @@ namespace winrt::midiglass::implementation
                 {
                     if (auto strong = weak.get())
                     {
-                        strong->m_chrome.ApplyTheme();
+                        App::ApplyAppearanceToAllWindows();
                     }
                 },
                 BuildAppSettingsPanel(),
@@ -332,8 +346,7 @@ namespace winrt::midiglass::implementation
     {
         try
         {
-            auto const tertiary = xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>();
+            auto const tertiary = ::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush");
 
             controls::StackPanel panel{};
             panel.Spacing(10);

@@ -162,6 +162,8 @@
     <ClInclude Include="..\midi-app-shared\UmpDescriber.h" />
     <ClInclude Include="..\midi-app-shared\TapTempo.h" />
     <ClInclude Include="..\midi-app-shared\ChordTheory.h" />
+    <ClInclude Include="..\midi-app-shared\ThemeBrushes.h" />
+    <ClInclude Include="..\midi-app-shared\XamlErrors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -224,6 +226,7 @@
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\ThemeBrushes.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\UmpDescriber.cpp" />
     <ClCompile Include="..\midi-app-shared\TapTempo.cpp">

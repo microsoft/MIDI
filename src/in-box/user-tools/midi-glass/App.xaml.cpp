@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "XamlErrors.h"
 #include "MainWindow.xaml.h"
 #include "RuntimeWindow.xaml.h"
 #include "EditorWindow.xaml.h"
@@ -60,6 +61,23 @@ namespace winrt::midiglass::implementation
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to bring the library forward.")
+    }
+
+    void App::ApplyAppearanceToAllWindows() noexcept
+    {
+        try
+        {
+            if (auto const library = g_libraryWindow.try_as<midiglass::MainWindow>())
+            {
+                winrt::get_self<MainWindow>(library)->ApplyAppearance();
+            }
+
+            for (auto const& editor : g_editorWindows)
+            {
+                winrt::get_self<EditorWindow>(editor)->ApplyAppearance();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to apply the appearance to every window.")
     }
 
     _Use_decl_annotations_
@@ -241,8 +259,9 @@ namespace winrt::midiglass::implementation
                 TraceLoggingHResult(static_cast<HRESULT>(args.Exception()), MIDI_GLASS_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(args.Message().c_str(), MIDI_GLASS_TRACE_ERROR_FIELD));
 
-            // the app stays usable rather than terminating in front of the customer
-            args.Handled(true);
+            // the app stays usable rather than terminating in front of the customer, except after an
+            // error XAML can't recover from: then it crashes, so the crash dump shows what happened
+            args.Handled(!::midiapp::IsUnrecoverableXamlError(static_cast<HRESULT>(args.Exception())));
         }
         catch (...)
         {

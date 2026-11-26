@@ -1107,6 +1107,12 @@ function Test-SdkBuildOutput {
         throw "$dll is an $actual binary. The $BuildPlatform NuGet runtime folders and installers need the $expected build."
     }
 
+    # Preview 14 shipped a new DLL with Preview 13's file version, and upgrades kept the old one.
+    $fileVersion = (Get-Item $dll).VersionInfo
+    if ($fileVersion.FilePrivatePart -ne $script:Versions.Sdk.Patch) {
+        throw "$dll has file version $($fileVersion.FileVersion). Its last part must be the SDK patch, $($script:Versions.Sdk.Patch), or an installer upgrade keeps the previous release's DLL."
+    }
+
     Write-Detail "SDK $BuildPlatform $expected, linked $((Get-Item $dll).LastWriteTime.ToString('HH:mm:ss')) by this build: $folder"
 }
 
@@ -1347,6 +1353,9 @@ function Invoke-SdkTarget {
     $versionProps['NoWarn'] = 'MSB3271'
     # The package is made by the Pack target once every platform is built, never by one of these.
     $versionProps['GeneratePackageOnBuild'] = 'false'
+    # The last part of the SDK DLL's file version. Windows Installer won't replace an installed
+    # file with one of the same version, so every release needs a higher one.
+    $versionProps['MidiSdkFileVersionRevision'] = $script:Versions.Sdk.Patch
 
     foreach ($plat in $Platform) {
         Remove-SdkLinkOutput -BuildPlatform $plat

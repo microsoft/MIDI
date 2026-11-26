@@ -13,6 +13,7 @@
 #include "CalcHistory.h"
 #include "PopupBackdrop.h"
 #include "StringResources.h"
+#include "ThemeBrushes.h"
 #include "resource.h"
 
 namespace native = ::midicalculator;
@@ -38,6 +39,14 @@ namespace winrt::midicalculator::implementation
     {
         try
         {
+            // Before the chrome applies the saved theme, so that change is caught too. This also
+            // catches a change of the Windows theme, which raises no settings change.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
+
             InitializeWindowChrome();
 
             ::midicalculator::ui::SetCopyNameFormat(res::GetString(L"CopyNameFormat"));
@@ -70,6 +79,7 @@ namespace winrt::midicalculator::implementation
                         strong->StopLiveClock();
                         native::History::Current().Changed(nullptr);
                         strong->m_chrome.SavePlacement();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });

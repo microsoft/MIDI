@@ -37,6 +37,19 @@
                 Grid.RowSpan="3"
                 Visibility="Collapsed" />
 
+        <!-- Theme brushes for what's built in code. XAML re-resolves each of these on every theme
+             change, and midiapp::ThemeBrushes copies them into the brushes the code shares. A key
+             used in code must be listed here. Zero sized rather than collapsed, so nothing here
+             can be skipped as unrealized. -->
+        <Grid x:Name="ThemeBrushSource" Grid.Row="0" Width="0" Height="0"
+              Opacity="0" IsHitTestVisible="False"
+              HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Border x:Name="AccentFillColorDefaultBrush" Background="{ThemeResource AccentFillColorDefaultBrush}" />
+            <Border x:Name="SystemFillColorCautionBrush" Background="{ThemeResource SystemFillColorCautionBrush}" />
+            <Border x:Name="SystemFillColorCriticalBrush" Background="{ThemeResource SystemFillColorCriticalBrush}" />
+            <Border x:Name="SystemFillColorSuccessBrush" Background="{ThemeResource SystemFillColorSuccessBrush}" />
+        </Grid>
+
         <!-- ============================ Title bar drag region ============================ -->
         <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
             <Grid.ColumnDefinitions>
@@ -771,13 +784,39 @@
                         </StackPanel>
 
                         <StackPanel Spacing="4">
+                            <CheckBox x:Name="SingleWindowCheckBox"
+                                      x:Uid="SingleWindowCheckBox"
+                                      AutomationProperties.AutomationId="SingleWindowCheckBox"
+                                      Content="Open only one window"
+                                      Click="OnSingleWindowChanged" />
+                            <TextBlock x:Uid="SingleWindowHint"
+                                       Text="Starting the keyboard again brings this window forward instead of opening another one. MIDI Sequencer and MIDI Patchbay can still open a keyboard for each track."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <CheckBox x:Name="UseMidiCiCheckBox"
+                                      x:Uid="UseMidiCiCheckBox"
+                                      AutomationProperties.AutomationId="UseMidiCiCheckBox"
+                                      Content="Ask the device for its programs with MIDI-CI"
+                                      Click="OnUseMidiCiChanged" />
+                            <TextBlock x:Uid="UseMidiCiHint"
+                                       Text="MIDI-CI lets this app show a device's program names. It sends a few short SysEx messages when you connect. Turn it off if another app on the same loopback is also sending SysEx and the messages get mixed up."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
                             <CheckBox x:Name="RetryProgramListCheckBox"
                                       x:Uid="RetryProgramListCheckBox"
                                       AutomationProperties.AutomationId="RetryProgramListCheckBox"
                                       Content="Keep looking for the device's programs"
                                       Click="OnRetryProgramListChanged" />
                             <TextBlock x:Uid="RetryProgramListHint"
-                                       Text="Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination."
+                                       Text="Asks again until something answers, waiting longer each time, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination."
                                        TextWrapping="Wrap"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

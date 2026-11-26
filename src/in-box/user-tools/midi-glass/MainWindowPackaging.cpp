@@ -12,6 +12,7 @@
 // empty rectangles.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "App.xaml.h"
 
@@ -128,8 +129,7 @@ namespace winrt::midiglass::implementation
                     if (secondary)
                     {
                         block.FontSize(12.0);
-                        block.Foreground(xaml::Application::Current().Resources()
-                            .Lookup(box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
+                        block.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
                     }
 
                     panel.Children().Append(block);
@@ -327,8 +327,7 @@ namespace winrt::midiglass::implementation
             caption.Text(resources::GetString(L"RestorePickCaption"));
             caption.TextWrapping(xaml::TextWrapping::Wrap);
             caption.FontSize(12.0);
-            caption.Foreground(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
+            caption.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
 
             controls::ListView list{};
 
@@ -351,8 +350,7 @@ namespace winrt::midiglass::implementation
 
                 detail.Text(winrt::hstring{ DescribeSize(backup.Bytes) });
                 detail.FontSize(11.0);
-                detail.Foreground(xaml::Application::Current().Resources()
-                    .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+                detail.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
                 row.Children().Append(name);
                 row.Children().Append(detail);

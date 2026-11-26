@@ -10,7 +10,7 @@ Exploratory work toward **MIDI Glass**, a customizable MIDI control surface for 
 
 In short: the rendering approach is settled (a hybrid of a light XAML element per control with custom-drawn content, with a measured latency budget), the SDK sequencing work landed, the app shell exists, the document, theme and thumbnail layers are built, and the binding layer that decides what goes on the wire is built and tested. What remains in phase 4 is the device catalog, the output router, the runtime window, the renderer, input and multi-touch, Panic, and an end-to-end capture.
 
-**98 unit tests, none of which need a window or a device**, in `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`.
+**98 unit tests, none of which need a window or a device**, in `src/in-box/Test/Apps/Midi2.MidiGlass.unittests`.
 
 ## Layout
 
@@ -28,7 +28,7 @@ In short: the rendering approach is settled (a hybrid of a light XAML element pe
 | `midi-glass/document/` | The layout document, its file format, page templates, the theme model and the theme store. |
 | `midi-glass/thumbnail/` | Drawing a library card with no window, via Win2D. |
 | `midi-glass/binding/` | What a control puts on the wire, and how often. |
-| `src/in-box/Test/Tools/Midi2.MidiGlass.unittests` | All of the above, tested without a window or a device. |
+| `src/in-box/Test/Apps/Midi2.MidiGlass.unittests` | All of the above, tested without a window or a device. |
 
 ## The design record
 

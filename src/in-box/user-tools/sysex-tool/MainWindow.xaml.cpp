@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "MainWindow.g.cpp"
 #include "SysExRow.h"
@@ -27,8 +28,7 @@ namespace winrt::midisysextool::implementation
         {
             try
             {
-                return xaml::Application::Current().Resources()
-                    .Lookup(winrt::box_value(L"SystemFillColorCriticalBrush")).as<media::Brush>();
+                return ::midiapp::ThemeBrushes::Current().Get(L"SystemFillColorCriticalBrush");
             }
             catch (...)
             {
@@ -134,6 +134,7 @@ namespace winrt::midisysextool::implementation
                         strong->StopReceiving();
                         strong->CloseConnection();
                         strong->StopEndpointWatcher();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -169,6 +170,13 @@ namespace winrt::midisysextool::implementation
             elements.TitleBar = AppTitleBar();
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
+
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
@@ -1481,11 +1489,9 @@ namespace winrt::midisysextool::implementation
 
             StatusText().Text(winrt::hstring{ status });
 
-            StatusText().Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(stats.DisallowedBytes > 0
+            StatusText().Foreground(::midiapp::ThemeBrushes::Current().Get(stats.DisallowedBytes > 0
                     ? L"SystemFillColorCriticalBrush"
-                    : L"TextFillColorSecondaryBrush"))
-                .as<media::Brush>());
+                    : L"TextFillColorSecondaryBrush"));
         }
         MIDI_SYSEXTOOL_CATCH_AND_LOG(L"Unable to update the status.")
     }

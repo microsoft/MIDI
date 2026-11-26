@@ -27,6 +27,28 @@
                 Grid.RowSpan="2"
                 Visibility="Collapsed" />
 
+        <!-- Theme brushes for the pages built in code. XAML re-resolves each of these on every
+             theme change, and ThemeBrushes copies them into the brushes the pages share. A key
+             used in code must be listed here. Zero sized rather than collapsed, so nothing here
+             can be skipped as unrealized. -->
+        <Grid x:Name="ThemeBrushSource" Grid.Row="0" Width="0" Height="0"
+              Opacity="0" IsHitTestVisible="False"
+              HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Border x:Name="AccentFillColorDefaultBrush" Background="{ThemeResource AccentFillColorDefaultBrush}" />
+            <Border x:Name="AccentTextFillColorPrimaryBrush" Background="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+            <Border x:Name="CardBackgroundFillColorDefaultBrush" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Border x:Name="CardStrokeColorDefaultBrush" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Border x:Name="ControlFillColorDefaultBrush" Background="{ThemeResource ControlFillColorDefaultBrush}" />
+            <Border x:Name="ControlStrongFillColorDisabledBrush" Background="{ThemeResource ControlStrongFillColorDisabledBrush}" />
+            <Border x:Name="ControlStrongStrokeColorDisabledBrush" Background="{ThemeResource ControlStrongStrokeColorDisabledBrush}" />
+            <Border x:Name="DividerStrokeColorDefaultBrush" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            <Border x:Name="LayerFillColorDefaultBrush" Background="{ThemeResource LayerFillColorDefaultBrush}" />
+            <Border x:Name="SolidBackgroundFillColorBaseBrush" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" />
+            <Border x:Name="TextFillColorPrimaryBrush" Background="{ThemeResource TextFillColorPrimaryBrush}" />
+            <Border x:Name="TextFillColorSecondaryBrush" Background="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Border x:Name="TextFillColorTertiaryBrush" Background="{ThemeResource TextFillColorTertiaryBrush}" />
+        </Grid>
+
         <!-- ============================ Title bar drag region ============================ -->
         <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
             <Grid.ColumnDefinitions>

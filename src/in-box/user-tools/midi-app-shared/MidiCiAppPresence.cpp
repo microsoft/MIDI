@@ -144,7 +144,7 @@ namespace midiapp
 
                 if (responderToken.value != 0)
                 {
-                    session.ResponderFound(responderToken);
+                    session.MessageReceived(responderToken);
                 }
 
                 // Withdraws the identifier, which is what tells everything else this app has gone.
@@ -326,12 +326,29 @@ namespace midiapp
                 return;
             }
 
-            auto const token = session.ResponderFound(
-                [this](auto&&, MidiCapabilityInquiryResponder const& responder)
+            // Only a reply addressed to this app counts. The session also hears other apps'
+            // Discoveries and replies meant for someone else, and acting on those is what turned
+            // two copies of this app on one loopback into a chain of overlapping SysEx.
+            auto const token = session.MessageReceived(
+                [this](MidiCapabilityInquirySession const& sender,
+                       MidiCapabilityInquiryMessageReceivedEventArgs const& args)
                 {
                     try
                     {
-                        if (responder == nullptr || responder.Muid() == nullptr)
+                        auto const message = args == nullptr ? nullptr : args.Message();
+
+                        if (message == nullptr ||
+                            message.MessageType() != MidiCapabilityInquiryMessageType::DiscoveryReply)
+                        {
+                            return;
+                        }
+
+                        auto const ownMuid = sender.SourceMuid();
+                        auto const destination = message.DestinationMuid();
+                        auto const source = message.SourceMuid();
+
+                        if (ownMuid == nullptr || destination == nullptr || source == nullptr ||
+                            destination.AsCombined28BitValue() != ownMuid.AsCombined28BitValue())
                         {
                             return;
                         }
@@ -343,13 +360,21 @@ namespace midiapp
 
                             // A device that was already here is not news, and acting on it would
                             // start a query again for nothing.
-                            if (!m_knownResponders.insert(
-                                    responder.Muid().AsCombined28BitValue()).second)
+                            if (!m_knownResponders.insert(source.AsCombined28BitValue()).second)
                             {
                                 return;
                             }
 
                             handler = m_responderAppeared;
+                        }
+
+                        // A device with no property exchange, such as another copy of this app,
+                        // has nothing to ask for.
+                        auto const responder = sender.GetResponder(source);
+
+                        if (responder == nullptr || !responder.SupportsPropertyExchange())
+                        {
+                            return;
                         }
 
                         // Recorded either way above, so that when the query finishes this device

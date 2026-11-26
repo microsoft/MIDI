@@ -8,7 +8,7 @@ categories:
   - Device/Transport Configuration Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released in 2027. It's currently available in preview at [https://aka.ms/midireleases](https://aka.ms/midireleases).
 
 Windows MIDI Loopback Setup creates loopback MIDI endpoints: virtual MIDI connections that exist only on this PC, with no cable and no hardware. Send MIDI to one and it arrives back in another app, which is how you get a sequencer talking to a software synth, a lighting program listening to your DAW, or a controller mapping tool sitting in between two other apps.
 

@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #if __has_include("MainWindow.g.cpp")
 #include "MainWindow.g.cpp"
@@ -99,6 +100,7 @@ namespace winrt::midiclock::implementation
                         strong->m_engine.StopAll();
 
                         strong->m_chrome.SavePlacement();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -170,6 +172,13 @@ namespace winrt::midiclock::implementation
             elements.TitleBar = AppTitleBar();
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
+
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
@@ -258,8 +267,7 @@ namespace winrt::midiclock::implementation
             body.TextWrapping(xaml::TextWrapping::Wrap);
             body.Style(xaml::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
-            body.Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<xaml::Media::Brush>());
+            body.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
 
             panel.Children().Append(heading);
             panel.Children().Append(body);
@@ -268,10 +276,8 @@ namespace winrt::midiclock::implementation
             border.Padding(xaml::Thickness{ 12, 10, 12, 12 });
             border.CornerRadius(xaml::CornerRadius{ 4, 4, 4, 4 });
             border.BorderThickness(xaml::Thickness{ 1, 1, 1, 1 });
-            border.Background(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"CardBackgroundFillColorDefaultBrush")).as<xaml::Media::Brush>());
-            border.BorderBrush(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"CardStrokeColorDefaultBrush")).as<xaml::Media::Brush>());
+            border.Background(::midiapp::ThemeBrushes::Current().Get(L"CardBackgroundFillColorDefaultBrush"));
+            border.BorderBrush(::midiapp::ThemeBrushes::Current().Get(L"CardStrokeColorDefaultBrush"));
             border.Child(panel);
 
             return border;
@@ -317,8 +323,7 @@ namespace winrt::midiclock::implementation
             body.TextWrapping(xaml::TextWrapping::Wrap);
             body.Style(xaml::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
-            body.Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<xaml::Media::Brush>());
+            body.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
 
             controls::StackPanel panel{};
             panel.Spacing(4.0);

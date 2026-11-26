@@ -19,6 +19,7 @@
 #include "MonitorPalette.h"
 #include "NamedChoice.h"
 #include "PopupBackdrop.h"
+#include "ThemeBrushes.h"
 #include "StringResources.h"
 #include "resource.h"
 
@@ -172,6 +173,7 @@ namespace winrt::midi2monitor::implementation
                         strong->StopMonitoring(false);
                         strong->StopEndpointWatcher();
                         strong->m_pipeline.Stop();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -196,6 +198,9 @@ namespace winrt::midi2monitor::implementation
             elements.TitleBar = AppTitleBar();
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
+
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
@@ -227,6 +232,7 @@ namespace winrt::midi2monitor::implementation
                 {
                     if (auto strong = weak.get())
                     {
+                        midiapp::ThemeBrushes::Current().Refresh();
                         strong->ColorDialogs();
                     }
                 });

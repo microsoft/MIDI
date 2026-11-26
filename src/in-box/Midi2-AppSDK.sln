@@ -175,19 +175,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midipatchbay", "user-tools\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midiglass", "user-tools\midi-glass\midiglass.vcxproj", "{F9FF254E-0F0E-4479-B720-AE24EB2BF444}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiFile.unittests", "Test\Tools\Midi2.MidiFile.unittests\Midi2.MidiFile.unittests.vcxproj", "{D3F7C1A8-4B62-4E90-9C17-8A5E2D0B46F1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiFile.unittests", "Test\Apps\Midi2.MidiFile.unittests\Midi2.MidiFile.unittests.vcxproj", "{D3F7C1A8-4B62-4E90-9C17-8A5E2D0B46F1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiGlass.unittests", "Test\Tools\Midi2.MidiGlass.unittests\Midi2.MidiGlass.unittests.vcxproj", "{B8D45C27-9E31-4A6E-B0F4-17C3EA92D558}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiGlass.unittests", "Test\Apps\Midi2.MidiGlass.unittests\Midi2.MidiGlass.unittests.vcxproj", "{B8D45C27-9E31-4A6E-B0F4-17C3EA92D558}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiClock.unittests", "Test\Tools\Midi2.MidiClock.unittests\Midi2.MidiClock.unittests.vcxproj", "{D17C4C3D-66A1-45B8-BE21-572CFC51619D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiClock.unittests", "Test\Apps\Midi2.MidiClock.unittests\Midi2.MidiClock.unittests.vcxproj", "{D17C4C3D-66A1-45B8-BE21-572CFC51619D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiPatchbay.unittests", "Test\Tools\Midi2.MidiPatchbay.unittests\Midi2.MidiPatchbay.unittests.vcxproj", "{6E2B9F41-3C7A-4D85-A1F6-92B4C0E7D318}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiPatchbay.unittests", "Test\Apps\Midi2.MidiPatchbay.unittests\Midi2.MidiPatchbay.unittests.vcxproj", "{6E2B9F41-3C7A-4D85-A1F6-92B4C0E7D318}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSettings.unittests", "Test\Tools\Midi2.MidiSettings.unittests\Midi2.MidiSettings.unittests.vcxproj", "{45BDA4B8-8E25-4639-BB5B-108993F2116C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSettings.unittests", "Test\Apps\Midi2.MidiSettings.unittests\Midi2.MidiSettings.unittests.vcxproj", "{45BDA4B8-8E25-4639-BB5B-108993F2116C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSequencer.unittests", "Test\Tools\Midi2.MidiSequencer.unittests\Midi2.MidiSequencer.unittests.vcxproj", "{F07EB088-8CF5-4785-8C52-44CB5BE54F0B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSequencer.unittests", "Test\Apps\Midi2.MidiSequencer.unittests\Midi2.MidiSequencer.unittests.vcxproj", "{F07EB088-8CF5-4785-8C52-44CB5BE54F0B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiCalculator.unittests", "Test\Tools\Midi2.MidiCalculator.unittests\Midi2.MidiCalculator.unittests.vcxproj", "{AC5429DB-E39B-4A25-96A6-23BBFB0533F1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiCalculator.unittests", "Test\Apps\Midi2.MidiCalculator.unittests\Midi2.MidiCalculator.unittests.vcxproj", "{AC5429DB-E39B-4A25-96A6-23BBFB0533F1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midisequencer", "user-tools\midi-sequencer\midisequencer.vcxproj", "{BAF13437-1C06-452E-9D1A-84639BC8C910}"
 EndProject
@@ -197,7 +197,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midisoundmodule", "user-too
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SoundFontSynthEngine", "user-tools\midi-sound-module\engine\SoundFontSynthEngine.vcxproj", "{7499AD83-08DB-4A99-9CEB-34F3CA944F2A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSoundModule.unittests", "Test\Tools\Midi2.MidiSoundModule.unittests\Midi2.MidiSoundModule.unittests.vcxproj", "{A31B0A52-F740-4FF6-AD2E-09E9548DFDDC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.MidiSoundModule.unittests", "Test\Apps\Midi2.MidiSoundModule.unittests\Midi2.MidiSoundModule.unittests.vcxproj", "{A31B0A52-F740-4FF6-AD2E-09E9548DFDDC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midicrashhandler", "user-tools\midi-crash-handler\midicrashhandler.vcxproj", "{6121B8E4-0E1E-45E8-A264-258B899C387E}"
 EndProject

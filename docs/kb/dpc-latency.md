@@ -7,7 +7,7 @@ categories:
   - Troubleshooting
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released in 2027. It's currently available in preview at [https://aka.ms/midireleases](https://aka.ms/midireleases).
 
 You hear a click, a pop or a short gap in your audio, and your audio app's meters say it wasn't busy. Sometimes the cause isn't the audio app at all. It's a driver somewhere else on the PC, such as the Wi-Fi, graphics or storage driver, that kept a processor busy for too long at exactly the wrong moment.
 

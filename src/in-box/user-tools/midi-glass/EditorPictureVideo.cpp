@@ -13,6 +13,7 @@
 // frame at that end on the canvas, so the part can be picked by eye rather than by number.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -52,7 +53,7 @@ namespace winrt::midiglass::implementation
 
         media::Brush ThemeBrush(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         // To the hundredth, which is finer than a frame and short enough to read.

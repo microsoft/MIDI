@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
+#include "XamlErrors.h"
 #include "MainWindow.xaml.h"
 
 #include "AppSettings.h"
@@ -39,8 +40,9 @@ namespace winrt::midisequencer::implementation
                 TraceLoggingHResult(static_cast<HRESULT>(args.Exception()), MIDI_SEQUENCER_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(args.Message().c_str(), MIDI_SEQUENCER_TRACE_ERROR_FIELD));
 
-            // the app stays usable rather than terminating with the customer's work in it
-            args.Handled(true);
+            // the app stays usable rather than terminating with the customer's work in it, except after an
+            // error XAML can't recover from: then it crashes, so the crash dump shows what happened
+            args.Handled(!::midiapp::IsUnrecoverableXamlError(static_cast<HRESULT>(args.Exception())));
         }
         catch (...)
         {

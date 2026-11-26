@@ -10,6 +10,7 @@
 // button that adds a tuning picker and a row of fretboard buttons beside it.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -233,8 +234,7 @@ namespace winrt::midiglass::implementation
                 shortCaption.Text(resources::FormatString(L"FretShortStringFormat", std::to_wstring(string.StartFret)));
                 shortCaption.FontSize(11);
                 shortCaption.Margin(xaml::ThicknessHelper::FromLengths(68, 0, 0, 2));
-                shortCaption.Foreground(xaml::Application::Current().Resources()
-                    .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+                shortCaption.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
                 rows.Append(shortCaption);
             }

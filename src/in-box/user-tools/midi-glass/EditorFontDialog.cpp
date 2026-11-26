@@ -13,6 +13,7 @@
 // the theme happens to be today.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "AppSettings.h"
@@ -145,8 +146,7 @@ namespace winrt::midiglass::implementation
             allFontsCaption.FontSize(11);
             allFontsCaption.TextWrapping(xaml::TextWrapping::Wrap);
             allFontsCaption.Margin({ 0, -8, 0, 0 });
-            allFontsCaption.Foreground(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            allFontsCaption.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
             // ---- size ----
 
@@ -220,8 +220,7 @@ namespace winrt::midiglass::implementation
             color.Header(box_value(resources::GetString(L"FontColorHeader")));
             color.Text(winrt::hstring{ working->Color });
             color.PlaceholderText(resources::GetString(L"FontColorPlaceholder"));
-            color.PlaceholderForeground(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            color.PlaceholderForeground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
             controls::Button colorButton{};
             colorButton.VerticalAlignment(xaml::VerticalAlignment::Bottom);
@@ -256,8 +255,7 @@ namespace winrt::midiglass::implementation
             previewHost.Height(64);
             previewHost.CornerRadius({ 6, 6, 6, 6 });
             previewHost.Padding({ 10, 8, 10, 8 });
-            previewHost.Background(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"CardBackgroundFillColorSecondaryBrush")).as<media::Brush>());
+            previewHost.Background(::midiapp::ThemeBrushes::Current().Get(L"CardBackgroundFillColorSecondaryBrush"));
 
             controls::TextBlock preview{};
             preview.Text(winrt::hstring{ control->Label.empty()
@@ -328,8 +326,7 @@ namespace winrt::midiglass::implementation
                     preview.Foreground(!working->Color.empty() && glass::TryParseColor(working->Color, parsed)
                         ? media::SolidColorBrush(winrt::Windows::UI::ColorHelper::FromArgb(
                             parsed.A, parsed.R, parsed.G, parsed.B))
-                        : xaml::Application::Current().Resources()
-                            .Lookup(box_value(L"TextFillColorPrimaryBrush")).as<media::Brush>());
+                        : ::midiapp::ThemeBrushes::Current().Get(L"TextFillColorPrimaryBrush"));
                 };
 
             family.SelectionChanged([=](auto&&, auto&&) { apply(); });

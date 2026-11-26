@@ -14,6 +14,7 @@
 // it has to be something else.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "PopupBackdrop.h"
@@ -51,8 +52,7 @@ namespace winrt::midiglass::implementation
             swatch.RadiusY(4);
             swatch.UseLayoutRounding(false);
             swatch.StrokeThickness(1);
-            swatch.Stroke(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"ControlStrokeColorDefaultBrush")).as<media::Brush>());
+            swatch.Stroke(::midiapp::ThemeBrushes::Current().Get(L"ControlStrokeColorDefaultBrush"));
 
             return swatch;
         }
@@ -84,8 +84,7 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        swatch.Fill(xaml::Application::Current().Resources()
-            .Lookup(box_value(L"ControlAltFillColorSecondaryBrush")).as<media::Brush>());
+        swatch.Fill(::midiapp::ThemeBrushes::Current().Get(L"ControlAltFillColorSecondaryBrush"));
 
         button.SetValue(xaml::Automation::AutomationProperties::HelpTextProperty(),
             box_value(resources::GetString(L"ColorPickerNone")));

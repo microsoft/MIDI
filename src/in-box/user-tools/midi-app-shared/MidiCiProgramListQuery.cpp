@@ -10,6 +10,7 @@
 #include "MidiCiProgramListQuery.h"
 
 #include <algorithm>
+#include <set>
 
 #include <winrt/Windows.System.Threading.h>
 
@@ -25,6 +26,14 @@ namespace midiapp
     {
         std::mutex g_ciErrorHandlerLock{};
         std::function<void(std::wstring_view, winrt::hresult)> g_ciErrorHandler{};
+
+        // Who replied to this query's own Discovery. Shared with the message handler, which can
+        // still be running for a moment after the query stops listening.
+        struct AnsweredDiscovery
+        {
+            std::mutex Lock{};
+            std::set<uint32_t> Muids{};
+        };
     }
 
     _Use_decl_annotations_
@@ -264,7 +273,58 @@ namespace midiapp
                 return;
             }
 
+            // The session also lists anything it merely overheard, such as another app sending a
+            // Discovery of its own. Only a device that replied to this app's Discovery is asked
+            // anything, so a second copy of this app on the same loopback doesn't start a chain
+            // of questions and answers.
+            auto const answeredUs = std::make_shared<AnsweredDiscovery>();
+            auto const ownMuid = session.SourceMuid();
+            auto const ownMuidValue = ownMuid == nullptr ? 0u : ownMuid.AsCombined28BitValue();
+
+            auto const replyToken = session.MessageReceived(
+                [answeredUs, ownMuidValue](auto&&, MidiCapabilityInquiryMessageReceivedEventArgs const& args)
+                {
+                    try
+                    {
+                        auto const message = args == nullptr ? nullptr : args.Message();
+
+                        if (message == nullptr ||
+                            message.MessageType() != MidiCapabilityInquiryMessageType::DiscoveryReply)
+                        {
+                            return;
+                        }
+
+                        auto const destination = message.DestinationMuid();
+                        auto const source = message.SourceMuid();
+
+                        if (destination == nullptr || source == nullptr ||
+                            destination.AsCombined28BitValue() != ownMuidValue)
+                        {
+                            return;
+                        }
+
+                        std::lock_guard<std::mutex> guard(answeredUs->Lock);
+                        answeredUs->Muids.insert(source.AsCombined28BitValue());
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
+            auto stopListening = wil::scope_exit([&]() noexcept
+                {
+                    try
+                    {
+                        session.MessageReceived(replyToken);
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             auto const responders = session.DiscoverAsync().get();
+
+            stopListening.reset();
 
             if (m_canceled)
             {
@@ -272,22 +332,36 @@ namespace midiapp
                 return;
             }
 
-            if (responders == nullptr || responders.Size() == 0)
+            MidiCapabilityInquiryResponder responder{ nullptr };
+            bool anyAnswered{ false };
+
+            if (responders != nullptr)
+            {
+                std::lock_guard<std::mutex> guard(answeredUs->Lock);
+
+                for (auto const& candidate : responders)
+                {
+                    if (candidate == nullptr || candidate.Muid() == nullptr ||
+                        answeredUs->Muids.count(candidate.Muid().AsCombined28BitValue()) == 0)
+                    {
+                        continue;
+                    }
+
+                    anyAnswered = true;
+
+                    if (candidate.SupportsPropertyExchange())
+                    {
+                        responder = candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (!anyAnswered)
             {
                 // Nothing answered Discovery, so this is not a capability inquiry device at all.
                 Complete(ProgramListResult::NoResponse);
                 return;
-            }
-
-            MidiCapabilityInquiryResponder responder{ nullptr };
-
-            for (auto const& candidate : responders)
-            {
-                if (candidate != nullptr && candidate.SupportsPropertyExchange())
-                {
-                    responder = candidate;
-                    break;
-                }
             }
 
             if (responder == nullptr)

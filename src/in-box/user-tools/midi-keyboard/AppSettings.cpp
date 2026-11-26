@@ -25,6 +25,8 @@ namespace midikeyboard
         constexpr wchar_t ValueSendPatchOnStartup[] = L"SendPatchOnStartup";
         constexpr wchar_t ValueProgramsByCategory[] = L"ProgramsByCategory";
         constexpr wchar_t ValueRetryProgramListQuery[] = L"RetryProgramListQuery";
+        constexpr wchar_t ValueUseMidiCi[] = L"UseMidiCi";
+        constexpr wchar_t ValueSingleWindow[] = L"SingleWindow";
         constexpr wchar_t ValueBaseOctave[] = L"BaseOctave";
         constexpr wchar_t ValueOctaveCount[] = L"OctaveCount";
         constexpr wchar_t ValueMinimumWhiteKeyWidth[] = L"MinimumWhiteKeyWidth";
@@ -85,6 +87,8 @@ namespace midikeyboard
         m_sendPatchOnStartup = ReadDword(ValueSendPatchOnStartup, 0u) != 0;
         m_programsByCategory = ReadDword(ValueProgramsByCategory, 0u) != 0;
         m_retryProgramListQuery = ReadDword(ValueRetryProgramListQuery, 1u) != 0;
+        m_useMidiCi = ReadDword(ValueUseMidiCi, 1u) != 0;
+        m_singleWindow = ReadDword(ValueSingleWindow, 1u) != 0;
 
         m_baseOctave = std::clamp(
             static_cast<int32_t>(ReadDword(ValueBaseOctave, static_cast<uint32_t>(1))),
@@ -212,6 +216,20 @@ namespace midikeyboard
     {
         m_retryProgramListQuery = value;
         WriteDword(ValueRetryProgramListQuery, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::UseMidiCi(bool value) noexcept
+    {
+        m_useMidiCi = value;
+        WriteDword(ValueUseMidiCi, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::SingleWindow(bool value) noexcept
+    {
+        m_singleWindow = value;
+        WriteDword(ValueSingleWindow, value ? 1u : 0u);
     }
 
     void AppSettings::BaseOctave(int32_t value) noexcept    {

@@ -10,6 +10,7 @@
 // page title; Pinned and Today on the left, earlier days on the right.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "CalcHistory.h"
@@ -68,7 +69,7 @@ namespace winrt::midicalculator::implementation
 
         media::Brush Brush(wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         controls::Button IconButton(wchar_t const* glyph, winrt::hstring const& name)

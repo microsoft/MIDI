@@ -202,6 +202,16 @@
                 Grid.RowSpan="4"
                 Visibility="Collapsed" />
 
+        <!-- Theme brushes for what's built in code. XAML re-resolves each of these on every theme
+             change, and midiapp::ThemeBrushes copies them into the brushes the code shares. A key
+             used in code must be listed here. Zero sized rather than collapsed, so nothing here
+             can be skipped as unrealized. -->
+        <Grid x:Name="ThemeBrushSource" Grid.Row="0" Width="0" Height="0"
+              Opacity="0" IsHitTestVisible="False"
+              HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Border x:Name="TextFillColorTertiaryBrush" Background="{ThemeResource TextFillColorTertiaryBrush}" />
+        </Grid>
+
         <!-- ============================ Title bar drag region ============================ -->
         <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
             <Grid.ColumnDefinitions>

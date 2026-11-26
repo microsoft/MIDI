@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 #include "MainWindow.g.cpp"
 
@@ -124,6 +125,7 @@ namespace winrt::midiscratchpad::implementation
                     {
                         strong->m_chrome.SavePlacement();
                         strong->StopEndpointWatcher();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -161,6 +163,13 @@ namespace winrt::midiscratchpad::implementation
             elements.TitleBar = AppTitleBar();
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
+
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
@@ -734,8 +743,7 @@ namespace winrt::midiscratchpad::implementation
             if (m_lastParse.HasError)
             {
                 StatusIcon().Glyph(L"\uEA39");
-                StatusIcon().Foreground(xaml::Application::Current().Resources()
-                    .Lookup(winrt::box_value(L"SystemFillColorCriticalBrush")).as<media::Brush>());
+                StatusIcon().Foreground(::midiapp::ThemeBrushes::Current().Get(L"SystemFillColorCriticalBrush"));
 
                 auto const detail = m_lastParse.ErrorToken.empty()
                     ? res::GetString(m_lastParse.ErrorResourceKey.c_str())
@@ -749,8 +757,7 @@ namespace winrt::midiscratchpad::implementation
             }
 
             StatusIcon().Glyph(L"\uE73E");
-            StatusIcon().Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"SystemFillColorSuccessBrush")).as<media::Brush>());
+            StatusIcon().Foreground(::midiapp::ThemeBrushes::Current().Get(L"SystemFillColorSuccessBrush"));
 
             if (m_lastParse.IsEmpty())
             {
@@ -1253,9 +1260,7 @@ namespace winrt::midiscratchpad::implementation
         {
             SendResultText().Text(message);
 
-            SendResultText().Foreground(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(isError ? L"SystemFillColorCriticalBrush" : L"TextFillColorSecondaryBrush"))
-                .as<media::Brush>());
+            SendResultText().Foreground(::midiapp::ThemeBrushes::Current().Get(isError ? L"SystemFillColorCriticalBrush" : L"TextFillColorSecondaryBrush"));
         }
         MIDI_SCRATCHPAD_CATCH_AND_LOG(L"Unable to show the send result.")
     }

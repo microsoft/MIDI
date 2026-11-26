@@ -8,6 +8,7 @@
 // The editor's three dialogs: Repeat, the page size, and renaming the layout.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -24,7 +25,7 @@ namespace winrt::midiglass::implementation
 
         media::Brush BrushNamed(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(box_value(key)).as<media::Brush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key);
         }
 
         controls::ContentDialog MakeDialog(
@@ -331,8 +332,7 @@ namespace winrt::midiglass::implementation
             explanation.Text(resources::GetString(L"RepeatExplanation"));
             explanation.FontSize(11);
             explanation.TextWrapping(xaml::TextWrapping::Wrap);
-            explanation.Foreground(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            explanation.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
             controls::StackPanel panel{};
             panel.Spacing(10);
@@ -443,8 +443,7 @@ namespace winrt::midiglass::implementation
             wasText.Margin({ 0, 0, 0, 6 });
             wasText.Text(resources::FormatString(
                 L"PageSizeWasFormat", std::to_wstring(startWidth), std::to_wstring(startHeight)));
-            wasText.Foreground(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+            wasText.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
             // ---- growing: where the existing controls sit, and what that looks like ----
 
@@ -461,8 +460,7 @@ namespace winrt::midiglass::implementation
             previewNew.RadiusY(3);
             previewNew.StrokeThickness(1);
             previewNew.UseLayoutRounding(false);
-            previewNew.Stroke(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"AccentFillColorDefaultBrush")).as<media::Brush>());
+            previewNew.Stroke(::midiapp::ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush"));
             previewNew.Fill(media::SolidColorBrush(
                 winrt::Windows::UI::ColorHelper::FromArgb(30, 96, 205, 255)));
 
@@ -474,8 +472,7 @@ namespace winrt::midiglass::implementation
             previewOld.UseLayoutRounding(false);
             previewOld.HorizontalAlignment(xaml::HorizontalAlignment::Left);
             previewOld.VerticalAlignment(xaml::VerticalAlignment::Top);
-            previewOld.Stroke(xaml::Application::Current().Resources()
-                .Lookup(box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
+            previewOld.Stroke(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
 
             {
                 media::DoubleCollection dashes{};

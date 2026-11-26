@@ -14,6 +14,7 @@
 //
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "MainWindow.xaml.h"
 
 #include "MonitorPalette.h"
@@ -51,7 +52,7 @@ namespace winrt::midi2monitor::implementation
 
         media::Brush Lookup(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources().Lookup(winrt::box_value(key)).as<media::Brush>();
+            return midiapp::ThemeBrushes::Current().Get(key);
         }
 
         // The endpoint's picture from MIDI Settings, or an icon for the kind of endpoint, in a
@@ -159,8 +160,7 @@ namespace winrt::midi2monitor::implementation
             light.Height(LightSize);
             light.VerticalAlignment(xaml::VerticalAlignment::Center);
             light.Margin(xaml::ThicknessHelper::FromLengths(6, 0, 6, 0));
-            light.Fill(xaml::Application::Current().Resources()
-                .Lookup(winrt::box_value(L"ControlStrongFillColorDisabledBrush")).as<media::Brush>());
+            light.Fill(midiapp::ThemeBrushes::Current().Get(L"ControlStrongFillColorDisabledBrush"));
             return light;
         }
     }

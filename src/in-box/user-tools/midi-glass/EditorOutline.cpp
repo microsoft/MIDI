@@ -12,6 +12,7 @@
 // controls. It carries the keyboard order badge, because a hidden ordering is one nobody can fix.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 #include "EditorItems.h"
 
@@ -115,8 +116,7 @@ namespace winrt::midiglass::implementation
 
         media::SolidColorBrush AccentAt(_In_ double opacity)
         {
-            auto const accent = xaml::Application::Current().Resources()
-                .Lookup(box_value(L"AccentFillColorDefaultBrush")).as<media::SolidColorBrush>();
+            auto const accent = ::midiapp::ThemeBrushes::Current().Get(L"AccentFillColorDefaultBrush").as<media::SolidColorBrush>();
 
             auto color = accent.Color();
             color.A = static_cast<uint8_t>(std::clamp(opacity, 0.0, 1.0) * 255.0);
@@ -750,8 +750,8 @@ namespace winrt::midiglass::implementation
                     // Understated at rest and highlighted by its edge when armed. A row of
                     // fully drawn buttons reads as chrome; what is wanted here is a set of
                     // tools, one of which is on.
-                    face.Fill(application.Lookup(box_value(L"SubtleFillColorSecondaryBrush")).as<media::Brush>());
-                    face.Stroke(application.Lookup(box_value(L"ControlStrokeColorDefaultBrush")).as<media::Brush>());
+                    face.Fill(::midiapp::ThemeBrushes::Current().Get(L"SubtleFillColorSecondaryBrush"));
+                    face.Stroke(::midiapp::ThemeBrushes::Current().Get(L"ControlStrokeColorDefaultBrush"));
 
                     controls::Grid stack{};
 
@@ -788,8 +788,7 @@ namespace winrt::midiglass::implementation
                     caption.LineStackingStrategy(xaml::LineStackingStrategy::BlockLineHeight);
                     caption.HorizontalAlignment(xaml::HorizontalAlignment::Center);
                     caption.VerticalAlignment(xaml::VerticalAlignment::Top);
-                    caption.Foreground(application
-                        .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+                    caption.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
 
                     controls::Grid::SetRow(caption, 1);
 

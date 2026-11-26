@@ -8,7 +8,7 @@ categories:
   - General Purpose MIDI Tools
 ---
 
-> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in 2027. It's currently available for developers.
+> This page covers information about a Windows MIDI Services feature and application that will be released in 2027. It's currently available in preview at [https://aka.ms/midireleases](https://aka.ms/midireleases).
 
 Windows MIDI Keyboard is an on-screen keyboard for playing MIDI instruments. It's the quickest way to answer "is this thing making a sound?" without unpacking a controller, and it's genuinely playable with a mouse, a touchscreen, or your computer keyboard.
 
@@ -105,6 +105,8 @@ If the instrument answers MIDI Capability Inquiry, the keyboard asks it for its 
 
 Not every device answers, and the flyout tells you which case you're in. When it doesn't, type the numbers instead: program 1 to 128, and bank MSB and LSB 0 to 127. That always works, because it's an ordinary bank select and program change either way.
 
+Asking for the program list sends a few short SysEx messages when the keyboard connects. If nothing answers, the keyboard asks again, waiting longer each time, unless **Keep looking for the device's programs** is turned off in settings. If you play into a loopback that another app also sends SysEx through, the two apps' messages can get mixed up. Turn off **Ask the device for its programs with MIDI-CI** in settings and the keyboard sends no SysEx of its own.
+
 **Send these when reconnecting to this device** re-sends your choice whenever the keyboard reconnects, which is what you want for a device that forgets its patch when it's power-cycled. **Send now** sends it immediately.
 
 ## Settings
@@ -120,6 +122,8 @@ The gear button at the top right opens the settings panel beside the keys.
 **Appearance** sets whether the app follows your Windows light or dark mode, and which window background to use. Its **Black keys** and **White keys** tabs let you pick your own color for each kind of key. The letters and note names on the keys switch between dark and light text on their own, so they stay easy to read whatever colors you choose.
 
 The pin button next to the settings button keeps the keyboard above your other windows, which is what you want when you're playing an instrument hosted in a DAW.
+
+**Open only one window** is on unless you turn it off. Starting the keyboard again, for example with a double-click that went through twice, brings the open window forward instead of opening a second one. A keyboard opened for a track from Windows MIDI Sequencer or Windows MIDI Patchbay still gets its own window. Any extra window opens a little down and to the right of the first, so you can see there are two.
 
 ## Starting from the command line
 

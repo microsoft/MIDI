@@ -14,6 +14,7 @@
 // ============================================================================
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "ConfigurationsWindow.xaml.h"
 #include "ConfigurationsWindow.g.cpp"
 
@@ -169,6 +170,13 @@ namespace winrt::midisettings::implementation
             elements.LeftInset = TitleBarLeftInsetColumn();
             elements.RightInset = TitleBarRightInsetColumn();
 
+            // Before the chrome applies the saved theme, so the brushes start in that theme.
+            ::midiapp::ThemeBrushes::Current().AddSource(ThemeBrushSource());
+            RootGrid().ActualThemeChanged([](auto&&, auto&&)
+                {
+                    ::midiapp::ThemeBrushes::Current().Refresh();
+                });
+
             m_chrome.Initialize(elements, native::AppSettings::Current());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
@@ -194,6 +202,7 @@ namespace winrt::midisettings::implementation
                     {
                         strong->m_closing = true;
                         strong->SaveWindowPlacement();
+                        ::midiapp::ThemeBrushes::Current().RemoveSource(strong->ThemeBrushSource());
                         strong->m_chrome.Shutdown();
                     }
                 });
@@ -699,7 +708,7 @@ namespace winrt::midisettings::implementation
             if (caption)
             {
                 block.Style(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
-                block.Foreground(xaml::Application::Current().Resources().Lookup(winrt::box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
+                block.Foreground(::midiapp::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
             }
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to make dialog text.")

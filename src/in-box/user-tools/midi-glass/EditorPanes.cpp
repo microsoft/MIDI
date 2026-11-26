@@ -13,6 +13,7 @@
 // divider that does not move looks broken.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "AppSettings.h"
@@ -303,8 +304,7 @@ namespace winrt::midiglass::implementation
 
             if (auto const line = border.Child().try_as<::winrt::Microsoft::UI::Xaml::Shapes::Rectangle>())
             {
-                line.Fill(xaml::Application::Current().Resources()
-                    .Lookup(box_value(key)).as<media::Brush>());
+                line.Fill(::midiapp::ThemeBrushes::Current().Get(key));
             }
         }
     }

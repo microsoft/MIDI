@@ -22,6 +22,9 @@ namespace winrt::midiglass::implementation
         // Called before Activate, so the window is sized and placed before its first paint.
         void RestoreWindowPlacement();
 
+        // The tool's Appearance settings, applied again after they change in any window.
+        void ApplyAppearance() noexcept;
+
         void OnRootLoaded(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);

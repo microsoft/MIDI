@@ -21,6 +21,7 @@
 //     away - not to wash a palette out until it no longer looks like the thing it is named after.
 
 #include "pch.h"
+#include "ThemeBrushes.h"
 #include "EditorWindow.xaml.h"
 
 #include "StringResources.h"
@@ -59,8 +60,7 @@ namespace winrt::midiglass::implementation
 
         media::SolidColorBrush BrushFromKey(_In_ wchar_t const* key)
         {
-            return xaml::Application::Current().Resources()
-                .Lookup(box_value(key)).as<media::SolidColorBrush>();
+            return ::midiapp::ThemeBrushes::Current().Get(key).as<media::SolidColorBrush>();
         }
 
         winrt::Windows::UI::Color ToWindowsColor(_In_ glass::ThemeColor const& color) noexcept
