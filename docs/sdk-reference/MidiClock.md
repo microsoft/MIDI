@@ -20,7 +20,7 @@ To learn more about high-resolution timestamps in Windows, see [https://aka.ms/m
 | --------------- | ----------- |
 | `Now` | Returns the current timestamp |
 | `TimestampFrequency` | The number of timestamp ticks in one second. It's worked out on the first call and then remembered |
-| `TimestampConstantSendImmediately` | The timestamp that means "send this right away, don't schedule it." Its value is `0`, so you can also pass `0` |
+| `TimestampConstantSendImmediately` | The timestamp that means "send this right away, don't schedule it." Use this constant whenever you want a message sent right away |
 | `TimestampConstantMessageQueueMaximumFutureTicks` | How far ahead you can schedule a message, in ticks. It's currently five minutes. A message scheduled further ahead than this fails to send |
 
 ## Static Functions for Conversion

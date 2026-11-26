@@ -276,14 +276,33 @@ namespace midiapp
                             return;
                         }
 
-                        auto packets = winrt::single_threaded_vector<IMidiUniversalPacket>();
+                        // One call for the whole reply, so a reply another app sends to the same
+                        // endpoint and group at the same moment can't land in the middle of it.
+                        auto const raw = connection.try_as<IMidiEndpointConnectionRaw>();
+
+                        if (raw == nullptr)
+                        {
+                            LOG_HR(E_NOINTERFACE);
+                            return;
+                        }
+
+                        std::vector<uint32_t> words{};
+                        words.reserve(static_cast<size_t>(messages.Size()) * 2);
 
                         for (auto const& reply : messages)
                         {
-                            packets.Append(reply);
+                            words.push_back(reply.Word0());
+                            words.push_back(reply.Word1());
                         }
 
-                        (void)connection.SendMultipleMessagesPacketList(packets);
+                        if (words.size() > raw->GetSupportedMaxMidiWordsPerTransmission())
+                        {
+                            LOG_HR(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
+                            return;
+                        }
+
+                        LOG_IF_FAILED(raw->SendMidiMessagesRaw(
+                            messages.GetAt(0).Timestamp(), static_cast<UINT32>(words.size()), words.data()));
                     }
                     catch (...)
                     {

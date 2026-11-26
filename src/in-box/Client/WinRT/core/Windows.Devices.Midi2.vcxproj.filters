@@ -66,6 +66,46 @@
     <ClCompile Include="$(SolutionDir)inc\midi_sequence_playback_engine.cpp">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_file_smf_writer.cpp" />
+    <ClCompile Include="MidiFileReadOptions.cpp">
+      <Filter>SDK\Utilities\Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFileReadResult.cpp">
+      <Filter>SDK\Utilities\Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFileWriteOptions.cpp">
+      <Filter>SDK\Utilities\Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFileWriteResult.cpp">
+      <Filter>SDK\Utilities\Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequence.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequenceBuilder.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequenceLyricLine.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequencePlayer.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequenceTextEvent.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequenceTrack.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSequenceTrackRouting.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiStandardFileReader.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiStandardFileWriter.cpp">
+      <Filter>SDK\Utilities\Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -126,15 +166,7 @@
     <ClInclude Include="MidiRtpSdkJson.h">
       <Filter>SDK\Transports\Rtp</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)inc\midi_file_sequence.h">
-      <Filter>SDK\Utilities\Files</Filter>
-    </ClInclude>
-    <ClInclude Include="$(SolutionDir)inc\midi_file_smf_reader.h">
-      <Filter>SDK\Utilities\Files</Filter>
-    </ClInclude>
-    <ClInclude Include="$(SolutionDir)inc\midi_sequence_playback_engine.h">
-      <Filter>SDK\Utilities\Sequencing</Filter>
-    </ClInclude>
+    <ClInclude Include="midi_saved_config_json.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -1045,6 +1077,12 @@
     </Midl>
     <Midl Include="MidiRtpTransportManager.idl">
       <Filter>SDK\Transports\Rtp</Filter>
+    </Midl>
+    <Midl Include="MidiSequenceBuilder.idl">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </Midl>
+    <Midl Include="MidiSequenceTimingModeEnum.idl">
+      <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

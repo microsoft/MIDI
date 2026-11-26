@@ -2,7 +2,7 @@
 
 Windows MIDI Sound Module turns SoundFont 2 banks (`.sf2` files) into synths that any MIDI app on the PC can play. Each synth you add gets its own MIDI endpoint, so a DAW, a notation app or the MIDI console sees it like any other device. You can run several synths at once, and they all play through one audio device.
 
-It's one of the in-box MIDI tools, and it builds with the rest of them. It isn't in the Tools installer yet, though. Each synth is a virtual device, so the app has to wait until the Virtual Device transport works in the released service.
+It's one of the in-box MIDI tools, and it installs with the rest of them in the Tools installer. Each synth is a virtual device, so the app needs a Windows MIDI Services service that has the latest Virtual Device fixes.
 
 ## What it does
 
@@ -39,7 +39,7 @@ Synths are saved to `%LOCALAPPDATA%\Microsoft\MIDI Sound Module\synths.json`. Th
 
 Open `src/in-box/Midi2-AppSDK.sln`, pick `x64` or `ARM64`, and build the `midisoundmodule` project. That also builds the engine and the Windows MIDI Services SDK. The app lands in `src/in-box/vsfiles-sdk/out/midisoundmodule/<platform>/<configuration>`. It runs unpackaged, so the Windows App SDK runtime and the Windows MIDI Services SDK runtime have to be installed.
 
-`build\build-all.ps1` builds it along with everything else in that solution, but doesn't add it to the Tools installer.
+`build\build-all.ps1` builds it along with everything else in that solution and adds it to the Tools installer, with a Start menu shortcut named MIDI Sound Module.
 
 To run the tests, build `Midi2.MidiSoundModule.unittests` and run it with TAEF:
 

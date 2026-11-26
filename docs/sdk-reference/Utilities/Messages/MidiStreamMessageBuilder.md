@@ -14,7 +14,7 @@ The messages are described in the MIDI Association's Universal MIDI Packet (UMP)
 
 ## Static Functions: Building Messages
 
-Every function takes a `timestamp` first. Pass `0` or `MidiClock.TimestampConstantSendImmediately` to send the message right away.
+Every function takes a `timestamp` first. Pass `MidiClock.TimestampConstantSendImmediately` to send the message right away.
 
 | Function | Description |
 | -------- | ----------- |
