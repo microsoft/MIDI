@@ -8,7 +8,7 @@ categories:
   - Internals
 ---
 
-If you've spent time with MIDI-OX or a tool like it, you can probably read MIDI 1.0 messages by sight. `90 3C 64` is a note, `B0 07 64` is a volume change, and anything that starts with `F0` is going to take a while. The tools that come with Windows MIDI Services, like [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), show those same messages in a newer form called the Universal MIDI Packet, or UMP. That note from the first example now shows up as `20903C64`.
+If you've spent time with MIDI-OX or a tool like it, you can probably read MIDI 1.0 messages by sight. `90 3C 64` is a note on, `B0 07 64` is a volume change, and anything that starts with `F0` is going to take a while. The tools that come with Windows MIDI Services, like [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), show those same messages in a newer standard form called the Universal MIDI Packet, or UMP, introduced with MIDI 2.0. That note from the first example now shows up as `20903C64`.
 
 This article is for you if you know the MIDI 1.0 bytes and want to make sense of what you see now. It shows you how to read a UMP, puts common messages side by side in both forms, explains how System Exclusive changed, and describes what Windows translates for you. It doesn't try to cover the whole UMP specification. There's a link to that at the end.
 
@@ -16,22 +16,24 @@ The good news is that you already know most of it.
 
 ## What UMP is
 
-UMP is the data format that arrived with MIDI 2.0. It carries MIDI 1.0 messages as well as MIDI 2.0 messages, so UMP and MIDI 2.0 aren't the same thing. A MIDI 1.0 keyboard's notes can travel as UMP without any change in what they mean.
+UMP is the data format that arrived with MIDI 2.0. It carries MIDI 1.0 protocol messages as well as MIDI 2.0 protocol messages, so **UMP and MIDI 2.0 aren't the same thing**. A MIDI 1.0 data format keyboard's notes can travel as UMP without any change in what they mean.
+
+> Data format vs protocol: The data format is original MIDI 1.0 byte format, or the new UMP format. That's separate from the protocol which describes the messages themselves. MIDI 1.0 protocol messages can be represented in MIDI 1.0 byte data format, or in UMP. MIDI 2.0 protocol messages can only be represented in UMP.
 
 UMP data is made of 32-bit words. A word is four bytes, which is eight hexadecimal (hex) digits. A packet, which the specification calls a UMP, is one, two, three, or four words long and holds one message. Long messages, like System Exclusive, are split across several packets.
 
-There's no running status in UMP. Every packet carries its own status, even when it's the same as the one before.
+There's no running status in UMP, just like how there's no running status in USB MIDI 1.0. Every packet carries its own status, even when it's the same as the one before.
 
 Inside Windows MIDI Services, every message is a UMP, including messages to and from MIDI 1.0 devices. That's why MIDI Monitor and [MIDI Console]({{ site.baseurl }}/tools/console/) show UMP words for every device, old or new. This translation makes it simple to move messages around, merge and split streams, and filter/modify individual messages.
 
 ## Reading a UMP
 
-Here's that note again: middle C (note 60), velocity 100, on channel 1. In MIDI 1.0 bytes it's `90 3C 64`. As a UMP, it's `20903C64`.
+Here's that note again: middle C (note 60), velocity 100, on channel 1. In MIDI 1.0 byte data format it's `90 3C 64`. As a UMP, it's `20903C64`.
 
 | Hex digits | What they mean |
 | --- | --- |
 | `2` | The message type. Type 2 is a MIDI 1.0 channel voice message, such as a note or a controller. |
-| `0` | The group. This is group 1. |
+| `0` | The group. This is group 1. More on groups in a moment. |
 | `90` | The MIDI 1.0 status byte you already know: Note On (`9`) on channel 1 (`0`) |
 | `3C` | Note number 60, middle C |
 | `64` | Velocity 100 |
@@ -42,9 +44,11 @@ After the first two hex digits come the MIDI 1.0 bytes you already know, in the 
 
 For simplicity's sake*, a group is the UMP version of a MIDI 1.0 port, or of a cable in USB MIDI 1.0. Each group has its own 16 channels and its own system messages, and a device can use up to 16 groups. A MIDI interface with four MIDI outputs shows up in older apps as four ports. In Windows MIDI Services, it's one device with four groups.
 
+This is an affordance with Windows MIDI Services to make it easy to work with messages in either protocol. USB MIDI always had a single stream to the device endpoint, and that stream had virtual cable numbers in it. Those virtual cables were turned into "Ports" by most operating systems, but really, they were just an index added to messages in the stream. In Windows MIDI Services, we took that concept and mapped it to UMP, reusing the UMP Group concept as the stand in for the virtual cable.
+
 In the data, groups and channels are counted from `0` to `F`, and apps show them as 1 to 16. So group `0` is group 1, and channel `0` is channel 1, the same way MIDI 1.0 channels have always worked.
 
-To learn how ports and groups line up, see [Understanding How we Map MIDI 1.0 Ports to UMP Endpoints]({{ site.baseurl }}/kb/mapping-midi1-port-concepts/).
+To learn more about how ports and groups line up, see [Understanding How we Map MIDI 1.0 Ports to UMP Endpoints]({{ site.baseurl }}/kb/mapping-midi1-port-concepts/).
 
 \* There's more subtlety to what a Group really is, especially as a way to expand the channel count across a MIDI 2.0 function, but for our purposes here, this fits. The Windows MIDI Services mapping of Cable to Group is not part of the specification -- it's an affordance to bringing classic MIDI 1.0 devices into the UMP format.
 
@@ -130,7 +134,7 @@ These are the MIDI 1.0 messages from the first table, converted with the specifi
 
 A few more differences are worth knowing when you read raw data:
 
-- **A Note On with velocity 0 is a real Note On** in the MIDI 2.0 protocol, not a Note Off. It starts a note at the lowest velocity there is.
+- **A Note On with velocity 0 is a real Note On** in the MIDI 2.0 protocol, not a Note Off. It starts a note at the lowest velocity there is. The original reason for "note on velocity 0" being treated as a note off was for running status over a DIN cable. Because running status is no longer a thing in MIDI 2.0, neither is this convention. (This can cause issues when translation between MIDI 1.0 and MIDI 2.0, as some operating systems have run into in 2026 where note off messages from devices were not received due to the translation. This is the only message that doesn't survive a round trip between protocols.)
 - **Some messages are new.** MIDI 2.0 adds controllers and pitch bend for each individual note, and Registered and Assignable Controllers that move a value up or down instead of setting it. MIDI 1.0 has nothing that matches them.
 - **MIDI Monitor names them for you.** Under each message you'll see a label such as **MIDI 2.0 Note On** or **MIDI 2.0 Registered Controller**, and the **Details** column spells out the values.
 
