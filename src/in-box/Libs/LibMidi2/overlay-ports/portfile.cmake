@@ -2,7 +2,7 @@
 # patches below. The first two mirror upstream fixes for AM_MIDI2.0Lib issues #39 and #36;
 # the third has no upstream fix yet and covers two further defects reported in the #39
 # thread. The fourth fixes the MIDI 1.0 to MIDI 2.0 RPN and NRPN translation in
-# umpToMIDI2Protocol.h, which only the MIDI Sequencer uses, and has no upstream fix yet.
+# umpToMIDI2Protocol.h, which only the MIDI Sequencer uses (AM_MIDI2.0Lib issue #46).
 # Expect this overlay to live for a while, since a vcpkg publish takes over a month
 # to reach the internal build repo.
 #
