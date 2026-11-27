@@ -259,6 +259,16 @@
 #define MIDIDIAG_FIELD_LABEL_LOOPBACK                                    L"loopback"
 #define MIDIDIAG_FIELD_LABEL_SAVED_LOOPBACK                              L"saved_loopback"
 
+#define MIDIDIAG_SECTION_LABEL_GM_SYNTH                                  L"transport_gm_synth"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_STATUS                                L"synth_status"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_ENABLED                               L"synth_enabled"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_ENDPOINT_DEVICE_ID                    L"synth_endpoint_device_id"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_MODE                                  L"synth_mode"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_AUDIO_OUTPUT                          L"audio_output"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_BANK_SELECT                           L"bank_select"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_VOLUME_TRIM_DB                        L"volume_trim_db"
+#define MIDIDIAG_FIELD_LABEL_SYNTH_REVERB_AND_CHORUS                     L"reverb_and_chorus"
+
 #define MIDIDIAG_SECTION_LABEL_ENDPOINT_CUSTOMIZATIONS                   L"endpoint_customizations"
 #define MIDIDIAG_FIELD_LABEL_CUSTOMIZATION_COUNT                         L"customization_count"
 #define MIDIDIAG_FIELD_LABEL_ORPHANED_CUSTOMIZATION_COUNT                L"orphaned_customization_count"

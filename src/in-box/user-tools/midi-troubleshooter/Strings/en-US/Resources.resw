@@ -692,6 +692,9 @@
   <data name="ReportSection_transport_basic_loopback" xml:space="preserve">
     <value>Basic loopback endpoints</value>
   </data>
+  <data name="ReportSection_transport_gm_synth" xml:space="preserve">
+    <value>General MIDI synthesizer</value>
+  </data>
   <data name="ReportSection_endpoint_customizations" xml:space="preserve">
     <value>Endpoint customizations</value>
   </data>

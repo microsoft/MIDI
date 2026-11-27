@@ -54,5 +54,6 @@ bool DoSectionNetworkMidi2();
 bool DoSectionRtpMidi();
 bool DoSectionLoopback();
 bool DoSectionBasicLoopback();
+bool DoSectionGeneralMidiSynth();
 bool DoSectionEndpointCustomizations();
 bool DoSectionConnectionTiming();

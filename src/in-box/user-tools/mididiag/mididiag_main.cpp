@@ -699,7 +699,10 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
                 }
                 else
                 {
-                    OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, std::wstring{ L"Not present" });
+                    // absent means the same as 0: the service falls back to its built-in default
+                    mididiag::WriteField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, mididiag::KeyValueText{}
+                        .Add(L"value", L"not_set")
+                        .Add(L"meaning", L"Use the built-in default"));
                 }
             }
             catch (...)
@@ -2909,6 +2912,7 @@ int __cdecl wmain(_In_ int argc, _In_reads_(argc) wchar_t* argv[])
             DoSectionRtpMidi();
             DoSectionLoopback();
             DoSectionBasicLoopback();
+            DoSectionGeneralMidiSynth();
             DoSectionEndpointCustomizations();
 
             // before the ping test and the connection timing, so their own sessions are not listed

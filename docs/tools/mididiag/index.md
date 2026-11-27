@@ -31,6 +31,7 @@ The report tells you:
 - The device behind each endpoint: its USB vendor and product IDs, its serial number, how many hubs it's plugged in through, when it was last connected and removed, and its driver
 - Every MIDI 1.0 port that WinMM apps see, and whether its number matches the one Windows MIDI Services expects
 - Bluetooth MIDI, Network MIDI 2.0, RTP-MIDI and loopback details, when those transports are installed
+- The built-in General MIDI synthesizer's settings, when it's installed: whether it's turned on, its synthesizer mode, audio output, bank select, volume trim, and whether reverb and chorus are on. If it's turned off, the report says so, because then it has no MIDI ports.
 - For each network MIDI host on this PC, whether looking it up by name still finds it
 - Saved names and pictures that no longer match any device
 - Every app that's connected to the MIDI service right now, and what it has open
