@@ -701,6 +701,7 @@ namespace mididiag::report
             { L"ble", L"BLE" },
             { L"cc", L"CC" },
             { L"clsid", L"CLSID" },
+            { L"db", L"dB" },
             { L"dbm", L"dBm" },
             { L"desc", L"description" },
             { L"dhcp", L"DHCP" },

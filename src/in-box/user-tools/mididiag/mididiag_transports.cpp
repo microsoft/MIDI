@@ -19,6 +19,7 @@
 #include <winrt/Windows.Devices.Midi2.Transports.Rtp.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
 #include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Synth.h>
 
 using namespace mididiag;
 
@@ -27,6 +28,7 @@ namespace net = winrt::Windows::Devices::Midi2::Transports::Network;
 namespace rtp = winrt::Windows::Devices::Midi2::Transports::Rtp;
 namespace loop = winrt::Windows::Devices::Midi2::Transports::Loopback;
 namespace bloop = winrt::Windows::Devices::Midi2::Transports::BasicLoopback;
+namespace synth = winrt::Windows::Devices::Midi2::Transports::Synth;
 
 namespace
 {
@@ -1035,6 +1037,75 @@ bool DoSectionBasicLoopback()
                 .AddBool(L"muted", saved.IsMuted())
                 .Add(L"feedback_protection", saved.FeedbackProtection() == bloop::MidiBasicLoopbackFeedbackProtection::Off ? L"off" : L"mute")
                 .Add(L"name", saved.EndpointDefinition() == nullptr ? winrt::hstring{} : saved.EndpointDefinition().Name()));
+        }
+    }
+    catch (...)
+    {
+        WriteError(internal::ResourceGetWString(IDS_ERROR_EXCEPTION_COLLECTING_SECTION));
+        return false;
+    }
+
+    return true;
+}
+
+bool DoSectionGeneralMidiSynth()
+{
+    if (!synth::MidiSynthManager::IsTransportAvailable())
+    {
+        return true;
+    }
+
+    WriteSection(MIDIDIAG_SECTION_LABEL_GM_SYNTH);
+
+    try
+    {
+        auto const status = synth::MidiSynthManager::GetStatus();
+
+        if (status == nullptr)
+        {
+            WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_STATUS, L"not_reported");
+            return true;
+        }
+
+        auto const endpointDeviceId = status.EndpointDeviceId();
+
+        WriteBoolField(MIDIDIAG_FIELD_LABEL_SYNTH_ENABLED, status.IsEnabled());
+        WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_ENDPOINT_DEVICE_ID, endpointDeviceId);
+
+        switch (status.RenderMode())
+        {
+        case synth::MidiSynthRenderMode::Modern:        WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_MODE, L"modern"); break;
+        case synth::MidiSynthRenderMode::Compatible:    WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_MODE, L"compatible"); break;
+        default:                                        WriteNumberField(MIDIDIAG_FIELD_LABEL_SYNTH_MODE, static_cast<uint32_t>(status.RenderMode())); break;
+        }
+
+        switch (status.AudioOutputMode())
+        {
+        case synth::MidiSynthAudioOutputMode::WasapiShared:             WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_AUDIO_OUTPUT, L"shared"); break;
+        case synth::MidiSynthAudioOutputMode::WasapiSharedLowLatency:   WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_AUDIO_OUTPUT, L"shared_low_latency"); break;
+        case synth::MidiSynthAudioOutputMode::WasapiExclusive:          WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_AUDIO_OUTPUT, L"exclusive"); break;
+        default:                                                        WriteNumberField(MIDIDIAG_FIELD_LABEL_SYNTH_AUDIO_OUTPUT, static_cast<uint32_t>(status.AudioOutputMode())); break;
+        }
+
+        switch (status.BankSelectMode())
+        {
+        case synth::MidiSynthBankSelectMode::Automatic:     WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_BANK_SELECT, L"automatic"); break;
+        case synth::MidiSynthBankSelectMode::RolandGS:      WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_BANK_SELECT, L"roland_gs"); break;
+        case synth::MidiSynthBankSelectMode::YamahaXG:      WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_BANK_SELECT, L"yamaha_xg"); break;
+        case synth::MidiSynthBankSelectMode::GeneralMidi2:  WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_BANK_SELECT, L"general_midi_2"); break;
+        default:                                            WriteNumberField(MIDIDIAG_FIELD_LABEL_SYNTH_BANK_SELECT, static_cast<uint32_t>(status.BankSelectMode())); break;
+        }
+
+        WriteField(MIDIDIAG_FIELD_LABEL_SYNTH_VOLUME_TRIM_DB, std::format(L"{:.1f}", status.VolumeDecibels()));
+        WriteBoolField(MIDIDIAG_FIELD_LABEL_SYNTH_REVERB_AND_CHORUS, status.AreEffectsEnabled());
+
+        if (!status.IsEnabled())
+        {
+            AddFinding(L"gm_synth_turned_off", internal::ResourceGetWString(IDS_FINDING_GM_SYNTH_TURNED_OFF));
+        }
+        else if (endpointDeviceId.empty())
+        {
+            AddFinding(L"gm_synth_endpoint_missing", internal::ResourceGetWString(IDS_FINDING_GM_SYNTH_ENDPOINT_MISSING));
         }
     }
     catch (...)
