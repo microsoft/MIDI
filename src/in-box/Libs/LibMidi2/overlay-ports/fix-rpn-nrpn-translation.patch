@@ -1,0 +1,53 @@
+Fix three defects in the MIDI 1.0 to MIDI 2.0 RPN and NRPN translation.
+
+1. RPN 0x0005 (Modulation Depth Range) was sent as soon as CC 6 arrived, and the
+   CC 38 after it was dropped. That RPN uses the Data Entry LSB: GM2 3.4.4 gives
+   it 100/128-cent steps and a default of 00H/40H (+/-50 cents), so the default
+   translated to 0 cents. RPNs 0x0002, 0x0003, 0x0004 and 0x0006 use only the MSB
+   and are still sent at once.
+
+2. NRPNs 0x0002 to 0x0006 were sent at once too, because the check never looked
+   at whether the selection was an RPN or an NRPN. NRPN numbers are
+   manufacturer-defined, so they now wait for CC 38 like every other NRPN.
+
+3. The RPN and NRPN null function (7FH/7FH) was translated, and a Data Entry
+   with no parameter selected was sent with 0xFF in the bank and index fields.
+   M2-104-UM D.3.3 says the null function is not translated, and 0xFF isn't a
+   valid 7-bit value. Neither is sent now.
+
+Upstream: https://github.com/midi2-dev/AM_MIDI2.0Lib
+diff --git a/include/umpToMIDI2Protocol.h b/include/umpToMIDI2Protocol.h
+--- a/include/umpToMIDI2Protocol.h
++++ b/include/umpToMIDI2Protocol.h
+@@ -55,7 +55,8 @@ private:
+ 
+     void checkRPNOnChannel(uint8_t grChannel)
+     {
+-        if (cTR[grChannel].valueMSB < 128 && cTR[grChannel].MSB < 128 && cTR[grChannel].LSB < 128)
++        if (cTR[grChannel].valueMSB < 128 && cTR[grChannel].MSB < 128 && cTR[grChannel].LSB < 128 &&
++            !(cTR[grChannel].MSB == 0x7F && cTR[grChannel].LSB == 0x7F))
+         {
+             //So sometimes CC 38 is optional grrrr... handle this
+             uint8_t group = grChannel >> 4;
+@@ -205,15 +206,18 @@ public:
+                                     break;
+                                 case 6:
+                                     cTR[grChannel].valueMSB = val2;
+-                                    if(cTR[grChannel].MSB == 0x00 &&
+-                                        cTR[grChannel].LSB >= 0x02 && cTR[grChannel].LSB <= 0x06
++                                    if(cTR[grChannel].type == RPN && cTR[grChannel].MSB == 0x00 &&
++                                        cTR[grChannel].LSB >= 0x02 && cTR[grChannel].LSB <= 0x06 &&
++                                        cTR[grChannel].LSB != 0x05
+                                         )
+                                     { //Force an RPN Out
+                                         checkRPNOnChannel(grChannel);
+                                     }
+                                     break;
+                                 case 38:
+-                                    if(cTR[grChannel].valueMSB != 255)
++                                    if(cTR[grChannel].valueMSB != 255 &&
++                                        cTR[grChannel].MSB < 128 && cTR[grChannel].LSB < 128 &&
++                                        !(cTR[grChannel].MSB == 0x7F && cTR[grChannel].LSB == 0x7F))
+                                     {
+                                         out1 = ((0x04 << 4) + group) << 24;
+                                         out1 += cTR[grChannel].type == RPN ? 0b0010 << 20 : 0b0011 << 20;

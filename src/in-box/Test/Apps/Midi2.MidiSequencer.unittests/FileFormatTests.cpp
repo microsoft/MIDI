@@ -309,6 +309,18 @@ void ClipFileTests::EveryExportedMessageIsMidi2()
         testdata::MakeEvent(480, 0x20B00602),
         testdata::MakeEvent(480, 0x20B02640),
         testdata::MakeEvent(600, 0x20B06000),   // CC 0 alone, with no program change after it
+        testdata::MakeEvent(700, 0x20B06500),   // RPN 0x0005 uses CC 38: 00H/40H is +/-50 cents
+        testdata::MakeEvent(700, 0x20B06405),
+        testdata::MakeEvent(700, 0x20B00600),
+        testdata::MakeEvent(700, 0x20B02640),
+        testdata::MakeEvent(800, 0x20B06300),   // NRPN 0x0003 is the maker's, so it waits for CC 38
+        testdata::MakeEvent(800, 0x20B06203),
+        testdata::MakeEvent(800, 0x20B00601),
+        testdata::MakeEvent(800, 0x20B02610),
+        testdata::MakeEvent(900, 0x20B0657F),   // the null function, then a stray data entry
+        testdata::MakeEvent(900, 0x20B0647F),
+        testdata::MakeEvent(900, 0x20B00605),
+        testdata::MakeEvent(900, 0x20B02605),
     };
 
     Track track{};
@@ -381,6 +393,16 @@ void ClipFileTests::EveryExportedMessageIsMidi2()
     VERIFY_ARE_EQUAL(ScaleUp((2 << 7) | 0x40, 14, 32), assignable->Words[1]);
 
     VERIFY_IS_NULL(find(read.Events, 600, 0x41B30000));
+
+    auto const modulationRange = find(read.Events, 700, 0x41230005);
+    VERIFY_IS_NOT_NULL(modulationRange);
+    VERIFY_ARE_EQUAL(ScaleUp(0x40, 14, 32), modulationRange->Words[1]);
+
+    auto const makers = find(read.Events, 800, 0x41330003);
+    VERIFY_IS_NOT_NULL(makers);
+    VERIFY_ARE_EQUAL(ScaleUp((1 << 7) | 0x10, 14, 32), makers->Words[1]);
+
+    VERIFY_IS_FALSE(std::any_of(read.Events.begin(), read.Events.end(), [](ClipEvent const& event) { return event.Tick >= 900 && (event.Words[0] >> 28) == 0x4; }));
 }
 
 void StandardMidiFileTests::AnExportReadsBackWithTheSameNotes()

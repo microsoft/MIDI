@@ -94,14 +94,6 @@ namespace midisequencer
                 auto const status = (out.Words[0] >> 20) & 0x0F;
                 auto const controller = midi2 && (status == 0x2 || status == 0x3);
 
-                // The RPN and NRPN null function selects nothing, so it isn't translated (D.3.3).
-                // Neither is a data entry before any parameter was selected, which libmidi2 sends
-                // with 0xFF in the bank and index.
-                if (controller && ((out.Words[0] & 0xFFFF) == 0x7F7F || (out.Words[0] & 0x8080) != 0))
-                {
-                    continue;
-                }
-
                 out.Tick = controller && heldTick.has_value() ? *heldTick : tick;
                 upgraded.push_back(out);
             }
@@ -178,9 +170,12 @@ namespace midisequencer
 
             case ControllerDataEntryMsb:
             {
-                // libmidi2 sends RPN 0x0002 to 0x0006 at once, without waiting for CC 38.
-                auto const sentAtOnce = selection.Msb == 0 && selection.Lsb >= 2 && selection.Lsb <= 6;
-                selection.Held = !sentAtOnce && selection.Msb < 128 && selection.Lsb < 128;
+                // libmidi2 sends RPN 0x0002, 0x0003, 0x0004 and 0x0006 at once, without waiting
+                // for CC 38, because they use only the MSB. It never sends the null function.
+                auto const sentAtOnce = selection.Registered && selection.Msb == 0 &&
+                    selection.Lsb >= 2 && selection.Lsb <= 6 && selection.Lsb != 5;
+                auto const null = selection.Msb == 0x7F && selection.Lsb == 0x7F;
+                selection.Held = !sentAtOnce && !null && selection.Msb < 128 && selection.Lsb < 128;
                 selection.HeldTick = event.Tick;
                 break;
             }
