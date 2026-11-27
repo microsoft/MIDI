@@ -7,6 +7,7 @@
 
 #include "MidiClipFile.h"
 
+#include "Midi2ProtocolUpgrade.h"
 #include "SequenceRender.h"
 
 #include <algorithm>
@@ -471,7 +472,12 @@ namespace midisequencer
             file.EndTick = std::max(file.EndTick, message.Tick);
         }
 
-        std::stable_sort(file.Events.begin(), file.Events.end(), [](ClipEvent const& a, ClipEvent const& b) { return a.Tick < b.Tick; });
+        // A clip file holds MIDI 2.0 Protocol messages only, but start-up messages and imported
+        // events can be MIDI 1.0. One translation runs through both parts, so a bank select in
+        // the header still reaches a program change in the sequence. This also sorts the events.
+        Midi2ProtocolUpgrade upgrade{};
+        upgrade.Upgrade(file.Configuration);
+        upgrade.Upgrade(file.Events);
 
         file.EndTick = std::max(file.EndTick, TrackEndTick(sequence, track));
 

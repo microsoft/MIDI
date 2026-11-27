@@ -1,7 +1,9 @@
 # Overlay of the upstream libmidi2 port. Identical to the registry port except for the
 # patches below. The first two mirror upstream fixes for AM_MIDI2.0Lib issues #39 and #36;
 # the third has no upstream fix yet and covers two further defects reported in the #39
-# thread. Expect this overlay to live for a while, since a vcpkg publish takes over a month
+# thread. The fourth fixes the MIDI 1.0 to MIDI 2.0 RPN and NRPN translation in
+# umpToMIDI2Protocol.h, which only the MIDI Sequencer uses, and has no upstream fix yet.
+# Expect this overlay to live for a while, since a vcpkg publish takes over a month
 # to reach the internal build repo.
 #
 # This must stay under src/api: the internal Windows build repo is rooted there and cannot
@@ -28,6 +30,7 @@ vcpkg_from_github(
         fix-uninitialized-running-status.patch
         fix-stray-sysex-end-byte.patch
         fix-status-byte-terminates-sysex.patch
+        fix-rpn-nrpn-translation.patch
 )
 
 if(VCPKG_TARGET_IS_WINDOWS)
