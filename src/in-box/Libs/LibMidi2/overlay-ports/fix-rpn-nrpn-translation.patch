@@ -15,7 +15,7 @@ Fix three defects in the MIDI 1.0 to MIDI 2.0 RPN and NRPN translation.
    M2-104-UM D.3.3 says the null function is not translated, and 0xFF isn't a
    valid 7-bit value. Neither is sent now.
 
-Upstream: https://github.com/midi2-dev/AM_MIDI2.0Lib
+Upstream: https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/46
 diff --git a/include/umpToMIDI2Protocol.h b/include/umpToMIDI2Protocol.h
 --- a/include/umpToMIDI2Protocol.h
 +++ b/include/umpToMIDI2Protocol.h

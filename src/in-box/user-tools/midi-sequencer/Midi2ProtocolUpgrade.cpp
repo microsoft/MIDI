@@ -99,7 +99,8 @@ namespace midisequencer
             }
         };
 
-        // Selecting the same parameter again sends what's held and changes nothing else.
+        // Selecting the same parameter again sends what's held and changes nothing else. libmidi2
+        // has no call for this yet (AM_MIDI2.0Lib issue #47).
         auto flush = [&](size_t groupChannel)
         {
             auto& selection = selections[groupChannel];
