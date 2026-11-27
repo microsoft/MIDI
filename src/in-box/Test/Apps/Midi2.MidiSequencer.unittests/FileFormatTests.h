@@ -25,6 +25,7 @@ public:
     TEST_METHOD(SomethingElseIsRefused);
     TEST_METHOD(TempoTimeSignatureAndTextMessages);
     TEST_METHOD(ATrackExportsAndImportsBack);
+    TEST_METHOD(EveryExportedMessageIsMidi2);
 };
 
 // Standard MIDI Files, through the shared reader and writer.

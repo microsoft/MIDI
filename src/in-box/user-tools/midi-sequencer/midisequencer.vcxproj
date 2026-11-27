@@ -80,6 +80,16 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <!-- libmidi2 translates MIDI 1.0 messages to MIDI 2.0 for clip file export -->
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Platform)'=='x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Platform)'=='ARM64'">
+    <VcpkgTriplet>arm64-windows</VcpkgTriplet>
+  </PropertyGroup>
   <PropertyGroup>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
@@ -141,6 +151,7 @@
     <ClInclude Include="DialogParts.h" />
     <ClInclude Include="EndpointDirectory.h" />
     <ClInclude Include="MessageTranslation.h" />
+    <ClInclude Include="Midi2ProtocolUpgrade.h" />
     <ClInclude Include="MidiClipFile.h" />
     <ClInclude Include="PianoRoll.h" />
     <ClInclude Include="ClipLaneStrip.h" />
@@ -386,6 +397,9 @@
     <ClCompile Include="MessageTranslation.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Midi2ProtocolUpgrade.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MidiClipFile.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -554,6 +568,10 @@
     <None Include="Themes\tactile.json" />
     <None Include="Themes\aluminum.json" />
     <None Include="Themes\vellum.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vcpkg.json" />
+    <None Include="vcpkg-configuration.json" />
   </ItemGroup>
   <ItemGroup>
     <!-- Embedded in the exe by Resources.rc. Not deployed: every tool installs into one shared

@@ -266,8 +266,12 @@ void ClipFileTests::ATrackExportsAndImportsBack()
     VERIFY_ARE_EQUAL(size_t{ 4 }, clip.Events.size());
     VERIFY_ARE_EQUAL(2u, (clip.Events.front().Words[0] >> 24) & 0x0F);
 
+    // The start-up messages were MIDI 1.0, and a clip file holds only MIDI 2.0 Protocol messages.
     VERIFY_ARE_EQUAL(size_t{ 2 }, imported.Startup.size());
-    VERIFY_ARE_EQUAL(0x22C15100u, imported.Startup[0].Words[0]);
+    VERIFY_ARE_EQUAL(0x42C10000u, imported.Startup[0].Words[0]);
+    VERIFY_ARE_EQUAL(0x51000000u, imported.Startup[0].Words[1]);
+    VERIFY_ARE_EQUAL(0x42B10700u, imported.Startup[1].Words[0]);
+    VERIFY_ARE_EQUAL(ScaleUp(100, 7, 32), imported.Startup[1].Words[1]);
 
     VERIFY_ARE_EQUAL(size_t{ 3 }, imported.Tags.size());
     VERIFY_IS_FALSE(imported.Tempo.empty());
@@ -280,6 +284,103 @@ void ClipFileTests::ATrackExportsAndImportsBack()
 
     VERIFY_IS_TRUE(std::any_of(imported.Meter.begin(), imported.Meter.end(),
         [](MeterChange const& change) { return change.Tick == Bar * 20 && change.Numerator == 7 && change.Denominator == 8; }));
+}
+
+void ClipFileTests::EveryExportedMessageIsMidi2()
+{
+    // MIDI 1.0 start-up messages and clip events, as a Standard MIDI File import leaves them.
+    Clip clip{};
+    clip.Id = L"c-imported";
+    clip.Kind = ClipKind::Notes;
+    clip.Name = L"Imported";
+    clip.Length = Bar;
+    clip.Loop = false;
+    clip.Events = {
+        testdata::MakeEvent(0, 0x20B00140),     // modulation 64
+        testdata::MakeEvent(100, 0x20B06500),   // RPN 0x0000, pitch bend range, with no CC 38
+        testdata::MakeEvent(100, 0x20B06400),
+        testdata::MakeEvent(100, 0x20B0060C),
+        testdata::MakeEvent(200, 0x20903C64),
+        testdata::MakeEvent(250, 0x20E00040),
+        testdata::MakeEvent(300, 0x20903C00),   // a note on at velocity 0 is a note off
+        testdata::MakeEvent(400, 0x20D00050),
+        testdata::MakeEvent(480, 0x20B06301),   // NRPN 0x0102 with CC 38
+        testdata::MakeEvent(480, 0x20B06202),
+        testdata::MakeEvent(480, 0x20B00602),
+        testdata::MakeEvent(480, 0x20B02640),
+        testdata::MakeEvent(600, 0x20B06000),   // CC 0 alone, with no program change after it
+    };
+
+    Track track{};
+    track.Id = L"t-imported";
+    track.Name = L"Imported";
+    track.Destination.Group = 1;
+    track.Destination.Channel = 3;
+    track.Startup = {
+        testdata::MakeEvent(0, 0x20B00001),     // bank 1:2, program 5
+        testdata::MakeEvent(0, 0x20B02002),
+        testdata::MakeEvent(0, 0x20C00500),
+        testdata::MakeEvent(0, 0x20B00764),
+    };
+    track.Timeline = { Placement{ L"c-imported", 0, 0 } };
+
+    Sequence sequence{};
+    sequence.Tempo = { TempoPoint{ 0, 120.0, false } };
+    sequence.Meter = { MeterChange{ 0, 4, 4 } };
+    sequence.Tracks = { track };
+    sequence.Clips = { clip };
+    NormalizeSequence(sequence);
+
+    ClipFile read{};
+    VERIFY_IS_TRUE(ReadClipFile(WriteClipFile(ExportTrackToClipFile(sequence, sequence.Tracks[0], ClipFileText{})), read).Succeeded());
+
+    std::vector<ClipEvent> all{ read.Configuration };
+    all.insert(all.end(), read.Events.begin(), read.Events.end());
+
+    for (auto const& message : all)
+    {
+        VERIFY_ARE_NOT_EQUAL(0x2u, message.Words[0] >> 28);
+
+        // Bank select and the RPN and NRPN controllers live inside other messages in MIDI 2.0.
+        if ((message.Words[0] >> 28) == 0x4 && ((message.Words[0] >> 20) & 0x0F) == 0xB)
+        {
+            auto const controller = (message.Words[0] >> 8) & 0x7F;
+            VERIFY_IS_FALSE(controller == 0 || controller == 6 || controller == 32 || controller == 38 || (controller >= 98 && controller <= 101));
+        }
+    }
+
+    auto const find = [](std::vector<ClipEvent> const& events, int64_t tick, uint32_t word0) -> ClipEvent const*
+    {
+        auto const found = std::find_if(events.begin(), events.end(),
+            [tick, word0](ClipEvent const& event) { return event.Tick == tick && event.Words[0] == word0 && event.WordCount == 2; });
+        return found == events.end() ? nullptr : &*found;
+    };
+
+    auto const program = find(read.Configuration, 0, 0x41C30001);
+    VERIFY_IS_NOT_NULL(program);
+    VERIFY_ARE_EQUAL(0x05000102u, program->Words[1]);
+
+    auto const volume = find(read.Configuration, 0, 0x41B30700);
+    VERIFY_IS_NOT_NULL(volume);
+    VERIFY_ARE_EQUAL(ScaleUp(100, 7, 32), volume->Words[1]);
+
+    VERIFY_IS_NOT_NULL(find(read.Events, 0, 0x41B30100));
+
+    // The pitch bend range goes out at its CC 6, before the note it applies to.
+    auto const range = find(read.Events, 100, 0x41230000);
+    VERIFY_IS_NOT_NULL(range);
+    VERIFY_ARE_EQUAL(ScaleUp(12 << 7, 14, 32), range->Words[1]);
+
+    VERIFY_IS_NOT_NULL(find(read.Events, 200, 0x41933C00));
+    VERIFY_IS_NOT_NULL(find(read.Events, 250, 0x41E30000));
+    VERIFY_IS_NOT_NULL(find(read.Events, 300, 0x41833C00));
+    VERIFY_IS_NOT_NULL(find(read.Events, 400, 0x41D30000));
+
+    auto const assignable = find(read.Events, 480, 0x41330102);
+    VERIFY_IS_NOT_NULL(assignable);
+    VERIFY_ARE_EQUAL(ScaleUp((2 << 7) | 0x40, 14, 32), assignable->Words[1]);
+
+    VERIFY_IS_NULL(find(read.Events, 600, 0x41B30000));
 }
 
 void StandardMidiFileTests::AnExportReadsBackWithTheSameNotes()
