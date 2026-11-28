@@ -7,7 +7,7 @@
 
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_IS_PREVIEW                         true
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-11-26"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-11-27"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"API and Tools Preview 15"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"0.99.106-preview.15"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      0
